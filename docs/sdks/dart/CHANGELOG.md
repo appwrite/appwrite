@@ -1,3 +1,11 @@
+## 11.0.0
+
+* Added enum support
+* Added SSR support
+* Added messaging service support
+* Added contains query support
+* Added or query support
+
 ## 10.1.0
 
 * Add new queue health endpoints

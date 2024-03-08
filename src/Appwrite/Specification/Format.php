@@ -2,10 +2,10 @@
 
 namespace Appwrite\Specification;
 
+use Appwrite\Utopia\Response\Model;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Route;
-use Appwrite\Utopia\Response\Model;
 
 abstract class Format
 {
@@ -131,8 +131,27 @@ abstract class Format
         switch ($service) {
             case "account":
                 switch ($method) {
-                    case "createOAuth2Session":
-                        return "Provider";
+                    case 'createOAuth2Session':
+                    case 'createOAuth2Token':
+                        switch ($param) {
+                            case 'provider':
+                                return 'OAuthProvider';
+                        }
+                        break;
+                    case 'createMfaAuthenticator':
+                    case 'updateMfaAuthenticator':
+                    case 'deleteMfaAuthenticator':
+                        switch ($param) {
+                            case 'type':
+                                return 'AuthenticatorType';
+                        }
+                        break;
+                    case 'createMfaChallenge':
+                        switch ($param) {
+                            case 'factor':
+                                return 'AuthenticationFactor';
+                        }
+                        break;
                 }
                 break;
             case "avatars":
@@ -145,21 +164,21 @@ abstract class Format
                         return "Flag";
                 }
                 break;
-            case "storage":
+            case 'databases':
                 switch ($method) {
-                    case "getFilePreview":
+                    case 'getFilePreview':
                         switch ($param) {
-                            case "gravity":
-                                return "ImageGravity";
-                            case "output":
-                                return "ImageFormat";
+                            case 'gravity':
+                                return 'ImageGravity';
+                            case 'output':
+                                return  'ImageFormat';
                         }
                         break;
                 }
                 break;
-            case "databases":
+            case 'databases':
                 switch ($method) {
-                    case "createRelationshipAttribute":
+                    case 'createRelationshipAttribute':
                         switch ($param) {
                             case "type":
                                 return "RelationshipType";
@@ -182,12 +201,86 @@ abstract class Format
                         }
                 }
                 break;
-            case "projects":
+            case 'projects':
                 switch ($method) {
-                    case "createPlatform":
+                    case 'createPlatform':
                         switch ($param) {
                             case "type":
                                 return "PlatformType";
+                        }
+                        break;
+                    case 'createSmtpTest':
+                    case 'updateSmtp':
+                        switch ($param) {
+                            case 'secure':
+                                return 'SMTPSecure';
+                        }
+                        break;
+                    case 'updateOAuth2':
+                        switch ($param) {
+                            case 'provider':
+                                return 'OAuthProvider';
+                        }
+                        break;
+                    case 'updateAuthStatus':
+                        switch ($param) {
+                            case 'method':
+                                return 'AuthMethod';
+                        }
+                        break;
+                    case 'updateServiceStatus':
+                        switch ($param) {
+                            case 'service':
+                                return 'ApiService';
+                        }
+                        break;
+                }
+                break;
+            case 'storage':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'getBucketUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'StorageUsageRange';
+                        }
+                        break;
+                    case 'getFilePreview':
+                        switch ($param) {
+                            case 'gravity':
+                                return 'ImageGravity';
+                            case 'output':
+                                return  'ImageFormat';
+                        }
+                        break;
+                }
+                break;
+            case 'users':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UserUsageRange';
+                        }
+                        break;
+                    case 'createMfaAuthenticator':
+                    case 'updateMfaAuthenticator':
+                    case 'deleteMfaAuthenticator':
+                        switch ($param) {
+                            case 'type':
+                                return 'AuthenticatorType';
+                        }
+                        break;
+                    case 'createTarget':
+                        switch ($param) {
+                            case 'providerType':
+                                return 'MessagingProviderType';
+                        }
+                        break;
+                    case 'createSHAUser':
+                        switch ($param) {
+                            case 'passwordVersion':
+                                return 'PasswordHash';
                         }
                         break;
                 }
@@ -230,41 +323,26 @@ abstract class Format
                     case "getCollectionUsage":
                     case "getDatabaseUsage":
                         // Range Enum Keys
-                        $values = [
-                            "Twenty Four Hours",
-                            "Seven Days",
-                            "Thirty Days",
-                            "Ninety Days",
-                        ];
+                        $values  = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
                         return $values;
                 }
                 break;
-            case "function":
+            case 'function':
                 switch ($method) {
                     case "getUsage":
                     case "getFunctionUsage":
                         // Range Enum Keys
-                        $values = [
-                            "Twenty Four Hours",
-                            "Seven Days",
-                            "Thirty Days",
-                            "Ninety Days",
-                        ];
+                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
                         return $values;
                 }
                 break;
             case "users":
                 switch ($method) {
-                    case "getUsage":
-                    case "getUserUsage":
+                    case 'getUsage':
+                    case 'getUserUsage':
                         // Range Enum Keys
-                        if ($param == "range") {
-                            $values = [
-                                "Twenty Four Hours",
-                                "Seven Days",
-                                "Thirty Days",
-                                "Ninety Days",
-                            ];
+                        if ($param == 'range') {
+                            $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
                             return $values;
                         }
                 }
@@ -274,14 +352,10 @@ abstract class Format
                     case "getUsage":
                     case "getBucketUsage":
                         // Range Enum Keys
-                        $values = [
-                            "Twenty Four Hours",
-                            "Seven Days",
-                            "Thirty Days",
-                            "Ninety Days",
-                        ];
+                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
                         return $values;
                 }
+                break;
         }
         return $values;
     }

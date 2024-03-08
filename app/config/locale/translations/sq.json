@@ -228,5 +228,18 @@
     "continents.eu": "Evropë",
     "continents.na": "Amerika e Veriut",
     "continents.oc": "Oqeani",
-    "continents.sa": "Amerika e Jugut"
+    "continents.sa": "Amerika e Jugut",
+    "emails.magicSession.optionButton": "Klikoni butonin më poshtë për të hyrë në mënyrë të sigurt në llogarinë tuaj {{project}}. Do të skadojë në 1 orë.",
+    "emails.magicSession.buttonText": "Kyçu në {{project}}",
+    "emails.magicSession.clientInfo": "Ky hyrje është kërkuar duke përdorur {{agentClient}} në {{agentDevice}} {{agentOs}}. Nëse nuk e keni kërkuar hyrjen, mund ta injoroni këtë email pa pasur shqetësim.",
+    "sms.verification.body": "{{secret}} është kodi juaj i verifikimit për {{project}}.",
+    "emails.magicSession.securityPhrase": "Fjalia e sigurisë për këtë email është {{phrase}}. Mund të besoni këtë email nëse kjo fjali përputhet me fjalën e shfaqur gjatë hyrjes në sistem.",
+    "emails.magicSession.optionUrl": "Nëse nuk mund të hyni duke përdorur butonin më sipër, ju lutem vizitoni lidhjen e mëposhtme:",
+    "emails.otpSession.subject": "{{project}} Hyrje",
+    "emails.otpSession.hello": "Përshëndetje,",
+    "emails.otpSession.description": "Shkruaj kodin e mëposhtëm të verifikimit kur të kërkohet për t'u kyçur në mënyrë të sigurt në llogarinë tënde {{project}}. Do të skadojë pas 15 minutash.",
+    "emails.otpSession.clientInfo": "Ky hyrje u kërkua duke përdorur {{agentClient}} në {{agentDevice}} {{agentOs}}. Nëse nuk e keni kërkuar hyrjen, mund ta injoroni këtë email pa asnjë problem.",
+    "emails.otpSession.securityPhrase": "Fjala e sigurisë për këtë email është {{phrase}}. Ju mund të besoni këtë email nëse kjo fjalë përputhet me fjalën që shfaqet gjatë kyçjes.",
+    "emails.otpSession.thanks": "Faleminderit,",
+    "emails.otpSession.signature": "ekipi i {{project}}"
 }

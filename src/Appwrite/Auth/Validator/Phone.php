@@ -11,6 +11,13 @@ use Utopia\Validator;
  */
 class Phone extends Validator
 {
+    protected bool $allowEmpty;
+
+    public function __construct(bool $allowEmpty = false)
+    {
+        $this->allowEmpty = $allowEmpty;
+    }
+
     /**
      * Get Description.
      *
@@ -32,7 +39,15 @@ class Phone extends Validator
      */
     public function isValid($value): bool
     {
-        return is_string($value) && !!\preg_match('/^\+[1-9]\d{6,14}$/', $value);
+        if (!is_string($value)) {
+            return false;
+        }
+
+        if ($this->allowEmpty && \strlen($value) === 0) {
+            return true;
+        }
+
+        return !!\preg_match('/^\+[1-9]\d{6,14}$/', $value);
     }
 
     /**

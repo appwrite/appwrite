@@ -40,6 +40,7 @@ class Exception extends \Exception
     public const GENERAL_MOCK                      = 'general_mock';
     public const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
     public const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
+    public const GENERAL_API_DISABLED              = 'general_api_disabled';
     public const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';
     public const GENERAL_UNAUTHORIZED_SCOPE        = 'general_unauthorized_scope';
     public const GENERAL_RATE_LIMIT_EXCEEDED       = 'general_rate_limit_exceeded';
@@ -55,6 +56,9 @@ class Exception extends \Exception
     public const GENERAL_CODES_DISABLED            = 'general_codes_disabled';
     public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
     public const GENERAL_NOT_IMPLEMENTED           = 'general_not_implemented';
+    public const GENERAL_INVALID_EMAIL             = 'general_invalid_email';
+    public const GENERAL_INVALID_PHONE             = 'general_invalid_phone';
+    public const GENERAL_REGION_ACCESS_DENIED      = 'general_region_access_denied';
     public const GENERAL_BAD_REQUEST               = 'general_bad_request';
 
     /** Users */
@@ -81,13 +85,26 @@ class Exception extends \Exception
     public const USER_AUTH_METHOD_UNSUPPORTED      = 'user_auth_method_unsupported';
     public const USER_PHONE_ALREADY_EXISTS         = 'user_phone_already_exists';
     public const USER_PHONE_NOT_FOUND              = 'user_phone_not_found';
+    public const USER_PHONE_NOT_VERIFIED           = 'user_phone_not_verified';
+    public const USER_EMAIL_NOT_FOUND              = 'user_email_not_found';
+    public const USER_EMAIL_NOT_VERIFIED           = 'user_email_not_verified';
     public const USER_MISSING_ID                   = 'user_missing_id';
+    public const USER_MORE_FACTORS_REQUIRED        = 'user_more_factors_required';
+    public const USER_INVALID_CHALLENGE            = 'user_invalid_challenge';
+    public const USER_AUTHENTICATOR_NOT_FOUND      = 'user_authenticator_not_found';
+    public const USER_AUTHENTICATOR_ALREADY_VERIFIED = 'user_authenticator_already_verified';
+    public const USER_RECOVERY_CODES_ALREADY_EXISTS = 'user_recovery_codes_already_exists';
+    public const USER_RECOVERY_CODES_NOT_FOUND     = 'user_recovery_codes_not_found';
+    public const USER_CHALLENGE_REQUIRED           = 'user_challenge_required';
     public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
     public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
-    public const USER_EMAIL_ALREADY_VERIFIED       = 'user_email_alread_verified';
+    public const USER_EMAIL_ALREADY_VERIFIED       = 'user_email_already_verified';
     public const USER_PHONE_ALREADY_VERIFIED       = 'user_phone_already_verified';
     public const USER_DELETION_PROHIBITED          = 'user_deletion_prohibited';
+    public const USER_TARGET_NOT_FOUND             = 'user_target_not_found';
+    public const USER_TARGET_ALREADY_EXISTS        = 'user_target_already_exists';
+    public const USER_API_KEY_AND_SESSION_SET      = 'user_key_and_session_set';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -122,18 +139,19 @@ class Exception extends \Exception
     public const STORAGE_INVALID_CONTENT_RANGE     = 'storage_invalid_content_range';
     public const STORAGE_INVALID_RANGE             = 'storage_invalid_range';
     public const STORAGE_INVALID_APPWRITE_ID       = 'storage_invalid_appwrite_id';
+    public const STORAGE_FILE_NOT_PUBLIC           = 'storage_file_not_public';
 
     /** VCS */
-    public const INSTALLATION_NOT_FOUND              = 'installation_not_found';
-    public const PROVIDER_REPOSITORY_NOT_FOUND       = 'provider_repository_not_found';
-    public const REPOSITORY_NOT_FOUND                = 'repository_not_found';
-    public const PROVIDER_CONTRIBUTION_CONFLICT      = 'provider_contribution_conflict';
-    public const GENERAL_PROVIDER_FAILURE            = 'general_provider_failure';
+    public const INSTALLATION_NOT_FOUND            = 'installation_not_found';
+    public const PROVIDER_REPOSITORY_NOT_FOUND     = 'provider_repository_not_found';
+    public const REPOSITORY_NOT_FOUND              = 'repository_not_found';
+    public const PROVIDER_CONTRIBUTION_CONFLICT    = 'provider_contribution_conflict';
+    public const GENERAL_PROVIDER_FAILURE          = 'general_provider_failure';
 
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
     public const FUNCTION_RUNTIME_UNSUPPORTED      = 'function_runtime_unsupported';
-    public const FUNCTION_ENTRYPOINT_MISSING      = 'function_entrypoint_missing';
+    public const FUNCTION_ENTRYPOINT_MISSING       = 'function_entrypoint_missing';
 
     /** Deployments */
     public const DEPLOYMENT_NOT_FOUND              = 'deployment_not_found';
@@ -184,7 +202,6 @@ class Exception extends \Exception
 
     /** Projects */
     public const PROJECT_NOT_FOUND                 = 'project_not_found';
-    public const PROJECT_UNKNOWN                   = 'project_unknown';
     public const PROJECT_PROVIDER_DISABLED         = 'project_provider_disabled';
     public const PROJECT_PROVIDER_UNSUPPORTED      = 'project_provider_unsupported';
     public const PROJECT_ALREADY_EXISTS            = 'project_already_exists';
@@ -197,6 +214,8 @@ class Exception extends \Exception
 
     public const PROJECT_TEMPLATE_DEFAULT_DELETION = 'project_template_default_deletion';
 
+    public const PROJECT_REGION_UNSUPPORTED        = 'project_region_unsupported';
+
     /** Webhooks */
     public const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';
 
@@ -205,10 +224,10 @@ class Exception extends \Exception
     public const ROUTER_DOMAIN_NOT_CONFIGURED      = 'router_domain_not_configured';
 
     /** Proxy */
-    public const RULE_RESOURCE_NOT_FOUND            = 'rule_resource_not_found';
-    public const RULE_NOT_FOUND                     = 'rule_not_found';
-    public const RULE_ALREADY_EXISTS                = 'rule_already_exists';
-    public const RULE_VERIFICATION_FAILED           = 'rule_verification_failed';
+    public const RULE_RESOURCE_NOT_FOUND           = 'rule_resource_not_found';
+    public const RULE_NOT_FOUND                    = 'rule_not_found';
+    public const RULE_ALREADY_EXISTS               = 'rule_already_exists';
+    public const RULE_VERIFICATION_FAILED          = 'rule_verification_failed';
 
     /** Keys */
     public const KEY_NOT_FOUND                     = 'key_not_found';
@@ -225,20 +244,53 @@ class Exception extends \Exception
     public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
 
     /** Migrations */
-    public const MIGRATION_NOT_FOUND                 = 'migration_not_found';
-    public const MIGRATION_ALREADY_EXISTS            = 'migration_already_exists';
-    public const MIGRATION_IN_PROGRESS               = 'migration_in_progress';
-    public const MIGRATION_PROVIDER_ERROR            = 'migration_provider_error';
+    public const MIGRATION_NOT_FOUND               = 'migration_not_found';
+    public const MIGRATION_ALREADY_EXISTS          = 'migration_already_exists';
+    public const MIGRATION_IN_PROGRESS             = 'migration_in_progress';
+    public const MIGRATION_PROVIDER_ERROR          = 'migration_provider_error';
 
     /** Realtime */
-    public const REALTIME_MESSAGE_FORMAT_INVALID    = 'realtime_message_format_invalid';
-    public const REALTIME_TOO_MANY_MESSAGES         = 'realtime_too_many_messages';
-    public const REALTIME_POLICY_VIOLATION          = 'realtime_policy_violation';
+    public const REALTIME_MESSAGE_FORMAT_INVALID   = 'realtime_message_format_invalid';
+    public const REALTIME_TOO_MANY_MESSAGES        = 'realtime_too_many_messages';
+    public const REALTIME_POLICY_VIOLATION         = 'realtime_policy_violation';
 
     /** Health */
-    public const HEALTH_QUEUE_SIZE_EXCEEDED          = 'health_queue_size_exceeded';
-    public const HEALTH_CERTIFICATE_EXPIRED          = 'health_certificate_expired';
-    public const HEALTH_INVALID_HOST                 = 'health_invalid_host';
+    public const HEALTH_QUEUE_SIZE_EXCEEDED        = 'health_queue_size_exceeded';
+    public const HEALTH_CERTIFICATE_EXPIRED        = 'health_certificate_expired';
+    public const HEALTH_INVALID_HOST               = 'health_invalid_host';
+
+    /** Provider */
+    public const PROVIDER_NOT_FOUND                = 'provider_not_found';
+    public const PROVIDER_ALREADY_EXISTS           = 'provider_already_exists';
+    public const PROVIDER_INCORRECT_TYPE           = 'provider_incorrect_type';
+    public const PROVIDER_MISSING_CREDENTIALS      = 'provider_missing_credentials';
+
+    /** Topic */
+    public const TOPIC_NOT_FOUND                   = 'topic_not_found';
+    public const TOPIC_ALREADY_EXISTS              = 'topic_already_exists';
+
+    /** Subscriber */
+    public const SUBSCRIBER_NOT_FOUND              = 'subscriber_not_found';
+    public const SUBSCRIBER_ALREADY_EXISTS         = 'subscriber_already_exists';
+
+    /** Message */
+    public const MESSAGE_NOT_FOUND                 = 'message_not_found';
+    public const MESSAGE_MISSING_TARGET            = 'message_missing_target';
+    public const MESSAGE_ALREADY_SENT              = 'message_already_sent';
+    public const MESSAGE_ALREADY_PROCESSING        = 'message_already_processing';
+    public const MESSAGE_ALREADY_FAILED            = 'message_already_failed';
+    public const MESSAGE_ALREADY_SCHEDULED         = 'message_already_scheduled';
+    public const MESSAGE_TARGET_NOT_EMAIL          = 'message_target_not_email';
+    public const MESSAGE_TARGET_NOT_SMS            = 'message_target_not_sms';
+    public const MESSAGE_TARGET_NOT_PUSH           = 'message_target_not_push';
+    public const MESSAGE_MISSING_SCHEDULE          = 'message_missing_schedule';
+
+    /** Targets */
+    public const TARGET_PROVIDER_INVALID_TYPE       = 'target_provider_invalid_type';
+
+    /** Schedules */
+    public const SCHEDULE_NOT_FOUND                = 'schedule_not_found';
+
 
     protected string $type = '';
     protected array $errors = [];

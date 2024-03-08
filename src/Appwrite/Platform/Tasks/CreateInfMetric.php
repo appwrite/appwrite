@@ -2,17 +2,13 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\App;
+use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
-use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
-use Utopia\Database\Database;
-use Utopia\Pools\Group;
-use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
 
 class CreateInfMetric extends Action
@@ -167,8 +163,8 @@ class CreateInfMetric extends Action
 
         try {
             $id = \md5("_inf_{$metric}");
-            $dbForProject->deleteDocument('stats_v2', $id);
-            $dbForProject->createDocument('stats_v2', new Document([
+            $dbForProject->deleteDocument('stats', $id);
+            $dbForProject->createDocument('stats', new Document([
                 '$id' => $id,
                 'metric' => $metric,
                 'period' => 'inf',
@@ -190,7 +186,7 @@ class CreateInfMetric extends Action
     protected function getFromMetric(database $dbForProject, string $metric): int|float
     {
 
-        return  $dbForProject->sum('stats_v2', 'value', [
+        return  $dbForProject->sum('stats', 'value', [
             Query::equal('metric', [
                 $metric,
             ]),

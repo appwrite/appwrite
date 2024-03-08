@@ -3,7 +3,6 @@
 namespace Appwrite\Tests;
 
 use PHPUnit\Runner\AfterTestHook;
-use Exception;
 
 class TestHook implements AfterTestHook
 {
