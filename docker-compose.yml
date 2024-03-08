@@ -50,7 +50,7 @@ services:
     build:
       context: .
       args:
-        DEBUG: false
+        DEBUG: true
         TESTING: true
         VERSION: dev
     ports:
@@ -84,6 +84,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      - ./temp-debug:/tmp/xdebug
     depends_on:
       - mariadb
       - redis
@@ -959,6 +960,7 @@ services:
       - database-proxy
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
+      - ./mariadb-config.cnf:/etc/mysql/conf.d/mariadb-config.cnf
     ports:
       - "3306:3306"
     environment:
