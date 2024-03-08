@@ -269,17 +269,16 @@ class DatabasesCustomServerTest extends Scope
             'policyId' => 'policy1',
             'name' => 'Hourly Backups',
             'enabled' => true,
-            'retention' => 6,
-            'hours' => 4,
+            'retention' => 1,
+            'hours' => 1,
         ]);
 
-        var_dump($response);
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertEquals('Hourly Backups', $response['body']['name']);
         $this->assertEquals('policy1', $response['body']['$id']);
-        $this->assertEquals(4, $response['body']['hours']);
-        $this->assertEquals(6, $response['body']['retention']);
+        $this->assertEquals(1, $response['body']['hours']);
+        $this->assertEquals(1, $response['body']['retention']);
         $this->assertEquals($databaseId, $response['body']['resourceId']);
         $this->assertEquals(true, $response['body']['enabled']);
         $this->assertEquals('backup-database', $response['body']['resourceType']);
@@ -341,7 +340,62 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals('Daily backups', $policy['body']['name']);
         $this->assertEquals(false, $policy['body']['enabled']);
 
+        $policyId = $policy['body']['$id'];
+
+        /**
+         * Test create new Backup policy again
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/backups-policy', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], $this->getHeaders()), [
+            'policyId' => 'my-policy',
+            'name' => 'New Hourly Backups',
+            'enabled' => true,
+            'retention' => 1,
+            'hours' => 1,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals('New Hourly Backups', $response['body']['name']);
+        $this->assertEquals('my-policy', $response['body']['$id']);
+        $this->assertEquals(1, $response['body']['hours']);
+        $this->assertEquals(1, $response['body']['retention']);
+        $this->assertEquals($databaseId, $response['body']['resourceId']);
+        $this->assertEquals(true, $response['body']['enabled']);
+        $this->assertEquals('backup-database', $response['body']['resourceType']);
+
+
+        /**
+         * Test to get back policies list
+         */
+
+        $policies = $this->client->call(Client::METHOD_GET, '/databases/'. $databaseId .'/backups-policy', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+
+        $this->assertEquals(200, $policy['headers']['status-code']);
+        //$this->assertEquals('policy1', $policy['body']['$id']);
+        //$this->assertEquals('Hourly Backups', $policy['body']['name']);
+        //$this->assertEquals(true, $policy['body']['enabled']);
+        var_dump($policies);
         $this->assertEquals('---', '-------');
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId. '/backups-policy/' .$policyId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEquals("", $response['body']);
+
+
+
     }
 
     /**

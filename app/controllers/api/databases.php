@@ -3984,7 +3984,7 @@ App::post('/v1/databases/:databaseId/backups-policy')
 
 App::get('/v1/databases/:databaseId/backups-policy/:policyId')
     ->groups(['api', 'database'])
-    ->desc('Get backup policy')
+    ->desc('Get backups policy')
     ->label('scope', 'databases.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
@@ -4015,7 +4015,7 @@ App::get('/v1/databases/:databaseId/backups-policy/:policyId')
 
 App::patch('/v1/databases/:databaseId/backups-policy/:policyId')
     ->groups(['api', 'database'])
-    ->desc('Update backup policy')
+    ->desc('Update backups policy')
     ->label('scope', 'databases.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     //->label('event', 'backupPolicy.[functionId].create')
@@ -4077,9 +4077,67 @@ App::patch('/v1/databases/:databaseId/backups-policy/:policyId')
         $response->dynamic($policy, Response::MODEL_BACKUP_POLICY);
     });
 
+App::get('/v1/databases/:databaseId/backups-policy')
+    ->groups(['api', 'database'])
+    ->desc('Get database backups policies')
+    ->label('scope', 'databases.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'getBackupsPolicies')
+    ->label('sdk.description', '/docs/references/databases/get-backups-policies.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BACKUP_LIST)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('dbForConsole')
+    ->action(function (string $databaseId, array $queries, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject) {
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $policyId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('backupsPolicy', $policyId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Collection '{$policyId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
+
+        $response->dynamic(new Document([
+            'backupPolicies' => $dbForProject->find('backupsPolicy', $queries),
+            'total' => $dbForProject->count('backupsPolicy', $filterQueries, APP_LIMIT_COUNT),
+        ]), Response::MODEL_BACKUP_POLICY_LIST);
+    });
+
+
 App::delete('/v1/databases/:databaseId/backups-policy/:policyId')
     ->groups(['api', 'database'])
-    ->desc('delete backup policy')
+    ->desc('delete backups policy')
     ->label('scope', 'databases.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     //->label('event', 'backupPolicy.[functionId].delete')
@@ -4133,7 +4191,7 @@ App::delete('/v1/databases/:databaseId/backups-policy/:policyId')
 
 App::get('/v1/databases/:databaseId/backups/:policyId')
     ->groups(['api', 'database'])
-    ->desc('Get database backups')
+    ->desc('Get database backups by policy id')
     ->label('scope', 'databases.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')

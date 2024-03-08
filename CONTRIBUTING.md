@@ -393,7 +393,11 @@ docker compose exec appwrite test /usr/src/code/tests/e2e
 To run end-2-end tests for a specific service use:
 
 ```bash
-docker compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
+docker compose exec appwrite 
+
+
+
+tests/e2e/Services/[ServiceName]
 ```
 
 ## Benchmarking
