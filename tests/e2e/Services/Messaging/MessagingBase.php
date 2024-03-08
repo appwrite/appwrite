@@ -884,7 +884,7 @@ trait MessagingBase
     public function testCreateDraftPushWithImage()
     {
         // Create User 1
-        $response = $this->client->call(Client::METHOD_POST, '/users', [
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -895,12 +895,22 @@ trait MessagingBase
             'name' => 'Messaging User 1',
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code'], "Error creating user: " . var_export($response['body'], true));
+        $this->assertEquals(201, $user['headers']['status-code'], "Error creating user: " . var_export($user['body'], true));
+        $this->assertEquals(1, \count($user['body']['targets']));
 
-        $user1 = $response['body'];
+        // Create push target
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'userId' => $user['body']['$id'],
+            'providerType' => 'push',
+            'identifier' => '123456',
+        ]);
 
-        $this->assertEquals(1, \count($user1['targets']));
-        $targetId1 = $user1['targets'][0]['$id'];
+        $targetId = $target['body']['$id'];
 
         // Create bucket
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
@@ -921,14 +931,18 @@ trait MessagingBase
             ],
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $bucketId = $response['body']['$id'];
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        \sleep(1);
 
         // Create file
-        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
             'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
@@ -947,7 +961,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'targets' => [$targetId1],
+            'targets' => [$targetId],
             'title' => 'New blog post',
             'body' => 'Check out the new blog post at http://localhost',
             'image' => "{$bucketId}:{$fileId}",
@@ -962,7 +976,10 @@ trait MessagingBase
 
         $imageUrl = $message['data']['image']['url'];
 
-        $image = $this->client->call(Client::METHOD_GET, $imageUrl);
+        $client = new Client();
+        $client->setEndpoint('');
+
+        $image = $client->call(Client::METHOD_GET, $imageUrl);
 
         $this->assertEquals(200, $image['headers']['status-code']);
 

@@ -471,15 +471,7 @@ App::post('/v1/users/:userId/targets')
     ->action(function (string $targetId, string $userId, string $providerType, string $identifier, string $providerId, string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
-        $provider = new Document();
-
-        if ($providerType === MESSAGE_TYPE_PUSH) {
-            $provider = $dbForProject->getDocument('providers', $providerId);
-
-            if ($provider->isEmpty()) {
-                throw new Exception(Exception::PROVIDER_NOT_FOUND);
-            }
-        }
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         switch ($providerType) {
             case 'email':
@@ -520,7 +512,7 @@ App::post('/v1/users/:userId/targets')
                     Permission::update(Role::user($user->getId())),
                     Permission::delete(Role::user($user->getId())),
                 ],
-                'providerId' => $providerId ?? null,
+                'providerId' => empty($provider->getId()) ? null : $provider->getId(),
                 'providerInternalId' => $provider->isEmpty() ? null : $provider->getInternalId(),
                 'providerType' =>  $providerType,
                 'userId' => $userId,
