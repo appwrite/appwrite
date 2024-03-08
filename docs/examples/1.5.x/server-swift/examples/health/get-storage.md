@@ -1,5 +1,4 @@
 import Appwrite
-import AppwriteEnums
 
 let client = Client()
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -8,8 +7,5 @@ let client = Client()
 
 let health = Health(client)
 
-let healthQueue = try await health.getFailedJobs(
-    name: .v1Database,
-    threshold: 0 // optional
-)
+let healthStatus = try await health.getStorage()
 

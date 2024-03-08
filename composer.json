@@ -91,7 +91,7 @@
     },
     "config": {
         "platform": {
-            "php": "8.2"
+            "php": "8.3"
         }
     }
 }

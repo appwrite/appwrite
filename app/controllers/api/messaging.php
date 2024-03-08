@@ -3301,7 +3301,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                     : MessageStatus::SCHEDULED;
             }
         } else {
-            $status = null;
+            $status = $message->getAttribute('status');
         }
 
         if (
@@ -3472,7 +3472,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                     : MessageStatus::SCHEDULED;
             }
         } else {
-            $status = null;
+            $status = $message->getAttribute('status');
         }
 
         if (
@@ -3636,7 +3636,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                     : MessageStatus::SCHEDULED;
             }
         } else {
-            $status = null;
+            $status = $message->getAttribute('status');
         }
 
         if (
