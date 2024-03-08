@@ -369,23 +369,20 @@ class DatabasesCustomServerTest extends Scope
 
 
         /**
-         * Test to get back policies list
+         * Test to get backup policies list
          */
-
         $policies = $this->client->call(Client::METHOD_GET, '/databases/'. $databaseId .'/backups-policy', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
+        $this->assertEquals(200, $policies['headers']['status-code']);
+        $this->assertEquals(2, count($policies['body']['backupPolicies']));
 
-        $this->assertEquals(200, $policy['headers']['status-code']);
-        //$this->assertEquals('policy1', $policy['body']['$id']);
-        //$this->assertEquals('Hourly Backups', $policy['body']['name']);
-        //$this->assertEquals(true, $policy['body']['enabled']);
-        var_dump($policies);
-        $this->assertEquals('---', '-------');
-
-        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId. '/backups-policy/' .$policyId, array_merge([
+        /**
+         * Test Create a new policy
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId. '/backups-policy/' . $policyId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -394,7 +391,20 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEquals("", $response['body']);
 
+        /**
+         * Test to get backup policies list again
+         */
+        $policies = $this->client->call(Client::METHOD_GET, '/databases/'. $databaseId .'/backups-policy', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
 
+        $this->assertEquals(200, $policies['headers']['status-code']);
+        $this->assertEquals(1, count($policies['body']['backupPolicies']));
+
+
+       $this->assertEquals('---', '-------');
 
     }
 

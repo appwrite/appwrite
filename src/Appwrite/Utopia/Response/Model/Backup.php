@@ -56,7 +56,7 @@ class Backup extends Model
      */
     public function getName(): string
     {
-        return 'Backups';
+        return 'Backup';
     }
 
     /**

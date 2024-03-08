@@ -4126,8 +4126,6 @@ App::get('/v1/databases/:databaseId/backups-policy')
             $cursor->setValue($cursorDocument);
         }
 
-
-
         $response->dynamic(new Document([
             'backupPolicies' => $dbForProject->find('backupsPolicy', $queries),
             'total' => $dbForProject->count('backupsPolicy', $queries, APP_LIMIT_COUNT),
@@ -4138,7 +4136,7 @@ App::get('/v1/databases/:databaseId/backups-policy')
 App::delete('/v1/databases/:databaseId/backups-policy/:policyId')
     ->groups(['api', 'database'])
     ->desc('delete backups policy')
-    ->label('scope', 'databases.delete')
+    ->label('scope', 'documents.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     //->label('event', 'backupPolicy.[functionId].delete')
     ->label('audits.event', 'backups.deletePolicy')
@@ -4160,7 +4158,10 @@ App::delete('/v1/databases/:databaseId/backups-policy/:policyId')
     ->inject('project')
     ->inject('dbForConsole')
     ->inject('queueForDeletes')
-    ->action(function (string $databaseId, string $policyId, string $name, bool $enabled, int $retention, int $hours, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject, Document $project, Database $dbForConsole, Delete $queueForDeletes) {
+    ->action(function (string $databaseId, string $policyId, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject, Document $project, Database $dbForConsole, Delete $queueForDeletes) {
+
+        //Todo what you do we do with backups when a db is deleted?
+
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
@@ -4245,18 +4246,16 @@ App::get('/v1/databases/:databaseId/backups/:policyId')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-
         $response->dynamic(new Document([
             'backups' => $dbForProject->find('backups', $queries),
-            'total' => $dbForProject->count('backups', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('backups', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_BACKUP_LIST);
     });
 
 App::delete('/v1/databases/:databaseId/backups/:backupId')
     ->groups(['api', 'database'])
     ->desc('delete database backup')
-    ->label('scope', 'databases.delete')
+    ->label('scope', 'documents.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     //->label('event', 'backupPolicy.[functionId].delete')
     ->label('audits.event', 'backup.delete')
