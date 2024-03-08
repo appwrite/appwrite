@@ -2935,12 +2935,7 @@ App::post('/v1/messaging/messages/push')
             }
 
             $host = App::getEnv('_APP_DOMAIN', 'localhost');
-            $domain = new Domain(\parse_url($host, PHP_URL_HOST));
             $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-
-            if (!$domain->isKnown()) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
-            }
 
             $scheduleTime = $currentScheduledAt ?? $scheduledAt;
             if (!\is_null($scheduleTime)) {
@@ -3777,12 +3772,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
             }
 
             $host = App::getEnv('_APP_DOMAIN', 'localhost');
-            $domain = new Domain(\parse_url($host, PHP_URL_HOST));
             $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-
-            if (!$domain->isKnown()) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
-            }
 
             $scheduleTime = $currentScheduledAt ?? $scheduledAt;
             if (!\is_null($scheduleTime)) {
