@@ -544,6 +544,8 @@ App::get('/v1/project/backups-policy')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $queries[] = Query::equal('resourceType', [BACKUP_RESOURCE_PROJECT]);
+
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
          */

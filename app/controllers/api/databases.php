@@ -4107,6 +4107,8 @@ App::get('/v1/databases/:databaseId/backups-policy')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $queries[] = Query::equal('resourceType', [BACKUP_RESOURCE_DATABASE]);
+
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
          */
