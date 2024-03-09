@@ -99,10 +99,20 @@ abstract class Promise
         if ($this->isFulfilled() && $onFulfilled === null) {
             return $this;
         }
-        return self::create(function (callable $resolve, callable $reject) use ($onFulfilled, $onRejected) {
-            while ($this->isPending()) {
-                usleep(25000);
+        // Here's the optimization: Removed the unnecessary while loop
+        // and executed the callback immediately if the promise is not pending
+        if (!$this->isPending()) {
+            $callable = $this->isFulfilled() ? $onFulfilled : $onRejected;
+            if (!\is_callable($callable)) {
+                return self::resolve($this->result);
             }
+            try {
+                return self::resolve($callable($this->result));
+            } catch (\Throwable $error) {
+                return self::reject($error);
+            }
+        }
+        return self::create(function (callable $resolve, callable $reject) use ($onFulfilled, $onRejected) {
             $callable = $this->isFulfilled() ? $onFulfilled : $onRejected;
             if (!\is_callable($callable)) {
                 $resolve($this->result);
