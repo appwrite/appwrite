@@ -313,7 +313,7 @@ $commonCollections = [
                 '$id' => ID::custom('_key_email'),
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['email'],
-                'lengths' => [320],
+                'lengths' => [256],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -733,7 +733,7 @@ $commonCollections = [
                 '$id' => ID::custom('_key_provider_providerUid'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['provider', 'providerUid'],
-                'lengths' => [100, 100],
+                'lengths' => [128, 128],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
@@ -857,14 +857,14 @@ $commonCollections = [
                 '$id' => ID::custom('_key_userInternalId_provider_providerUid'),
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['userInternalId', 'provider', 'providerUid'],
-                'lengths' => [Database::LENGTH_KEY, 100, 385],
+                'lengths' => [11, 128, 128],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_provider_providerUid'),
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['provider', 'providerUid'],
-                'lengths' => [100, 640],
+                'lengths' => [128, 128],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
@@ -885,7 +885,7 @@ $commonCollections = [
                 '$id' => ID::custom('_key_provider'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['provider'],
-                'lengths' => [100],
+                'lengths' => [128],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -2113,7 +2113,7 @@ $projectCollections = array_merge([
                 '$id' => ID::custom('_key_name'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['name'],
-                'lengths' => [768],
+                'lengths' => [256],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -2162,7 +2162,7 @@ $projectCollections = array_merge([
                 '$id' => ID::custom('_key_runtime'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['runtime'],
-                'lengths' => [768],
+                'lengths' => [64],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -2902,14 +2902,14 @@ $projectCollections = array_merge([
                 '$id' => ID::custom('_key_trigger'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['trigger'],
-                'lengths' => [128],
+                'lengths' => [32],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_status'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['status'],
-                'lengths' => [128],
+                'lengths' => [32],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -4834,14 +4834,14 @@ $bucketCollections = [
                 '$id' => ID::custom('_key_name'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['name'],
-                'lengths' => [768],
+                'lengths' => [256],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_signature'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['signature'],
-                'lengths' => [768],
+                'lengths' => [256],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
