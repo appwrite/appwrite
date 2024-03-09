@@ -90,7 +90,7 @@ class ScheduleFunctions extends ScheduleBase
                         ->trigger();
                 }
 
-                $queue->reclaim();
+                $queue->reclaim(); // TODO: Do in try/catch/finally, or add to connectons resource
             });
         }
 

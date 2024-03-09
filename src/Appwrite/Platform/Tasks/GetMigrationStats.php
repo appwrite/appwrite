@@ -2,13 +2,13 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Utopia\Queue\Connections;
 use League\Csv\CannotInsertRecord;
 use League\Csv\Writer;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\Http\Adapter\FPM\Server;
@@ -50,8 +50,9 @@ class GetMigrationStats extends Action
             ->inject('dbForConsole')
             ->inject('register')
             ->inject('auth')
-            ->callback(function (Group $pools, Cache $cache, Database $dbForConsole, Registry $register, ValidatorAuthorization $auth) {
-                $this->action($pools, $cache, $dbForConsole, $register, $auth);
+            ->inject('connections')
+            ->callback(function (Group $pools, Cache $cache, Database $dbForConsole, Registry $register, ValidatorAuthorization $auth, Connections $connections) {
+                $this->action($pools, $cache, $dbForConsole, $register, $auth, $connections);
             });
     }
 
@@ -59,7 +60,7 @@ class GetMigrationStats extends Action
      * @throws \Utopia\Exception
      * @throws CannotInsertRecord
      */
-    public function action(Group $pools, Cache $cache, Database $dbForConsole, Registry $register, ValidatorAuthorization $auth): void
+    public function action(Group $pools, Cache $cache, Database $dbForConsole, Registry $register, ValidatorAuthorization $auth, Connections $connections): void
     {
         //docker compose exec -t appwrite get-migration-stats
 
@@ -99,12 +100,11 @@ class GetMigrationStats extends Action
 
                 try {
                     $db = $project->getAttribute('database');
-                    $adapter = $pools
-                        ->get($db)
-                        ->pop()
-                        ->getResource();
+                    $connection = $pools->get($db)->pop();
+                    $connections->add($connection);
+                    $adapter = $connection->getResource();
 
-                    $dbForProject = new Database($adapter, $cache);
+                    $dbForProject = new Database($adapter, $cache); // TODO: Use getProjectDB instead, or reclaim connections properly
                     $dbForProject->setAuthorization($auth);
                     $dbForProject->setDatabase('appwrite');
                     $dbForProject->setNamespace('_' . $project->getInternalId());

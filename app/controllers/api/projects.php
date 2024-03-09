@@ -10,6 +10,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
+use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -78,7 +79,8 @@ Http::post('/v1/projects')
     ->inject('cache')
     ->inject('pools')
     ->inject('auth')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools, Authorization $auth) {
+    ->inject('connections')
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools, Authorization $auth, Connections $connections) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -178,7 +180,9 @@ Http::post('/v1/projects')
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
 
-        $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
+        $connection = $pools->get($database)->pop();
+        $connections->add($connection);
+        $dbForProject = new Database($connection->getResource(), $cache);
         $dbForProject->setAuthorization($auth);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create();

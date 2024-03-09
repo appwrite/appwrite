@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Hamster as EventHamster;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Utopia\Queue\Connections;
 use Utopia\Analytics\Adapter\Mixpanel;
 use Utopia\Analytics\Event as AnalyticsEvent;
 use Utopia\Cache\Cache;
@@ -54,7 +55,8 @@ class Hamster extends Action
             ->inject('cache')
             ->inject('dbForConsole')
             ->inject('auth')
-            ->callback(fn (Message $message, Group $pools, Cache $cache, Database $dbForConsole, Authorization $auth) => $this->action($message, $pools, $cache, $dbForConsole, $auth));
+            ->inject('connections')
+            ->callback(fn (Message $message, Group $pools, Cache $cache, Database $dbForConsole, Authorization $auth, Connections $connections) => $this->action($message, $pools, $cache, $dbForConsole, $auth, $connections));
     }
 
     /**
@@ -66,7 +68,7 @@ class Hamster extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Group $pools, Cache $cache, Database $dbForConsole, Authorization $auth): void
+    public function action(Message $message, Group $pools, Cache $cache, Database $dbForConsole, Authorization $auth, Connections $connections): void
     {
         $token = Http::getEnv('_APP_MIXPANEL_TOKEN', '');
         if (empty($token)) {
@@ -84,7 +86,7 @@ class Hamster extends Action
 
         switch ($type) {
             case EventHamster::TYPE_PROJECT:
-                $this->getStatsForProject(new Document($payload['project']), $pools, $cache, $dbForConsole, $auth);
+                $this->getStatsForProject(new Document($payload['project']), $pools, $cache, $dbForConsole, $auth, $connections);
                 break;
             case EventHamster::TYPE_ORGANISATION:
                 $this->getStatsForOrganization(new Document($payload['organization']), $dbForConsole);
@@ -102,7 +104,7 @@ class Hamster extends Action
      * @param Database $dbForConsole
      * @throws \Utopia\Database\Exception
      */
-    private function getStatsForProject(Document $project, Group $pools, Cache $cache, Database $dbForConsole, Authorization $auth): void
+    private function getStatsForProject(Document $project, Group $pools, Cache $cache, Database $dbForConsole, Authorization $auth, Connections $connections): void
     {
         /**
          * Skip user projects with id 'console'
@@ -116,12 +118,11 @@ class Hamster extends Action
 
         try {
             $db = $project->getAttribute('database');
-            $adapter = $pools
-                ->get($db)
-                ->pop()
-                ->getResource();
+            $connection = $pools->get($db)->pop();
+            $connections->add($connection);
+            $adapter = $connection->getResource();
 
-            $dbForProject = new Database($adapter, $cache);
+            $dbForProject = new Database($adapter, $cache); // TODO: Use getProjectDB instead, or reclaim connections properly
             $dbForProject->setAuthorization($auth);
             $dbForProject->setDatabase('appwrite');
             $dbForProject->setNamespace('_' . $project->getInternalId());

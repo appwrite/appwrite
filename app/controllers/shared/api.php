@@ -12,6 +12,7 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
@@ -28,7 +29,6 @@ use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Http\Http;
 use Utopia\Http\Validator\WhiteList;
 use Utopia\Pools\Group;
-use Utopia\Pools\Pool;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -749,14 +749,14 @@ Http::init()
     });
 
 Http::shutdown()
-    ->inject('pools')
-    ->action(function (Group $pools) {
-        $pools->reclaim();
+    ->inject('connections')
+    ->action(function (Connections $connections) {
+        $connections->reclaim();
     });
 
 
 Http::error()
-    ->inject('pools')
-    ->action(function (Group $pools) {
-        $pools->reclaim();
+    ->inject('connections')
+    ->action(function (Connections $connections) {
+        $connections->reclaim();
     });

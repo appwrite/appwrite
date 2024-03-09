@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Utopia\Queue\Connections;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -34,13 +35,14 @@ class DeleteOrphanedProjects extends Action
             ->inject('dbForConsole')
             ->inject('register')
             ->inject('auth')
-            ->callback(function (bool $commit, Group $pools, Cache $cache, Database $dbForConsole, Registry $register, Authorization $auth) {
-                $this->action($commit, $pools, $cache, $dbForConsole, $register, $auth);
+            ->inject('connections')
+            ->callback(function (bool $commit, Group $pools, Cache $cache, Database $dbForConsole, Registry $register, Authorization $auth, Connections $connections) {
+                $this->action($commit, $pools, $cache, $dbForConsole, $register, $auth, $connections);
             });
     }
 
 
-    public function action(bool $commit, Group $pools, Cache $cache, Database $dbForConsole, Registry $register, Authorization $auth): void
+    public function action(bool $commit, Group $pools, Cache $cache, Database $dbForConsole, Registry $register, Authorization $auth, Connections $connections): void
     {
 
         Console::title('Delete orphaned projects V1');
@@ -87,10 +89,9 @@ class DeleteOrphanedProjects extends Action
 
                 try {
                     $db = $project->getAttribute('database');
-                    $adapter = $pools
-                        ->get($db)
-                        ->pop()
-                        ->getResource();
+                    $connection = $pools->get($db)->pop();
+                    $connections->add($connection);
+                    $adapter = $connection->getResource();
 
                     $dbForProject = new Database($adapter, $cache);
                     $dbForProject->setAuthorization($auth);

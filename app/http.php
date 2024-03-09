@@ -15,8 +15,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Http\Adapter\Swoole\Request as SwooleRequest;
-use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Http\Adapter\Swoole\Server;
 use Utopia\Http\Http;
 use Utopia\Pools\Group;
@@ -209,4 +207,3 @@ go(function () use ($register, $http, $payloadSize) {
 
     $http->start();
 });
-

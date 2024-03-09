@@ -3,6 +3,7 @@
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -69,7 +70,8 @@ Http::get('/v1/health/db')
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->inject('pools')
-    ->action(function (Response $response, Group $pools) {
+    ->inject('connections')
+    ->action(function (Response $response, Group $pools, Connections $connections) {
 
         $output = [];
 
@@ -81,7 +83,9 @@ Http::get('/v1/health/db')
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
                 try {
-                    $adapter = $pools->get($database)->pop()->getResource();
+                    $connection = $pools->get($database)->pop();
+                    $connections->add($connection);
+                    $adapter = $connection->getResource();
 
                     $checkStart = \microtime(true);
 
@@ -123,7 +127,8 @@ Http::get('/v1/health/cache')
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->inject('pools')
-    ->action(function (Response $response, Group $pools) {
+    ->inject('connections')
+    ->action(function (Response $response, Group $pools, Connections $connections) {
 
         $output = [];
 
@@ -134,7 +139,9 @@ Http::get('/v1/health/cache')
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
                 try {
-                    $adapter = $pools->get($database)->pop()->getResource();
+                    $connection = $pools->get($database)->pop();
+                    $connections->add($connection);
+                    $adapter = $connection->getResource();
 
                     $checkStart = \microtime(true);
 
@@ -180,7 +187,8 @@ Http::get('/v1/health/queue')
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->inject('pools')
-    ->action(function (Response $response, Group $pools) {
+    ->inject('connections')
+    ->action(function (Response $response, Group $pools, Connections $connections) {
 
         $output = [];
 
@@ -191,7 +199,9 @@ Http::get('/v1/health/queue')
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
                 try {
-                    $adapter = $pools->get($database)->pop()->getResource();
+                    $connection = $pools->get($database)->pop();
+                    $connections->add($connection);
+                    $adapter = $connection->getResource();
 
                     $checkStart = \microtime(true);
 
@@ -237,7 +247,8 @@ Http::get('/v1/health/pubsub')
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->inject('pools')
-    ->action(function (Response $response, Group $pools) {
+    ->inject('connections')
+    ->action(function (Response $response, Group $pools, Connections $connections) {
 
         $output = [];
 
@@ -248,7 +259,9 @@ Http::get('/v1/health/pubsub')
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
                 try {
-                    $adapter = $pools->get($database)->pop()->getResource();
+                    $connection = $pools->get($database)->pop();
+                    $connections->add($connection);
+                    $adapter = $connection->getResource();
 
                     $checkStart = \microtime(true);
 

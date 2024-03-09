@@ -40,6 +40,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Utopia\Queue\Connections;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
@@ -1043,10 +1044,16 @@ Http::setResource('localeCodes', function () {
     return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
 });
 
+Http::setResource('connections', function () {
+    return new Connections();
+});
+
 // Queues
-Http::setResource('queue', function (Group $pools) {
-    return $pools->get('queue')->pop()->getResource();
-}, ['pools']);
+Http::setResource('queue', function (Group $pools, Connections $connections) {
+    $connection = $pools->get('queue')->pop();
+    $connections->add($connection);
+    return $connection->getResource();
+}, ['pools', 'connections']);
 Http::setResource('queueForMessaging', function (Connection $queue) {
     return new Messaging($queue);
 }, ['queue']);
@@ -1307,15 +1314,14 @@ Http::setResource('console', function () {
     ]);
 }, []);
 
-Http::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project, Authorization $auth) {
+Http::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project, Authorization $auth, Connections $connections) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
     }
 
-    $dbAdapter = $pools
-        ->get($project->getAttribute('database'))
-        ->pop()
-        ->getResource();
+    $connection = $pools->get($project->getAttribute('database'))->pop();
+    $connections->add($connection);
+    $dbAdapter = $connection->getResource();
 
     $database = new Database($dbAdapter, $cache);
     $database->setAuthorization($auth);
@@ -1327,14 +1333,12 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForConsole
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
-}, ['pools', 'dbForConsole', 'cache', 'project', 'auth']);
+}, ['pools', 'dbForConsole', 'cache', 'project', 'auth', 'connections']);
 
-Http::setResource('dbForConsole', function (Group $pools, Cache $cache, Authorization $auth) {
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource()
-    ;
+Http::setResource('dbForConsole', function (Group $pools, Cache $cache, Authorization $auth, Connections $connections) {
+    $connection = $pools->get('console')->pop();
+    $connections->add($connection);
+    $dbAdapter = $connection->getResource();
 
     $database = new Database($dbAdapter, $cache);
     $database->setAuthorization($auth);
@@ -1346,12 +1350,12 @@ Http::setResource('dbForConsole', function (Group $pools, Cache $cache, Authoriz
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
-}, ['pools', 'cache', 'auth']);
+}, ['pools', 'cache', 'auth', 'connections']);
 
-Http::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache, Authorization $auth) {
+Http::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache, Authorization $auth, Connections $connections) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $auth) {
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $auth, $connections) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -1370,10 +1374,9 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForConsole
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get($databaseName)
-            ->pop()
-            ->getResource();
+        $connection = $pools->get($databaseName)->pop();
+        $connections->add($connection);
+        $dbAdapter = $connection->getResource();
 
         $database = new Database($dbAdapter, $cache);
         $database->setAuthorization($auth);
@@ -1390,22 +1393,20 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForConsole
     };
 
     return $getProjectDB;
-}, ['pools', 'dbForConsole', 'cache', 'auth']);
+}, ['pools', 'dbForConsole', 'cache', 'auth', 'connections']);
 
-Http::setResource('cache', function (Group $pools) {
+Http::setResource('cache', function (Group $pools, Connections $connections) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
     foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource()
-        ;
+        $connection = $pools->get($value)->pop();
+        $connections->add($connection);
+        $adapters[] = $connection->getResource();
     }
 
     return new Cache(new Sharding($adapters));
-}, ['pools']);
+}, ['pools', 'connections']);
 
 Http::setResource('deviceForLocal', function () {
     return new Local();
