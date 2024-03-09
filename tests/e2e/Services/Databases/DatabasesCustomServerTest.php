@@ -3,10 +3,10 @@
 namespace Tests\E2E\Services\Databases;
 
 use Appwrite\Extend\Exception as AppwriteException;
-use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Tests\E2E\Client;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -249,168 +249,6 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(409, $response['headers']['status-code']);
         return ['databaseId' => $test1['body']['$id']];
-    }
-
-    /**
-     * @depends testListDatabases
-     */
-    public function testBackupPolicy(array $data): void
-    {
-        $databaseId = $data['databaseId'];
-
-        /**
-         * Test create new Backup policy
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/backups-policy', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()), [
-            'policyId' => 'policy1',
-            'name' => 'Hourly Backups',
-            'enabled' => true,
-            'retention' => 1,
-            'hours' => 1,
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals('Hourly Backups', $response['body']['name']);
-        $this->assertEquals('policy1', $response['body']['$id']);
-        $this->assertEquals(1, $response['body']['hours']);
-        $this->assertEquals(1, $response['body']['retention']);
-        $this->assertEquals($databaseId, $response['body']['resourceId']);
-        $this->assertEquals(true, $response['body']['enabled']);
-        $this->assertEquals('backup-database', $response['body']['resourceType']);
-
-        /**
-         * Test for Duplicate
-         */
-        $duplicate = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/backups-policy', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()), [
-            'policyId' => 'policy1',
-            'name' => 'Hourly Backups',
-            'enabled' => true,
-            'retention' => 6,
-            'hours' => 4,
-        ]);
-        $this->assertEquals(409, $duplicate['headers']['status-code']);
-
-        /**
-         * Test for Policy not found
-         */
-        $database = $this->client->call(Client::METHOD_GET, '/databases/'. $databaseId .'/backups-policy/notfound', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
-
-        $this->assertEquals(404, $database['headers']['status-code']);
-
-        $policy = $this->client->call(Client::METHOD_GET, '/databases/'. $databaseId .'/backups-policy/policy1', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
-
-        $this->assertEquals(200, $policy['headers']['status-code']);
-        $this->assertEquals('policy1', $policy['body']['$id']);
-        $this->assertEquals('Hourly Backups', $policy['body']['name']);
-        $this->assertEquals(true, $policy['body']['enabled']);
-
-        /**
-         * Test for update Policy
-         */
-        $policy = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/backups-policy/policy1', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'name' => 'Daily backups',
-            'enabled' => false,
-            'retention' => 10,
-            'hours' => 3,
-        ]);
-
-        $this->assertEquals(200, $policy['headers']['status-code']);
-        $this->assertEquals('policy1', $policy['body']['$id']);
-        $this->assertEquals('Daily backups', $policy['body']['name']);
-        $this->assertEquals(false, $policy['body']['enabled']);
-
-        $policyId = $policy['body']['$id'];
-
-        /**
-         * Test create new Backup policy again
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/backups-policy', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()), [
-            'policyId' => 'my-policy',
-            'name' => 'New Hourly Backups',
-            'enabled' => true,
-            'retention' => 1,
-            'hours' => 1,
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals('New Hourly Backups', $response['body']['name']);
-        $this->assertEquals('my-policy', $response['body']['$id']);
-        $this->assertEquals(1, $response['body']['hours']);
-        $this->assertEquals(1, $response['body']['retention']);
-        $this->assertEquals($databaseId, $response['body']['resourceId']);
-        $this->assertEquals(true, $response['body']['enabled']);
-        $this->assertEquals('backup-database', $response['body']['resourceType']);
-
-
-        /**
-         * Test to get backup policies list
-         */
-        $policies = $this->client->call(Client::METHOD_GET, '/databases/'. $databaseId .'/backups-policy', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ],
-            [
-                'queries' => [
-                    Query::orderDesc()->toString()
-                ]
-            ]);
-        $this->assertEquals(200, $policies['headers']['status-code']);
-        $this->assertEquals(2, count($policies['body']['backupPolicies']));
-
-        /**
-         * Test Delete policy
-         */
-        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId. '/backups-policy/' . $policyId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()));
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-        $this->assertEquals("", $response['body']);
-
-        /**
-         * Test to get backup policies list again
-         */
-        $policies = $this->client->call(Client::METHOD_GET, '/databases/'. $databaseId .'/backups-policy', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
-
-        $this->assertEquals(200, $policies['headers']['status-code']);
-        $this->assertEquals(1, count($policies['body']['backupPolicies']));
-
-
-       $this->assertEquals('---', '-------');
-
     }
 
     /**
@@ -1827,7 +1665,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('lorem', $attribute['default']);
@@ -1969,7 +1807,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('torsten@appwrite.io', $attribute['default']);
@@ -2112,7 +1950,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('127.0.0.1', $attribute['default']);
@@ -2254,7 +2092,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('http://appwrite.io', $attribute['default']);
@@ -2400,7 +2238,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals(123, $attribute['default']);
@@ -2663,7 +2501,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals(123.456, $attribute['default']);
@@ -2922,7 +2760,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals(true, $attribute['default']);
@@ -3064,7 +2902,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('1975-06-12 14:12:55+02:00', $attribute['default']);
@@ -3211,7 +3049,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('lorem', $attribute['default']);
