@@ -424,7 +424,8 @@ App::post('/v1/project/backups-policy')
                 'resourceInternalId' => $project->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
-                'schedule'  => "0 */{$hours} * * *",
+                //'schedule'  => "0 */{$hours} * * *",
+                'schedule'  => "* * * * *",
                 'active' => $enabled,
             ]))
         );

@@ -37,6 +37,7 @@ class Migrations extends Action
     private ?Database $dbForProject = null;
     private ?Database $dbForConsole = null;
     private Device $deviceForFiles;
+    private Document $backup;
 
     public static function getName(): string
     {
@@ -77,6 +78,7 @@ class Migrations extends Action
         $events    = $payload['events'] ?? [];
         $project   = new Document($payload['project'] ?? []);
         $migration = new Document($payload['migration'] ?? []);
+        $backup = new Document($payload['backup'] ?? []);
 
         if ($project->getId() === 'console') {
             return;
@@ -85,6 +87,7 @@ class Migrations extends Action
         $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
         $this->deviceForFiles = $deviceForFiles;
+        $this->backup = $backup;
 
         /**
          * Handle Event execution.
@@ -109,6 +112,7 @@ class Migrations extends Action
         return match ($destination)
         {
             DestinationBackup::getName() => new DestinationBackup(
+                $this->backup,
                 __DIR__ . '/localBackup/',
                 $this->dbForProject,
                 $this->deviceForFiles
@@ -152,6 +156,7 @@ class Migrations extends Action
                 $credentials['port'],
             ),
             sourceBackup::getName() => new SourceBackup(
+
                '',
                 $this->dbForProject,
                 $this->deviceForFiles

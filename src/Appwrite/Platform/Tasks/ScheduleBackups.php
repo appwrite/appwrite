@@ -123,20 +123,18 @@ class ScheduleBackups extends ScheduleBase
                         'errors' => [],
                     ]));
 
-                    $dbForProject->createDocument('backups', new Document([
+                    $backup = $dbForProject->createDocument('backups', new Document([
+                        'migrationId' => $migration->getId(),
+                        'migrationInternalId' => $migration->getInternalId(),
+                        'status' => 'pending',
                         'policyId' => $policy->getId(),
                         'policyInternalId' => $policy->getInternalId(),
                     ]));
 
-                    $queueForMigrations = new Migration($connection);
-
-                    $queueForMigrations
+                    (new Migration($connection))
                         ->setMigration($migration)
                         ->setProject($project)
-                        ->setParams([
-                             'policyId' => $policy->getId(),
-                             'policyInternalId' => $policy->getInternalId(),
-                        ])
+                        ->setBackup($backup)
                         ->trigger();
                 }
 
