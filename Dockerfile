@@ -65,6 +65,7 @@ RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/certificates && \
     mkdir -p /storage/functions && \
     mkdir -p /storage/debug && \
+    mkdir -p /storage/backups && \
     chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
     chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
     chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \

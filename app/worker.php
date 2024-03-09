@@ -226,6 +226,11 @@ Server::setResource('deviceForLocalFiles', function (Document $project) {
     return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
+Server::setResource('deviceForBackups', function ($project) {
+    return getDevice(APP_STORAGE_BACKUPS . '/app-' . $project->getId());
+}, ['project']);
+
+
 $pools = $register->get('pools');
 $platform = new Appwrite();
 $args = $_SERVER['argv'];

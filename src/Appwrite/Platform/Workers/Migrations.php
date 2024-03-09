@@ -36,7 +36,7 @@ class Migrations extends Action
 {
     private ?Database $dbForProject = null;
     private ?Database $dbForConsole = null;
-    private Device $deviceForFiles;
+    private Device $deviceForBackups;
     private Document $backup;
 
     public static function getName(): string
@@ -54,9 +54,9 @@ class Migrations extends Action
             ->inject('message')
             ->inject('dbForProject')
             ->inject('dbForConsole')
-            ->inject('deviceForFiles')
+            ->inject('deviceForBackups')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Device $deviceForFiles, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $deviceForFiles, $log));
+            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Device $deviceForBackups, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $deviceForBackups, $log));
     }
 
     /**
@@ -67,7 +67,7 @@ class Migrations extends Action
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Device $deviceForFiles, Log $log): void
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Device $deviceForBackups, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -86,7 +86,7 @@ class Migrations extends Action
 
         $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
-        $this->deviceForFiles = $deviceForFiles;
+        $this->deviceForBackups = $deviceForBackups;
         $this->backup = $backup;
 
         /**
@@ -113,9 +113,9 @@ class Migrations extends Action
         {
             DestinationBackup::getName() => new DestinationBackup(
                 $this->backup,
-                __DIR__ . '/localBackup/',
+                $this->deviceForBackups,
                 $this->dbForProject,
-                $this->deviceForFiles
+
             ),
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $credentials['projectId'],

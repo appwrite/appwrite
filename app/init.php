@@ -122,6 +122,7 @@ const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1_073_741_824; // 2^32 bits / 4 bits per char
 const APP_DATABASE_TIMEOUT_MILLISECONDS = 15_000;
+const APP_STORAGE_BACKUPS = '/storage/backups';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
@@ -1418,6 +1419,10 @@ App::setResource('deviceForFunctions', function ($project) {
 
 App::setResource('deviceForBuilds', function ($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+}, ['project']);
+
+App::setResource('deviceForBackups', function ($project) {
+    return getDevice(APP_STORAGE_BACKUPS . '/app-' . $project->getId());
 }, ['project']);
 
 function getDevice($root): Device

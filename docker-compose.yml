@@ -604,6 +604,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
+      -  appwrite-backups:/storage/backups:rw
       - ./vendor/utopia-php/migration:/usr/src/code/vendor/utopia-php/migration
 
     depends_on:
@@ -1080,3 +1081,4 @@ volumes:
   appwrite-functions:
   appwrite-builds:
   appwrite-config:
+  appwrite-backups:
