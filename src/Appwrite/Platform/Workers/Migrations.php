@@ -120,7 +120,11 @@ class Migrations extends Action
                 $credentials['password'],
                 $credentials['port'],
             ),
-            Appwrite::getName() => new Appwrite($credentials['projectId'], str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']),
+            Appwrite::getName() => new Appwrite(
+                $credentials['projectId'],
+                str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'],
+                $credentials['apiKey']
+            ),
             default => throw new \Exception('Invalid source type'),
         };
     }

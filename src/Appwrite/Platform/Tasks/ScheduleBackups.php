@@ -129,6 +129,7 @@ class ScheduleBackups extends ScheduleBase
                     ]));
 
                     $queueForMigrations = new Migration($connection);
+
                     $queueForMigrations
                         ->setMigration($migration)
                         ->setProject($project)
