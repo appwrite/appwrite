@@ -117,9 +117,10 @@ class Migrations extends Action
                 $this->dbForProject,
                 $this->deviceForFiles
             ),
-            DestinationAppwrite::getName() =>
-            new DestinationAppwrite($credentials['projectId'],
-                str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']),
+            DestinationAppwrite::getName() => new DestinationAppwrite(
+                $credentials['projectId'],
+                str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']
+            ),
             default => throw new \Exception('Invalid destination type'),
         };
     }
@@ -305,14 +306,19 @@ class Migrations extends Action
 
             $log->addTag('type', $migrationDocument->getAttribute('source'));
 
-            $source = $this->processSource($migrationDocument->getAttribute('source'), $migrationDocument->getAttribute('credentials'));
+            $source = $this->processSource(
+                $migrationDocument->getAttribute('source'),
+                $migrationDocument->getAttribute('credentials')
+            );
+
             $destination = $this->processDestination(
                 //$migrationDocument->getAttribute('destination')
                 Backup::getName(), [
-                'projectId' => $projectDocument->getId(),
-                'endpoint'  => 'http://appwrite/v1',
-                'apiKey'    => $tempAPIKey['secret'],
-            ]);
+                    'projectId' => $projectDocument->getId(),
+                    'endpoint'  => 'http://appwrite/v1',
+                    'apiKey'    => $tempAPIKey['secret']
+                ]
+            );
 
             $source->report();
 
