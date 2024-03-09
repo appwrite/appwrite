@@ -113,9 +113,8 @@ class Migrations extends Action
         {
             DestinationBackup::getName() => new DestinationBackup(
                 $this->backup,
-                $this->deviceForBackups,
                 $this->dbForProject,
-
+                $this->deviceForBackups,
             ),
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $credentials['projectId'],
