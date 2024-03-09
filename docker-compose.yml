@@ -604,6 +604,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
+      - ./vendor/utopia-php/migration:/usr/src/code/vendor/utopia-php/migration
+
     depends_on:
       - mariadb
     environment:
