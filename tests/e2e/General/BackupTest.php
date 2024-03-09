@@ -30,18 +30,15 @@ class BackupTest extends Scope
 
     protected function getConsoleHeaders(): array
     {
-        return [
-            'content-type' => 'application/json',
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-mode' => 'admin'
-        ];
+        return (
+            array_merge($this->getConsoleHeadersGet(), ['content-type' => 'application/json'])
+        );
     }
 
     protected function getConsoleHeadersGet(): array
     {
         return [
+            'content-type' => 'application/json',
             'origin' => 'http://localhost',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => $this->getProject()['$id'],
