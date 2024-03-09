@@ -619,7 +619,7 @@ App::delete('/v1/project/backups-policy/:policyId')
         $response->noContent();
     });
 
-App::get('/v1/databases/:databaseId/backups-policy/:policyId/backups')
+App::get('/v1/project/backups-policy/:policyId/backups')
     ->groups(['api'])
     ->desc('Get database backups by policy id')
     ->label('scope', 'projects.read')

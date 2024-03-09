@@ -113,9 +113,9 @@ class ScheduleBackups extends ScheduleBase
                         'stage' => 'init',
                         'source' => Appwrite::getName(),
                         'credentials' => [
-                            'endpoint' => '127.0.0.1/v1',
+                            'endpoint' => 'http://localhost/v1',
                             'projectId' => $project->getId(),
-                            'apiKey' => $project['secret'],
+                            'apiKey' => $apiKey,
                         ],
                         'resources' => $resources,
                         'statusCounters' => '{}',

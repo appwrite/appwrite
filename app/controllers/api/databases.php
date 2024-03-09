@@ -3966,7 +3966,7 @@ App::post('/v1/databases/:databaseId/backups-policy')
                 'resourceInternalId' => $database->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
-                'schedule'  => "0 */{$hours} * * *",
+                'schedule'  => "* */{$hours} * * *",
                 'active' => $enabled,
             ]))
         );

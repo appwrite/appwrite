@@ -16,21 +16,27 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Logger\Log;
-use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
+use Utopia\Migration\Destination;
+use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
+use Utopia\Migration\Destinations\Backup;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
-use Utopia\Migration\Sources\Appwrite;
+use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
+use Utopia\Migration\Sources\Backup as SourceBackup;
+use Utopia\Migration\Destinations\Backup as DestinationBackup;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Storage\Device;
 
 class Migrations extends Action
 {
     private ?Database $dbForProject = null;
     private ?Database $dbForConsole = null;
+    private Device $deviceForFiles;
 
     public static function getName(): string
     {
@@ -47,8 +53,9 @@ class Migrations extends Action
             ->inject('message')
             ->inject('dbForProject')
             ->inject('dbForConsole')
+            ->inject('deviceForFiles')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $log));
+            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Device $deviceForFiles, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $deviceForFiles, $log));
     }
 
     /**
@@ -59,7 +66,7 @@ class Migrations extends Action
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log): void
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Device $deviceForFiles, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -77,6 +84,7 @@ class Migrations extends Action
 
         $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
+        $this->deviceForFiles = $deviceForFiles;
 
         /**
          * Handle Event execution.
@@ -89,6 +97,29 @@ class Migrations extends Action
 
         $this->processMigration($project, $migration, $log);
     }
+
+    /**
+     * @param string $destination
+     * @param array $credentials
+     * @return Destination
+     * @throws Exception
+     */
+    protected function processDestination(string $destination, array $credentials): Destination
+    {
+        return match ($destination)
+        {
+            DestinationBackup::getName() => new DestinationBackup(
+                __DIR__ . '/localBackup/',
+                $this->dbForProject,
+                $this->deviceForFiles
+            ),
+            DestinationAppwrite::getName() =>
+            new DestinationAppwrite($credentials['projectId'],
+                str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']),
+            default => throw new \Exception('Invalid destination type'),
+        };
+    }
+
 
     /**
      * @param string $source
@@ -120,7 +151,16 @@ class Migrations extends Action
                 $credentials['password'],
                 $credentials['port'],
             ),
-            Appwrite::getName() => new Appwrite($credentials['projectId'], str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']),
+            sourceBackup::getName() => new SourceBackup(
+               '',
+                $this->dbForProject,
+                $this->deviceForFiles
+            ),
+            SourceAppwrite::getName() => new SourceAppwrite(
+                $credentials['projectId'],
+                str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'],
+                $credentials['apiKey']
+            ),
             default => throw new \Exception('Invalid source type'),
         };
     }
@@ -261,19 +301,17 @@ class Migrations extends Action
             $log->addTag('type', $migrationDocument->getAttribute('source'));
 
             $source = $this->processSource($migrationDocument->getAttribute('source'), $migrationDocument->getAttribute('credentials'));
+            $destination = $this->processDestination(
+                //$migrationDocument->getAttribute('destination')
+                Backup::getName(), [
+                'projectId' => $projectDocument->getId(),
+                'endpoint'  => 'http://appwrite/v1',
+                'apiKey'    => $tempAPIKey['secret'],
+            ]);
 
             $source->report();
 
-            $destination = new DestinationsAppwrite(
-                $projectDocument->getId(),
-                'http://appwrite/v1',
-                $tempAPIKey['secret'],
-            );
-
-            $transfer = new Transfer(
-                $source,
-                $destination
-            );
+            $transfer = new Transfer($source, $destination);
 
             /** Start Transfer */
             $migrationDocument->setAttribute('stage', 'migrating');
