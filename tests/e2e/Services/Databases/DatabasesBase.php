@@ -4266,7 +4266,7 @@ trait DatabasesBase
             ], $this->getHeaders()), [
                 'documentId' => ID::unique(),
                 'data' => [
-                    'longtext' => file_get_contents(__DIR__ . '/../../../extensionsresources/longtext.txt'),
+                    'longtext' => file_get_contents(__DIR__ . '/../../../resources/longtext.txt'),
                 ],
                 'permissions' => [
                     Permission::read(Role::user($this->getUser()['$id'])),
