@@ -11,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Migration\Destinations\Backup;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Pools\Group;
@@ -110,10 +111,11 @@ class ScheduleBackups extends ScheduleBase
                     $migration = $dbForProject->createDocument('migrations', new Document([
                         '$id' => ID::unique(),
                         'status' => 'pending',
-                        'stage' => 'init',
+                        'stage'  => 'init',
                         'source' => Appwrite::getName(),
-                        'credentials' => [
-                            'endpoint' => 'http://localhost/v1',
+                        'destination' => Backup::getName(),
+                        'credentials'   => [
+                            'endpoint'  => 'http://localhost/v1',
                             'projectId' => $project->getId(),
                             'apiKey' => $apiKey,
                         ],

@@ -311,8 +311,7 @@ class Migrations extends Action
             );
 
             $destination = $this->processDestination(
-                //$migrationDocument->getAttribute('destination')
-                Backup::getName(), [
+                $migrationDocument->getAttribute('destination'), [
                     'projectId' => $projectDocument->getId(),
                     'endpoint'  => 'http://appwrite/v1',
                     'apiKey'    => $tempAPIKey['secret']

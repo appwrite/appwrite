@@ -4364,6 +4364,17 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('destination'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 8192,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('credentials'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
