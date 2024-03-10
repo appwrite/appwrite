@@ -41,213 +41,222 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 use function Swoole\Coroutine\batch;
 
 $createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForConsole, Build $queueForBuilds, callable $getProjectDB, Request $request) {
+    $errors = [];
     foreach ($repositories as $resource) {
-        $resourceType = $resource->getAttribute('resourceType');
+        try {
+            $resourceType = $resource->getAttribute('resourceType');
 
-        if ($resourceType === "function") {
-            $projectId = $resource->getAttribute('projectId');
-            $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
-            $dbForProject = $getProjectDB($project);
+            if ($resourceType === "function") {
+                $projectId = $resource->getAttribute('projectId');
+                $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+                $dbForProject = $getProjectDB($project);
 
-            $functionId = $resource->getAttribute('resourceId');
-            $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
-            $functionInternalId = $function->getInternalId();
+                $functionId = $resource->getAttribute('resourceId');
+                $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+                $functionInternalId = $function->getInternalId();
 
-            $deploymentId = ID::unique();
-            $repositoryId = $resource->getId();
-            $repositoryInternalId = $resource->getInternalId();
-            $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
-            $installationId = $resource->getAttribute('installationId');
-            $installationInternalId = $resource->getAttribute('installationInternalId');
-            $productionBranch = $function->getAttribute('providerBranch');
-            $activate = false;
+                $deploymentId = ID::unique();
+                $repositoryId = $resource->getId();
+                $repositoryInternalId = $resource->getInternalId();
+                $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
+                $installationId = $resource->getAttribute('installationId');
+                $installationInternalId = $resource->getAttribute('installationInternalId');
+                $productionBranch = $function->getAttribute('providerBranch');
+                $activate = false;
 
-            if ($providerBranch == $productionBranch && $external === false) {
-                $activate = true;
-            }
+                if ($providerBranch == $productionBranch && $external === false) {
+                    $activate = true;
+                }
 
-            $owner = $github->getOwnerName($providerInstallationId) ?? '';
-            try {
-                $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+                $owner = $github->getOwnerName($providerInstallationId) ?? '';
+                try {
+                    $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+                    if (empty($repositoryName)) {
+                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                    }
+                } catch (RepositoryNotFound $e) {
+                    throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                }
+
                 if (empty($repositoryName)) {
                     throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                 }
-            } catch (RepositoryNotFound $e) {
-                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-            }
 
-            if (empty($repositoryName)) {
-                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-            }
+                $isAuthorized = !$external;
 
-            $isAuthorized = !$external;
-
-            if (!$isAuthorized && !empty($providerPullRequestId)) {
-                if (\in_array($providerPullRequestId, $resource->getAttribute('providerPullRequestIds', []))) {
-                    $isAuthorized = true;
-                }
-            }
-
-            $commentStatus = $isAuthorized ? 'waiting' : 'failed';
-
-            $authorizeUrl = $request->getProtocol() . '://' . $request->getHostname() . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
-
-            $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
-
-            $latestCommentId = '';
-
-            if (!empty($providerPullRequestId)) {
-                $latestComment = Authorization::skip(fn () => $dbForConsole->findOne('vcsComments', [
-                    Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                    Query::equal('providerPullRequestId', [$providerPullRequestId]),
-                    Query::orderDesc('$createdAt'),
-                ]));
-
-                if ($latestComment !== false && !$latestComment->isEmpty()) {
-                    $latestCommentId = $latestComment->getAttribute('providerCommentId', '');
-                    $comment = new Comment();
-                    $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
-
-                    $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
-                } else {
-                    $comment = new Comment();
-                    $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
-                    $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
-
-                    if (!empty($latestCommentId)) {
-                        $teamId = $project->getAttribute('teamId', '');
-
-                        $latestComment = Authorization::skip(fn () => $dbForConsole->createDocument('vcsComments', new Document([
-                            '$id' => ID::unique(),
-                            '$permissions' => [
-                                Permission::read(Role::team(ID::custom($teamId))),
-                                Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                                Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                            ],
-                            'installationInternalId' => $installationInternalId,
-                            'installationId' => $installationId,
-                            'projectInternalId' => $project->getInternalId(),
-                            'projectId' => $project->getId(),
-                            'providerRepositoryId' => $providerRepositoryId,
-                            'providerBranch' => $providerBranch,
-                            'providerPullRequestId' => $providerPullRequestId,
-                            'providerCommentId' => $latestCommentId
-                        ])));
+                if (!$isAuthorized && !empty($providerPullRequestId)) {
+                    if (\in_array($providerPullRequestId, $resource->getAttribute('providerPullRequestIds', []))) {
+                        $isAuthorized = true;
                     }
                 }
-            } elseif (!empty($providerBranch)) {
-                $latestComments = Authorization::skip(fn () => $dbForConsole->find('vcsComments', [
-                    Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                    Query::equal('providerBranch', [$providerBranch]),
-                    Query::orderDesc('$createdAt'),
-                ]));
 
-                foreach ($latestComments as $comment) {
-                    $latestCommentId = $comment->getAttribute('providerCommentId', '');
-                    $comment = new Comment();
-                    $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
+                $commentStatus = $isAuthorized ? 'waiting' : 'failed';
 
-                    $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                $authorizeUrl = $request->getProtocol() . '://' . $request->getHostname() . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
+
+                $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
+
+                $latestCommentId = '';
+
+                if (!empty($providerPullRequestId)) {
+                    $latestComment = Authorization::skip(fn () => $dbForConsole->findOne('vcsComments', [
+                        Query::equal('providerRepositoryId', [$providerRepositoryId]),
+                        Query::equal('providerPullRequestId', [$providerPullRequestId]),
+                        Query::orderDesc('$createdAt'),
+                    ]));
+
+                    if ($latestComment !== false && !$latestComment->isEmpty()) {
+                        $latestCommentId = $latestComment->getAttribute('providerCommentId', '');
+                        $comment = new Comment();
+                        $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
+                        $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
+
+                        $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                    } else {
+                        $comment = new Comment();
+                        $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
+                        $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
+
+                        if (!empty($latestCommentId)) {
+                            $teamId = $project->getAttribute('teamId', '');
+
+                            $latestComment = Authorization::skip(fn () => $dbForConsole->createDocument('vcsComments', new Document([
+                                '$id' => ID::unique(),
+                                '$permissions' => [
+                                    Permission::read(Role::team(ID::custom($teamId))),
+                                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                                ],
+                                'installationInternalId' => $installationInternalId,
+                                'installationId' => $installationId,
+                                'projectInternalId' => $project->getInternalId(),
+                                'projectId' => $project->getId(),
+                                'providerRepositoryId' => $providerRepositoryId,
+                                'providerBranch' => $providerBranch,
+                                'providerPullRequestId' => $providerPullRequestId,
+                                'providerCommentId' => $latestCommentId
+                            ])));
+                        }
+                    }
+                } elseif (!empty($providerBranch)) {
+                    $latestComments = Authorization::skip(fn () => $dbForConsole->find('vcsComments', [
+                        Query::equal('providerRepositoryId', [$providerRepositoryId]),
+                        Query::equal('providerBranch', [$providerBranch]),
+                        Query::orderDesc('$createdAt'),
+                    ]));
+
+                    foreach ($latestComments as $comment) {
+                        $latestCommentId = $comment->getAttribute('providerCommentId', '');
+                        $comment = new Comment();
+                        $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
+                        $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
+
+                        $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                    }
                 }
-            }
 
-            if (!$isAuthorized) {
-                $functionName = $function->getAttribute('name');
-                $projectName = $project->getAttribute('name');
-                $name = "{$functionName} ({$projectName})";
-                $message = 'Authorization required for external contributor.';
+                if (!$isAuthorized) {
+                    $functionName = $function->getAttribute('name');
+                    $projectName = $project->getAttribute('name');
+                    $name = "{$functionName} ({$projectName})";
+                    $message = 'Authorization required for external contributor.';
 
-                $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
-                try {
-                    $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-                    if (empty($repositoryName)) {
+                    $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
+                    try {
+                        $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+                        if (empty($repositoryName)) {
+                            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                        }
+                    } catch (RepositoryNotFound $e) {
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
-                } catch (RepositoryNotFound $e) {
-                    throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                    $owner = $github->getOwnerName($providerInstallationId);
+                    $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $authorizeUrl, $name);
+                    continue;
                 }
-                $owner = $github->getOwnerName($providerInstallationId);
-                $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $authorizeUrl, $name);
-                continue;
-            }
 
-            if ($external) {
-                $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $providerPullRequestId);
-                $providerRepositoryName = $pullRequestResponse['head']['repo']['owner']['login'];
-                $providerRepositoryOwner = $pullRequestResponse['head']['repo']['name'];
-            }
+                if ($external) {
+                    $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $providerPullRequestId);
+                    $providerRepositoryName = $pullRequestResponse['head']['repo']['owner']['login'];
+                    $providerRepositoryOwner = $pullRequestResponse['head']['repo']['name'];
+                }
 
-            $deployment = $dbForProject->createDocument('deployments', new Document([
-                '$id' => $deploymentId,
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-                'resourceId' => $functionId,
-                'resourceInternalId' => $functionInternalId,
-                'resourceType' => 'functions',
-                'entrypoint' => $function->getAttribute('entrypoint'),
-                'commands' => $function->getAttribute('commands'),
-                'type' => 'vcs',
-                'installationId' => $installationId,
-                'installationInternalId' => $installationInternalId,
-                'providerRepositoryId' => $providerRepositoryId,
-                'repositoryId' => $repositoryId,
-                'repositoryInternalId' => $repositoryInternalId,
-                'providerBranchUrl' => $providerBranchUrl,
-                'providerRepositoryName' => $providerRepositoryName,
-                'providerRepositoryOwner' => $providerRepositoryOwner,
-                'providerRepositoryUrl' => $providerRepositoryUrl,
-                'providerCommitHash' => $providerCommitHash,
-                'providerCommitAuthorUrl' => $providerCommitAuthorUrl,
-                'providerCommitAuthor' => $providerCommitAuthor,
-                'providerCommitMessage' => $providerCommitMessage,
-                'providerCommitUrl' => $providerCommitUrl,
-                'providerCommentId' => \strval($latestCommentId),
-                'providerBranch' => $providerBranch,
-                'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
-                'activate' => $activate,
-            ]));
+                $deployment = $dbForProject->createDocument('deployments', new Document([
+                    '$id' => $deploymentId,
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                    'resourceId' => $functionId,
+                    'resourceInternalId' => $functionInternalId,
+                    'resourceType' => 'functions',
+                    'entrypoint' => $function->getAttribute('entrypoint'),
+                    'commands' => $function->getAttribute('commands'),
+                    'type' => 'vcs',
+                    'installationId' => $installationId,
+                    'installationInternalId' => $installationInternalId,
+                    'providerRepositoryId' => $providerRepositoryId,
+                    'repositoryId' => $repositoryId,
+                    'repositoryInternalId' => $repositoryInternalId,
+                    'providerBranchUrl' => $providerBranchUrl,
+                    'providerRepositoryName' => $providerRepositoryName,
+                    'providerRepositoryOwner' => $providerRepositoryOwner,
+                    'providerRepositoryUrl' => $providerRepositoryUrl,
+                    'providerCommitHash' => $providerCommitHash,
+                    'providerCommitAuthorUrl' => $providerCommitAuthorUrl,
+                    'providerCommitAuthor' => $providerCommitAuthor,
+                    'providerCommitMessage' => $providerCommitMessage,
+                    'providerCommitUrl' => $providerCommitUrl,
+                    'providerCommentId' => \strval($latestCommentId),
+                    'providerBranch' => $providerBranch,
+                    'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
+                    'activate' => $activate,
+                ]));
 
-            if (!empty($providerCommitHash) && $function->getAttribute('providerSilentMode', false) === false) {
-                $functionName = $function->getAttribute('name');
-                $projectName = $project->getAttribute('name');
-                $name = "{$functionName} ({$projectName})";
-                $message = 'Starting...';
+                if (!empty($providerCommitHash) && $function->getAttribute('providerSilentMode', false) === false) {
+                    $functionName = $function->getAttribute('name');
+                    $projectName = $project->getAttribute('name');
+                    $name = "{$functionName} ({$projectName})";
+                    $message = 'Starting...';
 
-                $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
-                try {
-                    $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-                    if (empty($repositoryName)) {
+                    $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
+                    try {
+                        $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+                        if (empty($repositoryName)) {
+                            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                        }
+                    } catch (RepositoryNotFound $e) {
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
-                } catch (RepositoryNotFound $e) {
-                    throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                    $owner = $github->getOwnerName($providerInstallationId);
+
+                    $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
+                    $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
                 }
-                $owner = $github->getOwnerName($providerInstallationId);
 
-                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
-                $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
+                $queueForBuilds
+                    ->setType(BUILD_TYPE_DEPLOYMENT)
+                    ->setResource($function)
+                    ->setDeployment($deployment)
+                    ->setProject($project); // set the project because it won't be set for git deployments
+
+                $queueForBuilds->trigger(); // must trigger here so that we create a build for each function
+
+                //TODO: Add event?
             }
-
-            $queueForBuilds
-                ->setType(BUILD_TYPE_DEPLOYMENT)
-                ->setResource($function)
-                ->setDeployment($deployment)
-                ->setProject($project); // set the project because it won't be set for git deployments
-
-            $queueForBuilds->trigger(); // must trigger here so that we create a build for each function
-
-            //TODO: Add event?
+        } catch (Throwable $e) {
+            $errors[] = $e->getMessage();
         }
     }
 
     $queueForBuilds->setType(''); // prevent shutdown hook from triggering again
+
+    if (!empty($errors)) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
+    }
 };
 
 App::get('/v1/vcs/github/authorize')
