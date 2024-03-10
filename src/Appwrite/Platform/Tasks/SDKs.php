@@ -19,6 +19,7 @@ use Appwrite\SDK\Language\REST;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Web;
+use Appwrite\SDK\Language\ReactNative;
 use Appwrite\SDK\SDK;
 use Appwrite\Spec\Swagger2;
 use Utopia\CLI\Console;
@@ -158,6 +159,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'flutter':
                         $config = new Flutter();
                         $config->setPackageName('appwrite');
+                        break;
+                    case 'react-native':
+                        $config = new ReactNative();
+                        $config->setNPMPackage('react-native-appwrite');
                         break;
                     case 'flutter-dev':
                         $config = new Flutter();
