@@ -238,11 +238,16 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
-                ->setDeployment($deployment);
+                ->setDeployment($deployment)
+                ->setProject($project); // set the project because it won't be set for git deployments
+
+            $queueForBuilds->trigger(); // must trigger here so that we create a build for each function
 
             //TODO: Add event?
         }
     }
+
+    $queueForBuilds->setType(''); // prevent shutdown hook from triggering again
 };
 
 App::get('/v1/vcs/github/authorize')
