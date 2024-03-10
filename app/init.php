@@ -1448,6 +1448,10 @@ function getDevice($root, $connection): Device
             Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
 
+        var_dump('#################');
+        var_dump($device);
+        var_dump('#################');
+
         switch ($device) {
             case Storage::DEVICE_S3:
                 return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
@@ -1464,7 +1468,9 @@ function getDevice($root, $connection): Device
                 return new Local($root);
         }
     } else {
-
+        var_dump('#################');
+        var_dump('the other way');
+        var_dump('#################');
         switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) ?? '')) {
             case Storage::DEVICE_LOCAL:
             default:

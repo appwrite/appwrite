@@ -8,9 +8,8 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Migration\Destinations\Backup;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
@@ -32,6 +31,10 @@ class ScheduleBackups extends ScheduleBase
         return 'backup-policy';
     }
 
+    /**
+     * @throws Exception
+     * @throws \Exception
+     */
     protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         $timerStart = \microtime(true);
@@ -71,7 +74,7 @@ class ScheduleBackups extends ScheduleBase
 
         foreach ($delayedExecutions as $delay => $scheduleKeys) {
             \go(/**
-             * @throws \Utopia\Database\Exception
+             * @throws Exception
              */ function () use ($getProjectDB, $delay, $scheduleKeys, $pools) {
                 \sleep($delay); // in seconds
 
@@ -107,7 +110,7 @@ class ScheduleBackups extends ScheduleBase
                     }
 
                     $policy = $schedule['resource'];
-                    var_dump($schedule);
+
                     $dbForProject = $getProjectDB($project);
                     $migration = $dbForProject->createDocument('migrations', new Document([
                         '$id' => ID::unique(),

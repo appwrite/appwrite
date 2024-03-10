@@ -3,12 +3,16 @@
 namespace Tests\E2E\General;
 
 use Appwrite\ID;
+use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Functions\FunctionsBase;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class BackupTest extends Scope
 {
@@ -258,6 +262,57 @@ class BackupTest extends Scope
         $this->assertEquals($this->getProject()['$id'], $response['body']['resourceId']);
         $this->assertEquals(true, $response['body']['enabled']);
         $this->assertEquals('backup-project', $response['body']['resourceType']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => \Utopia\Database\Helpers\ID::unique(),
+            'name' => 'Test Bucket',
+            'fileSecurity' => true,
+            'maximumFileSize' => 2000000, //2MB
+            'allowedFileExtensions' => ['jpg', 'png', 'jfif'],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucket['body']['$id']);
+
+        $bucketId = $bucket['body']['$id'];
+
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        var_dump($file);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertNotEmpty($file['body']['$id']);
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($file['body']['$createdAt']));
+        $this->assertEquals('logo.png', $file['body']['name']);
+        $this->assertEquals('image/png', $file['body']['mimeType']);
+        $this->assertEquals(47218, $file['body']['sizeOriginal']);
+        $this->assertTrue(md5_file(realpath(__DIR__ . '/../../resources/logo.png')) == $file['body']['signature']);
+
+
+
 
         /**
          * Test for Duplicate
