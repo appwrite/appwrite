@@ -23,7 +23,7 @@ abstract class ScheduleBase extends Action
     protected array $schedules = [];
 
     abstract public static function getName(): string;
-    abstract public static function getSupportedResource(): array;
+    abstract public static function getSupportedResource(): string;
 
     abstract protected function enqueueResources(
         Group $pools,
@@ -33,10 +33,10 @@ abstract class ScheduleBase extends Action
 
     public function __construct()
     {
-        $types = implode(',', static::getSupportedResource());
+        $type = static::getSupportedResource();
 
         $this
-            ->desc("Execute {$types}s scheduled in Appwrite")
+            ->desc("Execute {$type}s scheduled in Appwrite")
             ->inject('pools')
             ->inject('dbForConsole')
             ->inject('getProjectDB')
@@ -50,9 +50,8 @@ abstract class ScheduleBase extends Action
      */
     public function action(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
-        $types = implode(',', static::getSupportedResource());
-        Console::title(\ucfirst($types) . ' scheduler V1');
-        Console::success(APP_NAME . ' ' . \ucfirst($types) . ' scheduler v1 has started');
+        Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
+        Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
 
         /**
          * Extract only necessary attributes to lower memory used.
@@ -67,7 +66,7 @@ abstract class ScheduleBase extends Action
             $collectionId = match ($schedule->getAttribute('resourceType')) {
                 'function' => 'functions',
                 'message' => 'messages',
-                'backup-project', 'backup-database' => 'backupsPolicy',
+                'backup-policy' => 'backupsPolicy',
             };
 
             $resource = $getProjectDB($project)->getDocument(
@@ -103,7 +102,7 @@ abstract class ScheduleBase extends Action
 
             $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
                 Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
-                Query::equal('resourceType', static::getSupportedResource()),
+                Query::equal('resourceType', [static::getSupportedResource()]),
                 Query::equal('active', [true]),
             ]));
 
@@ -158,7 +157,7 @@ abstract class ScheduleBase extends Action
 
                     $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
                         Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
-                        Query::equal('resourceType', static::getSupportedResource()),
+                        Query::equal('resourceType', [static::getSupportedResource()]),
                         Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate),
                     ]));
 

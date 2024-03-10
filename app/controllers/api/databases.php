@@ -3961,12 +3961,13 @@ App::post('/v1/databases/:databaseId/backups-policy')
         $schedule = Authorization::skip(
             fn () => $dbForConsole->createDocument('schedules', new Document([
                 'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
-                'resourceType' => BACKUP_RESOURCE_DATABASE,
-                'resourceId' => $database->getId(),
-                'resourceInternalId' => $database->getInternalId(),
+                'resourceType' => BACKUP_RESOURCE_POLICY,
+                'resourceId' => $policy->getId(),
+                'resourceInternalId' => $policy->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
-                'schedule'  => "* */{$hours} * * *",
+                //'schedule'  => "* */{$hours} * * *",
+                'schedule'  => "* * * * *",
                 'active' => $enabled,
             ]))
         );

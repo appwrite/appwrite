@@ -16,9 +16,9 @@ class ScheduleMessages extends ScheduleBase
         return 'schedule-messages';
     }
 
-    public static function getSupportedResource(): array
+    public static function getSupportedResource(): string
     {
-        return ['message'];
+        return 'message';
     }
 
     protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void

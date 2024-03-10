@@ -249,6 +249,7 @@ const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 // Backups
 const BACKUP_RESOURCE_PROJECT = 'backup-project';
 const BACKUP_RESOURCE_DATABASE = 'backup-database';
+const BACKUP_RESOURCE_POLICY = 'backup-policy';
 
 
 $register = new Registry();

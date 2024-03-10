@@ -21,9 +21,9 @@ class ScheduleFunctions extends ScheduleBase
         return 'schedule-functions';
     }
 
-    public static function getSupportedResource(): array
+    public static function getSupportedResource(): string
     {
-        return ['function'];
+        return 'function';
     }
 
     protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void

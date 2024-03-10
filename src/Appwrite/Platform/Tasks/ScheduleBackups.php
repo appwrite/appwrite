@@ -27,9 +27,9 @@ class ScheduleBackups extends ScheduleBase
         return 'schedule-backups';
     }
 
-    public static function getSupportedResource(): array
+    public static function getSupportedResource(): string
     {
-        return ['backup-project', 'backup-database'];
+        return 'backup-policy';
     }
 
     protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
@@ -107,6 +107,7 @@ class ScheduleBackups extends ScheduleBase
                     }
 
                     $policy = $schedule['resource'];
+                    var_dump($schedule);
                     $dbForProject = $getProjectDB($project);
                     $migration = $dbForProject->createDocument('migrations', new Document([
                         '$id' => ID::unique(),
