@@ -51,20 +51,138 @@ class BackupTest extends Scope
     }
 
     public function testCreateDatabase(){
-        $test = $this->client->call(
-            Client::METHOD_POST,
-            '/databases',
-            $this->getConsoleHeaders(),
-            [
+
+            // Create database
+            $database = $this->client->call(Client::METHOD_POST, '/databases', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], [
                 'databaseId' => ID::custom('first'),
-                'name' => 'Test 1'
-            ]
-        );
+                'name' => 'Backup list database'
+            ]);
 
-        $this->assertEquals(201, $test['headers']['status-code']);
-        $this->assertEquals('Test 1', $test['body']['name']);
+            $this->assertNotEmpty($database['body']['$id']);
+            $this->assertEquals(201, $database['headers']['status-code']);
+            $this->assertEquals('Backup list database', $database['body']['name']);
 
-        return ['databaseId' => $test['body']['$id']];
+            $databaseId = $database['body']['$id'];
+
+            // Create Collection
+            $presidents = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'collectionId' => ID::unique(),
+                'name' => 'people',
+                'documentSecurity' => true,
+                'permissions' => [
+                    Permission::create(Role::user($this->getUser()['$id'])),
+                ],
+            ]);
+
+            $this->assertEquals(201, $presidents['headers']['status-code']);
+            $this->assertEquals($presidents['body']['name'], 'people');
+
+            // Create Attributes
+            $firstName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'first_name',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $firstName['headers']['status-code']);
+
+            $lastName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'last_name',
+                'size' => 256,
+                'required' => true,
+            ]);
+
+            $this->assertEquals(202, $lastName['headers']['status-code']);
+
+            // Wait for worker
+            sleep(2);
+
+            $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'first_name' => 'Donald',
+                    'last_name' => 'Trump',
+                ],
+                'permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                ]
+            ]);
+            $this->assertEquals(201, $document1['headers']['status-code']);
+
+            $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'first_name' => 'George',
+                    'last_name' => 'Bush',
+                ],
+                'permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                ]
+            ]);
+            $this->assertEquals(201, $document2['headers']['status-code']);
+
+            $document3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'first_name' => 'Joe',
+                    'last_name' => 'Biden',
+                ],
+                'permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                ]
+            ]);
+
+            $this->assertEquals(201, $document3['headers']['status-code']);
+
+            $documents = $this->client->call(
+                Client::METHOD_GET,
+                '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()),
+                [
+                    'queries' => [
+                        Query::select(['first_name', 'last_name'])->toString(),
+                        Query::or([
+                            Query::equal('first_name', ['Donald']),
+                            Query::equal('last_name', ['Bush'])
+                        ])->toString(),
+                        Query::limit(999)->toString(),
+                        Query::offset(0)->toString()
+                    ],
+                ]
+            );
+
+            $this->assertEquals(200, $documents['headers']['status-code']);
+            $this->assertCount(2, $documents['body']['documents']);
+
+
+        return ['databaseId' => $databaseId];
     }
 
     /**
@@ -237,31 +355,6 @@ class BackupTest extends Scope
 
     public function testProjectBackup(): void
     {
-        /**
-         * Test create new Backup policy
-         */
-        $response = $this->client->call(
-            Client::METHOD_POST,
-            '/project/backups-policy',
-            $this->getConsoleHeaders(),
-            [
-                'policyId' => 'policy2',
-                'name' => 'Hourly Backups',
-                'enabled' => true,
-                'retention' => 6,
-                'hours' => 4,
-            ]
-        );
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals('Hourly Backups', $response['body']['name']);
-        $this->assertEquals('policy2', $response['body']['$id']);
-        $this->assertEquals(4, $response['body']['hours']);
-        $this->assertEquals(6, $response['body']['retention']);
-        $this->assertEquals($this->getProject()['$id'], $response['body']['resourceId']);
-        $this->assertEquals(true, $response['body']['enabled']);
-        $this->assertEquals('backup-project', $response['body']['resourceType']);
 
         /**
          * Test for SUCCESS
@@ -301,7 +394,7 @@ class BackupTest extends Scope
                 Permission::delete(Role::any()),
             ],
         ]);
-        var_dump($file);
+
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
         $dateValidator = new DatetimeValidator();
@@ -313,6 +406,31 @@ class BackupTest extends Scope
 
 
 
+        /**
+         * Test create new Backup policy
+         */
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/project/backups-policy',
+            $this->getConsoleHeaders(),
+            [
+                'policyId' => 'policy2',
+                'name' => 'Hourly Backups',
+                'enabled' => true,
+                'retention' => 6,
+                'hours' => 4,
+            ]
+        );
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals('Hourly Backups', $response['body']['name']);
+        $this->assertEquals('policy2', $response['body']['$id']);
+        $this->assertEquals(4, $response['body']['hours']);
+        $this->assertEquals(6, $response['body']['retention']);
+        $this->assertEquals($this->getProject()['$id'], $response['body']['resourceId']);
+        $this->assertEquals(true, $response['body']['enabled']);
+        $this->assertEquals('backup-project', $response['body']['resourceType']);
 
         /**
          * Test for Duplicate
