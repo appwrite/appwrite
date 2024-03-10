@@ -1410,24 +1410,23 @@ App::setResource('deviceForLocal', function () {
 });
 
 App::setResource('deviceForFiles', function ($project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), App::getEnv('_APP_CONNECTIONS_STORAGE', ''));
 }, ['project']);
 
 App::setResource('deviceForFunctions', function ($project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), App::getEnv('_APP_CONNECTIONS_STORAGE', ''));
 }, ['project']);
 
 App::setResource('deviceForBuilds', function ($project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId(), App::getEnv('_APP_CONNECTIONS_STORAGE', ''));
 }, ['project']);
 
 App::setResource('deviceForBackups', function ($project) {
-    return getDevice(APP_STORAGE_BACKUPS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_BACKUPS . '/app-' . $project->getId(), App::getEnv('_APP_CONNECTIONS_STORAGE_BACKUPS', ''));
 }, ['project']);
 
-function getDevice($root): Device
+function getDevice($root, $connection): Device
 {
-    $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
     if (!empty($connection)) {
         $acl = 'private';
@@ -1464,6 +1463,7 @@ function getDevice($root): Device
                 return new Local($root);
         }
     } else {
+
         switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) ?? '')) {
             case Storage::DEVICE_LOCAL:
             default:
