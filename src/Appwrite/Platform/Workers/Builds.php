@@ -472,7 +472,7 @@ class Builds extends Action
             $durationEnd = \microtime(true);
 
             /** Update the build document */
-            $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
+            $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'ready');
