@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
@@ -16,14 +17,12 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Logger\Log;
+use Appwrite\Utopia\Migration\Destinations\Backup;
+use Appwrite\Utopia\Migration\sources\Restore;
 use Utopia\Migration\Destination;
-use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
-use Utopia\Migration\Destinations\Backup;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
-use Utopia\Migration\Sources\Backup as SourceBackup;
-use Utopia\Migration\Destinations\Backup as DestinationBackup;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
@@ -38,6 +37,9 @@ class Migrations extends Action
     private ?Database $dbForConsole = null;
     private Device $deviceForBackups;
     private Document $backup;
+    private Usage $queueForUsage;
+
+    private Document $project;
 
     public static function getName(): string
     {
@@ -55,8 +57,9 @@ class Migrations extends Action
             ->inject('dbForProject')
             ->inject('dbForConsole')
             ->inject('deviceForBackups')
+            ->inject('queueForUsage')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Device $deviceForBackups, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $deviceForBackups, $log));
+            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Device $deviceForBackups, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $deviceForBackups, $queueForUsage, $log));
     }
 
     /**
@@ -67,7 +70,7 @@ class Migrations extends Action
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Device $deviceForBackups, Log $log): void
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Device $deviceForBackups, Usage $queueForUsage, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -87,8 +90,9 @@ class Migrations extends Action
         $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
         $this->deviceForBackups = $deviceForBackups;
+        $this->queueForUsage = $queueForUsage;
         $this->backup = $backup;
-
+        $this->project = $project;
 
         /**
          * Handle Event execution.
@@ -112,13 +116,14 @@ class Migrations extends Action
     {
         return match ($destination)
         {
-            DestinationBackup::getName() => new DestinationBackup(
-                APP_STORAGE_BACKUPS,
+            Backup::getName() => new Backup(
+                $this->project,
                 $this->backup,
                 $this->dbForProject,
-                $this->deviceForBackups
+                $this->deviceForBackups,
+                $this->queueForUsage
             ),
-            DestinationAppwrite::getName() => new DestinationAppwrite(
+            Restore::getName() => new Restore(
                 $credentials['projectId'],
                 str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']
             ),
@@ -157,11 +162,9 @@ class Migrations extends Action
                 $credentials['password'],
                 $credentials['port'],
             ),
-            sourceBackup::getName() => new SourceBackup(
-
-               '',
+            Restore::getName() => new Restore(
                 $this->dbForProject,
-                $this->deviceForFiles
+                $this->deviceForBackups,
             ),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
