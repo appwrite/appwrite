@@ -115,7 +115,8 @@ class Migrations extends Action
                 APP_STORAGE_BACKUPS,
                 $this->backup,
                 $this->dbForProject,
-                $this->deviceForBackups),
+                $this->deviceForBackups
+            ),
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $credentials['projectId'],
                 str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']
