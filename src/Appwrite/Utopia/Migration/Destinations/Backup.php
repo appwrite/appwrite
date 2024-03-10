@@ -134,11 +134,7 @@ class Backup extends Destination
             \json_encode($files, JSON_PRETTY_PRINT)
         );
 
-        $this->backup
-            ->setAttribute('status', 'uploading')
-            ->setAttribute('finishedAt', DateTime::now())
-        ;
-
+        $this->backup->setAttribute('status', 'uploading');
         $this->dbForProject->updateDocument('backups', $this->backup->getId() ,$this->backup);
 
         $filesize = $this->upload();
@@ -166,7 +162,7 @@ class Backup extends Destination
      * @throws Authorization
      * @throws Structure
      * @throws Conflict
-     * @throws Exception
+     * @throws Exception|\Exception
      */
     protected function import(array $resources, callable $callback): void
     {
@@ -176,7 +172,7 @@ class Backup extends Destination
             ->setAttribute('status', 'started')
         ;
 
-        $this->database->updateDocument('backups', $this->backup->getId() ,$this->backup);
+        $this->dbForProject->updateDocument('backups', $this->backup->getId() ,$this->backup);
 
         foreach ($resources as $resource) {
             /** @var resource $resource */
