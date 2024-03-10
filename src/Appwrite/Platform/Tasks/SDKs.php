@@ -25,6 +25,7 @@ use Appwrite\Spec\Swagger2;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Platform\Action;
+use Exception;
 
 class SDKs extends Action
 {
