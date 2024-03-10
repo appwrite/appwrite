@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "767fe773a75b04ff6c22eac8b2c1498b",
+    "content-hash": "d9a7df9d8d4ed11e157accbd2d73bf7b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -404,16 +404,16 @@
         },
         {
             "name": "jean85/pretty-package-versions",
-            "version": "2.0.5",
+            "version": "2.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Jean85/pretty-package-versions.git",
-                "reference": "ae547e455a3d8babd07b96966b17d7fd21d9c6af"
+                "reference": "f9fdd29ad8e6d024f52678b570e5593759b550b4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Jean85/pretty-package-versions/zipball/ae547e455a3d8babd07b96966b17d7fd21d9c6af",
-                "reference": "ae547e455a3d8babd07b96966b17d7fd21d9c6af",
+                "url": "https://api.github.com/repos/Jean85/pretty-package-versions/zipball/f9fdd29ad8e6d024f52678b570e5593759b550b4",
+                "reference": "f9fdd29ad8e6d024f52678b570e5593759b550b4",
                 "shasum": ""
             },
             "require": {
@@ -421,9 +421,9 @@
                 "php": "^7.1|^8.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^2.17",
+                "friendsofphp/php-cs-fixer": "^3.2",
                 "jean85/composer-provided-replaced-stub-package": "^1.0",
-                "phpstan/phpstan": "^0.12.66",
+                "phpstan/phpstan": "^1.4",
                 "phpunit/phpunit": "^7.5|^8.5|^9.4",
                 "vimeo/psalm": "^4.3"
             },
@@ -457,9 +457,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Jean85/pretty-package-versions/issues",
-                "source": "https://github.com/Jean85/pretty-package-versions/tree/2.0.5"
+                "source": "https://github.com/Jean85/pretty-package-versions/tree/2.0.6"
             },
-            "time": "2021-10-08T21:21:46+00:00"
+            "time": "2024-03-08T09:58:59+00:00"
         },
         {
             "name": "league/csv",
@@ -1187,16 +1187,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.45.8",
+            "version": "0.45.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "8c68f04f073e50c5199bc2df22c5bf9e3be512e4"
+                "reference": "f28a3f5b5276d3459694669f01a382b3e35b2006"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/8c68f04f073e50c5199bc2df22c5bf9e3be512e4",
-                "reference": "8c68f04f073e50c5199bc2df22c5bf9e3be512e4",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f28a3f5b5276d3459694669f01a382b3e35b2006",
+                "reference": "f28a3f5b5276d3459694669f01a382b3e35b2006",
                 "shasum": ""
             },
             "require": {
@@ -1237,9 +1237,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.45.8"
+                "source": "https://github.com/utopia-php/database/tree/0.45.9"
             },
-            "time": "2024-03-07T16:36:43+00:00"
+            "time": "2024-03-10T11:46:14+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2413,30 +2413,30 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.36.4",
+            "version": "0.36.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "8d932098009d62d37dda73cfe4ebc11f83e21405"
+                "reference": "c9c07e8d96b80f62507bbb5ef90fa0769e560621"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8d932098009d62d37dda73cfe4ebc11f83e21405",
-                "reference": "8d932098009d62d37dda73cfe4ebc11f83e21405",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/c9c07e8d96b80f62507bbb5ef90fa0769e560621",
+                "reference": "c9c07e8d96b80f62507bbb5ef90fa0769e560621",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-json": "*",
                 "ext-mbstring": "*",
-                "matthiasmullie/minify": "^1.3.68",
+                "matthiasmullie/minify": "1.3.*",
                 "php": ">=8.0",
-                "twig/twig": "^3.4.1"
+                "twig/twig": "v3.8.*"
             },
             "require-dev": {
-                "brianium/paratest": "^6.4",
-                "phpunit/phpunit": "^9.5.21",
-                "squizlabs/php_codesniffer": "^3.6"
+                "brianium/paratest": "v7.4.*",
+                "phpunit/phpunit": "10.5.*",
+                "squizlabs/php_codesniffer": "3.9.*"
             },
             "type": "library",
             "autoload": {
@@ -2458,9 +2458,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.36.4"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.36.7"
             },
-            "time": "2024-02-20T16:36:15+00:00"
+            "time": "2024-03-09T16:57:18+00:00"
         },
         {
             "name": "doctrine/deprecations",
