@@ -53,7 +53,7 @@ class Backup extends Destination
         $this->backup = $backup;
         $this->project = $project;
 
-        $this->policy = $dbForProject->getDocument('backupsPolicy', $this->backup->getId());
+        $this->policy = $dbForProject->getDocument('backupsPolicy', $this->backup->getAttribute('policyId'));
 
         if (! \file_exists($this->path)) {
             mkdir($this->path, 0777, true);
@@ -114,7 +114,7 @@ class Backup extends Destination
 
         foreach ($this->data as $group => $v1){
             foreach ($v1 as $k2 => $v2){
-                $name = $group . '::' . $k2;
+                $name = $group . '-' . $k2;
                 $files[][] = $name;
 
                 $data = \json_encode($v2);
@@ -145,14 +145,16 @@ class Backup extends Destination
             ->setAttribute('size', $filesize)
         ;
 
+        $this->dbForProject->updateDocument('backups', $this->backup->getId() ,$this->backup);
+
         if($this->policy->getAttribute('resourceType') === BACKUP_RESOURCE_DATABASE){
             /** Trigger usage queue */
             $this->queueForUsage
                 ->setProject($this->project)
                 ->addMetric(METRIC_BACKUPS, 1)
                 ->addMetric(METRIC_BACKUPS_STORAGE, $filesize)
-                ->addMetric(str_replace('{databaseInternalId}', $this->backup['resourceId'], METRIC_DATABASE_ID_BACKUPS), 1)
-                ->addMetric(str_replace('{databaseInternalId}', $this->backup['resourceId'], METRIC_DATABASE_ID_BACKUPS_STORAGE), $filesize)
+                ->addMetric(str_replace('{databaseInternalId}', $this->policy['resourceId'], METRIC_DATABASE_ID_BACKUPS), 1)
+                ->addMetric(str_replace('{databaseInternalId}', $this->policy['resourceId'], METRIC_DATABASE_ID_BACKUPS_STORAGE), $filesize)
                 ->trigger()
             ;
         }
@@ -240,12 +242,12 @@ class Backup extends Destination
 
         $local = new Local($this->path);
 
-        Console::error($local->getRoot());
+        //Console::info($local->getRoot());
 
         $local->setTransferChunkSize(5 * 1024 * 1024);  // >= 5MB;
 
         $cmd = 'cd '. $this->path .' && tar -zcf ' . $tarFile . ' * && cd ' . getcwd();
-        Console::error($cmd);
+        //Console::info($cmd);
 
         $stdout = '';
         $stderr = '';
@@ -255,11 +257,11 @@ class Backup extends Destination
         }
 
         $destination = $this->storage->getRoot() . '/' . $filename;
-        var_dump($this->storage);
-        Console::error($destination);
+
+        //Console::info($destination);
 
         $result = $local->transfer($tarFile, $destination, $this->storage);
-        Console::error($result);
+        //Console::info($result);
 
         if ($result === false) {
             throw new \Exception('Error uploading to ' . $destination);

@@ -66,9 +66,15 @@ class Migrations extends Action
      * @param Message $message
      * @param Database $dbForProject
      * @param Database $dbForConsole
+     * @param Device $deviceForBackups
+     * @param Usage $queueForUsage
      * @param Log $log
      * @return void
-     * @throws Exception
+     * @throws Authorization
+     * @throws Conflict
+     * @throws Restricted
+     * @throws Structure
+     * @throws \Utopia\Database\Exception
      */
     public function action(Message $message, Database $dbForProject, Database $dbForConsole, Device $deviceForBackups, Usage $queueForUsage, Log $log): void
     {
