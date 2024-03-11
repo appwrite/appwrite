@@ -552,16 +552,13 @@ App::post('/v1/teams/:teamId/memberships')
             try {
                 if ($shouldCreateMembership) {
                     $membership = Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership));
+                    Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
                 } else {
                     $membership = Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership));
                 }
             } catch (Duplicate $th) {
                 throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
-            $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
-            $team = Authorization::skip(fn () => $dbForProject->updateDocument('teams', $team->getId(), $team));
-
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
