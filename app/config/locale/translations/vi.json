@@ -228,5 +228,18 @@
     "continents.eu": "Châu Âu",
     "continents.na": "Bắc Mỹ",
     "continents.oc": "Châu Đại Dương",
-    "continents.sa": "Nam Mỹ"
+    "continents.sa": "Nam Mỹ",
+    "emails.magicSession.optionButton": "Nhấp vào nút bên dưới để đăng nhập an toàn vào tài khoản {{project}} của bạn. Nó sẽ hết hạn sau 1 giờ.",
+    "emails.magicSession.buttonText": "Đăng nhập vào {{project}}",
+    "emails.magicSession.clientInfo": "Yêu cầu đăng nhập này được thực hiện bằng {{agentClient}} trên {{agentDevice}} {{agentOs}}. Nếu bạn không yêu cầu đăng nhập, bạn có thể bỏ qua email này một cách an toàn.",
+    "sms.verification.body": "{{secret}} là mã xác minh {{project}} của bạn.",
+    "emails.magicSession.securityPhrase": "Cụm từ bảo mật cho email này là {{phrase}}. Bạn có thể tin tưởng email này nếu cụm từ này khớp với cụm từ hiển thị khi đăng nhập.",
+    "emails.magicSession.optionUrl": "Nếu bạn không thể đăng nhập bằng cách sử dụng nút ở trên, vui lòng truy cập liên kết sau:",
+    "emails.otpSession.subject": "Đăng nhập {{project}}",
+    "emails.otpSession.hello": "Xin chào,",
+    "emails.otpSession.description": "Nhập mã xác minh sau đây khi được yêu cầu để đăng nhập an toàn vào tài khoản {{project}} của bạn. Mã này sẽ hết hạn trong 15 phút.",
+    "emails.otpSession.clientInfo": "Đăng nhập này được yêu cầu sử dụng {{agentClient}} trên {{agentDevice}} {{agentOs}}. Nếu bạn không yêu cầu đăng nhập, bạn có thể bỏ qua email này một cách an toàn.",
+    "emails.otpSession.securityPhrase": "Cụm từ bảo mật cho email này là {{phrase}}. Bạn có thể tin tưởng email này nếu cụm từ này khớp với cụm từ hiển thị khi đăng nhập.",
+    "emails.otpSession.thanks": "Cảm ơn,",
+    "emails.otpSession.signature": "nhóm {{project}}"
 }

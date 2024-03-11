@@ -228,5 +228,18 @@
     "continents.eu": "اروپا",
     "continents.na": "آمریکای شمالی",
     "continents.oc": "اقیانوسیه",
-    "continents.sa": "آمریکای جنوبی"
+    "continents.sa": "آمریکای جنوبی",
+    "emails.magicSession.optionButton": "بر روی دکمه زیر کلیک کنید تا به صورت امن وارد حساب {{project}} خود شوید. این دکمه یک ساعت دیگر منقضی می‌شود.",
+    "emails.magicSession.buttonText": "ورود به {{project}}",
+    "emails.magicSession.clientInfo": "این ورود به سیستم با استفاده از {{agentClient}} در {{agentDevice}} {{agentOs}} درخواست شده است. اگر شما این ورود به سیستم را درخواست نکرده‌اید، می‌توانید به راحتی این ایمیل را نادیده بگیرید.",
+    "sms.verification.body": "{{secret}} کد تایید {{project}} شما است.",
+    "emails.magicSession.securityPhrase": "عبارت امنیتی برای این ایمیل {{phrase}} است. اگر این عبارت با عبارت نشان داده شده در هنگام ورود به سیستم مطابقت داشت، می‌توانید به این ایمیل اعتماد کنید.",
+    "emails.magicSession.optionUrl": "اگر قادر به ورود با استفاده از دکمه بالا نیستید، لطفاً از لینک زیر دیدن فرمایید:",
+    "emails.otpSession.subject": "ورود {{project}}",
+    "emails.otpSession.hello": "سلام،",
+    "emails.otpSession.description": "وقتی از شما خواسته شد، کد تأیید زیر را برای ورود ایمن به حساب کاربری {{project}} خود وارد کنید. این کد تا ۱۵ دقیقه دیگر منقضی می‌شود.",
+    "emails.otpSession.clientInfo": "این ورود به سیستم با استفاده از {{agentClient}} در {{agentDevice}} {{agentOs}} درخواست شده است. اگر شما این ورود به سیستم را درخواست نکرده‌اید، می‌توانید به راحتی این ایمیل را نادیده بگیرید.",
+    "emails.otpSession.securityPhrase": "عبارت امنیتی برای این ایمیل {{phrase}} است. اگر این عبارت با عبارت نشان داده شده هنگام ورود به سیستم مطابقت داشته باشد، می‌توانید به این ایمیل اعتماد کنید.",
+    "emails.otpSession.thanks": "متشکرم،",
+    "emails.otpSession.signature": "تیم {{project}}"
 }
