@@ -111,7 +111,7 @@ class Backup extends Destination
     private function sync(): void
     {
         $files = [];
-
+       //Todo change var names @fogelito
         foreach ($this->data as $group => $v1){
             foreach ($v1 as $k2 => $v2){
                 $name = $group . '-' . $k2;

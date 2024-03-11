@@ -238,6 +238,34 @@ class Usage extends Action
                         ];
                     }
                     break;
+
+                case $document->getCollection() === 'backupsPolicy':
+                    $backups = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{resourceInternalId}', $document->getAttribute('resourceInternalId'), METRIC_DATABASE_ID_BACKUPS)));
+                    $storage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{resourceInternalId}', $document->getAttribute('resourceInternalId'), METRIC_DATABASE_ID_BACKUPS_STORAGE)));
+
+                    if (!empty($backups['value'])) {
+                        $metrics[] = [
+                            'key' => METRIC_BACKUPS,
+                            'value' => ($backups['value'] * -1),
+                        ];
+                        $metrics[] = [
+                            'key' => METRIC_DATABASE_ID_BACKUPS,
+                            'value' => ($backups['value'] * -1),
+                        ];
+                    }
+
+                    if (!empty($storage['value'])) {
+                        $metrics[] = [
+                            'key' => METRIC_BACKUPS_STORAGE,
+                            'value' => ($storage['value'] * -1),
+                        ];
+                        $metrics[] = [
+                            'key' => METRIC_DATABASE_ID_BACKUPS_STORAGE,
+                            'value' => ($storage['value'] * -1),
+                        ];
+                    }
+                    break;
+
                 default:
                     break;
             }
