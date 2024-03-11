@@ -21,22 +21,27 @@ abstract class Format
      */
     protected array $models;
 
+    /**
+     * @var Event []
+     */
+    protected array $events;
+
     protected array $services;
     protected array $keys;
     protected int $authCount;
     protected array $params = [
-        'name' => '',
-        'description' => '',
-        'endpoint' => 'https://localhost',
-        'version' => '1.0.0',
-        'terms' => '',
-        'support.email' => '',
-        'support.url' => '',
-        'contact.name' => '',
-        'contact.email' => '',
-        'contact.url' => '',
-        'license.name' => '',
-        'license.url' => '',
+        "name" => "",
+        "description" => "",
+        "endpoint" => "https://localhost",
+        "version" => "1.0.0",
+        "terms" => "",
+        "support.email" => "",
+        "support.url" => "",
+        "contact.name" => "",
+        "contact.email" => "",
+        "contact.url" => "",
+        "license.name" => "",
+        "license.url" => "",
     ];
 
     /*
@@ -44,20 +49,28 @@ abstract class Format
      */
     protected array $enumBlacklist = [
         [
-            'namespace' => 'users',
-            'method' => 'getUsage',
-            'parameter' => 'provider'
-        ]
+            "namespace" => "users",
+            "method" => "getUsage",
+            "parameter" => "provider",
+        ],
     ];
 
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
-    {
+    public function __construct(
+        App $app,
+        array $services,
+        array $routes,
+        array $models,
+        array $keys,
+        int $authCount,
+        array $events
+    ) {
         $this->app = $app;
         $this->services = $services;
         $this->routes = $routes;
         $this->models = $models;
         $this->keys = $keys;
         $this->authCount = $authCount;
+        $this->events = $events;
     }
 
     /**
@@ -105,15 +118,18 @@ abstract class Format
      *
      * @return string
      */
-    public function getParam(string $key, string $default = ''): string
+    public function getParam(string $key, string $default = ""): string
     {
         return $this->params[$key] ?? $default;
     }
 
-    protected function getEnumName(string $service, string $method, string $param): ?string
-    {
+    protected function getEnumName(
+        string $service,
+        string $method,
+        string $param
+    ): ?string {
         switch ($service) {
-            case 'account':
+            case "account":
                 switch ($method) {
                     case 'createOAuth2Session':
                     case 'createOAuth2Token':
@@ -138,130 +154,59 @@ abstract class Format
                         break;
                 }
                 break;
-            case 'avatars':
+            case "avatars":
                 switch ($method) {
-                    case 'getBrowser':
-                        return 'Browser';
-                    case 'getCreditCard':
-                        return 'CreditCard';
-                    case 'getFlag':
-                        return  'Flag';
+                    case "getBrowser":
+                        return "Browser";
+                    case "getCreditCard":
+                        return "CreditCard";
+                    case "getFlag":
+                        return "Flag";
                 }
                 break;
             case 'databases':
                 switch ($method) {
-                    case 'getUsage':
-                    case 'getCollectionUsage':
-                    case 'getDatabaseUsage':
+                    case 'getFilePreview':
                         switch ($param) {
-                            case 'range':
-                                return 'DatabaseUsageRange';
+                            case 'gravity':
+                                return 'ImageGravity';
+                            case 'output':
+                                return  'ImageFormat';
                         }
                         break;
+                }
+                break;
+            case 'databases':
+                switch ($method) {
                     case 'createRelationshipAttribute':
                         switch ($param) {
-                            case 'type':
-                                return 'RelationshipType';
-                            case 'onDelete':
-                                return 'RelationMutate';
+                            case "type":
+                                return "RelationshipType";
+                            case "onDelete":
+                                return "RelationMutate";
                         }
                         break;
-                    case 'updateRelationshipAttribute':
+                    case "updateRelationshipAttribute":
                         switch ($param) {
-                            case 'onDelete':
-                                return 'RelationMutate';
+                            case "onDelete":
+                                return "RelationMutate";
                         }
                         break;
-                    case 'createIndex':
+                    case "createIndex":
                         switch ($param) {
-                            case 'type':
-                                return 'IndexType';
-                            case 'orders':
-                                return 'OrderBy';
+                            case "type":
+                                return "IndexType";
+                            case "orders":
+                                return "OrderBy";
                         }
-                }
-                break;
-            case 'functions':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'getFunctionUsage':
-                        switch ($param) {
-                            case 'range':
-                                return 'FunctionUsageRange';
-                        }
-                        break;
-                    case 'createExecution':
-                        switch ($param) {
-                            case 'method':
-                                return 'ExecutionMethod';
-                        }
-                        break;
-                }
-                break;
-            case 'messaging':
-                switch ($method) {
-                    case 'getUsage':
-                        switch ($param) {
-                            case 'period':
-                                return 'MessagingUsageRange';
-                        }
-                        break;
-                    case 'createSms':
-                    case 'createPush':
-                    case 'createEmail':
-                    case 'updateSms':
-                    case 'updatePush':
-                    case 'updateEmail':
-                        switch ($param) {
-                            case 'status':
-                                return 'MessageStatus';
-                        }
-                        break;
-                    case 'createSmtpProvider':
-                    case 'updateSmtpProvider':
-                        switch ($param) {
-                            case 'encryption':
-                                return 'SmtpEncryption';
-                        }
-                        break;
-                }
-                break;
-            case 'project':
-                switch ($method) {
-                    case 'getUsage':
-                        switch ($param) {
-                            case 'period':
-                                return 'ProjectUsageRange';
-                        }
-                        break;
                 }
                 break;
             case 'projects':
                 switch ($method) {
-                    case 'getEmailTemplate':
-                    case 'updateEmailTemplate':
-                    case 'deleteEmailTemplate':
-                        switch ($param) {
-                            case 'type':
-                                return 'EmailTemplateType';
-                            case 'locale':
-                                return 'EmailTemplateLocale';
-                        }
-                        break;
-                    case 'getSmsTemplate':
-                    case 'updateSmsTemplate':
-                    case 'deleteSmsTemplate':
-                        switch ($param) {
-                            case 'type':
-                                return 'SmsTemplateType';
-                            case 'locale':
-                                return 'SmsTemplateLocale';
-                        }
-                        break;
                     case 'createPlatform':
                         switch ($param) {
-                            case 'type':
-                                return 'PlatformType';
+                            case "type":
+                                return "PlatformType";
                         }
                         break;
                     case 'createSmtpTest':
@@ -343,71 +288,72 @@ abstract class Format
         }
         return null;
     }
-    public function getEnumKeys(string $service, string $method, string $param): array
-    {
+    public function getEnumKeys(
+        string $service,
+        string $method,
+        string $param
+    ): array {
         $values = [];
         switch ($service) {
-            case 'avatars':
+            case "avatars":
                 switch ($method) {
-                    case 'getBrowser':
-                        $codes = Config::getParam('avatar-browsers');
+                    case "getBrowser":
+                        $codes = Config::getParam("avatar-browsers");
                         foreach ($codes as $code => $value) {
-                            $values[] = $value['name'];
+                            $values[] = $value["name"];
                         }
                         return $values;
-                    case 'getCreditCard':
-                        $codes = Config::getParam('avatar-credit-cards');
+                    case "getCreditCard":
+                        $codes = Config::getParam("avatar-credit-cards");
                         foreach ($codes as $code => $value) {
-                            $values[] = $value['name'];
+                            $values[] = $value["name"];
                         }
                         return $values;
-                    case 'getFlag':
-                        $codes = Config::getParam('avatar-flags');
+                    case "getFlag":
+                        $codes = Config::getParam("avatar-flags");
                         foreach ($codes as $code => $value) {
-                            $values[] = $value['name'];
+                            $values[] = $value["name"];
                         }
                         return $values;
                 }
                 break;
-            case 'databases':
+            case "databases":
                 switch ($method) {
-                    case 'getUsage':
-                    case 'getCollectionUsage':
-                    case 'getDatabaseUsage':
+                    case "getUsage":
+                    case "getCollectionUsage":
+                    case "getDatabaseUsage":
                         // Range Enum Keys
-                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
+                        $values  = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
+                        return $values;
                 }
                 break;
-            case 'functions':
+            case 'function':
                 switch ($method) {
-                    case 'getUsage':
-                    case 'getFunctionUsage':
+                    case "getUsage":
+                    case "getFunctionUsage":
                         // Range Enum Keys
-                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
+                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
+                        return $values;
                 }
                 break;
-            case 'users':
+            case "users":
                 switch ($method) {
                     case 'getUsage':
+                    case 'getUserUsage':
                         // Range Enum Keys
                         if ($param == 'range') {
-                            return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
+                            $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
+                            return $values;
                         }
                 }
                 break;
-            case 'storage':
+            case "storage":
                 switch ($method) {
-                    case 'getUsage':
-                    case 'getBucketUsage':
+                    case "getUsage":
+                    case "getBucketUsage":
                         // Range Enum Keys
-                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
-                }
-                break;
-            case 'project':
-                switch ($method) {
-                    case 'getUsage':
-                        // Range Enum Keys
-                        return ['One Hour', 'One Day'];
+                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
+                        return $values;
                 }
                 break;
         }
