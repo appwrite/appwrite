@@ -793,7 +793,6 @@ App::error()
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
 
-        //TEMP, After 13/03/2024 remove.
         if ($error->getCode() >= 400 && $error->getCode() < 500) {
             // Register error logger
             $providerName = App::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
