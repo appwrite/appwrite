@@ -78,7 +78,7 @@ class BackupTest extends Scope
                     'name' => 'Backup list database'
                 ]
             );
-var_dump($database);
+
             $this->assertNotEmpty($database['body']['$id']);
             $this->assertEquals(201, $database['headers']['status-code']);
             $this->assertEquals('Backup list database', $database['body']['name']);
