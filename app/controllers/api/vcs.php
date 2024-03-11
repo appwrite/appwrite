@@ -254,7 +254,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
         }
     }
 
-    $queueForBuilds->setType(''); // prevent shutdown hook from triggering again
+    $queueForBuilds->reset(); // prevent shutdown hook from triggering again
 
     if (!empty($errors)) {
         throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
