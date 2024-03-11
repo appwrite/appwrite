@@ -84,27 +84,29 @@ class V20 extends Migration
                     Query::equal('array', [true]),
                 ]) as $attribute
             ) {
-                $foundIndex = false;
                 $collectionId = "database_{$attribute['databaseInternalId']}_collection_{$attribute['collectionInternalId']}";
+
                 foreach (
                     $this->documentsIterator('indexes', [
                         Query::equal('databaseInternalId', [$attribute['databaseInternalId']]),
                         Query::equal('collectionInternalId', [$attribute['collectionInternalId']]),
                     ]) as $index
                 ) {
-                    if (in_array($attribute->getAttribute('key'), $index->getAttribute('attributes'))) {
+                    if (\in_array($attribute->getAttribute('key'), $index->getAttribute('attributes'))) {
                         try {
-                            $this->projectDB->deleteIndex($collectionId, $index->getId());
+                            $this->projectDB->deleteIndex($collectionId, $index->getAttribute('key'));
                         } catch (Throwable $th) {
                             Console::warning("Failed to delete index: {$th->getMessage()}");
-                        } finally {
-                            $foundIndex = true;
+                        }
+                        try {
+                            $this->projectDB->deleteDocument('indexes', $index->getId());
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to remove index: {$th->getMessage()}");
                         }
                     }
                 }
-                if ($foundIndex === true) {
-                    $this->projectDB->updateAttribute($collectionId, $attribute['key'], $attribute['type']);
-                }
+
+                $this->projectDB->updateAttribute($collectionId, $attribute['key'], $attribute['type']);
             }
         }
 
@@ -117,17 +119,18 @@ class V20 extends Migration
             $this->projectDB->setNamespace("_$internalProjectId");
 
             // Support database array type migration
-            $foundIndex = false;
             foreach ($collection['attributes'] ?? [] as $attribute) {
                 if ($attribute['array'] === true) {
                     foreach ($collection['indexes'] ?? [] as $index) {
-                        if (in_array($attribute['$id'], $index['attributes'])) {
+                        if (\in_array($attribute['$id'], $index['attributes'])) {
                             $this->projectDB->deleteIndex($id, $index['$id']);
-                            $foundIndex = true;
                         }
                     }
-                    if ($foundIndex === true) {
+
+                    try {
                         $this->projectDB->updateAttribute($id, $attribute['$id'], $attribute['type']);
+                    } catch (Throwable $th) {
+                        Console::warning("'{$attribute['$id']}' from {$id}: {$th->getMessage()}");
                     }
                 }
             }
@@ -178,6 +181,15 @@ class V20 extends Migration
                         $this->projectDB->updateAttribute(collection: $id, id: 'value', signed: true);
                     } catch (Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        /**
+                         * Ensure 'time' attribute is not required
+                         */
+                        $this->projectDB->updateAttribute($id, 'time', required: false);
+                    } catch (Throwable $th) {
+                        Console::warning("'time' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
