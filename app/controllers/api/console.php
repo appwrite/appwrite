@@ -46,6 +46,7 @@ App::get('/v1/console/variables')
             '_APP_DOMAIN_TARGET' => App::getEnv('_APP_DOMAIN_TARGET'),
             '_APP_STORAGE_LIMIT' => +App::getEnv('_APP_STORAGE_LIMIT'),
             '_APP_FUNCTIONS_SIZE_LIMIT' => +App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT'),
+            '_APP_FUNCTIONS_TIMEOUT' => +App::getEnv('_APP_FUNCTIONS_TIMEOUT'),
             '_APP_USAGE_STATS' => App::getEnv('_APP_USAGE_STATS'),
             '_APP_VCS_ENABLED' => $isVcsEnabled,
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
