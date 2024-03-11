@@ -34,19 +34,19 @@ class BackupTest extends Scope
 
     protected function getConsoleHeaders(): array
     {
+        return (
+            array_merge($this->getConsoleHeadersGet(), ['content-type' => 'application/json'])
+        );
+    }
+
+    protected function getConsoleHeadersGet(): array
+    {
         return [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-mode' => 'admin'
         ];
-    }
-
-    protected function getConsoleHeadersGet(): array
-    {
-        return (
-            array_merge($this->getConsoleHeaders(), ['content-type' => 'application/json'])
-        );
     }
 
     public function testShmuel()
@@ -78,7 +78,7 @@ class BackupTest extends Scope
                     'name' => 'Backup list database'
                 ]
             );
-
+var_dump($database);
             $this->assertNotEmpty($database['body']['$id']);
             $this->assertEquals(201, $database['headers']['status-code']);
             $this->assertEquals('Backup list database', $database['body']['name']);
