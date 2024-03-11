@@ -23,6 +23,7 @@ use Utopia\Migration\Destination;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
+use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
@@ -129,7 +130,7 @@ class Migrations extends Action
                 $this->deviceForBackups,
                 $this->queueForUsage
             ),
-            Restore::getName() => new Restore(
+            DestinationAppwrite::getName() => new DestinationAppwrite(
                 $credentials['projectId'],
                 str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']
             ),
