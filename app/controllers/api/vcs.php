@@ -41,10 +41,15 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 use function Swoole\Coroutine\batch;
 
 $createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForConsole, Build $queueForBuilds, callable $getProjectDB, Request $request) {
+    $errors = [];
     foreach ($repositories as $resource) {
-        $resourceType = $resource->getAttribute('resourceType');
+        try {
+            $resourceType = $resource->getAttribute('resourceType');
 
-        if ($resourceType === "function") {
+            if ($resourceType !== "function") {
+                continue;
+            }
+
             $projectId = $resource->getAttribute('projectId');
             $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
             $dbForProject = $getProjectDB($project);
@@ -238,10 +243,21 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
-                ->setDeployment($deployment);
+                ->setDeployment($deployment)
+                ->setProject($project); // set the project because it won't be set for git deployments
+
+            $queueForBuilds->trigger(); // must trigger here so that we create a build for each function
 
             //TODO: Add event?
+        } catch (Throwable $e) {
+            $errors[] = $e->getMessage();
         }
+    }
+
+    $queueForBuilds->reset(); // prevent shutdown hook from triggering again
+
+    if (!empty($errors)) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
     }
 };
 
