@@ -45,7 +45,7 @@ class BackupTest extends Scope
     protected function getConsoleHeadersGet(): array
     {
         return (
-            array_merge($this->getConsoleHeadersGet(), ['content-type' => 'application/json'])
+            array_merge($this->getConsoleHeaders(), ['content-type' => 'application/json'])
         );
     }
 
