@@ -6,14 +6,17 @@ use Utopia\App;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Logger\Log;
 
 App::init()
     ->groups(['auth'])
     ->inject('utopia')
     ->inject('request')
     ->inject('project')
-    ->action(function (App $utopia, Request $request, Document $project) {
-
+    ->inject('startTime')
+    ->inject('log')
+    ->action(function (App $utopia, Request $request, Document $project, float $startTime, Log $log) {
+        $log->addExtra('AuthInitStart', \strval(\microtime(true)));
         $route = $utopia->match($request);
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -65,4 +68,5 @@ App::init()
                 throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
                 break;
         }
+        $log->addExtra('AuthInitEnd', \strval(\microtime(true)));
     });

@@ -16,6 +16,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Logger\Log;
 
 App::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')
@@ -218,8 +219,11 @@ App::shutdown()
     ->inject('utopia')
     ->inject('response')
     ->inject('request')
-    ->action(function (App $utopia, Response $response, Request $request) {
+    ->inject('startTime')
+    ->inject('log')
+    ->action(function (App $utopia, Response $response, Request $request, float $startTime, Log $log) {
 
+        $log->addExtra('MockShutdownStart', \strval(\microtime(true)));
         $result = [];
         $route  = $utopia->getRoute();
         $path   = APP_STORAGE_CACHE . '/tests.json';
@@ -236,6 +240,8 @@ App::shutdown()
         if (!\file_put_contents($path, \json_encode($tests), LOCK_EX)) {
             throw new Exception(Exception::GENERAL_MOCK, 'Failed to save results', 500);
         }
+
+        $log->addExtra('MockShutdownEnd', \strval(\microtime(true)));
 
         $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
     });

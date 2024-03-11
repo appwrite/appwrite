@@ -3,17 +3,22 @@
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Logger\Log;
 
 App::init()
     ->groups(['web'])
     ->inject('request')
     ->inject('response')
-    ->action(function (Request $request, Response $response) {
+    ->inject('startTime')
+    ->inject('log')
+    ->action(function (Request $request, Response $response, float $startTime, Log $log) {
+        $log->addExtra('ConsoleWebInitStart', \strval(\microtime(true)));
         $response
             ->addHeader('X-Frame-Options', 'SAMEORIGIN') // Avoid console and homepage from showing in iframes
             ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url=' . \urlencode($request->getURI()))
             ->addHeader('X-UA-Compatible', 'IE=Edge') // Deny IE browsers from going into quirks mode
         ;
+        $log->addExtra('ConsoleWebInitEnd', \strval(\microtime(true)));
     });
 
 App::get('/console/*')

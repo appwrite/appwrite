@@ -386,11 +386,13 @@ App::init()
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('geodb')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, callable $getProjectDB, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers, Certificate $queueForCertificates, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+    ->inject('startTime')
+    ->inject('log')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, callable $getProjectDB, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers, Certificate $queueForCertificates, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, float $startTime, Log $log) {
         /*
         * Appwrite Router
         */
-
+        $log->addExtra('generalInitStart', \strval(\microtime(true)));
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
@@ -738,6 +740,8 @@ App::init()
         if ($user->getAttribute('reset')) {
             throw new AppwriteException(AppwriteException::USER_PASSWORD_RESET_REQUIRED);
         }
+
+        $log->addExtra('generalInitEnd', \strval(\microtime(true)));
     });
 
 App::options()

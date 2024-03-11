@@ -38,14 +38,19 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
+use Utopia\Logger\Log;
 
 App::init()
     ->groups(['projects'])
     ->inject('project')
-    ->action(function (Document $project) {
+    ->inject('startTime')
+    ->inject('log')
+    ->action(function (Document $project, float $startTime, Log $log) {
+        $log->addExtra('projectInitStart', \strval(\microtime(true)));
         if ($project->getId() !== 'console') {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
         }
+        $log->addExtra('projectInitEnd', \strval(\microtime(true)));
     });
 
 App::post('/v1/projects')

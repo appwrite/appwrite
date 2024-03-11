@@ -5,14 +5,19 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Validator\Text;
+use Utopia\Logger\Log;
 
 App::init()
     ->groups(['console'])
     ->inject('project')
-    ->action(function (Document $project) {
+    ->inject('startTime')
+    ->inject('log')
+    ->action(function (Document $project, float $startTime, Log $log) {
+        $log->addExtra('consoleInitStart', \strval(\microtime(true)));
         if ($project->getId() !== 'console') {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
         }
+        $log->addExtra('consoleInitEnd', \strval(\microtime(true)));
     });
 
 

@@ -875,6 +875,10 @@ App::setResource('hooks', function ($register) {
     return $register->get('hooks');
 }, ['register']);
 
+App::setResource('startTime', function() {
+    return \microtime(true);
+});
+
 App::setResource('register', fn() => $register);
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 

@@ -21,6 +21,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Logger\Log;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -156,8 +157,11 @@ App::init()
     ->inject('mode')
     ->inject('queueForMails')
     ->inject('queueForUsage')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, string $mode, Mail $queueForMails, Usage $queueForUsage) use ($databaseListener) {
+    ->inject('startTime')
+    ->inject('log')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, string $mode, Mail $queueForMails, Usage $queueForUsage, float $startTime, Log $log) use ($databaseListener) {
 
+        $log->addExtra('apiInitStart', \strval(\microtime(true)));
         $route = $utopia->getRoute();
 
         if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
@@ -309,6 +313,7 @@ App::init()
                 $response->addHeader('X-Appwrite-Cache', 'miss');
             }
         }
+        $log->addExtra('apiInitEnd', \strval(\microtime(true)));
     });
 
 App::init()
@@ -316,8 +321,10 @@ App::init()
     ->inject('utopia')
     ->inject('request')
     ->inject('project')
-    ->action(function (App $utopia, Request $request, Document $project) {
-
+    ->inject('startTime')
+    ->inject('log')
+    ->action(function (App $utopia, Request $request, Document $project, float $startTime, Log $log) {
+        $log->addExtra('APIInitStart2', \strval(\microtime(true)));
         $route = $utopia->getRoute();
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -369,6 +376,7 @@ App::init()
                 throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication type: ' . $route->getLabel('auth.type', ''));
                 break;
         }
+        $log->addExtra('APIInitEnd2', \strval(\microtime(true)));
     });
 
 /**
@@ -384,7 +392,10 @@ App::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->inject('startTime')
+    ->inject('log')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Database $dbForProject, float $startTime, Log $log) {
+        $log->addExtra('APIShutdownStart1', \strval(\microtime(true)));
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
         $session = $response->getPayload();
         $userId = $session['userId'] ?? '';
@@ -408,6 +419,8 @@ App::shutdown()
             $dbForProject->deleteDocument('sessions', $session->getId());
         }
         $dbForProject->deleteCachedDocument('users', $userId);
+
+        $log->addExtra('APIShutdownStart2', \strval(\microtime(true)));
     });
 
 App::shutdown()
@@ -426,8 +439,11 @@ App::shutdown()
     ->inject('queueForFunctions')
     ->inject('mode')
     ->inject('dbForConsole')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
+    ->inject('startTime')
+    ->inject('log')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole, float $startTime, Log $log) use ($parseLabel) {
 
+        $log->addExtra('APIShutdownStart2', \strval(\microtime(true)));
         $responsePayload = $response->getPayload();
 
         if (!empty($queueForEvents->getEvent())) {
@@ -615,12 +631,17 @@ App::shutdown()
                 }
             }
         }
+        $log->addExtra('APIShutdownEnd2', \strval(\microtime(true)));
     });
 
 App::init()
     ->groups(['usage'])
-    ->action(function () {
+    ->inject('startTime')
+    ->inject('log')
+    ->action(function (float $startTime, Log $log) {
+        $log->addExtra('APIInitStart3', \strval(\microtime(true)));
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
             throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
+        $log->addExtra('APIInitEnd3', \strval(\microtime(true)));
     });

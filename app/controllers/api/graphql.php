@@ -16,6 +16,7 @@ use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
+use Utopia\Logger\Log;
 
 App::get('/v1/graphql')
     ->desc('GraphQL endpoint')
@@ -292,6 +293,10 @@ function processResult($result, $debugFlags): array
 App::shutdown()
     ->groups(['schema'])
     ->inject('project')
-    ->action(function (Document $project) {
+    ->inject('startTime')
+    ->inject('log')
+    ->action(function (Document $project, float $startTime, Log $log) {
+        $log->addExtra('GraphQLShutdownStart', \strval(\microtime(true)));
         Schema::setDirty($project->getId());
+        $log->addExtra('GraphQLShutdownEnd', \strval(\microtime(true)));
     });
