@@ -3,19 +3,19 @@
 global $utopia, $request, $response;
 
 use Appwrite\Extend\Exception;
-use Utopia\Database\Document;
-use Utopia\Validator\Host;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\UID;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\UID;
+use Utopia\Validator\Host;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 App::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')

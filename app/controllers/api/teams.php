@@ -1,22 +1,19 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
-use Appwrite\Event\Phone as EventPhone;
+use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
-use Utopia\Validator\Host;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Database\Validator\Queries\Teams;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
@@ -24,20 +21,25 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Query;
-use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\Host;
 use Utopia\Validator\Text;
 
 App::post('/v1/teams')
@@ -114,7 +116,7 @@ App::post('/v1/teams')
             ]);
 
             $membership = $dbForProject->createDocument('memberships', $membership);
-            $dbForProject->deleteCachedDocument('users', $user->getId());
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         }
 
         $queueForEvents->setParam('teamId', $team->getId());
@@ -146,15 +148,21 @@ App::get('/v1/teams')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -387,7 +395,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('queueForMails')
     ->inject('queueForMessaging')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, EventPhone $queueForMessaging, Event $queueForEvents) {
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -473,6 +481,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'phone' => empty($phone) ? null : $phone,
                     'emailVerification' => false,
                     'status' => true,
+                    // TODO: Set password empty?
                     'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
                     'hash' => Auth::DEFAULT_ALGO,
                     'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
@@ -552,7 +561,9 @@ App::post('/v1/teams/:teamId/memberships')
             $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
             $team = Authorization::skip(fn () => $dbForProject->updateDocument('teams', $team->getId(), $team));
 
-            $dbForProject->deleteCachedDocument('users', $invitee->getId());
+            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+
+            $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
             try {
                 if ($shouldCreateMembership) {
@@ -647,6 +658,10 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setVariables($emailVariables)
                     ->trigger();
             } elseif (!empty($phone)) {
+                if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+                    throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
+                }
+
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
                 $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
@@ -657,10 +672,18 @@ App::post('/v1/teams/:teamId/memberships')
                 $message = $message->setParam('{{token}}', $url);
                 $message = $message->render();
 
+                $messageDoc = new Document([
+                    '$id' => ID::unique(),
+                    'data' => [
+                        'content' => $message,
+                    ],
+                ]);
+
                 $queueForMessaging
-                    ->setRecipient($phone)
-                    ->setMessage($message)
-                    ->trigger();
+                    ->setType(MESSAGE_SEND_TYPE_INTERNAL)
+                    ->setMessage($messageDoc)
+                    ->setRecipients([$phone])
+                    ->setProviderType('SMS');
             }
         }
 
@@ -704,7 +727,11 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -713,9 +740,11 @@ App::get('/v1/teams/:teamId/memberships')
         // Set internal queries
         $queries[] = Query::equal('teamId', [$teamId]);
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -748,7 +777,20 @@ App::get('/v1/teams/:teamId/memberships')
         $memberships = array_map(function ($membership) use ($dbForProject, $team) {
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
+            $mfa = $user->getAttribute('mfa', false);
+            if ($mfa) {
+                $totp = TOTP::getAuthenticatorFromUser($user);
+                $totpEnabled = $totp && $totp->getAttribute('verified', false);
+                $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
+                $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+
+                if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
+                    $mfa = false;
+                }
+            }
+
             $membership
+                ->setAttribute('mfa', $mfa)
                 ->setAttribute('teamName', $team->getAttribute('name'))
                 ->setAttribute('userName', $user->getAttribute('name'))
                 ->setAttribute('userEmail', $user->getAttribute('email'));
@@ -795,7 +837,21 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
 
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
+        $mfa = $user->getAttribute('mfa', false);
+
+        if ($mfa) {
+            $totp = TOTP::getAuthenticatorFromUser($user);
+            $totpEnabled = $totp && $totp->getAttribute('verified', false);
+            $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
+            $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+
+            if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
+                $mfa = false;
+            }
+        }
+
         $membership
+            ->setAttribute('mfa', $mfa)
             ->setAttribute('teamName', $team->getAttribute('name'))
             ->setAttribute('userName', $user->getAttribute('name'))
             ->setAttribute('userEmail', $user->getAttribute('email'));
@@ -859,7 +915,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         /**
          * Replace membership on profile
          */
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
@@ -963,7 +1019,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
+            'factors' => ['email'],
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $session = $dbForProject->createDocument('sessions', $session
@@ -973,13 +1031,13 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         Authorization::setRole(Role::user($userId)->toString());
 
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $team = Authorization::skip(fn () => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
 
@@ -1051,11 +1109,11 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             $dbForProject->deleteDocument('memberships', $membership->getId());
         } catch (AuthorizationException $exception) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
         }
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));
@@ -1095,7 +1153,12 @@ App::get('/v1/teams/:teamId/logs')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;

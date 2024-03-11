@@ -2,10 +2,10 @@
 
 namespace Tests\E2E\Services\VCS;
 
-use Tests\E2E\Scopes\Scope;
-use Tests\E2E\Scopes\ProjectCustom;
-use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
+use Tests\E2E\Scopes\SideServer;
 
 class VCSCustomServerTest extends Scope
 {
