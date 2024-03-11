@@ -24,7 +24,7 @@ class Restore extends Source
 
     public static function getName(): string
     {
-        return 'Backup';
+        return 'Restore';
     }
 
     /**

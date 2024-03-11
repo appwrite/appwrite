@@ -10,7 +10,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Helpers\ID;
-use Utopia\Migration\Destinations\Backup;
+use Appwrite\Utopia\Migration\Destinations\Backup;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Pools\Group;

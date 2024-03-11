@@ -153,8 +153,8 @@ class Backup extends Destination
                 ->setProject($this->project)
                 ->addMetric(METRIC_BACKUPS, 1)
                 ->addMetric(METRIC_BACKUPS_STORAGE, $filesize)
-                ->addMetric(str_replace('{databaseInternalId}', $this->policy['resourceId'], METRIC_DATABASE_ID_BACKUPS), 1)
-                ->addMetric(str_replace('{databaseInternalId}', $this->policy['resourceId'], METRIC_DATABASE_ID_BACKUPS_STORAGE), $filesize)
+                ->addMetric(str_replace('{databaseInternalId}', $this->policy['resourceInternalId'], METRIC_DATABASE_ID_BACKUPS), 1)
+                ->addMetric(str_replace('{databaseInternalId}', $this->policy['resourceInternalId'], METRIC_DATABASE_ID_BACKUPS_STORAGE), $filesize)
                 ->trigger()
             ;
         }
