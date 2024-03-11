@@ -157,18 +157,6 @@ class BackupTest extends Scope
 
         $attribute = $this->client->call(
             Client::METHOD_POST,
-            '/databases/' . $databaseId . '/collections/' . $animals['body']['$id'] . '/attributes/string',
-            $this->getConsoleHeaders(),
-            [
-                'key' => 'name',
-                'size' => 256,
-                'required' => true
-            ]
-        );
-        $this->assertEquals(202, $attribute['headers']['status-code']);
-
-        $attribute = $this->client->call(
-            Client::METHOD_POST,
             '/databases/' . $databaseId . '/collections/' . $animals['body']['$id'] . '/attributes/datetime',
             $this->getConsoleHeaders(),
             [
@@ -186,21 +174,6 @@ class BackupTest extends Scope
          */
         $index = $this->client->call(
             Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/indexes',
-            $this->getConsoleHeaders(),
-            [
-                'key' => 'key_lastName',
-                'type' => 'key',
-                'attributes' => [
-                    'last_name'
-                ],
-                ]
-        );
-        $this->assertEquals(202, $index['headers']['status-code']);
-        $this->assertEquals('key_lastName', $index['body']['key']);
-
-        $index = $this->client->call(
-            Client::METHOD_POST,
-            '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/indexes',
             $this->getConsoleHeaders(),
             [
                 'key' => 'key_lastName',
@@ -226,7 +199,7 @@ class BackupTest extends Scope
             ]
         );
         $this->assertEquals(202, $index['headers']['status-code']);
-        $this->assertEquals('key_lastName', $index['body']['key']);
+        $this->assertEquals('key_name', $index['body']['key']);
 
         $index = $this->client->call(
             Client::METHOD_POST,
@@ -241,7 +214,7 @@ class BackupTest extends Scope
             ]
         );
         $this->assertEquals(202, $index['headers']['status-code']);
-        $this->assertEquals('key_lastName', $index['body']['key']);
+        $this->assertEquals('key_date_of_birth', $index['body']['key']);
 
         // Wait for database worker to finish creating index
         sleep(2);
