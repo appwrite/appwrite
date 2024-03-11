@@ -523,10 +523,10 @@ App::shutdown()
             $queueForDeletes->trigger();
         }
 
-        \var_dump('About to trigger database event');
         if (!empty($queueForDatabase->getType())) {
-            \var_dump('Triggering database event');
+            \var_dump('Before triggering database event');
             $queueForDatabase->trigger();
+            \var_dump('After triggering database event');
         }
 
         /**
