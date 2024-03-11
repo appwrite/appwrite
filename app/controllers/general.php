@@ -793,6 +793,23 @@ App::error()
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
 
+        if ($error->getCode() >= 400 && $error->getCode() < 500) {
+            // Register error logger
+            $providerName = App::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
+            $providerConfig = App::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
+
+            if (!(empty($providerName) || empty($providerConfig))) {
+                if (!Logger::hasProvider($providerName)) {
+                    throw new Exception("Logging provider not supported. Logging is disabled");
+                }
+
+                $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
+                $adapter = new $classname($providerConfig);
+                $logger = new Logger($adapter);
+                $publish = true;
+            }
+        }
+
         if ($logger && ($publish || $error->getCode() === 0)) {
             try {
                 /** @var Utopia\Database\Document $user */
