@@ -893,7 +893,7 @@ App::error()
             $code = $error->getCode();
             $message = $error->getMessage();
         } elseif ($error instanceof Utopia\Database\Exception\Query) {
-            $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, previous: $error);
+            $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, $error->getMessage(), previous: $error);
             $code = $error->getCode();
             $message = $error->getMessage();
         } elseif ($error instanceof Utopia\Database\Exception\Structure) {
