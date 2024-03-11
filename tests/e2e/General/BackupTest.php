@@ -102,85 +102,88 @@ class BackupTest extends Scope
             $this->assertEquals($presidents['body']['name'], 'people');
 
             // Create Attributes
-            $firstName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'first_name',
-                'size' => 256,
-                'required' => true,
-            ]);
+            $firstName = $this->client->call(
+                Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string',
+                $this->getConsoleHeaders(),
+                [
+                    'key' => 'first_name',
+                    'size' => 256,
+                    'required' => true
+                ]
+            );
+
             $this->assertEquals(202, $firstName['headers']['status-code']);
 
-            $lastName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'last_name',
-                'size' => 256,
-                'required' => true,
-            ]);
+            $lastName = $this->client->call(
+                Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string',
+                $this->getConsoleHeaders(),
+                [
+                    'key' => 'last_name',
+                    'size' => 256,
+                    'required' => true
+                ]
+            );
 
             $this->assertEquals(202, $lastName['headers']['status-code']);
 
             // Wait for worker
             sleep(2);
 
-            $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'documentId' => ID::unique(),
-                'data' => [
-                    'first_name' => 'Donald',
-                    'last_name' => 'Trump',
-                ],
-                'permissions' => [
-                    Permission::read(Role::user($this->getUser()['$id'])),
+            $document1 = $this->client->call(
+                Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
+                $this->getConsoleHeaders(),
+                [
+                    'documentId' => ID::unique(),
+                    'data' => [
+                        'first_name' => 'Donald',
+                        'last_name' => 'Trump'
+                    ],
+                    'permissions' => [
+                        Permission::read(Role::user($this->getUser()['$id'])),
+                    ]
                 ]
-            ]);
+            );
+
             $this->assertEquals(201, $document1['headers']['status-code']);
 
-            $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'documentId' => ID::unique(),
-                'data' => [
-                    'first_name' => 'George',
-                    'last_name' => 'Bush',
-                ],
-                'permissions' => [
-                    Permission::read(Role::user($this->getUser()['$id'])),
+            $document2 = $this->client->call(
+                Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
+                $this->getConsoleHeaders(),
+                [
+                    'documentId' => ID::unique(),
+                    'data' => [
+                        'first_name' => 'George',
+                        'last_name' => 'Bush'
+                    ],
+                    'permissions' => [
+                        Permission::read(Role::user($this->getUser()['$id']))
+                    ]
                 ]
-            ]);
+            );
+
             $this->assertEquals(201, $document2['headers']['status-code']);
 
-            $document3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'documentId' => ID::unique(),
-                'data' => [
-                    'first_name' => 'Joe',
-                    'last_name' => 'Biden',
-                ],
-                'permissions' => [
-                    Permission::read(Role::user($this->getUser()['$id'])),
-                ]
-            ]);
+            $document3 = $this->client->call(
+                Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
+                $this->getConsoleHeaders(),
+                [
+                    'documentId' => ID::unique(),
+                    'data' => [
+                        'first_name' => 'Joe',
+                        'last_name' => 'Biden',
+                        ],
+                    'permissions' => [
+                        Permission::read(Role::user($this->getUser()['$id'])),
+                    ]
+            ]
+            );
 
             $this->assertEquals(201, $document3['headers']['status-code']);
 
             $documents = $this->client->call(
                 Client::METHOD_GET,
                 '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
-                array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                ], $this->getHeaders()),
+                $this->getConsoleHeadersGet(),
                 [
                     'queries' => [
                         Query::select(['first_name', 'last_name'])->toString(),
