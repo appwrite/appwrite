@@ -1,3 +1,15 @@
+# Version 1.5.2
+## What's Changed
+* Fix stats migration by @abnegate in https://github.com/appwrite/appwrite/pull/7760
+* Fix index migrations by @abnegate in https://github.com/appwrite/appwrite/pull/7769
+* Fix Flutter/Dart SDKs by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7765
+* Fix push notifications with no image by @abnegate in https://github.com/appwrite/appwrite/pull/7771
+* Fix Python SDK by @abnegate in https://github.com/appwrite/appwrite/pull/7770
+* Fix Android SDK deployment by @abnegate in https://github.com/appwrite/appwrite/pull/7770
+
+
+**Full Changelog**: https://github.com/appwrite/appwrite/compare/1.5.1...1.5.2
+
 # Version 1.5.1
 ## What's Changed
 * fix: usage containers by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7757
@@ -18,7 +30,7 @@
 - Appwrite Cloud is not yet updated to 1.5.x, expect an announcement in the upcoming weeks. If you lock your Appwrite SDK version, this update is not breaking.
 - Follow the [self-hosted docs](https://appwrite.io/docs/advanced/self-hosting/update) to update your self-hosted Appwrite.
 - Update your SDKs to the latest versions. The API is backwards compatible, using old SDKs will not break existing apps, but you will not have access to new features.
-### Ful changes
+### Full changes
 * Sync 1.5.x by @abnegate in https://github.com/appwrite/appwrite/pull/6030
 * Sync master into 1.5.x by @fanatic75 in https://github.com/appwrite/appwrite/pull/6092
 * add collections to config file and messaging scopes to config file by @fanatic75 in https://github.com/appwrite/appwrite/pull/5930
