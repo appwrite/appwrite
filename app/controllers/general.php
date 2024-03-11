@@ -810,7 +810,7 @@ App::error()
             }
         }
 
-        if ($logger && ($publish || $error->getCode() === 0)) {
+        if ($logger && $publish) {
             try {
                 /** @var Utopia\Database\Document $user */
                 $user = $utopia->getResource('user');
@@ -890,6 +890,22 @@ App::error()
             $message = $error->getMessage();
         } elseif ($error instanceof Utopia\Database\Exception\Timeout) {
             $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
+            $code = $error->getCode();
+            $message = $error->getMessage();
+        } elseif ($error instanceof Utopia\Database\Exception\Query) {
+            $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, previous: $error);
+            $code = $error->getCode();
+            $message = $error->getMessage();
+        } elseif ($error instanceof Utopia\Database\Exception\Structure) {
+            $error = new AppwriteException(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $error->getMessage(), previous: $error);
+            $code = $error->getCode();
+            $message = $error->getMessage();
+        } elseif ($error instanceof Utopia\Database\Exception\Duplicate) {
+            $error = new AppwriteException(AppwriteException::DOCUMENT_ALREADY_EXISTS);
+            $code = $error->getCode();
+            $message = $error->getMessage();
+        } elseif ($error instanceof Utopia\Database\Exception\Restricted) {
+            $error = new AppwriteException(AppwriteException::DOCUMENT_DELETE_RESTRICTED);
             $code = $error->getCode();
             $message = $error->getMessage();
         }

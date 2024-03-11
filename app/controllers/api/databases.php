@@ -662,8 +662,6 @@ App::put('/v1/databases/:databaseId')
                 ->setAttribute('name', $name)
                 ->setAttribute('enabled', $enabled)
                 ->setAttribute('search', implode(' ', [$databaseId, $name])));
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Bad structure. ' . $exception->getMessage());
         }
@@ -1015,19 +1013,14 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
         $enabled ??= $collection->getAttribute('enabled', true);
 
-        try {
-            $collection = $dbForProject->updateDocument('database_' . $database->getInternalId(), $collectionId, $collection
-                ->setAttribute('name', $name)
-                ->setAttribute('$permissions', $permissions)
-                ->setAttribute('documentSecurity', $documentSecurity)
-                ->setAttribute('enabled', $enabled)
-                ->setAttribute('search', implode(' ', [$collectionId, $name])));
-            $dbForProject->updateCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $permissions, $documentSecurity);
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (StructureException $exception) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Bad structure. ' . $exception->getMessage());
-        }
+        $collection = $dbForProject->updateDocument('database_' . $database->getInternalId(), $collectionId, $collection
+            ->setAttribute('name', $name)
+            ->setAttribute('$permissions', $permissions)
+            ->setAttribute('documentSecurity', $documentSecurity)
+            ->setAttribute('enabled', $enabled)
+            ->setAttribute('search', implode(' ', [$collectionId, $name])));
+
+        $dbForProject->updateCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $permissions, $documentSecurity);
 
         $queueForEvents
             ->setContext('database', $database)
@@ -2936,14 +2929,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $filters = Query::groupByType($queries)['filters'];
 
-        try {
-            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
-            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filters, APP_LIMIT_COUNT);
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
-        }
+        $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
+        $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filters, APP_LIMIT_COUNT);
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
@@ -3069,13 +3056,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
         $queries = Query::parseQueries($queries);
 
-        try {
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
-        }
+        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
@@ -3387,22 +3368,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $setCollection($collection, $newDocument);
 
-        try {
-            $document = $dbForProject->withRequestTimestamp(
-                $requestTimestamp,
-                fn() => $dbForProject->updateDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $document->getId(),
-                    $newDocument
-                )
-            );
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-        } catch (StructureException $exception) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
-        }
+        $document = $dbForProject->withRequestTimestamp(
+            $requestTimestamp,
+            fn() => $dbForProject->updateDocument(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $document->getId(),
+                $newDocument
+            )
+        );
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
@@ -3502,16 +3475,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         }
 
         $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
-            try {
-                $dbForProject->deleteDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $documentId
-                );
-            } catch (AuthorizationException) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            } catch (RestrictedException) {
-                throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
-            }
+            $dbForProject->deleteDocument(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $documentId
+            );
         });
 
         // Add $collectionId and $databaseId for all documents
