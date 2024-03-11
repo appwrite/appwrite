@@ -19,16 +19,13 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
-use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
-use Utopia\Database\Exception\Timeout as TimeoutException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -657,14 +654,10 @@ App::put('/v1/databases/:databaseId')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        try {
-            $database = $dbForProject->updateDocument('databases', $databaseId, $database
-                ->setAttribute('name', $name)
-                ->setAttribute('enabled', $enabled)
-                ->setAttribute('search', implode(' ', [$databaseId, $name])));
-        } catch (StructureException $exception) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Bad structure. ' . $exception->getMessage());
-        }
+        $database = $dbForProject->updateDocument('databases', $databaseId, $database
+            ->setAttribute('name', $name)
+            ->setAttribute('enabled', $enabled)
+            ->setAttribute('search', implode(' ', [$databaseId, $name])));
 
         $queueForEvents->setParam('databaseId', $database->getId());
 
@@ -2815,13 +2808,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
 
-    try {
         $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
-    } catch (StructureException $exception) {
-        throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
-    } catch (DuplicateException $exception) {
-        throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-    }
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {

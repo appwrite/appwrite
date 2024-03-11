@@ -908,6 +908,10 @@ App::error()
             $error = new AppwriteException(AppwriteException::DOCUMENT_DELETE_RESTRICTED);
             $code = $error->getCode();
             $message = $error->getMessage();
+        } elseif ($error instanceof Utopia\Database\Exception\Authorization) {
+            $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
+            $code = $error->getCode();
+            $message = $error->getMessage();
         }
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */
