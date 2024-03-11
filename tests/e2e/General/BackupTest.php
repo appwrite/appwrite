@@ -34,15 +34,7 @@ class BackupTest extends Scope
 
     protected function getConsoleHeaders(): array
     {
-        return (
-            array_merge($this->getConsoleHeadersGet(), ['content-type' => 'application/json'])
-        );
-    }
-
-    protected function getConsoleHeadersGet(): array
-    {
         return [
-            'content-type' => 'application/json',
             'origin' => 'http://localhost',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -50,17 +42,42 @@ class BackupTest extends Scope
         ];
     }
 
-    public function testCreateDatabase(){
+    protected function getConsoleHeadersGet(): array
+    {
+        return (
+            array_merge($this->getConsoleHeadersGet(), ['content-type' => 'application/json'])
+        );
+    }
 
+    public function testShmuel()
+    {
+        $arr['databases']['db1'][] = 1;
+        $arr['databases']['db1'][] = 3;
+        $arr['databases']['db1'][] = 4;
+        $arr['databases']['db2'][] = 5;
+        $arr['databases']['db2'][] = 6;
+        $arr['buckets']['b1'][] = 2;
+        $arr['buckets']['b1'][] = 2;
+        $files = [];
+        foreach ($arr as $group => $v1) {
+            foreach ($v1 as $k2 => $v2) {
+                $files[][] = $group . '::' . $k2;
+                var_dump($v2);
+            }
+        }
+    }
+
+    public function testCreateDatabase(){
             // Create database
-            $database = $this->client->call(Client::METHOD_POST, '/databases', [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ], [
-                'databaseId' => ID::custom('first'),
-                'name' => 'Backup list database'
-            ]);
+            $database = $this->client->call(
+                Client::METHOD_POST,
+                '/databases',
+                $this->getConsoleHeaders(),
+                [
+                    'databaseId' => ID::custom('first'),
+                    'name' => 'Backup list database'
+                ]
+            );
 
             $this->assertNotEmpty($database['body']['$id']);
             $this->assertEquals(201, $database['headers']['status-code']);
@@ -69,17 +86,16 @@ class BackupTest extends Scope
             $databaseId = $database['body']['$id'];
 
             // Create Collection
-            $presidents = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'collectionId' => ID::unique(),
-                'name' => 'people',
-                'documentSecurity' => true,
-                'permissions' => [
-                    Permission::create(Role::user($this->getUser()['$id'])),
-                ],
+            $presidents = $this->client->call(
+                Client::METHOD_POST, '/databases/' . $databaseId . '/collections',
+                $this->getConsoleHeaders(),
+                [
+                    'collectionId' => ID::unique(),
+                    'name' => 'people',
+                    'documentSecurity' => true,
+                    'permissions' => [
+                        Permission::create(Role::user($this->getUser()['$id']))
+                    ],
             ]);
 
             $this->assertEquals(201, $presidents['headers']['status-code']);
