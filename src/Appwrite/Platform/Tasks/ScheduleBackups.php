@@ -133,6 +133,9 @@ class ScheduleBackups extends ScheduleBase
                         'migrationId' => $migration->getId(),
                         'migrationInternalId' => $migration->getInternalId(),
                         'status' => 'pending',
+                        'resourceId' => $policy->getAttribute('resourceId'),
+                        'resourceInternalId' => $policy->getAttribute('resourceInternalId'),
+                        'resourceType' => $policy->getAttribute('resourceType'),
                         'policyId' => $policy->getId(),
                         'policyInternalId' => $policy->getInternalId(),
                     ]));

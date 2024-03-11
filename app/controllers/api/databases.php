@@ -5,6 +5,7 @@ use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Task\Validator\Cron;
@@ -4278,7 +4279,8 @@ App::delete('/v1/databases/:databaseId/backups/:backupId')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $backupId, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject) {
+    ->inject('queueForUsage')
+    ->action(function (string $databaseId, string $backupId, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject, Usage $queueForUsage) {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
