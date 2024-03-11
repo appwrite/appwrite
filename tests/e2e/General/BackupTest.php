@@ -68,70 +68,190 @@ class BackupTest extends Scope
     }
 
     public function testCreateDatabase(){
-            // Create database
-            $database = $this->client->call(
-                Client::METHOD_POST,
-                '/databases',
-                $this->getConsoleHeaders(),
-                [
-                    'databaseId' => ID::custom('first'),
-                    'name' => 'Backup list database'
+        // Create database
+        $database = $this->client->call(
+            Client::METHOD_POST,
+            '/databases',
+            $this->getConsoleHeaders(),
+            [
+                'databaseId' => ID::custom('first'),
+                'name' => 'Backup list database'
+            ]
+        );
+
+        $this->assertNotEmpty($database['body']['$id']);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('Backup list database', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
+
+        // Create Collection
+        $presidents = $this->client->call(
+            Client::METHOD_POST, '/databases/' . $databaseId . '/collections',
+            $this->getConsoleHeaders(),
+            [
+                'collectionId' => ID::unique(),
+                'name' => 'people',
+                'documentSecurity' => true,
+                'permissions' => [
+                    Permission::create(Role::user($this->getUser()['$id']))
+                ],
+        ]);
+
+        $this->assertEquals(201, $presidents['headers']['status-code']);
+        $this->assertEquals($presidents['body']['name'], 'people');
+
+        $animals = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections',
+            $this->getConsoleHeaders(),
+            [
+                'collectionId' => ID::unique(),
+                'name' => 'animals',
+                'documentSecurity' => true,
+                'permissions' => [
+                    Permission::create(Role::user($this->getUser()['$id']))
+                ],
+            ]
+        );
+        $this->assertEquals(201, $animals['headers']['status-code']);
+        $this->assertEquals($animals['body']['name'], 'animals');
+
+
+        // Create Attributes
+        $attribute = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string',
+            $this->getConsoleHeaders(),
+            [
+                'key' => 'first_name',
+                'size' => 256,
+                'required' => true
+            ]
+        );
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+
+        $attribute = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string',
+            $this->getConsoleHeaders(),
+            [
+                'key' => 'last_name',
+                'size' => 256,
+                'required' => true
+            ]
+        );
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+
+        $attribute = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $animals['body']['$id'] . '/attributes/string',
+            $this->getConsoleHeaders(),
+            [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true
+            ]
+        );
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+
+        $attribute = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $animals['body']['$id'] . '/attributes/string',
+            $this->getConsoleHeaders(),
+            [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true
+            ]
+        );
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+
+        $attribute = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $animals['body']['$id'] . '/attributes/datetime',
+            $this->getConsoleHeaders(),
+            [
+                'key' => 'date_of_birth',
+                'required' => true
+            ]
+        );
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+
+        // Wait for worker
+        sleep(3);
+
+        /**
+         * Created Index
+         */
+        $index = $this->client->call(
+            Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/indexes',
+            $this->getConsoleHeaders(),
+            [
+                'key' => 'key_lastName',
+                'type' => 'key',
+                'attributes' => [
+                    'last_name'
+                ],
                 ]
-            );
+        );
+        $this->assertEquals(202, $index['headers']['status-code']);
+        $this->assertEquals('key_lastName', $index['body']['key']);
 
-            $this->assertNotEmpty($database['body']['$id']);
-            $this->assertEquals(201, $database['headers']['status-code']);
-            $this->assertEquals('Backup list database', $database['body']['name']);
-
-            $databaseId = $database['body']['$id'];
-
-            // Create Collection
-            $presidents = $this->client->call(
-                Client::METHOD_POST, '/databases/' . $databaseId . '/collections',
-                $this->getConsoleHeaders(),
-                [
-                    'collectionId' => ID::unique(),
-                    'name' => 'people',
-                    'documentSecurity' => true,
-                    'permissions' => [
-                        Permission::create(Role::user($this->getUser()['$id']))
-                    ],
-            ]);
-
-            $this->assertEquals(201, $presidents['headers']['status-code']);
-            $this->assertEquals($presidents['body']['name'], 'people');
-
-            // Create Attributes
-            $firstName = $this->client->call(
-                Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string',
-                $this->getConsoleHeaders(),
-                [
-                    'key' => 'first_name',
-                    'size' => 256,
-                    'required' => true
+        $index = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/indexes',
+            $this->getConsoleHeaders(),
+            [
+                'key' => 'key_lastName',
+                'type' => 'key',
+                'attributes' => [
+                    'last_name'
                 ]
-            );
+            ]
+        );
+        $this->assertEquals(202, $index['headers']['status-code']);
+        $this->assertEquals('key_lastName', $index['body']['key']);
 
-            $this->assertEquals(202, $firstName['headers']['status-code']);
-
-            $lastName = $this->client->call(
-                Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string',
-                $this->getConsoleHeaders(),
-                [
-                    'key' => 'last_name',
-                    'size' => 256,
-                    'required' => true
+        $index = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $animals['body']['$id'] . '/indexes',
+            $this->getConsoleHeaders(),
+            [
+                'key' => 'key_name',
+                'type' => 'key',
+                'attributes' => [
+                    'name'
                 ]
-            );
+            ]
+        );
+        $this->assertEquals(202, $index['headers']['status-code']);
+        $this->assertEquals('key_lastName', $index['body']['key']);
 
-            $this->assertEquals(202, $lastName['headers']['status-code']);
+        $index = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $animals['body']['$id'] . '/indexes',
+            $this->getConsoleHeaders(),
+            [
+                'key' => 'key_date_of_birth',
+                'type' => 'key',
+                'attributes' => [
+                    'date_of_birth'
+                ]
+            ]
+        );
+        $this->assertEquals(202, $index['headers']['status-code']);
+        $this->assertEquals('key_lastName', $index['body']['key']);
 
-            // Wait for worker
-            sleep(2);
+        // Wait for database worker to finish creating index
+        sleep(2);
 
-            $document1 = $this->client->call(
-                Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
-                $this->getConsoleHeaders(),
+        /**
+         * Created Documents
+         */
+        $document1 = $this->client->call(
+            Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
+            $this->getConsoleHeaders(),
                 [
                     'documentId' => ID::unique(),
                     'data' => [
