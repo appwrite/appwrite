@@ -127,7 +127,11 @@ class V20 extends Migration
                         }
                     }
 
-                    $this->projectDB->updateAttribute($id, $attribute['$id'], $attribute['type']);
+                    try {
+                        $this->projectDB->updateAttribute($id, $attribute['$id'], $attribute['type']);
+                    } catch (Throwable $th) {
+                        Console::warning("'{$attribute['$id']}' from {$id}: {$th->getMessage()}");
+                    }
                 }
             }
 
