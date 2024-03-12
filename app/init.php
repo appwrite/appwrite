@@ -866,7 +866,6 @@ foreach ($locales as $locale) {
 ]);
 
 // Runtime Execution
-App::setResource('log', fn() => new Log());
 App::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
