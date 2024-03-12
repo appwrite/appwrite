@@ -34,7 +34,7 @@ const client = new Client();
 client
     .setEndpoint('http://localhost/v1') // Your Appwrite Endpoint
     .setProject('455x34dfkj') // Your project ID
-    .setPlatform('com.example.myappwriteapp') // YOUR application ID
+    .setPlatform('com.example.myappwriteapp') // Your application ID or bundle ID.
 ;
 ```
 
