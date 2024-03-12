@@ -2,9 +2,15 @@
 ## Getting Started
 
 ### Add your Platform
-For you to init your SDK and interact with Appwrite services you need to add a web platform to your project. To add a new platform, go to your Appwrite console, choose the project you created in the step before and click the 'Add Platform' button.
+If this is your first time using Appwrite, create an account and create your first project.
 
-From the options, choose to add a **Web** platform and add your client app hostname. By adding your hostname to your project platform you are allowing cross-domain communication between your project and the Appwrite API.
+Then, under **Add a platform**, add a **Android app** or a **Apple app**. You can skip optional steps.
+
+#### iOS steps
+Add your app **name** and **Bundle ID**. You can find your **Bundle Identifier** in the **General** tab for your app's primary target in XCode.
+
+#### Android steps
+Add your app's **name** and **package name**, Your package name is generally the **applicationId** in your app-level [build.gradle](https://github.com/appwrite/playground-for-flutter/blob/master/android/app/build.gradle#L41) file.
 
 ## Setup
 
