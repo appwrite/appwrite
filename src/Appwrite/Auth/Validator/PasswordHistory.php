@@ -17,6 +17,8 @@ class PasswordHistory extends Password
 
     public function __construct(array $history, string $algo, array $algoOptions = [])
     {
+        parent::__construct();
+
         $this->history = $history;
         $this->algo = $algo;
         $this->algoOptions = $algoOptions;

@@ -228,5 +228,18 @@
     "continents.eu": "ਯੂਰਪ",
     "continents.na": "ਉੱਤਰ ਅਮਰੀਕਾ",
     "continents.oc": "ਓਸੀਆਨੀਆ",
-    "continents.sa": "ਸਾਉਥ ਅਮਰੀਕਾ"
+    "continents.sa": "ਸਾਉਥ ਅਮਰੀਕਾ",
+    "emails.magicSession.optionButton": "Haz clic en el botón de abajo para iniciar sesión de manera segura en tu cuenta de {{project}}. Expirará en una hora.",
+    "emails.magicSession.buttonText": "Inicia sesión en {{project}}",
+    "emails.magicSession.clientInfo": "Este ingreso fue solicitado usando {{agentClient}} en {{agentDevice}} {{agentOs}}. Si no solicitaste el ingreso, puedes ignorar este correo electrónico sin problema.",
+    "sms.verification.body": "El {{secret}} es tu código de verificación de {{project}}.",
+    "emails.magicSession.securityPhrase": "La frase de seguridad para este correo electrónico es {{phrase}}. Puedes confiar en este correo si esta frase coincide con la frase que se muestra al iniciar sesión.",
+    "emails.magicSession.optionUrl": "Si no puedes iniciar sesión utilizando el botón superior, por favor visita el siguiente enlace:",
+    "emails.otpSession.subject": "{{project}} ਲਾਗਿਨ",
+    "emails.otpSession.hello": "ਸਤ ਸ੍ਰੀ ਅਕਾਲ,",
+    "emails.otpSession.description": "ਜਦੋਂ ਤੁਹਾਨੂੰ ਆਪਣੇ {{project}} ਖਾਤੇ ਵਿੱਚ ਸੁਰੱਖਿਅਤ ਤਰੀਕੇ ਨਾਲ ਸਾਇਨ ਇਨ ਕਰਨ ਲਈ ਕਿਹਾ ਜਾਵੇ, ਤਾਂ ਹੇਠ ਲਿਖੇ ਵੈਰੀਫਿਕੇਸ਼ਨ ਕੋਡ ਨੂੰ ਦਰਜ ਕਰੋ। ਇਹ 15 ਮਿੰਟਾਂ ਵਿੱਚ ਮੁਕ ਜਾਵੇਗਾ।",
+    "emails.otpSession.clientInfo": "ਇਹ ਸਾਈਨ ਇਨ ਬੇਨਤੀ {{agentClient}} 'ਤੇ {{agentDevice}} {{agentOs}} ਦਾ ਇਸਤੇਮਾਲ ਕਰਕੇ ਕੀਤੀ ਗਈ ਸੀ। ਜੇ ਤੁਸੀਂ ਇਸ ਸਾਈਨ ਇਨ ਦੀ ਬੇਨਤੀ ਨਹੀਂ ਕੀਤੀ, ਤਾਂ ਤੁਸੀਂ ਇਸ ਈਮੇਲ ਨੂੰ ਬਿਨਾਂ ਕਿਸੇ ਚਿੰਤਾ ਦੇ ਨਜ਼ਰਅੰਦਾਜ਼ ਕਰ ਸਕਦੇ ਹੋ।",
+    "emails.otpSession.securityPhrase": "ਇਸ ਈਮੇਲ ਲਈ ਸੁਰੱਖਿਆ ਵਾਕ ਹੈ {{phrase}}। ਜੇ ਇਹ ਵਾਕ ਸਾਈਨ ਇਨ ਕਰਨ ਸਮੇਂ ਦਿਖਾਈ ਦੇਣ ਵਾਲੇ ਵਾਕ ਨਾਲ ਮੇਲ ਖਾਂਦਾ ਹੈ ਤਾਂ ਤੁਸੀਂ ਇਸ ਈਮੇਲ 'ਤੇ ਭਰੋਸਾ ਕਰ ਸਕਦੇ ਹੋ।",
+    "emails.otpSession.thanks": "ਧੰਨਵਾਦ,",
+    "emails.otpSession.signature": "{{project}} ਟੀਮ"
 }
