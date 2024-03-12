@@ -111,6 +111,8 @@ class Database extends Event
 
         $client = new Client($this->queue, $this->connection);
 
+        \var_dump('Event queue name is: ' . $this->queue);
+
         try {
             $result = $client->enqueue([
                 'project' => $this->project,
