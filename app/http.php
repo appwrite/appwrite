@@ -264,7 +264,14 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $app = new App('UTC');
 
     $l = new Log();
+
+    $fd = $swooleRequest->fd;
+    $fd_info = $http->getClientInfo($fd);
+    $packetTimeStart = $fd_info['last_time'];
+    $l->addExtra('packetTimeStart', \strval($packetTimeStart));
+
     App::setResource('log', fn() => $l);
+    App::setResource('swooleStartTime', fn() => \floatval($packetTimeStart));
 
     $l->addExtra('GetPoolsStart', \strval(\microtime(true)));
 
@@ -355,15 +362,15 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 });
 
 App::shutdown()
-    ->inject('startTime')
+    ->inject('swooleStartTime')
     ->inject('log')
-    ->action(function(float $startTime, Log $log) {
+    ->action(function(float $swooleStartTime, Log $log) {
         $endTime = \microtime(true);
 
         $log->addExtra('veryLastShutdown', \strval(\microtime(true)));
-        $log->addExtra('duration', \strval($endTime - $startTime));
+        $log->addExtra('durationSwoole', \strval($endTime - $swooleStartTime));
 
-        if($endTime - $startTime < 10) {
+        if($endTime - $swooleStartTime > 10) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Our amazing timeout.');
         }
     });
