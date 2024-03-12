@@ -1036,14 +1036,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        try {
-            $dbForProject->deleteDocument('memberships', $membership->getId());
-        } catch (AuthorizationException $exception) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (\Exception $exception) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
-        }
-
+        $dbForProject->deleteDocument('memberships', $membership->getId());
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
