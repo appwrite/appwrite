@@ -172,7 +172,7 @@ class V19 extends Migration
                                 id: $attribute->getAttribute('key'),
                                 size: Database::LENGTH_KEY
                             );
-                        } catch (Throwable) {
+                        } catch (\Throwable) {
                             Console::warning("Error migrating internal attribute {$attribute->getAttribute('key')}: {$th->getMessage()}");
                         }
                     }
