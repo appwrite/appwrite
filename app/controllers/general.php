@@ -786,6 +786,71 @@ App::error()
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
+        $class = \get_class($error);
+        $code = $error->getCode();
+        $message = $error->getMessage();
+        $file = $error->getFile();
+        $line = $error->getLine();
+        $trace = $error->getTrace();
+
+        if (php_sapi_name() === 'cli') {
+            Console::error('[Error] Timestamp: ' . date('c', time()));
+
+            if ($route) {
+                Console::error('[Error] Method: ' . $route->getMethod());
+                Console::error('[Error] URL: ' . $route->getPath());
+            }
+
+            Console::error('[Error] Type: ' . get_class($error));
+            Console::error('[Error] Message: ' . $message);
+            Console::error('[Error] File: ' . $file);
+            Console::error('[Error] Line: ' . $line);
+        }
+
+        switch ($class) {
+            case 'Utopia\Exception':
+                $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
+                switch ($code) {
+                    case 400:
+                        $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
+                        break;
+                    case 404:
+                        $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+                        break;
+                }
+                break;
+            case 'Utopia\Database\Exception\Conflict':
+                \var_dump('Wrapping conflict exception');
+                $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Timeout':
+                \var_dump('Wrapping timeout exception');
+                $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Query':
+                \var_dump('Wrapping query exception');
+                $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, $error->getMessage(), previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Structure':
+                \var_dump('Wrapping structure exception');
+                $error = new AppwriteException(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $error->getMessage(), previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Duplicate':
+                \var_dump('Wrapping duplicate exception');
+                $error = new AppwriteException(AppwriteException::DOCUMENT_ALREADY_EXISTS);
+                break;
+            case 'Utopia\Database\Exception\Restricted':
+                \var_dump('Wrapping restricted exception');
+                $error = new AppwriteException(AppwriteException::DOCUMENT_DELETE_RESTRICTED);
+                break;
+            case 'Utopia\Database\Exception\Authorization':
+                \var_dump('Wrapping authorization exception');
+                $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
+                break;
+        }
+
+        $code = $error->getCode();
+        $message = $error->getMessage();
 
         if ($error instanceof AppwriteException) {
             $publish = $error->isPublishable();
@@ -814,7 +879,7 @@ App::error()
             try {
                 /** @var Utopia\Database\Document $user */
                 $user = $utopia->getResource('user');
-            } catch (\Throwable $th) {
+            } catch (\Throwable) {
                 // All good, user is optional information for logger
             }
 
@@ -852,65 +917,6 @@ App::error()
             $responseCode = $logger->addLog($log);
             Console::info('Log pushed with status code: ' . $responseCode);
         }
-
-        $class = \get_class($error);
-        $code = $error->getCode();
-        $message = $error->getMessage();
-        $file = $error->getFile();
-        $line = $error->getLine();
-        $trace = $error->getTrace();
-
-        if (php_sapi_name() === 'cli') {
-            Console::error('[Error] Timestamp: ' . date('c', time()));
-
-            if ($route) {
-                Console::error('[Error] Method: ' . $route->getMethod());
-                Console::error('[Error] URL: ' . $route->getPath());
-            }
-
-            Console::error('[Error] Type: ' . get_class($error));
-            Console::error('[Error] Message: ' . $message);
-            Console::error('[Error] File: ' . $file);
-            Console::error('[Error] Line: ' . $line);
-        }
-
-        switch ($class) {
-            case 'Utopia\Exception':
-                $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
-                switch ($code) {
-                    case 400:
-                        $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
-                        break;
-                    case 404:
-                        $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
-                        break;
-                }
-                break;
-            case 'Utopia\Database\Exception\Conflict':
-                $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
-                break;
-            case 'Utopia\Database\Exception\Timeout':
-                $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
-                break;
-            case 'Utopia\Database\Exception\Query':
-                $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, $error->getMessage(), previous: $error);
-                break;
-            case 'Utopia\Database\Exception\Structure':
-                $error = new AppwriteException(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $error->getMessage(), previous: $error);
-                break;
-            case 'Utopia\Database\Exception\Duplicate':
-                $error = new AppwriteException(AppwriteException::DOCUMENT_ALREADY_EXISTS);
-                break;
-            case 'Utopia\Database\Exception\Restricted':
-                $error = new AppwriteException(AppwriteException::DOCUMENT_DELETE_RESTRICTED);
-                break;
-            case 'Utopia\Database\Exception\Authorization':
-                $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
-                break;
-        }
-
-        $code = $error->getCode();
-        $message = $error->getMessage();
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */
         if (!($error instanceof AppwriteException)) {
