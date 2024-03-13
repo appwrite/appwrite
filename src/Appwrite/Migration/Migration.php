@@ -201,20 +201,14 @@ abstract class Migration
         $sum = 0;
         $nextDocument = null;
         $collectionCount = $this->projectDB->count($collectionId);
-        $queries[] = Query::limit($this->limit);
 
         do {
+            $usedQueries = [...$queries, Query::limit($this->limit)];
             if ($nextDocument !== null) {
-                $cursorQueryIndex = \array_search('cursorAfter', \array_map(fn (Query $query) => $query->getMethod(), $queries));
-
-                if ($cursorQueryIndex !== false) {
-                    $queries[$cursorQueryIndex] = Query::cursorAfter($nextDocument);
-                } else {
-                    $queries[] = Query::cursorAfter($nextDocument);
-                }
+                $usedQueries[] = Query::cursorAfter($nextDocument);
             }
 
-            $documents = $this->projectDB->find($collectionId, $queries);
+            $documents = $this->projectDB->find($collectionId, $usedQueries);
             $count = count($documents);
             $sum += $count;
 

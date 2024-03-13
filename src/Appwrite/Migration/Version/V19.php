@@ -3,6 +3,7 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
+use Throwable;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -41,11 +42,6 @@ class V19 extends Migration
 
         Console::info('Migrating Buckets');
         $this->migrateBuckets();
-
-        if ($this->project->getId() !== 'console') {
-            Console::info('Migrating Enum Attribute Size');
-            $this->migrateEnumAttributeSize();
-        }
 
         Console::info('Migrating Documents');
         $this->forEachDocument([$this, 'fixDocument']);
@@ -147,6 +143,40 @@ class V19 extends Migration
                     // $this->createCollection('statsLogger');
                     break;
                 case 'attributes':
+                    /**
+                     * Update all enum attributes to have a size of 255
+                     */
+                    foreach (
+                        $this->documentsIterator('attributes', [
+                            Query::equal('format', ['enum']),
+                            Query::lessThan('size', Database::LENGTH_KEY)
+                        ]) as $attribute
+                    ) {
+                        /**
+                        * Migratte attribute document on collection
+                        */
+                        try {
+                            $attribute->setAttribute('size', Database::LENGTH_KEY);
+                            $this->projectDB->updateDocument('attributes', $attribute->getId(), $attribute);
+                        } catch (\Throwable $th) {
+                            Console::warning("Error migrating attribute {$attribute->getAttribute('key')}: {$th->getMessage()}");
+                        }
+                        /**
+                         * Migrate internal attribute on collections
+                         */
+                        try {
+                            $databaseInternalId = $attribute->getAttribute('databaseInternalId');
+                            $collectionInternalId = $attribute->getAttribute('collectionInternalId');
+                            $this->projectDB->updateAttribute(
+                                collection: 'database_' . $databaseInternalId . '_collection_' . $collectionInternalId,
+                                id: $attribute->getAttribute('key'),
+                                size: Database::LENGTH_KEY
+                            );
+                        } catch (Throwable) {
+                            Console::warning("Error migrating internal attribute {$attribute->getAttribute('key')}: {$th->getMessage()}");
+                        }
+                    }
+                    // intentional fallthrough
                 case 'indexes':
                     try {
                         $this->projectDB->updateAttribute($id, 'databaseInternalId', required: true);
@@ -644,22 +674,6 @@ class V19 extends Migration
         };
 
         return $commands;
-    }
-
-    private function migrateEnumAttributeSize(): void
-    {
-        foreach (
-            $this->documentsIterator('attributes', [
-            Query::equal('format', ['enum']),
-            Query::lessThan('size', Database::LENGTH_KEY)
-            ]) as $attribute
-        ) {
-            $attribute->setAttribute('size', Database::LENGTH_KEY);
-            $this->projectDB->updateDocument('attributes', $attribute->getId(), $attribute);
-            $databaseInternalId = $attribute->getAttribute('databaseInternalId');
-            $collectionInternalId = $attribute->getAttribute('collectionInternalId');
-            $this->projectDB->updateAttribute('database_' . $databaseInternalId . '_collection_' . $collectionInternalId, $attribute->getAttribute('key'), size: 255);
-        }
     }
 
     /**
