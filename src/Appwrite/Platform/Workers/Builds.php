@@ -385,7 +385,6 @@ class Builds extends Action
             ]);
 
             $command = $deployment->getAttribute('commands', '');
-            $command = \str_replace('"', '\\"', $command);
 
             $response = null;
             $err = null;
@@ -394,7 +393,7 @@ class Builds extends Action
                 Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
                     try {
                         $version = $function->getAttribute('version', 'v2');
-                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"';
+                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
 
                         $response = $executor->createRuntime(
                             deploymentId: $deployment->getId(),
