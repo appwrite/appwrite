@@ -61,7 +61,7 @@ class MessagingTest extends Scope
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
-                'from' => '+123456789'
+                'templateId' => '123456'
             ],
             'Vonage' => [
                 'providerId' => ID::unique(),
@@ -152,6 +152,7 @@ class MessagingTest extends Scope
                 'name' => 'Ms91-2',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
+                'templateId' => '123456',
             ],
             'Vonage' => [
                 'providerId' => $providers[6]['_id'],
