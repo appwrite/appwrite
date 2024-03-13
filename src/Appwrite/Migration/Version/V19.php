@@ -3,7 +3,6 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
-use Throwable;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
