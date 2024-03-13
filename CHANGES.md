@@ -1,3 +1,9 @@
+# Version 1.4.14
+## What's Changed
+### Fixes
+
+* Fix function build command by @abnegate in https://github.com/appwrite/appwrite/pull/7816
+
 # Version 1.4.13
 
 ## Notable changes
