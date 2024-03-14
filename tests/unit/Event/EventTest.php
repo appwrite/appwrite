@@ -28,7 +28,7 @@ class EventTest extends TestCase
             'pass' => App::getEnv('_APP_REDIS_PASS', ''),
         ]);
 
-        $dsn = App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
+        $dsn = App::getEnv('_APP_CONNECTIONS_QUEUE', 'redis=' . $fallbackForRedis);
         $dsn = explode('=', $dsn);
         $dsn = $dsn[1] ?? '';
         $dsn = new DSN($dsn);
