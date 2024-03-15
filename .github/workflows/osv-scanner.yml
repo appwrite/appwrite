@@ -1,0 +1,27 @@
+name: OSV Scanner
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  OSV-Scanner:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Golang
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.19'
+
+      - name: Install OSV Scanner
+        run: |
+          go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+
+      - name: Scan for Vulnerabilities
+        run: |
+          osv-scanner -r .
