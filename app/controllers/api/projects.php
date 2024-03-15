@@ -121,7 +121,9 @@ App::post('/v1/projects')
             }
         }
 
-        $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE', null);
+        $databaseOverrides = \explode(',', App::getEnv('_APP_DATABASE_OVERRIDE', ''));
+        $databaseOverride = $databaseOverrides[array_rand($databaseOverrides)];
+
         $index = array_search($databaseOverride, $databases);
         if ($index !== false) {
             $database = $databases[$index];
