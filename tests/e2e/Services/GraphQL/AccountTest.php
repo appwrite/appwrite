@@ -61,7 +61,7 @@ class AccountTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $session['body']);
         $this->assertIsArray($session['body']['data']);
-        $this->assertIsArray($session['body']['data']['accountCreateEmailSession']);
+        $this->assertIsArray($session['body']['data']['accountCreateEmailPasswordSession']);
 
         $cookie = $session['cookies']['a_session_' . $this->getProject()['$id']];
         $this->assertNotEmpty($cookie);
@@ -87,9 +87,9 @@ class AccountTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $session['body']);
         $this->assertIsArray($session['body']['data']);
-        $this->assertIsArray($session['body']['data']['accountCreateMagicURLSession']);
+        $this->assertIsArray($session['body']['data']['accountCreateMagicURLToken']);
 
-        return $session['body']['data']['accountCreateMagicURLSession'];
+        return $session['body']['data']['accountCreateMagicURLToken'];
     }
 
     public function testCreateEmailVerification(): array
@@ -123,6 +123,7 @@ class AccountTest extends Scope
     public function testCreatePhoneVerification(): array
     {
         $projectId = $this->getProject()['$id'];
+
         $query = $this->getQuery(self::$CREATE_PHONE_VERIFICATION);
         $graphQLPayload = [
             'query' => $query,

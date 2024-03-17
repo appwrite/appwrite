@@ -5,10 +5,10 @@ namespace Tests\E2E\Services\Storage;
 use Appwrite\Extend\Exception;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StorageBase
@@ -30,7 +30,7 @@ trait StorageBase
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
-            'allowedFileExtensions' => ["jpg", "png", 'jfif'],
+            'allowedFileExtensions' => ['jpg', 'png', 'jfif'],
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -383,7 +383,9 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ]
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
         $this->assertEquals(1, count($files['body']['files']));
@@ -392,7 +394,9 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ]
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
         $this->assertEquals(0, count($files['body']['files']));
@@ -401,7 +405,9 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("mimeType", "image/png")' ]
+            'queries' => [
+                Query::equal('mimeType', ['image/png'])->toString(),
+            ],
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
         $this->assertEquals(1, count($files['body']['files']));
@@ -410,7 +416,9 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("mimeType", "image/jpeg")' ]
+            'queries' => [
+                Query::equal('mimeType', ['image/jpeg'])->toString(),
+            ],
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
         $this->assertEquals(0, count($files['body']['files']));

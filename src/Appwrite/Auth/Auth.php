@@ -9,8 +9,8 @@ use Appwrite\Auth\Hash\Phpass;
 use Appwrite\Auth\Hash\Scrypt;
 use Appwrite\Auth\Hash\Scryptmodified;
 use Appwrite\Auth\Hash\Sha;
-use Utopia\Database\Document;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
@@ -52,6 +52,9 @@ class Auth
     public const TOKEN_TYPE_INVITE = 4;
     public const TOKEN_TYPE_MAGIC_URL = 5;
     public const TOKEN_TYPE_PHONE = 6;
+    public const TOKEN_TYPE_OAUTH2 = 7;
+    public const TOKEN_TYPE_GENERIC = 8;
+    public const TOKEN_TYPE_EMAIL = 9; // OTP
 
     /**
      * Session Providers.
@@ -60,6 +63,9 @@ class Auth
     public const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
     public const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
     public const SESSION_PROVIDER_PHONE = 'phone';
+    public const SESSION_PROVIDER_OAUTH2 = 'oauth2';
+    public const SESSION_PROVIDER_TOKEN = 'token';
+    public const SESSION_PROVIDER_SERVER = 'server';
 
     /**
      * Token Expiration times.
@@ -67,8 +73,23 @@ class Auth
     public const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */
     public const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
     public const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
-    public const TOKEN_EXPIRATION_CONFIRM = 3600 * 24 * 7;    /* 7 days */
-    public const TOKEN_EXPIRATION_PHONE = 60 * 15;            /* 15 minutes */
+    public const TOKEN_EXPIRATION_CONFIRM = 3600 * 1;         /* 1 hour */
+    public const TOKEN_EXPIRATION_OTP = 60 * 15;            /* 15 minutes */
+    public const TOKEN_EXPIRATION_GENERIC = 60 * 15;        /* 15 minutes */
+
+    /**
+     * Token Lengths.
+     */
+    public const TOKEN_LENGTH_MAGIC_URL = 64;
+    public const TOKEN_LENGTH_VERIFICATION = 256;
+    public const TOKEN_LENGTH_RECOVERY = 256;
+    public const TOKEN_LENGTH_OAUTH2 = 64;
+    public const TOKEN_LENGTH_SESSION = 256;
+
+    /**
+     * MFA
+     */
+    public const MFA_RECENT_DURATION = 1800; // 30 mins
 
     /**
      * @var string
@@ -115,6 +136,27 @@ class Auth
             'id' => $id,
             'secret' => $secret,
         ]));
+    }
+
+    /**
+     * Token type to session provider mapping.
+     */
+    public static function getSessionProviderByTokenType(int $type): string
+    {
+        switch ($type) {
+            case Auth::TOKEN_TYPE_VERIFICATION:
+            case Auth::TOKEN_TYPE_RECOVERY:
+            case Auth::TOKEN_TYPE_INVITE:
+                return Auth::SESSION_PROVIDER_EMAIL;
+            case Auth::TOKEN_TYPE_MAGIC_URL:
+                return Auth::SESSION_PROVIDER_MAGIC_URL;
+            case Auth::TOKEN_TYPE_PHONE:
+                return Auth::SESSION_PROVIDER_PHONE;
+            case Auth::TOKEN_TYPE_OAUTH2:
+                return Auth::SESSION_PROVIDER_OAUTH2;
+            default:
+                return Auth::SESSION_PROVIDER_TOKEN;
+        }
     }
 
     /**
@@ -270,13 +312,20 @@ class Auth
      *
      * Generate random password string
      *
-     * @param int $length
+     * @param int $length Length of returned token
      *
      * @return string
      */
-    public static function tokenGenerator(int $length = 128): string
+    public static function tokenGenerator(int $length = 256): string
     {
-        return \bin2hex(\random_bytes($length));
+        if ($length <= 0) {
+            throw new \Exception('Token length must be greater than 0');
+        }
+
+        $bytesLength = (int) ceil($length / 2);
+        $token = \bin2hex(\random_bytes($bytesLength));
+
+        return substr($token, 0, $length);
     }
 
     /**
@@ -302,44 +351,24 @@ class Auth
     /**
      * Verify token and check that its not expired.
      *
-     * @param array  $tokens
-     * @param int    $type
+     * @param array<Document> $tokens
+     * @param int $type Type of token to verify, if null will verify any type
      * @param string $secret
      *
-     * @return bool|string
+     * @return false|Document
      */
-    public static function tokenVerify(array $tokens, int $type, string $secret)
+    public static function tokenVerify(array $tokens, int $type = null, string $secret): false|Document
     {
         foreach ($tokens as $token) {
-            /** @var Document $token */
             if (
-                $token->isSet('type') &&
                 $token->isSet('secret') &&
                 $token->isSet('expire') &&
-                $token->getAttribute('type') == $type &&
+                $token->isSet('type') &&
+                ($type === null ||  $token->getAttribute('type') === $type) &&
                 $token->getAttribute('secret') === self::hash($secret) &&
                 DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
-                return (string)$token->getId();
-            }
-        }
-
-        return false;
-    }
-
-    public static function phoneTokenVerify(array $tokens, string $secret)
-    {
-        foreach ($tokens as $token) {
-            /** @var Document $token */
-            if (
-                $token->isSet('type') &&
-                $token->isSet('secret') &&
-                $token->isSet('expire') &&
-                $token->getAttribute('type') == Auth::TOKEN_TYPE_PHONE &&
-                $token->getAttribute('secret') === self::hash($secret) &&
-                DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
-            ) {
-                return (string) $token->getId();
+                return $token;
             }
         }
 
@@ -349,21 +378,19 @@ class Auth
     /**
      * Verify session and check that its not expired.
      *
-     * @param array  $sessions
+     * @param array<Document> $sessions
      * @param string $secret
-     * @param string $expires
      *
      * @return bool|string
      */
-    public static function sessionVerify(array $sessions, string $secret, int $expires)
+    public static function sessionVerify(array $sessions, string $secret)
     {
         foreach ($sessions as $session) {
-            /** @var Document $session */
             if (
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&
                 $session->getAttribute('secret') === self::hash($secret) &&
-                DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $expires)) >= DateTime::formatTz(DateTime::now())
+                DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now())
             ) {
                 return $session->getId();
             }
@@ -375,7 +402,7 @@ class Auth
     /**
      * Is Privileged User?
      *
-     * @param array $roles
+     * @param array<string> $roles
      *
      * @return bool
      */
@@ -395,7 +422,7 @@ class Auth
     /**
      * Is App User?
      *
-     * @param array $roles
+     * @param array<string> $roles
      *
      * @return bool
      */
@@ -412,7 +439,7 @@ class Auth
      * Returns all roles for a user.
      *
      * @param Document $user
-     * @return array
+     * @return array<string>
      */
     public static function getRoles(Document $user): array
     {
@@ -462,6 +489,12 @@ class Auth
         return $roles;
     }
 
+    /**
+     * Check if user is anonymous.
+     *
+     * @param Document $user
+     * @return bool
+     */
     public static function isAnonymousUser(Document $user): bool
     {
         return is_null($user->getAttribute('email'))
