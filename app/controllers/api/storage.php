@@ -1947,7 +1947,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId/jwt')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
+                'resourceType' => 'file',
                 'resourceId' => $token->getAttribute('resourceId'),
+                'resourceInternalId' => $token->getAttribute('resourceInternalId'),
                 'tokenId' => $token->getId(),
                 'secret' => $token->getAttribute('secret')
             ])]), Response::MODEL_JWT);
