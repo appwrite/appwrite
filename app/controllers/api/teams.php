@@ -694,7 +694,7 @@ App::get('/v1/teams/:teamId/memberships')
         }
 
         // Set internal queries
-        $queries[] = Query::equal('teamId', [$teamId]);
+        $queries[] = Query::equal('teamInternalId', [$team->getInternalId()]);
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
