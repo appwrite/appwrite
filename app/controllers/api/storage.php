@@ -11,6 +11,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Buckets;
 use Appwrite\Utopia\Database\Validator\Queries\Files;
+use Appwrite\Utopia\Database\Validator\Queries\FileTokens;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -26,6 +27,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Image\Image;
@@ -42,12 +44,10 @@ use Utopia\Swoole\Request;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Validator\Nullable;
-use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Appwrite\Utopia\Database\Validator\Queries\FileTokens;
 
 App::post('/v1/storage/buckets')
     ->desc('Create bucket')
@@ -1725,7 +1725,7 @@ App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
         if ($file->isEmpty()) {
@@ -1792,7 +1792,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
         if ($file->isEmpty()) {
@@ -1864,7 +1864,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
         if ($file->isEmpty()) {
@@ -1919,7 +1919,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId/jwt')
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
         if ($file->isEmpty()) {
@@ -1947,10 +1947,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId/jwt')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
-            'resourceId' => $token->getAttribute('resourceId'),
-            'tokenId' => $token->getId(),
-            'secret' => $token->getAttribute('secret')
-        ])]), Response::MODEL_JWT);
+                'resourceId' => $token->getAttribute('resourceId'),
+                'tokenId' => $token->getId(),
+                'secret' => $token->getAttribute('secret')
+            ])]), Response::MODEL_JWT);
     });
 
 App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
@@ -2003,7 +2003,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
         if ($file->isEmpty()) {
@@ -2108,7 +2108,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
         if ($file->isEmpty()) {
