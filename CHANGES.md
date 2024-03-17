@@ -1,3 +1,17 @@
+# Version 1.5.4
+## What's Changed
+### Fixes
+
+* Fix function build command by @abnegate in https://github.com/appwrite/appwrite/pull/7813
+
+# Version 1.5.3
+## What's Changed
+### Fixes
+
+* Fix Attribute not found when migrating users collection in [#7782](https://github.com/appwrite/appwrite/pull/7782)
+* Fix git deployments in [#7780](https://github.com/appwrite/appwrite/pull/7780)
+* Allow wildcards for url validation like OAuth2 success in [#7791](https://github.com/appwrite/appwrite/pull/7791)
+
 # Version 1.5.2
 ## What's Changed
 * Fix stats migration by @abnegate in https://github.com/appwrite/appwrite/pull/7760
