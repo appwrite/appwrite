@@ -1020,10 +1020,6 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_INVITE_NOT_FOUND);
         }
 
-        if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
-        }
-
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
         if ($user->isEmpty()) {
@@ -1034,6 +1030,10 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         $dbForProject->deleteDocument('memberships', $membership->getId());
