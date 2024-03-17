@@ -394,7 +394,7 @@ class Hamster extends Action
 
             /** Number of projects in this organization */
             $statsPerOrganization['projects'] = $dbForConsole->count('projects', [
-                Query::equal('teamId', [$organization->getId()]),
+                Query::equal('teamInternalId', [$organization->getInternalId()]),
                 Query::limit(APP_LIMIT_COUNT)
             ]);
 
