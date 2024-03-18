@@ -23,6 +23,7 @@ use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
+use Utopia\Fetch\Client;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
 
@@ -283,14 +284,21 @@ App::get('/v1/avatars/image')
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
-        $fetch = @\file_get_contents($url);
+        $client = new Client();
+        try {
+            $res = $client
+                ->setAllowRedirects(false)
+                ->fetch($url);
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
 
-        if (!$fetch) {
+        if ($res->getStatusCode() !== 200) {
             throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
         }
 
         try {
-            $image = new Image($fetch);
+            $image = new Image($res->getBody());
         } catch (\Exception $exception) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to parse image');
         }
@@ -339,31 +347,27 @@ App::get('/v1/avatars/favicon')
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
-        $curl = \curl_init();
+        $client = new Client();
+        try {
+            $res = $client
+                ->setAllowRedirects(false)
+                ->setUserAgent(\sprintf(
+                    APP_USERAGENT,
+                    App::getEnv('_APP_VERSION', 'UNKNOWN'),
+                    App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+                ))
+                ->fetch($url);
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
 
-        \curl_setopt_array($curl, [
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS => 3,
-            CURLOPT_URL => $url,
-            CURLOPT_USERAGENT => \sprintf(
-                APP_USERAGENT,
-                App::getEnv('_APP_VERSION', 'UNKNOWN'),
-                App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
-            ),
-        ]);
-
-        $html = \curl_exec($curl);
-
-        \curl_close($curl);
-
-        if (!$html) {
+        if ($res->getStatusCode() !== 200) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
         $doc = new DOMDocument();
         $doc->strictErrorChecking = false;
-        @$doc->loadHTML($html);
+        @$doc->loadHTML($res->getBody());
 
         $links = $doc->getElementsByTagName('link');
         $outputHref = '';
@@ -418,9 +422,22 @@ App::get('/v1/avatars/favicon')
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
-        if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
-            $data = @\file_get_contents($outputHref, false);
+        $client = new Client();
+        try {
+            $res = $client
+                ->setAllowRedirects(false)
+                ->fetch($outputHref);
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
 
+        if ($res->getStatusCode() !== 200) {
+            throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
+        }
+
+        $data = $res->getBody();
+
+        if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
             if (empty($data) || (\mb_substr($data, 0, 5) === '<html') || \mb_substr($data, 0, 5) === '<!doc') {
                 throw new Exception(Exception::AVATAR_ICON_NOT_FOUND, 'Favicon not found');
             }
@@ -430,13 +447,7 @@ App::get('/v1/avatars/favicon')
                 ->file($data);
         }
 
-        $fetch = @\file_get_contents($outputHref, false);
-
-        if (!$fetch) {
-            throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
-        }
-
-        $image = new Image($fetch);
+        $image = new Image($data);
         $image->crop((int) $width, (int) $height);
         $output = (empty($output)) ? $type : $output;
         $data = $image->output($output, $quality);
