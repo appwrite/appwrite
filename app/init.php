@@ -1034,7 +1034,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     }
 
     if (APP_MODE_ADMIN === $mode) {
-        if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
+        if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
             $user = new Document([]);
