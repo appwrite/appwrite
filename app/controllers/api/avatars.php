@@ -285,10 +285,14 @@ App::get('/v1/avatars/image')
         }
 
         $client = new Client();
-        $res = $client
+        try {
+            $res = $client
                 ->setAllowRedirects(false)
                 ->fetch($url);
-
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+        
         if ($res->getStatusCode() !== 200) {
             throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
         }
@@ -344,7 +348,8 @@ App::get('/v1/avatars/favicon')
         }
 
         $client = new Client();
-        $res = $client
+        try {
+            $res = $client
                 ->setAllowRedirects(false)
                 ->setUserAgent(\sprintf(
                     APP_USERAGENT,
@@ -352,7 +357,10 @@ App::get('/v1/avatars/favicon')
                     App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
                 ))
                 ->fetch($url);
-
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+        
         if ($res->getStatusCode() !== 200) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
@@ -415,9 +423,13 @@ App::get('/v1/avatars/favicon')
         }
 
         $client = new Client();
-        $res = $client
-            ->setAllowRedirects(false)
-            ->fetch($outputHref);
+        try {
+            $res = $client
+                ->setAllowRedirects(false)
+                ->fetch($outputHref);
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }    
 
         if ($res->getStatusCode() !== 200) {
             throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
