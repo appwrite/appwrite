@@ -292,7 +292,7 @@ App::get('/v1/avatars/image')
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
-        
+
         if ($res->getStatusCode() !== 200) {
             throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
         }
@@ -360,7 +360,7 @@ App::get('/v1/avatars/favicon')
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
-        
+
         if ($res->getStatusCode() !== 200) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
@@ -429,7 +429,7 @@ App::get('/v1/avatars/favicon')
                 ->fetch($outputHref);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
-        }    
+        }
 
         if ($res->getStatusCode() !== 200) {
             throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
