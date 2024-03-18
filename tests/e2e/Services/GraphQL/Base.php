@@ -899,7 +899,15 @@ trait Base
             case self::$UPDATE_USER_PREFS:
                 return 'mutation updateUserPrefs($userId: String!, $prefs: Assoc!){
                     usersUpdatePrefs(userId: $userId, prefs: $prefs) {
-                        data
+                        _id
+                        name
+                        registration
+                        status
+                        email
+                        emailVerification
+                        prefs {
+                          data
+                        }
                     }
                 }';
             case self::$UPDATE_USER_EMAIL_VERIFICATION:

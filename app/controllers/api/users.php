@@ -1396,9 +1396,9 @@ App::patch('/v1/users/:userId/prefs')
     ->label('sdk.description', '/docs/references/users/update-user-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
+    ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -1410,12 +1410,13 @@ App::patch('/v1/users/:userId/prefs')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
+        $user->setAttribute('prefs', $prefs);
 
-        $queueForEvents
-            ->setParam('userId', $user->getId());
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/users/:userId/targets/:targetId')
