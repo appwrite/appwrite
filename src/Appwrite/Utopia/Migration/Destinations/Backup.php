@@ -52,7 +52,6 @@ class Backup extends Destination
         $this->storage = $storage;
         $this->backup = $backup;
         $this->project = $project;
-
         $this->policy = $dbForProject->getDocument('backupsPolicy', $this->backup->getAttribute('policyId'));
 
         if (! \file_exists($this->path)) {
@@ -110,6 +109,7 @@ class Backup extends Destination
      */
     private function sync(): void
     {
+
         $files = [];
        //Todo change var names @fogelito
         foreach ($this->data as $group => $v1){
@@ -220,6 +220,8 @@ class Backup extends Destination
             $resource->setStatus(Resource::STATUS_SUCCESS);
             $this->cache->update($resource);
             $this->sync();
+
+
         }
 
         $callback($resources);
