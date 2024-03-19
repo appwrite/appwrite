@@ -1393,16 +1393,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.3",
+            "version": "0.33.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "893d602cd96676810c25fc9b9a2e9360eebb898f"
+                "reference": "6ee2e93a4a529bce5eecf4ac892890d4b0c84861"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/893d602cd96676810c25fc9b9a2e9360eebb898f",
-                "reference": "893d602cd96676810c25fc9b9a2e9360eebb898f",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/6ee2e93a4a529bce5eecf4ac892890d4b0c84861",
+                "reference": "6ee2e93a4a529bce5eecf4ac892890d4b0c84861",
                 "shasum": ""
             },
             "require": {
@@ -1417,7 +1417,8 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\": "src/"
+                    "Utopia\\": "src/",
+                    "Tests\\E2E\\": "tests/e2e"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -1432,9 +1433,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.3"
+                "source": "https://github.com/utopia-php/http/tree/0.33.4"
             },
-            "time": "2024-03-11T13:43:23+00:00"
+            "time": "2024-03-19T08:04:59+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5169,5 +5170,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.2.0"
 }
