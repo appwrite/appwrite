@@ -4,6 +4,10 @@ on:
   pull_request:
     types: [opened,reopened,synchronize,closed]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   build-image:
     name: Build and Push image
@@ -15,19 +19,22 @@ jobs:
       # You'll need this output later to render the Compose file.
       tags: ${{ steps.meta.outputs.tags }}
     steps:
-      - name: Login to DockerHub
+      - name: Login to Container registry
         uses: docker/login-action@v1
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      
       - name: Checkout git repo
         uses: actions/checkout@v3
+
       - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: appwrite/appwrite
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      
       - name: Build and Push Image to Docker Hub
         uses: docker/build-push-action@v2
         with:
