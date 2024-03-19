@@ -19,7 +19,6 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
@@ -28,7 +27,6 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
-use Utopia\Database\Exception\Timeout as TimeoutException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -47,8 +45,8 @@ use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
-use Utopia\Validator\IP;
 use Utopia\Validator\Integer;
+use Utopia\Validator\IP;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
@@ -152,14 +150,14 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
     } catch (LimitException) {
         throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
-    } catch (\Exception $e) {
-        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-        $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+    } catch (\Throwable $e) {
+        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
         throw $e;
     }
 
-    $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-    $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+    $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
+    $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 
     if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
         $twoWayKey = $options['twoWayKey'];
@@ -196,14 +194,14 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         } catch (LimitException) {
             $dbForProject->deleteDocument('attributes', $attribute->getId());
             throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
-        } catch (\Exception $e) {
-            $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
-            $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+        } catch (\Throwable $e) {
+            $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
+            $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
             throw $e;
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
-        $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
+        $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
     }
 
     $queueForDatabase
@@ -358,7 +356,7 @@ function updateAttribute(
             $relatedOptions = \array_merge($relatedAttribute->getAttribute('options'), $options);
             $relatedAttribute->setAttribute('options', $relatedOptions);
             $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey'], $relatedAttribute);
-            $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
+            $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
         }
     } else {
         $dbForProject->updateAttribute(
@@ -371,7 +369,7 @@ function updateAttribute(
     }
 
     $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
-    $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collection->getId());
+    $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collection->getId());
 
     $queueForEvents
         ->setContext('collection', $collection)
@@ -488,15 +486,21 @@ App::get('/v1/databases')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -568,7 +572,12 @@ App::get('/v1/databases/:databaseId/logs')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -703,8 +712,8 @@ App::delete('/v1/databases/:databaseId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove collection from DB');
         }
 
-        $dbForProject->deleteCachedDocument('databases', $database->getId());
-        $dbForProject->deleteCachedCollection('databases_' . $database->getInternalId());
+        $dbForProject->purgeCachedDocument('databases', $database->getId());
+        $dbForProject->purgeCachedCollection('databases_' . $database->getInternalId());
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_DATABASE)
@@ -743,7 +752,7 @@ App::post('/v1/databases/:databaseId/collections')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $queueForEvents) {
 
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -804,21 +813,27 @@ App::get('/v1/databases/:databaseId/collections')
     ->inject('mode')
     ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
 
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -860,7 +875,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, string $mode) {
 
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -896,11 +911,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->inject('geodb')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
         $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
         $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
 
@@ -908,7 +924,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -996,7 +1017,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $queueForEvents) {
 
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -1060,7 +1081,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, string $mode) {
 
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -1076,7 +1097,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove collection from DB');
         }
 
-        $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+        $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_COLLECTION)
@@ -1526,7 +1547,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new DatetimeValidator(), 'Default value for the attribute in ISO 8601 format. Cannot be set when attribute is required.', true)
+    ->param('default', null, new DatetimeValidator(), 'Default value for the attribute in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -1595,6 +1616,54 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         $key ??= $relatedCollectionId;
         $twoWayKey ??= $collectionId;
 
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $relatedCollectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId);
+        $relatedCollection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollectionDocument->getInternalId());
+
+        if ($relatedCollection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $attributes = $collection->getAttribute('attributes', []);
+        /** @var Document[] $attributes */
+        foreach ($attributes as $attribute) {
+            if ($attribute->getAttribute('type') !== Database::VAR_RELATIONSHIP) {
+                continue;
+            }
+
+            if (\strtolower($attribute->getId()) === \strtolower($key)) {
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
+            }
+
+            if (
+                \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
+                $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
+            ) {
+                // Console should provide a unique twoWayKey input!
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.');
+            }
+
+            if (
+                $type === Database::RELATION_MANY_TO_MANY &&
+                $attribute->getAttribute('options')['relationType'] === Database::RELATION_MANY_TO_MANY &&
+                $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
+            ) {
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Creating more than one "manyToMany" relationship on the same collection is currently not permitted.');
+            }
+        }
+
         $attribute = createAttribute(
             $databaseId,
             $collectionId,
@@ -1649,8 +1718,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
-
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        /** @var Document $database */
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -1662,26 +1731,31 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         \array_push(
             $queries,
-            Query::equal('collectionId', [$collectionId]),
-            Query::equal('databaseId', [$databaseId])
+            Query::equal('collectionInternalId', [$collection->getInternalId()]),
+            Query::equal('databaseInternalId', [$database->getInternalId()])
         );
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
-
         $cursor = \reset($cursor);
 
         if ($cursor) {
             $attributeId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn() => $dbForProject->find('attributes', [
-                Query::equal('collectionId', [$collectionId]),
-                Query::equal('databaseId', [$databaseId]),
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->find('attributes', [
+                Query::equal('collectionInternalId', [$collection->getInternalId()]),
+                Query::equal('databaseInternalId', [$database->getInternalId()]),
                 Query::equal('key', [$attributeId]),
                 Query::limit(1),
             ]));
@@ -1733,7 +1807,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject) {
 
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2226,7 +2300,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
-        $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2248,8 +2322,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-        $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 
         if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
             $options = $attribute->getAttribute('options');
@@ -2270,8 +2344,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
                     $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'deleting'));
                 }
 
-                $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
-                $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+                $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
+                $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
             }
         }
 
@@ -2330,7 +2404,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', null, new Key(), 'Index Key.')
-    ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL, Database::INDEX_ARRAY]), 'Index type.')
+    ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
     ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true)
     ->inject('response')
@@ -2339,7 +2413,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
-        $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2363,7 +2437,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         }
 
         // Convert Document[] to array of attribute metadata
-        $oldAttributes = \array_map(fn($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
+        $oldAttributes = \array_map(fn ($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
 
         $oldAttributes[] = [
             'key' => '$id',
@@ -2411,6 +2485,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             $attributeStatus = $oldAttributes[$attributeIndex]['status'];
             $attributeType = $oldAttributes[$attributeIndex]['type'];
             $attributeSize = $oldAttributes[$attributeIndex]['size'];
+            $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
             if ($attributeType === Database::VAR_RELATIONSHIP) {
                 throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Cannot create an index for a relationship attribute: ' . $oldAttributes[$attributeIndex]['key']);
@@ -2421,8 +2496,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Attribute not available: ' . $oldAttributes[$attributeIndex]['key']);
             }
 
-            // set attribute size as index length only for strings
-            $lengths[$i] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
+            $lengths[$i] = null;
+
+            if ($attributeType === Database::VAR_STRING) {
+                $lengths[$i] = $attributeSize; // set attribute size as index length only for strings
+            }
+
+            if ($attributeArray === true) {
+                $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
+                $orders[$i] = null;
+            }
         }
 
         $index = new Document([
@@ -2453,7 +2536,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             throw new Exception(Exception::INDEX_ALREADY_EXISTS);
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_CREATE_INDEX)
@@ -2491,8 +2574,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
-
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        /** @var Document $database */
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2504,20 +2587,27 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
-         // Get cursor document if there was a cursor query
-         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
-         });
-         $cursor = reset($cursor);
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
+        $cursor = reset($cursor);
 
         if ($cursor) {
             $indexId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn() => $dbForProject->find('indexes', [
-                Query::equal('collectionId', [$collectionId]),
-                Query::equal('databaseId', [$databaseId]),
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->find('indexes', [
+                Query::equal('collectionInternalId', [$collection->getInternalId()]),
+                Query::equal('databaseInternalId', [$database->getInternalId()]),
                 Query::equal('key', [$indexId]),
                 Query::limit(1)
             ]));
@@ -2555,7 +2645,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject) {
 
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2598,7 +2688,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
-        $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2620,7 +2710,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             $index = $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_INDEX)
@@ -2681,7 +2771,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is not allowed for creating new documents, try update instead');
         }
 
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -2690,7 +2780,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -2758,7 +2848,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -2778,7 +2868,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
-                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
                 foreach ($relations as &$relation) {
@@ -2792,7 +2882,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     }
                     if ($relation instanceof Document) {
                         $current = Authorization::skip(
-                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $relation->getId())
+                            fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $relation->getId())
                         );
 
                         if ($current->isEmpty()) {
@@ -2822,13 +2912,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
 
-    try {
-        $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
-    } catch (StructureException $exception) {
-        throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
-    } catch (DuplicateException $exception) {
-        throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-    }
+        try {
+            $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
+        } catch (StructureException $exception) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
+        } catch (DuplicateException $exception) {
+            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+        }
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
@@ -2837,7 +2927,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -2852,7 +2942,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
-                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
                 foreach ($related as $relation) {
@@ -2898,8 +2988,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
-
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -2907,17 +2996,23 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
 
         $cursor = \reset($cursor);
@@ -2925,7 +3020,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         if ($cursor) {
             $documentId = $cursor->getValue();
 
-            $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Document '{$documentId}' for the 'cursor' value not found.");
@@ -2934,15 +3029,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $cursor->setValue($cursorDocument);
         }
 
-        $filters = Query::groupByType($queries)['filters'];
-
         try {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
-            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filters, APP_LIMIT_COUNT);
+            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
         // Add $collectionId and $databaseId for all documents
@@ -2957,7 +3050,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -2973,7 +3066,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
+                $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
 
                 foreach ($relations as $index => $doc) {
                     if ($doc instanceof Document) {
@@ -3047,12 +3140,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('documentId', '', new UID(), 'Document ID.')
-    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only method allowed is select.', true)
+    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode) {
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3061,20 +3154,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
-
         try {
+            $queries = Query::parseQueries($queries);
             $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
         if ($document->isEmpty()) {
@@ -3092,7 +3184,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -3107,7 +3199,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
-                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
                 foreach ($related as $relation) {
@@ -3145,7 +3237,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('geodb')
     ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -3163,7 +3255,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -3260,7 +3357,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
         }
 
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3269,7 +3366,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -3277,7 +3374,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         // Read permission should not be required for update
         /** @var Document $document */
-        $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
@@ -3322,7 +3419,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database) {
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -3342,7 +3439,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
-                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
                 foreach ($relations as &$relation) {
@@ -3356,7 +3453,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
-                        $oldDocument = Authorization::skip(fn() => $dbForProject->getDocument(
+                        $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument(
                             'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
                             $relation->getId()
                         ));
@@ -3390,7 +3487,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         try {
             $document = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,
-                fn() => $dbForProject->updateDocument(
+                fn () => $dbForProject->updateDocument(
                     'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                     $document->getId(),
                     $newDocument
@@ -3411,7 +3508,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -3426,7 +3523,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
-                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
                 foreach ($related as $relation) {
@@ -3479,7 +3576,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('queueForEvents')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, string $mode) {
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3488,14 +3585,14 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         // Read permission should not be required for delete
-        $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
@@ -3521,7 +3618,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -3536,7 +3633,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
-                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
                 foreach ($related as $relation) {
@@ -3565,7 +3662,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     });
 
 App::get('/v1/databases/usage')
-    ->desc('Get usage stats for the database')
+    ->desc('Get databases usage stats')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -3618,19 +3715,19 @@ App::get('/v1/databases/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-    foreach ($metrics as $metric) {
-        $usage[$metric]['total'] =  $stats[$metric]['total'];
-        $usage[$metric]['data'] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric]['data'][] = [
-                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
+        foreach ($metrics as $metric) {
+            $usage[$metric]['total'] =  $stats[$metric]['total'];
+            $usage[$metric]['data'] = [];
+            $leap = time() - ($days['limit'] * $days['factor']);
+            while ($leap < time()) {
+                $leap += $days['factor'];
+                $formatDate = date($format, $leap);
+                $usage[$metric]['data'][] = [
+                    'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
+                ];
+            }
         }
-    }
         $response->dynamic(new Document([
             'range' => $range,
             'databasesTotal'   => $usage[$metrics[0]]['total'],
@@ -3643,7 +3740,7 @@ App::get('/v1/databases/usage')
     });
 
 App::get('/v1/databases/:databaseId/usage')
-    ->desc('Get usage stats for the database')
+    ->desc('Get database usage stats')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -3702,19 +3799,19 @@ App::get('/v1/databases/:databaseId/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-    foreach ($metrics as $metric) {
-        $usage[$metric]['total'] =  $stats[$metric]['total'];
-        $usage[$metric]['data'] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric]['data'][] = [
-                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
+        foreach ($metrics as $metric) {
+            $usage[$metric]['total'] =  $stats[$metric]['total'];
+            $usage[$metric]['data'] = [];
+            $leap = time() - ($days['limit'] * $days['factor']);
+            while ($leap < time()) {
+                $leap += $days['factor'];
+                $formatDate = date($format, $leap);
+                $usage[$metric]['data'][] = [
+                    'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
+                ];
+            }
         }
-    }
 
         $response->dynamic(new Document([
             'range' => $range,
@@ -3727,7 +3824,7 @@ App::get('/v1/databases/:databaseId/usage')
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->alias('/v1/database/:collectionId/usage', ['databaseId' => 'default'])
-    ->desc('Get usage stats for a collection')
+    ->desc('Get collection usage stats')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -3743,9 +3840,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $range, string $collectionId, Response $response, Database $dbForProject) {
 
-         $database = $dbForProject->getDocument('databases', $databaseId);
-         $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
-         $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
+        $database = $dbForProject->getDocument('databases', $databaseId);
+        $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
 
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -3788,19 +3885,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-    foreach ($metrics as $metric) {
-        $usage[$metric]['total'] =  $stats[$metric]['total'];
-        $usage[$metric]['data'] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric]['data'][] = [
-                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
+        foreach ($metrics as $metric) {
+            $usage[$metric]['total'] =  $stats[$metric]['total'];
+            $usage[$metric]['data'] = [];
+            $leap = time() - ($days['limit'] * $days['factor']);
+            while ($leap < time()) {
+                $leap += $days['factor'];
+                $formatDate = date($format, $leap);
+                $usage[$metric]['data'][] = [
+                    'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
+                ];
+            }
         }
-    }
 
         $response->dynamic(new Document([
             'range' => $range,

@@ -1,6 +1,8 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Utopia\Request;
@@ -14,8 +16,22 @@ use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
+
+App::init()
+    ->groups(['graphql'])
+    ->inject('project')
+    ->action(function (Document $project) {
+        if (
+            array_key_exists('graphql', $project->getAttribute('apis', []))
+            && !$project->getAttribute('apis', [])['graphql']
+            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+        ) {
+            throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
+        }
+    });
 
 App::get('/v1/graphql')
     ->desc('GraphQL endpoint')

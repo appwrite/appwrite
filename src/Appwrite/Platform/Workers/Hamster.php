@@ -10,14 +10,13 @@ use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Platform\Action;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Document;
-use Utopia\Queue\Message;
-use Utopia\Logger\Log;
+use Utopia\Platform\Action;
 use Utopia\Pools\Group;
+use Utopia\Queue\Message;
 
 class Hamster extends Action
 {
@@ -340,7 +339,7 @@ class Hamster extends Action
             if (!$res) {
                 Console::error('Failed to create event for project: ' . $project->getId());
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::error('Failed to send stats for project: ' . $project->getId());
             Console::error($e->getMessage());
         } finally {
@@ -410,7 +409,7 @@ class Hamster extends Action
             if (!$res) {
                 throw new \Exception('Failed to create event for organization : ' . $organization->getId());
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::error($e->getMessage());
         }
     }
@@ -464,7 +463,7 @@ class Hamster extends Action
             if (!$res) {
                 throw new \Exception('Failed to create user profile for user: ' . $user->getId());
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::error($e->getMessage());
         }
     }

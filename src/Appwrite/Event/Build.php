@@ -122,4 +122,20 @@ class Build extends Event
             'template' => $this->template
         ]);
     }
+
+    /**
+     * Resets event.
+     *
+     * @return self
+     */
+    public function reset(): self
+    {
+        $this->type = '';
+        $this->resource = null;
+        $this->deployment = null;
+        $this->template = null;
+        parent::reset();
+
+        return $this;
+    }
 }

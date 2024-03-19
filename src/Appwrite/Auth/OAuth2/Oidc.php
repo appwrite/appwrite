@@ -168,11 +168,11 @@ class Oidc extends OAuth2
         return '';
     }
 
-     /**
-     * @param string $accessToken
-     *
-     * @return array
-     */
+    /**
+    * @param string $accessToken
+    *
+    * @return array
+    */
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
@@ -196,11 +196,11 @@ class Oidc extends OAuth2
         return $secret['clientSecret'] ?? '';
     }
 
-     /**
-     * Extracts the well known endpoint from the JSON stored in appSecret.
-     *
-     * @return string
-     */
+    /**
+    * Extracts the well known endpoint from the JSON stored in appSecret.
+    *
+    * @return string
+    */
     protected function getWellKnownEndpoint(): string
     {
         $secret = $this->getAppSecret();
@@ -266,9 +266,9 @@ class Oidc extends OAuth2
         return $wellKnownConfiguration['userinfo_endpoint'] ?? '';
     }
 
-   /**
-    * Get the well-known configuration using the well known endpoint
-    */
+    /**
+     * Get the well-known configuration using the well known endpoint
+     */
     protected function getWellKnownConfiguration(): array
     {
         if (empty($this->wellKnownConfiguration)) {

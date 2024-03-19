@@ -46,7 +46,7 @@ class Functions extends Action
             ->inject('queueForEvents')
             ->inject('queueForUsage')
             ->inject('log')
-            ->callback(fn(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+            ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
     }
 
     /**
@@ -90,6 +90,10 @@ class Functions extends Action
         if ($project->getId() === 'console') {
             return;
         }
+
+        $log->addTag('functionId', $function->getId());
+        $log->addTag('projectId', $project->getId());
+        $log->addTag('type', $type);
 
         if (!empty($events)) {
             $limit = 30;
@@ -237,15 +241,14 @@ class Functions extends Action
         string $eventData = null,
         string $executionId = null,
     ): void {
-            $user ??= new Document();
-            $functionId = $function->getId();
-            $deploymentId = $function->getAttribute('deployment', '');
+        $user ??= new Document();
+        $functionId = $function->getId();
+        $deploymentId = $function->getAttribute('deployment', '');
 
-            $log->addTag('functionId', $functionId);
-            $log->addTag('projectId', $project->getId());
+        $log->addTag('deploymentId', $deploymentId);
 
-            /** Check if deployment exists */
-            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        /** Check if deployment exists */
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             throw new Exception('Deployment not found. Create deployment before trying to execute a function');
@@ -255,8 +258,12 @@ class Functions extends Action
             throw new Exception('Deployment not found. Create deployment before trying to execute a function');
         }
 
-            /** Check if build has exists */
-            $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
+        $buildId = $deployment->getAttribute('buildId', '');
+
+        $log->addTag('buildId', $buildId);
+
+        /** Check if build has exists */
+        $build = $dbForProject->getDocument('builds', $buildId);
         if ($build->isEmpty()) {
             throw new Exception('Build not found');
         }
@@ -265,7 +272,7 @@ class Functions extends Action
             throw new Exception('Build not ready');
         }
 
-            /** Check if  runtime is supported */
+        /** Check if  runtime is supported */
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
 
@@ -460,7 +467,7 @@ class Functions extends Action
             'executionId' => $execution->getId()
         ]);
         $target = Realtime::fromPayload(
-        // Pass first, most verbose event pattern
+            // Pass first, most verbose event pattern
             event: $allEvents[0],
             payload: $execution
         );

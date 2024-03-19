@@ -1,0 +1,2 @@
+appwrite account listLogs \
+
