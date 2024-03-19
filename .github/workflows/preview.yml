@@ -8,8 +8,7 @@ jobs:
   build-image:
     name: Build and Push image
     runs-on: ubuntu-22.04
-    permissions:
-          packages: write
+    permissions: write-all
     outputs:
       # You'll need this output later to render the Compose file.
       tags: ${{ steps.meta.outputs.tags }}
