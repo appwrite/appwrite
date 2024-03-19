@@ -410,7 +410,7 @@ class Messaging extends Action
                 'msg91' => [
                     'senderId' => $user,
                     'authKey' => $password,
-                    'templateId' => $smsDSN->getParam('templateId'),
+                    'templateId' => $smsDSN->getParam('templateId', $from),
                 ],
                 'vonage' => [
                     'apiKey' => $user,
