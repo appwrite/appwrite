@@ -8,6 +8,8 @@ jobs:
   build-image:
     name: Build and Push image
     runs-on: ubuntu-22.04
+    permissions:
+          packages: write
     outputs:
       # You'll need this output later to render the Compose file.
       tags: ${{ steps.meta.outputs.tags }}
@@ -24,7 +26,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: appwrite/dev
+          images: appwrite/appwrite
       - name: Build and Push Image to Docker Hub
         uses: docker/build-push-action@v2
         with:
