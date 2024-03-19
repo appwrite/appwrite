@@ -111,13 +111,12 @@ class Backup extends Destination
     {
 
         $files = [];
-       //Todo change var names @fogelito
-        foreach ($this->data as $group => $v1){
-            foreach ($v1 as $k2 => $v2){
-                $name = $group . '-' . $k2;
+        foreach ($this->data as $group => $groupData){
+            foreach ($groupData as $resource => $resourceData){
+                $name = $group . '-' . $resource;
                 $files[][] = $name;
 
-                $data = \json_encode($v2);
+                $data = \json_encode($resourceData);
                 if ($data === false) {
                     throw new \Exception('Unable to encode data to JSON, Are you accidentally encoding binary data?');
                 }
@@ -275,10 +274,10 @@ class Backup extends Destination
 
         $filesize = filesize($tarFile);
 
-        if (!unlink($tarFile)) {
-            Console::error('Error deleting: ' . $tarFile);
-            throw new \Exception('Error deleting: ' . $tarFile);
-        }
+//        if (!unlink($tarFile)) {
+//            Console::error('Error deleting: ' . $tarFile);
+//            throw new \Exception('Error deleting: ' . $tarFile);
+//        }
 
         return $filesize;
     }
