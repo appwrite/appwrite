@@ -12,8 +12,8 @@
     ],
     "scripts": {
         "test": "vendor/bin/phpunit",
-        "lint": "vendor/bin/pint --test",
-        "format": "vendor/bin/pint"
+        "lint": "vendor/bin/phpcs",
+        "format": "vendor/bin/phpcbf"
     },
     "autoload": {
         "psr-4": {
@@ -79,19 +79,18 @@
     },
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "0.37.*",
+        "appwrite/sdk-generator": "0.37.0-rc.6",
         "phpunit/phpunit": "9.5.20",
         "swoole/ide-helper": "5.0.2",
         "textalk/websocket": "1.5.7",
-        "utopia-php/fetch": "0.1.*",
-        "laravel/pint": "^1.14"
+        "utopia-php/fetch": "0.1.*"
     },
     "provide": {
         "ext-phpiredis": "*"
     },
     "config": {
         "platform": {
-            "php": "8.3"
+            "php": "8.2"
         }
     }
 }

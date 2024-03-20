@@ -110,17 +110,6 @@ class Backup extends Destination
         return $report;
     }
 
-    private function sync(): void
-    {
-        $jsonEncodedData = \json_encode($this->data, JSON_PRETTY_PRINT);
-
-        if ($jsonEncodedData === false) {
-            throw new \Exception('Unable to encode data to JSON, Are you accidentally encoding binary data?');
-        }
-
-        \file_put_contents($this->path.'/backup.json', \json_encode($this->data, JSON_PRETTY_PRINT));
-    }
-
     public function shutDown(): void {
         Console::error('shutDown function');
 
@@ -171,6 +160,8 @@ class Backup extends Destination
                 ->trigger()
             ;
         }
+
+        //todo: Delete $this->path Directory
     }
 
 
@@ -199,10 +190,9 @@ class Backup extends Destination
                     file_put_contents($this->path. '/deployments/'.$resource->getId().'.tar.gz', $resource->getData(), FILE_APPEND);
                     $resource->setData('');
                     break;
+
                 case Resource::TYPE_FILE:
                     /** @var File $resource */
-
-                    // Handle folders
                     if (str_contains($resource->getFileName(), '/')) {
                         $folders = explode('/', $resource->getFileName());
                         $folderPath = $this->path. '/files';
@@ -223,6 +213,7 @@ class Backup extends Destination
                     file_put_contents($this->path. '/files/'.$resource->getFileName(), $resource->getData(), FILE_APPEND);
                     $resource->setData('');
                     break;
+
                 case Resource::TYPE_ATTRIBUTE:
                     /** @var Attribute $resource */
                     $data = $resource->asArray();
@@ -230,6 +221,7 @@ class Backup extends Destination
                     $data['__collectionInternalId'] = $resource->getCollection()->getInternalId();
                     $this->data[$resource->getGroup()][$resource->getName()][] = $data;
                     break;
+
                 case Resource::TYPE_INDEX:
                     /** @var Index $resource */
                     $data = $resource->asArray();
@@ -237,6 +229,7 @@ class Backup extends Destination
                     $data['__collectionInternalId'] = $resource->getCollection()->getInternalId();
                     $this->data[$resource->getGroup()][$resource->getName()][] = $data;
                     break;
+
                 default:
                     $this->data[$resource->getGroup()][$resource->getName()][] = $resource->asArray();
                     break;
@@ -253,8 +246,6 @@ class Backup extends Destination
                 throw new \Exception('Unable to encode data to JSON, Are you accidentally encoding binary data?');
             }
             //\file_put_contents($this->path.'/backup.json', \json_encode($this->data, JSON_PRETTY_PRINT));
-
-            //$this->sync();
         }
 
         $callback($resources);
