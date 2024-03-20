@@ -11,7 +11,7 @@ Client client = new Client()
 Health health = new Health(client);
 
 health.getFailedJobs(
-    .V1DATABASE, // name
+    .V1_DATABASE, // name
     0, // threshold (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

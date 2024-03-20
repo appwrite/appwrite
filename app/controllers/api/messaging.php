@@ -1,5 +1,6 @@
 <?php
 
+use Ahc\Jwt\JWT;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
@@ -35,7 +36,6 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
-use Utopia\Domains\Domain;
 use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -2929,23 +2929,35 @@ App::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
 
-            if (!\in_array(Permission::read(Role::any()), \array_merge($file->getRead(), $bucket->getRead()))) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
-            }
-
             if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
             $host = App::getEnv('_APP_DOMAIN', 'localhost');
-            $domain = new Domain(\parse_url($host, PHP_URL_HOST));
             $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
 
-            if (!$domain->isKnown()) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
+            $scheduleTime = $currentScheduledAt ?? $scheduledAt;
+            if (!\is_null($scheduleTime)) {
+                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
+            } else {
+                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $image = "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}";
+            $encoder = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'));
+
+            $jwt = $encoder->encode([
+                'iat' => \time(),
+                'exp' => $expiry,
+                'bucketId' => $bucket->getId(),
+                'fileId' => $file->getId(),
+                'projectId' => $project->getId(),
+            ]);
+
+            $image = [
+                'bucketId' => $bucket->getId(),
+                'fileId' => $file->getId(),
+                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
+            ];
         }
 
         $pushData = [];
@@ -3283,7 +3295,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                     : MessageStatus::SCHEDULED;
             }
         } else {
-            $status = null;
+            $status = $message->getAttribute('status');
         }
 
         if (
@@ -3454,7 +3466,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                     : MessageStatus::SCHEDULED;
             }
         } else {
-            $status = null;
+            $status = $message->getAttribute('status');
         }
 
         if (
@@ -3618,7 +3630,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                     : MessageStatus::SCHEDULED;
             }
         } else {
-            $status = null;
+            $status = $message->getAttribute('status');
         }
 
         if (
@@ -3754,23 +3766,35 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
 
-            if (!\in_array(Permission::read(Role::any()), \array_merge($file->getRead(), $bucket->getRead()))) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
-            }
-
             if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
             $host = App::getEnv('_APP_DOMAIN', 'localhost');
-            $domain = new Domain(\parse_url($host, PHP_URL_HOST));
             $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
 
-            if (!$domain->isKnown()) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
+            $scheduleTime = $currentScheduledAt ?? $scheduledAt;
+            if (!\is_null($scheduleTime)) {
+                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
+            } else {
+                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $pushData['image'] = "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}";
+            $encoder = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'));
+
+            $jwt = $encoder->encode([
+                'iat' => \time(),
+                'exp' => $expiry,
+                'bucketId' => $bucket->getId(),
+                'fileId' => $file->getId(),
+                'projectId' => $project->getId(),
+            ]);
+
+            $pushData['image'] = [
+                'bucketId' => $bucket->getId(),
+                'fileId' => $file->getId(),
+                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}"
+            ];
         }
 
         $message->setAttribute('data', $pushData);

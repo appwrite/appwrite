@@ -627,7 +627,7 @@ class Messaging extends Action
         $body = $message['data']['body'];
         $data = $message['data']['data'] ?? null;
         $action = $message['data']['action'] ?? null;
-        $image = $message['data']['image'] ?? null;
+        $image = $message['data']['image']['url'] ?? null;
         $sound = $message['data']['sound'] ?? null;
         $icon = $message['data']['icon'] ?? null;
         $color = $message['data']['color'] ?? null;

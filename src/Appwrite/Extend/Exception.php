@@ -40,6 +40,7 @@ class Exception extends \Exception
     public const GENERAL_MOCK                      = 'general_mock';
     public const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
     public const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
+    public const GENERAL_API_DISABLED              = 'general_api_disabled';
     public const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';
     public const GENERAL_UNAUTHORIZED_SCOPE        = 'general_unauthorized_scope';
     public const GENERAL_RATE_LIMIT_EXCEEDED       = 'general_rate_limit_exceeded';

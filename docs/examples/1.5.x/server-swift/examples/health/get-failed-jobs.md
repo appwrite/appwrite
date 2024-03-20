@@ -9,7 +9,7 @@ let client = Client()
 let health = Health(client)
 
 let healthQueue = try await health.getFailedJobs(
-    name: .v1database,
+    name: .v1Database,
     threshold: 0 // optional
 )
 

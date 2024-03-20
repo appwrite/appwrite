@@ -12,7 +12,7 @@ $client = (new Client())
 $avatars = new Avatars($client);
 
 $result = $avatars->getCreditCard(
-    code: CreditCard::AMERICAN_EXPRESS(),
+    code: CreditCard::AMERICANEXPRESS(),
     width: 0, // optional
     height: 0, // optional
     quality: 0 // optional

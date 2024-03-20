@@ -12,7 +12,7 @@ $client = (new Client())
 $avatars = new Avatars($client);
 
 $result = $avatars->getBrowser(
-    code: Browser::AVANT_BROWSER(),
+    code: Browser::AVANTBROWSER(),
     width: 0, // optional
     height: 0, // optional
     quality: 0 // optional

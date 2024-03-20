@@ -659,6 +659,60 @@ App::get('/v1/health/queue/functions')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
+App::get('/v1/health/queue/usage')
+    ->desc('Get usage queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueUsage')
+    ->label('sdk.description', '/docs/references/health/get-queue-usage.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->inject('queue')
+    ->inject('response')
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
+
+        $client = new Client(Event::USAGE_QUEUE_NAME, $queue);
+        $size = $client->getQueueSize();
+
+        if ($size >= $threshold) {
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+        }
+
+        $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
+    });
+
+App::get('/v1/health/queue/usage-dump')
+    ->desc('Get usage dump queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueUsageDump')
+    ->label('sdk.description', '/docs/references/health/get-queue-usage-dump.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->inject('queue')
+    ->inject('response')
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
+
+        $client = new Client(Event::USAGE_DUMP_QUEUE_NAME, $queue);
+        $size = $client->getQueueSize();
+
+        if ($size >= $threshold) {
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+        }
+
+        $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
+    });
+
 App::get('/v1/health/storage/local')
     ->desc('Get local storage')
     ->groups(['api', 'health'])
@@ -796,6 +850,7 @@ App::get('/v1/health/queue/failed/:name')
         Event::MAILS_QUEUE_NAME,
         Event::FUNCTIONS_QUEUE_NAME,
         Event::USAGE_QUEUE_NAME,
+        Event::USAGE_DUMP_QUEUE_NAME,
         Event::WEBHOOK_CLASS_NAME,
         Event::CERTIFICATES_QUEUE_NAME,
         Event::BUILDS_QUEUE_NAME,

@@ -11,6 +11,6 @@ client = Client.new
 health = Health.new(client)
 
 result = health.get_failed_jobs(
-    name: ::V1-DATABASE,
+    name: ::V1_DATABASE,
     threshold: null # optional
 )

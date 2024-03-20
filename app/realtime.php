@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
@@ -408,6 +409,14 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          */
         if (empty($project->getId())) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing or unknown project ID');
+        }
+
+        if (
+            array_key_exists('realtime', $project->getAttribute('apis', []))
+            && !$project->getAttribute('apis', [])['realtime']
+            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+        ) {
+            throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
 
         $dbForProject = getProjectDB($project);

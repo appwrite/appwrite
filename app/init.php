@@ -111,8 +111,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 331;
-const APP_VERSION_STABLE = '1.5.0';
+const APP_CACHE_BUSTER = 405;
+const APP_VERSION_STABLE = '1.5.4';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -269,6 +269,7 @@ if (!App::isProduction()) {
  */
 Config::load('events', __DIR__ . '/config/events.php');
 Config::load('auth', __DIR__ . '/config/auth.php');
+Config::load('apis', __DIR__ . '/config/apis.php');  // List of APIs
 Config::load('errors', __DIR__ . '/config/errors.php');
 Config::load('oAuthProviders', __DIR__ . '/config/oAuthProviders.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
