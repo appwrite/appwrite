@@ -1406,16 +1406,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.9.0",
+            "version": "0.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "4fc7b4789b5f0ce74835c1ecfec4f3afe6f0e34e"
+                "reference": "552b4c554bb14d0c529631ce304cdf4a2b9d06a6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/4fc7b4789b5f0ce74835c1ecfec4f3afe6f0e34e",
-                "reference": "4fc7b4789b5f0ce74835c1ecfec4f3afe6f0e34e",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/552b4c554bb14d0c529631ce304cdf4a2b9d06a6",
+                "reference": "552b4c554bb14d0c529631ce304cdf4a2b9d06a6",
                 "shasum": ""
             },
             "require": {
@@ -1450,9 +1450,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.9.0"
+                "source": "https://github.com/utopia-php/cache/tree/0.9.1"
             },
-            "time": "2024-01-07T18:11:23+00:00"
+            "time": "2024-03-19T17:07:20+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -1719,16 +1719,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.2",
+            "version": "0.33.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "b1423ca3e3b61c6c4c2e619d2cb80672809a19f3"
+                "reference": "6ee2e93a4a529bce5eecf4ac892890d4b0c84861"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/b1423ca3e3b61c6c4c2e619d2cb80672809a19f3",
-                "reference": "b1423ca3e3b61c6c4c2e619d2cb80672809a19f3",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/6ee2e93a4a529bce5eecf4ac892890d4b0c84861",
+                "reference": "6ee2e93a4a529bce5eecf4ac892890d4b0c84861",
                 "shasum": ""
             },
             "require": {
@@ -1743,7 +1743,8 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\": "src/"
+                    "Utopia\\": "src/",
+                    "Tests\\E2E\\": "tests/e2e"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -1758,9 +1759,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.2"
+                "source": "https://github.com/utopia-php/http/tree/0.33.4"
             },
-            "time": "2024-01-31T10:35:59+00:00"
+            "time": "2024-03-19T08:04:59+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -1970,12 +1971,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "f16b98482b5c4771fc7473dacea005125cac31eb"
+                "reference": "aabe9a11ea79af786ca6ea90bb1a95bdadced6a1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f16b98482b5c4771fc7473dacea005125cac31eb",
-                "reference": "f16b98482b5c4771fc7473dacea005125cac31eb",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/aabe9a11ea79af786ca6ea90bb1a95bdadced6a1",
+                "reference": "aabe9a11ea79af786ca6ea90bb1a95bdadced6a1",
                 "shasum": ""
             },
             "require": {
@@ -2014,7 +2015,7 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/backups"
             },
-            "time": "2024-03-11T09:27:05+00:00"
+            "time": "2024-03-20T09:38:05+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -2969,16 +2970,16 @@
         },
         {
             "name": "matthiasmullie/minify",
-            "version": "1.3.71",
+            "version": "1.3.73",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matthiasmullie/minify.git",
-                "reference": "ae42a47d7fecc1fbb7277b2f2d84c37a33edc3b1"
+                "reference": "cb7a9297b4ab070909cefade30ee95054d4ae87a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/ae42a47d7fecc1fbb7277b2f2d84c37a33edc3b1",
-                "reference": "ae42a47d7fecc1fbb7277b2f2d84c37a33edc3b1",
+                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/cb7a9297b4ab070909cefade30ee95054d4ae87a",
+                "reference": "cb7a9297b4ab070909cefade30ee95054d4ae87a",
                 "shasum": ""
             },
             "require": {
@@ -3028,7 +3029,7 @@
             ],
             "support": {
                 "issues": "https://github.com/matthiasmullie/minify/issues",
-                "source": "https://github.com/matthiasmullie/minify/tree/1.3.71"
+                "source": "https://github.com/matthiasmullie/minify/tree/1.3.73"
             },
             "funding": [
                 {
@@ -3036,7 +3037,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-04-25T20:33:03+00:00"
+            "time": "2024-03-15T10:27:10+00:00"
         },
         {
             "name": "matthiasmullie/path-converter",
@@ -4884,16 +4885,16 @@
         },
         {
             "name": "sebastian/resource-operations",
-            "version": "3.0.3",
+            "version": "3.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/resource-operations.git",
-                "reference": "0f4443cb3a1d92ce809899753bc0d5d5a8dd19a8"
+                "reference": "05d5692a7993ecccd56a03e40cd7e5b09b1d404e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/resource-operations/zipball/0f4443cb3a1d92ce809899753bc0d5d5a8dd19a8",
-                "reference": "0f4443cb3a1d92ce809899753bc0d5d5a8dd19a8",
+                "url": "https://api.github.com/repos/sebastianbergmann/resource-operations/zipball/05d5692a7993ecccd56a03e40cd7e5b09b1d404e",
+                "reference": "05d5692a7993ecccd56a03e40cd7e5b09b1d404e",
                 "shasum": ""
             },
             "require": {
@@ -4905,7 +4906,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.0-dev"
+                    "dev-main": "3.0-dev"
                 }
             },
             "autoload": {
@@ -4926,8 +4927,7 @@
             "description": "Provides a list of PHP built-in functions that operate on resources",
             "homepage": "https://www.github.com/sebastianbergmann/resource-operations",
             "support": {
-                "issues": "https://github.com/sebastianbergmann/resource-operations/issues",
-                "source": "https://github.com/sebastianbergmann/resource-operations/tree/3.0.3"
+                "source": "https://github.com/sebastianbergmann/resource-operations/tree/3.0.4"
             },
             "funding": [
                 {
@@ -4935,7 +4935,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-09-28T06:45:17+00:00"
+            "time": "2024-03-14T16:00:52+00:00"
         },
         {
             "name": "sebastian/type",
@@ -5477,5 +5477,5 @@
     "platform-overrides": {
         "php": "8.2"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }

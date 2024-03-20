@@ -13,6 +13,9 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Structure;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Resource;
+use Utopia\Migration\Resources\Database\Attribute;
+use Utopia\Migration\Resources\Database\Collection;
+use Utopia\Migration\Resources\Database\Index;
 use Utopia\Migration\Resources\Functions\Deployment;
 use Utopia\Migration\Resources\Storage\File;
 use Utopia\Migration\Transfer;
@@ -60,6 +63,9 @@ class Backup extends Destination
             mkdir($this->path.'/deployments', 0777, true);
         }
 
+        $this->backup->setAttribute('startedAt', DateTime::now());
+        $this->backup->setAttribute('status', 'started');
+        $this->dbForProject->updateDocument('backups', $this->backup->getId() ,$this->backup);
     }
 
     public static function getName(): string
@@ -104,11 +110,19 @@ class Backup extends Destination
         return $report;
     }
 
-    /**
-     * @throws \Exception
-     */
     private function sync(): void
     {
+        $jsonEncodedData = \json_encode($this->data, JSON_PRETTY_PRINT);
+
+        if ($jsonEncodedData === false) {
+            throw new \Exception('Unable to encode data to JSON, Are you accidentally encoding binary data?');
+        }
+
+        \file_put_contents($this->path.'/backup.json', \json_encode($this->data, JSON_PRETTY_PRINT));
+    }
+
+    public function shutDown(): void {
+        Console::error('shutDown function');
 
         $files = [];
         foreach ($this->data as $group => $groupData){
@@ -159,6 +173,7 @@ class Backup extends Destination
         }
     }
 
+
     /**
      * @throws Authorization
      * @throws Structure
@@ -167,16 +182,13 @@ class Backup extends Destination
      */
     protected function import(array $resources, callable $callback): void
     {
-
-        $this->backup
-            ->setAttribute('startedAt', DateTime::now())
-            ->setAttribute('status', 'started')
-        ;
-
-        $this->dbForProject->updateDocument('backups', $this->backup->getId() ,$this->backup);
-
         foreach ($resources as $resource) {
             /** @var resource $resource */
+            var_dump('--------------------------------');
+            var_dump($resource->getGroup());
+            var_dump($resource->getName());
+            //var_dump($resource->asArray());
+
             switch ($resource->getName()) {
                 case Resource::TYPE_DEPLOYMENT:
                     /** @var Deployment $resource */
@@ -211,6 +223,20 @@ class Backup extends Destination
                     file_put_contents($this->path. '/files/'.$resource->getFileName(), $resource->getData(), FILE_APPEND);
                     $resource->setData('');
                     break;
+                case Resource::TYPE_ATTRIBUTE:
+                    /** @var Attribute $resource */
+                    $data = $resource->asArray();
+                    $data['__collectionId'] = $resource->getCollection()->getId();
+                    $data['__collectionInternalId'] = $resource->getCollection()->getInternalId();
+                    $this->data[$resource->getGroup()][$resource->getName()][] = $data;
+                    break;
+                case Resource::TYPE_INDEX:
+                    /** @var Index $resource */
+                    $data = $resource->asArray();
+                    $data['__collectionId'] = $resource->getCollection()->getId();
+                    $data['__collectionInternalId'] = $resource->getCollection()->getInternalId();
+                    $this->data[$resource->getGroup()][$resource->getName()][] = $data;
+                    break;
                 default:
                     $this->data[$resource->getGroup()][$resource->getName()][] = $resource->asArray();
                     break;
@@ -218,9 +244,17 @@ class Backup extends Destination
 
             $resource->setStatus(Resource::STATUS_SUCCESS);
             $this->cache->update($resource);
-            $this->sync();
 
+            /**
+             * json validation
+             */
+            $jsonEncodedData = \json_encode($this->data, JSON_PRETTY_PRINT);
+            if ($jsonEncodedData === false) {
+                throw new \Exception('Unable to encode data to JSON, Are you accidentally encoding binary data?');
+            }
+            //\file_put_contents($this->path.'/backup.json', \json_encode($this->data, JSON_PRETTY_PRINT));
 
+            //$this->sync();
         }
 
         $callback($resources);
@@ -237,6 +271,8 @@ class Backup extends Destination
 
         $id = $this->backup->getInternalId();
         $filename = $id . '.tar.gz';
+
+        Console::error('uploading' . $filename);
 
         $tarFolder = realpath($this->path . '/..');
         $tarFile = $tarFolder . '/' . $filename;

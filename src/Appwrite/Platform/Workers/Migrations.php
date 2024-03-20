@@ -337,12 +337,18 @@ class Migrations extends Action
             /** Start Transfer */
             $migrationDocument->setAttribute('stage', 'migrating');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
+
+            $destination->init();
+
             $transfer->run($migrationDocument->getAttribute('resources'), function () use ($migrationDocument, $transfer, $projectDocument) {
+                var_dump('** Transfer run Callback function **');
                 $migrationDocument->setAttribute('resourceData', json_encode($transfer->getCache()));
                 $migrationDocument->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
 
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
             });
+
+            $destination->shutDown();
 
             $sourceErrors = $source->getErrors();
             $destinationErrors = $destination->getErrors();
