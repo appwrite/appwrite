@@ -92,24 +92,27 @@ if(!function_exists("getProjectDB")) {
     }
 }
 
-function getCache(): Cache
-{
-    global $register;
+// Allows overriding
+if(!function_exists("getCache")) {
+    function getCache(): Cache
+    {
+        global $register;
 
-    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
 
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
+        $list = Config::getParam('pools-cache', []);
+        $adapters = [];
 
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource()
-        ;
+        foreach ($list as $value) {
+            $adapters[] = $pools
+                ->get($value)
+                ->pop()
+                ->getResource()
+            ;
+        }
+
+        return new Cache(new Sharding($adapters));
     }
-
-    return new Cache(new Sharding($adapters));
 }
 
 $realtime = new Realtime();
