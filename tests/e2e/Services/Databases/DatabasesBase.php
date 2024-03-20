@@ -4752,4 +4752,81 @@ trait DatabasesBase
 
         $this->assertEquals(408, $response['headers']['status-code']);
     }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testDeleteRelationAttributeIfRelatedCollectionDeleted(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $level1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Level 1',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $level2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Level 2',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        // Create relationship
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $level1['body']['$id'] . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedCollectionId' => $level2['body']['$id'],
+            'type' => Database::RELATION_MANY_TO_ONE,
+            'twoWay' => false,
+            'key' => 'level2',
+            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+        ]);
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertEquals(false, $response['body']['array']);
+        $this->assertEquals('level2', $response['body']['key']);
+        $this->assertEquals('cascade', $response['body']['onDelete']);
+        $this->assertEquals($level2['body']['$id'], $response['body']['relatedCollection']);
+        $this->assertEquals('manyToOne', $response['body']['relationType']);
+        $this->assertEquals(false, $response['body']['required']);
+        $this->assertEquals(false, $response['body']['twoWay']);
+        $this->assertEquals('relationship', $response['body']['type']);
+
+
+        $deleteLevel2CollectionResponse = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $level2['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(204, $deleteLevel2CollectionResponse['headers']['status-code']);
+
+        // Delete level2 (key) relation attribute from level 1 collection
+        $deleteRelationAttributeFromLevel1 = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $level1['body']['$id'] . '/attributes/level2', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(204, $deleteRelationAttributeFromLevel1['headers']['status-code']);
+    }
 }
