@@ -24,7 +24,7 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
 
-$http = new Server("0.0.0.0", App::getEnv('PORT', 80));
+$http = new Server("0.0.0.0", App::getEnv('PORT', 80), SWOOLE_PROCESS);
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
@@ -36,10 +36,38 @@ $http
         // 'document_root' => __DIR__.'/../public',
         // 'enable_static_handler' => true,
         'http_compression' => true,
+        'dispatch_func' => 'dispatch',
         'http_compression_level' => 6,
         'package_max_length' => $payloadSize,
         'buffer_output_size' => $payloadSize,
     ]);
+
+function dispatch(Server $server, $fd, $type, $data = null)
+{
+    /** @var Server $server */
+    $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+
+    $safeThreadsPercent = intval(App::getEnv('_APP_SAFE_THREADS_PERCENT', 80)) / 100;
+
+    $safeThreads = (int) floor($workerNumber * $safeThreadsPercent);
+
+    if ($data && preg_match('/^POST \/v1\/functions\/.*\/executions/', $data)) {
+        for ($j = $safeThreads; $j < $workerNumber; $j++) {
+            if ($server->getWorkerStatus($j) === 2) {
+                return $j;
+            }
+        }
+        return rand($safeThreads, $workerNumber - 1);
+    }
+
+    for ($i = 0; $i < $workerNumber; $i++) {
+        if ($server->getWorkerStatus($i) === 2) {
+            return $i;
+        }
+    }
+
+    return rand(0, $safeThreads - 1);
+}
 
 $http->on('WorkerStart', function ($server, $workerId) {
     Console::success('Worker ' . ++$workerId . ' started successfully');
