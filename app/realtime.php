@@ -36,54 +36,60 @@ require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-function getConsoleDB(): Database
-{
-    global $register;
+// Allows overriding
+if(!function_exists("getConsoleDB")) {
+    function getConsoleDB(): Database
+    {
+        global $register;
 
-    /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('pools');
+        /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools');
 
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource()
-    ;
+        $dbAdapter = $pools
+            ->get('console')
+            ->pop()
+            ->getResource()
+        ;
 
-    $database = new Database($dbAdapter, getCache());
+        $database = new Database($dbAdapter, getCache());
 
-    $database
-        ->setNamespace('_console')
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', '_console');
+        $database
+            ->setNamespace('_console')
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', '_console');
 
-    return $database;
+        return $database;
+    }
 }
 
-function getProjectDB(Document $project): Database
-{
-    global $register;
+// Allows overriding
+if(!function_exists("getProjectDB")) {
+    function getProjectDB(Document $project): Database
+    {
+        global $register;
 
-    /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('pools');
+        /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools');
 
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return getConsoleDB();
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return getConsoleDB();
+        }
+
+        $dbAdapter = $pools
+            ->get($project->getAttribute('database'))
+            ->pop()
+            ->getResource()
+        ;
+
+        $database = new Database($dbAdapter, getCache());
+
+        $database
+            ->setNamespace('_' . $project->getInternalId())
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId());
+
+        return $database;
     }
-
-    $dbAdapter = $pools
-        ->get($project->getAttribute('database'))
-        ->pop()
-        ->getResource()
-    ;
-
-    $database = new Database($dbAdapter, getCache());
-
-    $database
-        ->setNamespace('_' . $project->getInternalId())
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', $project->getId());
-
-    return $database;
 }
 
 function getCache(): Cache
