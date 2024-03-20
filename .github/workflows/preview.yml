@@ -78,6 +78,8 @@ jobs:
       compose-file-cache-key: ${{ needs.render-compose-file.outputs.compose-file-cache-key }}
       compose-file-cache-path: ${{ needs.render-compose-file.outputs.compose-file-cache-path }}
       server: https://app.uffizzi.com/
+    secrets:
+      access-token: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       contents: read
       pull-requests: write
