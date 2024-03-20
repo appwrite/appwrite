@@ -111,45 +111,6 @@ $title = $this->getParam('title', '')
             </div>
         </article>
     </div>
-    <!--section>
-        <h1>Error <?php echo $this->print($code, self::FILTER_ESCAPE); ?></h1>
-
-        <p><?php echo $this->print($message, self::FILTER_ESCAPE); ?></p>
-
-        <small>Error ID: <?php echo $this->print($errorID, self::FILTER_ESCAPE); ?></small>
-
-        <?php if (!empty($projectURL)) : ?>
-            <hr />
-
-            <p><a href="<?php echo $this->print($projectURL, self::FILTER_ESCAPE); ?>" rel="noopener">Back to <?php echo $this->print($projectName, self::FILTER_ESCAPE); ?></a></p>
-        <?php endif; ?>
-
-        <?php if ($development) : ?>
-            <div>
-
-                <h2>Error Trace</h2>
-
-                <?php foreach ($trace as $log) : ?>
-                    <table>
-                        <?php foreach ($log as $key => $value) : ?>
-                            <tr>
-                                <td style="width: 120px"><?php echo $this->print($key, self::FILTER_ESCAPE); ?></td>
-                                <td>
-                                    <?php if (is_array($value)) : ?>
-                                        <?php echo $this->print(var_export($value, true), self::FILTER_ESCAPE); ?>
-                                    <?php else : ?>
-                                        <?php echo $this->print($value, self::FILTER_ESCAPE); ?>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-
-                        <?php endforeach; ?>
-                    </table>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-
-    </section-->
     <script type="text/javascript">
         const app = (JSON.parse(localStorage.getItem('appwrite')) ?? {});
         const theme = app.theme ?? 'auto';
