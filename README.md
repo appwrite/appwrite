@@ -44,7 +44,8 @@ Find out more at: [https://appwrite.io](https://appwrite.io)
 
 Table of Contents:
 
-- [Installation](#installation)
+- [Getting Started](#getting-started)
+- [Self-Hosting](#self-hosting)
   - [Unix](#unix)
   - [Windows](#windows)
     - [CMD](#cmd)
@@ -63,11 +64,14 @@ Table of Contents:
 - [Follow Us](#follow-us)
 - [License](#license)
 
-## Installation
+## Getting Started
+The easiest way to get started with Appwrite is by [signing up for Appwrite Cloud](https://cloud.appwrite.io/). While Appwrite Cloud is in public beta, you can build with Appwrite completely free, and we won't collect you credit card information. 
+
+## Self-Hosting
 
 Appwrite is designed to run in a containerized environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool, such as [Kubernetes](https://kubernetes.io/docs/home/), [Docker Swarm](https://docs.docker.com/engine/swarm/), or [Rancher](https://rancher.com/docs/).
 
-The easiest way to start running your Appwrite server is by running our docker-compose file. Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
+Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
 
 ### Unix
 
@@ -107,7 +111,7 @@ For advanced production and custom installation, check out our Docker [environme
 
 ### Upgrade from an Older Version
 
-If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/installation).
+If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/self-hosting).
 
 ## One-Click Setups
 
