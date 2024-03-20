@@ -279,7 +279,7 @@ class Firebase extends OAuth2
             $role = \json_decode($role, true);
 
             return $role;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             if ($e->getCode() !== 404) {
                 throw $e;
             }

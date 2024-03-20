@@ -8,6 +8,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 use Utopia\Validator\WhiteList;
+use Utopia\Validator\Wildcard;
 
 class QueueRetry extends Action
 {
@@ -35,21 +36,25 @@ class QueueRetry extends Action
                 Event::MIGRATIONS_QUEUE_NAME,
                 Event::HAMSTER_CLASS_NAME
             ]), 'Queue name')
+            ->param('limit', 0, new Wildcard(), 'jobs limit', true)
             ->inject('queue')
-            ->callback(fn ($name, $queue) => $this->action($name, $queue));
+            ->callback(fn ($name, $limit, $queue) => $this->action($name, $limit, $queue));
     }
 
     /**
      * @param string $name The name of the queue to retry jobs from
+     * @param  mixed $limit
      * @param Connection $queue
      */
-    public function action(string $name, Connection $queue): void
+    public function action(string $name, mixed $limit, Connection $queue): void
     {
+
         if (!$name) {
             Console::error('Missing required parameter $name');
             return;
         }
 
+        $limit = (int)$limit;
         $queueClient = new Client($name, $queue);
 
         if ($queueClient->countFailedJobs() === 0) {
@@ -59,6 +64,6 @@ class QueueRetry extends Action
 
         Console::log('Retrying failed jobs...');
 
-        $queueClient->retry();
+        $queueClient->retry($limit);
     }
 }

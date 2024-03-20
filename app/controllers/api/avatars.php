@@ -3,6 +3,8 @@
 use Appwrite\Extend\Exception;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -21,8 +23,6 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
 
@@ -84,8 +84,8 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
         $accessTokenExpiry = $gitHubSession->getAttribute('providerAccessTokenExpiry');
         $refreshToken = $gitHubSession->getAttribute('providerRefreshToken');
 
-        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
@@ -116,7 +116,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
 
                 Authorization::skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
 
-                $dbForProject->deleteCachedDocument('users', $user->getId());
+                $dbForProject->purgeCachedDocument('users', $user->getId());
             } catch (Throwable $err) {
                 $index = 0;
                 do {
@@ -291,7 +291,7 @@ App::get('/v1/avatars/image')
 
         try {
             $image = new Image($fetch);
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to parse image');
         }
 
@@ -521,7 +521,7 @@ App::get('/v1/avatars/initials')
         // if there is no space, try to split by `_` underscore
         $words = (count($words) == 1) ? \explode('_', \strtoupper($name)) : $words;
 
-        $initials = null;
+        $initials = '';
         $code = 0;
 
         foreach ($words as $key => $w) {

@@ -2,18 +2,16 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Exception;
-use League\Csv\CannotInsertRecord;
+use League\Csv\Writer;
+use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\App;
-use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
-use League\Csv\Writer;
-use PHPMailer\PHPMailer\PHPMailer;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
@@ -200,7 +198,7 @@ class CalcTierStats extends Action
             $mail->Body = "Please find the daily cloud report atttached";
             $mail->send();
             Console::success('Email has been sent!');
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Console::error("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
         }
     }

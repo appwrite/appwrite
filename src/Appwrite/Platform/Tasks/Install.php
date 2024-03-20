@@ -8,9 +8,9 @@ use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
-use Utopia\Platform\Action;
 
 class Install extends Action
 {
