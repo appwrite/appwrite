@@ -421,6 +421,7 @@ class BackupTest extends Scope
         /**
          * Test to get backup policies list
          */
+
         $policies = $this->client->call(
             Client::METHOD_GET,
             '/databases/'. $databaseId .'/backups-policy',
