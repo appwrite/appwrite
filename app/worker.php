@@ -14,6 +14,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Phone;
 use Appwrite\Event\Usage;
+use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
 use Utopia\App;
@@ -145,6 +146,9 @@ Server::setResource('cache', function (Registry $register) {
 Server::setResource('log', fn() => new Log());
 Server::setResource('queueForUsage', function (Connection $queue) {
     return new Usage($queue);
+}, ['queue']);
+Server::setResource('queueForUsageDump', function (Connection $queue) {
+    return new UsageDump($queue);
 }, ['queue']);
 Server::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
@@ -299,12 +303,9 @@ $worker
         Console::error('[Error] Line: ' . $error->getLine());
     });
 
-try {
-    $workerStart = $worker->getWorkerStart();
-} catch (\Throwable $error) {
-    $worker->workerStart();
-} finally {
-    Console::info("Worker $workerName  started");
-}
+$worker->workerStart()
+    ->action(function () use ($workerName) {
+        Console::info("Worker $workerName  started");
+    });
 
 $worker->start();

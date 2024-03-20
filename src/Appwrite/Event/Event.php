@@ -27,6 +27,9 @@ class Event
     public const USAGE_QUEUE_NAME = 'v1-usage';
     public const USAGE_CLASS_NAME = 'UsageV1';
 
+    public const USAGE_DUMP_QUEUE_NAME = 'v1-usage-dump';
+    public const USAGE_DUMP_CLASS_NAME = 'UsageDumpV1';
+
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 
