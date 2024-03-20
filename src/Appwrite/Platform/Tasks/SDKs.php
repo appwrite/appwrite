@@ -74,7 +74,7 @@ class SDKs extends Action
 
                 $spec = file_get_contents(__DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json');
 
-                $cover = 'https://appwrite.io/images/github.png';
+                $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';
                 $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
                 $resultExamples = \realpath(__DIR__ . '/../../../..') . '/docs/examples/' . $version . '/' . $key . '-' . $language['key'];
                 $target = \realpath(__DIR__ . '/../../../../app') . '/sdks/git/' . $language['key'] . '/';
