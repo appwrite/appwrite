@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "78dc32d6ba7183aabeb11b0c5d08b5b0",
+    "content-hash": "7ba55df37d335bba9acb9320e244eaa7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1971,12 +1971,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "aabe9a11ea79af786ca6ea90bb1a95bdadced6a1"
+                "reference": "df296cfe8d3d2034e83f7a0140c47b6f74fc2a90"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/aabe9a11ea79af786ca6ea90bb1a95bdadced6a1",
-                "reference": "aabe9a11ea79af786ca6ea90bb1a95bdadced6a1",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/df296cfe8d3d2034e83f7a0140c47b6f74fc2a90",
+                "reference": "df296cfe8d3d2034e83f7a0140c47b6f74fc2a90",
                 "shasum": ""
             },
             "require": {
@@ -2015,7 +2015,7 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/backups"
             },
-            "time": "2024-03-20T09:38:05+00:00"
+            "time": "2024-03-21T11:29:12+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -2736,16 +2736,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.37.0-rc.6",
+            "version": "0.37.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "38dce714421fe616e29ddf65dc5e60d16fa8e158"
+                "reference": "29844ac860237018a5d6bce17f8b591c996081ef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/38dce714421fe616e29ddf65dc5e60d16fa8e158",
-                "reference": "38dce714421fe616e29ddf65dc5e60d16fa8e158",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/29844ac860237018a5d6bce17f8b591c996081ef",
+                "reference": "29844ac860237018a5d6bce17f8b591c996081ef",
                 "shasum": ""
             },
             "require": {
@@ -2781,9 +2781,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.37.0-rc.6"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.37.8"
             },
-            "time": "2024-02-27T07:49:06+00:00"
+            "time": "2024-03-12T14:13:43+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -2901,6 +2901,72 @@
                 }
             ],
             "time": "2022-12-30T00:15:36+00:00"
+        },
+        {
+            "name": "laravel/pint",
+            "version": "v1.14.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/pint.git",
+                "reference": "6b127276e3f263f7bb17d5077e9e0269e61b2a0e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/6b127276e3f263f7bb17d5077e9e0269e61b2a0e",
+                "reference": "6b127276e3f263f7bb17d5077e9e0269e61b2a0e",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "ext-tokenizer": "*",
+                "ext-xml": "*",
+                "php": "^8.1.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.49.0",
+                "illuminate/view": "^10.43.0",
+                "larastan/larastan": "^2.8.1",
+                "laravel-zero/framework": "^10.3.0",
+                "mockery/mockery": "^1.6.7",
+                "nunomaduro/termwind": "^1.15.1",
+                "pestphp/pest": "^2.33.6"
+            },
+            "bin": [
+                "builds/pint"
+            ],
+            "type": "project",
+            "autoload": {
+                "psr-4": {
+                    "App\\": "app/",
+                    "Database\\Seeders\\": "database/seeders/",
+                    "Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nuno Maduro",
+                    "email": "enunomaduro@gmail.com"
+                }
+            ],
+            "description": "An opinionated code formatter for PHP.",
+            "homepage": "https://laravel.com",
+            "keywords": [
+                "format",
+                "formatter",
+                "lint",
+                "linter",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/laravel/pint/issues",
+                "source": "https://github.com/laravel/pint"
+            },
+            "time": "2024-02-20T17:38:05+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -5385,8 +5451,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/migration": 20,
-        "appwrite/sdk-generator": 5
+        "utopia-php/migration": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
@@ -5409,7 +5474,7 @@
         "ext-fileinfo": "*"
     },
     "platform-overrides": {
-        "php": "8.2"
+        "php": "8.3"
     },
     "plugin-api-version": "2.6.0"
 }
