@@ -20,16 +20,12 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Appwrite\Utopia\Request;
-use Swoole\Timer;
-use Utopia\Database\DateTime;
-use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
 
 const DOMAIN_SYNC_TIMER = 30; // 30 seconds
 
-$domains = [];
 $lastSyncUpdate = null;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80), SWOOLE_PROCESS);
@@ -52,7 +48,7 @@ $http
 
 /**
  * Assigns HTTP requests to worker threads by analyzing its payload/content.
- * 
+ *
  * Routes requests as 'safe' or 'risky' based on specific content patterns (like POST actions or certain domains)
  * to optimize load distribution between the workers. Utilizes `$safeThreadsPercent` to manage risk by assigning
  * riskier tasks to a dedicated worker subset. Prefers idle workers, with fallback to random selection if necessary.
@@ -60,12 +56,11 @@ $http
  * @param Server $server Swoole server instance.
  * @param string|null $data Request content for categorization.
  * @global int $workerNumber Total number of workers.
- * @global array $domains List of risky domains.
  * @return int Chosen worker ID for the request.
  */
 function dispatch(Server $server, $data = null)
 {
-    global $workerNumber, $domains;
+    global $workerNumber;
 
     $safeThreadsPercent = intval(App::getEnv('_APP_SAFE_THREADS_PERCENT', 80)) / 100;
 
@@ -76,14 +71,6 @@ function dispatch(Server $server, $data = null)
         $risky = true;
     } elseif ($data && str_contains($data, '.appwrite.global')) {
         $risky = true;
-    } elseif ($data) {
-        $lines = explode($data, '\n');
-        if (count($lines) > 2) {
-            $host = trim(explode('Host: ', $lines[1])[1]);
-            if (array_key_exists($host, $domains)) {
-                $risky = true;
-            }
-        }
     }
 
     if ($risky) {
