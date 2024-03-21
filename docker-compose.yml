@@ -604,8 +604,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
-      - ./vendor/utopia-php/migration:/usr/src/code/vendor/utopia-php/migration
-      -  appwrite-backups:/storage/backups:rw
+     # - ./vendor/utopia-php/migration:/usr/src/code/vendor/utopia-php/migration
+      - appwrite-backups:/storage/backups:rw
     depends_on:
       - mariadb
     environment:
