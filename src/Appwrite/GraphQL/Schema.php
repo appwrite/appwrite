@@ -230,7 +230,7 @@ class Schema
                     'args' => \array_merge(
                         Mapper::args('id'),
                         \array_map(
-                            fn($attr) => $attr['type'] = Type::getNullableType($attr['type']),
+                            fn ($attr) => $attr['type'] = Type::getNullableType($attr['type']),
                             $attributes
                         )
                     ),

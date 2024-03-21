@@ -4,8 +4,8 @@ namespace Tests\E2E\Services\Realtime;
 
 use CURLFile;
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;

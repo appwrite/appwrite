@@ -10,29 +10,29 @@ use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Platform\Action;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Document;
-use Utopia\Queue\Message;
-use Utopia\Logger\Log;
+use Utopia\Platform\Action;
 use Utopia\Pools\Group;
+use Utopia\Queue\Message;
 
 class Hamster extends Action
 {
     private array $metrics = [
-        'usage_files' => 'files.$all.count.total',
-        'usage_buckets' => 'buckets.$all.count.total',
-        'usage_databases' => 'databases.$all.count.total',
-        'usage_documents' => 'documents.$all.count.total',
-        'usage_collections' => 'collections.$all.count.total',
-        'usage_storage' => 'project.$all.storage.size',
-        'usage_requests' => 'project.$all.network.requests',
-        'usage_bandwidth' => 'project.$all.network.bandwidth',
-        'usage_users' => 'users.$all.count.total',
-        'usage_sessions' => 'sessions.email.requests.create',
-        'usage_executions' => 'executions.$all.compute.total',
+        'usage_files' => 'files',
+        'usage_buckets' => 'buckets',
+        'usage_databases' => 'databases',
+        'usage_documents' => 'documents',
+        'usage_collections' => 'collections',
+        'usage_storage' => 'files.storage',
+        'usage_requests' => 'network.requests',
+        'usage_inbound' => 'network.inbound',
+        'usage_outbound' => 'network.outbound',
+        'usage_users' => 'users',
+        'usage_sessions' => 'sessions',
+        'usage_executions' => 'executions',
     ];
 
     protected Mixpanel $mixpanel;
@@ -217,6 +217,15 @@ class Hamster extends Action
                 }
             }
 
+            /** Add billing information to the project */
+            $organization = $dbForConsole->findOne('teams', [
+                Query::equal('$internalId', [$teamInternalId])
+            ]);
+
+            $billing = $this->getBillingDetails($organization);
+            $statsPerProject['billing_plan'] = $billing['billing_plan'] ?? null;
+            $statsPerProject['billing_start_date'] = $billing['billing_start_date'] ?? null;
+
             /** Get Domains */
             $statsPerProject['custom_domains'] = $dbForConsole->count('rules', [
                 Query::equal('projectInternalId', [$project->getInternalId()]),
@@ -298,6 +307,17 @@ class Hamster extends Action
                 }
             });
 
+            /**
+             * Workaround to combine network.Inbound+network.outbound as bandwidth.
+             */
+            $statsPerProject["usage_bandwidth_infinity"]  = $statsPerProject["usage_inbound_infinity"] + $statsPerProject["usage_outbound_infinity"];
+            $statsPerProject["usage_bandwidth_24h"]  = $statsPerProject["usage_inbound_24h"] + $statsPerProject["usage_outbound_24h"];
+            unset($statsPerProject["usage_outbound_24h"]);
+            unset($statsPerProject["usage_inbound_24h"]);
+            unset($statsPerProject["usage_outbound_infinity"]);
+            unset($statsPerProject["usage_inbound_infinity"]);
+
+
             if (isset($statsPerProject['email'])) {
                 /** Send data to mixpanel */
                 $res = $this->mixpanel->createProfile($statsPerProject['email'], '', [
@@ -319,7 +339,7 @@ class Hamster extends Action
             if (!$res) {
                 Console::error('Failed to create event for project: ' . $project->getId());
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::error('Failed to send stats for project: ' . $project->getId());
             Console::error($e->getMessage());
         } finally {
@@ -332,7 +352,6 @@ class Hamster extends Action
     /**
      * @param Document $organization
      * @param Database $dbForConsole
-     * @throws \Utopia\Database\Exception
      */
     private function getStatsForOrganization(Document $organization, Database $dbForConsole): void
     {
@@ -346,21 +365,25 @@ class Hamster extends Action
             /** Organization name */
             $statsPerOrganization['name'] = $organization->getAttribute('name');
 
-
             /** Get Email and of the organization owner */
             $membership = $dbForConsole->findOne('memberships', [
                 Query::equal('teamInternalId', [$organization->getInternalId()]),
             ]);
-
             if (!$membership || $membership->isEmpty()) {
                 throw new \Exception('Membership not found. Skipping organization : ' . $organization->getId());
             }
-
             $userId = $membership->getAttribute('userId', null);
             if ($userId) {
                 $user = $dbForConsole->getDocument('users', $userId);
                 $statsPerOrganization['email'] = $user->getAttribute('email', null);
             }
+
+            /** Add billing information */
+            $billing = $this->getBillingDetails($organization);
+            $statsPerOrganization['billing_plan'] = $billing['billing_plan'] ?? null;
+            $statsPerOrganization['billing_start_date'] = $billing['billing_start_date'] ?? null;
+            $statsPerOrganization['marked_for_deletion'] = $billing['markedForDeletion'] ?? 0;
+            $statsPerOrganization['billing_plan_downgrade'] = $billing['billing_plan_downgrade'] ?? null;
 
             /** Organization Creation Date */
             $statsPerOrganization['created'] = $organization->getAttribute('$createdAt');
@@ -386,7 +409,7 @@ class Hamster extends Action
             if (!$res) {
                 throw new \Exception('Failed to create event for organization : ' . $organization->getId());
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::error($e->getMessage());
         }
     }
@@ -399,6 +422,16 @@ class Hamster extends Action
             $statsPerUser = [];
 
             $statsPerUser['time'] = $user->getAttribute('$time');
+
+            /** Add billing information */
+            $organization = $dbForConsole->findOne('teams', [
+                Query::equal('userInternalId', [$user->getInternalId()])
+            ]);
+
+
+            $billing = $this->getBillingDetails($organization);
+            $statsPerUser['billing_plan'] = $billing['billing_plan'] ?? null;
+            $statsPerUser['billing_start_date'] = $billing['billing_start_date'] ?? null;
 
             /** Organization name */
             $statsPerUser['name'] = $user->getAttribute('name');
@@ -430,8 +463,32 @@ class Hamster extends Action
             if (!$res) {
                 throw new \Exception('Failed to create user profile for user: ' . $user->getId());
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::error($e->getMessage());
         }
+    }
+
+    private function getBillingDetails(bool|Document $team): array
+    {
+        $billing = [];
+
+        if (!empty($team) && !$team->isEmpty()) {
+            $billingPlan = $team->getAttribute('billingPlan', null);
+            $billingPlanDowngrade = $team->getAttribute('billingPlanDowngrade', null);
+
+            if (!empty($billingPlan) && empty($billingPlanDowngrade)) {
+                $billing['billing_plan'] = $billingPlan;
+            }
+
+            if (in_array($billingPlan, ['tier-1', 'tier-2'])) {
+                $billingStartDate = $team->getAttribute('billingStartDate', null);
+                $billing['billing_start_date'] = $billingStartDate;
+            }
+
+            $billing['marked_for_deletion'] = $team->getAttribute('markedForDeletion', 0);
+            $billing['billing_plan_downgrade'] = $billingPlanDowngrade;
+        }
+
+        return $billing;
     }
 }

@@ -228,5 +228,18 @@
     "continents.eu": "Europa",
     "continents.na": "América do Norte",
     "continents.oc": "Oceania",
-    "continents.sa": "América do Sul"
+    "continents.sa": "América do Sul",
+    "emails.magicSession.optionButton": "Clique no botão abaixo para acessar sua conta {{project}} com segurança. Ele expirará em 1 hora.",
+    "emails.magicSession.buttonText": "Faça login no {{project}}",
+    "emails.magicSession.clientInfo": "Este acesso foi solicitado usando {{agentClient}} em {{agentDevice}} {{agentOs}}. Se você não solicitou o acesso, pode ignorar este e-mail com segurança.",
+    "sms.verification.body": "{{secret}} é o seu código de verificação do {{project}}.",
+    "emails.magicSession.securityPhrase": "A frase de segurança para este e-mail é {{phrase}}. Você pode confiar neste e-mail se essa frase corresponder à frase mostrada durante o acesso.",
+    "emails.magicSession.optionUrl": "Se você não consegue fazer login usando o botão acima, por favor visite o seguinte link:",
+    "emails.otpSession.subject": "Login do {{project}}",
+    "emails.otpSession.hello": "Olá,",
+    "emails.otpSession.description": "Insira o seguinte código de verificação quando solicitado para acessar de forma segura a sua conta {{project}}. Ele expirará em 15 minutos.",
+    "emails.otpSession.clientInfo": "Este acesso foi solicitado usando {{agentClient}} em {{agentDevice}} {{agentOs}}. Se você não solicitou o acesso, pode ignorar este e-mail com segurança.",
+    "emails.otpSession.securityPhrase": "A frase de segurança para este e-mail é {{phrase}}. Você pode confiar neste e-mail se esta frase corresponder à frase mostrada durante o login.",
+    "emails.otpSession.thanks": "Obrigado,",
+    "emails.otpSession.signature": "equipe {{project}}"
 }

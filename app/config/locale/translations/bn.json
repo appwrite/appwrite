@@ -228,5 +228,18 @@
     "continents.eu": "ইউরোপ",
     "continents.na": "উত্তর আমেরিকা",
     "continents.oc": "ওশেনিয়া",
-    "continents.sa": "দক্ষিণ আমেরিকা"
+    "continents.sa": "দক্ষিণ আমেরিকা",
+    "emails.magicSession.optionButton": "নীচের বোতামে ক্লিক করুন আপনার {{project}} অ্যাকাউন্টে নিরাপদে সাইন ইন করতে। এটি ১ ঘন্টা পরে মেয়াদ উত্তীর্ণ হবে।",
+    "emails.magicSession.buttonText": "{{project}}-এ সাইন ইন করুন",
+    "emails.magicSession.clientInfo": "এই সাইন ইনটি {{agentClient}} ব্যবহার করে {{agentDevice}} {{agentOs}}-এ অনুরোধ করা হয়েছিল। যদি আপনি সাইন ইনের অনুরোধ করেননি, আপনি নিরাপদে এই ইমেইলটি উপেক্ষা করতে পারেন।",
+    "sms.verification.body": "{{secret}} আপনার {{project}} যাচাইকরণ কোড।",
+    "emails.magicSession.securityPhrase": "এই ইমেলের জন্য নিরাপত্তা বাক্যটি হল {{phrase}}। সাইন-ইনের সময় দেখানো বাক্যটির সাথে এই বাক্যটি মিলে গেলে আপনি এই ইমেইলকে বিশ্বাস করতে পারেন।",
+    "emails.magicSession.optionUrl": "উপরের বোতামটি ব্যবহার করে আপনি যদি সাইন ইন করতে অক্ষম হন, অনুগ্রহ করে নিম্নলিখিত লিঙ্কটি দেখুন:",
+    "emails.otpSession.subject": "{{project}} লগইন",
+    "emails.otpSession.hello": "নমস্কার,",
+    "emails.otpSession.description": "নিরাপদে আপনার {{project}} অ্যাকাউন্টে সাইন ইন করার জন্য যখন বলা হবে, তখন নিম্নলিখিত যাচাইকরণ কোডটি প্রবেশ করান। এটি ১৫ মিনিটের মধ্যে মেয়াদোত্তীর্ণ হয়ে যাবে।",
+    "emails.otpSession.clientInfo": "এই সাইন ইনটি {{agentClient}} ব্যবহার করে {{agentDevice}} {{agentOs}}-এ অনুরোধ করা হয়েছে। আপনি যদি সাইন ইনের অনুরোধ না করে থাকেন, আপনি নিরাপদে এই ইমেলটি উপেক্ষা করতে পারেন।",
+    "emails.otpSession.securityPhrase": "এই ইমেইলের জন্য সুরক্ষা বাক্য হলো {{phrase}}। যদি এই বাক্যটি সাইন ইনের সময় দেখানো বাক্যের সাথে মেলে, তাহলে আপনি এই ইমেইলটিকে বিশ্বাস করতে পারেন।",
+    "emails.otpSession.thanks": "ধন্যবাদ,",
+    "emails.otpSession.signature": "{{project}} দল"
 }

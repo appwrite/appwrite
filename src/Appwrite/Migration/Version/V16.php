@@ -124,23 +124,23 @@ class V16 extends Migration
                 /**
                  * Enable OAuth providers with data
                  */
-                $authProviders = $document->getAttribute('authProviders', []);
+                $oAuthProviders = $document->getAttribute('oAuthProviders', []);
 
-                foreach (Config::getParam('providers') as $provider => $value) {
+                foreach (Config::getParam('oAuthProviders') as $provider => $value) {
                     if (!$value['enabled']) {
                         continue;
                     }
 
-                    if (($authProviders[$provider . 'Appid'] ?? false) && ($authProviders[$provider . 'Secret'] ?? false)) {
-                        if (array_key_exists($provider . 'Enabled', $authProviders)) {
+                    if (($oAuthProviders[$provider . 'Appid'] ?? false) && ($oAuthProviders[$provider . 'Secret'] ?? false)) {
+                        if (array_key_exists($provider . 'Enabled', $oAuthProviders)) {
                             continue;
                         }
 
-                        $authProviders[$provider . 'Enabled'] = true;
+                        $oAuthProviders[$provider . 'Enabled'] = true;
                     }
                 }
 
-                $document->setAttribute('authProviders', $authProviders);
+                $document->setAttribute('oAuthProviders', $oAuthProviders);
 
                 break;
         }

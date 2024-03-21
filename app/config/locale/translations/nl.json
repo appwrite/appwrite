@@ -228,5 +228,18 @@
     "continents.eu": "Europa",
     "continents.na": "Noord Amerika",
     "continents.oc": "Oceanië",
-    "continents.sa": "Zuid Amerika"
+    "continents.sa": "Zuid Amerika",
+    "emails.magicSession.optionButton": "Klik op de knop hieronder om veilig in te loggen op uw {{project}} account. Deze zal verlopen over 1 uur.",
+    "emails.magicSession.buttonText": "Meld u aan bij {{project}}",
+    "emails.magicSession.clientInfo": "Deze aanmelding is aangevraagd met {{agentClient}} op {{agentDevice}} {{agentOs}}. Als u de aanmelding niet hebt aangevraagd, kunt u deze e-mail gerust negeren.",
+    "sms.verification.body": "{{secret}} is uw {{project}} verificatiecode.",
+    "emails.magicSession.securityPhrase": "De beveiligingszin voor deze e-mail is {{phrase}}. U kunt deze e-mail vertrouwen als deze zin overeenkomt met de zin die getoond werd tijdens het aanmelden.",
+    "emails.magicSession.optionUrl": "Als u zich niet kunt aanmelden via de bovenstaande knop, bezoekt u dan de volgende link:",
+    "emails.otpSession.subject": "{{project}} Inloggen",
+    "emails.otpSession.hello": "Hallo,",
+    "emails.otpSession.description": "Voer de volgende verificatiecode in wanneer je wordt gevraagd om veilig in te loggen op je {{project}} account. Deze verloopt over 15 minuten.",
+    "emails.otpSession.clientInfo": "Deze aanmelding is aangevraagd met {{agentClient}} op {{agentDevice}} {{agentOs}}. Als u de aanmelding niet heeft aangevraagd, kunt u deze e-mail veilig negeren.",
+    "emails.otpSession.securityPhrase": "De beveiligingszin voor deze e-mail is {{phrase}}. U kunt deze e-mail vertrouwen als deze zin overeenkomt met de zin die wordt getoond tijdens het inloggen.",
+    "emails.otpSession.thanks": "Bedankt,",
+    "emails.otpSession.signature": "{{project}} team"
 }
