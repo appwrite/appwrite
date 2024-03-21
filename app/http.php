@@ -24,6 +24,8 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
 
+$domains = [];
+
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80), SWOOLE_PROCESS);
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
@@ -42,30 +44,42 @@ $http
         'buffer_output_size' => $payloadSize,
     ]);
 
-function dispatch(Server $server, $fd, $type, $data = null)
-{
-    /** @var Server $server */
-    $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
-
+function dispatch(Server $server, $fd, $type, $data = null) {
+    global $workerNumber, $domains;
+    
     $safeThreadsPercent = intval(App::getEnv('_APP_SAFE_THREADS_PERCENT', 80)) / 100;
 
     $safeThreads = (int) floor($workerNumber * $safeThreadsPercent);
 
-    if ($data && preg_match('/^POST \/v1\/functions\/.*\/executions/', $data)) {
-        for ($j = $safeThreads; $j < $workerNumber; $j++) {
-            if ($server->getWorkerStatus($j) === 2) {
+    $risky = false;
+    if($data && str_contains($data, 'POST') && str_contains($data, '/executions')) {
+        $risky = true;
+    } else if ($data && str_contains($data, 'GET')){
+        $lines = explode($data, '\n');
+        if(count($lines) > 2) {
+            $host = trim(explode('Host: ', $lines[1])[1]);
+            if(array_key_exists($host, $domains)) {
+                $risky = true;
+            }
+        }
+    }
+
+    if($risky) {
+        var_dump('execution request sending to unsafe thread');
+        for($j = $safeThreads; $j < $workerNumber; $j++) {
+            if($server->getWorkerStatus($j) === 2) {
                 return $j;
             }
         }
         return rand($safeThreads, $workerNumber - 1);
+
     }
 
-    for ($i = 0; $i < $workerNumber; $i++) {
-        if ($server->getWorkerStatus($i) === 2) {
+    for($i = 0; $i < $workerNumber; $i++) {
+        if($server->getWorkerStatus($i) === 2) {
             return $i;
         }
     }
-
     return rand(0, $safeThreads - 1);
 }
 
@@ -250,10 +264,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     });
 });
 
-$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
+$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register, $http) {
     App::setResource('swooleRequest', fn () => $swooleRequest);
     App::setResource('swooleResponse', fn () => $swooleResponse);
-
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
