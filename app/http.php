@@ -377,7 +377,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
 function getDomains(Database $dbForConsole, &$lastSyncUpdate, &$domains)
 {
-    go(function () use ($dbForConsole, &$lastSyncUpdate, &$domains, $pools) {
+    go(function () use ($dbForConsole, &$lastSyncUpdate, &$domains) {
         Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForConsole, &$domains, &$lastSyncUpdate) {
             try {
                 $time = DateTime::now();
