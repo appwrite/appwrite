@@ -74,7 +74,6 @@ function dispatch(Server $server, $fd, $type, $data = null)
     }
 
     if ($risky) {
-        var_dump('execution request sending to unsafe thread');
         for ($j = $safeThreads; $j < $workerNumber; $j++) {
             if ($server->getWorkerStatus($j) === 2) {
                 return $j;
@@ -384,7 +383,6 @@ function getDomains(Database $dbForConsole, &$lastSyncUpdate, &$domains, $pools)
         Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForConsole, &$domains, &$lastSyncUpdate, $pools) {
             $time = DateTime::now();
             $timerStart = \microtime(true);
-            var_dump($domains);
             $limit = 1000;
             $sum = $limit;
             $total = 0;
