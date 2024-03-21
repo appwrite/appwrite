@@ -50,7 +50,20 @@ $http
         'buffer_output_size' => $payloadSize,
     ]);
 
-function dispatch(Server $server, $fd, $type, $data = null)
+/**
+ * Assigns HTTP requests to worker threads by analyzing its payload/content.
+ * 
+ * Routes requests as 'safe' or 'risky' based on specific content patterns (like POST actions or certain domains)
+ * to optimize load distribution between the workers. Utilizes `$safeThreadsPercent` to manage risk by assigning
+ * riskier tasks to a dedicated worker subset. Prefers idle workers, with fallback to random selection if necessary.
+ *
+ * @param Server $server Swoole server instance.
+ * @param string|null $data Request content for categorization.
+ * @global int $workerNumber Total number of workers.
+ * @global array $domains List of risky domains.
+ * @return int Chosen worker ID for the request.
+ */
+function dispatch(Server $server, $data = null)
 {
     global $workerNumber, $domains;
 
@@ -75,7 +88,8 @@ function dispatch(Server $server, $fd, $type, $data = null)
 
     if ($risky) {
         for ($j = $safeThreads; $j < $workerNumber; $j++) {
-            if ($server->getWorkerStatus($j) === 2) {
+            /** Reference https://openswoole.com/docs/modules/swoole-server-getWorkerStatus#description */
+            if ($server->getWorkerStatus($j) === SWOOLE_WORKER_IDLE) {
                 return $j;
             }
         }
@@ -83,7 +97,7 @@ function dispatch(Server $server, $fd, $type, $data = null)
     }
 
     for ($i = 0; $i < $workerNumber; $i++) {
-        if ($server->getWorkerStatus($i) === 2) {
+        if ($server->getWorkerStatus($i) === SWOOLE_WORKER_IDLE) {
             return $i;
         }
     }
@@ -256,8 +270,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register, &$domai
             $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
         }
 
-        getDomains($dbForConsole, $lastSyncUpdate, $domains);
-
         Console::success('[Setup] - Server database init completed...');
     });
 
@@ -375,54 +387,55 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     }
 });
 
-function getDomains(Database $dbForConsole, &$lastSyncUpdate, &$domains)
-{
-    go(function () use ($dbForConsole, &$lastSyncUpdate, &$domains) {
-        Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForConsole, &$domains, &$lastSyncUpdate) {
-            try {
-                $time = DateTime::now();
-                $timerStart = \microtime(true);
-                $limit = 1000;
-                $sum = $limit;
-                $total = 0;
-                $latestDocument = null;
+// Commenting this for now as we had some errors with this part of the code. This still needs investigating.
+// function getDomains(Database $dbForConsole, &$lastSyncUpdate, &$domains)
+// {
+//     go(function () use ($dbForConsole, &$lastSyncUpdate, &$domains) {
+//         Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForConsole, &$domains, &$lastSyncUpdate) {
+//             try {
+//                 $time = DateTime::now();
+//                 $timerStart = \microtime(true);
+//                 $limit = 1000;
+//                 $sum = $limit;
+//                 $total = 0;
+//                 $latestDocument = null;
 
-                while ($sum === $limit) {
-                    $queries = [Query::limit($limit)];
-                    if ($latestDocument !== null) {
-                        $queries[] =  Query::cursorAfter($latestDocument);
-                    }
-                    if ($lastSyncUpdate != null) {
-                        $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
-                    }
-                    $queries[] = Query::equal('resourceType', ['function']);
-                    $results = [];
-                    try {
-                        $results = Authorization::skip(fn () =>  $dbForConsole->find('rules', $queries));
-                    } catch (Throwable $th) {
-                        Console::error($th->getMessage());
-                    }
+//                 while ($sum === $limit) {
+//                     $queries = [Query::limit($limit)];
+//                     if ($latestDocument !== null) {
+//                         $queries[] =  Query::cursorAfter($latestDocument);
+//                     }
+//                     if ($lastSyncUpdate != null) {
+//                         $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
+//                     }
+//                     $queries[] = Query::equal('resourceType', ['function']);
+//                     $results = [];
+//                     try {
+//                         $results = Authorization::skip(fn () =>  $dbForConsole->find('rules', $queries));
+//                     } catch (Throwable $th) {
+//                         Console::error($th->getMessage());
+//                     }
 
-                    $sum = count($results);
-                    $total = $total + $sum;
-                    foreach ($results as $document) {
-                        $domain = $document->getAttribute('domain');
-                        if (str_ends_with($domain, '.appwrite.global')) {
-                            continue;
-                        }
-                        $domains[$domain] = true;
-                    }
-                    $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
-                }
+//                     $sum = count($results);
+//                     $total = $total + $sum;
+//                     foreach ($results as $document) {
+//                         $domain = $document->getAttribute('domain');
+//                         if (str_ends_with($domain, '.appwrite.global')) {
+//                             continue;
+//                         }
+//                         $domains[$domain] = true;
+//                     }
+//                     $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
+//                 }
 
-                if ($total > 0) {
-                    Console::log("Sync domains tick: {$total} domains were updated in");
-                }
-            } catch (Throwable $th) {
-                Console::error($th->getMessage());
-            }
-        });
-    });
-}
+//                 if ($total > 0) {
+//                     Console::log("Sync domains tick: {$total} domains were updated in");
+//                 }
+//             } catch (Throwable $th) {
+//                 Console::error($th->getMessage());
+//             }
+//         });
+//     });
+// }
 
 $http->start();
