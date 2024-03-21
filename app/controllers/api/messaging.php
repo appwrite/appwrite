@@ -313,23 +313,22 @@ App::post('/v1/messaging/providers/msg91')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('senderId', '', new Text(0), 'Msg91 Sender ID.', true)
-    ->param('authKey', '', new Text(0), 'Msg91 Auth Key.', true)
+    ->param('templateId', '', new Text(0), 'Msg91 template ID', true)
+    ->param('senderId', '', new Text(0), 'Msg91 sender ID.', true)
+    ->param('authKey', '', new Text(0), 'Msg91 auth key.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $senderId, string $authKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $templateId, string $senderId, string $authKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $options = [];
-
-        if (!empty($from)) {
-            $options['from'] = $from;
-        }
-
         $credentials = [];
+
+        if (!empty($templateId)) {
+            $credentials['templateId'] = $templateId;
+        }
 
         if (!empty($senderId)) {
             $credentials['senderId'] = $senderId;
@@ -1330,13 +1329,13 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('senderId', '', new Text(0), 'Msg91 Sender ID.', true)
-    ->param('authKey', '', new Text(0), 'Msg91 Auth Key.', true)
-    ->param('from', '', new Text(256), 'Sender number.', true)
+    ->param('templateId', '', new Text(0), 'Msg91 template ID.', true)
+    ->param('senderId', '', new Text(0), 'Msg91 sender ID.', true)
+    ->param('authKey', '', new Text(0), 'Msg91 auth key.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $senderId, string $authKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $templateId, string $senderId, string $authKey, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1352,13 +1351,11 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
             $provider->setAttribute('name', $name);
         }
 
-        if (!empty($from)) {
-            $provider->setAttribute('options', [
-                'from' => $from,
-            ]);
-        }
-
         $credentials = $provider->getAttribute('credentials');
+
+        if (!empty($templateId)) {
+            $credentials['templateId'] = $templateId;
+        }
 
         if (!empty($senderId)) {
             $credentials['senderId'] = $senderId;
@@ -1375,7 +1372,7 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
                 if (
                     \array_key_exists('senderId', $credentials) &&
                     \array_key_exists('authKey', $credentials) &&
-                    \array_key_exists('from', $provider->getAttribute('options'))
+                    \array_key_exists('templateId', $credentials)
                 ) {
                     $provider->setAttribute('enabled', true);
                 } else {
