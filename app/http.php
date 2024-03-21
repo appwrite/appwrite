@@ -381,43 +381,49 @@ function getDomains(Database $dbForConsole, &$lastSyncUpdate, &$domains, $pools)
 {
     go(function () use ($dbForConsole, &$lastSyncUpdate, &$domains, $pools) {
         Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForConsole, &$domains, &$lastSyncUpdate, $pools) {
-            $time = DateTime::now();
-            $timerStart = \microtime(true);
-            $limit = 1000;
-            $sum = $limit;
-            $total = 0;
-            $latestDocument = null;
+            try {
+                $time = DateTime::now();
+                $timerStart = \microtime(true);
+                $limit = 1000;
+                $sum = $limit;
+                $total = 0;
+                $latestDocument = null;
 
-            while ($sum === $limit) {
-                $queries = [Query::limit($limit)];
-                if ($latestDocument !== null) {
-                    $queries[] =  Query::cursorAfter($latestDocument);
-                }
-                if ($lastSyncUpdate != null) {
-                    $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
-                }
-                $queries[] = Query::equal('resourceType', ['function']);
-
-                $results = Authorization::skip(fn () =>  $dbForConsole->find('rules', $queries));
-
-                $sum = count($results);
-                $total = $total + $sum;
-                foreach ($results as $document) {
-                    $domain = $document->getAttribute('domain');
-                    if (str_contains($domain, '.appwrite.global')) {
-                        continue;
+                while ($sum === $limit) {
+                    $queries = [Query::limit($limit)];
+                    if ($latestDocument !== null) {
+                        $queries[] =  Query::cursorAfter($latestDocument);
                     }
-                    $domains[$domain] = true;
+                    if ($lastSyncUpdate != null) {
+                        $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
+                    }
+                    $queries[] = Query::equal('resourceType', ['function']);
+
+                    $results = Authorization::skip(fn () =>  $dbForConsole->find('rules', $queries));
+
+                    $sum = count($results);
+                    $total = $total + $sum;
+                    foreach ($results as $document) {
+                        $domain = $document->getAttribute('domain');
+                        if (str_contains($domain, '.appwrite.global')) {
+                            continue;
+                        }
+                        $domains[$domain] = true;
+                    }
+                    $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
                 }
-                $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
+
+                $lastSyncUpdate = $time;
+                $timerEnd = \microtime(true);
+
+                $pools->reclaim();
+
+                if ($total > 0) {
+                    Console::log("Sync domains tick: {$total} domains were updated in " . ($timerEnd - $timerStart) . " seconds");
+                }
+            } catch (Throwable $th) {
+                Console::error($th->getMessage());
             }
-
-            $lastSyncUpdate = $time;
-            $timerEnd = \microtime(true);
-
-            $pools->reclaim();
-
-            Console::log("Sync domains tick: {$total} domains were updated in " . ($timerEnd - $timerStart) . " seconds");
         });
     });
 }
