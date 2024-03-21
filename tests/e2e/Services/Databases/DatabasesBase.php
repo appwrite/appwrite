@@ -150,6 +150,27 @@ trait DatabasesBase
 
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertCount(2, $documents['body']['documents']);
+
+        $documents = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/console/collections/' . $presidents['body']['$id'] . '/documents',
+            array_merge([
+                'content-type' => 'application/json',
+               // 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-project' => 'console',
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::limit(1)->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertCount(2, $documents['body']['documents']);
+
+        $this->assertCount(true, false);
+
     }
 
     public function testCreateDatabase(): array
