@@ -380,8 +380,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 function getDomains(Database $dbForConsole, &$lastSyncUpdate, &$domains, $pools)
 {
     go(function () use ($dbForConsole, &$lastSyncUpdate, &$domains, $pools) {
-        Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForConsole, &$domains, &$lastSyncUpdate, $pools) {
-            try {
+        try {
+            Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForConsole, &$domains, &$lastSyncUpdate, $pools) {
                 $time = DateTime::now();
                 $timerStart = \microtime(true);
                 $limit = 1000;
@@ -421,10 +421,10 @@ function getDomains(Database $dbForConsole, &$lastSyncUpdate, &$domains, $pools)
                 if ($total > 0) {
                     Console::log("Sync domains tick: {$total} domains were updated in " . ($timerEnd - $timerStart) . " seconds");
                 }
-            } catch (Throwable $th) {
-                Console::error($th->getMessage());
-            }
-        });
+            });
+        } catch (Throwable $th) {
+            Console::error($th->getMessage());
+        }
     });
 }
 
