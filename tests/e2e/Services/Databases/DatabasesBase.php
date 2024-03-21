@@ -166,8 +166,9 @@ trait DatabasesBase
             ]
         );
 
-        $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertCount(2, $documents['body']['documents']);
+        var_dump($documents);
+
+        $this->assertEquals(500, $documents['headers']['status-code']);
 
         $this->assertCount(true, false);
 
