@@ -331,4 +331,31 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
         $this->assertIsNumeric($logs['body']['total']);
     }
+
+    /**
+     * @depends testCreateCollection
+     */
+    public function testConsole(array $data){
+        $documents = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/console/collections/' . $data['moviesId'] . '/documents',
+            array_merge([
+                'content-type' => 'application/json',
+                // 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-project' => 'console',
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::limit(1)->toString(),
+                ],
+            ]
+        );
+
+        var_dump($documents);
+
+        $this->assertEquals(500, $documents['headers']['status-code']);
+
+        $this->assertEquals(true, false);
+
+    }
 }
