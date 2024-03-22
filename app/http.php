@@ -27,15 +27,16 @@ use Utopia\Pools\Group;
 const DOMAIN_SYNC_TIMER = 30; // 30 seconds
 
 $lastSyncUpdate = null;
+$domains = [];
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80), SWOOLE_PROCESS);
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
-$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+$totalWorkers = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $http
     ->set([
-        'worker_num' => $workerNumber,
+        'worker_num' => $totalWorkers,
         'open_http2_protocol' => true,
         // 'document_root' => __DIR__.'/../public',
         // 'enable_static_handler' => true,
@@ -55,17 +56,21 @@ $http
  *
  * @param Server $server Swoole server instance.
  * @param string|null $data Request content for categorization.
- * @global int $workerNumber Total number of workers.
+ * @global int $totalThreads Total number of workers.
  * @return int Chosen worker ID for the request.
  */
 function dispatch(Server $server, $data = null)
 {
-    global $workerNumber;
+    global $totalWorkers;
 
-    $safeThreadsPercent = intval(App::getEnv('_APP_SAFE_THREADS_PERCENT', 80)) / 100;
+    $riskyWorkersPercent = intval(App::getEnv('_APP_RISKY_WORKERS_PERCENT', 80)) / 100; // Decimal form 0 to 1
 
-    $safeThreads = (int) floor($workerNumber * $safeThreadsPercent);
+    // Each worker has numeric ID, starting from 0 and incrementing
+    // From 0 to riskyWorkers, we consider safe workers
+    // From riskyWorkers to totalWorkers, we consider risky workers
+    $riskyWorkers = (int) floor($totalWorkers * $riskyWorkersPercent); // Absolute amount of risky workers
 
+    // Sync executions are considered risky
     $risky = false;
     if ($data && str_contains($data, 'POST') && str_contains($data, '/executions')) {
         $risky = true;
@@ -73,22 +78,33 @@ function dispatch(Server $server, $data = null)
         $risky = true;
     }
 
+    // TODO: Custom function domains are also risky
+
     if ($risky) {
-        for ($j = $safeThreads; $j < $workerNumber; $j++) {
+        // If risky request, only consider risky workers
+        for ($j = $riskyWorkers; $j < $totalWorkers; $j++) {
             /** Reference https://openswoole.com/docs/modules/swoole-server-getWorkerStatus#description */
             if ($server->getWorkerStatus($j) === SWOOLE_WORKER_IDLE) {
+                // If idle worker found, give to him
                 return $j;
             }
         }
-        return rand($safeThreads, $workerNumber - 1);
+
+        // If no idle workers, give to random risky worker
+        return rand($riskyWorkers, $totalWorkers - 1);
     }
 
-    for ($i = 0; $i < $workerNumber; $i++) {
+    // If safe request, give to any idle worker
+    // Its fine to pick risky worker here, because it's idle. Idle is never actually risky
+    for ($i = 0; $i < $totalWorkers; $i++) {
         if ($server->getWorkerStatus($i) === SWOOLE_WORKER_IDLE) {
             return $i;
         }
     }
-    return rand(0, $safeThreads - 1);
+
+    // If no idle worker found, give to random safe worker
+    // We avoid risky workers here, as it could be in work - not idle. Thats exactly when they are risky.
+    return rand(0, $riskyWorkers - 1);
 }
 
 $http->on('WorkerStart', function ($server, $workerId) {
@@ -374,6 +390,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     }
 });
 
+// TODO: Re-add this logic
 // Commenting this for now as we had some errors with this part of the code. This still needs investigating.
 // function getDomains(Database $dbForConsole, &$lastSyncUpdate, &$domains)
 // {
