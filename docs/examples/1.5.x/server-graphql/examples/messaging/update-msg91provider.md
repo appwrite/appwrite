@@ -3,9 +3,9 @@ mutation {
         providerId: "<PROVIDER_ID>",
         name: "<NAME>",
         enabled: false,
+        templateId: "<TEMPLATE_ID>",
         senderId: "<SENDER_ID>",
-        authKey: "<AUTH_KEY>",
-        from: "<FROM>"
+        authKey: "<AUTH_KEY>"
     ) {
         _id
         _createdAt

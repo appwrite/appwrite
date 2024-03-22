@@ -10,7 +10,7 @@ Messaging messaging = Messaging(client);
 Provider result = await messaging.createMsg91Provider(
     providerId: '<PROVIDER_ID>',
     name: '<NAME>',
-    from: '+12065550100', // (optional)
+    templateId: '<TEMPLATE_ID>', // (optional)
     senderId: '<SENDER_ID>', // (optional)
     authKey: '<AUTH_KEY>', // (optional)
     enabled: false, // (optional)

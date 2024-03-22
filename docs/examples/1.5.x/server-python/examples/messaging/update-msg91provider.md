@@ -11,7 +11,7 @@ result = messaging.update_msg91_provider(
     provider_id = '<PROVIDER_ID>',
     name = '<NAME>', # optional
     enabled = False, # optional
+    template_id = '<TEMPLATE_ID>', # optional
     sender_id = '<SENDER_ID>', # optional
-    auth_key = '<AUTH_KEY>', # optional
-    from = '<FROM>' # optional
+    auth_key = '<AUTH_KEY>' # optional
 )
