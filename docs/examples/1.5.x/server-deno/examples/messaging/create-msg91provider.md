@@ -10,7 +10,7 @@ const messaging = new Messaging(client);
 const response = await messaging.createMsg91Provider(
     '<PROVIDER_ID>', // providerId
     '<NAME>', // name
-    '+12065550100', // from (optional)
+    '<TEMPLATE_ID>', // templateId (optional)
     '<SENDER_ID>', // senderId (optional)
     '<AUTH_KEY>', // authKey (optional)
     false // enabled (optional)

@@ -13,9 +13,9 @@ messaging.updateMsg91Provider(
     "<PROVIDER_ID>", // providerId
     "<NAME>", // name (optional)
     false, // enabled (optional)
+    "<TEMPLATE_ID>", // templateId (optional)
     "<SENDER_ID>", // senderId (optional)
     "<AUTH_KEY>", // authKey (optional)
-    "<FROM>", // from (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
