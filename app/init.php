@@ -1161,7 +1161,6 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', 'console')
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
-    $pools->get('console')->reclaim();
     return $database;
 }, ['pools', 'cache']);
 
