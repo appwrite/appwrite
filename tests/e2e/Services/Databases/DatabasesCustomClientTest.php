@@ -88,19 +88,16 @@ class DatabasesCustomClientTest extends Scope
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
 
 
+        /**
+        * Test console serviceStatusForDatabases is false
+        */
         $documents = $this->client->call(
             Client::METHOD_GET,
             '/databases/console/collections/' . $moviesId . '/documents',
             array_merge([
                 'content-type' => 'application/json',
-                // 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-project' => 'console',
-            ], $this->getHeaders()),
-            [
-                'queries' => [
-                    Query::limit(1)->toString(),
-                ],
-            ]
+                'x-appwrite-project' => 'console'
+            ], $this->getHeaders())
         );
 
         var_dump($documents);

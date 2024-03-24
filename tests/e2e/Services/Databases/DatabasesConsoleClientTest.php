@@ -341,14 +341,8 @@ class DatabasesConsoleClientTest extends Scope
             '/databases/console/collections/' . $data['moviesId'] . '/documents',
             array_merge([
                 'content-type' => 'application/json',
-                // 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-project' => 'console',
-            ], $this->getHeaders()),
-            [
-                'queries' => [
-                    Query::limit(1)->toString(),
-                ],
-            ]
+            ], $this->getHeaders())
         );
 
         var_dump($documents);
