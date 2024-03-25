@@ -56,15 +56,29 @@ $http
  * Routes requests as 'safe' or 'risky' based on specific content patterns (like POST actions or certain domains)
  * to optimize load distribution between the workers. Utilizes `$safeThreadsPercent` to manage risk by assigning
  * riskier tasks to a dedicated worker subset. Prefers idle workers, with fallback to random selection if necessary.
+ * doc: https://openswoole.com/docs/modules/swoole-server/configuration#dispatch_func
  *
  * @param Server $server Swoole server instance.
+ * @param int $fd client ID
+ * @param int $type the type of data and its current state
  * @param string|null $data Request content for categorization.
  * @global int $totalThreads Total number of workers.
  * @return int Chosen worker ID for the request.
  */
-function dispatch(Server $server, $data = null)
+function dispatch(Server $server, int $fd, int $type, $data = null): int
 {
-    global $totalWorkers;
+    global $totalWorkers, $domains;
+
+    // If data is not set we can send request to any worker
+    // first we try to pick idle worker, if not we randomly pick a worker
+    if ($data === null) {
+        for ($i = 0; $i < $totalWorkers; $i++) {
+            if ($server->getWorkerStatus($i) === SWOOLE_WORKER_IDLE) {
+                return $i;
+            }
+        }
+        return rand(0, $totalWorkers - 1);
+    }
 
     $riskyWorkersPercent = intval(App::getEnv('_APP_RISKY_WORKERS_PERCENT', 80)) / 100; // Decimal form 0 to 1
 
@@ -73,15 +87,25 @@ function dispatch(Server $server, $data = null)
     // From riskyWorkers to totalWorkers, we consider risky workers
     $riskyWorkers = (int) floor($totalWorkers * $riskyWorkersPercent); // Absolute amount of risky workers
 
-    // Sync executions are considered risky
-    $risky = false;
-    if ($data && str_contains($data, 'POST') && str_contains($data, '/executions')) {
-        $risky = true;
-    } elseif ($data && str_contains($data, '.appwrite.global')) {
-        $risky = true;
+    $lines = [];
+    $domain = '';
+    // max up to 3 as first line has request details and second line has host
+    $lines = explode("\n", $data, 3);
+    $request = $lines[0];
+    if (count($lines) > 1) {
+        $domain = trim(explode('Host: ', $lines[1])[1]);
     }
 
-    // TODO: Custom function domains are also risky
+    // Sync executions are considered risky
+    $risky = false;
+    if (str_starts_with($request, 'POST') && str_contains($request, '/executions')) {
+        $risky = true;
+    } elseif (str_ends_with($domain, App::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
+        $risky = true;
+    } elseif (array_key_exists($domain, $domains) && str_contains($request, '/executions')) {
+        // executions request coming from custom domain
+        $risky = true;
+    }
 
     if ($risky) {
         // If risky request, only consider risky workers
@@ -126,7 +150,7 @@ Files::load(__DIR__ . '/../console');
 
 include __DIR__ . '/controllers/general.php';
 
-$http->on('start', function (Server $http) use ($payloadSize, $register, &$domains, &$lastSyncUpdate) {
+$http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
     go(function () use ($register, $app) {
@@ -395,16 +419,16 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     }
 });
 
-// TODO: Re-add this logic
-// Commenting this for now as we had some errors with this part of the code. This still needs investigating.
-function fetchDomains() {
+// Fetch domains every `DOMAIN_SYNC_TIMER` seconds and update in the memory
+function fetchDomains()
+{
     global $domains, $lastSyncUpdate;
     go(function () use (&$lastSyncUpdate, &$domains) {
         $app = new App('UTC');
-        
+
         /** @var Utopia\Database\Database $dbForConsole */
         $dbForConsole = $app->getResource('dbForConsole');
-        
+
         Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForConsole, &$domains, &$lastSyncUpdate) {
             try {
                 $time = DateTime::now();
@@ -412,7 +436,7 @@ function fetchDomains() {
                 $sum = $limit;
                 $total = 0;
                 $latestDocument = null;
-    
+
                 while ($sum === $limit) {
                     $queries = [Query::limit($limit)];
                     if ($latestDocument !== null) {
@@ -428,12 +452,12 @@ function fetchDomains() {
                     } catch (Throwable $th) {
                         Console::error($th->getMessage());
                     }
-    
+
                     $sum = count($results);
                     $total = $total + $sum;
                     foreach ($results as $document) {
                         $domain = $document->getAttribute('domain');
-                        if (str_ends_with($domain, '.appwrite.global')) {
+                        if (str_ends_with($domain, App::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
                             continue;
                         }
                         $domains[$domain] = true;
