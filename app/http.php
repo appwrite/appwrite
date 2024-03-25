@@ -8,6 +8,7 @@ use Swoole\Http\Server;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Helpers\ID;
@@ -434,7 +435,6 @@ function fetchDomains()
                 $time = DateTime::now();
                 $limit = 1000;
                 $sum = $limit;
-                $total = 0;
                 $latestDocument = null;
 
                 while ($sum === $limit) {
@@ -454,7 +454,6 @@ function fetchDomains()
                     }
 
                     $sum = count($results);
-                    $total = $total + $sum;
                     foreach ($results as $document) {
                         $domain = $document->getAttribute('domain');
                         if (str_ends_with($domain, App::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
@@ -465,8 +464,8 @@ function fetchDomains()
                     $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
                 }
                 $lastSyncUpdate = $time;
-                if ($total > 0) {
-                    Console::log("Sync domains tick: {$total} domains were updated in");
+                if ($sum > 0) {
+                    Console::log("Sync domains tick: {$sum} domains were updated in");
                 }
             } catch (Throwable $th) {
                 Console::error($th->getMessage());
