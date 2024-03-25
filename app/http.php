@@ -20,9 +20,12 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Appwrite\Utopia\Request;
+use Swoole\Timer;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
+use Utopia\Database\DateTime;
+use Utopia\Database\Query;
 
 const DOMAIN_SYNC_TIMER = 30; // 30 seconds
 
@@ -126,7 +129,7 @@ include __DIR__ . '/controllers/general.php';
 $http->on('start', function (Server $http) use ($payloadSize, $register, &$domains, &$lastSyncUpdate) {
     $app = new App('UTC');
 
-    go(function () use ($register, $app, &$domains, &$lastSyncUpdate) {
+    go(function () use ($register, $app) {
         $pools = $register->get('pools');
         /** @var Group $pools */
         App::setResource('pools', fn () => $pools);
@@ -279,6 +282,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register, &$domai
     Console::success('Server started successfully (max payload is ' . number_format($payloadSize) . ' bytes)');
     Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
 
+    fetchDomains();
+
     // listen ctrl + c
     Process::signal(2, function () use ($http) {
         Console::log('Stop by Ctrl+C');
@@ -392,54 +397,58 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
 // TODO: Re-add this logic
 // Commenting this for now as we had some errors with this part of the code. This still needs investigating.
-// function getDomains(Database $dbForConsole, &$lastSyncUpdate, &$domains)
-// {
-//     go(function () use ($dbForConsole, &$lastSyncUpdate, &$domains) {
-//         Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForConsole, &$domains, &$lastSyncUpdate) {
-//             try {
-//                 $time = DateTime::now();
-//                 $timerStart = \microtime(true);
-//                 $limit = 1000;
-//                 $sum = $limit;
-//                 $total = 0;
-//                 $latestDocument = null;
-
-//                 while ($sum === $limit) {
-//                     $queries = [Query::limit($limit)];
-//                     if ($latestDocument !== null) {
-//                         $queries[] =  Query::cursorAfter($latestDocument);
-//                     }
-//                     if ($lastSyncUpdate != null) {
-//                         $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
-//                     }
-//                     $queries[] = Query::equal('resourceType', ['function']);
-//                     $results = [];
-//                     try {
-//                         $results = Authorization::skip(fn () =>  $dbForConsole->find('rules', $queries));
-//                     } catch (Throwable $th) {
-//                         Console::error($th->getMessage());
-//                     }
-
-//                     $sum = count($results);
-//                     $total = $total + $sum;
-//                     foreach ($results as $document) {
-//                         $domain = $document->getAttribute('domain');
-//                         if (str_ends_with($domain, '.appwrite.global')) {
-//                             continue;
-//                         }
-//                         $domains[$domain] = true;
-//                     }
-//                     $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
-//                 }
-
-//                 if ($total > 0) {
-//                     Console::log("Sync domains tick: {$total} domains were updated in");
-//                 }
-//             } catch (Throwable $th) {
-//                 Console::error($th->getMessage());
-//             }
-//         });
-//     });
-// }
+function fetchDomains() {
+    global $domains, $lastSyncUpdate;
+    go(function () use (&$lastSyncUpdate, &$domains) {
+        $app = new App('UTC');
+        
+        /** @var Utopia\Database\Database $dbForConsole */
+        $dbForConsole = $app->getResource('dbForConsole');
+        
+        Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForConsole, &$domains, &$lastSyncUpdate) {
+            try {
+                $time = DateTime::now();
+                $limit = 1000;
+                $sum = $limit;
+                $total = 0;
+                $latestDocument = null;
+    
+                while ($sum === $limit) {
+                    $queries = [Query::limit($limit)];
+                    if ($latestDocument !== null) {
+                        $queries[] =  Query::cursorAfter($latestDocument);
+                    }
+                    if ($lastSyncUpdate != null) {
+                        $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
+                    }
+                    $queries[] = Query::equal('resourceType', ['function']);
+                    $results = [];
+                    try {
+                        $results = Authorization::skip(fn () =>  $dbForConsole->find('rules', $queries));
+                    } catch (Throwable $th) {
+                        Console::error($th->getMessage());
+                    }
+    
+                    $sum = count($results);
+                    $total = $total + $sum;
+                    foreach ($results as $document) {
+                        $domain = $document->getAttribute('domain');
+                        if (str_ends_with($domain, '.appwrite.global')) {
+                            continue;
+                        }
+                        $domains[$domain] = true;
+                    }
+                    $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
+                }
+                $lastSyncUpdate = $time;
+                if ($total > 0) {
+                    Console::log("Sync domains tick: {$total} domains were updated in");
+                }
+            } catch (Throwable $th) {
+                Console::error($th->getMessage());
+            }
+        });
+    });
+}
 
 $http->start();
