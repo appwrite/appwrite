@@ -430,7 +430,7 @@ function fetchDomains()
         /** @var Utopia\Database\Database $dbForConsole */
         $dbForConsole = $app->getResource('dbForConsole');
 
-        Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForConsole, &$domains, &$lastSyncUpdate) {
+        Console::loop(function () use ($dbForConsole, &$domains, &$lastSyncUpdate) {
             try {
                 $time = DateTime::now();
                 $limit = 1000;
@@ -470,6 +470,8 @@ function fetchDomains()
             } catch (Throwable $th) {
                 Console::error($th->getMessage());
             }
+        }, DOMAIN_SYNC_TIMER, 0, function($error) {
+            Console::error($error);
         });
     });
 }
