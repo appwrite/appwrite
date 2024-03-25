@@ -89,16 +89,32 @@ class ScheduleBackups extends ScheduleBase
 
                     $schedule = $this->schedules[$scheduleKey];
 
-                    $resources = Appwrite::getSupportedResources();
+                    Console::error('DBG resourceType = ' . $schedule['resource']['resourceType']);
 
-                    if($schedule === BACKUP_RESOURCE_DATABASE) {
-                        $resources = [
-                            Resource::TYPE_DATABASE,
-                            Resource::TYPE_COLLECTION,
-                            Resource::TYPE_ATTRIBUTE,
-                            Resource::TYPE_INDEX,
-                            Resource::TYPE_DOCUMENT,
-                        ];
+                    switch ($schedule['resource']['resourceType']) {
+                        case BACKUP_RESOURCE_PROJECT:
+                            $resources = Appwrite::getSupportedResources();
+                            break;
+
+                        case BACKUP_RESOURCE_DATABASE:
+                            $resources = [
+                                Resource::TYPE_DATABASE,
+                                Resource::TYPE_COLLECTION,
+                                Resource::TYPE_ATTRIBUTE,
+                                Resource::TYPE_INDEX,
+                                Resource::TYPE_DOCUMENT,
+                            ];
+                            break;
+
+                        default:
+                            $resources = [];
+                            Console::error('No resourceType match!');
+                            break;
+                    }
+
+                    if(empty($resources)){
+                        Console::error('No resources found');
+                        continue;
                     }
 
                     $project = $schedule['project'];
