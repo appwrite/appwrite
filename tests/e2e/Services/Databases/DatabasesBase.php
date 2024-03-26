@@ -1643,7 +1643,6 @@ trait DatabasesBase
                 Query::orderAsc('releaseYear')->toString(),
             ],
         ]);
-
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);

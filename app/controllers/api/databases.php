@@ -3038,15 +3038,23 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $selections = Query::groupByType($queries)['selections'];
+        var_dump($selections);
+
         // Add $collectionId and $databaseId for all documents
-        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
+        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $selections): bool {
             if ($document->isEmpty()) {
                 return false;
             }
 
             $document->removeAttribute('$collection');
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
+
+            if (empty($selections)) {
+                // todo: what if someone Query::select(['*']) or Query::select(['users.*']) or or Query::select(['relatedAttributes.*'])
+
+                $document->setAttribute('$databaseId', $database->getId());
+                $document->setAttribute('$collectionId', $collection->getId());
+            }
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
@@ -3088,33 +3096,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         foreach ($documents as $document) {
             $processDocument($collection, $document);
-        }
-
-        $select = \array_reduce($queries, function ($result, $query) {
-            return $result || ($query->getMethod() === Query::TYPE_SELECT);
-        }, false);
-
-        // Check if the SELECT query includes $databaseId and $collectionId
-        $hasDatabaseId = false;
-        $hasCollectionId = false;
-        if ($select) {
-            $hasDatabaseId = \array_reduce($queries, function ($result, $query) {
-                return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$databaseId', $query->getValues()));
-            }, false);
-            $hasCollectionId = \array_reduce($queries, function ($result, $query) {
-                return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$collectionId', $query->getValues()));
-            }, false);
-        }
-
-        if ($select) {
-            foreach ($documents as $document) {
-                if (!$hasDatabaseId) {
-                    $document->removeAttribute('$databaseId');
-                }
-                if (!$hasCollectionId) {
-                    $document->removeAttribute('$collectionId');
-                }
-            }
         }
 
         $response->dynamic(new Document([
