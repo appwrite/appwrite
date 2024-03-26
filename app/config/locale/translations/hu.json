@@ -10,7 +10,7 @@
     "emails.verification.thanks": "Köszönettel",
     "emails.verification.signature": "a {{project}} csapat",
     "emails.magicSession.subject": "Bejelentkezés",
-    "emails.magicSession.hello": "Szia,",
+    "emails.magicSession.hello": "Szia",
     "emails.magicSession.body": "Kattints a linkre a bejelentkezéshez.",
     "emails.magicSession.footer": "Ha nem te szerettél volna bejelentkezni ezzel az email címmel, akkor nyugodtan hagyd figyelmen kívül ezt az üzenetet.",
     "emails.magicSession.thanks": "Köszönettel",
