@@ -4138,6 +4138,79 @@ $projectCollections = array_merge([
             ]
         ],
     ],
+
+    'resource_tokens' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('resource_tokens'),
+        'name' => 'Resource Tokens',
+        'attributes' => [
+            [
+                '$id' => ID::custom('resourceId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('resourceInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('resourceType'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 100,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('secret'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 512,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => ['encrypt'],
+            ],
+            [
+                '$id' => ID::custom('expire'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ]
+        ],
+        'indexes' => [
+            [
+                '$id' => '_key_expiry_date',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['expire'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+
+        ],
+    ],
 ], $commonCollections);
 
 $consoleCollections = array_merge([
