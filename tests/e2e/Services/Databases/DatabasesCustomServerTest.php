@@ -3,10 +3,10 @@
 namespace Tests\E2E\Services\Databases;
 
 use Appwrite\Extend\Exception as AppwriteException;
-use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Tests\E2E\Client;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -1665,7 +1665,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('lorem', $attribute['default']);
@@ -1807,7 +1807,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('torsten@appwrite.io', $attribute['default']);
@@ -1950,7 +1950,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('127.0.0.1', $attribute['default']);
@@ -2092,7 +2092,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('http://appwrite.io', $attribute['default']);
@@ -2238,7 +2238,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals(123, $attribute['default']);
@@ -2501,7 +2501,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals(123.456, $attribute['default']);
@@ -2760,7 +2760,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals(true, $attribute['default']);
@@ -2902,7 +2902,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('1975-06-12 14:12:55+02:00', $attribute['default']);
@@ -3049,7 +3049,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('lorem', $attribute['default']);

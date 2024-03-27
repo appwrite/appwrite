@@ -1,0 +1,1 @@
+Get database backups list by policy id.

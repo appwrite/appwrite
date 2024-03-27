@@ -65,6 +65,7 @@ RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/certificates && \
     mkdir -p /storage/functions && \
     mkdir -p /storage/debug && \
+    mkdir -p /storage/backups && \
     chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
     chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
     chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \
@@ -83,6 +84,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/schedule-functions && \
     chmod +x /usr/local/bin/schedule-messages && \
+    chmod +x /usr/local/bin/schedule-backups && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
     chmod +x /usr/local/bin/ssl && \

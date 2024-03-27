@@ -604,6 +604,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
+     # - ./vendor/utopia-php/migration:/usr/src/code/vendor/utopia-php/migration
+      - appwrite-backups:/storage/backups:rw
     depends_on:
       - mariadb
     environment:
@@ -626,6 +628,7 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
+      - _APP_CONNECTIONS_STORAGE_BACKUPS
 
   appwrite-maintenance:
     entrypoint: maintenance
@@ -757,6 +760,33 @@ services:
     entrypoint: schedule-messages
     <<: *x-logging
     container_name: appwrite-scheduler-messages
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-scheduler-backups:
+    entrypoint: schedule-backups
+    <<: *x-logging
+    container_name: appwrite-scheduler-backups
     image: appwrite-dev
     networks:
       - appwrite
@@ -1052,3 +1082,4 @@ volumes:
   appwrite-functions:
   appwrite-builds:
   appwrite-config:
+  appwrite-backups:

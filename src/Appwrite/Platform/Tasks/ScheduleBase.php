@@ -27,7 +27,8 @@ abstract class ScheduleBase extends Action
 
     abstract protected function enqueueResources(
         Group $pools,
-        Database $dbForConsole
+        Database $dbForConsole,
+        callable $getProjectDB,
     );
 
     public function __construct()
@@ -64,7 +65,8 @@ abstract class ScheduleBase extends Action
 
             $collectionId = match ($schedule->getAttribute('resourceType')) {
                 'function' => 'functions',
-                'message' => 'messages'
+                'message' => 'messages',
+                'backup-policy' => 'backupsPolicy',
             };
 
             $resource = $getProjectDB($project)->getDocument(
@@ -113,7 +115,8 @@ abstract class ScheduleBase extends Action
                 } catch (\Throwable $th) {
                     $collectionId = match ($document->getAttribute('resourceType')) {
                         'function' => 'functions',
-                        'message' => 'messages'
+                        'message'  => 'messages',
+                        'backup-project', 'backup-database' => 'backupsPolicy',
                     };
 
                     Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");
@@ -130,7 +133,7 @@ abstract class ScheduleBase extends Action
 
         Console::success("Starting timers at " . DateTime::now());
 
-        run(function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $pools) {
+        run(function () use ($getProjectDB, $dbForConsole, &$lastSyncUpdate, $getSchedule, $pools) {
             /**
              * The timer synchronize $schedules copy with database collection.
              */
@@ -190,10 +193,10 @@ abstract class ScheduleBase extends Action
 
             Timer::tick(
                 static::ENQUEUE_TIMER * 1000,
-                fn () => $this->enqueueResources($pools, $dbForConsole)
+                fn () => $this->enqueueResources($pools, $dbForConsole, $getProjectDB)
             );
 
-            $this->enqueueResources($pools, $dbForConsole);
+            $this->enqueueResources($pools, $dbForConsole, $getProjectDB);
         });
     }
 }

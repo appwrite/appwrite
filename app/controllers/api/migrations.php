@@ -17,6 +17,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
+use Utopia\Migration\Destinations\Backup;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
@@ -59,6 +60,7 @@ App::post('/v1/migrations/appwrite')
             'status' => 'pending',
             'stage' => 'init',
             'source' => Appwrite::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'endpoint' => $endpoint,
                 'projectId' => $projectId,
@@ -163,6 +165,7 @@ App::post('/v1/migrations/firebase/oauth')
             'status' => 'pending',
             'stage' => 'init',
             'source' => Firebase::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'serviceAccount' => json_encode($serviceAccount),
             ],
@@ -223,6 +226,7 @@ App::post('/v1/migrations/firebase')
             'status' => 'pending',
             'stage' => 'init',
             'source' => Firebase::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'serviceAccount' => $serviceAccount,
             ],
@@ -278,6 +282,7 @@ App::post('/v1/migrations/supabase')
             'status' => 'pending',
             'stage' => 'init',
             'source' => Supabase::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'endpoint' => $endpoint,
                 'apiKey' => $apiKey,
@@ -339,6 +344,7 @@ App::post('/v1/migrations/nhost')
             'status' => 'pending',
             'stage' => 'init',
             'source' => NHost::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'subdomain' => $subdomain,
                 'region' => $region,

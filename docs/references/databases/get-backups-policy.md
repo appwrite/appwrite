@@ -1,0 +1,1 @@
+Get database backups policy.

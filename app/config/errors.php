@@ -977,4 +977,16 @@ return [
         'description' => 'Target has an invalid provider type.',
         'code' => 400,
     ],
+
+    /** Backup Policy */
+    Exception::BACKUP_POLICY_ALREADY_EXISTS => [
+        'name' => Exception::BACKUP_POLICY_ALREADY_EXISTS,
+        'description' => 'A backup policy with the same id, exists in this project.',
+        'code' => 409,
+    ],
+    Exception::BACKUP_POLICY_NOT_FOUND => [
+        'name' => Exception::BACKUP_POLICY_NOT_FOUND,
+        'description' => 'Backup policy with the requested ID could not be found.',
+        'code' => 404,
+    ],
 ];

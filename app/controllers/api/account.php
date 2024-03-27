@@ -738,7 +738,7 @@ App::post('/v1/account/sessions/email')
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        //$detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
         $session = new Document(array_merge(
@@ -755,9 +755,12 @@ App::post('/v1/account/sessions/email')
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
-            $detector->getOS(),
-            $detector->getClient(),
-            $detector->getDevice()
+            [],
+            [],
+            []
+            //$detector->getOS(),
+            //$detector->getClient(),
+            //$detector->getDevice()
         ));
 
         Authorization::setRole(Role::user($user->getId())->toString());

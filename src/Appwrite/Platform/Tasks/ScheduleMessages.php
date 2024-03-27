@@ -21,7 +21,7 @@ class ScheduleMessages extends ScheduleBase
         return 'message';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole): void
+    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {

@@ -10,6 +10,7 @@ class Migration extends Event
 {
     protected string $type = '';
     protected ?Document $migration = null;
+    private ?Document $backup;
 
     public function __construct(protected Connection $connection)
     {
@@ -29,6 +30,20 @@ class Migration extends Event
     public function setMigration(Document $migration): self
     {
         $this->migration = $migration;
+
+        return $this;
+    }
+
+
+    /**
+     * Sets backup.
+     *
+     * @param Document $backup
+     * @return self
+     */
+    public function setBackup(Document $backup): self
+    {
+        $this->backup = $backup;
 
         return $this;
     }
@@ -81,6 +96,7 @@ class Migration extends Event
         return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
+            'backup' => $this->backup,
             'migration' => $this->migration
         ]);
     }

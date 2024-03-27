@@ -142,6 +142,20 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS), $value) // per function
                 ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
             break;
+        case $document->getCollection() === 'backups':
+            var_dump($value);
+            $queueForUsage
+                ->addMetric(METRIC_BACKUPS, $value) // per project
+                ->addMetric(METRIC_BACKUPS_STORAGE, $document->getAttribute('size') * $value) // per project
+                ->addMetric(str_replace('{resourceInternalId}', $document->getAttribute('resourceInternalId'), METRIC_DATABASE_ID_BACKUPS), $value) // per function
+                ->addMetric(str_replace('{resourceInternalId}', $document->getAttribute('resourceInternalId'), METRIC_DATABASE_ID_BACKUPS_STORAGE), $document->getAttribute('size') * $value);
+            break;
+        case $document->getCollection() === 'backupsPolicy':
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
         default:
             break;
     }

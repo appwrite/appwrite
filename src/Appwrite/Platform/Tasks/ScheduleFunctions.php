@@ -26,7 +26,7 @@ class ScheduleFunctions extends ScheduleBase
         return 'function';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole): void
+    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         $timerStart = \microtime(true);
         $time = DateTime::now();

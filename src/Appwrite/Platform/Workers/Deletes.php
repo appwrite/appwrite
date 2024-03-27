@@ -158,22 +158,47 @@ class Deletes extends Action
             case DELETE_TYPE_SESSION_TARGETS:
                 $this->deleteSessionTargets($project, $getProjectDB, $document);
                 break;
+            case DELETE_TYPE_BACKUPS:
+                $this->deleteBackupsByPolicyId($project, $getProjectDB, $document);
+                break;
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
         }
     }
 
     /**
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @param Document $policy
+     * @throws Exception
+     */
+    private function deleteBackupsByPolicyId(Document $project, callable $getProjectDB, Document $policy): void
+    {
+        $dbForProject = $getProjectDB($project);
+
+        $this->listByGroup(
+            'backups', [
+                'policyInternalId' => $policy->getId(),
+            ],
+            $dbForProject,
+            function (Document $document) use ($dbForProject) {
+                $dbForProject->deleteDocument('backups', $document->getId());
+                Console::success('Deleted backup for resourceType: '. $document->getAttribute('policyId'));
+                }
+        );
+    }
+
+    /**
      * @param Database $dbForConsole
      * @param callable $getProjectDB
      * @param string $datetime
-     * @param Document|null $document
      * @return void
      * @throws Authorization
      * @throws Conflict
+     * @throws DatabaseException
+     * @throws Exception
      * @throws Restricted
      * @throws Structure
-     * @throws DatabaseException
      */
     private function deleteSchedules(Database $dbForConsole, callable $getProjectDB, string $datetime): void
     {

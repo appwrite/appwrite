@@ -291,6 +291,10 @@ class Exception extends \Exception
     /** Schedules */
     public const SCHEDULE_NOT_FOUND                = 'schedule_not_found';
 
+    /** Backup Policy */
+    public const BACKUP_POLICY_NOT_FOUND           = 'backup_policy_not_found';
+    public const BACKUP_POLICY_ALREADY_EXISTS      = 'backup_policy_already_exists';
+    public const BACKUP_NOT_FOUND                  = 'backup_not_found';
 
     protected string $type = '';
     protected array $errors = [];

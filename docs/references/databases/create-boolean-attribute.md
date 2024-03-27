@@ -1,1 +1,1 @@
-Create a boolean attribute.
+Update database backups policy.

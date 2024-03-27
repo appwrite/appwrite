@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "92244aad23e8d26c034633397692c1fc",
+    "content-hash": "7ba55df37d335bba9acb9320e244eaa7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1966,22 +1966,26 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.4.0",
+            "version": "dev-backups",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "a72f27bd3dde68752fb185d306c4820e1b8d9657"
+                "reference": "df296cfe8d3d2034e83f7a0140c47b6f74fc2a90"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/a72f27bd3dde68752fb185d306c4820e1b8d9657",
-                "reference": "a72f27bd3dde68752fb185d306c4820e1b8d9657",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/df296cfe8d3d2034e83f7a0140c47b6f74fc2a90",
+                "reference": "df296cfe8d3d2034e83f7a0140c47b6f74fc2a90",
                 "shasum": ""
             },
             "require": {
                 "appwrite/appwrite": "10.1.0",
                 "php": "8.*",
-                "utopia-php/cli": "0.*"
+                "utopia-php/cli": "0.15.*",
+                "utopia-php/database": "0.48.*",
+                "utopia-php/dsn": "0.2.*",
+                "utopia-php/framework": "0.33.*",
+                "utopia-php/storage": "0.18.*"
             },
             "require-dev": {
                 "laravel/pint": "1.*",
@@ -2008,9 +2012,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.4.0"
+                "source": "https://github.com/utopia-php/migration/tree/backups"
             },
-            "time": "2024-02-25T12:35:21+00:00"
+            "time": "2024-03-21T11:29:12+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5445,7 +5449,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/migration": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
