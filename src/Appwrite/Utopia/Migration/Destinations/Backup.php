@@ -31,8 +31,6 @@ use Utopia\Storage\Device\Local;
  */
 class Backup extends Destination
 {
-    private array $data = [];
-
     protected Database $dbForProject;
 
     protected Device $storage;
@@ -49,7 +47,7 @@ class Backup extends Destination
 
     public function __construct(Document $project, Document $backup, Database $dbForProject, Device $storage, Usage $queueForUsage)
     {
-        $this->path = APP_STORAGE_BACKUPS . '/'. $backup->getId();
+        $this->path = APP_STORAGE_BACKUPS . '/'. $project->getInternalId() . '-' . $backup->getInternalId();
         $this->dbForProject = $dbForProject;
         $this->queueForUsage = $queueForUsage;
         $this->storage = $storage;
@@ -62,10 +60,6 @@ class Backup extends Destination
             mkdir($this->path.'/files', 0777, true);
             mkdir($this->path.'/deployments', 0777, true);
         }
-
-        $this->backup->setAttribute('startedAt', DateTime::now());
-        $this->backup->setAttribute('status', 'started');
-        $this->dbForProject->updateDocument('backups', $this->backup->getId() ,$this->backup);
     }
 
     public static function getName(): string
@@ -110,36 +104,50 @@ class Backup extends Destination
         return $report;
     }
 
+    public function init(): void
+    {
+        Console::info('Init function');
+
+        $this->backup->setAttribute('startedAt', DateTime::now());
+        $this->backup->setAttribute('status', 'started');
+        $this->dbForProject->updateDocument('backups', $this->backup->getId() ,$this->backup);
+    }
+
     public function shutDown(): void {
-        Console::error('shutDown function');
+        Console::info('shutDown function');
 
-        $files = [];
-        foreach ($this->data as $group => $groupData){
-            foreach ($groupData as $resource => $resourceData){
-                $name = $group . '-' . $resource;
-                $files[][] = $name;
-
-                $data = \json_encode($resourceData);
-                if ($data === false) {
-                    throw new \Exception('Unable to encode data to JSON, Are you accidentally encoding binary data?');
-                }
-
-                \file_put_contents(
-                    $this->path . '/'. $name .'.json',
-                    \json_encode($data)
-                );
-            }
-        }
-
-        \file_put_contents(
-            $this->path . '/index.json',
-            \json_encode($files, JSON_PRETTY_PRINT)
-        );
+//        $files = [];
+//        foreach ($this->data as $group => $groupData){
+//            foreach ($groupData as $resource => $resourceData){
+//                $name = $group . '-' . $resource;
+//                $files[][] = $name;
+//
+//                $data = \json_encode($resourceData);
+//                if ($data === false) {
+//                    throw new \Exception('Unable to encode data to JSON, Are you accidentally encoding binary data?');
+//                }
+//
+//                \file_put_contents(
+//                    $this->path . '/'. $name .'.json',
+//                    \json_encode($data)
+//                );
+//            }
+//        }
+//
+//        \file_put_contents(
+//            $this->path . '/index.json',
+//            \json_encode($files, JSON_PRETTY_PRINT)
+//        );
 
         $this->backup->setAttribute('status', 'uploading');
         $this->dbForProject->updateDocument('backups', $this->backup->getId() ,$this->backup);
 
         $filesize = $this->upload();
+
+        if (\file_exists($this->path)) {
+            Console::info('Deleting: ' . $this->path);
+            shell_exec('rm -rf ' . $this->path);
+        }
 
         $this->backup
             ->setAttribute('status', 'completed')
@@ -164,7 +172,6 @@ class Backup extends Destination
         //todo: Delete $this->path Directory
     }
 
-
     /**
      * @throws Authorization
      * @throws Structure
@@ -179,73 +186,83 @@ class Backup extends Destination
             var_dump($resource->getGroup());
             var_dump($resource->getName());
             //var_dump($resource->asArray());
+            $data = $resource->asArray();
 
             switch ($resource->getName()) {
                 case Resource::TYPE_DEPLOYMENT:
-                    /** @var Deployment $resource */
-                    if ($resource->getStart() === 0) {
-                        $this->data[$resource->getGroup()][$resource->getName()][] = $resource->asArray();
-                    }
-
-                    file_put_contents($this->path. '/deployments/'.$resource->getId().'.tar.gz', $resource->getData(), FILE_APPEND);
-                    $resource->setData('');
+//                    /** @var Deployment $resource */
+//                    if ($resource->getStart() === 0) {
+//                        $this->data[$resource->getGroup()][$resource->getName()][] = $resource->asArray();
+//                    }
+//
+//                    file_put_contents($this->path. '/deployments/'.$resource->getId().'.tar.gz', $resource->getData(), FILE_APPEND);
+//                    $resource->setData('');
                     break;
 
                 case Resource::TYPE_FILE:
-                    /** @var File $resource */
-                    if (str_contains($resource->getFileName(), '/')) {
-                        $folders = explode('/', $resource->getFileName());
-                        $folderPath = $this->path. '/files';
-
-                        foreach ($folders as $folder) {
-                            $folderPath .= '/'.$folder;
-
-                            if (! \file_exists($folderPath) && str_contains($folder, '.') === false) {
-                                mkdir($folderPath, 0777, true);
-                            }
-                        }
-                    }
-
-                    if ($resource->getStart() === 0 && \file_exists($this->path. '/files/'.$resource->getFileName())) {
-                        unlink($this->path. '/files/'.$resource->getFileName());
-                    }
-
-                    file_put_contents($this->path. '/files/'.$resource->getFileName(), $resource->getData(), FILE_APPEND);
-                    $resource->setData('');
+//                    /** @var File $resource */
+//                    if (str_contains($resource->getFileName(), '/')) {
+//                        $folders = explode('/', $resource->getFileName());
+//                        $folderPath = $this->path. '/files';
+//
+//                        foreach ($folders as $folder) {
+//                            $folderPath .= '/'.$folder;
+//
+//                            if (! \file_exists($folderPath) && str_contains($folder, '.') === false) {
+//                                mkdir($folderPath, 0777, true);
+//                            }
+//                        }
+//                    }
+//
+//                    if ($resource->getStart() === 0 && \file_exists($this->path. '/files/'.$resource->getFileName())) {
+//                        unlink($this->path. '/files/'.$resource->getFileName());
+//                    }
+//
+//                    file_put_contents($this->path. '/files/'.$resource->getFileName(), $resource->getData(), FILE_APPEND);
+//                    $resource->setData('');
                     break;
 
                 case Resource::TYPE_ATTRIBUTE:
                     /** @var Attribute $resource */
-                    $data = $resource->asArray();
-                    $data['__collectionId'] = $resource->getCollection()->getId();
-                    $data['__collectionInternalId'] = $resource->getCollection()->getInternalId();
-                    $this->data[$resource->getGroup()][$resource->getName()][] = $data;
+                    //$data['__collectionId'] = $resource->getCollection()->getId();
+                    //$data['__collectionInternalId'] = $resource->getCollection()->getInternalId();
+                    //$this->data[$resource->getGroup()][$resource->getName()][] = $data;
                     break;
 
                 case Resource::TYPE_INDEX:
                     /** @var Index $resource */
-                    $data = $resource->asArray();
-                    $data['__collectionId'] = $resource->getCollection()->getId();
-                    $data['__collectionInternalId'] = $resource->getCollection()->getInternalId();
-                    $this->data[$resource->getGroup()][$resource->getName()][] = $data;
+                    //$data['__collectionId'] = $resource->getCollection()->getId();
+                    //$data['__collectionInternalId'] = $resource->getCollection()->getInternalId();
+                   // $this->data[$resource->getGroup()][$resource->getName()][] = $data;
                     break;
 
                 default:
-                    $this->data[$resource->getGroup()][$resource->getName()][] = $resource->asArray();
+                    //$this->data[$resource->getGroup()][$resource->getName()][] = $resource->asArray();
                     break;
             }
+
+            $data = \json_encode($data, JSON_PRETTY_PRINT); // JSON_PRETTY_PRINT is forbidden
+            if ($data === false) {
+                throw new \Exception('Unable to encode JSON, Are you accidentally encoding binary data?');
+            }
+
+            $path = $this->path . '/' . $resource->getGroup() . '-' .$resource->getName() . '.log';
+            $data .= PHP_EOL;
+            \file_put_contents($path, $data, FILE_APPEND);
 
             $resource->setStatus(Resource::STATUS_SUCCESS);
             $this->cache->update($resource);
 
-            /**
-             * json validation
-             */
-            $jsonEncodedData = \json_encode($this->data, JSON_PRETTY_PRINT);
-            if ($jsonEncodedData === false) {
-                throw new \Exception('Unable to encode data to JSON, Are you accidentally encoding binary data?');
-            }
-            //\file_put_contents($this->path.'/backup.json', \json_encode($this->data, JSON_PRETTY_PRINT));
+//            /**
+//             * json validation
+//             */
+//            $jsonEncodedData = \json_encode($this->data, JSON_PRETTY_PRINT);
+//            if ($jsonEncodedData === false) {
+//                throw new \Exception('Unable to encode data to JSON, Are you accidentally encoding binary data?');
+//            }
+//
+//            // todo: split to smaller resources
+//            \file_put_contents($this->path.'/backup.json', \json_encode($this->data, JSON_PRETTY_PRINT));
         }
 
         $callback($resources);
