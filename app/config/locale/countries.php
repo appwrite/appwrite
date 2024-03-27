@@ -180,6 +180,7 @@ return [
     'TR',
     'TV',
     'TZ',
+    'TW',
     'UG',
     'UA',
     'UY',
