@@ -1297,6 +1297,7 @@ App::setResource('console', function () {
             'githubSecret' => App::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
             'githubAppid' => App::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
         ],
+        'serviceStatusForDatabases' => false
     ]);
 }, []);
 
