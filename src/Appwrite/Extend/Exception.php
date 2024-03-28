@@ -301,6 +301,12 @@ class Exception extends \Exception
         $this->errors = Config::getParam('errors');
         $this->type = $type;
         $this->code = $code ?? $this->errors[$type]['code'];
+
+        // shmuel
+        if(is_string($this->code)){
+            $this->code = 500;
+        }
+
         $this->message = $message ?? $this->errors[$type]['description'];
 
         $this->publish = $this->errors[$type]['publish'] ?? ($this->code >= 500);
