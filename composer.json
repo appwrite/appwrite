@@ -50,7 +50,7 @@
         "utopia-php/cache": "0.9.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.48.*",
+        "utopia-php/database": "dev-fix-transaction-rollback as 0.48.4",
         "utopia-php/domains": "0.5.*",
         "utopia-php/dsn": "0.2.*",
         "utopia-php/framework": "0.33.*",
@@ -81,7 +81,7 @@
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "0.37.*",
         "phpunit/phpunit": "9.5.20",
-        "swoole/ide-helper": "5.0.2",
+        "swoole/ide-helper": "5.1.2",
         "textalk/websocket": "1.5.7",
         "utopia-php/fetch": "0.1.*",
         "laravel/pint": "^1.14"
