@@ -296,11 +296,17 @@ class Exception extends \Exception
     protected array $errors = [];
     protected bool $publish;
 
-    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
+    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, $code = null, \Throwable $previous = null)
     {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
         $this->code = $code ?? $this->errors[$type]['code'];
+
+        // todo: Handle better PDOExceptions or string errors
+        if(is_string($this->code)) {
+            $this->code = 500;
+        }
+
         $this->message = $message ?? $this->errors[$type]['description'];
 
         $this->publish = $this->errors[$type]['publish'] ?? ($this->code >= 500);
