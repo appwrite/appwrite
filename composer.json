@@ -81,7 +81,7 @@
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "0.37.*",
         "phpunit/phpunit": "9.5.20",
-        "swoole/ide-helper": "dev-master",
+        "swoole/ide-helper": "5.0.2",
         "textalk/websocket": "1.5.7",
         "utopia-php/fetch": "0.1.*",
         "laravel/pint": "^1.14"

@@ -1719,16 +1719,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.4",
+            "version": "0.33.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "6ee2e93a4a529bce5eecf4ac892890d4b0c84861"
+                "reference": "8fe57da0cecd57e3b17cd395b4a666a24f4c07a6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/6ee2e93a4a529bce5eecf4ac892890d4b0c84861",
-                "reference": "6ee2e93a4a529bce5eecf4ac892890d4b0c84861",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/8fe57da0cecd57e3b17cd395b4a666a24f4c07a6",
+                "reference": "8fe57da0cecd57e3b17cd395b4a666a24f4c07a6",
                 "shasum": ""
             },
             "require": {
@@ -1743,8 +1743,7 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\": "src/",
-                    "Tests\\E2E\\": "tests/e2e"
+                    "Utopia\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -1759,9 +1758,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.4"
+                "source": "https://github.com/utopia-php/http/tree/0.33.6"
             },
-            "time": "2024-03-19T08:04:59+00:00"
+            "time": "2024-03-21T18:10:57+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2732,16 +2731,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.37.8",
+            "version": "0.37.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "29844ac860237018a5d6bce17f8b591c996081ef"
+                "reference": "ad80d80e18f0cda981e1bddbf0841a805632caa0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/29844ac860237018a5d6bce17f8b591c996081ef",
-                "reference": "29844ac860237018a5d6bce17f8b591c996081ef",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ad80d80e18f0cda981e1bddbf0841a805632caa0",
+                "reference": "ad80d80e18f0cda981e1bddbf0841a805632caa0",
                 "shasum": ""
             },
             "require": {
@@ -2777,9 +2776,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.37.8"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.37.9"
             },
-            "time": "2024-03-12T14:13:43+00:00"
+            "time": "2024-03-24T05:40:55+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -2900,16 +2899,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.14.0",
+            "version": "v1.15.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "6b127276e3f263f7bb17d5077e9e0269e61b2a0e"
+                "reference": "c52de679b3ac01207016c179d7ce173e4be128c4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/6b127276e3f263f7bb17d5077e9e0269e61b2a0e",
-                "reference": "6b127276e3f263f7bb17d5077e9e0269e61b2a0e",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/c52de679b3ac01207016c179d7ce173e4be128c4",
+                "reference": "c52de679b3ac01207016c179d7ce173e4be128c4",
                 "shasum": ""
             },
             "require": {
@@ -2962,7 +2961,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2024-02-20T17:38:05+00:00"
+            "time": "2024-03-26T16:40:24+00:00"
         },
         {
             "name": "matthiasmullie/minify",
