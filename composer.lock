@@ -1560,12 +1560,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "c3b76a5dd864791744168dcc6fb32eb159a08691"
+                "reference": "180bb663bdd0050ae24886808ea34eafc8c4e5e8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/c3b76a5dd864791744168dcc6fb32eb159a08691",
-                "reference": "c3b76a5dd864791744168dcc6fb32eb159a08691",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/180bb663bdd0050ae24886808ea34eafc8c4e5e8",
+                "reference": "180bb663bdd0050ae24886808ea34eafc8c4e5e8",
                 "shasum": ""
             },
             "require": {
@@ -1609,7 +1609,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/fix-transaction-rollback"
             },
-            "time": "2024-03-28T09:11:01+00:00"
+            "time": "2024-03-28T09:46:18+00:00"
         },
         {
             "name": "utopia-php/domains",

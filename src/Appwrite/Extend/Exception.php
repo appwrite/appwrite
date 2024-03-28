@@ -302,7 +302,7 @@ class Exception extends \Exception
         $this->type = $type;
         $this->code = $code ?? $this->errors[$type]['code'];
 
-        // shmuel
+        // todo: Handle better PDOExceptions
         if(is_string($this->code)){
             $this->code = 500;
         }
