@@ -37,7 +37,7 @@ require_once __DIR__ . '/init.php';
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 // Allows overriding
-if(!function_exists("getConsoleDB")) {
+if (!function_exists("getConsoleDB")) {
     function getConsoleDB(): Database
     {
         global $register;
@@ -63,7 +63,7 @@ if(!function_exists("getConsoleDB")) {
 }
 
 // Allows overriding
-if(!function_exists("getProjectDB")) {
+if (!function_exists("getProjectDB")) {
     function getProjectDB(Document $project): Database
     {
         global $register;
@@ -93,7 +93,7 @@ if(!function_exists("getProjectDB")) {
 }
 
 // Allows overriding
-if(!function_exists("getCache")) {
+if (!function_exists("getCache")) {
     function getCache(): Cache
     {
         global $register;
