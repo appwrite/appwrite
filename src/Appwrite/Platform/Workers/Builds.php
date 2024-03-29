@@ -73,7 +73,7 @@ class Builds extends Action
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
-            throw new Exception('Missing payload');
+            throw new \Exception('Missing payload');
         }
 
         $type = $payload['type'] ?? '';
@@ -124,7 +124,7 @@ class Builds extends Action
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404);
+            throw new \Exception('Function not found', 404);
         }
 
         $deploymentId = $deployment->getId();
@@ -132,11 +132,11 @@ class Builds extends Action
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found', 404);
+            throw new \Exception('Deployment not found', 404);
         }
 
         if (empty($deployment->getAttribute('entrypoint', ''))) {
-            throw new Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".', 500);
+            throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".', 500);
         }
 
         $version = $function->getAttribute('version', 'v2');
@@ -144,7 +144,7 @@ class Builds extends Action
         $key = $function->getAttribute('runtime');
         $runtime = $runtimes[$key] ?? null;
         if (\is_null($runtime)) {
-            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+            throw new \Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
         // Realtime preparation
@@ -306,7 +306,7 @@ class Builds extends Action
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
                 $functionsSizeLimit = (int) App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
                 if ($directorySize > $functionsSizeLimit) {
-                    throw new Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
+                    throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
                 }
 
                 Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
@@ -394,7 +394,6 @@ class Builds extends Action
             ]);
 
             $command = $deployment->getAttribute('commands', '');
-            $command = \str_replace('"', '\\"', $command);
 
             $response = null;
             $err = null;
@@ -403,7 +402,7 @@ class Builds extends Action
                 Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
                     try {
                         $version = $function->getAttribute('version', 'v2');
-                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"';
+                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
 
                         $response = $executor->createRuntime(
                             deploymentId: $deployment->getId(),
@@ -431,7 +430,7 @@ class Builds extends Action
                                     $build = $dbForProject->getDocument('builds', $build->getId());
 
                                     if ($build->isEmpty()) {
-                                        throw new Exception('Build not found', 404);
+                                        throw new \Exception('Build not found', 404);
                                     }
 
                                     $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
@@ -472,7 +471,7 @@ class Builds extends Action
             $durationEnd = \microtime(true);
 
             /** Update the build document */
-            $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
+            $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'ready');

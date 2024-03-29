@@ -10,7 +10,7 @@
     "emails.verification.thanks": "תודה",
     "emails.verification.signature": "צוות {{project}}",
     "emails.magicSession.subject": "כניסה למערכת",
-    "emails.magicSession.hello": "שלום,",
+    "emails.magicSession.hello": "שלום",
     "emails.magicSession.body": "לחץ על קישור זה כדי להיכנס.",
     "emails.magicSession.footer": "אם לא ביקשת להיכנס באמצעות דוא\"ל זה, תוכל להתעלם מהודעה זו.",
     "emails.magicSession.thanks": "תודה",
