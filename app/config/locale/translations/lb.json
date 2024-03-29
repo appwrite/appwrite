@@ -10,7 +10,7 @@
     "emails.verification.thanks": "Merci",
     "emails.verification.signature": "{{project}} équipe",
     "emails.magicSession.subject": "Login",
-    "emails.magicSession.hello": "Hey,",
+    "emails.magicSession.hello": "Hey",
     "emails.magicSession.body": "Follegt dëse Link fir umellen.",
     "emails.magicSession.footer": "Wann Dir net gefrot hutt Iech mat dëser E -Mail anzemelden, kënnt Dir dëse Message ignoréieren.",
     "emails.magicSession.thanks": "Merci",

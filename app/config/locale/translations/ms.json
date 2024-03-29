@@ -10,7 +10,7 @@
     "emails.verification.thanks": "Terima kasih",
     "emails.verification.signature": "{{project}} team",
     "emails.magicSession.subject": "Log masuk",
-    "emails.magicSession.hello": "Hey,",
+    "emails.magicSession.hello": "Hey",
     "emails.magicSession.body": "Tekan pautan ini untuk log masuk.",
     "emails.magicSession.footer": "Sekiranya anda tidak membuat permintaan untuk log masuk menggunakan email ini, sila abaikan mesej ini.",
     "emails.magicSession.thanks": "Terima kasih",
