@@ -798,7 +798,7 @@ class ProjectsConsoleClientTest extends Scope
     public function testUpdateProjectOAuth($data): array
     {
         $id = $data['projectId'] ?? '';
-        $providers = require('app/config/providers.php');
+        $providers = require(__DIR__ . '/../../../../app/config/providers.php');
 
         /**
          * Test for SUCCESS
@@ -909,7 +909,7 @@ class ProjectsConsoleClientTest extends Scope
     public function testUpdateProjectAuthStatus($data): array
     {
         $id = $data['projectId'] ?? '';
-        $auth = require('app/config/auth.php');
+        $auth = require(__DIR__ . '/../../../../app/config/auth.php');
 
         $originalEmail = uniqid() . 'user@localhost.test';
         $originalPassword = 'password';
@@ -1732,7 +1732,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($project['body']['$id']);
 
         $id = $project['body']['$id'];
-        $services = require('app/config/services.php');
+        $services = require(__DIR__ . '/../../../../app/config/services.php');
 
         /**
          * Test for Disabled
@@ -1806,7 +1806,7 @@ class ProjectsConsoleClientTest extends Scope
     {
         $id = $data['projectId'];
 
-        $services = require('app/config/services.php');
+        $services = require(__DIR__ . '/../../../../app/config/services.php');
 
         /**
          * Test for Disabled
@@ -1850,7 +1850,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
         ], $this->getHeaders()));
 
-        $this->assertEquals(503, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -1860,7 +1860,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => 'Arsenal'
         ]);
 
-        $this->assertEquals(503, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
 
         // Cleanup
 
@@ -1880,7 +1880,7 @@ class ProjectsConsoleClientTest extends Scope
     {
         $id = $data['projectId'];
 
-        $services = require('app/config/services.php');
+        $services = require(__DIR__ . '/../../../../app/config/services.php');
 
         /**
          * Test for Disabled

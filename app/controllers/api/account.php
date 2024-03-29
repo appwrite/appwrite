@@ -110,7 +110,7 @@ App::post('/v1/account')
             Query::equal('providerEmail', [$email]),
         ]);
         if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
@@ -555,7 +555,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
-                Query::notEqual('userId', $userId),
+                Query::notEqual('userInternalId', $user->getInternalId()),
             ]);
             if (!empty($identityWithMatchingEmail)) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -637,7 +637,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Query::equal('providerEmail', [$email]),
                 ]);
                 if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-                    throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
                 }
 
                 try {
@@ -695,7 +695,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::notEqual('userId', $user->getId()),
             ]);
             if (!empty($identitiesWithMatchingEmail)) {
-                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $dbForProject->createDocument('identities', new Document([
@@ -944,7 +944,7 @@ App::post('/v1/account/sessions/magic-url')
                 Query::equal('providerEmail', [$email]),
             ]);
             if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
@@ -1336,8 +1336,6 @@ App::post('/v1/account/sessions/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
-        var_dump($request->getIP());
-        var_dump($project->getId());
         $queueForMessaging
             ->setRecipient($phone)
             ->setMessage($message)
@@ -1987,10 +1985,10 @@ App::patch('/v1/account/email')
         // Makes sure this email is not already used in another identity
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
-            Query::notEqual('userId', $user->getId()),
+            Query::notEqual('userInternalId', $user->getInternalId()),
         ]);
         if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $user
@@ -2009,7 +2007,7 @@ App::patch('/v1/account/email')
         try {
             $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
         } catch (Duplicate) {
-            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $queueForEvents->setParam('userId', $user->getId());
@@ -2528,7 +2526,7 @@ App::post('/v1/account/recovery')
 
         $queueForMails
             ->setRecipient($profile->getAttribute('email', ''))
-            ->setName($profile->getAttribute('name'))
+            ->setName($profile->getAttribute('name', ''))
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setSubject($subject)
@@ -2939,8 +2937,6 @@ App::post('/v1/account/verification/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
-        var_dump($request->getIP());
-        var_dump($project->getId());
         $queueForMessaging
             ->setRecipient($user->getAttribute('phone'))
             ->setMessage($message)
@@ -3038,13 +3034,25 @@ App::delete('/v1/account')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->inject('user')
+    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
-    ->action(function (Document $user, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        if ($project->getId() === 'console') {
+            // get all memberships
+            $memberships = $user->getAttribute('memberships', []);
+            foreach ($memberships as $membership) {
+                // prevent deletion if at least one active membership
+                if ($membership->getAttribute('confirm', false)) {
+                    throw new Exception(Exception::USER_DELETION_PROHIBITED);
+                }
+            }
         }
 
         $dbForProject->deleteDocument('users', $user->getId());

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Event;
 
+use Utopia\CLI\Console;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 use Utopia\Database\Document;

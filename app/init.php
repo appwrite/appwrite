@@ -112,7 +112,7 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 329;
+const APP_CACHE_BUSTER = 331;
 const APP_VERSION_STABLE = '1.4.13';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -195,6 +195,7 @@ const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
+const METRIC_MESSAGES  = 'messages';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
@@ -1033,7 +1034,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     }
 
     if (APP_MODE_ADMIN === $mode) {
-        if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
+        if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
             $user = new Document([]);

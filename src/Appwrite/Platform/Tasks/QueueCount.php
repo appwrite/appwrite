@@ -58,18 +58,11 @@ class QueueCount extends Action
 
         $queueClient = new Client($name, $queue);
 
-        $count = 0;
-
-        switch ($type) {
-            case 'success':
-                $count = $queueClient->countSuccessfulJobs();
-                break;
-            case 'failed':
-                $count = $queueClient->countFailedJobs();
-                break;
-            case 'processing':
-                $count = $queueClient->countProcessingJobs();
-                break;
+        $count = match ($type) {
+            'success' => $queueClient->countSuccessfulJobs(),
+            'failed' => $queueClient->countFailedJobs(),
+            'processing' => $queueClient->countProcessingJobs(),
+            default => 0
         };
 
         Console::log("Queue: '{$name}' has {$count} {$type} jobs.");

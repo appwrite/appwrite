@@ -380,7 +380,6 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
-    ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('user')
@@ -389,7 +388,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('queueForMails')
     ->inject('queueForMessaging')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, EventPhone $queueForMessaging, Event $queueForEvents) {
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, EventPhone $queueForMessaging, Event $queueForEvents) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -639,8 +638,6 @@ App::post('/v1/teams/:teamId/memberships')
                 $message = $message->setParam('{{token}}', $url);
                 $message = $message->render();
 
-                var_dump($request->getIP());
-                var_dump($project->getId());
                 $queueForMessaging
                     ->setRecipient($phone)
                     ->setMessage($message)
@@ -697,7 +694,7 @@ App::get('/v1/teams/:teamId/memberships')
         }
 
         // Set internal queries
-        $queries[] = Query::equal('teamId', [$teamId]);
+        $queries[] = Query::equal('teamInternalId', [$team->getInternalId()]);
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
@@ -897,14 +894,14 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
-        if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
-        }
-
         $team = Authorization::skip(fn() => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
@@ -919,7 +916,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             $user->setAttributes($dbForProject->getDocument('users', $userId)->getArrayCopy()); // Get user
         }
 
-        if ($membership->getAttribute('userId') !== $user->getId()) {
+        if ($membership->getAttribute('userInternalId') !== $user->getInternalId()) {
             throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
         }
 
@@ -970,7 +967,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
+        Authorization::skip(fn() => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
@@ -1023,10 +1020,6 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_INVITE_NOT_FOUND);
         }
 
-        if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
-        }
-
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
         if ($user->isEmpty()) {
@@ -1039,19 +1032,15 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        try {
-            $dbForProject->deleteDocument('memberships', $membership->getId());
-        } catch (AuthorizationException $exception) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (\Exception $exception) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
+        if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
+        $dbForProject->deleteDocument('memberships', $membership->getId());
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
-            $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));
-            Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
+            Authorization::skip(fn() => $dbForProject->decreaseDocumentAttribute('teams', $team->getId(), 'total', 1, 0));
         }
 
         $queueForEvents

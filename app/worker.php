@@ -183,9 +183,6 @@ Server::setResource('queueForCertificates', function (Connection $queue) {
 Server::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
-Server::setResource('queueForHamster', function (Connection $queue) {
-    return new Hamster($queue);
-}, ['queue']);
 Server::setResource('logger', function (Registry $register) {
     return $register->get('logger');
 }, ['register']);
@@ -253,7 +250,6 @@ try {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
 }
 
-
 $worker = $platform->getWorker();
 
 $worker
@@ -268,7 +264,8 @@ $worker
     ->inject('error')
     ->inject('logger')
     ->inject('log')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log) {
+    ->inject('project')
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Document $project) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
@@ -284,6 +281,7 @@ $worker
             $log->setAction('appwrite-queue-' . App::getEnv('QUEUE'));
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
+            $log->addTag('projectId', $project->getId() ?? 'n/a');
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());

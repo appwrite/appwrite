@@ -408,7 +408,7 @@ return [
             ],
             [
                 'name' => '_APP_SMTP_SECURE',
-                'description' => 'SMTP secure connection protocol. Empty by default, change to \'tls\' if running on a secure connection.',
+                'description' => 'SMTP secure connection protocol. Empty by default, change to \'tls\' or \'ssl\' if running on a secure connection.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -944,6 +944,15 @@ return [
                 'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
                 'introduction' => '0.7.0',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_DELAY',
+                'description' => 'Delay value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 0 seconds.',
+                'introduction' => '1.5.0',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

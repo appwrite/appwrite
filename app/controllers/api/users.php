@@ -9,6 +9,7 @@ use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
+use Utopia\CLI\Console;
 use Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Utopia\Database\Validator\Query\Limit;
@@ -141,7 +142,6 @@ App::post('/v1/users')
     ->inject('hooks')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $queueForEvents, $hooks);
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
@@ -941,7 +941,7 @@ App::patch('/v1/users/:userId/email')
         // Makes sure this email is not already used in another identity
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
-            Query::notEqual('userId', $user->getId()),
+            Query::notEqual('userInternalId', $user->getInternalId()),
         ]);
         if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
