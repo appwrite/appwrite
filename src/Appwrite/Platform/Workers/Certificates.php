@@ -134,9 +134,9 @@ class Certificates extends Action
 
         try {
             // Email for alerts is required by LetsEncrypt
-            $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
+            $email = App::getEnv('_APP_EMAIL_CERTIFICATES');
             if (empty($email)) {
-                throw new Exception('You must set a valid security email address (_APP_SYSTEM_SECURITY_EMAIL_ADDRESS) to issue an SSL certificate.');
+                throw new Exception('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue an SSL certificate.');
             }
 
             // Validate domain and DNS records. Skip if job is forced
@@ -473,7 +473,7 @@ class Certificates extends Action
             ->setBody($body)
             ->setName('Appwrite Administrator')
             ->setVariables($emailVariables)
-            ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
+            ->setRecipient(App::getEnv('_APP_EMAIL_CERTIFICATES'))
             ->trigger();
     }
 

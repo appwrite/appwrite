@@ -349,7 +349,7 @@ App::get('/v1/avatars/favicon')
             CURLOPT_USERAGENT => \sprintf(
                 APP_USERAGENT,
                 App::getEnv('_APP_VERSION', 'UNKNOWN'),
-                App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+                App::getEnv('_APP_EMAIL_SECURITY', APP_EMAIL_SECURITY)
             ),
         ]);
 
