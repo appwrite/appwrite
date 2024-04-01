@@ -200,6 +200,8 @@ class Functions extends Action
      * @param string $path
      * @param string $method
      * @param Document $user
+     * @param string|null $jwt
+     * @param string|null $event
      * @throws Exception
      */
     private function fail(
@@ -209,7 +211,21 @@ class Functions extends Action
         string $path,
         string $method,
         Document $user,
+        string $jwt = null,
+        string $event = null,
     ): void {
+        $headers['x-appwrite-trigger'] = $trigger;
+        $headers['x-appwrite-event'] = $event ?? '';
+        $headers['x-appwrite-user-id'] = $user->getId() ?? '';
+        $headers['x-appwrite-user-jwt'] = $jwt ?? '';
+
+        $headersFiltered = [];
+        foreach ($headers as $key => $value) {
+            if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
+                $headersFiltered[] = ['name' => $key, 'value' => $value];
+            }
+        }
+
         $executionId = ID::unique();
         $execution = new Document([
             '$id' => $executionId,
@@ -224,6 +240,7 @@ class Functions extends Action
             'responseHeaders' => [],
             'requestPath' => $path,
             'requestMethod' => $method,
+            'requestHeaders' => $headersFiltered,
             'errors' => 'Deployment not found. Create deployment before trying to execute a function.',
             'logs' => '',
             'duration' => 0.0,
@@ -293,12 +310,12 @@ class Functions extends Action
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
-            $this->fail($dbForProject, $function, $trigger, $path, $method, $user);
+            $this->fail($dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
         if ($deployment->isEmpty()) {
-            $this->fail($dbForProject, $function, $trigger, $path, $method, $user);
+            $this->fail($dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
