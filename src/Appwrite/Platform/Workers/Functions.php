@@ -238,7 +238,7 @@ class Functions extends Action
             'deploymentId' => '',
             'trigger' => $trigger,
             'status' => 'failed',
-            'responseStatusCode' => 400,
+            'responseStatusCode' => 0,
             'responseHeaders' => [],
             'requestPath' => $path,
             'requestMethod' => $method,
@@ -326,7 +326,7 @@ class Functions extends Action
         /** Check if the build exists */
         $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
         if ($build->isEmpty()) {
-            $errorMessage = 'The execution could not be completed because a corresponding build was not found. A function build needs to be created before it can be executed. Please create a build for your function and try again.';
+            $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
             $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
