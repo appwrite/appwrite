@@ -2110,7 +2110,6 @@ Http::get('/v1/users/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('register')
     ->inject('auth')
     ->action(function (string $range, Response $response, Database $dbForProject, Authorization $auth) {
 
