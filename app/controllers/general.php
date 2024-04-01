@@ -397,7 +397,7 @@ App::init()
             return $response->setStatusCode(404)->send('Not Found');
         }
 
-        $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', null));
+        $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat) {
             if (version_compare($requestFormat, '1.4.0', '<')) {
                 $request->addFilter(new RequestV16());
@@ -513,7 +513,7 @@ App::init()
         /*
         * Response format
         */
-        $responseFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', null));
+        $responseFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
             if (version_compare($responseFormat, '1.4.0', '<')) {
                 $response->addFilter(new ResponseV16());
