@@ -2126,8 +2126,6 @@ App::get('/v1/messaging/topics/:topicId')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        $topic = $dbForProject->getDocument('topics', $topicId);
-
         $response
             ->dynamic($topic, Response::MODEL_TOPIC);
     });
