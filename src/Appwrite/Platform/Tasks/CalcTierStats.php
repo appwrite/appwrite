@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Tasks;
 
 use League\Csv\Writer;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -14,6 +13,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
+use Utopia\System\System;
 use Utopia\Validator\Text;
 
 class CalcTierStats extends Action
@@ -184,8 +184,8 @@ class CalcTierStats extends Action
 
         try {
             /** Addresses */
-            $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
-            $recipients = explode(',', App::getEnv('_APP_USERS_STATS_RECIPIENTS', ''));
+            $mail->setFrom(System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
+            $recipients = explode(',', System::getEnv('_APP_USERS_STATS_RECIPIENTS', ''));
             foreach ($recipients as $recipient) {
                 $mail->addAddress($recipient);
             }

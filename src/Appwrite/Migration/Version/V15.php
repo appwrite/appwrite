@@ -4,7 +4,6 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
 use Appwrite\OpenSSL\OpenSSL;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -12,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\System\System;
 
 class V15 extends Migration
 {
@@ -1484,7 +1484,7 @@ class V15 extends Migration
      */
     protected function encryptFilter(string $value): string
     {
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+        $key = System::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
 

@@ -30,6 +30,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Locale\Locale;
 use Utopia\Pools\Group;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -62,7 +63,7 @@ App::post('/v1/projects')
     ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('region', App::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
+    ->param('region', System::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
     ->param('url', '', new URL(), 'Project URL.', true)
@@ -84,7 +85,7 @@ App::post('/v1/projects')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $allowList = \array_filter(\explode(',', App::getEnv('_APP_PROJECT_REGIONS', '')));
+        $allowList = \array_filter(\explode(',', System::getEnv('_APP_PROJECT_REGIONS', '')));
 
         if (!empty($allowList) && !\in_array($region, $allowList)) {
             throw new Exception(Exception::PROJECT_REGION_UNSUPPORTED, 'Region "' . $region . '" is not supported');
@@ -127,7 +128,7 @@ App::post('/v1/projects')
             }
         }
 
-        $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE', null);
+        $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE', null);
         $index = array_search($databaseOverride, $databases);
         if ($index !== false) {
             $database = $databases[$index];
@@ -1613,8 +1614,8 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('emails', [], new ArrayList(new Email(), 10), 'Array of emails to send test email to. Maximum of 10 emails are allowed.')
-    ->param('senderName', App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'), new Text(255, 0), 'Name of the email sender')
-    ->param('senderEmail', App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), new Email(), 'Email of the sender')
+    ->param('senderName', System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'), new Text(255, 0), 'Name of the email sender')
+    ->param('senderEmail', System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), new Email(), 'Email of the sender')
     ->param('replyTo', '', new Email(), 'Reply to email', true)
     ->param('host', '', new HostName(), 'SMTP server host name')
     ->param('port', 587, new Integer(), 'SMTP server port', true)
