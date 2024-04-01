@@ -30,9 +30,9 @@ use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
+use Utopia\System\System;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\Text;
-use Utopia\System\System;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');

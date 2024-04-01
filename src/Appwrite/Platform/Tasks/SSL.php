@@ -6,9 +6,9 @@ use Appwrite\Event\Certificate;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
-use Utopia\System\System;
 
 class SSL extends Action
 {

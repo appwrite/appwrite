@@ -10,8 +10,8 @@ use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\System\System;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 class VCSConsoleClientTest extends Scope
 {

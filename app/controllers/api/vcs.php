@@ -32,12 +32,12 @@ use Utopia\Detector\Adapter\Python;
 use Utopia\Detector\Adapter\Ruby;
 use Utopia\Detector\Adapter\Swift;
 use Utopia\Detector\Detector;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Host;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
-use Utopia\System\System;
 
 use function Swoole\Coroutine\batch;
 

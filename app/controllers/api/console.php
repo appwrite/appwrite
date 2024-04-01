@@ -4,8 +4,8 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Document;
-use Utopia\Validator\Text;
 use Utopia\System\System;
+use Utopia\Validator\Text;
 
 App::init()
     ->groups(['console'])

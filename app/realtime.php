@@ -27,9 +27,9 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
+use Utopia\System\System;
 use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
-use Utopia\System\System;
 
 /**
  * @var \Utopia\Registry\Registry $register

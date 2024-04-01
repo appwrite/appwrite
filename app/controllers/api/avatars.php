@@ -17,13 +17,13 @@ use Utopia\Domains\Domain;
 use Utopia\Image\Image;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
-use Utopia\System\System;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
 

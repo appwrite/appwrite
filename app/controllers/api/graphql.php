@@ -17,9 +17,9 @@ use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
-use Utopia\System\System;
 
 App::init()
     ->groups(['graphql'])

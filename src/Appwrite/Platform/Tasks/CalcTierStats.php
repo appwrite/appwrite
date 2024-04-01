@@ -13,8 +13,8 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
-use Utopia\Validator\Text;
 use Utopia\System\System;
+use Utopia\Validator\Text;
 
 class CalcTierStats extends Action
 {

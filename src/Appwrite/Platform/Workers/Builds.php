@@ -26,8 +26,8 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\System\System;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 class Builds extends Action
 {

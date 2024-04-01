@@ -12,11 +12,11 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
+use Utopia\System\System;
 use Utopia\Validator\Host;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
-use Utopia\System\System;
 
 App::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')

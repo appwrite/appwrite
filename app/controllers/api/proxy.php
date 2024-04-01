@@ -16,10 +16,10 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
+use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\System\System;
 
 App::post('/v1/proxy/rules')
     ->groups(['api', 'proxy'])

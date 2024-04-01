@@ -18,9 +18,9 @@ use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Request;
+use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\System\System;
 
 class Specs extends Action
 {

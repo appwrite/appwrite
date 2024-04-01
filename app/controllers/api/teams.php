@@ -37,11 +37,11 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Host;
 use Utopia\Validator\Text;
-use Utopia\System\System;
 
 App::post('/v1/teams')
     ->desc('Create team')
