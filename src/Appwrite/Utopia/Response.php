@@ -312,9 +312,9 @@ class Response extends SwooleResponse
      *
      * @param float $time
      */
-    public function __construct(SwooleResponse $swooleResponse)
+    public function __construct(SwooleResponse $response)
     {
-        $response = $swooleResponse->getSwooleResponse();
+        parent::__construct($response->getSwooleResponse());
 
         $this
             // General
@@ -459,8 +459,6 @@ class Response extends SwooleResponse
             ->setModel(new MigrationFirebaseProject())
             // Tests (keep last)
             ->setModel(new Mock());
-
-        parent::__construct($response);
     }
 
     /**
