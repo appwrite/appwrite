@@ -195,6 +195,51 @@ class Functions extends Action
     }
 
     /**
+     * @param Document $function
+     * @param string $trigger
+     * @param string $path
+     * @param string $method
+     * @param Document $user
+     * @throws Exception
+     */
+    private function fail(
+        Database $dbForProject,
+        Document $function,
+        string $trigger,
+        string $path,
+        string $method,
+        Document $user,
+    ): void {
+        $executionId = ID::unique();
+        $execution = new Document([
+            '$id' => $executionId,
+            '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
+            'functionInternalId' => $function->getInternalId(),
+            'functionId' => $function->getId(),
+            'deploymentInternalId' => '',
+            'deploymentId' => '',
+            'trigger' => $trigger,
+            'status' => 'failed',
+            'responseStatusCode' => 400,
+            'responseHeaders' => [],
+            'requestPath' => $path,
+            'requestMethod' => $method,
+            'errors' => 'Deployment not found. Create deployment before trying to execute a function.',
+            'logs' => '',
+            'duration' => 0.0,
+            'search' => implode(' ', [$function->getId(), $executionId]),
+        ]);
+
+        if ($function->getAttribute('logging')) {
+            $execution = $dbForProject->createDocument('executions', $execution);
+        }
+
+        if ($execution->isEmpty()) {
+            throw new Exception('Failed to create execution');
+        }
+    }
+
+    /**
      * @param Log $log
      * @param Database $dbForProject
      * @param Func $queueForFunctions
@@ -248,15 +293,17 @@ class Functions extends Action
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
-            throw new Exception('Deployment not found. Create deployment before trying to execute a function');
+            $this->fail($dbForProject, $function, $trigger, $path, $method, $user);
+            return;
         }
 
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found. Create deployment before trying to execute a function');
+            $this->fail($dbForProject, $function, $trigger, $path, $method, $user);
+            return;
         }
 
-            /** Check if build has exists */
-            $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
+        /** Check if the build exists */
+        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
         if ($build->isEmpty()) {
             throw new Exception('Build not found');
         }
@@ -265,7 +312,7 @@ class Functions extends Action
             throw new Exception('Build not ready');
         }
 
-            /** Check if  runtime is supported */
+        /** Check if  runtime is supported */
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
 
@@ -280,7 +327,6 @@ class Functions extends Action
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';
 
-        /** Create execution or update execution status */
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
