@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "750df68fe066fde9554f4d1ba4a9afb5",
+    "content-hash": "791b4ede59f656313657d98fc2ed94fc",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2541,16 +2541,16 @@
         },
         {
             "name": "utopia-php/view",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/view.git",
-                "reference": "013a495af4e625df172d9bd534011014cb32bbab"
+                "reference": "6ee55e83bc014c39ed6b69390f6d399116f65e88"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/view/zipball/013a495af4e625df172d9bd534011014cb32bbab",
-                "reference": "013a495af4e625df172d9bd534011014cb32bbab",
+                "url": "https://api.github.com/repos/utopia-php/view/zipball/6ee55e83bc014c39ed6b69390f6d399116f65e88",
+                "reference": "6ee55e83bc014c39ed6b69390f6d399116f65e88",
                 "shasum": ""
             },
             "require": {
@@ -2578,9 +2578,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/view/issues",
-                "source": "https://github.com/utopia-php/view/tree/0.1.0"
+                "source": "https://github.com/utopia-php/view/tree/0.2.0"
             },
-            "time": "2023-09-10T12:07:26+00:00"
+            "time": "2024-04-01T17:21:29+00:00"
         },
         {
             "name": "utopia-php/websocket",

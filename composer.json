@@ -63,7 +63,7 @@
         "utopia-php/orchestration": "dev-feat-framework-v2 as 0.9.99",
         "utopia-php/platform": "dev-feat-framework-v2 as 0.5.99",
         "utopia-php/pools": "0.4.*",
-        "utopia-php/view": "0.1.*",
+        "utopia-php/view": "0.2.*",
         "utopia-php/queue": "dev-feat-framework-v2-v2 as 0.7.99",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "dev-feat-framework-v2-v2 as 0.18.99",

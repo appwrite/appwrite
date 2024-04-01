@@ -567,7 +567,7 @@ Http::post('/v1/teams/:teamId/memberships')
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
                 $message
-                    ->setParam('{{body}}', $body, escapeHtml: false)
+                    ->setParam('{{body}}', $body, escape: false)
                     ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
                     ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
                     ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))

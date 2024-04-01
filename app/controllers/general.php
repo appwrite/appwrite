@@ -730,6 +730,7 @@ Http::error()
                 Console::error('[Error] URL: ' . $route->getPath());
             }
 
+            Console::error('[Error] Code: ' . $code);
             Console::error('[Error] Type: ' . get_class($error));
             Console::error('[Error] Message: ' . $message);
             Console::error('[Error] File: ' . $file);

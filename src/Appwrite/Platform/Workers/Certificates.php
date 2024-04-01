@@ -452,7 +452,7 @@ class Certificates extends Action
 
         $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl');
         $message
-            ->setParam('{{body}}', $locale->getText("emails.certificate.body"), escapeHtml: false)
+            ->setParam('{{body}}', $locale->getText("emails.certificate.body"), escape: false)
             ->setParam('{{hello}}', $locale->getText("emails.certificate.hello"))
             ->setParam('{{footer}}', $locale->getText("emails.certificate.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.certificate.thanks"))

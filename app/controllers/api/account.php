@@ -2966,7 +2966,7 @@ Http::post('/v1/account/recovery')
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
-            ->setParam('{{body}}', $body, escapeHtml: false)
+            ->setParam('{{body}}', $body, escape: false)
             ->setParam('{{hello}}', $locale->getText("emails.recovery.hello"))
             ->setParam('{{footer}}', $locale->getText("emails.recovery.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.recovery.thanks"))
@@ -3216,7 +3216,7 @@ Http::post('/v1/account/verification')
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
-            ->setParam('{{body}}', $body, escapeHtml: false)
+            ->setParam('{{body}}', $body, escape: false)
             ->setParam('{{hello}}', $locale->getText("emails.verification.hello"))
             ->setParam('{{footer}}', $locale->getText("emails.verification.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.verification.thanks"))
