@@ -19,6 +19,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
+use Utopia\System\System;
 
 App::init()
     ->groups(['graphql'])
@@ -177,9 +178,9 @@ function execute(
     Adapter $promiseAdapter,
     array $query
 ): array {
-    $maxBatchSize = App::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
-    $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
-    $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
+    $maxBatchSize = System::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
+    $maxComplexity = System::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
+    $maxDepth = System::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
 
     if (!empty($query) && !isset($query[0])) {
         $query = [$query];
@@ -199,7 +200,7 @@ function execute(
     $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
 
-    if (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+    if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         $validations[] = new DisableIntrospection();
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);

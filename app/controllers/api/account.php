@@ -53,6 +53,7 @@ use Utopia\Validator\Host;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
+use Utopia\System\System;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
@@ -1012,7 +1013,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
@@ -1210,7 +1211,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
@@ -1594,7 +1595,7 @@ App::get('/v1/account/tokens/oauth2/:provider')
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
@@ -1660,7 +1661,7 @@ App::post('/v1/account/tokens/magic-url')
     ->inject('queueForMails')
     ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
@@ -1788,8 +1789,8 @@ App::post('/v1/account/tokens/magic-url')
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
-        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -1901,7 +1902,7 @@ App::post('/v1/account/tokens/email')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
@@ -2017,8 +2018,8 @@ App::post('/v1/account/tokens/email')
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
-        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -2190,7 +2191,7 @@ App::post('/v1/account/tokens/phone')
     ->inject('queueForMessaging')
     ->inject('locale')
     ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale) {
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+        if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -2364,7 +2365,7 @@ App::post('/v1/account/jwt')
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -2845,7 +2846,7 @@ App::post('/v1/account/recovery')
     ->inject('queueForEvents')
     ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
@@ -2915,8 +2916,8 @@ App::post('/v1/account/recovery')
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
-        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -3106,7 +3107,7 @@ App::post('/v1/account/verification')
     ->inject('queueForMails')
     ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
@@ -3163,8 +3164,8 @@ App::post('/v1/account/verification')
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
-        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -3326,7 +3327,7 @@ App::post('/v1/account/verification/phone')
     ->inject('project')
     ->inject('locale')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale) {
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+        if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -3889,7 +3890,7 @@ App::post('/v1/account/mfa/challenge')
 
         switch ($factor) {
             case Type::PHONE:
-                if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+                if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
                 if (empty($user->getAttribute('phone'))) {
@@ -3927,7 +3928,7 @@ App::post('/v1/account/mfa/challenge')
                     ->setProviderType(MESSAGE_TYPE_SMS);
                 break;
             case Type::EMAIL:
-                if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+                if (empty(System::getEnv('_APP_SMTP_HOST'))) {
                     throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
                 }
                 if (empty($user->getAttribute('email'))) {
@@ -3958,8 +3959,8 @@ App::post('/v1/account/mfa/challenge')
                 $smtp = $project->getAttribute('smtp', []);
                 $smtpEnabled = $smtp['enabled'] ?? false;
 
-                $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-                $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+                $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
                 $replyTo = "";
 
                 if ($smtpEnabled) {
