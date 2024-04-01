@@ -195,6 +195,7 @@ class Functions extends Action
     }
 
     /**
+     * @param string $message
      * @param Document $function
      * @param string $trigger
      * @param string $path
@@ -205,6 +206,7 @@ class Functions extends Action
      * @throws Exception
      */
     private function fail(
+        string $message,
         Database $dbForProject,
         Document $function,
         string $trigger,
@@ -241,7 +243,7 @@ class Functions extends Action
             'requestPath' => $path,
             'requestMethod' => $method,
             'requestHeaders' => $headersFiltered,
-            'errors' => 'Deployment not found. Create deployment before trying to execute a function.',
+            'errors' => $message,
             'logs' => '',
             'duration' => 0.0,
             'search' => implode(' ', [$function->getId(), $executionId]),
@@ -310,23 +312,29 @@ class Functions extends Action
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
-            $this->fail($dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
+            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
         if ($deployment->isEmpty()) {
-            $this->fail($dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
+            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
         /** Check if the build exists */
         $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
         if ($build->isEmpty()) {
-            throw new Exception('Build not found');
+            $errorMessage = 'The execution could not be completed because a corresponding build was not found. A function build needs to be created before it can be executed. Please create a build for your function and try again.';
+            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            return;
         }
 
         if ($build->getAttribute('status') !== 'ready') {
-            throw new Exception('Build not ready');
+            $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
+            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            return;
         }
 
         /** Check if  runtime is supported */
