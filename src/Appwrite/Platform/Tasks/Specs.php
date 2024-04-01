@@ -250,14 +250,14 @@ class Specs extends Action
             }
 
             $arguments = [
-                    new App('UTC'),
-                    $services,
-                    $routes,
-                    $models,
-                    $keys[$platform],
-                    $authCounts[$platform] ?? 0,
-                    $events,
-                ];
+                new App('UTC'),
+                $services,
+                $routes,
+                $models,
+                $keys[$platform],
+                $authCounts[$platform] ?? 0,
+                $events,
+            ];
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = match ($format) {
                     'swagger2' => new Swagger2(...$arguments),

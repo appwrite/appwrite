@@ -2,7 +2,6 @@
 
 namespace Appwrite\Specification\Format;
 
-use Utopia\Config\Config;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
