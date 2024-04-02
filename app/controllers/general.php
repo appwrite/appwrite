@@ -157,7 +157,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $permissions = $function->getAttribute('execute');
 
-        if (!(\in_array('any', $permissions)) && (\in_array('guests', $permissions))) {
+        if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
             throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED, 'To execute function using domain, execute permissions must include "any" or "guests"');
         }
 
@@ -616,6 +616,64 @@ App::error()
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
+        $class = \get_class($error);
+        $code = $error->getCode();
+        $message = $error->getMessage();
+        $file = $error->getFile();
+        $line = $error->getLine();
+        $trace = $error->getTrace();
+
+        if (php_sapi_name() === 'cli') {
+            Console::error('[Error] Timestamp: ' . date('c', time()));
+
+            if ($route) {
+                Console::error('[Error] Method: ' . $route->getMethod());
+                Console::error('[Error] URL: ' . $route->getPath());
+            }
+
+            Console::error('[Error] Type: ' . get_class($error));
+            Console::error('[Error] Message: ' . $message);
+            Console::error('[Error] File: ' . $file);
+            Console::error('[Error] Line: ' . $line);
+        }
+
+        switch ($class) {
+            case 'Utopia\Exception':
+                $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
+                switch ($code) {
+                    case 400:
+                        $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
+                        break;
+                    case 404:
+                        $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+                        break;
+                }
+                break;
+            case 'Utopia\Database\Exception\Conflict':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Timeout':
+                $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Query':
+                $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, $error->getMessage(), previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Structure':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $error->getMessage(), previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Duplicate':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_ALREADY_EXISTS);
+                break;
+            case 'Utopia\Database\Exception\Restricted':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_DELETE_RESTRICTED);
+                break;
+            case 'Utopia\Database\Exception\Authorization':
+                $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
+                break;
+        }
+
+        $code = $error->getCode();
+        $message = $error->getMessage();
 
         if ($error instanceof AppwriteException) {
             $publish = $error->isPublishable();
@@ -623,11 +681,28 @@ App::error()
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
 
-        if ($logger && ($publish || $error->getCode() === 0)) {
+        if ($error->getCode() >= 400 && $error->getCode() < 500) {
+            // Register error logger
+            $providerName = App::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
+            $providerConfig = App::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
+
+            if (!(empty($providerName) || empty($providerConfig))) {
+                if (!Logger::hasProvider($providerName)) {
+                    throw new Exception("Logging provider not supported. Logging is disabled");
+                }
+
+                $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
+                $adapter = new $classname($providerConfig);
+                $logger = new Logger($adapter);
+                $publish = true;
+            }
+        }
+
+        if ($logger && $publish) {
             try {
                 /** @var Utopia\Database\Document $user */
                 $user = $utopia->getResource('user');
-            } catch (\Throwable $th) {
+            } catch (\Throwable) {
                 // All good, user is optional information for logger
             }
 
@@ -664,47 +739,6 @@ App::error()
 
             $responseCode = $logger->addLog($log);
             Console::info('Log pushed with status code: ' . $responseCode);
-        }
-
-        $code = $error->getCode();
-        $message = $error->getMessage();
-        $file = $error->getFile();
-        $line = $error->getLine();
-        $trace = $error->getTrace();
-
-        if (php_sapi_name() === 'cli') {
-            Console::error('[Error] Timestamp: ' . date('c', time()));
-
-            if ($route) {
-                Console::error('[Error] Method: ' . $route->getMethod());
-                Console::error('[Error] URL: ' . $route->getPath());
-            }
-
-            Console::error('[Error] Type: ' . get_class($error));
-            Console::error('[Error] Message: ' . $message);
-            Console::error('[Error] File: ' . $file);
-            Console::error('[Error] Line: ' . $line);
-        }
-
-        /** Handle Utopia Errors */
-        if ($error instanceof Utopia\Exception) {
-            $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
-            switch ($code) {
-                case 400:
-                    $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
-                    break;
-                case 404:
-                    $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
-                    break;
-            }
-        } elseif ($error instanceof Utopia\Database\Exception\Conflict) {
-            $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
-            $code = $error->getCode();
-            $message = $error->getMessage();
-        } elseif ($error instanceof Utopia\Database\Exception\Timeout) {
-            $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
-            $code = $error->getCode();
-            $message = $error->getMessage();
         }
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */

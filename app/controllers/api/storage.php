@@ -588,111 +588,95 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 $openSSLIV = \bin2hex($iv);
             }
 
-            try {
-                if ($file->isEmpty()) {
-                    $doc = new Document([
-                        '$id' => $fileId,
-                        '$permissions' => $permissions,
-                        'bucketId' => $bucket->getId(),
-                        'bucketInternalId' => $bucket->getInternalId(),
-                        'name' => $fileName,
-                        'path' => $path,
-                        'signature' => $fileHash,
-                        'mimeType' => $mimeType,
-                        'sizeOriginal' => $fileSize,
-                        'sizeActual' => $sizeActual,
-                        'algorithm' => $algorithm,
-                        'comment' => '',
-                        'chunksTotal' => $chunks,
-                        'chunksUploaded' => $chunksUploaded,
-                        'openSSLVersion' => $openSSLVersion,
-                        'openSSLCipher' => $openSSLCipher,
-                        'openSSLTag' => $openSSLTag,
-                        'openSSLIV' => $openSSLIV,
-                        'search' => implode(' ', [$fileId, $fileName]),
-                        'metadata' => $metadata,
-                    ]);
+            if ($file->isEmpty()) {
+                $doc = new Document([
+                    '$id' => $fileId,
+                    '$permissions' => $permissions,
+                    'bucketId' => $bucket->getId(),
+                    'bucketInternalId' => $bucket->getInternalId(),
+                    'name' => $fileName,
+                    'path' => $path,
+                    'signature' => $fileHash,
+                    'mimeType' => $mimeType,
+                    'sizeOriginal' => $fileSize,
+                    'sizeActual' => $sizeActual,
+                    'algorithm' => $algorithm,
+                    'comment' => '',
+                    'chunksTotal' => $chunks,
+                    'chunksUploaded' => $chunksUploaded,
+                    'openSSLVersion' => $openSSLVersion,
+                    'openSSLCipher' => $openSSLCipher,
+                    'openSSLTag' => $openSSLTag,
+                    'openSSLIV' => $openSSLIV,
+                    'search' => implode(' ', [$fileId, $fileName]),
+                    'metadata' => $metadata,
+                ]);
 
-                    $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
-                } else {
-                    $file = $file
-                        ->setAttribute('$permissions', $permissions)
-                        ->setAttribute('signature', $fileHash)
-                        ->setAttribute('mimeType', $mimeType)
-                        ->setAttribute('sizeActual', $sizeActual)
-                        ->setAttribute('algorithm', $algorithm)
-                        ->setAttribute('openSSLVersion', $openSSLVersion)
-                        ->setAttribute('openSSLCipher', $openSSLCipher)
-                        ->setAttribute('openSSLTag', $openSSLTag)
-                        ->setAttribute('openSSLIV', $openSSLIV)
-                        ->setAttribute('metadata', $metadata)
-                        ->setAttribute('chunksUploaded', $chunksUploaded);
+                $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
+            } else {
+                $file = $file
+                    ->setAttribute('$permissions', $permissions)
+                    ->setAttribute('signature', $fileHash)
+                    ->setAttribute('mimeType', $mimeType)
+                    ->setAttribute('sizeActual', $sizeActual)
+                    ->setAttribute('algorithm', $algorithm)
+                    ->setAttribute('openSSLVersion', $openSSLVersion)
+                    ->setAttribute('openSSLCipher', $openSSLCipher)
+                    ->setAttribute('openSSLTag', $openSSLTag)
+                    ->setAttribute('openSSLIV', $openSSLIV)
+                    ->setAttribute('metadata', $metadata)
+                    ->setAttribute('chunksUploaded', $chunksUploaded);
 
-                    /**
-                     * Validate create permission and skip authorization in updateDocument
-                     * Without this, the file creation will fail when user doesn't have update permission
-                     * However as with chunk upload even if we are updating, we are essentially creating a file
-                     * adding it's new chunk so we validate create permission instead of update
-                     */
-                    $validator = new Authorization(Database::PERMISSION_CREATE);
-                    if (!$validator->isValid($bucket->getCreate())) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED);
-                    }
-                    $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+                /**
+                 * Validate create permission and skip authorization in updateDocument
+                 * Without this, the file creation will fail when user doesn't have update permission
+                 * However as with chunk upload even if we are updating, we are essentially creating a file
+                 * adding it's new chunk so we validate create permission instead of update
+                 */
+                $validator = new Authorization(Database::PERMISSION_CREATE);
+                if (!$validator->isValid($bucket->getCreate())) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
-            } catch (AuthorizationException) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            } catch (StructureException $exception) {
-                throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
-            } catch (DuplicateException) {
-                throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+                $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
             }
         } else {
-            try {
-                if ($file->isEmpty()) {
-                    $doc = new Document([
-                        '$id' => ID::custom($fileId),
-                        '$permissions' => $permissions,
-                        'bucketId' => $bucket->getId(),
-                        'bucketInternalId' => $bucket->getInternalId(),
-                        'name' => $fileName,
-                        'path' => $path,
-                        'signature' => '',
-                        'mimeType' => '',
-                        'sizeOriginal' => $fileSize,
-                        'sizeActual' => 0,
-                        'algorithm' => '',
-                        'comment' => '',
-                        'chunksTotal' => $chunks,
-                        'chunksUploaded' => $chunksUploaded,
-                        'search' => implode(' ', [$fileId, $fileName]),
-                        'metadata' => $metadata,
-                    ]);
+            if ($file->isEmpty()) {
+                $doc = new Document([
+                    '$id' => ID::custom($fileId),
+                    '$permissions' => $permissions,
+                    'bucketId' => $bucket->getId(),
+                    'bucketInternalId' => $bucket->getInternalId(),
+                    'name' => $fileName,
+                    'path' => $path,
+                    'signature' => '',
+                    'mimeType' => '',
+                    'sizeOriginal' => $fileSize,
+                    'sizeActual' => 0,
+                    'algorithm' => '',
+                    'comment' => '',
+                    'chunksTotal' => $chunks,
+                    'chunksUploaded' => $chunksUploaded,
+                    'search' => implode(' ', [$fileId, $fileName]),
+                    'metadata' => $metadata,
+                ]);
 
-                    $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
-                } else {
-                    $file = $file
-                        ->setAttribute('chunksUploaded', $chunksUploaded)
-                        ->setAttribute('metadata', $metadata);
+                $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
+            } else {
+                $file = $file
+                    ->setAttribute('chunksUploaded', $chunksUploaded)
+                    ->setAttribute('metadata', $metadata);
 
-                    /**
-                     * Validate create permission and skip authorization in updateDocument
-                     * Without this, the file creation will fail when user doesn't have update permission
-                     * However as with chunk upload even if we are updating, we are essentially creating a file
-                     * adding it's new chunk so we validate create permission instead of update
-                     */
-                    $validator = new Authorization(Database::PERMISSION_CREATE);
-                    if (!$validator->isValid($bucket->getCreate())) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED);
-                    }
-                    $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+                /**
+                 * Validate create permission and skip authorization in updateDocument
+                 * Without this, the file creation will fail when user doesn't have update permission
+                 * However as with chunk upload even if we are updating, we are essentially creating a file
+                 * adding it's new chunk so we validate create permission instead of update
+                 */
+                $validator = new Authorization(Database::PERMISSION_CREATE);
+                if (!$validator->isValid($bucket->getCreate())) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
-            } catch (AuthorizationException) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            } catch (StructureException $exception) {
-                throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
-            } catch (DuplicateException) {
-                throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+                $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
             }
         }
 
@@ -1554,11 +1538,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($fileSecurity && !$valid) {
-            try {
-                $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
-            } catch (AuthorizationException) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
+            $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
         } else {
             $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
         }
@@ -1643,11 +1623,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             ;
 
             if ($fileSecurity && !$valid) {
-                try {
-                    $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
-                } catch (AuthorizationException) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED);
-                }
+                $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
             } else {
                 $deleted = Authorization::skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
             }

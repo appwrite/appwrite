@@ -194,10 +194,6 @@ Server::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
 
-Server::setResource('queueForHamster', function (Connection $queue) {
-    return new Hamster($queue);
-}, ['queue']);
-
 Server::setResource('logger', function (Registry $register) {
     return $register->get('logger');
 }, ['register']);

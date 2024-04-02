@@ -948,7 +948,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
-        $team = Authorization::skip(fn () => $dbForProject->getDocument('teams', $teamId));
+        $team = Authorization::skip(fn() => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);

@@ -38,74 +38,83 @@ require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-function getConsoleDB(): Database
-{
-    global $register;
+// Allows overriding
+if (!function_exists("getConsoleDB")) {
+    function getConsoleDB(): Database
+    {
+        global $register;
 
-    /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('pools');
+        /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools');
 
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource()
-    ;
-
-    $database = new Database($dbAdapter, getCache());
-
-    $database
-        ->setNamespace('_console')
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', '_console');
-
-    return $database;
-}
-
-function getProjectDB(Document $project): Database
-{
-    global $register;
-
-    /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('pools');
-
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return getConsoleDB();
-    }
-
-    $dbAdapter = $pools
-        ->get($project->getAttribute('database'))
-        ->pop()
-        ->getResource()
-    ;
-
-    $database = new Database($dbAdapter, getCache());
-
-    $database
-        ->setNamespace('_' . $project->getInternalId())
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', $project->getId());
-
-    return $database;
-}
-
-function getCache(): Cache
-{
-    global $register;
-
-    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
-
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
-
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
+        $dbAdapter = $pools
+            ->get('console')
             ->pop()
             ->getResource()
         ;
-    }
 
-    return new Cache(new Sharding($adapters));
+        $database = new Database($dbAdapter, getCache());
+
+        $database
+            ->setNamespace('_console')
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', '_console');
+
+        return $database;
+    }
+}
+
+// Allows overriding
+if (!function_exists("getProjectDB")) {
+    function getProjectDB(Document $project): Database
+    {
+        global $register;
+
+        /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools');
+
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return getConsoleDB();
+        }
+
+        $dbAdapter = $pools
+            ->get($project->getAttribute('database'))
+            ->pop()
+            ->getResource()
+        ;
+
+        $database = new Database($dbAdapter, getCache());
+
+        $database
+            ->setNamespace('_' . $project->getInternalId())
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId());
+
+        return $database;
+    }
+}
+
+// Allows overriding
+if (!function_exists("getCache")) {
+    function getCache(): Cache
+    {
+        global $register;
+
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+
+        $list = Config::getParam('pools-cache', []);
+        $adapters = [];
+
+        foreach ($list as $value) {
+            $adapters[] = $pools
+                ->get($value)
+                ->pop()
+                ->getResource()
+            ;
+        }
+
+        return new Cache(new Sharding($adapters));
+    }
 }
 
 $realtime = new Realtime();

@@ -5,6 +5,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Template\Template;
@@ -77,7 +78,8 @@ App::post('/v1/projects')
     ->inject('dbForConsole')
     ->inject('cache')
     ->inject('pools')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools) {
+    ->inject('hooks')
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools, Hooks $hooks) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -223,6 +225,8 @@ App::post('/v1/projects')
             }
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
+
+        $hooks->trigger('afterProjectCreation', [ $project, $pools, $cache ]);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

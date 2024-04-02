@@ -102,7 +102,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $latestCommentId = '';
 
-            if (!empty($providerPullRequestId)) {
+            if (!empty($providerPullRequestId) && $function->getAttribute('providerSilentMode', false) === false) {
                 $latestComment = Authorization::skip(fn () => $dbForConsole->findOne('vcsComments', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::equal('providerPullRequestId', [$providerPullRequestId]),
