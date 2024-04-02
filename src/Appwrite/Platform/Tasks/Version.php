@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Platform\Action;
+use Utopia\System\System;
 
 class Version extends Action
 {
@@ -18,7 +18,7 @@ class Version extends Action
         $this
             ->desc('Get the server version')
             ->callback(function () {
-                Console::log(App::getEnv('_APP_VERSION', 'UNKNOWN'));
+                Console::log(System::getEnv('_APP_VERSION', 'UNKNOWN'));
             });
     }
 }
