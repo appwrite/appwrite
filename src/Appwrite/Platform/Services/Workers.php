@@ -8,7 +8,6 @@ use Appwrite\Platform\Workers\Certificates;
 use Appwrite\Platform\Workers\Databases;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\Platform\Workers\Functions;
-use Appwrite\Platform\Workers\Hamster;
 use Appwrite\Platform\Workers\Mails;
 use Appwrite\Platform\Workers\Messaging;
 use Appwrite\Platform\Workers\Migrations;
@@ -32,7 +31,6 @@ class Workers extends Service
             ->addAction(Mails::getName(), new Mails())
             ->addAction(Messaging::getName(), new Messaging())
             ->addAction(Webhooks::getName(), new Webhooks())
-            ->addAction(Hamster::getName(), new Hamster())
             ->addAction(UsageDump::getName(), new UsageDump())
             ->addAction(Usage::getName(), new Usage())
             ->addAction(Migrations::getName(), new Migrations())

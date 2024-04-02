@@ -4,8 +4,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
 use chillerlan\QRCode\QROptions;
 use Utopia\App;
 use Utopia\CLI\Console;
