@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1a272e08dfe04dbb86b65a5e1c419bb3",
+    "content-hash": "bbf819232382a6aeabe9d763844c3188",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -156,15 +156,15 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.13.3",
+            "version": "0.13.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "5d93fc578a9a543bcdc9b2c0562d80a51d56c73d"
+                "reference": "ba24c3a163f1a1da6cd355db92def508d05e59f7"
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/system": "0.7.*"
+                "utopia-php/system": "0.8.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -195,7 +195,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2024-03-01T14:47:47+00:00"
+            "time": "2024-04-01T10:35:02+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -1191,16 +1191,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.45.8",
+            "version": "0.45.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "ca1f6b0c4edf4be1db42788df953682f921565cb"
+                "reference": "e43e4b42f2a43e56dcfdc99ca527dfc885ca0667"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/ca1f6b0c4edf4be1db42788df953682f921565cb",
-                "reference": "ca1f6b0c4edf4be1db42788df953682f921565cb",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/e43e4b42f2a43e56dcfdc99ca527dfc885ca0667",
+                "reference": "e43e4b42f2a43e56dcfdc99ca527dfc885ca0667",
                 "shasum": ""
             },
             "require": {
@@ -1241,9 +1241,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.45.8"
+                "source": "https://github.com/utopia-php/database/tree/0.45.9"
             },
-            "time": "2024-03-28T10:52:53+00:00"
+            "time": "2024-04-02T09:22:05+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2062,16 +2062,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.18.3",
+            "version": "0.18.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "faa0279519ac14f3501e8b138e0865ad9d12bff6"
+                "reference": "94ab8758fabcefee5c5fa723616e45719833f922"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/faa0279519ac14f3501e8b138e0865ad9d12bff6",
-                "reference": "faa0279519ac14f3501e8b138e0865ad9d12bff6",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/94ab8758fabcefee5c5fa723616e45719833f922",
+                "reference": "94ab8758fabcefee5c5fa723616e45719833f922",
                 "shasum": ""
             },
             "require": {
@@ -2111,9 +2111,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.18.3"
+                "source": "https://github.com/utopia-php/storage/tree/0.18.4"
             },
-            "time": "2023-12-31T11:45:12+00:00"
+            "time": "2024-04-02T08:24:09+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -2168,16 +2168,16 @@
         },
         {
             "name": "utopia-php/system",
-            "version": "0.7.2",
+            "version": "0.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/system.git",
-                "reference": "4593d4d334b0c15879c4744a826e0362924c5d66"
+                "reference": "a2cbfb3c69b9ecb8b6f06c5774f3cf279ea7665e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/system/zipball/4593d4d334b0c15879c4744a826e0362924c5d66",
-                "reference": "4593d4d334b0c15879c4744a826e0362924c5d66",
+                "url": "https://api.github.com/repos/utopia-php/system/zipball/a2cbfb3c69b9ecb8b6f06c5774f3cf279ea7665e",
+                "reference": "a2cbfb3c69b9ecb8b6f06c5774f3cf279ea7665e",
                 "shasum": ""
             },
             "require": {
@@ -2218,9 +2218,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/system/issues",
-                "source": "https://github.com/utopia-php/system/tree/0.7.2"
+                "source": "https://github.com/utopia-php/system/tree/0.8.0"
             },
-            "time": "2023-10-20T01:39:17+00:00"
+            "time": "2024-04-01T10:22:28+00:00"
         },
         {
             "name": "utopia-php/vcs",
@@ -4702,16 +4702,16 @@
         },
         {
             "name": "squizlabs/php_codesniffer",
-            "version": "3.9.0",
+            "version": "3.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPCSStandards/PHP_CodeSniffer.git",
-                "reference": "d63cee4890a8afaf86a22e51ad4d97c91dd4579b"
+                "reference": "267a4405fff1d9c847134db3a3c92f1ab7f77909"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/d63cee4890a8afaf86a22e51ad4d97c91dd4579b",
-                "reference": "d63cee4890a8afaf86a22e51ad4d97c91dd4579b",
+                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/267a4405fff1d9c847134db3a3c92f1ab7f77909",
+                "reference": "267a4405fff1d9c847134db3a3c92f1ab7f77909",
                 "shasum": ""
             },
             "require": {
@@ -4778,7 +4778,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2024-02-16T15:06:51+00:00"
+            "time": "2024-03-31T21:03:09+00:00"
         },
         {
             "name": "swoole/ide-helper",
@@ -5169,5 +5169,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
