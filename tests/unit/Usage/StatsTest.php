@@ -9,6 +9,7 @@ use Utopia\Http\Http;
 use Utopia\Queue;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
+use Utopia\System\System;
 
 class StatsTest extends TestCase
 {
@@ -19,12 +20,12 @@ class StatsTest extends TestCase
 
     public function setUp(): void
     {
-        $env =  Http::getEnv('_APP_CONNECTIONS_QUEUE', AppwriteURL::unparse([
+        $env =  System::getEnv('_APP_CONNECTIONS_QUEUE', AppwriteURL::unparse([
             'scheme' => 'redis',
-            'host' => Http::getEnv('_APP_REDIS_HOST', 'redis'),
-            'port' => Http::getEnv('_APP_REDIS_PORT', '6379'),
-            'user' => Http::getEnv('_APP_REDIS_USER', ''),
-            'pass' => Http::getEnv('_APP_REDIS_PASS', ''),
+            'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
+            'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
+            'user' => System::getEnv('_APP_REDIS_USER', ''),
+            'pass' => System::getEnv('_APP_REDIS_PASS', ''),
         ]));
 
         $dsn = explode('=', $env);

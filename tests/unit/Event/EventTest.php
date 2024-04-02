@@ -7,9 +7,9 @@ use Appwrite\URL\URL;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Utopia\DSN\DSN;
-use Utopia\Http\Http;
 use Utopia\Queue;
 use Utopia\Queue\Client;
+use Utopia\System\System;
 
 require_once __DIR__ . '/../../../app/init.php';
 
@@ -22,13 +22,13 @@ class EventTest extends TestCase
     {
         $fallbackForRedis = URL::unparse([
             'scheme' => 'redis',
-            'host' => Http::getEnv('_APP_REDIS_HOST', 'redis'),
-            'port' => Http::getEnv('_APP_REDIS_PORT', '6379'),
-            'user' => Http::getEnv('_APP_REDIS_USER', ''),
-            'pass' => Http::getEnv('_APP_REDIS_PASS', ''),
+            'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
+            'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
+            'user' => System::getEnv('_APP_REDIS_USER', ''),
+            'pass' => System::getEnv('_APP_REDIS_PASS', ''),
         ]);
 
-        $dsn = Http::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
+        $dsn = System::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
         $dsn = explode('=', $dsn);
         $dsn = $dsn[0] ?? '';
         $dsn = new DSN($dsn);

@@ -15,6 +15,7 @@ use Utopia\Http\Http;
 use Utopia\Http\Validator\Host;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 Http::get('/v1/mock/tests/general/oauth2')
@@ -136,7 +137,7 @@ Http::patch('/v1/mock/functions-v2')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, Response $response, Database $dbForProject) {
-        $isDevelopment = Http::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -165,7 +166,7 @@ Http::get('/v1/mock/github/callback')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $providerInstallationId, string $projectId, GitHub $github, Document $project, Response $response, Database $dbForConsole) {
-        $isDevelopment = Http::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -179,8 +180,8 @@ Http::get('/v1/mock/github/callback')
         }
 
         if (!empty($providerInstallationId)) {
-            $privateKey = Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = Http::getEnv('_APP_VCS_GITHUB_APP_ID');
+            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             $owner = $github->getOwnerName($providerInstallationId) ?? '';
 

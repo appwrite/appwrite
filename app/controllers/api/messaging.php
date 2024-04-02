@@ -1,5 +1,6 @@
 <?php
 
+use Ahc\Jwt\JWT;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
@@ -35,7 +36,6 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
-use Utopia\Domains\Domain;
 use Utopia\Http\Http;
 use Utopia\Http\Validator\ArrayList;
 use Utopia\Http\Validator\Boolean;
@@ -45,6 +45,7 @@ use Utopia\Http\Validator\Range;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 
 use function Swoole\Coroutine\batch;
 
@@ -2131,8 +2132,6 @@ Http::get('/v1/messaging/topics/:topicId')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        $topic = $dbForProject->getDocument('topics', $topicId);
-
         $response
             ->dynamic($topic, Response::MODEL_TOPIC);
     });
@@ -2705,7 +2704,7 @@ Http::post('/v1/messaging/messages/email')
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
-                    'region' => Http::getEnv('_APP_REGION', 'default'),
+                    'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
@@ -2821,7 +2820,7 @@ Http::post('/v1/messaging/messages/sms')
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
-                    'region' => Http::getEnv('_APP_REGION', 'default'),
+                    'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
@@ -2939,23 +2938,35 @@ Http::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
 
-            if (!\in_array(Permission::read(Role::any()), \array_merge($file->getRead(), $bucket->getRead()))) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
-            }
-
             if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $host = Http::getEnv('_APP_DOMAIN', 'localhost');
-            $domain = new Domain(\parse_url($host, PHP_URL_HOST));
-            $protocol = Http::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $host = System::getEnv('_APP_DOMAIN', 'localhost');
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
 
-            if (!$domain->isKnown()) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
+            $scheduleTime = $currentScheduledAt ?? $scheduledAt;
+            if (!\is_null($scheduleTime)) {
+                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
+            } else {
+                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $image = "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}";
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'));
+
+            $jwt = $encoder->encode([
+                'iat' => \time(),
+                'exp' => $expiry,
+                'bucketId' => $bucket->getId(),
+                'fileId' => $file->getId(),
+                'projectId' => $project->getId(),
+            ]);
+
+            $image = [
+                'bucketId' => $bucket->getId(),
+                'fileId' => $file->getId(),
+                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
+            ];
         }
 
         $pushData = [];
@@ -2987,7 +2998,7 @@ Http::post('/v1/messaging/messages/push')
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
-                    'region' => Http::getEnv('_APP_REGION', 'default'),
+                    'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
@@ -3295,7 +3306,7 @@ Http::patch('/v1/messaging/messages/email/:messageId')
                     : MessageStatus::SCHEDULED;
             }
         } else {
-            $status = null;
+            $status = $message->getAttribute('status');
         }
 
         if (
@@ -3332,7 +3343,7 @@ Http::patch('/v1/messaging/messages/email/:messageId')
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForConsole->createDocument('schedules', new Document([
-                'region' => Http::getEnv('_APP_REGION', 'default'),
+                'region' => System::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getInternalId(),
@@ -3466,7 +3477,7 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
                     : MessageStatus::SCHEDULED;
             }
         } else {
-            $status = null;
+            $status = $message->getAttribute('status');
         }
 
         if (
@@ -3503,7 +3514,7 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForConsole->createDocument('schedules', new Document([
-                'region' => Http::getEnv('_APP_REGION', 'default'),
+                'region' => System::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getInternalId(),
@@ -3630,7 +3641,7 @@ Http::patch('/v1/messaging/messages/push/:messageId')
                     : MessageStatus::SCHEDULED;
             }
         } else {
-            $status = null;
+            $status = $message->getAttribute('status');
         }
 
         if (
@@ -3667,7 +3678,7 @@ Http::patch('/v1/messaging/messages/push/:messageId')
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForConsole->createDocument('schedules', new Document([
-                'region' => Http::getEnv('_APP_REGION', 'default'),
+                'region' => System::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getInternalId(),
@@ -3766,23 +3777,35 @@ Http::patch('/v1/messaging/messages/push/:messageId')
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
 
-            if (!\in_array(Permission::read(Role::any()), \array_merge($file->getRead(), $bucket->getRead()))) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
-            }
-
             if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $host = Http::getEnv('_APP_DOMAIN', 'localhost');
-            $domain = new Domain(\parse_url($host, PHP_URL_HOST));
-            $protocol = Http::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $host = System::getEnv('_APP_DOMAIN', 'localhost');
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
 
-            if (!$domain->isKnown()) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
+            $scheduleTime = $currentScheduledAt ?? $scheduledAt;
+            if (!\is_null($scheduleTime)) {
+                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
+            } else {
+                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $pushData['image'] = "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}";
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'));
+
+            $jwt = $encoder->encode([
+                'iat' => \time(),
+                'exp' => $expiry,
+                'bucketId' => $bucket->getId(),
+                'fileId' => $file->getId(),
+                'projectId' => $project->getId(),
+            ]);
+
+            $pushData['image'] = [
+                'bucketId' => $bucket->getId(),
+                'fileId' => $file->getId(),
+                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}"
+            ];
         }
 
         $message->setAttribute('data', $pushData);

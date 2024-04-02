@@ -1,6 +1,8 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Utopia\Request;
@@ -13,9 +15,25 @@ use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Database\Document;
-use Utopia\Http\Http;
+use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 use Utopia\Http\Validator\JSON;
 use Utopia\Http\Validator\Text;
+use Utopia\Http\Http;
+
+Http::init()
+    ->groups(['graphql'])
+    ->inject('project')
+    ->inject('auth')
+    ->action(function (Document $project, Authorization $auth) {
+        if (
+            array_key_exists('graphql', $project->getAttribute('apis', []))
+            && !$project->getAttribute('apis', [])['graphql']
+            && !(Auth::isPrivilegedUser($auth->getRoles()) || Auth::isAppUser($auth->getRoles()))
+        ) {
+            throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
+        }
+    });
 
 Http::get('/v1/graphql')
     ->desc('GraphQL endpoint')
@@ -161,9 +179,9 @@ function execute(
     Adapter $promiseAdapter,
     array $query
 ): array {
-    $maxBatchSize = Http::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
-    $maxComplexity = Http::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
-    $maxDepth = Http::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
+    $maxBatchSize = System::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
+    $maxComplexity = System::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
+    $maxDepth = System::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
 
     if (!empty($query) && !isset($query[0])) {
         $query = [$query];
@@ -183,7 +201,7 @@ function execute(
     $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
 
-    if (Http::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+    if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         $validations[] = new DisableIntrospection();
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);

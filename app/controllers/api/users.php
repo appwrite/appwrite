@@ -471,15 +471,7 @@ Http::post('/v1/users/:userId/targets')
     ->action(function (string $targetId, string $userId, string $providerType, string $identifier, string $providerId, string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
-        $provider = new Document();
-
-        if ($providerType === MESSAGE_TYPE_PUSH) {
-            $provider = $dbForProject->getDocument('providers', $providerId);
-
-            if ($provider->isEmpty()) {
-                throw new Exception(Exception::PROVIDER_NOT_FOUND);
-            }
-        }
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         switch ($providerType) {
             case 'email':
@@ -520,7 +512,7 @@ Http::post('/v1/users/:userId/targets')
                     Permission::update(Role::user($user->getId())),
                     Permission::delete(Role::user($user->getId())),
                 ],
-                'providerId' => $providerId ?? null,
+                'providerId' => empty($provider->getId()) ? null : $provider->getId(),
                 'providerInternalId' => $provider->isEmpty() ? null : $provider->getInternalId(),
                 'providerType' =>  $providerType,
                 'userId' => $userId,
@@ -814,6 +806,9 @@ Http::get('/v1/users/:userId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
+                'userId' => ID::custom($log['data']['userId']),
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
                 'ip' => $log['ip'],
                 'time' => $log['time'],
                 'osCode' => $os['osCode'],
@@ -842,7 +837,7 @@ Http::get('/v1/users/:userId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getId()),
+            'total' => $audit->countLogsByUser($user->getInternalId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -1212,7 +1207,7 @@ Http::patch('/v1/users/:userId/email')
             // Makes sure this email is not already used in another identity
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
-                Query::notEqual('userId', $user->getId()),
+                Query::notEqual('userInternalId', $user->getInternalId()),
             ]);
             if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);

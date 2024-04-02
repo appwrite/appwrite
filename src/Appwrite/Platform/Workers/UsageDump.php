@@ -7,9 +7,9 @@ use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class UsageDump extends Action
 {
@@ -81,7 +81,7 @@ class UsageDump extends Action
                                 'time' => $time,
                                 'metric' => $key,
                                 'value' => $value,
-                                'region' => Http::getEnv('_APP_REGION', 'default'),
+                                'region' => System::getEnv('_APP_REGION', 'default'),
                             ]));
                         } catch (Duplicate $th) {
                             if ($value < 0) {

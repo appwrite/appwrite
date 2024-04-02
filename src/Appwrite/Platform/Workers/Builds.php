@@ -21,12 +21,12 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
+use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Builds extends Action
@@ -120,7 +120,7 @@ class Builds extends Action
      */
     protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Log $log, Authorization $auth): void
     {
-        $executor = new Executor(Http::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
         $functionId = $function->getId();
         $log->addTag('functionId', $function->getId());
@@ -198,8 +198,8 @@ class Builds extends Action
         if ($isVcsEnabled) {
             $installation = $dbForConsole->getDocument('installations', $installationId);
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
-            $privateKey = Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = Http::getEnv('_APP_VCS_GITHUB_APP_ID');
+            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
 
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
         }
@@ -307,7 +307,7 @@ class Builds extends Action
                 }
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
-                $functionsSizeLimit = (int) Http::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
+                $functionsSizeLimit = (int) System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
                 if ($directorySize > $functionsSizeLimit) {
                     throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
                 }
@@ -397,7 +397,6 @@ class Builds extends Action
             ]);
 
             $command = $deployment->getAttribute('commands', '');
-            $command = \str_replace('"', '\\"', $command);
 
             $response = null;
             $err = null;
@@ -406,7 +405,7 @@ class Builds extends Action
                 Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
                     try {
                         $version = $function->getAttribute('version', 'v2');
-                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"';
+                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
 
                         $response = $executor->createRuntime(
                             deploymentId: $deployment->getId(),
@@ -475,7 +474,7 @@ class Builds extends Action
             $durationEnd = \microtime(true);
 
             /** Update the build document */
-            $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
+            $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'ready');
@@ -597,8 +596,8 @@ class Builds extends Action
 
             $name = "{$functionName} ({$projectName})";
 
-            $protocol = Http::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = Http::getEnv('_APP_DOMAIN');
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $hostname = System::getEnv('_APP_DOMAIN');
             $functionId = $function->getId();
             $projectId = $project->getId();
             $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$projectId/functions/function-$functionId";

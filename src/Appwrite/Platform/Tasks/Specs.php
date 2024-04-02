@@ -7,8 +7,10 @@ use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
 use Appwrite\Utopia\Response;
 use Exception;
-use Swoole\Http\Request;
-use Swoole\Http\Response as HttpResponse;
+use Swoole\Http\Request as SwooleHttpRequest;
+use Swoole\Http\Response as SwooleHttpResponse;
+use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Http\Adapter\Swoole\Response as HttpResponse;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -17,10 +19,11 @@ use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Http\Adapter\FPM\Server;
 use Utopia\Http\Http;
-use Utopia\Http\Validator\Text;
-use Utopia\Http\Validator\WhiteList;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
+use Utopia\System\System;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 
 class Specs extends Action
 {
@@ -42,11 +45,11 @@ class Specs extends Action
     public function action(string $version, string $mode, Registry $register): void
     {
         $appRoutes = Http::getRoutes();
-        $response = new Response(new HttpResponse());
+        $response = new Response(new HttpResponse(new SwooleHttpResponse));
         $mocks = ($mode === 'mocks');
 
         // Mock dependencies
-        Http::setResource('request', fn () => new Request());
+        Http::setResource('request', fn () => new Request(new SwooleHttpRequest));
         Http::setResource('response', fn () => $response);
         Http::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
         Http::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
@@ -258,8 +261,8 @@ class Specs extends Action
                 };
 
                 $specs = new Specification($formatInstance);
-                $endpoint = Http::getEnv('_APP_HOME', '[HOSTNAME]');
-                $email = Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $endpoint = System::getEnv('_APP_HOME', '[HOSTNAME]');
+                $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
                 $formatInstance
                     ->setParam('name', APP_NAME)

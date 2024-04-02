@@ -11,7 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Http\Http;
+use Utopia\System\System;
 
 class V15 extends Migration
 {
@@ -1484,7 +1484,7 @@ class V15 extends Migration
      */
     protected function encryptFilter(string $value): string
     {
-        $key = Http::getEnv('_APP_OPENSSL_KEY_V1');
+        $key = System::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
 

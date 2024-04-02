@@ -18,6 +18,7 @@ use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Hamster extends Action
 {
@@ -70,10 +71,12 @@ class Hamster extends Action
      */
     public function action(Message $message, Group $pools, Cache $cache, Database $dbForConsole, Authorization $auth, Connections $connections): void
     {
-        $token = Http::getEnv('_APP_MIXPANEL_TOKEN', '');
+        $token = System::getEnv('_APP_MIXPANEL_TOKEN', '');
+       
         if (empty($token)) {
             throw new \Exception('Missing MixPanel Token');
         }
+       
         $this->mixpanel = new Mixpanel($token);
 
         $payload = $message->getPayload() ?? [];

@@ -9,7 +9,7 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Http\Http;
+use Utopia\System\System;
 
 class AbuseTest extends Scope
 {
@@ -21,7 +21,7 @@ class AbuseTest extends Scope
     {
         parent::setUp();
 
-        if (Http::getEnv('_APP_OPTIONS_ABUSE') === 'disabled') {
+        if (System::getEnv('_APP_OPTIONS_ABUSE') === 'disabled') {
             $this->markTestSkipped('Abuse is not enabled.');
         }
     }
@@ -90,7 +90,7 @@ class AbuseTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $max = Http::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 250);
+        $max = System::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 250);
 
         $this->assertEquals('Max query complexity should be ' . $max . ' but got 259.', $response['body']['errors'][0]['message']);
     }
@@ -98,7 +98,7 @@ class AbuseTest extends Scope
     public function testTooManyQueriesBlocked()
     {
         $projectId = $this->getProject()['$id'];
-        $maxQueries = Http::getEnv('_APP_GRAPHQL_MAX_QUERIES', 10);
+        $maxQueries = System::getEnv('_APP_GRAPHQL_MAX_QUERIES', 10);
 
         $query = [];
         for ($i = 0; $i <= $maxQueries + 1; $i++) {

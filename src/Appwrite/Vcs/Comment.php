@@ -3,7 +3,9 @@
 namespace Appwrite\Vcs;
 
 use Utopia\Database\Document;
-use Utopia\Http\Http;
+use Utopia\System\System;
+
+// TODO this class should be moved to a more appropriate place in the architecture
 
 class Comment
 {
@@ -73,8 +75,8 @@ class Comment
             $text .= "| Function | ID | Status | Action |\n";
             $text .= "| :- | :-  | :-  | :- |\n";
 
-            $protocol = Http::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = Http::getEnv('_APP_DOMAIN');
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $hostname = System::getEnv('_APP_DOMAIN');
 
             foreach ($project['functions'] as $functionId => $function) {
                 $generateImage = function (string $status) use ($protocol, $hostname) {

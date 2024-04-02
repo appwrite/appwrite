@@ -23,6 +23,7 @@ use Utopia\Http\Validator\WhiteList;
 use Utopia\Image\Image;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
+use Utopia\System\System;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
 
@@ -76,7 +77,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
         }
 
         if (empty($gitHubSession)) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'GitHub session not found.');
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND, 'GitHub session not found.');
         }
 
         $provider = $gitHubSession->getAttribute('provider', '');
@@ -155,7 +156,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
         ];
     } catch (Exception $error) {
         if ($logger) {
-            $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
+            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
             $log = new Log();
             $log->setNamespace('console');
@@ -174,7 +175,8 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
 
             $log->setAction('avatarsGetGitHub');
 
-            $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
+            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);
@@ -348,8 +350,8 @@ Http::get('/v1/avatars/favicon')
             CURLOPT_URL => $url,
             CURLOPT_USERAGENT => \sprintf(
                 APP_USERAGENT,
-                Http::getEnv('_APP_VERSION', 'UNKNOWN'),
-                Http::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+                System::getEnv('_APP_VERSION', 'UNKNOWN'),
+                System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
             ),
         ]);
 

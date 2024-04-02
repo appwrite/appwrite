@@ -11,6 +11,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
@@ -26,9 +27,9 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
+use Utopia\System\System;
 use Utopia\Http\Http;
 use Utopia\Http\Validator\WhiteList;
-use Utopia\Pools\Group;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -320,6 +321,14 @@ Http::init()
 
         $route = $utopia->getRoute();
 
+        if (
+            array_key_exists('rest', $project->getAttribute('apis', []))
+            && !$project->getAttribute('apis', [])['rest']
+            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+        ) {
+            throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
+        }
+
         /*
         * Abuse Check
         */
@@ -370,7 +379,7 @@ Http::init()
                 ;
             }
 
-            $enabled = Http::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+            $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
 
             if (
                 $enabled                // Abuse is enabled
@@ -409,18 +418,17 @@ Http::init()
         ;
 
         $useCache = $route->getLabel('cache', false);
-
         if ($useCache) {
             $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+            $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
 
-            if (!empty($data)) {
-                $data = json_decode($data, true);
-                $parts = explode('/', $data['resourceType']);
+            if (!empty($data) && !$cacheLog->isEmpty()) {
+                $parts = explode('/', $cacheLog->getAttribute('resourceType'));
                 $type = $parts[0] ?? null;
 
                 if ($type === 'bucket') {
@@ -441,7 +449,7 @@ Http::init()
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
 
-                    $parts = explode('/', $data['resource']);
+                    $parts = explode('/', $cacheLog->getAttribute('resource'));
                     $fileId = $parts[1] ?? null;
 
                     if ($fileSecurity && !$valid) {
@@ -458,8 +466,8 @@ Http::init()
                 $response
                     ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
-                    ->setContentType($data['contentType'])
-                    ->send(base64_decode($data['payload']))
+                    ->setContentType($cacheLog->getAttribute('mimeType'))
+                    ->send($data)
                 ;
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
@@ -659,7 +667,6 @@ Http::shutdown()
         if ($useCache) {
             $resource = $resourceType = null;
             $data = $response->getPayload();
-
             if (!empty($data['payload'])) {
                 $pattern = $route->getLabel('cache.resource', null);
                 if (!empty($pattern)) {
@@ -671,22 +678,17 @@ Http::shutdown()
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
-                $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
-                $data = json_encode([
-                    'resourceType' => $resourceType,
-                    'resource' => $resource,
-                    'contentType' => $response->getContentType(),
-                    'payload' => base64_encode($data['payload']),
-                ]) ;
-
-                $signature = md5($data);
-                $cacheLog  = $auth->skip(fn () => $dbForProject->getDocument('cache', $key));
+                $key = md5($request->getURI() . '*' . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
+                $signature = md5($data['payload']);
+                $cacheLog  =  $auth->skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
                     $auth->skip(fn () => $dbForProject->createDocument('cache', new Document([
                         '$id' => $key,
                         'resource' => $resource,
+                        'resourceType' => $resourceType,
+                        'mimeType' => $response->getContentType(),
                         'accessedAt' => $now,
                         'signature' => $signature,
                     ])));
@@ -699,7 +701,7 @@ Http::shutdown()
                     $cache = new Cache(
                         new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
                     );
-                    $cache->save($key, $data);
+                    $cache->save($key, $data['payload']);
                 }
             }
         }
@@ -743,7 +745,7 @@ Http::shutdown()
 Http::init()
     ->groups(['usage'])
     ->action(function () {
-        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
+        if (System::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
             throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
     });

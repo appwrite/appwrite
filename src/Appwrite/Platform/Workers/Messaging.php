@@ -36,6 +36,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
+use Utopia\System\System;
 
 use function Swoole\Coroutine\batch;
 
@@ -361,7 +362,7 @@ class Messaging extends Action
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Usage $queueForUsage, Log $log): void
     {
-        if (empty(Http::getEnv('_APP_SMS_PROVIDER')) || empty(Http::getEnv('_APP_SMS_FROM'))) {
+        if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
             throw new \Exception('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
         }
 
@@ -371,7 +372,7 @@ class Messaging extends Action
 
         Console::log('Project: ' . $project->getId());
 
-        $denyList = Http::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
+        $denyList = System::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
         $denyList = explode(',', $denyList);
 
         if (\in_array($project->getId(), $denyList)) {
@@ -379,14 +380,14 @@ class Messaging extends Action
             return;
         }
 
-        $smsDSN = new DSN(Http::getEnv('_APP_SMS_PROVIDER'));
+        $smsDSN = new DSN(System::getEnv('_APP_SMS_PROVIDER'));
         $host = $smsDSN->getHost();
         $password = $smsDSN->getPassword();
         $user = $smsDSN->getUser();
 
         $log->addTag('type', $host);
 
-        $from = Http::getEnv('_APP_SMS_FROM');
+        $from = System::getEnv('_APP_SMS_FROM');
 
         $provider = new Document([
             '$id' => ID::unique(),
@@ -627,7 +628,7 @@ class Messaging extends Action
         $body = $message['data']['body'];
         $data = $message['data']['data'] ?? null;
         $action = $message['data']['action'] ?? null;
-        $image = $message['data']['image'] ?? null;
+        $image = $message['data']['image']['url'] ?? null;
         $sound = $message['data']['sound'] ?? null;
         $icon = $message['data']['icon'] ?? null;
         $color = $message['data']['color'] ?? null;

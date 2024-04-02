@@ -10,11 +10,11 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Http\Http;
 use Utopia\Http\Validator\Text;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
+use Utopia\System\System;
 
 class CalcTierStats extends Action
 {
@@ -185,8 +185,8 @@ class CalcTierStats extends Action
 
         try {
             /** Addresses */
-            $mail->setFrom(Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
-            $recipients = explode(',', Http::getEnv('_APP_USERS_STATS_RECIPIENTS', ''));
+            $mail->setFrom(System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
+            $recipients = explode(',', System::getEnv('_APP_USERS_STATS_RECIPIENTS', ''));
             foreach ($recipients as $recipient) {
                 $mail->addAddress($recipient);
             }

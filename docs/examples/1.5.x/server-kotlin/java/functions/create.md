@@ -13,7 +13,7 @@ Functions functions = new Functions(client);
 functions.create(
     "<FUNCTION_ID>", // functionId
     "<NAME>", // name
-    .NODE145, // runtime
+    .NODE_14_5, // runtime
     listOf("any"), // execute (optional)
     listOf(), // events (optional)
     "", // schedule (optional)

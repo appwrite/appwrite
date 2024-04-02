@@ -12,6 +12,7 @@ use Utopia\Database\Query;
 use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
+use Utopia\System\System;
 
 use function Swoole\Coroutine\run;
 
@@ -99,7 +100,7 @@ abstract class ScheduleBase extends Action
             }
 
             $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
-                Query::equal('region', [Http::getEnv('_APP_REGION', 'default')]),
+                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                 Query::equal('resourceType', [static::getSupportedResource()]),
                 Query::equal('active', [true]),
             ]));
@@ -153,7 +154,7 @@ abstract class ScheduleBase extends Action
                     }
 
                     $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
-                        Query::equal('region', [Http::getEnv('_APP_REGION', 'default')]),
+                        Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                         Query::equal('resourceType', [static::getSupportedResource()]),
                         Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate),
                     ]));

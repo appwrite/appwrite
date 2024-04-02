@@ -20,10 +20,10 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Functions extends Action
 {
@@ -383,7 +383,7 @@ class Functions extends Action
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
-            $executor = new Executor(Http::getEnv('_APP_EXECUTOR_HOST'));
+            $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
             $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),

@@ -36,6 +36,7 @@ use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
+use Utopia\System\System;
 
 global $register;
 
@@ -119,15 +120,15 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 }, ['pools', 'dbForConsole', 'cache', 'auth', 'connections']);
 
 Server::setResource('abuseRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * Http::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
+    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
 });
 
 Server::setResource('auditRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * Http::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
+    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
 });
 
 Server::setResource('executionRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * Http::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
+    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
 });
 
 Server::setResource('cache', function (Registry $register, Connections $connections) {
@@ -252,9 +253,9 @@ if (!empty($workerIndex)) {
 }
 
 if (\str_starts_with($workerName, 'databases')) {
-    $queueName = Http::getEnv('_APP_QUEUE_NAME', 'database_db_main');
+    $queueName = System::getEnv('_APP_QUEUE_NAME', 'database_db_main');
 } else {
-    $queueName = Http::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
+    $queueName = System::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
 }
 
 try {
@@ -265,7 +266,7 @@ try {
      * - _APP_QUEUE_NAME  The name of the queue to read for database events
      */
     $platform->init(Service::TYPE_WORKER, [
-        'workersNum' => Http::getEnv('_APP_WORKERS_NUM', 1),
+        'workersNum' => System::getEnv('_APP_WORKERS_NUM', 1),
         'connection' => $pools->get('queue')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
         'queueName' => $queueName
@@ -300,7 +301,7 @@ $worker
     ->inject('auth')
     ->action(function (Throwable $error, ?Logger $logger, Log $log, Connections $connections, Document $project, Authorization $auth) use ($queueName) {
         $connections->reclaim();
-        $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
+        $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
             throw $error;
@@ -322,7 +323,7 @@ $worker
             $log->addExtra('detailedTrace', $error->getTrace());
             $log->addExtra('roles', $auth->getRoles());
 
-            $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
+            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);

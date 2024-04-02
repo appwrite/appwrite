@@ -5,6 +5,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Http\Http;
 use Utopia\Http\Validator\Text;
+use Utopia\System\System;
 
 Http::init()
     ->groups(['console'])
@@ -29,24 +30,24 @@ Http::get('/v1/console/variables')
     ->label('sdk.response.model', Response::MODEL_CONSOLE_VARIABLES)
     ->inject('response')
     ->action(function (Response $response) {
-        $isDomainEnabled = !empty(Http::getEnv('_APP_DOMAIN', ''))
-            && !empty(Http::getEnv('_APP_DOMAIN_TARGET', ''))
-            && Http::getEnv('_APP_DOMAIN', '') !== 'localhost'
-            && Http::getEnv('_APP_DOMAIN_TARGET', '') !== 'localhost';
+        $isDomainEnabled = !empty(System::getEnv('_APP_DOMAIN', ''))
+            && !empty(System::getEnv('_APP_DOMAIN_TARGET', ''))
+            && System::getEnv('_APP_DOMAIN', '') !== 'localhost'
+            && System::getEnv('_APP_DOMAIN_TARGET', '') !== 'localhost';
 
-        $isVcsEnabled = !empty(Http::getEnv('_APP_VCS_GITHUB_APP_NAME', ''))
-            && !empty(Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''))
-            && !empty(Http::getEnv('_APP_VCS_GITHUB_APP_ID', ''))
-            && !empty(Http::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''))
-            && !empty(Http::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''));
+        $isVcsEnabled = !empty(System::getEnv('_APP_VCS_GITHUB_APP_NAME', ''))
+            && !empty(System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''))
+            && !empty(System::getEnv('_APP_VCS_GITHUB_APP_ID', ''))
+            && !empty(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''))
+            && !empty(System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''));
 
-        $isAssistantEnabled = !empty(Http::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
+        $isAssistantEnabled = !empty(System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
 
         $variables = new Document([
-            '_APP_DOMAIN_TARGET' => Http::getEnv('_APP_DOMAIN_TARGET'),
-            '_APP_STORAGE_LIMIT' => +Http::getEnv('_APP_STORAGE_LIMIT'),
-            '_APP_FUNCTIONS_SIZE_LIMIT' => +Http::getEnv('_APP_FUNCTIONS_SIZE_LIMIT'),
-            '_APP_USAGE_STATS' => Http::getEnv('_APP_USAGE_STATS'),
+            '_APP_DOMAIN_TARGET' => System::getEnv('_APP_DOMAIN_TARGET'),
+            '_APP_STORAGE_LIMIT' => +System::getEnv('_APP_STORAGE_LIMIT'),
+            '_APP_FUNCTIONS_SIZE_LIMIT' => +System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT'),
+            '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS'),
             '_APP_VCS_ENABLED' => $isVcsEnabled,
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
             '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled

@@ -9,6 +9,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Exception;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
+use Utopia\System\System;
 
 class Resolvers
 {
@@ -269,7 +270,7 @@ class Resolvers
         try {
             $route = $utopia->match($request, fresh: true);
 
-            $utopia->execute($route, $request, $response);
+            $utopia->execute($route, $request, xx);
         } catch (\Throwable $e) {
             if ($beforeReject) {
                 $e = $beforeReject($e);
@@ -302,7 +303,7 @@ class Resolvers
 
     private static function escapePayload(array $payload, int $depth)
     {
-        if ($depth > Http::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
+        if ($depth > System::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
             return;
         }
 

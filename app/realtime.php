@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
@@ -27,6 +28,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\FPM\Server as FPMServer;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
+use Utopia\System\System;
 use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
@@ -124,9 +126,9 @@ $stats->create();
 
 $containerId = uniqid();
 $statsDocument = null;
-$workerNumber = swoole_cpu_num() * intval(Http::getEnv('_APP_WORKER_PER_CORE', 6));
+$workerNumber = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 
-$adapter = new Adapter\Swoole(port: Http::getEnv('PORT', 80));
+$adapter = new Adapter\Swoole(port: System::getEnv('PORT', 80));
 $adapter
     ->setPackageMaxLength(64000) // Default maximum Package Size (64kb)
     ->setWorkerNumber($workerNumber);
@@ -137,7 +139,7 @@ $logError = function (Throwable $error, string $action) use ($register) {
     $logger = $register->get('logger');
 
     if ($logger && !$error instanceof Exception) {
-        $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
+        $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $log = new Log();
         $log->setNamespace("realtime");
@@ -156,7 +158,7 @@ $logError = function (Throwable $error, string $action) use ($register) {
 
         $log->setAction($action);
 
-        $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
+        $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
         $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
         $responseCode = $logger->addLog($log);
@@ -422,10 +424,18 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing or unknown project ID');
         }
 
+
+        if (
+            array_key_exists('realtime', $project->getAttribute('apis', []))
+            && !$project->getAttribute('apis', [])['realtime']
+            && !(Auth::isPrivilegedUser($auth->getRoles()) || Auth::isAppUser($auth->getRoles()))
+        ) {
+            throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
+        }
+
         $dbForProject = getProjectDB($project, $auth);
         $console = $http->getResource('console'); /** @var Document $console */
         $user = $http->getResource('user'); /** @var Document $user */
-        $auth = new Authorization();
 
         /*
          * Abuse Check
@@ -439,7 +449,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $abuse = new Abuse($timeLimit, $auth);
 
-        if (Http::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many requests');
         }
 
@@ -538,7 +548,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
         $abuse = new Abuse($timeLimit, $auth);
 
-        if ($abuse->check() && Http::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+        if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');
         }
 

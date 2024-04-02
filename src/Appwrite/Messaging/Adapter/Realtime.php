@@ -7,7 +7,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
-use Utopia\Http\Http;
+use Utopia\System\System;
 
 class Realtime extends Adapter
 {
@@ -140,7 +140,7 @@ class Realtime extends Adapter
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
         $redis = new \Redis(); //TODO: make this part of the constructor
-        $redis->connect(Http::getEnv('_APP_REDIS_HOST', ''), Http::getEnv('_APP_REDIS_PORT', ''));
+        $redis->connect(System::getEnv('_APP_REDIS_HOST', ''), System::getEnv('_APP_REDIS_PORT', ''));
         $redis->publish('realtime', json_encode([
             'project' => $projectId,
             'roles' => $roles,

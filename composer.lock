@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "791b4ede59f656313657d98fc2ed94fc",
+    "content-hash": "78b9cd75952805a2347578f4fcb96add",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1719,17 +1719,17 @@
             "time": "2023-11-02T12:01:43+00:00"
         },
         {
-            "name": "utopia-php/fetch",
-            "version": "0.1.0",
+            "name": "utopia-php/framework",
+            "version": "0.33.6",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/fetch.git",
-                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5"
+                "url": "https://github.com/utopia-php/http.git",
+                "reference": "8fe57da0cecd57e3b17cd395b4a666a24f4c07a6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/2fa214b9262acd1a3583515a364da4f35929d5c5",
-                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/8fe57da0cecd57e3b17cd395b4a666a24f4c07a6",
+                "reference": "8fe57da0cecd57e3b17cd395b4a666a24f4c07a6",
                 "shasum": ""
             },
             "require": {
@@ -1801,9 +1801,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/feat-framework-v2"
+                "source": "https://github.com/utopia-php/http/tree/0.33.6"
             },
-            "time": "2024-04-01T21:28:29+00:00"
+            "time": "2024-03-21T18:10:57+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2767,16 +2767,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.37.0-rc.6",
+            "version": "0.37.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "38dce714421fe616e29ddf65dc5e60d16fa8e158"
+                "reference": "ad80d80e18f0cda981e1bddbf0841a805632caa0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/38dce714421fe616e29ddf65dc5e60d16fa8e158",
-                "reference": "38dce714421fe616e29ddf65dc5e60d16fa8e158",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ad80d80e18f0cda981e1bddbf0841a805632caa0",
+                "reference": "ad80d80e18f0cda981e1bddbf0841a805632caa0",
                 "shasum": ""
             },
             "require": {
@@ -2812,9 +2812,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.37.0-rc.6"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.37.9"
             },
-            "time": "2024-02-27T07:49:06+00:00"
+            "time": "2024-03-24T05:40:55+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -3641,65 +3641,6 @@
                 "source": "https://github.com/phpstan/phpdoc-parser/tree/1.27.0"
             },
             "time": "2024-03-21T13:14:53+00:00"
-        },
-        {
-            "name": "phpstan/phpstan",
-            "version": "1.8.11",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "46e223dd68a620da18855c23046ddb00940b4014"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/46e223dd68a620da18855c23046ddb00940b4014",
-                "reference": "46e223dd68a620da18855c23046ddb00940b4014",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^7.2|^8.0"
-            },
-            "conflict": {
-                "phpstan/phpstan-shim": "*"
-            },
-            "bin": [
-                "phpstan",
-                "phpstan.phar"
-            ],
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "bootstrap.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "PHPStan - PHP Static Analysis Tool",
-            "keywords": [
-                "dev",
-                "static analysis"
-            ],
-            "support": {
-                "issues": "https://github.com/phpstan/phpstan/issues",
-                "source": "https://github.com/phpstan/phpstan/tree/1.8.11"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/ondrejmirtes",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/phpstan",
-                    "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/phpstan/phpstan",
-                    "type": "tidelift"
-                }
-            ],
-            "time": "2022-10-24T15:45:13+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -5562,19 +5503,7 @@
         }
     ],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/abuse": 20,
-        "utopia-php/analytics": 20,
-        "utopia-php/audit": 20,
-        "utopia-php/database": 20,
-        "utopia-php/domains": 20,
-        "utopia-php/framework": 20,
-        "utopia-php/orchestration": 20,
-        "utopia-php/platform": 20,
-        "utopia-php/queue": 20,
-        "utopia-php/storage": 20,
-        "appwrite/sdk-generator": 5
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5596,7 +5525,7 @@
         "ext-fileinfo": "*"
     },
     "platform-overrides": {
-        "php": "8.2"
+        "php": "8.3"
     },
     "plugin-api-version": "2.6.0"
 }

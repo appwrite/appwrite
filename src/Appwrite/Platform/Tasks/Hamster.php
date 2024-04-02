@@ -9,6 +9,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Http\Http;
 use Utopia\Platform\Action;
+use Utopia\System\System;
 
 class Hamster extends Action
 {
@@ -33,9 +34,9 @@ class Hamster extends Action
         Console::title('Cloud Hamster V1');
         Console::success(APP_NAME . ' cloud hamster process has started');
 
-        $sleep = (int) Http::getEnv('_APP_HAMSTER_INTERVAL', '30'); // 30 seconds (by default)
+        $sleep = (int) System::getEnv('_APP_HAMSTER_INTERVAL', '30'); // 30 seconds (by default)
 
-        $jobInitTime = Http::getEnv('_APP_HAMSTER_TIME', '22:00'); // (hour:minutes)
+        $jobInitTime = System::getEnv('_APP_HAMSTER_TIME', '22:00'); // (hour:minutes)
 
         $now = new \DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));

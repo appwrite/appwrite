@@ -29,6 +29,11 @@ return [
         'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
         'code' => 403,
     ],
+    Exception::GENERAL_API_DISABLED => [
+        'name' => Exception::GENERAL_API_DISABLED,
+        'description' => 'The requested API is disabled. You can enable the API from the Appwrite console.',
+        'code' => 403,
+    ],
     Exception::GENERAL_SERVICE_DISABLED => [
         'name' => Exception::GENERAL_SERVICE_DISABLED,
         'description' => 'The requested service is disabled. You can enable the service from the Appwrite console.',

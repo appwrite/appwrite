@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\Services\VCS;
 
-use Utopia\Http\Http;
+use Utopia\System\System;
 
 trait VCSBase
 {
@@ -10,7 +10,7 @@ trait VCSBase
     {
         parent::setUp();
 
-        if (Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY') === 'disabled') {
+        if (System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY') === 'disabled') {
             $this->markTestSkipped('VCS is not enabled.');
         }
     }

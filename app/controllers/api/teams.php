@@ -414,7 +414,7 @@ Http::post('/v1/teams/:teamId/memberships')
         $isPrivilegedUser = Auth::isPrivilegedUser($auth->getRoles());
         $isAppUser = Auth::isAppUser($auth->getRoles());
 
-        if (!$isPrivilegedUser && !$isAppUser && empty(Http::getEnv('_APP_SMTP_HOST'))) {
+        if (!$isPrivilegedUser && !$isAppUser && empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED);
         }
 
@@ -577,8 +577,8 @@ Http::post('/v1/teams/:teamId/memberships')
                 $smtp = $project->getAttribute('smtp', []);
                 $smtpEnabled = $smtp['enabled'] ?? false;
 
-                $senderEmail = Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-                $senderName = Http::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+                $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
                 $replyTo = "";
 
                 if ($smtpEnabled) {
@@ -639,7 +639,7 @@ Http::post('/v1/teams/:teamId/memberships')
                     ->trigger()
                 ;
             } elseif (!empty($phone)) {
-                if (empty(Http::getEnv('_APP_SMS_PROVIDER'))) {
+                if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
 
@@ -720,7 +720,7 @@ Http::get('/v1/teams/:teamId/memberships')
         }
 
         // Set internal queries
-        $queries[] = Query::equal('teamId', [$teamId]);
+        $queries[] = Query::equal('teamInternalId', [$team->getInternalId()]);
 
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
@@ -951,14 +951,14 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
-        if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
-        }
-
         $team = $auth->skip(fn () => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
@@ -973,7 +973,7 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             $user->setAttributes($dbForProject->getDocument('users', $userId)->getArrayCopy()); // Get user
         }
 
-        if ($membership->getAttribute('userId') !== $user->getId()) {
+        if ($membership->getAttribute('userInternalId') !== $user->getInternalId()) {
             throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
         }
 
@@ -1080,10 +1080,6 @@ Http::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_INVITE_NOT_FOUND);
         }
 
-        if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
-        }
-
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
         if ($user->isEmpty()) {
@@ -1094,6 +1090,10 @@ Http::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         try {

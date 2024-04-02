@@ -10,7 +10,7 @@ use Tests\E2E\Scopes\SideNone;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Http\Http;
+use Utopia\System\System;
 
 class AbuseTest extends Scope
 {
@@ -21,7 +21,7 @@ class AbuseTest extends Scope
     {
         parent::setUp();
 
-        if (Http::getEnv('_APP_OPTIONS_ABUSE') === 'disabled') {
+        if (System::getEnv('_APP_OPTIONS_ABUSE') === 'disabled') {
             $this->markTestSkipped('Abuse is not enabled.');
         }
     }

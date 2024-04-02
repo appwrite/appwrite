@@ -1006,6 +1006,7 @@ services:
   #     - appwrite
   #   volumes:
   #     - appwrite-uploads:/storage/uploads
+
   # Dev Tools Start ------------------------------------------------------------------------------------------
   #
   # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack

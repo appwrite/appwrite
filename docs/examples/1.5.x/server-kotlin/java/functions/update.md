@@ -12,7 +12,7 @@ Functions functions = new Functions(client);
 functions.update(
     "<FUNCTION_ID>", // functionId
     "<NAME>", // name
-    .NODE145, // runtime (optional)
+    .NODE_14_5, // runtime (optional)
     listOf("any"), // execute (optional)
     listOf(), // events (optional)
     "", // schedule (optional)

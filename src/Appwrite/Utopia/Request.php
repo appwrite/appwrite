@@ -8,7 +8,10 @@ use Utopia\Http\Route;
 
 class Request extends SwooleRequest
 {
-    private static ?Filter $filter = null;
+    /**
+     * @var array<Filter>
+     */
+    private array $filters = [];
     private static ?Route $route = null;
 
     /**
@@ -26,35 +29,48 @@ class Request extends SwooleRequest
     {
         $parameters = parent::getParams();
 
-        if (self::hasFilter() && self::hasRoute()) {
+        if ($this->hasFilters() && self::hasRoute()) {
             $method = self::getRoute()->getLabel('sdk.method', 'unknown');
             $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . $method;
-            $parameters = self::getFilter()->parse($parameters, $endpointIdentifier);
+
+            foreach ($this->getFilters() as $filter) {
+                $parameters = $filter->parse($parameters, $endpointIdentifier);
+            }
         }
 
         return $parameters;
     }
 
     /**
-     * Function to set a response filter
+     * Function to add a response filter, the order of filters are first in - first out.
      *
-     * @param Filter|null $filter Filter the response filter to set
+     * @param Filter $filter the response filter to set
      *
      * @return void
      */
-    public static function setFilter(?Filter $filter): void
+    public function addFilter(Filter $filter): void
     {
-        self::$filter = $filter;
+        $this->filters[] = $filter;
     }
 
     /**
      * Return the currently set filter
      *
-     * @return Filter|null
+     * @return array<Filter>
      */
-    public static function getFilter(): ?Filter
+    public function getFilters(): array
     {
-        return self::$filter;
+        return $this->filters;
+    }
+
+    /**
+     * Reset filters
+     *
+     * @return void
+     */
+    public function resetFilters(): void
+    {
+        $this->filters = [];
     }
 
     /**
@@ -62,9 +78,9 @@ class Request extends SwooleRequest
      *
      * @return bool
      */
-    public static function hasFilter(): bool
+    public function hasFilters(): bool
     {
-        return self::$filter != null;
+        return !empty($this->filters);
     }
 
     /**
@@ -96,7 +112,7 @@ class Request extends SwooleRequest
      */
     public static function hasRoute(): bool
     {
-        return self::$route != null;
+        return self::$route !== null;
     }
 
     /**
