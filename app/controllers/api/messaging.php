@@ -3819,7 +3819,7 @@ App::delete('/v1/messaging/messages/:messageId')
     ->desc('Delete message')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.delete')
-    ->label('audits.resource', 'message/{request.route.messageId}')
+    ->label('audits.resource', 'message/{request.messageId}')
     ->label('event', 'messages.[messageId].delete')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -3832,8 +3832,9 @@ App::delete('/v1/messaging/messages/:messageId')
     ->param('messageId', '', new UID(), 'Message ID.')
     ->inject('dbForProject')
     ->inject('dbForConsole')
+    ->inject('queueForEvents')
     ->inject('response')
-    ->action(function (string $messageId, Database $dbForProject, Database $dbForConsole, Response $response) {
+    ->action(function (string $messageId, Database $dbForProject, Database $dbForConsole, Event $queueForEvents, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3867,6 +3868,10 @@ App::delete('/v1/messaging/messages/:messageId')
         }
 
         $dbForProject->deleteDocument('messages', $message->getId());
+
+        $queueForEvents
+            ->setParam('messageId', $message->getId())
+            ->setPayload($response->output($message, Response::MODEL_MESSAGE));
 
         $response->noContent();
     });
