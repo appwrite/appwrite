@@ -41,6 +41,7 @@ use Utopia\Http\Validator\Assoc;
 use Utopia\Http\Validator\Host;
 use Utopia\Http\Validator\Text;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 
 Http::post('/v1/teams')
     ->desc('Create team')
