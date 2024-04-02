@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "78b9cd75952805a2347578f4fcb96add",
+    "content-hash": "e29166ee5ac565b8a7ad696a46588abc",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1719,17 +1719,17 @@
             "time": "2023-11-02T12:01:43+00:00"
         },
         {
-            "name": "utopia-php/framework",
-            "version": "0.33.6",
+            "name": "utopia-php/fetch",
+            "version": "0.1.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/http.git",
-                "reference": "8fe57da0cecd57e3b17cd395b4a666a24f4c07a6"
+                "url": "https://github.com/utopia-php/fetch.git",
+                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/8fe57da0cecd57e3b17cd395b4a666a24f4c07a6",
-                "reference": "8fe57da0cecd57e3b17cd395b4a666a24f4c07a6",
+                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/2fa214b9262acd1a3583515a364da4f35929d5c5",
+                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5",
                 "shasum": ""
             },
             "require": {
@@ -1801,9 +1801,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.6"
+                "source": "https://github.com/utopia-php/http/tree/feat-framework-v2"
             },
-            "time": "2024-03-21T18:10:57+00:00"
+            "time": "2024-04-01T21:28:29+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -3641,6 +3641,65 @@
                 "source": "https://github.com/phpstan/phpdoc-parser/tree/1.27.0"
             },
             "time": "2024-03-21T13:14:53+00:00"
+        },
+        {
+            "name": "phpstan/phpstan",
+            "version": "1.8.11",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpstan/phpstan.git",
+                "reference": "46e223dd68a620da18855c23046ddb00940b4014"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/46e223dd68a620da18855c23046ddb00940b4014",
+                "reference": "46e223dd68a620da18855c23046ddb00940b4014",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2|^8.0"
+            },
+            "conflict": {
+                "phpstan/phpstan-shim": "*"
+            },
+            "bin": [
+                "phpstan",
+                "phpstan.phar"
+            ],
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHPStan - PHP Static Analysis Tool",
+            "keywords": [
+                "dev",
+                "static analysis"
+            ],
+            "support": {
+                "issues": "https://github.com/phpstan/phpstan/issues",
+                "source": "https://github.com/phpstan/phpstan/tree/1.8.11"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/ondrejmirtes",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/phpstan",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/phpstan/phpstan",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-10-24T15:45:13+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -5503,7 +5562,18 @@
         }
     ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/abuse": 20,
+        "utopia-php/analytics": 20,
+        "utopia-php/audit": 20,
+        "utopia-php/database": 20,
+        "utopia-php/domains": 20,
+        "utopia-php/framework": 20,
+        "utopia-php/orchestration": 20,
+        "utopia-php/platform": 20,
+        "utopia-php/queue": 20,
+        "utopia-php/storage": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
