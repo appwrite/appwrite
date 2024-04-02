@@ -65,6 +65,11 @@ use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Http\Request;
 use Utopia\Http\Response;
+use Utopia\Http\Validator\Hostname;
+use Utopia\Http\Validator\IP;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\URL;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
@@ -82,11 +87,6 @@ use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
-use Utopia\Http\Validator\Hostname;
-use Utopia\Http\Validator\IP;
-use Utopia\Http\Validator\Range;
-use Utopia\Http\Validator\URL;
-use Utopia\Http\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
 const APP_NAME = 'Appwrite';
@@ -116,8 +116,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 405;
-const APP_VERSION_STABLE = '1.5.4';
+const APP_CACHE_BUSTER = 331;
+const APP_VERSION_STABLE = '1.5.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -262,7 +262,7 @@ if (!Http::isProduction()) {
  */
 Config::load('events', __DIR__ . '/config/events.php');
 Config::load('auth', __DIR__ . '/config/auth.php');
-Config::load('apis', __DIR__ . '/config/apis.php');  // List of APIs
+Config::load('apis', __DIR__ . '/config/apis.php');
 Config::load('errors', __DIR__ . '/config/errors.php');
 Config::load('oAuthProviders', __DIR__ . '/config/oAuthProviders.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
@@ -744,7 +744,7 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => 'mariadb',
+        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mariadb'),
         'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
         'port' => System::getEnv('_APP_DB_PORT', '3306'),
         'user' => System::getEnv('_APP_DB_USER', ''),

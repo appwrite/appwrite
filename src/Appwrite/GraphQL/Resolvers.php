@@ -270,7 +270,7 @@ class Resolvers
         try {
             $route = $utopia->match($request, fresh: true);
 
-            $utopia->execute($route, $request, xx);
+            $utopia->execute($route, $request, 'xx');
         } catch (\Throwable $e) {
             if ($beforeReject) {
                 $e = $beforeReject($e);
