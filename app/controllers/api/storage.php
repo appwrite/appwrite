@@ -16,11 +16,8 @@ use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -637,7 +634,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 if (!$validator->isValid($bucket->getCreate())) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
-                $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+                $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
             }
         } else {
             if ($file->isEmpty()) {
@@ -676,7 +673,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 if (!$validator->isValid($bucket->getCreate())) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
-                $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+                $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
             }
         }
 

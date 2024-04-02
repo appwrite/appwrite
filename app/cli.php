@@ -6,7 +6,6 @@ require_once __DIR__ . '/controllers/general.php';
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
-use Appwrite\Event\Hamster;
 use Appwrite\Platform\Appwrite;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;

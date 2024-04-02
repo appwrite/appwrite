@@ -4,6 +4,8 @@ use Appwrite\Extend\Exception;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 use chillerlan\QRCode\QROptions;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -14,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
+use Utopia\Fetch\Client;
 use Utopia\Image\Image;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
@@ -24,9 +27,6 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
-use Utopia\Fetch\Client;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "78b9cd75952805a2347578f4fcb96add",
+    "content-hash": "975de4e9a34e72235198c4fd448539bd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1718,6 +1718,45 @@
             "time": "2023-11-02T12:01:43+00:00"
         },
         {
+            "name": "utopia-php/fetch",
+            "version": "0.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/fetch.git",
+                "reference": "1423c0ee3eef944d816ca6e31706895b585aea82"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/1423c0ee3eef944d816ca6e31706895b585aea82",
+                "reference": "1423c0ee3eef944d816ca6e31706895b585aea82",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.5.0",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Fetch\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library that provides an interface for making HTTP Requests.",
+            "support": {
+                "issues": "https://github.com/utopia-php/fetch/issues",
+                "source": "https://github.com/utopia-php/fetch/tree/0.2.1"
+            },
+            "time": "2024-03-18T11:50:59+00:00"
+        },
+        {
             "name": "utopia-php/framework",
             "version": "0.33.6",
             "source": {
@@ -2337,16 +2376,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.18.3",
+            "version": "0.18.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "faa0279519ac14f3501e8b138e0865ad9d12bff6"
+                "reference": "94ab8758fabcefee5c5fa723616e45719833f922"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/faa0279519ac14f3501e8b138e0865ad9d12bff6",
-                "reference": "faa0279519ac14f3501e8b138e0865ad9d12bff6",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/94ab8758fabcefee5c5fa723616e45719833f922",
+                "reference": "94ab8758fabcefee5c5fa723616e45719833f922",
                 "shasum": ""
             },
             "require": {
@@ -2386,9 +2425,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.18.3"
+                "source": "https://github.com/utopia-php/storage/tree/0.18.4"
             },
-            "time": "2023-12-31T11:45:12+00:00"
+            "time": "2024-04-02T08:24:09+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -2899,16 +2938,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.15.0",
+            "version": "v1.15.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "c52de679b3ac01207016c179d7ce173e4be128c4"
+                "reference": "5f288b5e79938cc72f5c298d384e639de87507c6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/c52de679b3ac01207016c179d7ce173e4be128c4",
-                "reference": "c52de679b3ac01207016c179d7ce173e4be128c4",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/5f288b5e79938cc72f5c298d384e639de87507c6",
+                "reference": "5f288b5e79938cc72f5c298d384e639de87507c6",
                 "shasum": ""
             },
             "require": {
@@ -2919,13 +2958,13 @@
                 "php": "^8.1.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.49.0",
-                "illuminate/view": "^10.43.0",
-                "larastan/larastan": "^2.8.1",
+                "friendsofphp/php-cs-fixer": "^3.52.1",
+                "illuminate/view": "^10.48.4",
+                "larastan/larastan": "^2.9.2",
                 "laravel-zero/framework": "^10.3.0",
-                "mockery/mockery": "^1.6.7",
+                "mockery/mockery": "^1.6.11",
                 "nunomaduro/termwind": "^1.15.1",
-                "pestphp/pest": "^2.33.6"
+                "pestphp/pest": "^2.34.5"
             },
             "bin": [
                 "builds/pint"
@@ -2961,7 +3000,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2024-03-26T16:40:24+00:00"
+            "time": "2024-04-02T14:28:47+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -5402,45 +5441,6 @@
                 }
             ],
             "time": "2023-11-21T18:54:41+00:00"
-        },
-        {
-            "name": "utopia-php/fetch",
-            "version": "0.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/fetch.git",
-                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/2fa214b9262acd1a3583515a364da4f35929d5c5",
-                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.5.0",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^9.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Fetch\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple library that provides an interface for making HTTP Requests.",
-            "support": {
-                "issues": "https://github.com/utopia-php/fetch/issues",
-                "source": "https://github.com/utopia-php/fetch/tree/0.1.0"
-            },
-            "time": "2023-10-10T11:58:32+00:00"
         }
     ],
     "aliases": [],
@@ -5469,5 +5469,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
