@@ -1069,8 +1069,6 @@ class FunctionsCustomServerTest extends Scope
             'async' => false
         ]);
 
-        var_dump($execution['body']);
-
         $executionId = $execution['body']['$id'] ?? '';
         $output = json_decode($execution['body']['responseBody'], true);
 
