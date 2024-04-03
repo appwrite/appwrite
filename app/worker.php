@@ -232,19 +232,13 @@ try {
      * Any worker can be configured with the following env vars:
      * - _APP_WORKERS_NUM           The total number of worker processes
      * - _APP_WORKER_PER_CORE       The number of worker processes per core (ignored if _APP_WORKERS_NUM is set)
-     * - _APP_QUEUE_NAME  The name of the queue to read for database events
+     * - _APP_QUEUE_NAME            The name of the queue to read for database events
      */
-    if ($workerName === 'databases') {
-        $queueName = App::getEnv('_APP_QUEUE_NAME', 'database_db_main');
-    } else {
-        $queueName = App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
-    }
-
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => App::getEnv('_APP_WORKERS_NUM', 1),
         'connection' => $pools->get('queue')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
-        'queueName' => $queueName
+        'queueName' => App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName)),
     ]);
 } catch (\Exception $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
