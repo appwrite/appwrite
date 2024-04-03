@@ -213,29 +213,29 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
-        $payload = [];
-        foreach ($stats as $projectId => $value) {
-            $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
-        }
-        if (empty($payload) || empty($statsDocument)) {
-            return;
-        }
+    // Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
+    //     $payload = [];
+    //     foreach ($stats as $projectId => $value) {
+    //         $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
+    //     }
+    //     if (empty($payload) || empty($statsDocument)) {
+    //         return;
+    //     }
 
-        try {
-            $database = getConsoleDB();
+    //     try {
+    //         $database = getConsoleDB();
 
-            $statsDocument
-                ->setAttribute('timestamp', DateTime::now())
-                ->setAttribute('value', json_encode($payload));
+    //         $statsDocument
+    //             ->setAttribute('timestamp', DateTime::now())
+    //             ->setAttribute('value', json_encode($payload));
 
-            Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
-        } catch (Throwable $th) {
-            call_user_func($logError, $th, "updateWorkerDocument");
-        } finally {
-            $register->get('pools')->reclaim();
-        }
-    });
+    //         Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+    //     } catch (Throwable $th) {
+    //         call_user_func($logError, $th, "updateWorkerDocument");
+    //     } finally {
+    //         $register->get('pools')->reclaim();
+    //     }
+    // });
 });
 
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
