@@ -5,6 +5,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
+use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
@@ -21,6 +22,11 @@ use Utopia\Pools\Group;
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
 $workerNumber = swoole_cpu_num() * intval(Http::getEnv('_APP_WORKER_PER_CORE', 6));
+
+// Unlimited memory limit to handle as many coroutines/requests as possible
+ini_set('memory_limit', '-1');
+
+Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
 include __DIR__ . '/controllers/general.php';
 
