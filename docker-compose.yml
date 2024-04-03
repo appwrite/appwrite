@@ -378,7 +378,6 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_WORKERS_NUM
-      - _APP_QUEUE_NAME
 
   appwrite-worker-builds:
     entrypoint: worker-builds

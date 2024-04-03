@@ -9,7 +9,7 @@ use Utopia\Queue\Connection;
 
 class Event
 {
-    public const DATABASE_QUEUE_NAME = 'v1-database';
+    public const DATABASE_QUEUE_NAME = 'v1-databases';
     public const DATABASE_CLASS_NAME = 'DatabaseV1';
 
     public const DELETE_QUEUE_NAME = 'v1-deletes';
