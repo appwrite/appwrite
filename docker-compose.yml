@@ -751,7 +751,7 @@ services:
     hostname: appwrite-executor
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.5
+    image: openruntimes/executor:0.5.0
     restart: unless-stopped
     networks:
       - appwrite
