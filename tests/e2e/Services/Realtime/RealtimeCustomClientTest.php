@@ -290,7 +290,6 @@ class RealtimeCustomClientTest extends Scope
 
         $this->assertEquals($name, $response['data']['payload']['name']);
 
-
         /**
          * Test Account Password Event
          */
@@ -376,6 +375,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertCount(2, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertArrayNotHasKey('secret', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
         $this->assertContains("users.{$userId}.verification.{$verificationId}.create", $response['data']['events']);
