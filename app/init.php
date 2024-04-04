@@ -888,7 +888,7 @@ App::setResource('queue', function (Group $pools) {
 
     App::setResource('connectionForQueue', function () use ($connection) {
         return $connection;
-    }, []);
+    });
 
     return $connection->getResource();
 }, ['pools']);
@@ -1134,16 +1134,16 @@ App::setResource('console', function () {
 
 App::setResource('connectionForProject', function () {
     return null;
-}, []);
+});
 App::setResource('connectionForConsole', function () {
     return null;
-}, []);
+});
 App::setResource('connectionForQueue', function () {
     return null;
-}, []);
+});
 App::setResource('connectionsForCache', function () {
     return [];
-}, []);
+});
 
 App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
@@ -1152,12 +1152,11 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
 
     $connection = $pools
         ->get($project->getAttribute('database'))
-        ->pop()
-    ;
+        ->pop();
 
     App::setResource('connectionForProject', function () use ($connection) {
         return $connection;
-    }, []);
+    });
 
     $dbAdapter = $connection->getResource();
 
@@ -1179,7 +1178,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 
     App::setResource('connectionForConsole', function () use ($connection) {
         return $connection;
-    }, []);
+    });
 
     $dbAdapter = $connection->getResource();
 
@@ -1195,7 +1194,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 }, ['pools', 'cache']);
 
 App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -1234,8 +1233,6 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         return $database;
     };
-
-    return $getProjectDB;
 }, ['pools', 'dbForConsole', 'cache']);
 
 App::setResource('cache', function (Group $pools) {
