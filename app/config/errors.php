@@ -31,7 +31,7 @@ return [
     Exception::GENERAL_SERVICE_DISABLED => [
         'name' => Exception::GENERAL_SERVICE_DISABLED,
         'description' => 'The requested service is disabled. You can enable the service from the Appwrite console.',
-        'code' => 503,
+        'code' => 403,
     ],
     Exception::GENERAL_UNAUTHORIZED_SCOPE => [
         'name' => Exception::GENERAL_UNAUTHORIZED_SCOPE,
@@ -86,7 +86,7 @@ return [
     Exception::GENERAL_PROTOCOL_UNSUPPORTED => [
         'name' => Exception::GENERAL_PROTOCOL_UNSUPPORTED,
         'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
-        'code' => 500,
+        'code' => 426,
     ],
     Exception::GENERAL_CODES_DISABLED => [
         'name' => Exception::GENERAL_CODES_DISABLED,
@@ -102,6 +102,11 @@ return [
         'name' => Exception::GENERAL_NOT_IMPLEMENTED,
         'description' => 'This method was not fully implemented yet. If you believe this is a mistake, please upgrade your Appwrite server version.',
         'code' => 405,
+    ],
+    Exception::GENERAL_BAD_REQUEST => [
+        'name' => Exception::GENERAL_BAD_REQUEST,
+        'description' => 'There was an error processing your request. Please check the inputs and try again.',
+        'code' => 400,
     ],
 
     /** User Errors */
@@ -209,6 +214,7 @@ return [
         'name' => Exception::USER_AUTH_METHOD_UNSUPPORTED,
         'description' => 'The requested authentication method is either disabled or unsupported. Please check the supported authentication methods in the Appwrite console.',
         'code' => 501,
+        'publish' => false,
     ],
     Exception::USER_PHONE_ALREADY_EXISTS => [
         'name' => Exception::USER_PHONE_ALREADY_EXISTS,
@@ -239,6 +245,21 @@ return [
         'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
+    ],
+    Exception::USER_EMAIL_ALREADY_VERIFIED => [
+        'name' => Exception::USER_EMAIL_ALREADY_VERIFIED,
+        'description' => 'User email is already verified',
+        'code' => 409,
+    ],
+    Exception::USER_PHONE_ALREADY_VERIFIED => [
+        'name' => Exception::USER_PHONE_ALREADY_VERIFIED,
+        'description' => 'User phone is already verified',
+        'code' => 409
+    ],
+    Exception::USER_DELETION_PROHIBITED => [
+        'name' => Exception::USER_DELETION_PROHIBITED,
+        'description' => 'User deletion is not allowed for users with active memberships. Please delete all confirmed memberships before deleting the account.',
+        'code' => 400
     ],
 
     /** Teams */
@@ -355,7 +376,7 @@ return [
     ],
     Exception::STORAGE_BUCKET_ALREADY_EXISTS => [
         'name' => Exception::STORAGE_BUCKET_ALREADY_EXISTS,
-        'description' => 'A storage bucket with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'A storage bucket with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::STORAGE_BUCKET_NOT_FOUND => [
@@ -479,7 +500,7 @@ return [
     ],
     Exception::COLLECTION_ALREADY_EXISTS => [
         'name' => Exception::COLLECTION_ALREADY_EXISTS,
-        'description' => 'A collection with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'A collection with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::COLLECTION_LIMIT_EXCEEDED => [
@@ -511,7 +532,7 @@ return [
     ],
     Exception::DOCUMENT_ALREADY_EXISTS => [
         'name' => Exception::DOCUMENT_ALREADY_EXISTS,
-        'description' => 'Document with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::DOCUMENT_UPDATE_CONFLICT => [
@@ -553,7 +574,7 @@ return [
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
         'name' => Exception::ATTRIBUTE_ALREADY_EXISTS,
-        'description' => 'Attribute with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.',
         'code' => 409,
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
@@ -585,7 +606,7 @@ return [
     ],
     Exception::INDEX_ALREADY_EXISTS => [
         'name' => Exception::INDEX_ALREADY_EXISTS,
-        'description' => 'Index with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'Index with the requested key already exists. Try again with a different key.',
         'code' => 409,
     ],
     Exception::INDEX_INVALID => [
@@ -602,7 +623,7 @@ return [
     ],
     Exception::PROJECT_ALREADY_EXISTS => [
         'name' => Exception::PROJECT_ALREADY_EXISTS,
-        'description' => 'Project with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'Project with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::PROJECT_UNKNOWN => [
@@ -618,7 +639,7 @@ return [
     Exception::PROJECT_PROVIDER_UNSUPPORTED => [
         'name' => Exception::PROJECT_PROVIDER_UNSUPPORTED,
         'description' => 'The chosen OAuth provider is unsupported. Please check the <a href="/docs/client/account?sdk=web-default#accountCreateOAuth2Session">Create OAuth2 Session docs</a> for the complete list of supported OAuth providers.',
-        'code' => 501,
+        'code' => 400,
     ],
     Exception::PROJECT_INVALID_SUCCESS_URL => [
         'name' => Exception::PROJECT_INVALID_SUCCESS_URL,
@@ -669,6 +690,7 @@ return [
         'name' => Exception::RULE_VERIFICATION_FAILED,
         'description' => 'Domain verification failed. Please check if your DNS records are correct and try again.',
         'code' => 401,
+        'publish' => true
     ],
     Exception::PROJECT_SMTP_CONFIG_INVALID => [
         'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
@@ -731,5 +753,47 @@ return [
         'name' => Exception::MIGRATION_IN_PROGRESS,
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
+    ],
+
+    /** Realtime */
+    Exception::REALTIME_MESSAGE_FORMAT_INVALID => [
+        'name' => Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+        'description' => 'Message format is not valid.',
+        'code' => 1003,
+    ],
+    Exception::REALTIME_POLICY_VIOLATION => [
+        'name' => Exception::REALTIME_POLICY_VIOLATION,
+        'description' => 'Policy violation.',
+        'code' => 1008,
+    ],
+    Exception::REALTIME_TOO_MANY_MESSAGES => [
+        'name' => Exception::REALTIME_TOO_MANY_MESSAGES,
+        'description' => 'Too many messages.',
+        'code' => 1013,
+    ],
+    Exception::MIGRATION_PROVIDER_ERROR => [
+        'name' => Exception::MIGRATION_PROVIDER_ERROR,
+        'description' => 'An error occurred on the provider\'s side. Please try again later.',
+        'code' => 400,
+    ],
+
+    /** Health */
+    Exception::HEALTH_QUEUE_SIZE_EXCEEDED => [
+        'name' => Exception::HEALTH_QUEUE_SIZE_EXCEEDED,
+        'description' => 'Queue size threshold hit.',
+        'code' => 503,
+        'publish' => false
+    ],
+
+    Exception::HEALTH_CERTIFICATE_EXPIRED => [
+        'name' => Exception::HEALTH_CERTIFICATE_EXPIRED,
+        'description' => 'The SSL certificate for the specified domain has expired and is no longer valid.',
+        'code' => 404,
+    ],
+
+    Exception::HEALTH_INVALID_HOST => [
+        'name' => Exception::HEALTH_INVALID_HOST,
+        'description' => 'Failed to establish a connection to the specified domain. Please verify the domain name and ensure that the server is running and accessible.',
+        'code' => 404,
     ],
 ];

@@ -6,6 +6,7 @@ require_once __DIR__ . '/controllers/general.php';
 use Appwrite\Event\Delete;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
+use Appwrite\Event\Hamster;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
 use Utopia\Database\Validator\Authorization;
@@ -61,7 +62,11 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
                 ->getResource();
 
             $dbForConsole = new Database($dbAdapter, $cache);
-            $dbForConsole->setNamespace('_console');
+
+            $dbForConsole
+                ->setNamespace('_console')
+                ->setMetadata('host', \gethostname())
+                ->setMetadata('project', 'console');
 
             // Ensure tables exist
             $collections = Config::getParam('collections', [])['console'];
@@ -111,35 +116,14 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $databases[$databaseName] = $database;
 
-        $database->setNamespace('_' . $project->getInternalId());
+        $database
+            ->setNamespace('_' . $project->getInternalId())
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId());
 
         return $database;
     };
 }, ['pools', 'dbForConsole', 'cache']);
-
-CLI::setResource('influxdb', function (Registry $register) {
-    $client = $register->get('influxdb'); /** @var InfluxDB\Client $client */
-    $attempts = 0;
-    $max = 10;
-    $sleep = 1;
-
-    do { // check if telegraf database is ready
-        try {
-            $attempts++;
-            $database = $client->selectDB('telegraf');
-            if (in_array('telegraf', $client->listDatabases())) {
-                break; // leave the do-while if successful
-            }
-        } catch (\Throwable $th) {
-            Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
-            if ($attempts >= $max) {
-                throw new \Exception('InfluxDB database not ready yet');
-            }
-            sleep($sleep);
-        }
-    } while ($attempts < $max);
-    return $database;
-}, ['register']);
 
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();

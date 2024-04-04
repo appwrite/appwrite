@@ -1,3 +1,103 @@
+# Version 1.4.14
+
+## Changes
+- New usage metrics collection flow [#7005](https://github.com/appwrite/appwrite/pull/7005)
+  - Deprecated influxdb, telegraf containers and removed all of their occurrences from the code.
+  - Removed _APP_INFLUXDB_HOST, _APP_INFLUXDB_PORT, _APP_STATSD_HOST, _APP_STATSD_PORT env variables.
+  - Removed usage labels dependency.
+  - Dropped type attribute from stats collection.
+  - Usage metrics are processed via new usage worker.
+  - updated Metric names.
+  
+# Version 1.4.13
+
+## Notable changes
+
+* Change enum size validation in update controller [#7164](https://github.com/appwrite/appwrite/pull/7164)
+* Bump console to version 3.2.8 in [#7167](https://github.com/appwrite/appwrite/pull/7167)
+
+## Bug fixes
+
+* Fix error after adding bigger enum [#7162](https://github.com/appwrite/appwrite/pull/7162)
+* Add chunkId to abuse key to prevent rate limit for SDKs [#7154](https://github.com/appwrite/appwrite/pull/7154)
+
+## Miscellaneous
+
+* Fix enum test case [#7163](https://github.com/appwrite/appwrite/pull/7163)
+* Add flag to send logs to logger [#7155](https://github.com/appwrite/appwrite/pull/7155)
+* Add a CI task to validate composer file and lock [#7142](https://github.com/appwrite/appwrite/pull/7142)
+
+# Version 1.4.12
+
+## Miscellaneous
+* Bump console to version 3.2.7 [#7148](https://github.com/appwrite/appwrite/pull/7148)
+* Chore update database to 0.45.2 [#7138](https://github.com/appwrite/appwrite/pull/7138)
+* Implement queue thresholds for the health API [#7123](https://github.com/appwrite/appwrite/pull/7123)
+* Add Authorization::skip to the usage worker [#7124](https://github.com/appwrite/appwrite/pull/7124)
+
+## Bug fixes
+* fix: use queueForDeletes in git installation delete endpoint [#7140](https://github.com/appwrite/appwrite/pull/7140)
+* fix: patch script, make errors silent [#7134](https://github.com/appwrite/appwrite/pull/7134)
+* fix: repositories recreation script [#7133](https://github.com/appwrite/appwrite/pull/7133)
+* fix: Only delete repositories linked to the particular project [#7131](https://github.com/appwrite/appwrite/pull/7131)
+
+# Version 1.4.11
+
+## Miscellaneous
+
+* Update database by @abnegate in [#7111](https://github.com/appwrite/appwrite/pull/7111)
+
+# Version 1.4.10
+
+## Bug fixes
+* Handle cases where password history could contain NULLs [#7092](https://github.com/appwrite/appwrite/pull/7092)
+* Missing functionId error on create execution [#7091](https://github.com/appwrite/appwrite/pull/7091)
+* Ensure usage endpoints don't throw 500 when usage is disabled [#7087](https://github.com/appwrite/appwrite/pull/7087)
+* Missing sessionId error when deleting all user sessions [#7085](https://github.com/appwrite/appwrite/pull/7085)
+* Domain validation in Create Proxy rule results in 500 error [#7084](https://github.com/appwrite/appwrite/pull/7084)
+* Fix optional services [#7078](https://github.com/appwrite/appwrite/pull/7078)
+* Fix regression from worker refactor [#7074](https://github.com/appwrite/appwrite/pull/7074)
+* Use getQueueSize() in the Health service's get X queue endpoints [#7073](https://github.com/appwrite/appwrite/pull/7073)
+* Delete linked VCS repos and comments [#7066](https://github.com/appwrite/appwrite/pull/7066)
+
+
+# Version 1.4.9
+
+## Bug fixes
+
+* Fix 400 error on function domain execution in [#7059](https://github.com/appwrite/appwrite/pull/7059)
+
+# Version 1.4.8
+
+## Notable changes
+
+* Fix certificate emails and add support for variables in email template subject in [#6495](https://github.com/appwrite/appwrite/)pull/6495
+* Bump console to version 3.2.5 in [#7027](https://github.com/appwrite/appwrite/pull/7027)
+* Bump utopia database and storage versions in [#7002](https://github.com/appwrite/appwrite/pull/7002)
+
+## Bug fixes
+
+* Fixes cookie headers not being passed properly by router in [#7024](https://github.com/appwrite/appwrite/pull/7024)
+* Fix permission problem in deletes worker in [#7013](https://github.com/appwrite/appwrite/pull/7013)
+
+## Miscellaneous
+
+* Improve error handling in the realtime service in [#6998](https://github.com/appwrite/appwrite/pull/6998)
+* Update the error code for unsupported protocol in [#7006](https://github.com/appwrite/appwrite/pull/7006)
+* Improve CI tests by executing them in parallel in [#6198](https://github.com/appwrite/appwrite/pull/6198)
+* Update README.md to add links to orchestration tools in [#7011](https://github.com/appwrite/appwrite/pull/7011)
+* Update gitpod setup to install instead of update dependencies in [#6938](https://github.com/appwrite/appwrite/pull/6938)
+* Remove analytics from install script in [#7017](https://github.com/appwrite/appwrite/pull/7017)
+* Improve database logging in [#7003](https://github.com/appwrite/appwrite/pull/7003)
+* Add VCS tests in [#6894](https://github.com/appwrite/appwrite/pull/6894)
+* Improve error messages in [#6487](https://github.com/appwrite/appwrite/pull/6487)
+* Add command to delete orphaned projects in [#7015](https://github.com/appwrite/appwrite/pull/7015)
+
+# Version 1.4.7
+
+## Fixes
+- Fix missing body in async function execution in [#6988](https://github.com/appwrite/appwrite/pull/6988)
+
 # Version 1.4.6
 
 ## Changes

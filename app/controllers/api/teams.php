@@ -533,8 +533,8 @@ App::post('/v1/teams/:teamId/memberships')
             } catch (Duplicate $th) {
                 throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
-            $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
-            $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
+
+            Authorization::skip(fn() => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
             $dbForProject->deleteCachedDocument('users', $invitee->getId());
         } else {
@@ -555,7 +555,12 @@ App::post('/v1/teams/:teamId/memberships')
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
-                $message->setParam('{{body}}', $body);
+                $message
+                    ->setParam('{{body}}', $body, escapeHtml: false)
+                    ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
+                    ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
+                    ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
+                    ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"));
                 $body = $message->render();
 
                 $smtp = $project->getAttribute('smtp', []);
@@ -606,21 +611,12 @@ App::post('/v1/teams/:teamId/memberships')
 
                 $emailVariables = [
                     'owner' => $user->getAttribute('name'),
-                    'subject' => $subject,
-                    'hello' => $locale->getText("emails.invitation.hello"),
-                    'body' => $body,
-                    'footer' => $locale->getText("emails.invitation.footer"),
-                    'thanks' => $locale->getText("emails.invitation.thanks"),
-                    'signature' => $locale->getText("emails.invitation.signature"),
                     'direction' => $locale->getText('settings.direction'),
-                    'bg-body' => '#f7f7f7',
-                    'bg-content' => '#ffffff',
-                    'text-content' => '#000000',
-                    /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
+                    /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
                     'user' => $user->getAttribute('name'),
                     'team' => $team->getAttribute('name'),
-                    'project' => $projectName,
-                    'redirect' => $url
+                    'redirect' => $url,
+                    'project' => $projectName
                 ];
 
                 $queueForMails
@@ -645,6 +641,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $queueForMessaging
                     ->setRecipient($phone)
                     ->setMessage($message)
+                    ->setProject($project)
                     ->trigger();
             }
         }
@@ -697,7 +694,7 @@ App::get('/v1/teams/:teamId/memberships')
         }
 
         // Set internal queries
-        $queries[] = Query::equal('teamId', [$teamId]);
+        $queries[] = Query::equal('teamInternalId', [$team->getInternalId()]);
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
@@ -897,14 +894,14 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
-        if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
-        }
-
         $team = Authorization::skip(fn() => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
@@ -919,7 +916,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             $user->setAttributes($dbForProject->getDocument('users', $userId)->getArrayCopy()); // Get user
         }
 
-        if ($membership->getAttribute('userId') !== $user->getId()) {
+        if ($membership->getAttribute('userInternalId') !== $user->getInternalId()) {
             throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
         }
 
@@ -970,7 +967,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
+        Authorization::skip(fn() => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
@@ -1023,10 +1020,6 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_INVITE_NOT_FOUND);
         }
 
-        if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
-        }
-
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
         if ($user->isEmpty()) {
@@ -1039,19 +1032,15 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        try {
-            $dbForProject->deleteDocument('memberships', $membership->getId());
-        } catch (AuthorizationException $exception) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (\Exception $exception) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
+        if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
+        $dbForProject->deleteDocument('memberships', $membership->getId());
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
-            $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));
-            Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
+            Authorization::skip(fn() => $dbForProject->decreaseDocumentAttribute('teams', $team->getId(), 'total', 1, 0));
         }
 
         $queueForEvents

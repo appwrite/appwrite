@@ -58,13 +58,26 @@ class Mails extends Action
         $subject = $payload['subject'];
         $variables = $payload['variables'];
         $name = $payload['name'];
-        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
-
-        foreach ($variables as $key => $value) {
-            $body->setParam('{{' . $key . '}}', $value);
+        $body = $payload['body'];
+        $attachment = $payload['attachment'] ?? [];
+        $bodyTemplate = $payload['bodyTemplate'];
+        if (empty($bodyTemplate)) {
+            $bodyTemplate = __DIR__ . '/../../../../app/config/locale/templates/email-base.tpl';
         }
+        $bodyTemplate = Template::fromFile($bodyTemplate);
+        $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
+        foreach ($variables as $key => $value) {
+            // TODO: hotfix for redirect param
+            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
+        }
+        $body = $bodyTemplate->render();
 
-        $body = $body->render();
+        $subjectTemplate = Template::fromString($subject);
+        foreach ($variables as $key => $value) {
+            $subjectTemplate->setParam('{{' . $key . '}}', $value);
+        }
+        // render() will return the subject in <p> tags, so use strip_tags() to remove them
+        $subject = \strip_tags($subjectTemplate->render());
 
         /** @var PHPMailer $mail */
         $mail = empty($smtp)
@@ -81,6 +94,14 @@ class Mails extends Action
         $mail->Subject = $subject;
         $mail->Body = $body;
         $mail->AltBody = \strip_tags($body);
+        if (!empty($attachment['content'] ?? '')) {
+            $mail->AddStringAttachment(
+                base64_decode($attachment['content']),
+                $attachment['filename'] ?? 'unknown.file',
+                $attachment['encoding'] ?? PHPMailer::ENCODING_BASE64,
+                $attachment['type'] ?? 'plain/text'
+            );
+        }
 
         try {
             $mail->send();

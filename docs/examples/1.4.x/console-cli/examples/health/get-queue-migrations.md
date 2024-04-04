@@ -1,1 +1,2 @@
-appwrite health getQueueMigrations
+appwrite health getQueueMigrations \
+

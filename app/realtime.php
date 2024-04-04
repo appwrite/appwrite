@@ -1,8 +1,10 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
@@ -20,7 +22,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Appwrite\Utopia\Request;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -28,71 +29,90 @@ use Utopia\Database\Database;
 use Utopia\WebSocket\Server;
 use Utopia\WebSocket\Adapter;
 
+/**
+ * @var \Utopia\Registry\Registry $register
+ */
 require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-function getConsoleDB(): Database
-{
-    global $register;
+// Allows overriding
+if (!function_exists("getConsoleDB")) {
+    function getConsoleDB(): Database
+    {
+        global $register;
 
-    /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('pools');
+        /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools');
 
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource()
-    ;
-
-    $database = new Database($dbAdapter, getCache());
-
-    $database->setNamespace('_console');
-
-    return $database;
-}
-
-function getProjectDB(Document $project): Database
-{
-    global $register;
-
-    /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('pools');
-
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return getConsoleDB();
-    }
-
-    $dbAdapter = $pools
-        ->get($project->getAttribute('database'))
-        ->pop()
-        ->getResource()
-    ;
-
-    $database = new Database($dbAdapter, getCache());
-    $database->setNamespace('_' . $project->getInternalId());
-
-    return $database;
-}
-
-function getCache(): Cache
-{
-    global $register;
-
-    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
-
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
-
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
+        $dbAdapter = $pools
+            ->get('console')
             ->pop()
             ->getResource()
         ;
-    }
 
-    return new Cache(new Sharding($adapters));
+        $database = new Database($dbAdapter, getCache());
+
+        $database
+            ->setNamespace('_console')
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', '_console');
+
+        return $database;
+    }
+}
+
+// Allows overriding
+if (!function_exists("getProjectDB")) {
+    function getProjectDB(Document $project): Database
+    {
+        global $register;
+
+        /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools');
+
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return getConsoleDB();
+        }
+
+        $dbAdapter = $pools
+            ->get($project->getAttribute('database'))
+            ->pop()
+            ->getResource()
+        ;
+
+        $database = new Database($dbAdapter, getCache());
+
+        $database
+            ->setNamespace('_' . $project->getInternalId())
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId());
+
+        return $database;
+    }
+}
+
+// Allows overriding
+if (!function_exists("getCache")) {
+    function getCache(): Cache
+    {
+        global $register;
+
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+
+        $list = Config::getParam('pools-cache', []);
+        $adapters = [];
+
+        foreach ($list as $value) {
+            $adapters[] = $pools
+                ->get($value)
+                ->pop()
+                ->getResource()
+            ;
+        }
+
+        return new Cache(new Sharding($adapters));
+    }
 }
 
 $realtime = new Realtime();
@@ -122,12 +142,12 @@ $server = new Server($adapter);
 $logError = function (Throwable $error, string $action) use ($register) {
     $logger = $register->get('logger');
 
-    if ($logger) {
+    if ($logger && !$error instanceof Exception) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $log = new Log();
         $log->setNamespace("realtime");
-        $log->setServer(\gethostname());
+        $log->setServer(gethostname());
         $log->setVersion($version);
         $log->setType(Log::TYPE_ERROR);
         $log->setMessage($error->getMessage());
@@ -182,7 +202,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
 
                 $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
                 break;
-            } catch (\Throwable $th) {
+            } catch (Throwable) {
                 Console::warning("Collection not ready. Retrying connection ({$attempts})...");
                 sleep(DATABASE_RECONNECT_SLEEP);
             }
@@ -193,29 +213,29 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
-        $payload = [];
-        foreach ($stats as $projectId => $value) {
-            $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
-        }
-        if (empty($payload) || empty($statsDocument)) {
-            return;
-        }
+    // Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
+    //     $payload = [];
+    //     foreach ($stats as $projectId => $value) {
+    //         $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
+    //     }
+    //     if (empty($payload) || empty($statsDocument)) {
+    //         return;
+    //     }
 
-        try {
-            $database = getConsoleDB();
+    //     try {
+    //         $database = getConsoleDB();
 
-            $statsDocument
-                ->setAttribute('timestamp', DateTime::now())
-                ->setAttribute('value', json_encode($payload));
+    //         $statsDocument
+    //             ->setAttribute('timestamp', DateTime::now())
+    //             ->setAttribute('value', json_encode($payload));
 
-            Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
-        } catch (\Throwable $th) {
-            call_user_func($logError, $th, "updateWorkerDocument");
-        } finally {
-            $register->get('pools')->reclaim();
-        }
-    });
+    //         Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+    //     } catch (Throwable $th) {
+    //         call_user_func($logError, $th, "updateWorkerDocument");
+    //     } finally {
+    //         $register->get('pools')->reclaim();
+    //     }
+    // });
 });
 
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
@@ -362,7 +382,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     $stats->incr($event['project'], 'messages', $num);
                 }
             });
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             call_user_func($logError, $th, "pubSubConnection");
 
             Console::error('Pub/sub error: ' . $th->getMessage());
@@ -389,19 +409,19 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     App::setResource('response', fn() => $response);
 
     try {
-        /** @var \Utopia\Database\Document $project */
+        /** @var Document $project */
         $project = $app->getResource('project');
 
         /*
          *  Project Check
          */
         if (empty($project->getId())) {
-            throw new Exception('Missing or unknown project ID', 1008);
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing or unknown project ID');
         }
 
         $dbForProject = getProjectDB($project);
-        $console = $app->getResource('console'); /** @var \Utopia\Database\Document $console */
-        $user = $app->getResource('user'); /** @var \Utopia\Database\Document $user */
+        $console = $app->getResource('console'); /** @var Document $console */
+        $user = $app->getResource('user'); /** @var Document $user */
 
         /*
          * Abuse Check
@@ -416,7 +436,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $abuse = new Abuse($timeLimit);
 
         if (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
-            throw new Exception('Too many requests', 1013);
+            throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many requests');
         }
 
         /*
@@ -425,10 +445,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Skip this check for non-web platforms which are not required to send an origin header.
          */
         $origin = $request->getOrigin();
-        $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
+        $originValidator = new Origin(array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
 
         if (!$originValidator->isValid($origin) && $project->getId() !== 'console') {
-            throw new Exception($originValidator->getDescription(), 1008);
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 
         $roles = Auth::getRoles($user);
@@ -439,7 +459,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Channels Check
          */
         if (empty($channels)) {
-            throw new Exception('Missing channels', 1008);
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing channels');
         }
 
         $realtime->subscribe($project->getId(), $connection, $roles, $channels);
@@ -460,7 +480,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         ]);
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
-    } catch (\Throwable $th) {
+    } catch (Throwable $th) {
         call_user_func($logError, $th, "initServer");
 
         $response = [
@@ -486,7 +506,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
 $server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
     try {
-        $app = new App('UTC');
         $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'];
         $database = getConsoleDB();
@@ -494,6 +513,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         if ($projectId !== 'console') {
             $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
             $database = getProjectDB($project);
+        } else {
+            $project = null;
         }
 
         /*
@@ -510,22 +531,22 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $abuse = new Abuse($timeLimit);
 
         if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
-            throw new Exception('Too many messages', 1013);
+            throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');
         }
 
         $message = json_decode($message, true);
 
         if (is_null($message) || (!array_key_exists('type', $message) && !array_key_exists('data', $message))) {
-            throw new Exception('Message format is not valid.', 1003);
+            throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message format is not valid.');
         }
 
         switch ($message['type']) {
-                /**
+            /**
              * This type is used to authenticate.
              */
             case 'authentication':
                 if (!array_key_exists('session', $message['data'])) {
-                    throw new Exception('Payload is not valid.', 1003);
+                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
                 }
 
                 $session = Auth::decodeSession($message['data']['session']);
@@ -540,7 +561,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                     || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration) // Validate user has valid login token
                 ) {
                     // cookie not valid
-                    throw new Exception('Session is not valid.', 1003);
+                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
                 }
 
                 $roles = Auth::getRoles($user);
@@ -560,9 +581,9 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 break;
 
             default:
-                throw new Exception('Message type is not valid.', 1003);
+                throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
         }
-    } catch (\Throwable $th) {
+    } catch (Throwable $th) {
         $response = [
             'type' => 'error',
             'data' => [

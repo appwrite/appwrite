@@ -14,6 +14,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
+use Utopia\Logger\Log;
 use Utopia\Validator\Domain as ValidatorDomain;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -87,7 +88,11 @@ App::post('/v1/proxy/rules')
             $resourceInternalId = $function->getInternalId();
         }
 
-        $domain = new Domain($domain);
+        try {
+            $domain = new Domain($domain);
+        } catch (\Exception) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
+        }
 
         $ruleId = ID::unique();
         $rule = new Document([
@@ -274,7 +279,8 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $ruleId, Response $response, Certificate $queueForCertificates, Event $queueForEvents, Document $project, Database $dbForConsole) {
+    ->inject('log')
+    ->action(function (string $ruleId, Response $response, Certificate $queueForCertificates, Event $queueForEvents, Document $project, Database $dbForConsole, Log $log) {
         $rule = $dbForConsole->getDocument('rules', $ruleId);
 
         if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
@@ -294,7 +300,14 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
         $validator = new CNAME($target->get()); // Verify Domain with DNS records
         $domain = new Domain($rule->getAttribute('domain', ''));
 
+        $validationStart = \microtime(true);
         if (!$validator->isValid($domain->get())) {
+            $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
+            $log->addTag('dnsDomain', $domain->get());
+
+            $error = $validator->getLogs();
+            $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
+
             throw new Exception(Exception::RULE_VERIFICATION_FAILED);
         }
 

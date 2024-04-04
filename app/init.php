@@ -19,6 +19,7 @@ ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
 use Appwrite\Event\Migration;
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Audit;
@@ -32,7 +33,6 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
-use Appwrite\Usage\Stats;
 use Utopia\App;
 use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
@@ -72,14 +72,17 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
+use Appwrite\Hooks\Hooks;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\Logger\Log;
 use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 use Utopia\Validator\Range;
+use Utopia\Validator\Hostname;
 use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -109,8 +112,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 514;
-const APP_VERSION_STABLE = '1.4.6';
+const APP_CACHE_BUSTER = 331;
+const APP_VERSION_STABLE = '1.4.13';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -173,10 +176,6 @@ const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 const DELETE_TYPE_SCHEDULES = 'schedules';
-// Compression type
-const COMPRESSION_TYPE_NONE = 'none';
-const COMPRESSION_TYPE_GZIP = 'gzip';
-const COMPRESSION_TYPE_ZSTD = 'zstd';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -196,6 +195,7 @@ const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
+const METRIC_MESSAGES  = 'messages';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
@@ -242,6 +242,7 @@ Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
 Config::load('runtimes-v2', __DIR__ . '/config/runtimes-v2.php');
+Config::load('usage', __DIR__ . '/config/usage.php');
 Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
@@ -767,31 +768,26 @@ $register->set('pools', function () {
     return $group;
 });
 
-$register->set('influxdb', function () {
+$register->set('db', function () {
+    // This is usually for our workers or CLI commands scope
+       $dbHost = App::getEnv('_APP_DB_HOST', '');
+       $dbPort = App::getEnv('_APP_DB_PORT', '');
+       $dbUser = App::getEnv('_APP_DB_USER', '');
+       $dbPass = App::getEnv('_APP_DB_PASS', '');
+       $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
- // Register DB connection
-    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
-    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
+       $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
+           PDO::ATTR_TIMEOUT => 3, // Seconds
+           PDO::ATTR_PERSISTENT => true,
+           PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+           PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+           PDO::ATTR_EMULATE_PREPARES => true,
+           PDO::ATTR_STRINGIFY_FETCHES => true,
+       ));
 
-    if (empty($host) || empty($port)) {
-        return;
-    }
-    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
-    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
-    $client->setDriver($driver);
-
-    return $client;
+       return $pdo;
 });
-$register->set('statsd', function () {
-    // Register DB connection
-    $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
-    $port = App::getEnv('_APP_STATSD_PORT', 8125);
 
-    $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
-    $statsd = new \Domnikl\Statsd\Client($connection);
-
-    return $statsd;
-});
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
@@ -832,6 +828,9 @@ $register->set('passwordsDictionary', function () {
 $register->set('promiseAdapter', function () {
     return new Swoole();
 });
+$register->set('hooks', function () {
+    return new Hooks();
+});
 /*
  * Localization
  */
@@ -867,13 +866,14 @@ foreach ($locales as $locale) {
 ]);
 
 // Runtime Execution
+App::setResource('log', fn() => new Log());
 App::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
 
-App::setResource('loggerBreadcrumbs', function () {
-    return [];
-});
+App::setResource('hooks', function ($register) {
+    return $register->get('hooks');
+}, ['register']);
 
 App::setResource('register', fn() => $register);
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
@@ -916,15 +916,15 @@ App::setResource('queueForAudits', function (Connection $queue) {
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
+App::setResource('queueForUsage', function (Connection $queue) {
+    return new Usage($queue);
+}, ['queue']);
 App::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
 App::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
-App::setResource('usage', function ($register) {
-    return new Stats($register->get('statsd'));
-}, ['register']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
@@ -932,6 +932,21 @@ App::setResource('clients', function ($request, $console, $project) {
         'type' => Origin::CLIENT_TYPE_WEB,
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
+
+    $hostnames = explode(',', App::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
+    $validator = new Hostname();
+    foreach ($hostnames as $hostname) {
+        $hostname = trim($hostname);
+        if (!$validator->isValid($hostname)) {
+            continue;
+        }
+        $console->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'type' => Origin::CLIENT_TYPE_WEB,
+            'name' => $hostname,
+            'hostname' => $hostname,
+        ], Document::SET_TYPE_APPEND);
+    }
 
     /**
      * Get All verified client URLs for both console and current projects
@@ -1025,7 +1040,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     }
 
     if (APP_MODE_ADMIN === $mode) {
-        if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
+        if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
             $user = new Document([]);
@@ -1054,6 +1069,9 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
             $user = new Document([]);
         }
     }
+
+    $dbForProject->setMetadata('user', $user->getId());
+    $dbForConsole->setMetadata('user', $user->getId());
 
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole']);
@@ -1147,6 +1165,8 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
 
     $database
         ->setNamespace('_' . $project->getInternalId())
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
@@ -1167,6 +1187,8 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 
     $database
         ->setNamespace('_console')
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', 'console')
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
@@ -1178,10 +1200,23 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             return $dbForConsole;
         }
 
+        $databaseName = $project->getAttribute('database');
+
+        if (isset($databases[$databaseName])) {
+            $database = $databases[$databaseName];
+
+            $database
+                ->setNamespace('_' . $project->getInternalId())
+                ->setMetadata('host', \gethostname())
+                ->setMetadata('project', $project->getId())
+                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+
+            return $database;
+        }
+
         $connection = $pools
-            ->get($project->getAttribute('database'))
-            ->pop()
-        ;
+            ->get($databaseName)
+            ->pop();
 
         $dbAdapter = $connection->getResource();
 
@@ -1192,9 +1227,10 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         $database = new Database($dbAdapter, $cache);
 
         $database
-          ->setNamespace('_' . $project->getInternalId())
-          ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
-        ;
+            ->setNamespace('_' . $project->getInternalId())
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId())
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
         return $database;
     };
@@ -1266,7 +1302,9 @@ function getDevice($root): Device
             case Storage::DEVICE_S3:
                 return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
             case STORAGE::DEVICE_DO_SPACES:
-                return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                $device = new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                $device->setHttpVersion(S3::HTTP_VERSION_1_1);
+                return $device;
             case Storage::DEVICE_BACKBLAZE:
                 return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
             case Storage::DEVICE_LINODE:
@@ -1295,7 +1333,9 @@ function getDevice($root): Device
                 $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
                 $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
                 $doSpacesAcl = 'private';
-                return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+                $device = new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+                $device->setHttpVersion(S3::HTTP_VERSION_1_1);
+                return $device;
             case Storage::DEVICE_BACKBLAZE:
                 $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
                 $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');

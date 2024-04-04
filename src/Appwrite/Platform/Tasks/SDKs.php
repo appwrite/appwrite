@@ -74,7 +74,7 @@ class SDKs extends Action
 
                 $spec = file_get_contents(__DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json');
 
-                $cover = 'https://appwrite.io/images/github.png';
+                $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';
                 $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
                 $resultExamples = \realpath(__DIR__ . '/../../../..') . '/docs/examples/' . $version . '/' . $key . '-' . $language['key'];
                 $target = \realpath(__DIR__ . '/../../../../app') . '/sdks/git/' . $language['key'] . '/';
@@ -234,6 +234,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setDefaultHeaders([
                         'X-Appwrite-Response-Format' => '1.4.0',
                     ]);
+
+                // Make sure we have a clean slate.
+                // Otherwise, all files in this dir will be pushed,
+                // regardless of whether they were just generated or not.
+                \exec('rm -rf ' . $result);
 
                 try {
                     $sdk->generate($result);
