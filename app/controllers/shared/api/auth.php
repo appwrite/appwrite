@@ -8,6 +8,7 @@ use Utopia\App;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 
 App::init()
     ->groups(['mfaProtected'])
@@ -35,7 +36,7 @@ App::init()
     ->inject('project')
     ->inject('geodb')
     ->action(function (App $utopia, Request $request, Document $project, Reader $geodb) {
-        $denylist = App::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
+        $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {
             $countries = explode(',', $denylist);
             $record = $geodb->get($request->getIP()) ?? [];

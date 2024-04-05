@@ -18,6 +18,7 @@ use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Request;
+use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -257,8 +258,8 @@ class Specs extends Action
                 };
 
                 $specs = new Specification($formatInstance);
-                $endpoint = App::getEnv('_APP_HOME', '[HOSTNAME]');
-                $email = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $endpoint = System::getEnv('_APP_HOME', '[HOSTNAME]');
+                $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
                 $formatInstance
                     ->setParam('name', APP_NAME)
