@@ -1113,8 +1113,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
-            $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));
-            Authorization::skip(fn () => $dbForProject->updateDocument('teams', $team->getId(), $team));
+            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
         }
 
         $queueForEvents
