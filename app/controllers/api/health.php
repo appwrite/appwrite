@@ -702,6 +702,47 @@ App::get('/v1/health/storage/local')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
+App::get('/v1/health/storage')
+    ->desc('Get storage')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getStorage')
+    ->label('sdk.description', '/docs/references/health/get-storage.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->inject('response')
+    ->inject('deviceFiles')
+    ->inject('deviceFunctions')
+    ->inject('deviceBuilds')
+    ->action(function (Response $response, Device $deviceFiles, Device $deviceFunctions, Device $deviceBuilds) {
+        $devices = [$deviceFiles, $deviceFunctions, $deviceBuilds];
+        $checkStart = \microtime(true);
+
+        foreach ($devices as $device) {
+            if (!$device->write($device->getPath('health.txt'), 'test', 'text/plain')) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed writing test file to ' . $device->getRoot());
+            }
+
+            if ($device->read($device->getPath('health.txt')) !== 'test') {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed reading test file from ' . $device->getRoot());
+            }
+
+            if (!$device->delete($device->getPath('health.txt'))) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed deleting test file from ' . $device->getRoot());
+            }
+        }
+
+        $output = [
+            'status' => 'pass',
+            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+        ];
+
+        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
+    });
+
 App::get('/v1/health/anti-virus')
     ->desc('Get antivirus')
     ->groups(['api', 'health'])
@@ -755,12 +796,12 @@ App::get('/v1/health/queue/failed/:name')
         Event::MAILS_QUEUE_NAME,
         Event::FUNCTIONS_QUEUE_NAME,
         Event::USAGE_QUEUE_NAME,
+        Event::USAGE_DUMP_QUEUE_NAME,
         Event::WEBHOOK_CLASS_NAME,
         Event::CERTIFICATES_QUEUE_NAME,
         Event::BUILDS_QUEUE_NAME,
         Event::MESSAGING_QUEUE_NAME,
-        Event::MIGRATIONS_QUEUE_NAME,
-        Event::HAMSTER_CLASS_NAME
+        Event::MIGRATIONS_QUEUE_NAME
     ]), 'The name of the queue')
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->label('sdk.description', '/docs/references/health/get-failed-queue-jobs.md')

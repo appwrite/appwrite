@@ -1,4 +1,5 @@
 {
+
     "name": "appwrite/server-ce",
     "description": "End to end backend server for frontend and mobile apps.",
     "type": "project",

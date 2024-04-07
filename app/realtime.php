@@ -36,74 +36,83 @@ require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-function getConsoleDB(): Database
-{
-    global $register;
+// Allows overriding
+if (!function_exists("getConsoleDB")) {
+    function getConsoleDB(): Database
+    {
+        global $register;
 
-    /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('pools');
+        /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools');
 
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource()
-    ;
-
-    $database = new Database($dbAdapter, getCache());
-
-    $database
-        ->setNamespace('_console')
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', '_console');
-
-    return $database;
-}
-
-function getProjectDB(Document $project): Database
-{
-    global $register;
-
-    /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('pools');
-
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return getConsoleDB();
-    }
-
-    $dbAdapter = $pools
-        ->get($project->getAttribute('database'))
-        ->pop()
-        ->getResource()
-    ;
-
-    $database = new Database($dbAdapter, getCache());
-
-    $database
-        ->setNamespace('_' . $project->getInternalId())
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', $project->getId());
-
-    return $database;
-}
-
-function getCache(): Cache
-{
-    global $register;
-
-    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
-
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
-
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
+        $dbAdapter = $pools
+            ->get('console')
             ->pop()
             ->getResource()
         ;
-    }
 
-    return new Cache(new Sharding($adapters));
+        $database = new Database($dbAdapter, getCache());
+
+        $database
+            ->setNamespace('_console')
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', '_console');
+
+        return $database;
+    }
+}
+
+// Allows overriding
+if (!function_exists("getProjectDB")) {
+    function getProjectDB(Document $project): Database
+    {
+        global $register;
+
+        /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools');
+
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return getConsoleDB();
+        }
+
+        $dbAdapter = $pools
+            ->get($project->getAttribute('database'))
+            ->pop()
+            ->getResource()
+        ;
+
+        $database = new Database($dbAdapter, getCache());
+
+        $database
+            ->setNamespace('_' . $project->getInternalId())
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId());
+
+        return $database;
+    }
+}
+
+// Allows overriding
+if (!function_exists("getCache")) {
+    function getCache(): Cache
+    {
+        global $register;
+
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+
+        $list = Config::getParam('pools-cache', []);
+        $adapters = [];
+
+        foreach ($list as $value) {
+            $adapters[] = $pools
+                ->get($value)
+                ->pop()
+                ->getResource()
+            ;
+        }
+
+        return new Cache(new Sharding($adapters));
+    }
 }
 
 $realtime = new Realtime();
@@ -204,29 +213,29 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
-        $payload = [];
-        foreach ($stats as $projectId => $value) {
-            $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
-        }
-        if (empty($payload) || empty($statsDocument)) {
-            return;
-        }
+    // Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
+    //     $payload = [];
+    //     foreach ($stats as $projectId => $value) {
+    //         $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
+    //     }
+    //     if (empty($payload) || empty($statsDocument)) {
+    //         return;
+    //     }
 
-        try {
-            $database = getConsoleDB();
+    //     try {
+    //         $database = getConsoleDB();
 
-            $statsDocument
-                ->setAttribute('timestamp', DateTime::now())
-                ->setAttribute('value', json_encode($payload));
+    //         $statsDocument
+    //             ->setAttribute('timestamp', DateTime::now())
+    //             ->setAttribute('value', json_encode($payload));
 
-            Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
-        } catch (Throwable $th) {
-            call_user_func($logError, $th, "updateWorkerDocument");
-        } finally {
-            $register->get('pools')->reclaim();
-        }
-    });
+    //         Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+    //     } catch (Throwable $th) {
+    //         call_user_func($logError, $th, "updateWorkerDocument");
+    //     } finally {
+    //         $register->get('pools')->reclaim();
+    //     }
+    // });
 });
 
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {

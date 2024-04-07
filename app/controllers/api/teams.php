@@ -694,7 +694,7 @@ App::get('/v1/teams/:teamId/memberships')
         }
 
         // Set internal queries
-        $queries[] = Query::equal('teamId', [$teamId]);
+        $queries[] = Query::equal('teamInternalId', [$team->getInternalId()]);
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
@@ -894,14 +894,14 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
-        if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
-        }
-
         $team = Authorization::skip(fn() => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
@@ -916,7 +916,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             $user->setAttributes($dbForProject->getDocument('users', $userId)->getArrayCopy()); // Get user
         }
 
-        if ($membership->getAttribute('userId') !== $user->getId()) {
+        if ($membership->getAttribute('userInternalId') !== $user->getInternalId()) {
             throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
         }
 
@@ -1020,10 +1020,6 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_INVITE_NOT_FOUND);
         }
 
-        if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
-        }
-
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
         if ($user->isEmpty()) {
@@ -1036,14 +1032,11 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        try {
-            $dbForProject->deleteDocument('memberships', $membership->getId());
-        } catch (AuthorizationException $exception) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (\Exception $exception) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
+        if ($membership->getAttribute('teamInternalId') !== $team->getInternalId()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
+        $dbForProject->deleteDocument('memberships', $membership->getId());
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members

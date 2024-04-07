@@ -31,7 +31,7 @@ return [
     Exception::GENERAL_SERVICE_DISABLED => [
         'name' => Exception::GENERAL_SERVICE_DISABLED,
         'description' => 'The requested service is disabled. You can enable the service from the Appwrite console.',
-        'code' => 503,
+        'code' => 403,
     ],
     Exception::GENERAL_UNAUTHORIZED_SCOPE => [
         'name' => Exception::GENERAL_UNAUTHORIZED_SCOPE,
@@ -102,6 +102,11 @@ return [
         'name' => Exception::GENERAL_NOT_IMPLEMENTED,
         'description' => 'This method was not fully implemented yet. If you believe this is a mistake, please upgrade your Appwrite server version.',
         'code' => 405,
+    ],
+    Exception::GENERAL_BAD_REQUEST => [
+        'name' => Exception::GENERAL_BAD_REQUEST,
+        'description' => 'There was an error processing your request. Please check the inputs and try again.',
+        'code' => 400,
     ],
 
     /** User Errors */
@@ -634,7 +639,7 @@ return [
     Exception::PROJECT_PROVIDER_UNSUPPORTED => [
         'name' => Exception::PROJECT_PROVIDER_UNSUPPORTED,
         'description' => 'The chosen OAuth provider is unsupported. Please check the <a href="/docs/client/account?sdk=web-default#accountCreateOAuth2Session">Create OAuth2 Session docs</a> for the complete list of supported OAuth providers.',
-        'code' => 501,
+        'code' => 400,
     ],
     Exception::PROJECT_INVALID_SUCCESS_URL => [
         'name' => Exception::PROJECT_INVALID_SUCCESS_URL,

@@ -112,7 +112,7 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 329;
+const APP_CACHE_BUSTER = 331;
 const APP_VERSION_STABLE = '1.4.13';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -1035,7 +1035,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     }
 
     if (APP_MODE_ADMIN === $mode) {
-        if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
+        if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
             $user = new Document([]);
@@ -1267,7 +1267,9 @@ function getDevice($root): Device
             case Storage::DEVICE_S3:
                 return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
             case STORAGE::DEVICE_DO_SPACES:
-                return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                $device = new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                $device->setHttpVersion(S3::HTTP_VERSION_1_1);
+                return $device;
             case Storage::DEVICE_BACKBLAZE:
                 return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
             case Storage::DEVICE_LINODE:
@@ -1296,7 +1298,9 @@ function getDevice($root): Device
                 $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
                 $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
                 $doSpacesAcl = 'private';
-                return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+                $device = new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+                $device->setHttpVersion(S3::HTTP_VERSION_1_1);
+                return $device;
             case Storage::DEVICE_BACKBLAZE:
                 $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
                 $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
