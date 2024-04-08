@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform;
+namespace Appwrite\Platform\Modules;
 
 use Utopia\Platform\Module;
 
