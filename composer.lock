@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d4bead528175f70ccaf4f4b8ec03a486",
+    "content-hash": "9df8a86d34f06281d71fc7ad4e70a563",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1796,16 +1796,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.5.1",
+            "version": "0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "3eceef0b6593fe0f7d2efd36d40402a395a4c285"
+                "reference": "6512e761f14f3bf3e510c2f2fdeb064e239d9634"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/3eceef0b6593fe0f7d2efd36d40402a395a4c285",
-                "reference": "3eceef0b6593fe0f7d2efd36d40402a395a4c285",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/6512e761f14f3bf3e510c2f2fdeb064e239d9634",
+                "reference": "6512e761f14f3bf3e510c2f2fdeb064e239d9634",
                 "shasum": ""
             },
             "require": {
@@ -1813,7 +1813,8 @@
                 "ext-redis": "*",
                 "php": ">=8.0",
                 "utopia-php/cli": "0.15.*",
-                "utopia-php/framework": "0.*.*"
+                "utopia-php/framework": "0.33.*",
+                "utopia-php/queue": "0.7.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -1839,9 +1840,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.5.1"
+                "source": "https://github.com/utopia-php/platform/tree/0.6.0"
             },
-            "time": "2023-12-26T16:14:41+00:00"
+            "time": "2024-04-08T04:49:05+00:00"
         },
         {
             "name": "utopia-php/pools",
