@@ -629,11 +629,11 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
     try {
         $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'];
-        [$database, $reclaim] = getConsoleDB();
+        [$database, $reclaimForConsole] = getConsoleDB();
 
         if ($projectId !== 'console') {
             $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
-            $database = getProjectDB($project);
+            [$database, $reclaimForProject] = getProjectDB($project);
         } else {
             $project = null;
         }
@@ -719,8 +719,11 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
             $server->close($connection, $th->getCode());
         }
     } finally {
-        if (isset($reclaim)) {
-            $reclaim();
+        if (isset($reclaimForConsole)) {
+            $reclaimForConsole();
+        }
+        if (isset($reclaimForProject)) {
+            $reclaimForProject();
         }
     }
 });
