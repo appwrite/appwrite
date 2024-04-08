@@ -323,7 +323,28 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $swooleResponse->end(\json_encode($output));
     } finally {
-        $pools->reclaim();
+        $connectionForConsole = $app->getResource('connectionForConsole');
+        $connectionForProject = $app->getResource('connectionForProject');
+        $connectionForQueue = $app->getResource('connectionForQueue');
+        $connectionsForCache = $app->getResource('connectionsForCache');
+
+        if (!is_null($connectionForConsole)) {
+            $connectionForConsole->reclaim();
+        }
+
+        if (!is_null($connectionForProject)) {
+            $connectionForProject->reclaim();
+        }
+
+        if (!is_null($connectionForQueue)) {
+            $connectionForQueue->reclaim();
+        }
+
+        if (!empty($connectionsForCache)) {
+            foreach ($connectionsForCache as $connection) {
+                $connection->reclaim();
+            }
+        }
     }
 });
 
