@@ -296,24 +296,26 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
             return;
         }
 
-        /**
-         * @var Database $database
-         * @var callable $reclaim
-         */
-        [$database, $reclaim] = getConsoleDB();
-
-        $statsDocument
-            ->setAttribute('timestamp', DateTime::now())
-            ->setAttribute('value', json_encode($payload));
-
         try {
+            /**
+             * @var Database $database
+             * @var callable $reclaim
+             */
+            [$database, $reclaim] = getConsoleDB();
+
+            $statsDocument
+                ->setAttribute('timestamp', DateTime::now())
+                ->setAttribute('value', json_encode($payload));
+
             Authorization::skip(function () use ($database, $statsDocument) {
                 $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument);
             });
         } catch (Throwable $th) {
             logError($th, 'updateWorkerDocument');
         } finally {
-            $reclaim();
+            if (isset($reclaim)) {
+                $reclaim();
+            }
         }
     });
 });
