@@ -11,7 +11,6 @@ use Appwrite\Platform\Tasks\Schedule;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
-use Appwrite\Platform\Tasks\Usage;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
 use Appwrite\Platform\Tasks\Upgrade;
@@ -20,7 +19,7 @@ class Tasks extends Service
 {
     public function __construct()
     {
-        $this->type = self::TYPE_CLI;
+        $this->type = Service::TYPE_TASK;
         $this
             ->addAction(Version::getName(), new Version())
             ->addAction(Vars::getName(), new Vars())
