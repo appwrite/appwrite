@@ -3270,13 +3270,14 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('cc', null, new ArrayList(new UID()), 'Array of target IDs to be added as CC.', true)
     ->param('bcc', null, new ArrayList(new UID()), 'Array of target IDs to be added as BCC.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('attachments', null, new ArrayList(new CompoundUID()), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForConsole')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3385,6 +3386,30 @@ App::patch('/v1/messaging/messages/email/:messageId')
 
         if (!\is_null($content)) {
             $data['content'] = $content;
+        }
+
+        if (!is_null($attachments)) {
+            foreach ($attachments as &$attachment) {
+                [$bucketId, $fileId] = CompoundUID::parse($attachment);
+
+                $bucket = $dbForProject->getDocument('buckets', $bucketId);
+
+                if ($bucket->isEmpty()) {
+                    throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                }
+
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+
+                if ($file->isEmpty()) {
+                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                }
+
+                $attachment = [
+                    'bucketId' => $bucketId,
+                    'fileId' => $fileId,
+                ];
+            }
+            $data['attachments'] = $attachments;
         }
 
         if (!\is_null($html)) {
