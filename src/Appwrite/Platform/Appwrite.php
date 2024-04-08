@@ -10,6 +10,7 @@ class Appwrite extends Platform
 {
     public function __construct()
     {
+        parent::__construct(new Core());
         $this->addService('tasks', new Tasks());
         $this->addService('workers', new Workers());
     }
