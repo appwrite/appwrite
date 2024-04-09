@@ -1233,7 +1233,7 @@ App::setResource('cache', function (Group $pools, Connections $connections) {
     }
 
     return new Cache(new Sharding($adapters));
-}, ['pools']);
+}, ['pools', 'connections']);
 
 App::setResource('deviceLocal', function () {
     return new Local();
