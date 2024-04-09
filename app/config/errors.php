@@ -592,6 +592,11 @@ return [
         'description' => 'The attribute type is invalid.',
         'code' => 400,
     ],
+    Exception::RELATIONSHIP_VALUE_INVALID => [
+        'name' => Exception::RELATIONSHIP_VALUE_INVALID,
+        'description' => 'The relationship value is invalid.',
+        'code' => 400,
+    ],
 
     /** Indexes */
     Exception::INDEX_NOT_FOUND => [

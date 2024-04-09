@@ -849,7 +849,7 @@ App::error()
                 break;
             case 'Utopia\Database\Exception\InvalidRelationshipValue':
                 \var_dump('Wrapping relationship exception');
-                $error = new AppwriteException(AppwriteException::INVALID_RELATIONSHIP_VALUE);
+                $error = new AppwriteException(AppwriteException::RELATIONSHIP_VALUE_INVALID);
                 break;
         }
 

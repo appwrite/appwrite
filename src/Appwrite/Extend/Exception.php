@@ -177,7 +177,7 @@ class Exception extends \Exception
     public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
 
     /** Relationship */
-    public const INVALID_RELATIONSHIP_VALUE        = 'invalid_relationship_value';
+    public const RELATIONSHIP_VALUE_INVALID        = 'relationship_value_invalid';
 
     /** Indexes */
     public const INDEX_NOT_FOUND                   = 'index_not_found';
