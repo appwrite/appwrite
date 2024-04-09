@@ -26,6 +26,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
@@ -374,7 +375,7 @@ App::init()
                 ;
             }
 
-            $enabled = App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+            $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
 
             if (
                 $enabled                // Abuse is enabled
@@ -739,7 +740,7 @@ App::shutdown()
 App::init()
     ->groups(['usage'])
     ->action(function () {
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
+        if (System::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
             throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
     });

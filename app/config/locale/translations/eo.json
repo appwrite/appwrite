@@ -9,7 +9,7 @@
     "emails.verification.thanks": "Dankegon.",
     "emails.verification.signature": "Teamo {{project}}",
     "emails.magicSession.subject": "Login",
-    "emails.magicSession.hello": "Saluton,",
+    "emails.magicSession.hello": "Saluton",
     "emails.magicSession.body": "Alklaku ĉi tiun ligon por eniri.",
     "emails.magicSession.footer": "Se vi ne petis ĉi tiun konfirmon de ĉi tiu retpoŝto, vi povas ignori ĉi tiun mesaĝon.",
     "emails.magicSession.thanks": "Dankegon",

@@ -6,11 +6,11 @@ use Appwrite\Template\Template;
 use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Runtime;
-use Utopia\App;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
+use Utopia\System\System;
 
 class Mails extends Action
 {
@@ -59,14 +59,14 @@ class Mails extends Action
 
         $smtp = $payload['smtp'];
 
-        if (empty($smtp) && empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty($smtp) && empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
         }
 
         $log->addTag('type', empty($smtp) ? 'cloud' : 'smtp');
 
-        $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = App::getEnv('_APP_DOMAIN');
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = System::getEnv('_APP_DOMAIN');
 
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
@@ -121,8 +121,8 @@ class Mails extends Action
         $mail->AltBody = \strip_tags($mail->AltBody);
         $mail->AltBody = \trim($mail->AltBody);
 
-        $replyTo = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $replyToName = \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+        $replyTo = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $replyToName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
 
         if (!empty($smtp)) {
             $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : $smtp['senderEmail'];
