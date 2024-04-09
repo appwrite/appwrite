@@ -382,6 +382,15 @@ function updateAttribute(
 }
 
 App::init()
+    ->groups(['database'])
+    ->inject('project')
+    ->action(function (Document $project) {
+        if ($project->getId() === 'console') {
+            throw new Exception(Exception::PROJECT_RESERVED_PROJECT, 'Please check X-Appwrite-Project header');
+        }
+    });
+
+App::init()
     ->groups(['api', 'database'])
     ->inject('request')
     ->inject('dbForProject')
@@ -2986,13 +2995,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('mode')
-    ->inject('project') // todo: remove this after test
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode, Document $project) {
-
-        var_dump($project->getId());
-        var_dump($project->getAttribute('serviceStatusForDatabases'));
-
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());

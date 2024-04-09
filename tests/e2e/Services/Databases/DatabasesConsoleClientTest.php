@@ -335,8 +335,8 @@ class DatabasesConsoleClientTest extends Scope
     /**
      * @depends testCreateCollection
      */
-    public function testConsole(array $data){
-        $documents = $this->client->call(
+    public function testConsoleProject(array $data){
+        $response = $this->client->call(
             Client::METHOD_GET,
             '/databases/console/collections/' . $data['moviesId'] . '/documents',
             array_merge([
@@ -344,12 +344,18 @@ class DatabasesConsoleClientTest extends Scope
                 'x-appwrite-project' => 'console',
             ], $this->getHeaders())
         );
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Please check X-Appwrite-Project header', $response['body']['message']);
 
-        var_dump($documents);
-
-        $this->assertEquals(500, $documents['headers']['status-code']);
-
-        $this->assertEquals(true, false);
-
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/console/collections/' . $data['moviesId'] . '/documents',
+            array_merge([
+                'content-type' => 'application/json',
+                // 'x-appwrite-project' => '', disabled
+            ], $this->getHeaders())
+        );
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Please check X-Appwrite-Project header', $response['body']['message']);
     }
 }

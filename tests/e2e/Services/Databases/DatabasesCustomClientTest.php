@@ -10,7 +10,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 
 class DatabasesCustomClientTest extends Scope
 {
@@ -86,26 +85,6 @@ class DatabasesCustomClientTest extends Scope
         $this->assertNotContains(Permission::create(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
         $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
-
-
-        /**
-        * Test console serviceStatusForDatabases is false
-        */
-        $documents = $this->client->call(
-            Client::METHOD_GET,
-            '/databases/console/collections/' . $moviesId . '/documents',
-            array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => 'console'
-            ], $this->getHeaders())
-        );
-
-        var_dump($documents);
-
-        $this->assertEquals(500, $documents['headers']['status-code']);
-
-        $this->assertEquals(true, false);
-
 
         /**
          * Test for FAILURE
