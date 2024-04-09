@@ -847,6 +847,10 @@ App::error()
                 \var_dump('Wrapping authorization exception');
                 $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
                 break;
+            case 'Utopia\Database\Exception\InvalidRelationshipValue':
+                \var_dump('Wrapping relationship exception');
+                $error = new AppwriteException(AppwriteException::INVALID_RELATIONSHIP_VALUE);
+                break;
         }
 
         $code = $error->getCode();
