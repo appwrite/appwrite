@@ -50,7 +50,6 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Adapter\MariaDBProxy;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Database\Database;
@@ -744,7 +743,7 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mariadb'),
+        'scheme' => 'mariadb',
         'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
         'port' => System::getEnv('_APP_DB_PORT', '3306'),
         'user' => System::getEnv('_APP_DB_USER', ''),
@@ -764,13 +763,13 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql', 'mariadb-proxy'],
+            'schemes' => ['mariadb', 'mysql'],
         ],
         'database' => [
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
             'multiple' => true,
-            'schemes' => ['mariadb', 'mysql', 'mariadb-proxy'],
+            'schemes' => ['mariadb', 'mysql'],
         ],
         'queue' => [
             'type' => 'queue',
@@ -825,7 +824,7 @@ $register->set('pools', function () {
                 //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
             }
-
+            
             $dsn = new DSN($dsn);
             $dsnHost = $dsn->getHost();
             $dsnPort = $dsn->getPort();
@@ -846,19 +845,6 @@ $register->set('pools', function () {
              * Resource assignment to an adapter will happen below.
              */
             switch ($dsnScheme) {
-                case 'mariadb-proxy':
-                    $host = $dsnHost;
-                    if ($dsnPort) {
-                        $host .= ':' . $dsnPort;
-                    }
-
-                    // Ignore port and password (user = password)
-                    $resource = [
-                        'endpoint' => 'http://' . $host . '/v1',
-                        'secret' => $dsnPass,
-                        'database' => $dsnDatabase
-                    ];
-                    break;
                 case 'mysql':
                 case 'mariadb':
                     $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
@@ -898,7 +884,6 @@ $register->set('pools', function () {
                         $adapter = match ($dsn->getScheme()) {
                             'mariadb' => new MariaDB($resource()),
                             'mysql' => new MySQL($resource()),
-                            'mariadb-proxy' => new MariaDBProxy($resource['endpoint'], $resource['secret'], $resource['database']),
                             default => null
                         };
 

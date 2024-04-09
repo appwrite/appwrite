@@ -497,12 +497,10 @@ Http::init()
  */
 Http::shutdown()
     ->groups(['session'])
-    ->inject('utopia')
-    ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->action(function (Response $response, Document $project, Database $dbForProject) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
         $session = $response->getPayload();
         $userId = $session['userId'] ?? '';
@@ -548,7 +546,25 @@ Http::shutdown()
     ->inject('mode')
     ->inject('dbForConsole')
     ->inject('auth')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole, Authorization $auth) use ($parseLabel) {
+    ->action(function (
+        Http $utopia,
+        Request $request,
+        Response $response,
+        Document $project,
+        Document $user,
+        Event $queueForEvents,
+        Audit $queueForAudits,
+        Usage $queueForUsage,
+        Delete $queueForDeletes,
+        EventDatabase $queueForDatabase,
+        Build $queueForBuilds,
+        Messaging $queueForMessaging,
+        Database $dbForProject,
+        Func $queueForFunctions,
+        string $mode,
+        Database $dbForConsole,
+        Authorization $auth,
+    ) use ($parseLabel) {
         if (!empty($user) && !$user->isEmpty() && empty($user->getInternalId())) {
             $user = $auth->skip(fn () => $dbForProject->getDocument('users', $user->getId()));
         }
