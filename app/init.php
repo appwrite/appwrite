@@ -1296,9 +1296,7 @@ App::setResource('console', function () {
             'githubEnabled' => true,
             'githubSecret' => App::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
             'githubAppid' => App::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
-        ],
-        'serviceStatusForDatabases' => false
-    ]);
+        ]]);
 }, []);
 
 App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
