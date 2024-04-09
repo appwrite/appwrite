@@ -335,7 +335,8 @@ class DatabasesConsoleClientTest extends Scope
     /**
      * @depends testCreateCollection
      */
-    public function testConsoleProject(array $data){
+    public function testConsoleProject(array $data)
+    {
         $response = $this->client->call(
             Client::METHOD_GET,
             '/databases/console/collections/' . $data['moviesId'] . '/documents',
