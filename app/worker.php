@@ -16,7 +16,7 @@ use Appwrite\Event\Phone;
 use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
-use Appwrite\Utopia\Queue\Connections;
+use Appwrite\Utopia\Pools\Connections;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;

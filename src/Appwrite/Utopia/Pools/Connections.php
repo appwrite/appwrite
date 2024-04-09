@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Utopia\Queue;
+namespace Appwrite\Utopia\Pools;
 
 use Utopia\Pools\Connection;
 
@@ -23,16 +23,6 @@ class Connections
 
     /**
      * @param string $id
-     * @return Connection
-     * @throws \Exception
-     */
-    public function get(string $id): Connection
-    {
-        return $this->connections[$id] ??  throw new \Exception("Connection '{$id}'  not found");
-    }
-
-    /**
-     * @param string $id
      * @return self
      */
     public function remove(string $id): self
@@ -41,14 +31,20 @@ class Connections
         return $this;
     }
 
+    public function count(): int
+    {
+        return \count($this->connections);
+    }
+
     /**
      * @return self
      * @throws \Exception
      */
     public function reclaim(): self
     {
-        foreach ($this->connections as $connection) {
+        foreach ($this->connections as $id => $connection) {
             $connection->reclaim();
+            unset($this->connections[$id]);
         }
 
         return $this;

@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Appwrite\Utopia\Queue\Connections;
+use Appwrite\Utopia\Pools\Connections;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
