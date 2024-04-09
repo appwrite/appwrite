@@ -224,6 +224,34 @@ trait DatabasesBase
     /**
      * @depends testCreateCollection
      */
+    public function testConsoleProject(array $data)
+    {
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/console/collections/' . $data['moviesId'] . '/documents',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+            ], $this->getHeaders())
+        );
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Please check X-Appwrite-Project header', $response['body']['message']);
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/console/collections/' . $data['moviesId'] . '/documents',
+            array_merge([
+                'content-type' => 'application/json',
+                // 'x-appwrite-project' => '', disabled
+            ], $this->getHeaders())
+        );
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Please check X-Appwrite-Project header', $response['body']['message']);
+    }
+
+    /**
+     * @depends testCreateCollection
+     */
     public function testDisableCollection(array $data): void
     {
         $databaseId = $data['databaseId'];
