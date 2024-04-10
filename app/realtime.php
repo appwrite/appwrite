@@ -38,6 +38,8 @@ require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine();
 
+$redisConnections = [];
+
 // Allows overriding
 if (!function_exists('getConsoleDB')) {
     /**
@@ -60,11 +62,7 @@ if (!function_exists('getConsoleDB')) {
         [$cache, $reclaimCache] = getCache();
 
         $database = new Database($dbAdapter, $cache);
-
-        $database
-            ->setNamespace('_console')
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', '_console');
+        $database->setNamespace('_console');
 
         return [$database, function () use ($dbConnection, $reclaimCache) {
             $dbConnection->reclaim();
@@ -100,11 +98,7 @@ if (!function_exists('getProjectDB')) {
         [$cache, $reclaimCache] = getCache();
 
         $database = new Database($dbAdapter, $cache);
-
-        $database
-            ->setNamespace('_' . $project->getInternalId())
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', $project->getId());
+        $database->setNamespace('_' . $project->getInternalId());
 
         return [$database, function () use ($dbConnection, $reclaimCache) {
             $dbConnection->reclaim();
@@ -325,7 +319,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     });
 });
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, &$redisConnections) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $attempts = 0;
@@ -436,6 +430,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
              */
             [$redis, $reclaimForRedis] = getPubSub();
 
+            $redisConnections[$workerId] = [$redis, $reclaimForRedis];
+
             $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
             if ($redis->ping(true)) {
@@ -514,9 +510,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             sleep(DATABASE_RECONNECT_SLEEP);
             continue;
         } finally {
-            if (isset($reclaimForRedis)) {
-                $reclaimForRedis();
-            }
             if (isset($reclaimForConsole)) {
                 $reclaimForConsole();
             }
@@ -527,6 +520,20 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     }
 
     Console::error('Failed to restart pub/sub...');
+});
+
+$server->onWorkerStop(function (int $workerId) use ($redisConnections) {
+    /**
+     * @var Redis $redis
+     * @var callable $reclaim
+     */
+    [$redis, $reclaim] = $redisConnections[$workerId] ?? null;
+
+    $redis?->unsubscribe(['realtime']);
+
+    if ($reclaim) {
+        $reclaim();
+    }
 });
 
 $server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
