@@ -5,10 +5,8 @@ namespace Tests\E2E\Services\Console;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectConsole;
-use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Tests\E2E\Scopes\SideConsole;
 
 class ModeTest extends Scope
 {
