@@ -630,20 +630,26 @@ App::init()
             : Role::users()->toString();
 
         // Add user roles
-        $memberships = $user->find('teamId', $project->getAttribute('teamId'), 'memberships');
+        if ($project->getId() === 'console') {
+            $memberships = $user->find(
+                'teamInternalId',
+                $project->getAttribute('teamInternalId'),
+                'memberships'
+            );
 
-        if ($memberships) {
-            foreach ($memberships->getAttribute('roles', []) as $memberRole) {
-                switch ($memberRole) {
-                    case 'owner':
-                        $role = Auth::USER_ROLE_OWNER;
-                        break;
-                    case 'admin':
-                        $role = Auth::USER_ROLE_ADMIN;
-                        break;
-                    case 'developer':
-                        $role = Auth::USER_ROLE_DEVELOPER;
-                        break;
+            if ($memberships) {
+                foreach ($memberships->getAttribute('roles', []) as $memberRole) {
+                    switch ($memberRole) {
+                        case 'owner':
+                            $role = Auth::USER_ROLE_OWNER;
+                            break;
+                        case 'admin':
+                            $role = Auth::USER_ROLE_ADMIN;
+                            break;
+                        case 'developer':
+                            $role = Auth::USER_ROLE_DEVELOPER;
+                            break;
+                    }
                 }
             }
         }
