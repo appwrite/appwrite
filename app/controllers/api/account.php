@@ -3526,7 +3526,8 @@ App::get('/v1/account/mfa/factors')
         $factors = new Document([
             Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
             Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
-            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
+            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false),
+            Type::RECOVERY_CODE => true
         ]);
 
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
