@@ -122,8 +122,6 @@ class OpenAPI3 extends Format
             $url = \str_replace('/v1', '', $route->getPath());
             $scope = $route->getLabel('scope', '');
             $consumes = [$route->getLabel('sdk.request.type', 'application/json')];
-            $event = $route->getLabel('event', '');
-
 
             $method = $route->getLabel('sdk.method', \uniqid());
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__ . '/../../../../' . $route->getLabel('sdk.description', '')) : null;
@@ -174,7 +172,6 @@ class OpenAPI3 extends Format
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
                     'packaging' => $route->getLabel('sdk.packaging', false),
-                    'event' => $event,
                 ],
             ];
 
