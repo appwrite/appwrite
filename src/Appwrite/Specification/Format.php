@@ -30,18 +30,18 @@ abstract class Format
     protected array $keys;
     protected int $authCount;
     protected array $params = [
-        "name" => "",
-        "description" => "",
-        "endpoint" => "https://localhost",
-        "version" => "1.0.0",
-        "terms" => "",
-        "support.email" => "",
-        "support.url" => "",
-        "contact.name" => "",
-        "contact.email" => "",
-        "contact.url" => "",
-        "license.name" => "",
-        "license.url" => "",
+        'name' => '',
+        'description' => '',
+        'endpoint' => 'https://localhost',
+        'version' => '1.0.0',
+        'terms' => '',
+        'support.email' => '',
+        'support.url' => '',
+        'contact.name' => '',
+        'contact.email' => '',
+        'contact.url' => '',
+        'license.name' => '',
+        'license.url' => '',
     ];
 
     /*
@@ -49,9 +49,9 @@ abstract class Format
      */
     protected array $enumBlacklist = [
         [
-            "namespace" => "users",
-            "method" => "getUsage",
-            "parameter" => "provider",
+            'namespace' => 'users',
+            'method' => 'getUsage',
+            'parameter' => 'provider',
         ],
     ];
 
@@ -118,7 +118,7 @@ abstract class Format
      *
      * @return string
      */
-    public function getParam(string $key, string $default = ""): string
+    public function getParam(string $key, string $default = ''): string
     {
         return $this->params[$key] ?? $default;
     }
@@ -129,7 +129,7 @@ abstract class Format
         string $param
     ): ?string {
         switch ($service) {
-            case "account":
+            case 'account':
                 switch ($method) {
                     case 'createOAuth2Session':
                     case 'createOAuth2Token':
@@ -154,14 +154,14 @@ abstract class Format
                         break;
                 }
                 break;
-            case "avatars":
+            case 'avatars':
                 switch ($method) {
-                    case "getBrowser":
-                        return "Browser";
-                    case "getCreditCard":
-                        return "CreditCard";
-                    case "getFlag":
-                        return "Flag";
+                    case 'getBrowser':
+                        return 'Browser';
+                    case 'getCreditCard':
+                        return 'CreditCard';
+                    case 'getFlag':
+                        return 'Flag';
                 }
                 break;
             case 'databases':
@@ -180,24 +180,24 @@ abstract class Format
                 switch ($method) {
                     case 'createRelationshipAttribute':
                         switch ($param) {
-                            case "type":
-                                return "RelationshipType";
-                            case "onDelete":
-                                return "RelationMutate";
+                            case 'type':
+                                return 'RelationshipType';
+                            case 'onDelete':
+                                return 'RelationMutate';
                         }
                         break;
-                    case "updateRelationshipAttribute":
+                    case 'updateRelationshipAttribute':
                         switch ($param) {
-                            case "onDelete":
-                                return "RelationMutate";
+                            case 'onDelete':
+                                return 'RelationMutate';
                         }
                         break;
-                    case "createIndex":
+                    case 'createIndex':
                         switch ($param) {
-                            case "type":
-                                return "IndexType";
-                            case "orders":
-                                return "OrderBy";
+                            case 'type':
+                                return 'IndexType';
+                            case 'orders':
+                                return 'OrderBy';
                         }
                 }
                 break;
@@ -205,8 +205,8 @@ abstract class Format
                 switch ($method) {
                     case 'createPlatform':
                         switch ($param) {
-                            case "type":
-                                return "PlatformType";
+                            case 'type':
+                                return 'PlatformType';
                         }
                         break;
                     case 'createSmtpTest':
@@ -295,33 +295,33 @@ abstract class Format
     ): array {
         $values = [];
         switch ($service) {
-            case "avatars":
+            case 'avatars':
                 switch ($method) {
-                    case "getBrowser":
-                        $codes = Config::getParam("avatar-browsers");
+                    case 'getBrowser':
+                        $codes = Config::getParam('avatar-browsers');
                         foreach ($codes as $code => $value) {
-                            $values[] = $value["name"];
+                            $values[] = $value['name'];
                         }
                         return $values;
-                    case "getCreditCard":
-                        $codes = Config::getParam("avatar-credit-cards");
+                    case 'getCreditCard':
+                        $codes = Config::getParam('avatar-credit-cards');
                         foreach ($codes as $code => $value) {
-                            $values[] = $value["name"];
+                            $values[] = $value['name'];
                         }
                         return $values;
-                    case "getFlag":
-                        $codes = Config::getParam("avatar-flags");
+                    case 'getFlag':
+                        $codes = Config::getParam('avatar-flags');
                         foreach ($codes as $code => $value) {
-                            $values[] = $value["name"];
+                            $values[] = $value['name'];
                         }
                         return $values;
                 }
                 break;
-            case "databases":
+            case 'databases':
                 switch ($method) {
-                    case "getUsage":
-                    case "getCollectionUsage":
-                    case "getDatabaseUsage":
+                    case 'getUsage':
+                    case 'getCollectionUsage':
+                    case 'getDatabaseUsage':
                         // Range Enum Keys
                         $values  = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
                         return $values;
@@ -329,14 +329,14 @@ abstract class Format
                 break;
             case 'function':
                 switch ($method) {
-                    case "getUsage":
-                    case "getFunctionUsage":
+                    case 'getUsage':
+                    case 'getFunctionUsage':
                         // Range Enum Keys
                         $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
                         return $values;
                 }
                 break;
-            case "users":
+            case 'users':
                 switch ($method) {
                     case 'getUsage':
                     case 'getUserUsage':
@@ -347,10 +347,10 @@ abstract class Format
                         }
                 }
                 break;
-            case "storage":
+            case 'storage':
                 switch ($method) {
-                    case "getUsage":
-                    case "getBucketUsage":
+                    case 'getUsage':
+                    case 'getBucketUsage':
                         // Range Enum Keys
                         $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
                         return $values;

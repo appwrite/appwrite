@@ -314,7 +314,7 @@ class Specs extends Action
         $nodeEvents = [];
         // go through each subNode's to find resources
         foreach ($events as $key => $subNode) {
-            $pattern = "";
+            $pattern = '';
             // if it's not an array of nodes, but something description or model, skip
             if (!is_array($subNode)) {
                 continue;
@@ -343,13 +343,13 @@ class Specs extends Action
             // for example, joining databases.* with the child event collections.*
             foreach ($subEvents as $key => $subEvent) {
                 $nodeEvents[] = [
-                    "pattern" => $pattern . "." . $subEvent["pattern"],
+                    'pattern' => $pattern . '.' . $subEvent['pattern'],
                     '$model' =>
                         $subEvent['$model'] === null
                             ? $subNode['$model']
                             : $subEvent['$model'],
                     '$description' =>
-                        $subEvent['$description'] === ""
+                        $subEvent['$description'] === ''
                             ? $subNode['$description']
                             : $subEvent['$description'],
                 ];
