@@ -322,9 +322,9 @@ class Specs extends Action
 
             // add wild card if applicable
             if ($subNode['$resource'] ?? false) {
-                $pattern = "{$key}.*";
+                $pattern = '{$key}.*';
             } else {
-                $pattern = "{$key}";
+                $pattern = '{$key}';
             }
 
             $model = isset($subNode['$model']) ? $subNode['$model'] : $parentModel;
