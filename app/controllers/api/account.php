@@ -3821,6 +3821,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
             $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
             if (in_array($otp, $mfaRecoveryCodes)) {
                 $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
+                $mfaRecoveryCodes = array_values($mfaRecoveryCodes);
                 $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
                 $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -4069,6 +4070,7 @@ App::put('/v1/account/mfa/challenge')
                 $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
                 if (in_array($otp, $mfaRecoveryCodes)) {
                     $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
+                    $mfaRecoveryCodes = array_values($mfaRecoveryCodes);
                     $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
                     $dbForProject->updateDocument('users', $user->getId(), $user);
 
