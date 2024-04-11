@@ -33,6 +33,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Utopia\Pools\Connections;
 use Utopia\App;
 use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
@@ -881,11 +882,14 @@ App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')))
 App::setResource('localeCodes', function () {
     return array_map(fn($locale) => $locale['code'], Config::getParam('locale-codes', []));
 });
-
 // Queues
-App::setResource('queue', function (Group $pools) {
-    return $pools->get('queue')->pop()->getResource();
-}, ['pools']);
+App::setResource('queue', function (Group $pools, Connections $connections) {
+    $connection = $pools->get('queue')->pop();
+
+    $connections->add($connection);
+
+    return $connection->getResource();
+}, ['pools', 'connections']);
 App::setResource('queueForMessaging', function (Connection $queue) {
     return new Phone($queue);
 }, ['queue']);
@@ -1126,15 +1130,22 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
+App::setResource('connections', function () {
+    return new Connections();
+});
+
+App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project, Connections $connections) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
     }
 
-    $dbAdapter = $pools
+    $connection = $pools
         ->get($project->getAttribute('database'))
-        ->pop()
-        ->getResource();
+        ->pop();
+
+    $connections->add($connection);
+
+    $dbAdapter = $connection->getResource();
 
     $database = new Database($dbAdapter, $cache);
 
@@ -1145,14 +1156,16 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
-}, ['pools', 'dbForConsole', 'cache', 'project']);
+}, ['pools', 'dbForConsole', 'cache', 'project', 'connections']);
 
-App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
-    $dbAdapter = $pools
+App::setResource('dbForConsole', function (Group $pools, Cache $cache, Connections $connections) {
+    $connection = $pools
         ->get('console')
-        ->pop()
-        ->getResource()
-    ;
+        ->pop();
+
+    $connections->add($connection);
+
+    $dbAdapter = $connection->getResource();
 
     $database = new Database($dbAdapter, $cache);
 
@@ -1163,12 +1176,12 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
-}, ['pools', 'cache']);
+}, ['pools', 'cache', 'connections']);
 
-App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, Cache $cache, Connections $connections) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, $connections, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -1180,48 +1193,47 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
             $database
                 ->setNamespace('_' . $project->getInternalId())
-                ->setMetadata('host', \gethostname())
-                ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
             return $database;
         }
 
-        $dbAdapter = $pools
+        $connection = $pools
             ->get($databaseName)
-            ->pop()
-            ->getResource();
+            ->pop();
+
+        $connections->add($connection);
+
+        $dbAdapter = $connection->getResource();
 
         $database = new Database($dbAdapter, $cache);
 
-        $databases[$databaseName] = $database;
-
         $database
             ->setNamespace('_' . $project->getInternalId())
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', $project->getId())
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
         return $database;
     };
 
     return $getProjectDB;
-}, ['pools', 'dbForConsole', 'cache']);
+}, ['pools', 'dbForConsole', 'cache', 'connections']);
 
-App::setResource('cache', function (Group $pools) {
+App::setResource('cache', function (Group $pools, Connections $connections) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
     foreach ($list as $value) {
-        $adapters[] = $pools
+        $connection = $pools
             ->get($value)
-            ->pop()
-            ->getResource()
-        ;
+            ->pop();
+
+        $connections->add($connection);
+
+        $adapters[] = $connection->getResource();
     }
 
     return new Cache(new Sharding($adapters));
-}, ['pools']);
+}, ['pools', 'connections']);
 
 App::setResource('deviceLocal', function () {
     return new Local();
@@ -1266,7 +1278,9 @@ function getDevice($root): Device
             case Storage::DEVICE_S3:
                 return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
             case STORAGE::DEVICE_DO_SPACES:
-                return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                $device = new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                $device->setHttpVersion(S3::HTTP_VERSION_1_1);
+                return $device;
             case Storage::DEVICE_BACKBLAZE:
                 return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
             case Storage::DEVICE_LINODE:
@@ -1295,7 +1309,9 @@ function getDevice($root): Device
                 $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
                 $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
                 $doSpacesAcl = 'private';
-                return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+                $device = new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+                $device->setHttpVersion(S3::HTTP_VERSION_1_1);
+                return $device;
             case Storage::DEVICE_BACKBLAZE:
                 $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
                 $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
