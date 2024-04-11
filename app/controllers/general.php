@@ -368,6 +368,15 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 }
 
 App::init()
+    ->groups(['database', 'function', 'storage', 'messaging'])
+    ->inject('project')
+    ->action(function (Document $project) {
+        if ($project->getId() === 'console') {
+            throw new Exception(AppwriteException::PROJECT_RESERVED_PROJECT, 'Please check X-Appwrite-Project header');
+        }
+    });
+
+App::init()
     ->groups(['api', 'web'])
     ->inject('utopia')
     ->inject('swooleRequest')
