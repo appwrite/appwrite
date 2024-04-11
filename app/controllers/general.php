@@ -820,35 +820,27 @@ App::error()
                 }
                 break;
             case 'Utopia\Database\Exception\Conflict':
-                \var_dump('Wrapping conflict exception');
                 $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
                 break;
             case 'Utopia\Database\Exception\Timeout':
-                \var_dump('Wrapping timeout exception');
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
                 break;
             case 'Utopia\Database\Exception\Query':
-                \var_dump('Wrapping query exception');
                 $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, $error->getMessage(), previous: $error);
                 break;
             case 'Utopia\Database\Exception\Structure':
-                \var_dump('Wrapping structure exception');
                 $error = new AppwriteException(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $error->getMessage(), previous: $error);
                 break;
             case 'Utopia\Database\Exception\Duplicate':
-                \var_dump('Wrapping duplicate exception');
                 $error = new AppwriteException(AppwriteException::DOCUMENT_ALREADY_EXISTS);
                 break;
             case 'Utopia\Database\Exception\Restricted':
-                \var_dump('Wrapping restricted exception');
                 $error = new AppwriteException(AppwriteException::DOCUMENT_DELETE_RESTRICTED);
                 break;
             case 'Utopia\Database\Exception\Authorization':
-                \var_dump('Wrapping authorization exception');
                 $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
                 break;
             case 'Utopia\Database\Exception\InvalidRelationshipValue':
-                \var_dump('Wrapping relationship exception');
                 $error = new AppwriteException(AppwriteException::RELATIONSHIP_VALUE_INVALID);
                 break;
         }
