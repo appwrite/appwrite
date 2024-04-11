@@ -382,15 +382,6 @@ function updateAttribute(
 }
 
 App::init()
-    ->groups(['database', 'function', 'storage', 'messaging'])
-    ->inject('project')
-    ->action(function (Document $project) {
-        if ($project->getId() === 'console') {
-            throw new Exception(Exception::PROJECT_RESERVED_PROJECT, 'Please check X-Appwrite-Project header');
-        }
-    });
-
-App::init()
     ->groups(['api', 'database'])
     ->inject('request')
     ->inject('dbForProject')

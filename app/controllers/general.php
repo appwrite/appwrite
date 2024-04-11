@@ -5,6 +5,7 @@ require_once __DIR__ . '/../init.php';
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Usage;
+use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
@@ -356,6 +357,15 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     $utopia->getRoute()?->label('error', '');
     return false;
 }
+
+App::init()
+    ->groups(['database', 'function', 'storage', 'messaging'])
+    ->inject('project')
+    ->action(function (Document $project) {
+        if ($project->getId() === 'console') {
+            throw new Exception(Exception::PROJECT_RESERVED_PROJECT, 'Please check X-Appwrite-Project header');
+        }
+    });
 
 App::init()
     ->groups(['api', 'web'])
