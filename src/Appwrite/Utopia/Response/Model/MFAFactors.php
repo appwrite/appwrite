@@ -13,19 +13,25 @@ class MFAFactors extends Model
         $this
             ->addRule(Type::TOTP, [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'TOTP',
+                'description' => 'Can TOTP be used for MFA challenge for this account.',
                 'default' => false,
                 'example' => true
             ])
             ->addRule(Type::PHONE, [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Phone',
+                'description' => 'Can phone (SMS) be used for MFA challenge for this account.',
                 'default' => false,
                 'example' => true
             ])
             ->addRule(Type::EMAIL, [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Email',
+                'description' => 'Can email be used for MFA challenge for this account.',
+                'default' => false,
+                'example' => true
+            ])
+            ->addRule(Type::RECOVERY_CODE, [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Can recovery code be used for MFA challenge for this account.',
                 'default' => false,
                 'example' => true
             ])
