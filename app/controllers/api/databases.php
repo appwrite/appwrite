@@ -382,7 +382,7 @@ function updateAttribute(
 }
 
 App::init()
-    ->groups(['database'])
+    ->groups(['database', 'function', 'storage', 'messaging'])
     ->inject('project')
     ->action(function (Document $project) {
         if ($project->getId() === 'console') {
