@@ -640,7 +640,7 @@ App::init()
             : Role::users()->toString();
 
         // Add user roles
-        $memberships = $user->find('teamId', $project->getAttribute('teamId'), 'memberships');
+        $memberships = $user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships');
 
         if ($memberships) {
             foreach ($memberships->getAttribute('roles', []) as $memberRole) {
