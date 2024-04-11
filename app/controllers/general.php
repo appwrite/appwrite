@@ -372,7 +372,7 @@ App::init()
     ->inject('project')
     ->action(function (Document $project) {
         if ($project->getId() === 'console') {
-            throw new Exception(AppwriteException::PROJECT_RESERVED_PROJECT, 'Please check X-Appwrite-Project header');
+            throw new Exception(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Access to this API is forbidden. Please check your "X-Appwrite-Project" header');
         }
     });
 
