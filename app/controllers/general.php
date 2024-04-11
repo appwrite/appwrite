@@ -841,7 +841,7 @@ App::error()
                 $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
                 break;
             case 'Utopia\Database\Exception\InvalidRelationshipValue':
-                $error = new AppwriteException(AppwriteException::RELATIONSHIP_VALUE_INVALID);
+                $error = new AppwriteException(AppwriteException::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
                 break;
         }
 
