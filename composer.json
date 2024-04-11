@@ -69,7 +69,7 @@
         "utopia-php/storage": "0.18.*",
         "utopia-php/swoole": "0.5.*",
         "utopia-php/vcs": "0.6.*",
-        "utopia-php/websocket": "dev-feat-worker-stop",
+        "utopia-php/websocket": "0.2.0",
         "matomo/device-detector": "6.1.*",
         "dragonmantank/cron-expression": "3.3.2",
         "phpmailer/phpmailer": "6.8.0",

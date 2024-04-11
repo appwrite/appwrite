@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ce7a7f429d68836b8667e2b02440fc3f",
+    "content-hash": "7ec104df6534b79c176a50541bf5ca24",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2273,16 +2273,16 @@
         },
         {
             "name": "utopia-php/websocket",
-            "version": "dev-feat-worker-stop",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "b7adfab69d4c48a60272fa4cb3328f9b400b0ffa"
+                "reference": "e9d0919b321744a61f12563f5791c47ba9f57810"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/b7adfab69d4c48a60272fa4cb3328f9b400b0ffa",
-                "reference": "b7adfab69d4c48a60272fa4cb3328f9b400b0ffa",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/e9d0919b321744a61f12563f5791c47ba9f57810",
+                "reference": "e9d0919b321744a61f12563f5791c47ba9f57810",
                 "shasum": ""
             },
             "require": {
@@ -2292,9 +2292,8 @@
                 "laravel/pint": "^1.15",
                 "phpstan/phpstan": "^1.8",
                 "phpunit/phpunit": "^9.5.5",
-                "swoole/ide-helper": "4.6.6",
+                "swoole/ide-helper": "5.1.2",
                 "textalk/websocket": "1.5.2",
-                "vimeo/psalm": "^4.8.1",
                 "workerman/workerman": "^4.0"
             },
             "type": "library",
@@ -2317,9 +2316,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/websocket/issues",
-                "source": "https://github.com/utopia-php/websocket/tree/feat-worker-stop"
+                "source": "https://github.com/utopia-php/websocket/tree/0.2.0"
             },
-            "time": "2024-04-09T04:48:45+00:00"
+            "time": "2024-04-09T08:28:11+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -5137,9 +5136,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/websocket": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
