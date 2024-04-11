@@ -148,7 +148,7 @@ return [
                 'family' => APP_PLATFORM_CLIENT,
                 'prism' => 'javascript',
                 'source' => \realpath(__DIR__ . '/../sdks/client-react-native'),
-                'gitUrl' => 'git@github.com:appwrite/sdk-for-react-native.git',
+                'gitUrl' => 'https://github.com/appwrite/sdk-for-react-native.git',
                 'gitRepoName' => 'sdk-for-react-native',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
