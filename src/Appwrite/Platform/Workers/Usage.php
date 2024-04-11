@@ -4,12 +4,12 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\UsageDump;
 use Exception;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Usage extends Action
 {
@@ -58,7 +58,7 @@ class Usage extends Action
         }
         //Todo Figure out way to preserve keys when the container is being recreated @shimonewman
 
-        $aggregationInterval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
+        $aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
         $project = new Document($payload['project'] ?? []);
         $projectId = $project->getInternalId();
         foreach ($payload['reduce'] ?? [] as $document) {

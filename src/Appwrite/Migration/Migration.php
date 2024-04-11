@@ -4,7 +4,6 @@ namespace Appwrite\Migration;
 
 use Exception;
 use Swoole\Runtime;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -12,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
@@ -81,6 +81,8 @@ abstract class Migration
         '1.5.0'  => 'V20',
         '1.5.1'  => 'V20',
         '1.5.2'  => 'V20',
+        '1.5.3'  => 'V20',
+        '1.5.4'  => 'V20',
     ];
 
     /**
@@ -250,7 +252,7 @@ abstract class Migration
             default => 'projects',
         };
 
-        if (!$this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
+        if (!$this->projectDB->exists(System::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
             $attributes = [];
             $indexes = [];
             $collection = $this->collections[$collectionType][$id];

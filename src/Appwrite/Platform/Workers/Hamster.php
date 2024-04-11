@@ -6,7 +6,6 @@ use Appwrite\Event\Hamster as EventHamster;
 use Appwrite\Network\Validator\Origin;
 use Utopia\Analytics\Adapter\Mixpanel;
 use Utopia\Analytics\Event as AnalyticsEvent;
-use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -17,6 +16,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Hamster extends Action
 {
@@ -67,7 +67,7 @@ class Hamster extends Action
      */
     public function action(Message $message, Group $pools, Cache $cache, Database $dbForConsole): void
     {
-        $token = App::getEnv('_APP_MIXPANEL_TOKEN', '');
+        $token = System::getEnv('_APP_MIXPANEL_TOKEN', '');
         if (empty($token)) {
             throw new \Exception('Missing MixPanel Token');
         }
