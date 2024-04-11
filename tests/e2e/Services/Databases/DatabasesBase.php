@@ -165,7 +165,7 @@ trait DatabasesBase
             ], $this->getHeaders())
         );
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Please check X-Appwrite-Project header', $response['body']['message']);
+        $this->assertEquals('Access to this API is forbidden. Please check your "X-Appwrite-Project" header', $response['body']['message']);
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -176,7 +176,7 @@ trait DatabasesBase
             ], $this->getHeaders())
         );
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Please check X-Appwrite-Project header', $response['body']['message']);
+        $this->assertEquals('Access to this API is forbidden. Please check your "X-Appwrite-Project" header', $response['body']['message']);
     }
 
     /**
