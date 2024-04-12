@@ -73,6 +73,7 @@ return [
     'GD',
     'GT',
     'GY',
+    'HK',
     'HN',
     'HR',
     'HT',
