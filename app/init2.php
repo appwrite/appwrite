@@ -1,5 +1,11 @@
 <?php
 
+require_once __DIR__ . '/init/constants.php';
+require_once __DIR__ . '/init/config.php';
+require_once __DIR__ . '/init/locale.php';
+require_once __DIR__ . '/init/database/filters.php';
+require_once __DIR__ . '/init/database/formats.php';
+
 global $http, $container;
 
 use Ahc\Jwt\JWT;
@@ -84,6 +90,88 @@ if (!Http::isProduction()) {
     // Allow specific domains to skip public domain validation in dev environment
     // Useful for existing tests involving webhooks
     PublicDomain::allow(['request-catcher']);
+}
+
+function getDevice($root): Device
+{
+    $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+
+    if (!empty($connection)) {
+        $acl = 'private';
+        $device = Storage::DEVICE_LOCAL;
+        $accessKey = '';
+        $accessSecret = '';
+        $bucket = '';
+        $region = '';
+
+        try {
+            $dsn = new DSN($connection);
+            $device = $dsn->getScheme();
+            $accessKey = $dsn->getUser() ?? '';
+            $accessSecret = $dsn->getPassword() ?? '';
+            $bucket = $dsn->getPath() ?? '';
+            $region = $dsn->getParam('region');
+        } catch (\Throwable $e) {
+            Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
+        }
+
+        switch ($device) {
+            case Storage::DEVICE_S3:
+                return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case STORAGE::DEVICE_DO_SPACES:
+                return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case Storage::DEVICE_BACKBLAZE:
+                return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case Storage::DEVICE_LINODE:
+                return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case Storage::DEVICE_WASABI:
+                return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case Storage::DEVICE_LOCAL:
+            default:
+                return new Local($root);
+        }
+    } else {
+        switch (strtolower(System::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) ?? '')) {
+            case Storage::DEVICE_LOCAL:
+            default:
+                return new Local($root);
+            case Storage::DEVICE_S3:
+                $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+                $s3SecretKey = System::getEnv('_APP_STORAGE_S3_SECRET', '');
+                $s3Region = System::getEnv('_APP_STORAGE_S3_REGION', '');
+                $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
+                $s3Acl = 'private';
+                return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+            case Storage::DEVICE_DO_SPACES:
+                $doSpacesAccessKey = System::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
+                $doSpacesSecretKey = System::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
+                $doSpacesRegion = System::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
+                $doSpacesBucket = System::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
+                $doSpacesAcl = 'private';
+                return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+            case Storage::DEVICE_BACKBLAZE:
+                $backblazeAccessKey = System::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
+                $backblazeSecretKey = System::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
+                $backblazeRegion = System::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
+                $backblazeBucket = System::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
+                $backblazeAcl = 'private';
+                return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
+            case Storage::DEVICE_LINODE:
+                $linodeAccessKey = System::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
+                $linodeSecretKey = System::getEnv('_APP_STORAGE_LINODE_SECRET', '');
+                $linodeRegion = System::getEnv('_APP_STORAGE_LINODE_REGION', '');
+                $linodeBucket = System::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
+                $linodeAcl = 'private';
+                return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
+            case Storage::DEVICE_WASABI:
+                $wasabiAccessKey = System::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
+                $wasabiSecretKey = System::getEnv('_APP_STORAGE_WASABI_SECRET', '');
+                $wasabiRegion = System::getEnv('_APP_STORAGE_WASABI_REGION', '');
+                $wasabiBucket = System::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
+                $wasabiAcl = 'private';
+                return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
+        }
+    }
 }
 
 $global = new Registry();
@@ -741,6 +829,41 @@ $queueForMigrations
         return new Migration($queue);
     });
 $container->set($queueForMigrations);
+
+$deviceForLocal = new Dependency();
+$deviceForLocal
+    ->setName('deviceForLocal')
+    ->setCallback(function () {
+        return new Local();
+    });
+$container->set($deviceForLocal);
+
+$deviceForFiles = new Dependency();
+$deviceForFiles
+    ->setName('deviceForFiles')
+    ->inject('project')
+    ->setCallback(function ($project) {
+        return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+    });
+$container->set($deviceForFiles);
+
+$deviceForFunctions = new Dependency();
+$deviceForFunctions
+    ->setName('deviceForFunctions')
+    ->inject('project')
+    ->setCallback(function ($project) {
+        return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+    });
+$container->set($deviceForFunctions);
+
+$deviceForBuilds = new Dependency();
+$deviceForBuilds
+    ->setName('deviceForBuilds')
+    ->inject('project')
+    ->setCallback(function ($project) {
+        return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+    });
+$container->set($deviceForBuilds);
 
 $clients = new Dependency();
 $clients

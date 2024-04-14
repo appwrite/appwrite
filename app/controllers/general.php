@@ -902,7 +902,7 @@ include_once 'api/locale.php';
 //include_once 'api/migrations.php';
 include_once 'api/projects.php';
 //include_once 'api/proxy.php';
-//include_once 'api/storage.php';
+include_once 'api/storage.php';
 include_once 'api/teams.php';
 include_once 'api/users.php';
 //include_once 'api/vcs.php';

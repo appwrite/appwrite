@@ -42,7 +42,6 @@ use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\URL;
 use Utopia\Http\Validator\WhiteList;
 use Utopia\Locale\Locale;
-use Utopia\Pools\Group;
 use Utopia\System\System;
 
 Http::init()

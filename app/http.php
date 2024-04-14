@@ -36,6 +36,8 @@ $server = new Server('0.0.0.0', '80', [
     'open_http2_protocol' => true,
     // 'http_compression' => true,
     // 'http_compression_level' => 6,
+    'package_max_length' => $payloadSize,
+    'buffer_output_size' => $payloadSize,
 
     // Server
     // 'log_level' => 0,
@@ -57,11 +59,6 @@ $http->setRequestClass(Request::class);
 $http->setResponseClass(Response::class);
 
 //require_once __DIR__ . '/init.php';
-require_once __DIR__ . '/init/constants.php';
-require_once __DIR__ . '/init/config.php';
-require_once __DIR__ . '/init/locale.php';
-require_once __DIR__ . '/init/database/filters.php';
-require_once __DIR__ . '/init/database/formats.php';
 require_once __DIR__ . '/init2.php';
 require_once __DIR__ . '/controllers/general.php';
 
