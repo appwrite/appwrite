@@ -78,39 +78,12 @@ use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 use Utopia\Cache\Adapter\None;
 
+Http::setMode(System::getEnv('_APP_ENV', Http::MODE_TYPE_PRODUCTION));
 
-function getAdapter($type, $scheme, $resource) {
-    switch ($type) {
-        case 'database':
-            $adapter = match ($scheme) {
-                'mariadb' => new MariaDB($resource),
-                'mysql' => new MySQL($resource),
-                default => null
-            };
-
-            $adapter->setDatabase($scheme);
-            break;
-        case 'pubsub':
-            $adapter = $resource();
-            break;
-        case 'queue':
-            $adapter = match ($scheme) {
-                //'redis' => new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()),
-                default => null
-            };
-            break;
-        case 'cache':
-            $adapter = match ($scheme) {
-                'redis' => new RedisCache($resource),
-                default => null
-            };
-            break;
-
-        default:
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
-    }
-
-    return $adapter; 
+if (!Http::isProduction()) {
+    // Allow specific domains to skip public domain validation in dev environment
+    // Useful for existing tests involving webhooks
+    PublicDomain::allow(['request-catcher']);
 }
 
 $global = new Registry();
@@ -138,6 +111,10 @@ $global->set('geodb', function () {
      * @disregard P1009 Undefined type
      */
     return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-02.mmdb');
+});
+
+$global->set('hooks', function () {
+   return new Hooks();
 });
 
 $global->set('pools', (function () {
@@ -199,9 +176,12 @@ $global->set('pools', (function () {
         $multipe = $connection['multiple'] ?? false;
         $schemes = $connection['schemes'] ?? [];
         $dsns = explode(',', $connection['dsns'] ?? '');
+        $config = [];
+
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
             $name = ($multipe) ? $dsn[0] : 'main';
+            $config[] = $name;
             $dsn = $dsn[1] ?? '';
             
             if (empty($dsn)) {
@@ -267,6 +247,8 @@ $global->set('pools', (function () {
                 'dsn' => $dsn,
             ];
         }
+
+        Config::setParam('pools-' . $key, $config);
     }
 
     return function () use ($pools): array {
@@ -401,6 +383,34 @@ $user
     });
 $container->set($user);
 
+$session = new Dependency();
+$session
+    ->setName('session')
+    ->inject('user')
+    ->inject('project')
+    ->setCallback(function (Document $user, Document $project) {
+        if ($user->isEmpty()) {
+            return;
+        }
+
+        $sessions = $user->getAttribute('sessions', []);
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration);
+
+        if (!$sessionId) {
+            return;
+        }
+
+        foreach ($sessions as $session) {
+            if ($sessionId === $session->getId()) {
+                return $session;
+            }
+        }
+
+        return;
+    });
+$container->set($session);
+
 $console = new Dependency();
 $console
     ->setName('console')
@@ -498,6 +508,8 @@ $dbForProject
             'mysql' => new MySQL($connection),
             default => null
         };
+
+        $adapter->setDatabase($dsn->getPath());
     
         $database = new Database($adapter, $cache);
         $database->setAuthorization($authorization);
@@ -531,7 +543,7 @@ $dbForConsole
             default => null
         };
 
-        $adapter->setDatabase('appwrite');
+        $adapter->setDatabase($dsn->getPath());
 
         $database = new Database($adapter, $cache);
         $database->setAuthorization($authorization);
@@ -788,6 +800,21 @@ $clients
     });
 $container->set($clients);
 
+$servers = new Dependency();
+$servers
+    ->setName('servers')
+    ->setCallback(function () {
+        $platforms = Config::getParam('platforms');
+        $server = $platforms[APP_PLATFORM_SERVER];
+
+        $languages = array_map(function ($language) {
+            return strtolower($language['name']);
+        }, $server['sdks']);
+
+        return $languages;
+    });
+$container->set($servers);
+
 $geodb = new Dependency();
 $geodb
     ->setName('geodb')
@@ -796,3 +823,43 @@ $geodb
         return $register->get('geodb');
     });
 $container->set($geodb);
+
+$passwordsDictionary = new Dependency();
+$passwordsDictionary
+    ->setName('passwordsDictionary')
+    ->setCallback(function () {
+        $content = file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
+        $content = explode("\n", $content);
+        $content = array_flip($content);
+        return $content;
+    });
+
+$container->set($passwordsDictionary);
+
+$hooks = new Dependency();
+$hooks
+    ->setName('hooks')
+    ->inject('registry')
+    ->setCallback(function (Registry $registry) {
+        return $registry->get('hooks');
+    });
+
+$container->set($hooks);
+
+$requestTimestamp = new Dependency();
+$requestTimestamp
+    ->setName('requestTimestamp')
+    ->inject('request')
+    ->setCallback(function ($request) {
+        $timestampHeader = $request->getHeader('x-appwrite-timestamp');
+        $requestTimestamp = null;
+        if (!empty($timestampHeader)) {
+            try {
+                $requestTimestamp = new \DateTime($timestampHeader);
+            } catch (\Throwable $e) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Timestamp header value');
+            }
+        }
+        return $requestTimestamp;
+    });
+$container->set($requestTimestamp);

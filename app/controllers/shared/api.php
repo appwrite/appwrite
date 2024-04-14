@@ -29,6 +29,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\System\System;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Http\Validator\WhiteList;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
@@ -152,7 +153,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
 
 Http::init()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('dbForConsole')
     ->inject('project')
@@ -160,10 +161,8 @@ Http::init()
     ->inject('session')
     ->inject('servers')
     ->inject('mode')
-    ->inject('auth')
-    ->action(function (Http $utopia, Request $request, Database $dbForConsole, Document $project, Document $user, ?Document $session, array $servers, string $mode, Authorization $auth) {
-        $route = $utopia->getRoute();
-
+    ->inject('authorization')
+    ->action(function (Route $route, Request $request, Database $dbForConsole, Document $project, Document $user, ?Document $session, array $servers, string $mode, Authorization $authorization) {
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
@@ -225,8 +224,8 @@ Http::init()
                     throw new Exception(Exception::PROJECT_KEY_EXPIRED);
                 }
 
-                $auth->addRole(Auth::USER_ROLE_APPS);
-                $auth->setDefaultStatus(false);  // Cancel security segmentation for API keys.
+                $authorization->addRole(Auth::USER_ROLE_APPS);
+                $authorization->setDefaultStatus(false);  // Cancel security segmentation for API keys.
 
                 $accessedAt = $key->getAttribute('accessedAt', '');
                 if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
@@ -252,10 +251,10 @@ Http::init()
             }
         }
 
-        $auth->addRole($role);
+        $authorization->addRole($role);
 
-        foreach (Auth::getRoles($user, $auth) as $authRole) {
-            $auth->addRole($authRole);
+        foreach (Auth::getRoles($user, $authorization) as $authRole) {
+            $authorization->addRole($authRole);
         }
 
         $service = $route->getLabel('sdk.namespace', '');
@@ -263,7 +262,7 @@ Http::init()
             if (
                 array_key_exists($service, $project->getAttribute('services', []))
                 && !$project->getAttribute('services', [])[$service]
-                && !(Auth::isPrivilegedUser($auth->getRoles()) || Auth::isAppUser($auth->getRoles()))
+                && !(Auth::isPrivilegedUser($authorization->getRoles()) || Auth::isAppUser($authorization->getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
@@ -302,7 +301,7 @@ Http::init()
 
 Http::init()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -316,15 +315,12 @@ Http::init()
     ->inject('queueForUsage')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('auth')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode, Authorization $auth) use ($databaseListener) {
-
-        $route = $utopia->getRoute();
-
+    ->inject('authorization')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode, Authorization $authorization) use ($databaseListener) {
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['rest']
-            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+            && !(Auth::isPrivilegedUser($authorization->getRoles()) || Auth::isAppUser($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -340,7 +336,7 @@ Http::init()
         foreach ($abuseKeyLabel as $abuseKey) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
-            $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject, $auth);
+            $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject, $authorization);
             $timeLimit
                 ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())
@@ -354,7 +350,7 @@ Http::init()
 
         $closestLimit = null;
 
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
@@ -420,7 +416,7 @@ Http::init()
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
             $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
-            $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
+            $cacheLog  = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
@@ -434,17 +430,17 @@ Http::init()
                 if ($type === 'bucket') {
                     $bucketId = $parts[1] ?? null;
 
-                    $bucket = $auth->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+                    $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    $isAPIKey = Auth::isAppUser($auth->getRoles());
-                    $isPrivilegedUser = Auth::isPrivilegedUser($auth->getRoles());
+                    $isAPIKey = Auth::isAppUser($authorization->getRoles());
+                    $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
 
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                     }
 
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-                    $valid = $auth->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
+                    $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
                     if (!$fileSecurity && !$valid) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
@@ -455,7 +451,7 @@ Http::init()
                     if ($fileSecurity && !$valid) {
                         $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
                     } else {
-                        $file = $auth->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+                        $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
                     }
 
                     if ($file->isEmpty()) {
@@ -529,7 +525,7 @@ Http::shutdown()
 
 Http::shutdown()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -545,9 +541,9 @@ Http::shutdown()
     ->inject('queueForFunctions')
     ->inject('mode')
     ->inject('dbForConsole')
-    ->inject('auth')
+    ->inject('authorization')
     ->action(function (
-        Http $utopia,
+        Route $route,
         Request $request,
         Response $response,
         Document $project,
@@ -563,10 +559,10 @@ Http::shutdown()
         Func $queueForFunctions,
         string $mode,
         Database $dbForConsole,
-        Authorization $auth,
+        Authorization $authorization,
     ) use ($parseLabel) {
         if (!empty($user) && !$user->isEmpty() && empty($user->getInternalId())) {
-            $user = $auth->skip(fn () => $dbForProject->getDocument('users', $user->getId()));
+            $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId()));
         }
 
         $responsePayload = $response->getPayload();
@@ -626,7 +622,6 @@ Http::shutdown()
             }
         }
 
-        $route = $utopia->getRoute();
         $requestParams = $route->getParamsValues();
 
         /**
@@ -696,11 +691,11 @@ Http::shutdown()
 
                 $key = md5($request->getURI() . '*' . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
                 $signature = md5($data['payload']);
-                $cacheLog  =  $auth->skip(fn () => $dbForProject->getDocument('cache', $key));
+                $cacheLog  =  $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
-                    $auth->skip(fn () => $dbForProject->createDocument('cache', new Document([
+                    $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
                         '$id' => $key,
                         'resource' => $resource,
                         'resourceType' => $resourceType,
@@ -710,7 +705,7 @@ Http::shutdown()
                     ])));
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);
-                    $auth->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+                    $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                 }
 
                 if ($signature !== $cacheLog->getAttribute('signature')) {

@@ -58,13 +58,13 @@ use Utopia\System\System;
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Authorization $auth) {
-    $roles = $auth->getRoles();
+$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Authorization $authorization) {
+    $roles = $authorization->getRoles();
     $isPrivilegedUser = Auth::isPrivilegedUser($roles);
     $isAppUser = Auth::isAppUser($roles);
 
     /** @var Utopia\Database\Document $user */
-    $userFromRequest = $auth->skip(fn () => $dbForProject->getDocument('users', $userId));
+    $userFromRequest = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
     if ($userFromRequest->isEmpty()) {
         throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -110,7 +110,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         $detector->getDevice()
     ));
 
-    $auth->addRole(Role::user($user->getId())->toString());
+    $authorization->addRole(Role::user($user->getId())->toString());
 
     $session = $dbForProject->createDocument('sessions', $session
         ->setAttribute('$permissions', [
@@ -120,7 +120,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         ]));
 
     $dbForProject->purgeCachedDocument('users', $user->getId());
-    $auth->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
+    $authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
     if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_MAGIC_URL) {
@@ -193,8 +193,8 @@ Http::post('/v1/account')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('hooks')
-    ->inject('auth')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Authorization $authorization) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -269,9 +269,9 @@ Http::post('/v1/account')
                 'accessedAt' => DateTime::now(),
             ]);
             $user->removeAttribute('$internalId');
-            $user = $auth->skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             try {
-                $target = $auth->skip(fn () => $dbForProject->createDocument('targets', new Document([
+                $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
                         Permission::read(Role::user($user->getId())),
                         Permission::update(Role::user($user->getId())),
@@ -295,9 +295,9 @@ Http::post('/v1/account')
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
 
-        $auth->removeRole(Role::guests()->toString());
-        $auth->addRole(Role::user($user->getId())->toString());
-        $auth->addRole(Role::users()->toString());
+        $authorization->removeRole(Role::guests()->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::users()->toString());
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -392,10 +392,10 @@ Http::get('/v1/account/sessions')
     ->inject('response')
     ->inject('user')
     ->inject('locale')
-    ->inject('auth')
-    ->action(function (Response $response, Document $user, Locale $locale, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (Response $response, Document $user, Locale $locale, Authorization $authorization) {
 
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
@@ -500,10 +500,10 @@ Http::get('/v1/account/sessions/:sessionId')
     ->inject('response')
     ->inject('user')
     ->inject('locale')
-    ->inject('auth')
-    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Authorization $authorization) {
 
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
@@ -714,8 +714,8 @@ Http::post('/v1/account/sessions/email')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('hooks')
-    ->inject('auth')
-    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Hooks $hooks, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Hooks $hooks, Authorization $authorization) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -731,7 +731,7 @@ Http::post('/v1/account/sessions/email')
             throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
         }
 
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
@@ -762,7 +762,7 @@ Http::post('/v1/account/sessions/email')
             $detector->getDevice()
         ));
 
-        $auth->addRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         // Re-hash if not using recommended algo
         if ($user->getAttribute('hash') !== Auth::DEFAULT_ALGO) {
@@ -837,10 +837,10 @@ Http::post('/v1/account/sessions/anonymous')
     ->inject('dbForProject')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->inject('auth')
-    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Authorization $authorization) {
         $protocol = $request->getProtocol();
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
@@ -886,7 +886,7 @@ Http::post('/v1/account/sessions/anonymous')
             'accessedAt' => DateTime::now(),
         ]);
         $user->removeAttribute('$internalId');
-        $auth->skip(fn () => $dbForProject->createDocument('users', $user));
+        $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
 
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -912,7 +912,7 @@ Http::post('/v1/account/sessions/anonymous')
             $detector->getDevice()
         ));
 
-        $auth->addRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $session = $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
             Permission::read(Role::user($user->getId())),
@@ -1138,8 +1138,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('dbForProject')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->inject('auth')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Authorization $auth) use ($oauthDefaultSuccess) {
+    ->inject('authorization')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Authorization $authorization) use ($oauthDefaultSuccess) {
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
@@ -1363,7 +1363,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'accessedAt' => DateTime::now(),
                     ]);
                     $user->removeAttribute('$internalId');
-                    $user = $auth->skip(fn () => $dbForProject->createDocument('users', $user));
+                    $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
 
                     $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
@@ -1382,8 +1382,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        $auth->addRole(Role::user($user->getId())->toString());
-        $auth->addRole(Role::users()->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::users()->toString());
 
         if (false === $user->getAttribute('status')) { // Account is blocked
             $failureRedirect(Exception::USER_BLOCKED); // User is in status blocked
@@ -1442,7 +1442,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        $auth->addRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $state['success'] = URLParser::parse($state['success']);
         $query = URLParser::parseQuery($state['success']['query']);
@@ -1464,7 +1464,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'ip' => $request->getIP(),
             ]);
 
-            $auth->addRole(Role::user($user->getId())->toString());
+            $authorization->addRole(Role::user($user->getId())->toString());
 
             $token = $dbForProject->createDocument('tokens', $token
                 ->setAttribute('$permissions', [
@@ -1663,8 +1663,8 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->inject('Auth')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, Authorization $authorization) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
@@ -1674,7 +1674,7 @@ Http::post('/v1/account/tokens/magic-url')
             $phrase = Phrase::generate();
         }
 
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
@@ -1729,7 +1729,7 @@ Http::post('/v1/account/tokens/magic-url')
             ]);
 
             $user->removeAttribute('$internalId');
-            $user = $auth->skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
         $tokenSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_MAGIC_URL);
@@ -1746,7 +1746,7 @@ Http::post('/v1/account/tokens/magic-url')
             'ip' => $request->getIP(),
         ]);
 
-        $auth->addRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
@@ -1906,8 +1906,8 @@ Http::post('/v1/account/tokens/email')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->inject('auth')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -1916,7 +1916,7 @@ Http::post('/v1/account/tokens/email')
             $phrase = Phrase::generate();
         }
 
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
@@ -1969,7 +1969,7 @@ Http::post('/v1/account/tokens/email')
             ]);
 
             $user->removeAttribute('$internalId');
-            $user = $auth->skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
         $tokenSecret = Auth::codeGenerator(6);
@@ -1986,7 +1986,7 @@ Http::post('/v1/account/tokens/email')
             'ip' => $request->getIP(),
         ]);
 
-        $auth->addRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
@@ -2136,7 +2136,7 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->inject('auth')
+    ->inject('authorization')
     ->action($createSession);
 
 Http::put('/v1/account/sessions/phone')
@@ -2167,7 +2167,7 @@ Http::put('/v1/account/sessions/phone')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->inject('auth')
+    ->inject('authorization')
     ->action($createSession);
 
 Http::post('/v1/account/tokens/phone')
@@ -2198,13 +2198,13 @@ Http::post('/v1/account/tokens/phone')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('locale')
-    ->inject('auth')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
@@ -2248,9 +2248,9 @@ Http::post('/v1/account/tokens/phone')
             ]);
 
             $user->removeAttribute('$internalId');
-            $user = $auth->skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             try {
-                $target = $auth->skip(fn () => $dbForProject->createDocument('targets', new Document([
+                $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
                         Permission::read(Role::user($user->getId())),
                         Permission::update(Role::user($user->getId())),
@@ -2285,7 +2285,7 @@ Http::post('/v1/account/tokens/phone')
             'ip' => $request->getIP(),
         ]);
 
-        $auth->addRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
@@ -2427,8 +2427,8 @@ Http::get('/v1/account/logs')
     ->inject('locale')
     ->inject('geodb')
     ->inject('dbForProject')
-    ->inject('auth')
-    ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Authorization $authorization) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -2440,7 +2440,7 @@ Http::get('/v1/account/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new EventAudit($dbForProject, $auth);
+        $audit = new EventAudit($dbForProject, $authorization);
 
         $logs = $audit->getLogsByUser($user->getInternalId(), $limit, $offset);
 
@@ -2603,8 +2603,8 @@ Http::patch('/v1/account/email')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-    ->inject('auth')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -2643,7 +2643,7 @@ Http::patch('/v1/account/email')
                 ->setAttribute('passwordUpdate', DateTime::now());
         }
 
-        $target = $auth->skip(fn () => $dbForProject->findOne('targets', [
+        $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
             Query::equal('identifier', [$email]),
         ]));
 
@@ -2659,7 +2659,7 @@ Http::patch('/v1/account/email')
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $auth->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
+                $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
@@ -2696,8 +2696,8 @@ Http::patch('/v1/account/phone')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-    ->inject('auth')
-    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -2710,7 +2710,7 @@ Http::patch('/v1/account/phone')
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
-        $target = $auth->skip(fn () => $dbForProject->findOne('targets', [
+        $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
             Query::equal('identifier', [$phone]),
         ]));
 
@@ -2741,7 +2741,7 @@ Http::patch('/v1/account/phone')
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $auth->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
+                $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
@@ -2856,14 +2856,14 @@ Http::post('/v1/account/recovery')
     ->inject('locale')
     ->inject('queueForMails')
     ->inject('queueForEvents')
-    ->inject('auth')
-    ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents, Authorization $authorization) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
@@ -2897,7 +2897,7 @@ Http::post('/v1/account/recovery')
             'ip' => $request->getIP(),
         ]);
 
-        $auth->addRole(Role::user($profile->getId())->toString());
+        $authorization->addRole(Role::user($profile->getId())->toString());
 
         $recovery = $dbForProject->createDocument('tokens', $recovery
             ->setAttribute('$permissions', [
@@ -3034,8 +3034,8 @@ Http::put('/v1/account/recovery')
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('hooks')
-    ->inject('auth')
-    ->action(function (string $userId, string $secret, string $password, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $userId, string $secret, string $password, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, Authorization $authorization) {
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
@@ -3049,7 +3049,7 @@ Http::put('/v1/account/recovery')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $auth->addRole(Role::user($profile->getId())->toString());
+        $authorization->addRole(Role::user($profile->getId())->toString());
 
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
 
@@ -3119,8 +3119,8 @@ Http::post('/v1/account/verification')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->inject('auth')
-    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, Authorization $authorization) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3130,7 +3130,7 @@ Http::post('/v1/account/verification')
             throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
         }
 
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
         $verificationSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_VERIFICATION);
@@ -3147,7 +3147,7 @@ Http::post('/v1/account/verification')
             'ip' => $request->getIP(),
         ]);
 
-        $auth->addRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $verification = $dbForProject->createDocument('tokens', $verification
             ->setAttribute('$permissions', [
@@ -3278,10 +3278,10 @@ Http::put('/v1/account/verification')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('auth')
-    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Authorization $authorization) {
 
-        $profile = $auth->skip(fn () => $dbForProject->getDocument('users', $userId));
+        $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -3294,7 +3294,7 @@ Http::put('/v1/account/verification')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $auth->addRole(Role::user($profile->getId())->toString());
+        $authorization->addRole(Role::user($profile->getId())->toString());
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true));
 
@@ -3342,8 +3342,8 @@ Http::post('/v1/account/verification/phone')
     ->inject('queueForMessaging')
     ->inject('project')
     ->inject('locale')
-    ->inject('auth')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3356,7 +3356,7 @@ Http::post('/v1/account/verification/phone')
             throw new Exception(Exception::USER_PHONE_ALREADY_VERIFIED);
         }
 
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
         $secret = Auth::codeGenerator();
@@ -3373,7 +3373,7 @@ Http::post('/v1/account/verification/phone')
             'ip' => $request->getIP(),
         ]);
 
-        $auth->addRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $verification = $dbForProject->createDocument('tokens', $verification
             ->setAttribute('$permissions', [
@@ -3452,10 +3452,10 @@ Http::put('/v1/account/verification/phone')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('auth')
-    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Authorization $authorization) {
 
-        $profile = $auth->skip(fn () => $dbForProject->getDocument('users', $userId));
+        $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -3467,7 +3467,7 @@ Http::put('/v1/account/verification/phone')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $auth->addRole(Role::user($profile->getId())->toString());
+        $authorization->addRole(Role::user($profile->getId())->toString());
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('phoneVerification', true));
 
@@ -4153,13 +4153,13 @@ Http::post('/v1/account/targets/push')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('auth')
-    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
-        $provider = $auth->skip(fn () => $dbForProject->getDocument('providers', $providerId));
+        $provider = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
-        $target = $auth->skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if (!$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
@@ -4226,10 +4226,10 @@ Http::put('/v1/account/targets/:targetId/push')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('auth')
-    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
 
-        $target = $auth->skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
@@ -4282,9 +4282,9 @@ Http::delete('/v1/account/targets/:targetId/push')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('auth')
-    ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $auth) {
-        $target = $auth->skip(fn () => $dbForProject->getDocument('targets', $targetId));
+    ->inject('authorization')
+    ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);

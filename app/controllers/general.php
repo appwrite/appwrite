@@ -5,6 +5,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
@@ -635,7 +636,8 @@ Http::error()
     ->inject('logger')
     ->inject('log')
     ->inject('authorization')
-    ->action(function (Throwable $error, Document $user, ?Route $route, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Authorization $authorization) {
+    ->inject('connections')
+    ->action(function (Throwable $error, Document $user, ?Route $route, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Authorization $authorization, Connections $connections) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if(is_null($route)) {
@@ -691,6 +693,7 @@ Http::error()
         $trace = $error->getTrace();
 
         if (php_sapi_name() === 'cli') {
+            Console::error('[Error] ------------------');
             Console::error('[Error] Timestamp: ' . date('c', time()));
 
             if ($route) {
@@ -728,7 +731,7 @@ Http::error()
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */
         if (!($error instanceof AppwriteException)) {
-            $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
+            $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, (int)$code, $error);
         }
 
         switch ($code) { // Don't show 500 errors!
@@ -748,7 +751,7 @@ Http::error()
                 break;
             default:
                 $code = 500; // All other errors get the generic 500 server error status code
-                $message = 'Server Error';
+                $message = (Http::getMode() === Http::MODE_TYPE_DEVELOPMENT) ? $message : 'Server Error';
         }
 
         //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
@@ -793,6 +796,8 @@ Http::error()
 
             $response->html($layout->render());
         }
+
+        $connections->reclaim();
 
         $response->dynamic(
             new Document($output),
@@ -884,4 +889,20 @@ foreach (Config::getParam('services', []) as $service) {
     //include_once $service['controller'];
 }
 
+include_once 'shared/api.php';
+include_once 'shared/api/auth.php';
+include_once 'api/account.php';
+include_once 'api/avatars.php';
+//include_once 'api/database.php';
+//include_once 'api/functions.php';
+//include_once 'api/graphql.php';
+//include_once 'api/health.php';
 include_once 'api/locale.php';
+//include_once 'api/messaging.php';
+//include_once 'api/migrations.php';
+include_once 'api/projects.php';
+//include_once 'api/proxy.php';
+//include_once 'api/storage.php';
+include_once 'api/teams.php';
+include_once 'api/users.php';
+//include_once 'api/vcs.php';

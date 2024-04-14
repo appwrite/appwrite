@@ -17,6 +17,8 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -79,9 +81,9 @@ Http::post('/v1/projects')
     ->inject('dbForConsole')
     ->inject('cache')
     ->inject('pools')
-    ->inject('auth')
+    ->inject('authorization')
     ->inject('connections')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools, Authorization $auth, Connections $connections) {
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, array $pools, Authorization $authorization, Connections $connections) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -181,19 +183,27 @@ Http::post('/v1/projects')
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
 
-        $connection = $pools->get($database)->pop();
-        $connections->add($connection);
-        $dbForProject = new Database($connection->getResource(), $cache);
-        $dbForProject->setAuthorization($auth);
+        $pool = $pools['pools-database-'.$project->getAttribute('database')]['pool'];
+        $dsn = $pools['pools-database-'.$project->getAttribute('database')]['dsn'];
+        $connection = $pool->get();
+        $connections->add($connection, $pool);
+        $adapter = match ($dsn->getScheme()) {
+            'mariadb' => new MariaDB($connection),
+            'mysql' => new MySQL($connection),
+            default => null
+        };
+
+        $adapter->setDatabase($dsn->getPath());
+
+        $dbForProject = new Database($adapter, $cache);
+        $dbForProject->setAuthorization($authorization);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create();
-
-        $audit = new Audit($dbForProject, $auth);
+        
+        $audit = new Audit($dbForProject, $authorization);
         $audit->setup();
-
-        $adapter = new TimeLimit('', 0, 1, $dbForProject, $auth);
+        $adapter = new TimeLimit('', 0, 1, $dbForProject, $authorization);
         $adapter->setup();
-
         /** @var array $collections */
         $collections = Config::getParam('collections', [])['projects'] ?? [];
 

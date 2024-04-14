@@ -2,41 +2,20 @@
 
 namespace Appwrite\Utopia\Queue;
 
-use Utopia\Pools\Connection;
-
 class Connections
 {
     /**
-     * @var Connection[]
+     * @var array
      */
     protected array $connections = [];
 
     /**
-     * @param Connection $pool
+     * @param mixed $connection
      * @return self
      */
-    public function add(Connection $connection): self
+    public function add(mixed $connection, $pool): self
     {
-        $this->connections[$connection->getID()] = $connection;
-        return $this;
-    }
-
-    /**
-     * @param string $id
-     * @return Connection
-     */
-    public function get(string $id): Connection
-    {
-        return $this->connections[$id] ??  throw new \Exception("Connection '{$id}'  not found");
-    }
-
-    /**
-     * @param string $id
-     * @return self
-     */
-    public function remove(string $id): self
-    {
-        unset($this->connections[$id]);
+        $this->connections[] = ['connection' => $connection, 'pool' => $pool];
         return $this;
     }
 
@@ -45,8 +24,11 @@ class Connections
      */
     public function reclaim(): self
     {
-        foreach ($this->connections as $connection) {
-            $connection->reclaim();
+        foreach ($this->connections as $id => $resource) {
+            $pool = $resource['pool'];
+            $connection = $resource['connection'];
+            $pool->put($connection);
+            unset($this->connections[$id]);
         }
 
         return $this;

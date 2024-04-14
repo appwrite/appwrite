@@ -1825,12 +1825,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "aef4e9a7bcb3ba21b993f2daad0364657c2fe1aa"
+                "reference": "d600ae234780e083c600ab62a8348b7ea506cd1d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/aef4e9a7bcb3ba21b993f2daad0364657c2fe1aa",
-                "reference": "aef4e9a7bcb3ba21b993f2daad0364657c2fe1aa",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/d600ae234780e083c600ab62a8348b7ea506cd1d",
+                "reference": "d600ae234780e083c600ab62a8348b7ea506cd1d",
                 "shasum": ""
             },
             "require": {
@@ -1867,7 +1867,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/feat-di-upgrade"
             },
-            "time": "2024-04-13T17:20:36+00:00"
+            "time": "2024-04-14T16:41:37+00:00"
         },
         {
             "name": "utopia-php/image",
