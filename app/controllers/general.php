@@ -370,12 +370,28 @@ Http::init()
     ->inject('locale')
     ->inject('localeCodes')
     ->inject('clients')
-    ->inject('geodb')
-    ->inject('queueForUsage')
-    ->inject('queueForEvents')
+    // ->inject('geodb')
+    // ->inject('queueForUsage')
+    // ->inject('queueForEvents')
     ->inject('queueForCertificates')
     ->inject('authorization')
-    ->action(function (Request $request, Response $response, Route $route, Document $console, Document $project, Database $dbForConsole, Locale $locale, array $localeCodes, array $clients, Reader $geodb, Usage $queueForUsage, Event $queueForEvents, Certificate $queueForCertificates, Authorization $authorization) {
+    ->action(function (
+        Request $request,
+        Response $response,
+        Route $route,
+        Document $console,
+        Document $project,
+        Database $dbForConsole,
+        Locale $locale, array $localeCodes,
+        array $clients,
+        /**
+         * @disregard P1009 Undefined type
+         */
+        // Reader $geodb,
+        // Usage $queueForUsage,
+        // Event $queueForEvents,
+        Certificate $queueForCertificates,
+        Authorization $authorization) {
         /*
         * Appwrite Router
         */

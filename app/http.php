@@ -56,9 +56,14 @@ $http = new Http($server, $container, 'UTC');
 $http->setRequestClass(Request::class);
 $http->setResponseClass(Response::class);
 
-require_once __DIR__ . '/init.php';
+//require_once __DIR__ . '/init.php';
+require_once __DIR__ . '/init/constants.php';
+require_once __DIR__ . '/init/config.php';
+require_once __DIR__ . '/init/locale.php';
+require_once __DIR__ . '/init/database/filters.php';
+require_once __DIR__ . '/init/database/formats.php';
 require_once __DIR__ . '/init2.php';
-include __DIR__ . '/controllers/general.php';
+require_once __DIR__ . '/controllers/general.php';
 
 global $global;
 
