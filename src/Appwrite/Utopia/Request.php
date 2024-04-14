@@ -3,10 +3,10 @@
 namespace Appwrite\Utopia;
 
 use Appwrite\Utopia\Request\Filter;
-use Utopia\Http\Adapter\Swoole\Request as SwooleRequest;
+use Utopia\Http\Adapter\Swoole\Request as HttpRequest;
 use Utopia\Http\Route;
 
-class Request extends SwooleRequest
+class Request extends HttpRequest
 {
     /**
      * @var array<Filter>
@@ -17,9 +17,9 @@ class Request extends SwooleRequest
     /**
      * Request constructor.
      */
-    public function __construct(SwooleRequest $request)
+    public function __construct(HttpRequest $request)
     {
-        parent::__construct($request->getSwooleRequest());
+        parent::__construct($request->swoole);
     }
 
     /**

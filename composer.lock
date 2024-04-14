@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e29166ee5ac565b8a7ad696a46588abc",
+    "content-hash": "42c5379dff348d3525688891a96d1e85",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1612,6 +1612,68 @@
             "time": "2024-03-07T16:55:44+00:00"
         },
         {
+            "name": "utopia-php/di",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/di.git",
+                "reference": "0bb7af5693bc131f4d2ce34d3f732d41e6637679"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/di/zipball/0bb7af5693bc131f4d2ce34d3f732d41e6637679",
+                "reference": "0bb7af5693bc131f4d2ce34d3f732d41e6637679",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.2",
+                "phpbench/phpbench": "^1.2",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.5.25",
+                "swoole/ide-helper": "4.8.3"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\": "src/",
+                    "Tests\\E2E\\": "tests/e2e"
+                }
+            },
+            "scripts": {
+                "lint": [
+                    "vendor/bin/pint --test"
+                ],
+                "format": [
+                    "vendor/bin/pint"
+                ],
+                "check": [
+                    "vendor/bin/phpstan analyse -c phpstan.neon"
+                ],
+                "test": [
+                    "vendor/bin/phpunit --configuration phpunit.xml"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple and lite library for managing dependency injections",
+            "keywords": [
+                "framework",
+                "http",
+                "php",
+                "upf"
+            ],
+            "support": {
+                "source": "https://github.com/utopia-php/di/tree/main",
+                "issues": "https://github.com/utopia-php/di/issues"
+            },
+            "time": "2024-04-08T22:41:41+00:00"
+        },
+        {
             "name": "utopia-php/domains",
             "version": "dev-feat-framework-v2",
             "source": {
@@ -1759,23 +1821,25 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-feat-framework-v2",
+            "version": "dev-feat-di-upgrade",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "662f7f93d2cd2b6a8bfc07b5b61dbec57ac51c0c"
+                "reference": "aef4e9a7bcb3ba21b993f2daad0364657c2fe1aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/662f7f93d2cd2b6a8bfc07b5b61dbec57ac51c0c",
-                "reference": "662f7f93d2cd2b6a8bfc07b5b61dbec57ac51c0c",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/aef4e9a7bcb3ba21b993f2daad0364657c2fe1aa",
+                "reference": "aef4e9a7bcb3ba21b993f2daad0364657c2fe1aa",
                 "shasum": ""
             },
             "require": {
                 "ext-swoole": "*",
-                "php": ">=8.0"
+                "php": ">=8.0",
+                "utopia-php/di": "dev-main"
             },
             "require-dev": {
+                "ext-xdebug": "*",
                 "laravel/pint": "^1.2",
                 "phpbench/phpbench": "^1.2",
                 "phpstan/phpstan": "^1.10",
@@ -1785,7 +1849,7 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\Http\\": "src/Http"
+                    "Utopia\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -1801,9 +1865,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/feat-framework-v2"
+                "source": "https://github.com/utopia-php/http/tree/feat-di-upgrade"
             },
-            "time": "2024-04-01T21:28:29+00:00"
+            "time": "2024-04-13T17:20:36+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2217,16 +2281,16 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "0.4.2",
+            "version": "dev-feat-coroutine-support",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "d2870ab74b31b7f4027799f082e85122154f8bed"
+                "reference": "ada61e5b86191644e779ea2c71cd7bf172e94fca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/d2870ab74b31b7f4027799f082e85122154f8bed",
-                "reference": "d2870ab74b31b7f4027799f082e85122154f8bed",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/ada61e5b86191644e779ea2c71cd7bf172e94fca",
+                "reference": "ada61e5b86191644e779ea2c71cd7bf172e94fca",
                 "shasum": ""
             },
             "require": {
@@ -2262,9 +2326,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/0.4.2"
+                "source": "https://github.com/utopia-php/pools/tree/feat-coroutine-support"
             },
-            "time": "2022-11-22T07:55:45+00:00"
+            "time": "2024-04-10T21:34:22+00:00"
         },
         {
             "name": "utopia-php/queue",
@@ -2935,16 +2999,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.15.0",
+            "version": "v1.15.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "c52de679b3ac01207016c179d7ce173e4be128c4"
+                "reference": "5f288b5e79938cc72f5c298d384e639de87507c6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/c52de679b3ac01207016c179d7ce173e4be128c4",
-                "reference": "c52de679b3ac01207016c179d7ce173e4be128c4",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/5f288b5e79938cc72f5c298d384e639de87507c6",
+                "reference": "5f288b5e79938cc72f5c298d384e639de87507c6",
                 "shasum": ""
             },
             "require": {
@@ -2955,13 +3019,13 @@
                 "php": "^8.1.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.49.0",
-                "illuminate/view": "^10.43.0",
-                "larastan/larastan": "^2.8.1",
+                "friendsofphp/php-cs-fixer": "^3.52.1",
+                "illuminate/view": "^10.48.4",
+                "larastan/larastan": "^2.9.2",
                 "laravel-zero/framework": "^10.3.0",
-                "mockery/mockery": "^1.6.7",
+                "mockery/mockery": "^1.6.11",
                 "nunomaduro/termwind": "^1.15.1",
-                "pestphp/pest": "^2.33.6"
+                "pestphp/pest": "^2.34.5"
             },
             "bin": [
                 "builds/pint"
@@ -2997,7 +3061,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2024-03-26T16:40:24+00:00"
+            "time": "2024-04-02T14:28:47+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -3413,28 +3477,35 @@
         },
         {
             "name": "phpdocumentor/reflection-docblock",
-            "version": "5.3.0",
+            "version": "5.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "622548b623e81ca6d78b721c5e029f4ce664f170"
+                "reference": "298d2febfe79d03fe714eb871d5538da55205b1a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/622548b623e81ca6d78b721c5e029f4ce664f170",
-                "reference": "622548b623e81ca6d78b721c5e029f4ce664f170",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/298d2febfe79d03fe714eb871d5538da55205b1a",
+                "reference": "298d2febfe79d03fe714eb871d5538da55205b1a",
                 "shasum": ""
             },
             "require": {
+                "doctrine/deprecations": "^1.1",
                 "ext-filter": "*",
-                "php": "^7.2 || ^8.0",
+                "php": "^7.4 || ^8.0",
                 "phpdocumentor/reflection-common": "^2.2",
-                "phpdocumentor/type-resolver": "^1.3",
+                "phpdocumentor/type-resolver": "^1.7",
+                "phpstan/phpdoc-parser": "^1.7",
                 "webmozart/assert": "^1.9.1"
             },
             "require-dev": {
-                "mockery/mockery": "~1.3.2",
-                "psalm/phar": "^4.8"
+                "mockery/mockery": "~1.3.5",
+                "phpstan/extension-installer": "^1.1",
+                "phpstan/phpstan": "^1.8",
+                "phpstan/phpstan-mockery": "^1.1",
+                "phpstan/phpstan-webmozart-assert": "^1.2",
+                "phpunit/phpunit": "^9.5",
+                "vimeo/psalm": "^5.13"
             },
             "type": "library",
             "extra": {
@@ -3458,15 +3529,15 @@
                 },
                 {
                     "name": "Jaap van Otterdijk",
-                    "email": "account@ijaap.nl"
+                    "email": "opensource@ijaap.nl"
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
             "support": {
                 "issues": "https://github.com/phpDocumentor/ReflectionDocBlock/issues",
-                "source": "https://github.com/phpDocumentor/ReflectionDocBlock/tree/5.3.0"
+                "source": "https://github.com/phpDocumentor/ReflectionDocBlock/tree/5.4.0"
             },
-            "time": "2021-10-19T17:43:47+00:00"
+            "time": "2024-04-09T21:13:58+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -3597,16 +3668,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.27.0",
+            "version": "1.28.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "86e4d5a4b036f8f0be1464522f4c6b584c452757"
+                "reference": "cd06d6b1a1b3c75b0b83f97577869fd85a3cd4fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/86e4d5a4b036f8f0be1464522f4c6b584c452757",
-                "reference": "86e4d5a4b036f8f0be1464522f4c6b584c452757",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/cd06d6b1a1b3c75b0b83f97577869fd85a3cd4fb",
+                "reference": "cd06d6b1a1b3c75b0b83f97577869fd85a3cd4fb",
                 "shasum": ""
             },
             "require": {
@@ -3638,9 +3709,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.27.0"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.28.0"
             },
-            "time": "2024-03-21T13:14:53+00:00"
+            "time": "2024-04-03T18:51:33+00:00"
         },
         {
             "name": "phpstan/phpstan",
@@ -5532,7 +5603,7 @@
         },
         {
             "package": "utopia-php/framework",
-            "version": "dev-feat-framework-v2",
+            "version": "dev-feat-di-upgrade",
             "alias": "0.34.99",
             "alias_normalized": "0.34.99.0"
         },
@@ -5547,6 +5618,12 @@
             "version": "dev-feat-framework-v2",
             "alias": "0.5.99",
             "alias_normalized": "0.5.99.0"
+        },
+        {
+            "package": "utopia-php/pools",
+            "version": "dev-feat-coroutine-support",
+            "alias": "0.4.99",
+            "alias_normalized": "0.4.99.0"
         },
         {
             "package": "utopia-php/queue",
@@ -5567,10 +5644,12 @@
         "utopia-php/analytics": 20,
         "utopia-php/audit": 20,
         "utopia-php/database": 20,
+        "utopia-php/di": 20,
         "utopia-php/domains": 20,
         "utopia-php/framework": 20,
         "utopia-php/orchestration": 20,
         "utopia-php/platform": 20,
+        "utopia-php/pools": 20,
         "utopia-php/queue": 20,
         "utopia-php/storage": 20
     },

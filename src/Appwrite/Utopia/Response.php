@@ -104,13 +104,13 @@ use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 // Keep last
 use Utopia\Database\Document;
-use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as HttpResponse;
 
 /**
  * @method int getStatusCode()
  * @method Response setStatusCode(int $code = 200)
  */
-class Response extends SwooleResponse
+class Response extends HttpResponse
 {
     // General
     public const MODEL_NONE = 'none';
@@ -312,10 +312,8 @@ class Response extends SwooleResponse
      *
      * @param float $time
      */
-    public function __construct(SwooleResponse $response)
+    public function __construct(HttpResponse $response)
     {
-        parent::__construct($response->getSwooleResponse());
-
         $this
             // General
             ->setModel(new None())
@@ -459,6 +457,8 @@ class Response extends SwooleResponse
             ->setModel(new MigrationFirebaseProject())
             // Tests (keep last)
             ->setModel(new Mock());
+
+            parent::__construct($response->swoole);
     }
 
     /**
