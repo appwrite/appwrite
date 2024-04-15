@@ -898,7 +898,7 @@ include_once 'api/avatars.php';
 //include_once 'api/graphql.php';
 //include_once 'api/health.php';
 include_once 'api/locale.php';
-//include_once 'api/messaging.php';
+include_once 'api/messaging.php';
 //include_once 'api/migrations.php';
 include_once 'api/projects.php';
 //include_once 'api/proxy.php';

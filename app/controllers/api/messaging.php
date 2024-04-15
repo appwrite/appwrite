@@ -848,8 +848,8 @@ Http::get('/v1/messaging/providers')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->inject('auth')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (array $queries, string $search, Database $dbForProject, Response $response, Authorization $authorization) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -870,7 +870,7 @@ Http::get('/v1/messaging/providers')
 
         if ($cursor) {
             $providerId = $cursor->getValue();
-            $cursorDocument = $auth->skip(fn () => $dbForProject->getDocument('providers', $providerId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
@@ -902,8 +902,8 @@ Http::get('/v1/messaging/providers/:providerId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('auth')
-    ->action(function (string $providerId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $providerId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -920,7 +920,7 @@ Http::get('/v1/messaging/providers/:providerId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject, $auth);
+        $audit = new Audit($dbForProject, $authorization);
         $resource = 'provider/' . $providerId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
         $output = [];
@@ -1984,8 +1984,8 @@ Http::get('/v1/messaging/topics')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->inject('auth')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (array $queries, string $search, Database $dbForProject, Response $response, Authorization $authorization) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2006,7 +2006,7 @@ Http::get('/v1/messaging/topics')
 
         if ($cursor) {
             $topicId = $cursor->getValue();
-            $cursorDocument = $auth->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Topic '{$topicId}' for the 'cursor' value not found.");
@@ -2038,8 +2038,8 @@ Http::get('/v1/messaging/topics/:topicId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('auth')
-    ->action(function (string $topicId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $topicId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2056,7 +2056,7 @@ Http::get('/v1/messaging/topics/:topicId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject, $auth);
+        $audit = new Audit($dbForProject, $authorization);
         $resource = 'topic/' . $topicId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -2240,11 +2240,11 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->inject('auth')
-    ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Response $response, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Response $response, Authorization $authorization) {
         $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
 
-        $topic = $auth->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2256,13 +2256,13 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
         }
 
-        $target = $auth->skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        $user = $auth->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber = new Document([
             '$id' => $subscriberId,
@@ -2295,7 +2295,7 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
                 default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
             };
 
-            $auth->skip(fn () => $dbForProject->increaseDocumentAttribute(
+            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute(
                 'topics',
                 $topicId,
                 $totalAttribute,
@@ -2333,8 +2333,8 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->inject('auth')
-    ->action(function (string $topicId, array $queries, string $search, Database $dbForProject, Response $response, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $topicId, array $queries, string $search, Database $dbForProject, Response $response, Authorization $authorization) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2345,7 +2345,7 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
             $queries[] = Query::search('search', $search);
         }
 
-        $topic = $auth->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2363,7 +2363,7 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
 
         if ($cursor) {
             $subscriberId = $cursor->getValue();
-            $cursorDocument = $auth->skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Subscriber '{$subscriberId}' for the 'cursor' value not found.");
@@ -2374,10 +2374,10 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
 
         $subscribers = $dbForProject->find('subscribers', $queries);
 
-        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject, $auth) {
-            return function () use ($subscriber, $dbForProject, $auth) {
-                $target = $auth->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-                $user = $auth->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject, $authorization) {
+            return function () use ($subscriber, $dbForProject, $authorization) {
+                $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+                $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
                 return $subscriber
                     ->setAttribute('target', $target)
@@ -2409,8 +2409,8 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('auth')
-    ->action(function (string $subscriberId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $subscriberId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization) {
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
         if ($subscriber->isEmpty()) {
@@ -2427,7 +2427,7 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject, $auth);
+        $audit = new Audit($dbForProject, $authorization);
         $resource = 'subscriber/' . $subscriberId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -2497,9 +2497,9 @@ Http::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->inject('dbForProject')
     ->inject('response')
-    ->inject('auth')
-    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response, Authorization $auth) {
-        $topic = $auth->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+    ->inject('authorization')
+    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response, Authorization $authorization) {
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2511,8 +2511,8 @@ Http::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
-        $target = $auth->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-        $user = $auth->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber
             ->setAttribute('target', $target)
@@ -2541,9 +2541,9 @@ Http::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->inject('auth')
-    ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Response $response, Authorization $auth) {
-        $topic = $auth->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+    ->inject('authorization')
+    ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Response $response, Authorization $authorization) {
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2566,7 +2566,7 @@ Http::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
         };
 
-        $auth->skip(fn () => $dbForProject->decreaseDocumentAttribute(
+        $authorization->skip(fn () => $dbForProject->decreaseDocumentAttribute(
             'topics',
             $topicId,
             $totalAttribute,
@@ -3043,8 +3043,8 @@ Http::get('/v1/messaging/messages')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->inject('auth')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (array $queries, string $search, Database $dbForProject, Response $response, Authorization $authorization) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -3065,7 +3065,7 @@ Http::get('/v1/messaging/messages')
 
         if ($cursor) {
             $messageId = $cursor->getValue();
-            $cursorDocument = $auth->skip(fn () => $dbForProject->getDocument('messages', $messageId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('messages', $messageId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Message '{$messageId}' for the 'cursor' value not found.");
@@ -3097,8 +3097,8 @@ Http::get('/v1/messaging/messages/:messageId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('auth')
-    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3115,7 +3115,7 @@ Http::get('/v1/messaging/messages/:messageId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject, $auth);
+        $audit = new Audit($dbForProject, $authorization);
         $resource = 'message/' . $messageId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
