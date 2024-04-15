@@ -21,11 +21,6 @@ abstract class Format
      */
     protected array $models;
 
-    /**
-     * @var Event []
-     */
-    protected array $events;
-
     protected array $services;
     protected array $keys;
     protected int $authCount;
@@ -51,16 +46,16 @@ abstract class Format
         [
             'namespace' => 'users',
             'method' => 'getUsage',
-            'parameter' => 'provider',
-        ],
+            'parameter' => 'provider'
+        ]
     ];
 
     public function __construct(
-        App $app,
-        array $services,
-        array $routes,
-        array $models,
-        array $keys,
+        App $app, 
+        array $services, 
+        array $routes, 
+        array $models, 
+        array $keys, 
         int $authCount,
         array $events
     ) {
@@ -123,11 +118,8 @@ abstract class Format
         return $this->params[$key] ?? $default;
     }
 
-    protected function getEnumName(
-        string $service,
-        string $method,
-        string $param
-    ): ?string {
+    protected function getEnumName(string $service, string $method, string $param): ?string
+    {
         switch ($service) {
             case 'account':
                 switch ($method) {
@@ -161,23 +153,19 @@ abstract class Format
                     case 'getCreditCard':
                         return 'CreditCard';
                     case 'getFlag':
-                        return 'Flag';
+                        return  'Flag';
                 }
                 break;
             case 'databases':
                 switch ($method) {
-                    case 'getFilePreview':
+                    case 'getUsage':
+                    case 'getCollectionUsage':
+                    case 'getDatabaseUsage':
                         switch ($param) {
-                            case 'gravity':
-                                return 'ImageGravity';
-                            case 'output':
-                                return  'ImageFormat';
+                            case 'range':
+                                return 'DatabaseUsageRange';
                         }
                         break;
-                }
-                break;
-            case 'databases':
-                switch ($method) {
                     case 'createRelationshipAttribute':
                         switch ($param) {
                             case 'type':
@@ -201,8 +189,83 @@ abstract class Format
                         }
                 }
                 break;
+            case 'functions':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'getFunctionUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'FunctionUsageRange';
+                        }
+                        break;
+                    case 'createExecution':
+                        switch ($param) {
+                            case 'method':
+                                return 'ExecutionMethod';
+                        }
+                        break;
+                }
+                break;
+            case 'messaging':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'period':
+                                return 'MessagingUsageRange';
+                        }
+                        break;
+                    case 'createSms':
+                    case 'createPush':
+                    case 'createEmail':
+                    case 'updateSms':
+                    case 'updatePush':
+                    case 'updateEmail':
+                        switch ($param) {
+                            case 'status':
+                                return 'MessageStatus';
+                        }
+                        break;
+                    case 'createSmtpProvider':
+                    case 'updateSmtpProvider':
+                        switch ($param) {
+                            case 'encryption':
+                                return 'SmtpEncryption';
+                        }
+                        break;
+                }
+                break;
+            case 'project':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'period':
+                                return 'ProjectUsageRange';
+                        }
+                        break;
+                }
+                break;
             case 'projects':
                 switch ($method) {
+                    case 'getEmailTemplate':
+                    case 'updateEmailTemplate':
+                    case 'deleteEmailTemplate':
+                        switch ($param) {
+                            case 'type':
+                                return 'EmailTemplateType';
+                            case 'locale':
+                                return 'EmailTemplateLocale';
+                        }
+                        break;
+                    case 'getSmsTemplate':
+                    case 'updateSmsTemplate':
+                    case 'deleteSmsTemplate':
+                        switch ($param) {
+                            case 'type':
+                                return 'SmsTemplateType';
+                            case 'locale':
+                                return 'SmsTemplateLocale';
+                        }
+                        break;
                     case 'createPlatform':
                         switch ($param) {
                             case 'type':
@@ -288,11 +351,8 @@ abstract class Format
         }
         return null;
     }
-    public function getEnumKeys(
-        string $service,
-        string $method,
-        string $param
-    ): array {
+    public function getEnumKeys(string $service, string $method, string $param): array
+    {
         $values = [];
         switch ($service) {
             case 'avatars':
@@ -323,27 +383,23 @@ abstract class Format
                     case 'getCollectionUsage':
                     case 'getDatabaseUsage':
                         // Range Enum Keys
-                        $values  = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-                        return $values;
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
                 break;
-            case 'function':
+            case 'functions':
                 switch ($method) {
                     case 'getUsage':
                     case 'getFunctionUsage':
                         // Range Enum Keys
-                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-                        return $values;
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
                 break;
             case 'users':
                 switch ($method) {
                     case 'getUsage':
-                    case 'getUserUsage':
                         // Range Enum Keys
                         if ($param == 'range') {
-                            $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-                            return $values;
+                            return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                         }
                 }
                 break;
@@ -352,8 +408,14 @@ abstract class Format
                     case 'getUsage':
                     case 'getBucketUsage':
                         // Range Enum Keys
-                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-                        return $values;
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
+                }
+                break;
+            case 'project':
+                switch ($method) {
+                    case 'getUsage':
+                        // Range Enum Keys
+                        return ['One Hour', 'One Day'];
                 }
                 break;
         }
