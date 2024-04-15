@@ -6,8 +6,11 @@ require_once __DIR__ . '/init/locale.php';
 require_once __DIR__ . '/init/database/filters.php';
 require_once __DIR__ . '/init/database/formats.php';
 
-// Unlimited memory limit to handle as many coroutines/requests as possible
 ini_set('memory_limit', '-1');
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+ini_set('default_socket_timeout', -1);
+error_reporting(E_ALL);
 
 global $http, $container;
 
