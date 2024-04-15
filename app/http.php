@@ -20,15 +20,14 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\DI\Container;
 use Utopia\Http\Adapter\Swoole\Server;
 use Utopia\Http\Http;
 use Utopia\System\System;
 
-// Unlimited memory limit to handle as many coroutines/requests as possible
-ini_set('memory_limit', '-1');
+//require_once __DIR__ . '/init.php';
+require_once __DIR__ . '/init2.php';
+require_once __DIR__ . '/controllers/general.php';
 
-$container = new Container();
 $workerNumber = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 $payloadSize = 6 * (1024 * 1024); // 6MB
 
@@ -58,11 +57,7 @@ $http = new Http($server, $container, 'UTC');
 $http->setRequestClass(Request::class);
 $http->setResponseClass(Response::class);
 
-//require_once __DIR__ . '/init.php';
-require_once __DIR__ . '/init2.php';
-require_once __DIR__ . '/controllers/general.php';
-
-global $global;
+global $global, $container;
 
 http::onStart()
     ->inject('authorization')

@@ -6,6 +6,9 @@ require_once __DIR__ . '/init/locale.php';
 require_once __DIR__ . '/init/database/filters.php';
 require_once __DIR__ . '/init/database/formats.php';
 
+// Unlimited memory limit to handle as many coroutines/requests as possible
+ini_set('memory_limit', '-1');
+
 global $http, $container;
 
 use Ahc\Jwt\JWT;
@@ -83,6 +86,7 @@ use Utopia\Storage\Storage;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 use Utopia\Cache\Adapter\None;
+use Utopia\DI\Container;
 
 Http::setMode(System::getEnv('_APP_ENV', Http::MODE_TYPE_PRODUCTION));
 
@@ -174,6 +178,7 @@ function getDevice($root): Device
     }
 }
 
+$container = new Container();
 $global = new Registry();
 
 $global->set('logger', function () {
