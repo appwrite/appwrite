@@ -175,7 +175,7 @@ trait Base
     public static string $GET_CACHE_HEALTH = 'get_cache_health';
     public static string $GET_TIME_HEALTH = 'get_time_health';
     public static string $GET_WEBHOOKS_QUEUE_HEALTH = 'get_webhooks_queue_health';
-    public static string $GET_LOGS_QUEUE_HEALTH = 'get_logs_queue_health';
+    public static string $GET_AUDITS_QUEUE_HEALTH = 'get_audits_queue_health';
     public static string $GET_CERTIFICATES_QUEUE_HEALTH = 'get_certificates_queue_health';
     public static string $GET_FUNCTION_QUEUE_HEALTH = 'get_functions_queue_health';
     public static string $GET_LOCAL_STORAGE_HEALTH = 'get_local_storage_health';
@@ -1656,9 +1656,9 @@ trait Base
                         size
                     }
                 }';
-            case self::$GET_LOGS_QUEUE_HEALTH:
-                return 'query getLogsQueueHealth {
-                    healthGetQueueLogs {
+            case self::$GET_AUDITS_QUEUE_HEALTH:
+                return 'query getAuditsQueueHealth {
+                    healthGetQueueAudits {
                         size
                     }
                 }';
