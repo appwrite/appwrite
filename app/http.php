@@ -31,8 +31,8 @@ $payloadSize = 6 * (1024 * 1024); // 6MB
 
 $server = new Server('0.0.0.0', '80', [
     'open_http2_protocol' => true,
-    // 'http_compression' => true,
-    // 'http_compression_level' => 6,
+    'http_compression' => true,
+    'http_compression_level' => 6,
     'package_max_length' => $payloadSize,
     'buffer_output_size' => $payloadSize,
 
