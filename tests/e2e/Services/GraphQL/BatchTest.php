@@ -33,7 +33,7 @@ class BatchTest extends Scope
         $this->assertArrayNotHasKey('errors', $response['body'][1]);
         $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
         $this->assertArrayHasKey('localeListContinents', $response['body'][1]['data']);
-        $this->assertEquals(195, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(196, $response['body'][0]['data']['localeListCountries']['total']);
         $this->assertEquals(7, $response['body'][1]['data']['localeListContinents']['total']);
     }
 
