@@ -30,7 +30,7 @@ class ContentTypeTest extends Scope
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
         $response = $response['body']['data']['localeListCountries'];
-        $this->assertEquals(195, $response['total']);
+        $this->assertEquals(196, $response['total']);
     }
 
     public function testSingleQueryJSONContentType()
@@ -46,7 +46,7 @@ class ContentTypeTest extends Scope
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
         $response = $response['body']['data']['localeListCountries'];
-        $this->assertEquals(195, $response['total']);
+        $this->assertEquals(196, $response['total']);
     }
 
     public function testArrayBatchedJSONContentType()
@@ -69,7 +69,7 @@ class ContentTypeTest extends Scope
         $this->assertArrayNotHasKey('errors', $response['body'][1]);
         $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
         $this->assertArrayHasKey('localeListContinents', $response['body'][1]['data']);
-        $this->assertEquals(195, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(196, $response['body'][0]['data']['localeListCountries']['total']);
         $this->assertEquals(7, $response['body'][1]['data']['localeListContinents']['total']);
     }
 
@@ -94,7 +94,7 @@ class ContentTypeTest extends Scope
         $this->assertArrayNotHasKey('errors', $response['body']);
         $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
         $this->assertArrayHasKey('localeListContinents', $response['body']['data']);
-        $this->assertEquals(195, $response['body']['data']['localeListCountries']['total']);
+        $this->assertEquals(196, $response['body']['data']['localeListCountries']['total']);
         $this->assertEquals(7, $response['body']['data']['localeListContinents']['total']);
     }
 
