@@ -628,64 +628,7 @@ Http::init()
 
 Http::error()
     ->inject('error')
-    ->inject('user')
-    ->inject('route')
-    ->inject('request')
-    ->inject('response')
-    ->inject('project')
-    ->inject('logger')
-    ->inject('log')
-    ->inject('authorization')
-    ->inject('connections')
-    ->action(function (Throwable $error, Document $user, ?Route $route, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Authorization $authorization, Connections $connections) {
-        $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-        if(is_null($route)) {
-            $route = new Route($request->getMethod(), $request->getURI());
-        }
-
-        if ($error instanceof AppwriteException) {
-            $publish = $error->isPublishable();
-        } else {
-            $publish = $error->getCode() === 0 || $error->getCode() >= 500;
-        }
-
-        if ($logger && ($publish || $error->getCode() === 0)) {
-            if (isset($user) && !$user->isEmpty()) {
-                $log->setUser(new User($user->getId()));
-            }
-
-            $log->setNamespace("http");
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-
-            $log->addTag('database', $project->getAttribute('database', 'console'));
-            $log->addTag('method', $route->getMethod());
-            $log->addTag('url', $route->getPath());
-            $log->addTag('verboseType', get_class($error));
-            $log->addTag('code', $error->getCode());
-            $log->addTag('projectId', $project->getId());
-            $log->addTag('hostname', $request->getHostname());
-            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
-
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', $authorization->getRoles());
-
-            $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
-            $log->setAction($action);
-
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            $responseCode = $logger->addLog($log);
-            Console::info('Log pushed with status code: ' . $responseCode);
-        }
-
+    ->action(function($error) {
         $code = $error->getCode();
         $message = $error->getMessage();
         $file = $error->getFile();
@@ -696,114 +639,192 @@ Http::error()
             Console::error('[Error] ------------------');
             Console::error('[Error] Timestamp: ' . date('c', time()));
 
-            if ($route) {
-                Console::error('[Error] Method: ' . $route->getMethod());
-                Console::error('[Error] URL: ' . $route->getPath());
-            }
-
             Console::error('[Error] Code: ' . $code);
             Console::error('[Error] Type: ' . get_class($error));
             Console::error('[Error] Message: ' . $message);
             Console::error('[Error] File: ' . $file);
             Console::error('[Error] Line: ' . $line);
         }
-
-        /** Handle Utopia Errors */
-        if ($error instanceof Utopia\Http\Exception) {
-            $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
-            switch ($code) {
-                case 400:
-                    $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
-                    break;
-                case 404:
-                    $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
-                    break;
-            }
-        } elseif ($error instanceof Utopia\Database\Exception\Conflict) {
-            $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
-            $code = $error->getCode();
-            $message = $error->getMessage();
-        } elseif ($error instanceof Utopia\Database\Exception\Timeout) {
-            $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
-            $code = $error->getCode();
-            $message = $error->getMessage();
-        }
-
-        /** Wrap all exceptions inside Appwrite\Extend\Exception */
-        if (!($error instanceof AppwriteException)) {
-            $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, (int)$code, $error);
-        }
-
-        switch ($code) { // Don't show 500 errors!
-            case 400: // Error allowed publicly
-            case 401: // Error allowed publicly
-            case 402: // Error allowed publicly
-            case 403: // Error allowed publicly
-            case 404: // Error allowed publicly
-            case 408: // Error allowed publicly
-            case 409: // Error allowed publicly
-            case 412: // Error allowed publicly
-            case 416: // Error allowed publicly
-            case 429: // Error allowed publicly
-            case 451: // Error allowed publicly
-            case 501: // Error allowed publicly
-            case 503: // Error allowed publicly
-                break;
-            default:
-                $code = 500; // All other errors get the generic 500 server error status code
-                $message = (Http::getMode() === Http::MODE_TYPE_DEVELOPMENT) ? $message : 'Server Error';
-        }
-
-        //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
-
-        $type = $error->getType();
-
-        $output = ((Http::isDevelopment())) ? [
-            'message' => $message,
-            'code' => $code,
-            'file' => $file,
-            'line' => $line,
-            'trace' => \json_encode($trace, JSON_UNESCAPED_UNICODE) === false ? [] : $trace, // check for failing encode
-            'version' => $version,
-            'type' => $type,
-        ] : [
-            'message' => $message,
-            'code' => $code,
-            'version' => $version,
-            'type' => $type,
-        ];
-
-        $response
-            ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->addHeader('Expires', '0')
-            ->addHeader('Pragma', 'no-cache')
-            ->setStatusCode($code);
-
-        $template = ($route) ? $route->getLabel('error', null) : null;
-
-        if ($template) {
-            $layout = new View($template);
-
-            $layout
-                ->setParam('title', $project->getAttribute('name') . ' - Error')
-                ->setParam('development', Http::isDevelopment())
-                ->setParam('projectName', $project->getAttribute('name'))
-                ->setParam('projectURL', $project->getAttribute('url'))
-                ->setParam('message', $output['message'] ?? '')
-                ->setParam('type', $output['type'] ?? '')
-                ->setParam('code', $output['code'] ?? '')
-                ->setParam('trace', $output['trace'] ?? []);
-
-            $response->html($layout->render());
-        }
-
-        $connections->reclaim();
-
-        $response->dynamic(
-            new Document($output),
-            Http::isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
-        );
     });
+
+// Http::error()
+//     ->inject('error')
+//     ->inject('user')
+//     ->inject('route')
+//     ->inject('request')
+//     ->inject('response')
+//     ->inject('project')
+//     ->inject('logger')
+//     ->inject('log')
+//     ->inject('authorization')
+//     ->inject('connections')
+//     ->action(function (Throwable $error, Document $user, ?Route $route, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Authorization $authorization, Connections $connections) {
+//         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
+
+//         if(is_null($route)) {
+//             $route = new Route($request->getMethod(), $request->getURI());
+//         }
+
+//         if ($error instanceof AppwriteException) {
+//             $publish = $error->isPublishable();
+//         } else {
+//             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
+//         }
+
+//         if ($logger && ($publish || $error->getCode() === 0)) {
+//             if (isset($user) && !$user->isEmpty()) {
+//                 $log->setUser(new User($user->getId()));
+//             }
+
+//             $log->setNamespace("http");
+//             $log->setServer(\gethostname());
+//             $log->setVersion($version);
+//             $log->setType(Log::TYPE_ERROR);
+//             $log->setMessage($error->getMessage());
+
+//             $log->addTag('database', $project->getAttribute('database', 'console'));
+//             $log->addTag('method', $route->getMethod());
+//             $log->addTag('url', $route->getPath());
+//             $log->addTag('verboseType', get_class($error));
+//             $log->addTag('code', $error->getCode());
+//             $log->addTag('projectId', $project->getId());
+//             $log->addTag('hostname', $request->getHostname());
+//             $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
+
+//             $log->addExtra('file', $error->getFile());
+//             $log->addExtra('line', $error->getLine());
+//             $log->addExtra('trace', $error->getTraceAsString());
+//             $log->addExtra('detailedTrace', $error->getTrace());
+//             $log->addExtra('roles', $authorization->getRoles());
+
+//             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
+//             $log->setAction($action);
+
+//             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+//             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+//             $responseCode = $logger->addLog($log);
+//             Console::info('Log pushed with status code: ' . $responseCode);
+//         }
+
+//         $code = $error->getCode();
+//         $message = $error->getMessage();
+//         $file = $error->getFile();
+//         $line = $error->getLine();
+//         $trace = $error->getTrace();
+
+//         if (php_sapi_name() === 'cli') {
+//             Console::error('[Error] ------------------');
+//             Console::error('[Error] Timestamp: ' . date('c', time()));
+
+//             if ($route) {
+//                 Console::error('[Error] Method: ' . $route->getMethod());
+//                 Console::error('[Error] URL: ' . $route->getPath());
+//             }
+
+//             Console::error('[Error] Code: ' . $code);
+//             Console::error('[Error] Type: ' . get_class($error));
+//             Console::error('[Error] Message: ' . $message);
+//             Console::error('[Error] File: ' . $file);
+//             Console::error('[Error] Line: ' . $line);
+//         }
+
+//         /** Handle Utopia Errors */
+//         if ($error instanceof Utopia\Http\Exception) {
+//             $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
+//             switch ($code) {
+//                 case 400:
+//                     $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
+//                     break;
+//                 case 404:
+//                     $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+//                     break;
+//             }
+//         } elseif ($error instanceof Utopia\Database\Exception\Conflict) {
+//             $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
+//             $code = $error->getCode();
+//             $message = $error->getMessage();
+//         } elseif ($error instanceof Utopia\Database\Exception\Timeout) {
+//             $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
+//             $code = $error->getCode();
+//             $message = $error->getMessage();
+//         }
+
+//         /** Wrap all exceptions inside Appwrite\Extend\Exception */
+//         if (!($error instanceof AppwriteException)) {
+//             $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, (int)$code, $error);
+//         }
+
+//         switch ($code) { // Don't show 500 errors!
+//             case 400: // Error allowed publicly
+//             case 401: // Error allowed publicly
+//             case 402: // Error allowed publicly
+//             case 403: // Error allowed publicly
+//             case 404: // Error allowed publicly
+//             case 408: // Error allowed publicly
+//             case 409: // Error allowed publicly
+//             case 412: // Error allowed publicly
+//             case 416: // Error allowed publicly
+//             case 429: // Error allowed publicly
+//             case 451: // Error allowed publicly
+//             case 501: // Error allowed publicly
+//             case 503: // Error allowed publicly
+//                 break;
+//             default:
+//                 $code = 500; // All other errors get the generic 500 server error status code
+//                 $message = (Http::getMode() === Http::MODE_TYPE_DEVELOPMENT) ? $message : 'Server Error';
+//         }
+
+//         //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
+
+//         $type = $error->getType();
+
+//         $output = ((Http::isDevelopment())) ? [
+//             'message' => $message,
+//             'code' => $code,
+//             'file' => $file,
+//             'line' => $line,
+//             'trace' => \json_encode($trace, JSON_UNESCAPED_UNICODE) === false ? [] : $trace, // check for failing encode
+//             'version' => $version,
+//             'type' => $type,
+//         ] : [
+//             'message' => $message,
+//             'code' => $code,
+//             'version' => $version,
+//             'type' => $type,
+//         ];
+
+//         $response
+//             ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+//             ->addHeader('Expires', '0')
+//             ->addHeader('Pragma', 'no-cache')
+//             ->setStatusCode($code);
+
+//         $template = ($route) ? $route->getLabel('error', null) : null;
+
+//         if ($template) {
+//             $layout = new View($template);
+
+//             $layout
+//                 ->setParam('title', $project->getAttribute('name') . ' - Error')
+//                 ->setParam('development', Http::isDevelopment())
+//                 ->setParam('projectName', $project->getAttribute('name'))
+//                 ->setParam('projectURL', $project->getAttribute('url'))
+//                 ->setParam('message', $output['message'] ?? '')
+//                 ->setParam('type', $output['type'] ?? '')
+//                 ->setParam('code', $output['code'] ?? '')
+//                 ->setParam('trace', $output['trace'] ?? []);
+
+//             $response->html($layout->render());
+//         }
+
+//         $connections->reclaim();
+
+//         $response->dynamic(
+//             new Document($output),
+//             Http::isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
+//         );
+//     });
 
 Http::get('/robots.txt')
     ->desc('Robots.txt File')
