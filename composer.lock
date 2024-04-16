@@ -2289,8 +2289,6 @@
                 "php": ">=8.0"
             },
             "require-dev": {
-                "laravel/pint": "^1.15",
-                "phpstan/phpstan": "^1.8",
                 "phpunit/phpunit": "^9.5.5",
                 "swoole/ide-helper": "5.1.2",
                 "textalk/websocket": "1.5.2",
@@ -2305,6 +2303,16 @@
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                },
+                {
+                    "name": "Torsten Dittmann",
+                    "email": "torsten@appwrite.io"
+                }
             ],
             "description": "A simple abstraction for WebSocket servers.",
             "keywords": [

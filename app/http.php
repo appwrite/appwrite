@@ -2,7 +2,6 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Appwrite\Utopia\Pools\Connections;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
@@ -324,14 +323,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $swooleResponse->end(\json_encode($output));
     } finally {
-        /**
-         * @var Connections $connections
-         */
-        $connections = $app->getResource('connections');
-
-        if (!empty($connections)) {
-            $connections->reclaim();
-        }
+        $pools->reclaim();
     }
 });
 

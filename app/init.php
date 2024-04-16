@@ -33,7 +33,6 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
-use Appwrite\Utopia\Pools\Connections;
 use Utopia\App;
 use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
@@ -882,14 +881,11 @@ App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')))
 App::setResource('localeCodes', function () {
     return array_map(fn($locale) => $locale['code'], Config::getParam('locale-codes', []));
 });
+
 // Queues
-App::setResource('queue', function (Group $pools, Connections $connections) {
-    $connection = $pools->get('queue')->pop();
-
-    $connections->add($connection);
-
-    return $connection->getResource();
-}, ['pools', 'connections']);
+App::setResource('queue', function (Group $pools) {
+    return $pools->get('queue')->pop()->getResource();
+}, ['pools']);
 App::setResource('queueForMessaging', function (Connection $queue) {
     return new Phone($queue);
 }, ['queue']);
@@ -1130,22 +1126,15 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('connections', function () {
-    return new Connections();
-});
-
-App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project, Connections $connections) {
+App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
     }
 
-    $connection = $pools
+    $dbAdapter = $pools
         ->get($project->getAttribute('database'))
-        ->pop();
-
-    $connections->add($connection);
-
-    $dbAdapter = $connection->getResource();
+        ->pop()
+        ->getResource();
 
     $database = new Database($dbAdapter, $cache);
 
@@ -1156,16 +1145,14 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
-}, ['pools', 'dbForConsole', 'cache', 'project', 'connections']);
+}, ['pools', 'dbForConsole', 'cache', 'project']);
 
-App::setResource('dbForConsole', function (Group $pools, Cache $cache, Connections $connections) {
-    $connection = $pools
+App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
+    $dbAdapter = $pools
         ->get('console')
-        ->pop();
-
-    $connections->add($connection);
-
-    $dbAdapter = $connection->getResource();
+        ->pop()
+        ->getResource()
+    ;
 
     $database = new Database($dbAdapter, $cache);
 
@@ -1176,12 +1163,12 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache, Connectio
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
-}, ['pools', 'cache', 'connections']);
+}, ['pools', 'cache']);
 
-App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, Cache $cache, Connections $connections) {
+App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, $connections, &$databases) {
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -1193,47 +1180,48 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
             $database
                 ->setNamespace('_' . $project->getInternalId())
+                ->setMetadata('host', \gethostname())
+                ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
             return $database;
         }
 
-        $connection = $pools
+        $dbAdapter = $pools
             ->get($databaseName)
-            ->pop();
-
-        $connections->add($connection);
-
-        $dbAdapter = $connection->getResource();
+            ->pop()
+            ->getResource();
 
         $database = new Database($dbAdapter, $cache);
 
+        $databases[$databaseName] = $database;
+
         $database
             ->setNamespace('_' . $project->getInternalId())
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId())
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
         return $database;
     };
 
     return $getProjectDB;
-}, ['pools', 'dbForConsole', 'cache', 'connections']);
+}, ['pools', 'dbForConsole', 'cache']);
 
-App::setResource('cache', function (Group $pools, Connections $connections) {
+App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
     foreach ($list as $value) {
-        $connection = $pools
+        $adapters[] = $pools
             ->get($value)
-            ->pop();
-
-        $connections->add($connection);
-
-        $adapters[] = $connection->getResource();
+            ->pop()
+            ->getResource()
+        ;
     }
 
     return new Cache(new Sharding($adapters));
-}, ['pools', 'connections']);
+}, ['pools']);
 
 App::setResource('deviceLocal', function () {
     return new Local();
