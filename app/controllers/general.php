@@ -367,6 +367,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     return false;
 }
 
+/*
 App::init()
     ->groups(['api'])
     ->inject('project')
@@ -376,6 +377,7 @@ App::init()
             throw new AppwriteException(AppwriteException::GENERAL_BAD_REQUEST, 'Admin mode is not allowed for console project');
         }
     });
+*/
 
 App::init()
     ->groups(['api', 'web'])
