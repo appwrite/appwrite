@@ -93,6 +93,7 @@ class OpenAPI3 extends Format
                 'description' => $this->getParam('docs.description'),
                 'url' => $this->getParam('docs.url'),
             ],
+            'x-appwrite-events' => $this->events,
         ];
 
         if (isset($output['components']['securitySchemes']['Project'])) {
@@ -121,7 +122,6 @@ class OpenAPI3 extends Format
             $url = \str_replace('/v1', '', $route->getPath());
             $scope = $route->getLabel('scope', '');
             $consumes = [$route->getLabel('sdk.request.type', 'application/json')];
-
 
             $method = $route->getLabel('sdk.method', \uniqid());
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__ . '/../../../../' . $route->getLabel('sdk.description', '')) : null;
@@ -172,9 +172,6 @@ class OpenAPI3 extends Format
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
                     'packaging' => $route->getLabel('sdk.packaging', false),
-                    'offline-model' => $route->getLabel('sdk.offline.model', ''),
-                    'offline-key' => $route->getLabel('sdk.offline.key', ''),
-                    'offline-response-key' => $route->getLabel('sdk.offline.response.key', '$id'),
                 ],
             ];
 

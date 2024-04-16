@@ -50,14 +50,22 @@ abstract class Format
         ]
     ];
 
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
-    {
+    public function __construct(
+        App $app, 
+        array $services, 
+        array $routes, 
+        array $models, 
+        array $keys, 
+        int $authCount,
+        array $events
+    ) {
         $this->app = $app;
         $this->services = $services;
         $this->routes = $routes;
         $this->models = $models;
         $this->keys = $keys;
         $this->authCount = $authCount;
+        $this->events = $events;
     }
 
     /**

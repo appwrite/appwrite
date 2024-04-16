@@ -90,6 +90,7 @@ class Swagger2 extends Format
                 'description' => $this->getParam('docs.description'),
                 'url' => $this->getParam('docs.url'),
             ],
+            'x-appwrite-events' => $this->events,
         ];
 
         if (isset($output['securityDefinitions']['Project'])) {
@@ -171,9 +172,6 @@ class Swagger2 extends Format
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
                     'packaging' => $route->getLabel('sdk.packaging', false),
-                    'offline-model' => $route->getLabel('sdk.offline.model', ''),
-                    'offline-key' => $route->getLabel('sdk.offline.key', ''),
-                    'offline-response-key' => $route->getLabel('sdk.offline.response.key', '$id'),
                 ],
             ];
 
