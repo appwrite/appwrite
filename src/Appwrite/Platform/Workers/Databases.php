@@ -528,7 +528,7 @@ class Databases extends Action
 
         foreach ($attributes as $attribute) {
             $options = $attribute->getAttribute('options', []);
-            if($options['relatedCollection'] === $collectionId){ // Remove if using contains query above
+            if($options['relatedCollection'] === $collectionId) { // Remove if using contains query above
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
                 Console::success('Deleted document "' . $attribute->getId() . '" related collection successfully');
                 $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
