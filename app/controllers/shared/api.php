@@ -281,7 +281,7 @@ App::init()
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
-        if ($mode !== APP_MODE_ADMIN) {
+        if ($mode !== APP_MODE_ADMIN && !Auth::isPrivilegedUser(Authorization::getRoles())) {
             $mfaEnabled = $user->getAttribute('mfa', false);
             $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
             $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
@@ -702,7 +702,7 @@ App::shutdown()
 
 
         if ($project->getId() !== 'console') {
-            if ($mode !== APP_MODE_ADMIN) {
+            if ($mode !== APP_MODE_ADMIN && !Auth::isPrivilegedUser(Authorization::getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {
