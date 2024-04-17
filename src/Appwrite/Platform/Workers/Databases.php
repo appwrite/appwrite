@@ -515,19 +515,25 @@ class Databases extends Action
         $databaseId = $database->getId();
         $databaseInternalId = $database->getInternalId();
 
-        $relationships = \array_filter(
-            $collection->getAttribute('attributes'),
-            fn ($attribute) => $attribute['type'] === Database::VAR_RELATIONSHIP
-        );
+        /**
+         * Related collections relating to current collection
+         */
+        $attributes = $dbForProject->find('attributes', [
+            Query::equal('databaseInternalId', [$databaseInternalId]),
+            Query::equal('type', [Database::VAR_RELATIONSHIP]),
+            Query::notEqual('collectionInternalId', $collectionInternalId),
+            Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']), // Comment in Version < 1.5
+            Query::limit(PHP_INT_MAX)
+        ]);
 
-        foreach ($relationships as $relationship) {
-            if (!$relationship['twoWay']) {
-                continue;
+        foreach ($attributes as $attribute) {
+            $options = $attribute->getAttribute('options', []);
+            if($options['relatedCollection'] === $collectionId){ // Remove if using contains query above
+                $dbForProject->deleteDocument('attributes', $attribute->getId());
+                Console::success('Deleted document "' . $attribute->getId() . '" related collection successfully');
+                $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
+                $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
             }
-            $relatedCollection = $dbForProject->getDocument('database_' . $databaseInternalId, $relationship['relatedCollection']);
-            $dbForProject->deleteDocument('attributes', $databaseInternalId . '_' . $relatedCollection->getInternalId() . '_' . $relationship['twoWayKey']);
-            $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
-            $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
         }
 
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
