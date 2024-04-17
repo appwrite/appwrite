@@ -30,7 +30,7 @@ class EventTest extends TestCase
 
         $dsn = System::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
         $dsn = explode('=', $dsn);
-        $dsn = $dsn[0] ?? '';
+        $dsn = $dsn[1] ?? '';
         $dsn = new DSN($dsn);
         $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
         $this->queue = 'v1-tests' . uniqid();
