@@ -361,9 +361,11 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 App::init()
     ->groups(['database', 'function', 'storage', 'messaging'])
     ->inject('project')
-    ->action(function (Document $project) {
+    ->inject('request')
+    ->action(function (Document $project, Appwrite\Utopia\Request $request) {
         if ($project->getId() === 'console') {
-            throw new Exception(Exception::PROJECT_RESERVED_PROJECT, 'Please check X-Appwrite-Project header');
+            $message = empty($request->getHeader('x-appwrite-project')) ? 'x-appwrite-project is empty' : 'console error';
+            throw new Exception(Exception::PROJECT_RESERVED_PROJECT, $message);
         }
     });
 
