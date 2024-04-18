@@ -11,10 +11,11 @@ use Appwrite\Platform\Tasks\Schedule;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
-use Appwrite\Platform\Tasks\Usage;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
 use Appwrite\Platform\Tasks\Upgrade;
+use Appwrite\Platform\Tasks\QueueRetry;
+use Appwrite\Platform\Tasks\QueueCount;
 
 class Tasks extends Service
 {
@@ -33,6 +34,8 @@ class Tasks extends Service
             ->addAction(Migrate::getName(), new Migrate())
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(Specs::getName(), new Specs())
+            ->addAction(QueueRetry::getName(), new QueueRetry())
+            ->addAction(QueueCount::getName(), new QueueCount())
         ;
     }
 }
