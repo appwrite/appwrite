@@ -351,7 +351,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         $utopia->getRoute()?->label('error', '');
         return false;
     } else {
-        throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Unknown resource type ' . $type);
+        throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Unknown resource type ' . $type);
     }
 
     $utopia->getRoute()?->label('error', '');
