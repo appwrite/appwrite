@@ -235,8 +235,8 @@ trait DatabasesBase
             ], $this->getHeaders())
         );
 
-        var_dump($response);
         $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_access_forbidden', $response['body']['type']);
         $this->assertEquals('This endpoint is not available for the console project. The Appwrite Console is a reserved project ID and cannot be used with the Appwrite SDKs and APIs. Please check if your project ID is correct.', $response['body']['message']);
 
         $response = $this->client->call(
@@ -248,7 +248,7 @@ trait DatabasesBase
             ], $this->getHeaders())
         );
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('No Appwrite project was specified. Please specify your Appwrite Project ID in the "x-appwrite-project" header or when you initialize your Appwrite SDK Client.', $response['body']['message']);
+        $this->assertEquals('No Appwrite project was specified. Please specify your Appwrite Project ID in the "x-appwrite-project" header or when you initialize your Appwrite SDK.', $response['body']['message']);
     }
 
     /**
