@@ -138,7 +138,7 @@ return [
     ],
     Exception::USER_CONSOLE_COUNT_EXCEEDED => [
         'name' => Exception::USER_CONSOLE_COUNT_EXCEEDED,
-        'description' => 'Sign up to the console is restricted. You can update console sign up restrictions by setting _APP_CONSOLE_WHITELIST_ROOT to "disabled" or by updating _APP_CONSOLE_WHITELIST_IPS or _APP_CONSOLE_WHITELIST_EMAILS to whitelist your IP or email.',
+        'description' => 'Sign up to the console is restricted. You can contact an administrator to update console sign up restrictions by setting _APP_CONSOLE_WHITELIST_ROOT to "disabled".',
         'code' => 501,
     ],
     Exception::USER_JWT_INVALID => [
