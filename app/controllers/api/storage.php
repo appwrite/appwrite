@@ -1109,15 +1109,20 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
-            for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
-                $response->chunk(
-                    $deviceFiles->read(
-                        $path,
-                        ($i * MAX_OUTPUT_CHUNK_SIZE),
-                        min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
-                    ),
-                    (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
-                );
+            $buffer = '';
+            $bytesRead = 0;
+            while ($bytesRead < $size) {
+                $bytesToRead = min(APP_STORAGE_READ_BUFFER, $size - $bytesRead);
+                $buffer .= $deviceFiles->read($path, $bytesRead, $bytesToRead);
+                $bytesRead += $bytesToRead;
+
+                while (strlen($buffer) >= MAX_OUTPUT_CHUNK_SIZE) {
+                    $response->chunk(substr($buffer, 0, MAX_OUTPUT_CHUNK_SIZE), false);
+                    $buffer = substr($buffer, MAX_OUTPUT_CHUNK_SIZE);
+                }
+            }
+            if (strlen($buffer) > 0) {
+                $response->chunk($buffer, true);
             }
         } else {
             $response->send($deviceFiles->read($path));
