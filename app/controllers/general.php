@@ -359,7 +359,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 }
 
 App::init()
-    ->groups(['database', 'function', 'storage', 'messaging'])
+    ->groups(['database', 'functions', 'storage', 'messaging'])
     ->inject('project')
     ->inject('request')
     ->action(function (Document $project, Appwrite\Utopia\Request $request) {
