@@ -5,7 +5,6 @@ require_once __DIR__ . '/../init.php';
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Usage;
-use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
@@ -367,7 +366,7 @@ App::init()
             $message = empty($request->getHeader('x-appwrite-project')) ?
                 'No Appwrite project was specified. Please specify your Appwrite Project ID in the "x-appwrite-project" header or when you initialize your Appwrite SDK.' :
                 'This endpoint is not available for the console project. The Appwrite Console is a reserved project ID and cannot be used with the Appwrite SDKs and APIs. Please check if your project ID is correct.';
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, $message);
+            throw new AppwriteException(Exception::GENERAL_ACCESS_FORBIDDEN, $message);
         }
     });
 
