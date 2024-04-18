@@ -235,18 +235,18 @@ trait DatabasesBase
             ], $this->getHeaders())
         );
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Please check X-Appwrite-Project header', $response['body']['message']);
+        $this->assertEquals('This endpoint is not available for the console project. The Appwrite Console is a reserved project ID and cannot be used with the Appwrite SDKs and APIs. Please check if your project ID is correct.', $response['body']['message']);
 
         $response = $this->client->call(
             Client::METHOD_GET,
             '/databases/console/collections/' . $data['moviesId'] . '/documents',
             array_merge([
                 'content-type' => 'application/json',
-                // 'x-appwrite-project' => '', disabled
+                // 'x-appwrite-project' => '', empty header
             ], $this->getHeaders())
         );
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Please check X-Appwrite-Project header', $response['body']['message']);
+        $this->assertEquals('No Appwrite project was specified. Please specify your Appwrite Project ID in the "x-appwrite-project" header or when you initialize your Appwrite SDK Client.', $response['body']['message']);
     }
 
     /**
