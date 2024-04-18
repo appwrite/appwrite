@@ -522,18 +522,15 @@ class Databases extends Action
             Query::equal('databaseInternalId', [$databaseInternalId]),
             Query::equal('type', [Database::VAR_RELATIONSHIP]),
             Query::notEqual('collectionInternalId', $collectionInternalId),
-            Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']), // Comment in Version < 1.5
+            Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
             Query::limit(PHP_INT_MAX)
         ]);
 
         foreach ($attributes as $attribute) {
-            $options = $attribute->getAttribute('options', []);
-            if($options['relatedCollection'] === $collectionId) { // Remove if using contains query above
-                $dbForProject->deleteDocument('attributes', $attribute->getId());
-                Console::success('Deleted document "' . $attribute->getId() . '" related collection successfully');
-                $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
-                $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
-            }
+            $dbForProject->deleteDocument('attributes', $attribute->getId());
+            Console::success('Deleted document "' . $attribute->getId() . '" related collection successfully');
+            $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
+            $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
         }
 
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
