@@ -234,6 +234,8 @@ trait DatabasesBase
                 'x-appwrite-project' => 'console',
             ], $this->getHeaders())
         );
+
+        var_dump($response);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('This endpoint is not available for the console project. The Appwrite Console is a reserved project ID and cannot be used with the Appwrite SDKs and APIs. Please check if your project ID is correct.', $response['body']['message']);
 

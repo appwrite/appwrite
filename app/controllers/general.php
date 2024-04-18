@@ -351,7 +351,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         $utopia->getRoute()?->label('error', '');
         return false;
     } else {
-        throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Unknown resource type ' . $type);
+        throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Unknown resource type ' . $type);
     }
 
     $utopia->getRoute()?->label('error', '');
@@ -367,7 +367,7 @@ App::init()
             $message = empty($request->getHeader('x-appwrite-project')) ?
                 'No Appwrite project was specified. Please specify your Appwrite Project ID in the "x-appwrite-project" header or when you initialize your Appwrite SDK.' :
                 'This endpoint is not available for the console project. The Appwrite Console is a reserved project ID and cannot be used with the Appwrite SDKs and APIs. Please check if your project ID is correct.';
-            throw new Exception(Exception::PROJECT_RESERVED_PROJECT, $message);
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, $message);
         }
     });
 
