@@ -17,7 +17,7 @@ jobs:
           days-before-stale: 7
           days-before-close: 14
           remove-stale-when-updated: true
-          close-issue-message: "This issue has been closed due to inactivity. If you still require assistance, please provide the requested information and reopen the issue."
+          close-issue-message: "This issue has been closed due to inactivity. If you still require assistance, please provide the requested information."
           close-issue-label: "not-planned"
           operations-per-run: 100
           only-labels: "question"
