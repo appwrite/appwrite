@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "38f7191613fc39799742a97787c7b252",
+    "content-hash": "56d2490abe5fd44b394a3e2f1115d642",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1845,16 +1845,16 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "0.4.2",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "d2870ab74b31b7f4027799f082e85122154f8bed"
+                "reference": "6f716a213a08db95eda1b5dddfa90983c1834817"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/d2870ab74b31b7f4027799f082e85122154f8bed",
-                "reference": "d2870ab74b31b7f4027799f082e85122154f8bed",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/6f716a213a08db95eda1b5dddfa90983c1834817",
+                "reference": "6f716a213a08db95eda1b5dddfa90983c1834817",
                 "shasum": ""
             },
             "require": {
@@ -1890,9 +1890,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/0.4.2"
+                "source": "https://github.com/utopia-php/pools/tree/0.5.0"
             },
-            "time": "2022-11-22T07:55:45+00:00"
+            "time": "2024-04-19T11:11:54+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -5250,5 +5250,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
