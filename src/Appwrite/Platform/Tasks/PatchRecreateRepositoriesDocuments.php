@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Platform\Action;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -10,6 +9,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Platform\Action;
 use Utopia\Validator\Text;
 
 class PatchRecreateRepositoriesDocuments extends Action

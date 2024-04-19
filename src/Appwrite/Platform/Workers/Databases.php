@@ -4,18 +4,18 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Utopia\Response\Model\Platform;
 use Exception;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Query;
+use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 
@@ -36,17 +36,19 @@ class Databases extends Action
             ->inject('message')
             ->inject('dbForConsole')
             ->inject('dbForProject')
-            ->callback(fn($message, $dbForConsole, $dbForProject) => $this->action($message, $dbForConsole, $dbForProject));
+            ->inject('log')
+            ->callback(fn (Message $message, Database $dbForConsole, Database $dbForProject, Log $log) => $this->action($message, $dbForConsole, $dbForProject, $log));
     }
 
     /**
      * @param Message $message
      * @param Database $dbForConsole
      * @param Database $dbForProject
+     * @param Log $log
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Database $dbForConsole, Database $dbForProject): void
+    public function action(Message $message, Database $dbForConsole, Database $dbForProject, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -60,18 +62,23 @@ class Databases extends Action
         $document = new Document($payload['document'] ?? []);
         $database = new Document($payload['database'] ?? []);
 
+        $log->addTag('projectId', $project->getId());
+        $log->addTag('type', $type);
+
         if ($database->isEmpty()) {
             throw new Exception('Missing database');
         }
 
-        match (strval($type)) {
+        $log->addTag('databaseId', $database->getId());
+
+        match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $project, $dbForProject),
             DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $project, $dbForProject),
             DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject),
             DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject),
             DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
-            default => Console::error('No database operation for type: ' . $type),
+            default => throw new \Exception('No database operation for type: ' . \strval($type)),
         };
     }
 
@@ -158,7 +165,8 @@ class Databases extends Action
             }
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -167,6 +175,7 @@ class Databases extends Action
                     $relatedAttribute->setAttribute('error', $e->getMessage());
                 }
             }
+
 
             $dbForProject->updateDocument(
                 'attributes',
@@ -186,10 +195,10 @@ class Databases extends Action
         }
 
         if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
-            $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
     }
 
     /**
@@ -260,7 +269,8 @@ class Databases extends Action
             if (!$relatedAttribute->isEmpty()) {
                 $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -336,12 +346,12 @@ class Databases extends Action
             }
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
-        $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 
         if (!$relatedCollection->isEmpty() && !$relatedAttribute->isEmpty()) {
-            $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
-            $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+            $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
         }
     }
 
@@ -387,7 +397,8 @@ class Databases extends Action
                 throw new DatabaseException('Failed to create Index');
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -402,7 +413,7 @@ class Databases extends Action
             $this->trigger($database, $collection, $index, $project, $projectId, $events);
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
     }
 
     /**
@@ -444,7 +455,8 @@ class Databases extends Action
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -459,7 +471,7 @@ class Databases extends Action
             $this->trigger($database, $collection, $index, $project, $projectId, $events);
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collection->getId());
+        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collection->getId());
     }
 
     /**
@@ -514,8 +526,8 @@ class Databases extends Action
             }
             $relatedCollection = $dbForProject->getDocument('database_' . $databaseInternalId, $relationship['relatedCollection']);
             $dbForProject->deleteDocument('attributes', $databaseInternalId . '_' . $relatedCollection->getInternalId() . '_' . $relationship['twoWayKey']);
-            $dbForProject->deleteCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
-            $dbForProject->deleteCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
+            $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
+            $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
         }
 
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
@@ -581,7 +593,7 @@ class Databases extends Action
                         $callback($document);
                     }
                 } else {
-                    Console::error('Failed to delete document: ' . $document->getId());
+                    Console::warning('Failed to delete document: ' . $document->getId());
                 }
                 $count++;
             }
@@ -601,7 +613,7 @@ class Databases extends Action
         array $events
     ): void {
         $target = Realtime::fromPayload(
-        // Pass first, most verbose event pattern
+            // Pass first, most verbose event pattern
             event: $events[0],
             payload: $attribute,
             project: $project,
