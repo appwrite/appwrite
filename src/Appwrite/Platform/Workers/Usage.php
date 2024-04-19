@@ -2,14 +2,14 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Event\UsageDump;
 use Exception;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
-use Appwrite\Event\UsageDump;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Usage extends Action
 {
@@ -18,7 +18,6 @@ class Usage extends Action
     private int $keys = 0;
     private const INFINITY_PERIOD = '_inf_';
     private const KEYS_THRESHOLD = 10000;
-
 
     public static function getName(): string
     {
@@ -37,7 +36,7 @@ class Usage extends Action
         ->inject('getProjectDB')
         ->inject('queueForUsageDump')
         ->callback(function (Message $message, callable $getProjectDB, UsageDump $queueForUsageDump) {
-             $this->action($message, $getProjectDB, $queueForUsageDump);
+            $this->action($message, $getProjectDB, $queueForUsageDump);
         });
 
         $this->lastTriggeredTime = time();
@@ -59,7 +58,7 @@ class Usage extends Action
         }
         //Todo Figure out way to preserve keys when the container is being recreated @shimonewman
 
-        $aggregationInterval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
+        $aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
         $project = new Document($payload['project'] ?? []);
         $projectId = $project->getInternalId();
         foreach ($payload['reduce'] ?? [] as $document) {
@@ -76,8 +75,9 @@ class Usage extends Action
         }
 
         $this->stats[$projectId]['project'] = $project;
+        $this->stats[$projectId]['receivedAt'] = DateTime::now();
         foreach ($payload['metrics'] ?? [] as $metric) {
-                 $this->keys++;
+            $this->keys++;
             if (!isset($this->stats[$projectId]['keys'][$metric['key']])) {
                 $this->stats[$projectId]['keys'][$metric['key']] = $metric['value'];
                 continue;
@@ -86,12 +86,12 @@ class Usage extends Action
             $this->stats[$projectId]['keys'][$metric['key']] += $metric['value'];
         }
 
-        // if keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
+        // If keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
         if (
             $this->keys >= self::KEYS_THRESHOLD ||
             (time() - $this->lastTriggeredTime > $aggregationInterval  && $this->keys > 0)
         ) {
-            console::warning('[' . DateTime::now() . '] Aggregated ' . $this->keys . ' keys');
+            Console::warning('[' . DateTime::now() . '] Aggregated ' . $this->keys . ' keys');
 
             $queueForUsageDump
                 ->setStats($this->stats)
@@ -103,18 +103,17 @@ class Usage extends Action
         }
     }
 
-     /**
-     * On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files.
-     * When we remove a parent document we need to deduct his children aggregation from the project scope.
-     * @param Document $project
-     * @param Document $document
-     * @param array $metrics
-     * @param  callable $getProjectDB
-     * @return void
-     */
+    /**
+    * On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files.
+    * When we remove a parent document we need to deduct his children aggregation from the project scope.
+    * @param Document $project
+    * @param Document $document
+    * @param array $metrics
+    * @param  callable $getProjectDB
+    * @return void
+    */
     private function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void
     {
-
         $dbForProject = $getProjectDB($project);
 
         try {
@@ -123,8 +122,8 @@ class Usage extends Action
                     $sessions = count($document->getAttribute(METRIC_SESSIONS, 0));
                     if (!empty($sessions)) {
                         $metrics[] = [
-                        'key' => METRIC_SESSIONS,
-                        'value' => ($sessions * -1),
+                            'key' => METRIC_SESSIONS,
+                            'value' => ($sessions * -1),
                         ];
                     }
                     break;
@@ -133,15 +132,15 @@ class Usage extends Action
                     $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS)));
                     if (!empty($collections['value'])) {
                         $metrics[] = [
-                        'key' => METRIC_COLLECTIONS,
-                        'value' => ($collections['value'] * -1),
+                            'key' => METRIC_COLLECTIONS,
+                            'value' => ($collections['value'] * -1),
                         ];
                     }
 
                     if (!empty($documents['value'])) {
                         $metrics[] = [
-                        'key' => METRIC_DOCUMENTS,
-                        'value' => ($documents['value'] * -1),
+                            'key' => METRIC_DOCUMENTS,
+                            'value' => ($documents['value'] * -1),
                         ];
                     }
                     break;
@@ -152,12 +151,12 @@ class Usage extends Action
 
                     if (!empty($documents['value'])) {
                         $metrics[] = [
-                        'key' => METRIC_DOCUMENTS,
-                        'value' => ($documents['value'] * -1),
+                            'key' => METRIC_DOCUMENTS,
+                            'value' => ($documents['value'] * -1),
                         ];
                         $metrics[] = [
-                        'key' => str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS),
-                        'value' => ($documents['value'] * -1),
+                            'key' => str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS),
+                            'value' => ($documents['value'] * -1),
                         ];
                     }
                     break;
@@ -168,15 +167,15 @@ class Usage extends Action
 
                     if (!empty($files['value'])) {
                         $metrics[] = [
-                        'key' => METRIC_FILES,
-                        'value' => ($files['value'] * -1),
+                            'key' => METRIC_FILES,
+                            'value' => ($files['value'] * -1),
                         ];
                     }
 
                     if (!empty($storage['value'])) {
                         $metrics[] = [
-                        'key' => METRIC_FILES_STORAGE,
-                        'value' => ($storage['value'] * -1),
+                            'key' => METRIC_FILES_STORAGE,
+                            'value' => ($storage['value'] * -1),
                         ];
                     }
                     break;
@@ -192,57 +191,57 @@ class Usage extends Action
 
                     if (!empty($deployments['value'])) {
                         $metrics[] = [
-                        'key' => METRIC_DEPLOYMENTS,
-                        'value' => ($deployments['value'] * -1),
+                            'key' => METRIC_DEPLOYMENTS,
+                            'value' => ($deployments['value'] * -1),
                         ];
                     }
 
                     if (!empty($deploymentsStorage['value'])) {
                         $metrics[] = [
-                        'key' => METRIC_DEPLOYMENTS_STORAGE,
-                        'value' => ($deploymentsStorage['value'] * -1),
+                            'key' => METRIC_DEPLOYMENTS_STORAGE,
+                            'value' => ($deploymentsStorage['value'] * -1),
                         ];
                     }
 
                     if (!empty($builds['value'])) {
                         $metrics[] = [
-                        'key' => METRIC_BUILDS,
-                        'value' => ($builds['value'] * -1),
+                            'key' => METRIC_BUILDS,
+                            'value' => ($builds['value'] * -1),
                         ];
                     }
 
                     if (!empty($buildsStorage['value'])) {
                         $metrics[] = [
-                        'key' => METRIC_BUILDS_STORAGE,
-                        'value' => ($buildsStorage['value'] * -1),
+                            'key' => METRIC_BUILDS_STORAGE,
+                            'value' => ($buildsStorage['value'] * -1),
                         ];
                     }
 
                     if (!empty($buildsCompute['value'])) {
                         $metrics[] = [
-                        'key' => METRIC_BUILDS_COMPUTE,
-                        'value' => ($buildsCompute['value'] * -1),
+                            'key' => METRIC_BUILDS_COMPUTE,
+                            'value' => ($buildsCompute['value'] * -1),
                         ];
                     }
 
                     if (!empty($executions['value'])) {
                         $metrics[] = [
-                        'key' => METRIC_EXECUTIONS,
-                        'value' => ($executions['value'] * -1),
+                            'key' => METRIC_EXECUTIONS,
+                            'value' => ($executions['value'] * -1),
                         ];
                     }
 
                     if (!empty($executionsCompute['value'])) {
                         $metrics[] = [
-                        'key' => METRIC_EXECUTIONS_COMPUTE,
-                        'value' => ($executionsCompute['value'] * -1),
+                            'key' => METRIC_EXECUTIONS_COMPUTE,
+                            'value' => ($executionsCompute['value'] * -1),
                         ];
                     }
                     break;
                 default:
                     break;
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             console::error("[reducer] " . " {DateTime::now()} " . " {$project->getInternalId()} " . " {$e->getMessage()}");
         }
     }

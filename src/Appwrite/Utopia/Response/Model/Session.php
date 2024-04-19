@@ -160,6 +160,25 @@ class Session extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('factors', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Returns a list of active session factors.',
+                'default' => [],
+                'example' => ['email'],
+                'array' => true,
+            ])
+            ->addRule('secret', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Secret used to authenticate the user. Only included if the request was made with an API key',
+                'default' => '',
+                'example' => '5e5bb8c16897e',
+            ])
+            ->addRule('mfaUpdatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Most recent date in ISO 8601 format when the session successfully passed MFA challenge.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
         ;
     }
 

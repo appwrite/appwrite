@@ -33,7 +33,7 @@ class BatchTest extends Scope
         $this->assertArrayNotHasKey('errors', $response['body'][1]);
         $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
         $this->assertArrayHasKey('localeListContinents', $response['body'][1]['data']);
-        $this->assertEquals(194, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(195, $response['body'][0]['data']['localeListCountries']['total']);
         $this->assertEquals(7, $response['body'][1]['data']['localeListContinents']['total']);
     }
 
@@ -56,8 +56,8 @@ class BatchTest extends Scope
         $this->assertArrayNotHasKey('errors', $response['body'][1]);
         $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
         $this->assertArrayHasKey('localeListCountries', $response['body'][1]['data']);
-        $this->assertEquals(194, $response['body'][0]['data']['localeListCountries']['total']);
-        $this->assertEquals(194, $response['body'][1]['data']['localeListCountries']['total']);
+        $this->assertEquals(195, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(195, $response['body'][1]['data']['localeListCountries']['total']);
     }
 
     public function testArrayBatchedMutations()
@@ -77,17 +77,17 @@ class BatchTest extends Scope
                 'name' => 'Tester 1',
             ],
         ],
-        [
-            'query' => 'mutation CreateTeam($teamId: String! $name: String!) {
+            [
+                'query' => 'mutation CreateTeam($teamId: String! $name: String!) {
                 teamsCreate(teamId: $teamId, name: $name) {
                     name
                 }
             }',
-            'variables' => [
-                'teamId' => ID::unique(),
-                'name' => 'Team 1',
-            ],
-        ]];
+                'variables' => [
+                    'teamId' => ID::unique(),
+                    'name' => 'Team 1',
+                ],
+            ]];
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -184,7 +184,7 @@ class BatchTest extends Scope
         $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
         $this->assertArrayHasKey('localeListContinents', $response['body'][1]['data']);
         $this->assertArrayHasKey('accountCreate', $response['body'][2]['data']);
-        $this->assertEquals(194, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(195, $response['body'][0]['data']['localeListCountries']['total']);
         $this->assertEquals(7, $response['body'][1]['data']['localeListContinents']['total']);
         $this->assertEquals('Tester 1', $response['body'][2]['data']['accountCreate']['name']);
     }
@@ -225,8 +225,8 @@ class BatchTest extends Scope
         $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
         $this->assertArrayHasKey('localeListCountries', $response['body'][1]['data']);
         $this->assertArrayHasKey('accountCreate', $response['body'][2]['data']);
-        $this->assertEquals(194, $response['body'][0]['data']['localeListCountries']['total']);
-        $this->assertEquals(194, $response['body'][1]['data']['localeListCountries']['total']);
+        $this->assertEquals(195, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(195, $response['body'][1]['data']['localeListCountries']['total']);
         $this->assertArrayHasKey('_id', $response['body'][2]['data']['accountCreate']);
     }
 
@@ -251,7 +251,7 @@ class BatchTest extends Scope
         $this->assertArrayNotHasKey('errors', $response['body']);
         $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
         $this->assertArrayHasKey('localeListContinents', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total']);
+        $this->assertEquals(195, $response['body']['data']['localeListCountries']['total']);
         $this->assertEquals(7, $response['body']['data']['localeListContinents']['total']);
     }
 
@@ -275,25 +275,28 @@ class BatchTest extends Scope
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
         $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total']);
+        $this->assertEquals(195, $response['body']['data']['localeListCountries']['total']);
     }
 
     public function testQueryBatchedMutations()
     {
         $projectId = $this->getProject()['$id'];
-        $email = 'tester' . \uniqid() . '@example.com';
+        $email1 = 'tester' . \uniqid() . '@example.com';
+        $email2 = 'tester' . \uniqid() . '@example.com';
         $graphQLPayload = [
-            'query' => 'mutation CreateAndLogin($userId: String!, $email: String!, $password: String!, $name: String) {
-                accountCreate(userId: $userId, email: $email, password: $password, name: $name) {
-                    name
+            'query' => 'mutation CreateAndLogin($user1Id: String!, $user2Id: String!, $email1: String!, $email2: String!, $password: String!, $name: String) {
+                account1: accountCreate(userId: $user1Id, email: $email1, password: $password, name: $name) {
+                    email
                 }
-                accountCreateEmailSession(email: $email, password: $password) {
-                    expire
+                account2: accountCreate(userId: $user2Id, email: $email2, password: $password, name: $name) {
+                    email
                 }
             }',
             'variables' => [
-                'userId' => ID::unique(),
-                'email' => $email,
+                'user1Id' => ID::unique(),
+                'user2Id' => ID::unique(),
+                'email1' => $email1,
+                'email2' => $email2,
                 'password' => 'password',
                 'name' => 'Tester',
             ],
@@ -304,12 +307,12 @@ class BatchTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('accountCreate', $response['body']['data']);
-        $this->assertArrayHasKey('accountCreateEmailSession', $response['body']['data']);
-        $this->assertEquals('Tester', $response['body']['data']['accountCreate']['name']);
+        $this->assertArrayHasKey('account1', $response['body']['data']);
+        $this->assertArrayHasKey('account2', $response['body']['data']);
+        $this->assertEquals($email1, $response['body']['data']['account1']['email']);
+        $this->assertEquals($email2, $response['body']['data']['account2']['email']);
     }
 
     public function testQueryBatchedMutationsOfSameType()

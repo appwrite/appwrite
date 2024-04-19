@@ -1,18 +1,50 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Utopia\Request;
-use Utopia\App;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Request;
+use MaxMind\Db\Reader;
+use Utopia\App;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
+
+App::init()
+    ->groups(['mfaProtected'])
+    ->inject('session')
+    ->action(function (Document $session) {
+        $isSessionFresh = false;
+
+        $lastUpdate = $session->getAttribute('mfaUpdatedAt');
+        if (!empty($lastUpdate)) {
+            $now = DateTime::now();
+            $maxAllowedDate = DateTime::addSeconds($lastUpdate, Auth::MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
+
+            $isSessionFresh = DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz($now);
+        }
+
+        if (!$isSessionFresh) {
+            throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
+        }
+    });
 
 App::init()
     ->groups(['auth'])
     ->inject('utopia')
     ->inject('request')
     ->inject('project')
-    ->action(function (App $utopia, Request $request, Document $project) {
+    ->inject('geodb')
+    ->action(function (App $utopia, Request $request, Document $project, Reader $geodb) {
+        $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
+        if (!empty($denylist && $project->getId() === 'console')) {
+            $countries = explode(',', $denylist);
+            $record = $geodb->get($request->getIP()) ?? [];
+            $country = $record['country']['iso_code'] ?? '';
+            if (in_array($country, $countries)) {
+                throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
+            }
+        }
 
         $route = $utopia->match($request);
 
@@ -61,8 +93,13 @@ App::init()
                 }
                 break;
 
+            case 'email-otp':
+                if (($auths['emailOTP'] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email OTP authentication is disabled for this project');
+                }
+                break;
+
             default:
                 throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
-                break;
         }
     });
