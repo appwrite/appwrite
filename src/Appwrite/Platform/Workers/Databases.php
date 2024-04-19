@@ -503,6 +503,7 @@ class Databases extends Action
      * @throws DatabaseException
      * @throws Restricted
      * @throws Structure
+     * @throws Exception
      */
     protected function deleteCollection(Document $database, Document $collection, Document $project, Database $dbForProject): void
     {
@@ -518,20 +519,22 @@ class Databases extends Action
         /**
          * Related collections relating to current collection
          */
-        $attributes = $dbForProject->find('attributes', [
-            Query::equal('databaseInternalId', [$databaseInternalId]),
-            Query::equal('type', [Database::VAR_RELATIONSHIP]),
-            Query::notEqual('collectionInternalId', $collectionInternalId),
-            Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
-            Query::limit(PHP_INT_MAX)
-        ]);
-
-        foreach ($attributes as $attribute) {
-            $dbForProject->deleteDocument('attributes', $attribute->getId());
-            Console::success('Deleted document "' . $attribute->getId() . '" related collection successfully');
-            $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
-            $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
-        }
+        $this->deleteByGroup(
+            'attributes',
+            [
+                Query::equal('databaseInternalId', [$databaseInternalId]),
+                Query::equal('type', [Database::VAR_RELATIONSHIP]),
+                Query::notEqual('collectionInternalId', $collectionInternalId),
+                Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
+            ],
+            $dbForProject,
+            function ($attribute) use ($dbForProject, $databaseInternalId) {
+                $dbForProject->deleteDocument('attributes', $attribute->getId());
+                Console::success('Deleted document "' . $attribute->getId() . '" related collection successfully');
+                $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
+                $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
+            }
+        );
 
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
 
