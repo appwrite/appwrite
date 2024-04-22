@@ -589,7 +589,6 @@ Http::init()
 
 Http::options()
     ->inject('route')
-    ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
@@ -597,8 +596,8 @@ Http::options()
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('geodb')
-    ->inject('auth')
-    ->action(function (Route $route, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (Route $route, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Authorization $authorization) {        
         /*
         * Appwrite Router
         */
@@ -606,7 +605,7 @@ Http::options()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
-            if (router($dbForConsole, $getProjectDB, $request, $response, $route, $queueForEvents, $queueForUsage, $geodb, $auth)) {
+            if (router($dbForConsole, $getProjectDB, $request, $response, $route, $queueForEvents, $queueForUsage, $geodb, $authorization)) {
                 return;
             }
         }
@@ -898,6 +897,7 @@ include_once 'api/health.php';
 include_once 'api/locale.php';
 include_once 'api/messaging.php';
 //include_once 'api/migrations.php';
+include_once 'api/project.php';
 include_once 'api/projects.php';
 include_once 'api/proxy.php';
 include_once 'api/storage.php';

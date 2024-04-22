@@ -31,8 +31,8 @@ Http::get('/v1/project/usage')
     ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('auth')
-    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject, Authorization $authorization) {
         $stats = $total = $usage = [];
         $format = 'Y-m-d 00:00:00';
         $firstDay = (new DateTime($startDate))->format($format);
@@ -71,7 +71,7 @@ Http::get('/v1/project/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        $auth->skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, &$total, &$stats) {
+        $authorization->skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, &$total, &$stats) {
             foreach ($metrics['total'] as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
