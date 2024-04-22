@@ -3,7 +3,6 @@
 global $utopia, $request, $response;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -12,6 +11,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Http\Validator\Host;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
@@ -216,13 +216,11 @@ Http::get('/v1/mock/github/callback')
 
 Http::shutdown()
     ->groups(['mock'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('response')
-    ->inject('request')
-    ->action(function (Http $utopia, Response $response, Request $request) {
+    ->action(function (Route $route, Response $response) {
 
         $result = [];
-        $route  = $utopia->getRoute();
         $path   = APP_STORAGE_CACHE . '/tests.json';
         $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
 
