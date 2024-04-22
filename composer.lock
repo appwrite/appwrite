@@ -1619,12 +1619,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/di.git",
-                "reference": "fb3c45b268018b87dcbbf87ad943ced9eea3bbe2"
+                "reference": "a0c8be65c19570c80e904d58f54bdd901d1d5d9c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/di/zipball/fb3c45b268018b87dcbbf87ad943ced9eea3bbe2",
-                "reference": "fb3c45b268018b87dcbbf87ad943ced9eea3bbe2",
+                "url": "https://api.github.com/repos/utopia-php/di/zipball/a0c8be65c19570c80e904d58f54bdd901d1d5d9c",
+                "reference": "a0c8be65c19570c80e904d58f54bdd901d1d5d9c",
                 "shasum": ""
             },
             "require": {
@@ -1673,7 +1673,7 @@
                 "source": "https://github.com/utopia-php/di/tree/main",
                 "issues": "https://github.com/utopia-php/di/issues"
             },
-            "time": "2024-04-18T20:06:02+00:00"
+            "time": "2024-04-22T21:22:44+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -1827,12 +1827,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "db782cedc80a639d1608d6dca7771fcff4031d88"
+                "reference": "cc3341f13d6b90f3104f197acb9136abe2fc708a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/db782cedc80a639d1608d6dca7771fcff4031d88",
-                "reference": "db782cedc80a639d1608d6dca7771fcff4031d88",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/cc3341f13d6b90f3104f197acb9136abe2fc708a",
+                "reference": "cc3341f13d6b90f3104f197acb9136abe2fc708a",
                 "shasum": ""
             },
             "require": {
@@ -1869,7 +1869,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/feat-di-upgrade"
             },
-            "time": "2024-04-22T20:19:36+00:00"
+            "time": "2024-04-22T21:25:06+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2287,12 +2287,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "8749796c05bf9a0abc9c949af5ceb2efa8531960"
+                "reference": "2133eb6da85156ff4abf0d0940715fa3975424f2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/8749796c05bf9a0abc9c949af5ceb2efa8531960",
-                "reference": "8749796c05bf9a0abc9c949af5ceb2efa8531960",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/2133eb6da85156ff4abf0d0940715fa3975424f2",
+                "reference": "2133eb6da85156ff4abf0d0940715fa3975424f2",
                 "shasum": ""
             },
             "require": {
@@ -2342,7 +2342,7 @@
                 "issues": "https://github.com/utopia-php/queue/issues",
                 "source": "https://github.com/utopia-php/queue/tree/feat-coroutine-and-di"
             },
-            "time": "2024-04-22T18:32:34+00:00"
+            "time": "2024-04-22T21:24:21+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -2402,12 +2402,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/servers.git",
-                "reference": "20bb7ab93c21d0ae37bc309d41b70ddf2a78a6fd"
+                "reference": "e7eee7f82399c89adc28cf79912a9a41d7bb3233"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/servers/zipball/20bb7ab93c21d0ae37bc309d41b70ddf2a78a6fd",
-                "reference": "20bb7ab93c21d0ae37bc309d41b70ddf2a78a6fd",
+                "url": "https://api.github.com/repos/utopia-php/servers/zipball/e7eee7f82399c89adc28cf79912a9a41d7bb3233",
+                "reference": "e7eee7f82399c89adc28cf79912a9a41d7bb3233",
                 "shasum": ""
             },
             "require": {
@@ -2465,7 +2465,7 @@
                 "source": "https://github.com/utopia-php/servers/tree/dev",
                 "issues": "https://github.com/utopia-php/servers/issues"
             },
-            "time": "2024-04-21T18:53:43+00:00"
+            "time": "2024-04-22T21:23:28+00:00"
         },
         {
             "name": "utopia-php/storage",
