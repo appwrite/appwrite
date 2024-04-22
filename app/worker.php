@@ -32,7 +32,6 @@ use Utopia\DI\Dependency;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
-use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Queue\Connection\Redis;
 use Utopia\Queue\Message;

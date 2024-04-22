@@ -1,4 +1,5 @@
 <?php
+
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\VCS\Adapter\Git\GitHub;
 
