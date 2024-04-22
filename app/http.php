@@ -22,7 +22,6 @@ use Utopia\Http\Adapter\Swoole\Server;
 use Utopia\Http\Http;
 use Utopia\System\System;
 
-//require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/init2.php';
 require_once __DIR__ . '/controllers/general.php';
 
