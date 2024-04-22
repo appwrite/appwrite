@@ -336,7 +336,7 @@ Http::init()
         foreach ($abuseKeyLabel as $abuseKey) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
-            $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject, $authorization);
+            $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
             $timeLimit
                 ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())

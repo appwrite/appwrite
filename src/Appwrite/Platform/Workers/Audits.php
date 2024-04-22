@@ -63,7 +63,7 @@ class Audits extends Action
         $userName = $user->getAttribute('name', '');
         $userEmail = $user->getAttribute('email', '');
 
-        $audit = new Audit($dbForProject, $auth);
+        $audit = new Audit($dbForProject);
         $audit->log(
             userId: $user->getInternalId(),
             // Pass first, most verbose event pattern

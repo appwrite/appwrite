@@ -920,7 +920,7 @@ Http::get('/v1/messaging/providers/:providerId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject, $authorization);
+        $audit = new Audit($dbForProject);
         $resource = 'provider/' . $providerId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
         $output = [];
@@ -2056,7 +2056,7 @@ Http::get('/v1/messaging/topics/:topicId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject, $authorization);
+        $audit = new Audit($dbForProject);
         $resource = 'topic/' . $topicId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -2427,7 +2427,7 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject, $authorization);
+        $audit = new Audit($dbForProject);
         $resource = 'subscriber/' . $subscriberId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -3115,7 +3115,7 @@ Http::get('/v1/messaging/messages/:messageId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject, $authorization);
+        $audit = new Audit($dbForProject);
         $resource = 'message/' . $messageId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 

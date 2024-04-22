@@ -15,7 +15,6 @@ use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
-use Swoole\Http\Request as SwooleRequest;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -597,7 +596,7 @@ Http::options()
     ->inject('queueForUsage')
     ->inject('geodb')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Authorization $authorization) {        
+    ->action(function (Route $route, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Authorization $authorization) {
         /*
         * Appwrite Router
         */

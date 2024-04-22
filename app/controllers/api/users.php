@@ -788,7 +788,7 @@ Http::get('/v1/users/:userId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject, $authorization);
+        $audit = new Audit($dbForProject);
 
         $logs = $audit->getLogsByUser($user->getInternalId(), $limit, $offset);
 

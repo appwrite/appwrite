@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/init2.php';
 require_once __DIR__ . '/controllers/general.php';
 
@@ -112,12 +113,12 @@ http::onStart()
             }
 
             if ($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
-                $audit = new Audit($dbForConsole, $authorization);
+                $audit = new Audit($dbForConsole);
                 $audit->setup();
             }
 
             if ($dbForConsole->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
-                $abuse = new TimeLimit("", 0, 1, $dbForConsole, $authorization);
+                $abuse = new TimeLimit("", 0, 1, $dbForConsole);
                 $abuse->setup();
             }
 

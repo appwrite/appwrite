@@ -660,8 +660,8 @@ class Deletes extends Action
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
-        $timeLimit = new TimeLimit("", 0, 1, $dbForProject, $auth);
-        $abuse = new Abuse($timeLimit, $auth);
+        $timeLimit = new TimeLimit("", 0, 1, $dbForProject);
+        $abuse = new Abuse($timeLimit);
         $status = $abuse->cleanup($abuseRetention);
         if (!$status) {
             throw new Exception('Failed to delete Abuse logs for project ' . $projectId);
@@ -679,7 +679,7 @@ class Deletes extends Action
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
-        $audit = new Audit($dbForProject, $auth);
+        $audit = new Audit($dbForProject);
         $status = $audit->cleanup($auditRetention);
         if (!$status) {
             throw new Exception('Failed to delete Audit logs for project' . $projectId);

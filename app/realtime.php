@@ -442,12 +442,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $dbForProject, $auth);
+        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $dbForProject);
         $timeLimit
             ->setParam('{ip}', $request->getIP())
             ->setParam('{url}', $request->getURI());
 
-        $abuse = new Abuse($timeLimit, $auth);
+        $abuse = new Abuse($timeLimit);
 
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many requests');
@@ -540,13 +540,13 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $database, $auth);
+        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $database);
 
         $timeLimit
             ->setParam('{connection}', $connection)
             ->setParam('{container}', $containerId);
 
-        $abuse = new Abuse($timeLimit, $auth);
+        $abuse = new Abuse($timeLimit);
 
         if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');

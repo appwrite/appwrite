@@ -199,9 +199,9 @@ Http::post('/v1/projects')
         $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create();
 
-        $audit = new Audit($dbForProject, $authorization);
+        $audit = new Audit($dbForProject);
         $audit->setup();
-        $adapter = new TimeLimit('', 0, 1, $dbForProject, $authorization);
+        $adapter = new TimeLimit('', 0, 1, $dbForProject);
         $adapter->setup();
         /** @var array $collections */
         $collections = Config::getParam('collections', [])['projects'] ?? [];

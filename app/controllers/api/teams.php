@@ -1156,7 +1156,7 @@ Http::get('/v1/teams/:teamId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject, $authorization);
+        $audit = new Audit($dbForProject);
         $resource = 'team/' . $team->getId();
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
