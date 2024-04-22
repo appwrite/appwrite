@@ -186,37 +186,6 @@ $getProjectDB
     });
 $container->set($getProjectDB);
 
-// Worker::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache, Authorization $auth, Connections $connections) {
-//     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
-
-//     return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $auth, $connections): Database {
-//         if ($project->isEmpty() || $project->getId() === 'console') {
-//             return $dbForConsole;
-//         }
-
-//         $databaseName = $project->getAttribute('database');
-
-//         if (isset($databases[$databaseName])) {
-//             $database = $databases[$databaseName];
-//             $database->setNamespace('_' . $project->getInternalId());
-//             return $database;
-//         }
-
-//         $connection = $pools->get($databaseName)->pop();
-//         $connections->add($connection);
-//         $dbAdapter = $connection->getResource();
-
-//         $database = new Database($dbAdapter, $cache);
-//         $database->setAuthorization($auth);
-
-//         $databases[$databaseName] = $database;
-
-//         $database->setNamespace('_' . $project->getInternalId());
-
-//         return $database;
-//     };
-// }, ['pools', 'dbForConsole', 'cache', 'auth', 'connections']);
-
 $abuseRetention = new Dependency();
 $abuseRetention
     ->setName('abuseRetention')
@@ -466,7 +435,7 @@ if (!empty($workerIndex)) {
 }
 
 if (\str_starts_with($workerName, 'databases')) {
-    $queueName = System::getEnv('_APP_QUEUE_NAME', 'database_db_main');
+    $queueName = System::getEnv('_APP_QUEUE_NAME', 'db_main');
 } else {
     $queueName = System::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
 }

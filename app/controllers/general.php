@@ -894,7 +894,7 @@ include_once 'shared/api/auth.php';
 include_once 'api/account.php';
 include_once 'api/avatars.php';
 include_once 'api/console.php';
-//include_once 'api/database.php';
+include_once 'api/databases.php';
 //include_once 'api/functions.php';
 //include_once 'api/graphql.php';
 include_once 'api/health.php';
