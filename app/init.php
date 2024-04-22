@@ -824,7 +824,7 @@ $register->set('pools', function () {
                 //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
             }
-            
+
             $dsn = new DSN($dsn);
             $dsnHost = $dsn->getHost();
             $dsnPort = $dsn->getPort();

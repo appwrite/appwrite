@@ -29,37 +29,27 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
-use Appwrite\GraphQL\Promises\Adapter\Swoole;
-use Appwrite\GraphQL\Schema;
 use Appwrite\Hooks\Hooks;
-use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL;
 use Appwrite\Utopia\Queue\Connections;
 use MaxMind\Db\Reader;
-use PHPMailer\PHPMailer\PHPMailer;
-use Swoole\Coroutine;
 use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\PDOProxy;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Cache\Adapter\Sharding;
+use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
-use Utopia\Database\Adapter\SQL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Database\Validator\Structure;
+use Utopia\DI\Container;
 use Utopia\DI\Dependency;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -67,14 +57,9 @@ use Utopia\Http\Http;
 use Utopia\Http\Request;
 use Utopia\Http\Response;
 use Utopia\Http\Validator\Hostname;
-use Utopia\Http\Validator\IP;
-use Utopia\Http\Validator\Range;
-use Utopia\Http\Validator\WhiteList;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
-use Utopia\Pools\Group;
-use Utopia\Pools\Pool;
 use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
@@ -87,9 +72,6 @@ use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
-use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
-use Utopia\Cache\Adapter\None;
-use Utopia\DI\Container;
 
 Http::setMode(System::getEnv('_APP_ENV', Http::MODE_TYPE_PRODUCTION));
 
@@ -210,7 +192,7 @@ $global->set('geodb', function () {
 });
 
 $global->set('hooks', function () {
-   return new Hooks();
+    return new Hooks();
 });
 
 $global->set('pools', (function () {
@@ -279,11 +261,11 @@ $global->set('pools', (function () {
             $name = ($multipe) ? $dsn[0] : 'main';
             $config[] = $name;
             $dsn = $dsn[1] ?? '';
-            
+
             if (empty($dsn)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
             }
-            
+
             $dsn = new DSN($dsn);
             $dsnHost = $dsn->getHost();
             $dsnPort = $dsn->getPort();
@@ -306,7 +288,8 @@ $global->set('pools', (function () {
             switch ($dsnScheme) {
                 case 'mysql':
                 case 'mariadb':
-                    $pool = new PDOPool((new PDOConfig)
+                    $pool = new PDOPool(
+                        (new PDOConfig())
                         ->withHost($dsnHost)
                         ->withPort($dsnPort)
                         ->withDbName($dsnDatabase)
@@ -327,17 +310,16 @@ $global->set('pools', (function () {
                     );
                     break;
                 case 'redis':
-                    $pool = new RedisPool((new RedisConfig)
+                    $pool = new RedisPool((new RedisConfig())
                         ->withHost($dsnHost)
                         ->withPort((int)$dsnPort)
-                        ->withAuth($dsnPass)
-                    , $poolSize);
+                        ->withAuth($dsnPass), $poolSize);
                     break;
 
                 default:
                     throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid scheme");
             }
-            
+
             $pools['pools-' . $key . '-' . $name] = [
                 'pool' => $pool,
                 'dsn' => $dsn,
@@ -381,32 +363,32 @@ $user
         $authorization->setDefaultStatus(true);
 
         Auth::setCookieName('a_session_' . $project->getId());
-    
+
         if (APP_MODE_ADMIN === $mode) {
             Auth::setCookieName('a_session_' . $console->getId());
         }
-    
+
         $session = Auth::decodeSession(
             $request->getCookie(
                 Auth::$cookieName, // Get sessions
                 $request->getCookie(Auth::$cookieName . '_legacy', '')
             )
         );
-    
+
         // Get session from header for SSR clients
         if (empty($session['id']) && empty($session['secret'])) {
             $sessionHeader = $request->getHeader('x-appwrite-session', '');
-    
+
             if (!empty($sessionHeader)) {
                 $session = Auth::decodeSession($sessionHeader);
             }
         }
-    
+
         // Get fallback session from old clients (no SameSite support) or clients who block 3rd-party cookies
         if ($response) {
             $response->addHeader('X-Debug-Fallback', 'false');
         }
-    
+
         if (empty($session['id']) && empty($session['secret'])) {
             if ($response) {
                 $response->addHeader('X-Debug-Fallback', 'true');
@@ -415,10 +397,10 @@ $user
             $fallback = \json_decode($fallback, true);
             $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
         }
-    
+
         Auth::$unique = $session['id'] ?? '';
         Auth::$secret = $session['secret'] ?? '';
-    
+
         if (APP_MODE_ADMIN !== $mode) {
             if ($project->isEmpty()) {
                 $user = new Document([]);
@@ -432,14 +414,14 @@ $user
         } else {
             $user = $dbForConsole->getDocument('users', Auth::$unique);
         }
-    
+
         if (
             $user->isEmpty() // Check a document has been found in the DB
             || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
         ) { // Validate user has valid login token
             $user = new Document([]);
         }
-    
+
         if (APP_MODE_ADMIN === $mode) {
             if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
                 $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
@@ -447,34 +429,34 @@ $user
                 $user = new Document([]);
             }
         }
-    
+
         $authJWT = $request->getHeader('x-appwrite-jwt', '');
-    
+
         if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
             $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
-    
+
             try {
                 $payload = $jwt->decode($authJWT);
             } catch (JWTException $error) {
                 throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
             }
-    
+
             $jwtUserId = $payload['userId'] ?? '';
             $jwtSessionId = $payload['sessionId'] ?? '';
-    
+
             if ($jwtUserId && $jwtSessionId) {
                 $user = $dbForProject->getDocument('users', $jwtUserId);
             }
-    
+
             if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
                 $user = new Document([]);
             }
         }
-    
+
         // Adds logs to database queries
         $dbForProject->setMetadata('user', $user->getId());
         $dbForConsole->setMetadata('user', $user->getId());
-    
+
         return $user;
     });
 $container->set($user);
@@ -589,14 +571,14 @@ $dbForProject
     ->inject('dbForConsole')
     ->inject('connections')
     ->inject('authorization')
-    ->setCallback(function(array $pools, Document $project, Cache $cache, Database $dbForConsole, Connections $connections, Authorization $authorization) {
+    ->setCallback(function (array $pools, Document $project, Cache $cache, Database $dbForConsole, Connections $connections, Authorization $authorization) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
 
         $pool = $pools['pools-database-'.$project->getAttribute('database')]['pool'];
         $dsn = $pools['pools-database-'.$project->getAttribute('database')]['dsn'];
-    
+
         $connection = $pool->get();
         $connections->add($connection, $pool);
         $adapter = match ($dsn->getScheme()) {
@@ -606,16 +588,16 @@ $dbForProject
         };
 
         $adapter->setDatabase($dsn->getPath());
-    
+
         $database = new Database($adapter, $cache);
         $database->setAuthorization($authorization);
-    
+
         $database
             ->setNamespace('_' . $project->getInternalId())
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId())
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
-    
+
         return $database;
     });
 $container->set($dbForProject);
@@ -627,7 +609,7 @@ $dbForConsole
     ->inject('cache')
     ->inject('authorization')
     ->inject('connections')
-    ->setCallback(function(array $pools, Cache $cache, Authorization $authorization, Connections $connections): Database {
+    ->setCallback(function (array $pools, Cache $cache, Authorization $authorization, Connections $connections): Database {
         $pool = $pools['pools-console-main']['pool'];
         $dsn = $pools['pools-console-main']['dsn'];
         $connection = $pool->get();
@@ -886,7 +868,7 @@ $clients
             'type' => Origin::CLIENT_TYPE_WEB,
             'hostname' => $request->getHostname(),
         ], Document::SET_TYPE_APPEND);
-    
+
         $hostnames = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
         $validator = new Hostname();
         foreach ($hostnames as $hostname) {
@@ -901,7 +883,7 @@ $clients
                 'hostname' => $hostname,
             ], Document::SET_TYPE_APPEND);
         }
-    
+
         /**
          * Get All verified client URLs for both console and current projects
          * + Filter for duplicated entries
@@ -913,7 +895,7 @@ $clients
                 fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && isset($node['hostname']) && !empty($node['hostname']))
             )
         );
-    
+
         $clients = \array_unique(
             \array_merge(
                 $clientsConsole,
@@ -926,7 +908,7 @@ $clients
                 )
             )
         );
-    
+
         return $clients;
     });
 $container->set($clients);

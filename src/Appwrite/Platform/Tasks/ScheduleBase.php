@@ -9,7 +9,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Query;
-use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\System\System;

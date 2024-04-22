@@ -458,7 +458,7 @@ class Response extends HttpResponse
             // Tests (keep last)
             ->setModel(new Mock());
 
-            parent::__construct($response->swoole);
+        parent::__construct($response->swoole);
     }
 
     /**

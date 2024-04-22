@@ -16,10 +16,10 @@ use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\System\System;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\JSON;
 use Utopia\Http\Validator\Text;
-use Utopia\Http\Http;
+use Utopia\System\System;
 
 Http::init()
     ->groups(['graphql'])

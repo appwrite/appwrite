@@ -20,10 +20,8 @@ use Appwrite\Platform\Appwrite;
 use Appwrite\Utopia\Queue\Connections;
 use Swoole\Runtime;
 use Utopia\Cache\Adapter\None;
-use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
@@ -38,7 +36,6 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Queue\Connection\Redis;
 use Utopia\Queue\Message;
-use Utopia\Queue\Server;
 use Utopia\Queue\Worker;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
@@ -114,10 +111,10 @@ $dbForProject
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
-    
+
         $pool = $pools['pools-database-'.$project->getAttribute('database')]['pool'];
         $dsn = $pools['pools-database-'.$project->getAttribute('database')]['dsn'];
-    
+
         $connection = $pool->get();
         $connections->add($connection, $pool);
         $adapter = match ($dsn->getScheme()) {
@@ -125,9 +122,9 @@ $dbForProject
             'mysql' => new MySQL($connection),
             default => null
         };
-    
+
         $adapter->setDatabase($dsn->getPath());
-            
+
         $database = new Database($adapter, $cache);
         $database->setAuthorization($auth);
         $database->setNamespace('_' . $project->getInternalId());
@@ -143,11 +140,11 @@ $project
     ->setCallback(function (Message $message, Database $dbForConsole) {
         $payload = $message->getPayload() ?? [];
         $project = new Document($payload['project'] ?? []);
-    
+
         if ($project->getId() === 'console') {
             return $project;
         }
-    
+
         return $dbForConsole->getDocument('projects', $project->getId());
     });
 $container->set($project);
@@ -170,7 +167,7 @@ $getProjectDB
 
             $pool = $pools['pools-database-'.$databaseName]['pool'];
             $dsn = $pools['pools-database-'.$databaseName]['dsn'];
-        
+
             $connection = $pool->get();
             $connections->add($connection, $pool);
             $adapter = match ($dsn->getScheme()) {
@@ -268,7 +265,7 @@ $queue
         $dsn = $pools['pools-queue-main']['dsn'];
         $connection = $pool->get();
         $connections->add($connection, $pool);
-    
+
         return new Redis($dsn->getHost(), $dsn->getPort());
     });
 $container->set($queue);

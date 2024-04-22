@@ -23,7 +23,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\DI\Dependency;
 use Utopia\Domains\Domain;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
@@ -33,7 +32,6 @@ use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
-use Utopia\Registry\Registry;
 use Utopia\System\System;
 
 Config::setParam('domainVerification', false);
@@ -383,7 +381,8 @@ Http::init()
         Document $console,
         Document $project,
         Database $dbForConsole,
-        Locale $locale, array $localeCodes,
+        Locale $locale,
+        array $localeCodes,
         array $clients,
         /**
          * @disregard P1009 Undefined type
@@ -392,7 +391,8 @@ Http::init()
         // Usage $queueForUsage,
         // Event $queueForEvents,
         Certificate $queueForCertificates,
-        Authorization $authorization) {
+        Authorization $authorization
+    ) {
         /*
         * Appwrite Router
         */

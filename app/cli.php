@@ -17,7 +17,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
@@ -180,7 +179,7 @@ CLI::setResource('logError', function (Registry $register) {
             $log->setAction($action);
 
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-       
+
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);

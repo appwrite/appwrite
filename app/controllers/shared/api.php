@@ -27,10 +27,10 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
-use Utopia\System\System;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\System\System;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);

@@ -198,7 +198,7 @@ Http::post('/v1/projects')
         $dbForProject->setAuthorization($authorization);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create();
-        
+
         $audit = new Audit($dbForProject, $authorization);
         $audit->setup();
         $adapter = new TimeLimit('', 0, 1, $dbForProject, $authorization);

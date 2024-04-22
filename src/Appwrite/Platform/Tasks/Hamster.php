@@ -7,7 +7,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 

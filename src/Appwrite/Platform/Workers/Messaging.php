@@ -12,7 +12,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
-use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;

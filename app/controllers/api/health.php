@@ -89,7 +89,7 @@ Http::get('/v1/health/db')
 
                     $pool = $pools['pools-'.$key.'-'.$database]['pool'];
                     $dsn = $pools['pools-'.$key.'-'.$database]['dsn'];
-                
+
                     $connection = $pool->get();
                     $connections->add($connection, $pool);
                     $adapter = match ($dsn->getScheme()) {
