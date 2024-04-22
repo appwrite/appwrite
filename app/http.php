@@ -1,6 +1,6 @@
 <?php
-
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/init2.php';
+require_once __DIR__ . '/controllers/general.php';
 
 use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
@@ -21,9 +21,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Server;
 use Utopia\Http\Http;
 use Utopia\System\System;
-
-require_once __DIR__ . '/init2.php';
-require_once __DIR__ . '/controllers/general.php';
 
 $workerNumber = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 $payloadSize = 6 * (1024 * 1024); // 6MB

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -470,6 +471,7 @@ $user
             try {
                 $payload = $jwt->decode($authJWT);
             } catch (JWTException $error) {
+                $request->removeHeader('x-appwrite-jwt');
                 throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
             }
 
