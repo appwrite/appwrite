@@ -47,13 +47,11 @@ class VolumeSync extends Action
                 return;
             }
 
-            $stdin = "";
-            $stdout = "";
-            $stderr = "";
+            $input = "";
+            $output = "";
 
-            Console::execute("rsync -av $source $destination", $stdin, $stdout, $stderr);
-            Console::success($stdout);
-            Console::error($stderr);
+            Console::execute("rsync -av $source $destination", $input, $output);
+            Console::log($output);
         }, $interval);
     }
 }

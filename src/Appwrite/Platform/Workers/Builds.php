@@ -221,13 +221,12 @@ class Builds extends Action
                 $branchName = $deployment->getAttribute('providerBranch');
                 $commitHash = $deployment->getAttribute('providerCommitHash', '');
                 $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory, $commitHash);
-                $stdout = '';
-                $stderr = '';
-                Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
-                $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
+                $output = '';
+                Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $output);
+                $exit = Console::execute($gitCloneCommand, '', $output);
 
                 if ($exit !== 0) {
-                    throw new \Exception('Unable to clone code repository: ' . $stderr);
+                    throw new \Exception('Unable to clone code repository: ' . $output);
                 }
 
                 // Build from template
@@ -244,33 +243,33 @@ class Builds extends Action
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . \escapeshellcmd($buildId) . '/template';
                     $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, $tmpTemplateDirectory, $templateRootDirectory);
-                    $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
+                    $exit = Console::execute($gitCloneCommandForTemplate, '', $output);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to clone code repository: ' . $stderr);
+                        throw new \Exception('Unable to clone code repository: ' . $output);
                     }
 
                     // Ensure directories
-                    Console::execute('mkdir -p ' . $tmpTemplateDirectory . '/' . $templateRootDirectory, '', $stdout, $stderr);
-                    Console::execute('mkdir -p ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
+                    Console::execute('mkdir -p ' . $tmpTemplateDirectory . '/' . $templateRootDirectory, '', $output);
+                    Console::execute('mkdir -p ' . $tmpDirectory . '/' . $rootDirectory, '', $output);
 
                     // Merge template into user repo
-                    Console::execute('cp -rfn ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/* ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
+                    Console::execute('cp -rfn ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/* ' . $tmpDirectory . '/' . $rootDirectory, '', $output);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . \escapeshellcmd($function->getAttribute('name', '')) . '\' function" && git push origin ' . \escapeshellcmd($branchName), '', $stdout, $stderr);
+                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . \escapeshellcmd($function->getAttribute('name', '')) . '\' function" && git push origin ' . \escapeshellcmd($branchName), '', $output);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to push code repository: ' . $stderr);
+                        throw new \Exception('Unable to push code repository: ' . $output);
                     }
 
-                    $exit = Console::execute('cd ' . $tmpDirectory . ' && git rev-parse HEAD', '', $stdout, $stderr);
+                    $exit = Console::execute('cd ' . $tmpDirectory . ' && git rev-parse HEAD', '', $output);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to get vcs commit SHA: ' . $stderr);
+                        throw new \Exception('Unable to get vcs commit SHA: ' . $output);
                     }
 
-                    $providerCommitHash = \trim($stdout);
+                    $providerCommitHash = \trim($output);
                     $authorUrl = "https://github.com/$cloneOwner";
 
                     $deployment->setAttribute('providerCommitHash', $providerCommitHash ?? '');
@@ -312,7 +311,7 @@ class Builds extends Action
                     throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
                 }
 
-                Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
+                Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $output);
 
                 $path = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
                 $result = $localDevice->transfer($tmpPathFile, $path, $deviceForFunctions);
@@ -321,7 +320,7 @@ class Builds extends Action
                     throw new \Exception("Unable to move file");
                 }
 
-                Console::execute('rm -rf ' . $tmpPath, '', $stdout, $stderr);
+                Console::execute('rm -rf ' . $tmpPath, '', $output);
 
                 $source = $path;
 

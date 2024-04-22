@@ -330,30 +330,26 @@ class Certificates extends Action
      *
      * @param string $folder Folder into which certificates should be generated
      * @param string $domain Domain to generate certificate for
-     * @return array Named array with keys 'stdout' and 'stderr', both string
+     * @return string output
      * @throws Exception
      */
-    private function issueCertificate(string $folder, string $domain, string $email): array
+    private function issueCertificate(string $folder, string $domain, string $email): string
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $staging = (Http::isProduction()) ? '' : ' --dry-run';
         $exit = Console::execute("certbot certonly -v --webroot --noninteractive --agree-tos{$staging}"
             . " --email " . $email
             . " --cert-name " . $folder
             . " -w " . APP_STORAGE_CERTIFICATES
-            . " -d {$domain}", '', $stdout, $stderr);
+            . " -d {$domain}", '', $output);
 
         // Unexpected error, usually 5XX, API limits, ...
         if ($exit !== 0) {
-            throw new Exception('Failed to issue a certificate with message: ' . $stderr);
+            throw new Exception('Failed to issue a certificate with message: ' . $output);
         }
 
-        return [
-            'stdout' => $stdout,
-            'stderr' => $stderr
-        ];
+        return $output;
     }
 
     /**
@@ -381,7 +377,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function applyCertificateFiles(string $folder, string $domain, array $letsEncryptData): void
+    private function applyCertificateFiles(string $folder, string $domain, string $letsEncryptData): void
     {
 
         // Prepare folder in storage for domain
@@ -394,19 +390,19 @@ class Certificates extends Action
 
         // Move generated files
         if (!@\rename('/etc/letsencrypt/live/' . $folder . '/cert.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem')) {
-            throw new Exception('Failed to rename certificate cert.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
+            throw new Exception('Failed to rename certificate cert.pem. Let\'s Encrypt log: ' . $letsEncryptData);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $folder . '/chain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/chain.pem')) {
-            throw new Exception('Failed to rename certificate chain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
+            throw new Exception('Failed to rename certificate chain.pem. Let\'s Encrypt log: ' . $letsEncryptData);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $folder . '/fullchain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/fullchain.pem')) {
-            throw new Exception('Failed to rename certificate fullchain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
+            throw new Exception('Failed to rename certificate fullchain.pem. Let\'s Encrypt log: ' . $letsEncryptData);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $folder . '/privkey.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/privkey.pem')) {
-            throw new Exception('Failed to rename certificate privkey.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
+            throw new Exception('Failed to rename certificate privkey.pem. Let\'s Encrypt log: ' . $letsEncryptData);
         }
 
         $config = \implode(PHP_EOL, [
