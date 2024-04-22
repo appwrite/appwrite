@@ -6,6 +6,8 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Document;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Http\Http;
@@ -72,21 +74,30 @@ Http::get('/v1/health/db')
     ->inject('response')
     ->inject('pools')
     ->inject('connections')
-    ->action(function (Response $response, Group $pools, Connections $connections) {
+    ->action(function (Response $response, array $pools, Connections $connections) {
 
         $output = [];
 
         $configs = [
-            'Console.DB' => Config::getParam('pools-console'),
-            'Projects.DB' => Config::getParam('pools-database'),
+            'console' => Config::getParam('pools-console'),
+            'database' => Config::getParam('pools-database'),
         ];
 
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
                 try {
-                    $connection = $pools->get($database)->pop();
-                    $connections->add($connection);
-                    $adapter = $connection->getResource();
+
+                    $pool = $pools['pools-'.$key.'-'.$database]['pool'];
+                    $dsn = $pools['pools-'.$key.'-'.$database]['dsn'];
+                
+                    $connection = $pool->get();
+                    $connections->add($connection, $pool);
+                    $adapter = match ($dsn->getScheme()) {
+                        'mariadb' => new MariaDB($connection),
+                        'mysql' => new MySQL($connection),
+                        default => null
+                    };
+                    $adapter->setDatabase($dsn->getPath());
 
                     $checkStart = \microtime(true);
 

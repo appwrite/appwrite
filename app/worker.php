@@ -178,6 +178,7 @@ $getProjectDB
                 'mysql' => new MySQL($connection),
                 default => null
             };
+            $adapter->setDatabase($dsn->getPath());
 
             $database = new Database($adapter, $cache);
             $database->setAuthorization($auth);
