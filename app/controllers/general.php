@@ -704,7 +704,7 @@ Http::error()
         }
 
         /** Handle Utopia Errors */
-        if ($error instanceof Utopia\Http\Exception) {
+        if ($error instanceof Utopia\Http\Exception || $error instanceof Utopia\Servers\Exception) {
             $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
             switch ($code) {
                 case 400:
