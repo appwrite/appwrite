@@ -46,7 +46,7 @@ class Resolvers
 
                 switch ($route->getMethod()) {
                     case 'GET':
-                        $request->setQueryString($args);
+                        $request->setQuery($args);
                         break;
                     default:
                         $request->setPayload($args);
@@ -134,7 +134,7 @@ class Resolvers
 
                 $request->setMethod('GET');
                 $request->setURI($url($databaseId, $collectionId, $args));
-                $request->setQueryString($params($databaseId, $collectionId, $args));
+                $request->setQuery($params($databaseId, $collectionId, $args));
 
                 $beforeResolve = function ($payload) {
                     return $payload['documents'];

@@ -36,7 +36,7 @@ class RequestTest extends TestCase
         // set test header to prevent header populaten inside the request class
         $this->request->addHeader('EXAMPLE', 'VALUE');
         $this->request->setRoute($route);
-        $this->request->setQueryString([
+        $this->request->setQuery([
             'initial' => true,
             'first' => false
         ]);

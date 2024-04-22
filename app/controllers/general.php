@@ -38,324 +38,320 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-// function router(Http $utopia, Database $dbForConsole, callable $getProjectDB, Request $request, Response $response, Route $route, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Authorization $auth)
-// {
-//     $route?->label('error', __DIR__ . '/../views/general/error.phtml');
+function router(Database $dbForConsole, callable $getProjectDB, Request $request, Response $response, Route $route, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Authorization $auth)
+{
+    $route?->label('error', __DIR__ . '/../views/general/error.phtml');
 
-//     $host = $request->getHostname() ?? '';
+    $host = $request->getHostname() ?? '';
 
-//     $route = $auth->skip(
-//         fn () => $dbForConsole->find('rules', [
-//             Query::equal('domain', [$host]),
-//             Query::limit(1)
-//         ])
-//     )[0] ?? null;
+    $rule = $auth->skip(
+        fn () => $dbForConsole->find('rules', [
+            Query::equal('domain', [$host]),
+            Query::limit(1)
+        ])
+    )[0] ?? null;
 
-//     if ($route === null) {
-//         if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
-//             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
-//         }
+    if ($rule === null) {
+        if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
+        }
 
-//         if (\str_ends_with($host, System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))) {
-//             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain is not connected to any Appwrite resource yet. Please configure custom domain or function domain to allow this request.');
-//         }
+        if (\str_ends_with($host, System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))) {
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain is not connected to any Appwrite resource yet. Please configure custom domain or function domain to allow this request.');
+        }
 
-//         if (System::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
-//             if ($host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
-//                 throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite over this domain. Please add it as custom domain to your project or disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.');
-//             }
-//         }
+        if (System::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
+            if ($host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
+                throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite over this domain. Please add it as custom domain to your project or disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.');
+            }
+        }
 
-//         // Act as API - no Proxy logic
-//         $utopia->getRoute()?->label('error', '');
-//         return false;
-//     }
+        // Act as API - no Proxy logic
+        $route?->label('error', '');
+        return false;
+    }
 
-//     $projectId = $route->getAttribute('projectId');
-//     $project = $auth->skip(
-//         fn () => $dbForConsole->getDocument('projects', $projectId)
-//     );
-//     if (array_key_exists('proxy', $project->getAttribute('services', []))) {
-//         $status = $project->getAttribute('services', [])['proxy'];
-//         if (!$status) {
-//             throw new AppwriteException(AppwriteException::GENERAL_SERVICE_DISABLED);
-//         }
-//     }
+    $projectId = $rule->getAttribute('projectId');
+    $project = $auth->skip(
+        fn () => $dbForConsole->getDocument('projects', $projectId)
+    );
+    if (array_key_exists('proxy', $project->getAttribute('services', []))) {
+        $status = $project->getAttribute('services', [])['proxy'];
+        if (!$status) {
+            throw new AppwriteException(AppwriteException::GENERAL_SERVICE_DISABLED);
+        }
+    }
 
-//     // Skip Appwrite Router for ACME challenge. Nessessary for certificate generation
-//     $path = ($request->getURI() ?? '/');
-//     if (\str_starts_with($path, '/.well-known/acme-challenge')) {
-//         return false;
-//     }
+    // Skip Appwrite Router for ACME challenge. Nessessary for certificate generation
+    $path = ($request->getURI() ?? '/');
+    if (\str_starts_with($path, '/.well-known/acme-challenge')) {
+        return false;
+    }
 
-//     $type = $route->getAttribute('resourceType');
+    $type = $rule->getAttribute('resourceType');
 
-//     if ($type === 'function') {
-//         if (System::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-//             if ($request->getProtocol() !== 'https') {
-//                 if ($request->getMethod() !== Request::METHOD_GET) {
-//                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
-//                 }
+    if ($type === 'function') {
+        if (System::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+            if ($request->getProtocol() !== 'https') {
+                if ($request->getMethod() !== Request::METHOD_GET) {
+                    throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
+                }
 
-//                 return $response->redirect('https://' . $request->getHostname() . $request->getURI());
-//             }
-//         }
+                return $response->redirect('https://' . $request->getHostname() . $request->getURI());
+            }
+        }
 
-//         $functionId = $route->getAttribute('resourceId');
-//         $projectId = $route->getAttribute('projectId');
+        $functionId = $rule->getAttribute('resourceId');
+        $projectId = $rule->getAttribute('projectId');
 
-//         $path = ($swooleRequest->server['request_uri'] ?? '/');
-//         $query = ($swooleRequest->server['query_string'] ?? '');
-//         if (!empty($query)) {
-//             $path .= '?' . $query;
-//         }
+        $path = ($request->getURI() ?? '/');
+        $query = ($request->getQueryString() ?? '');
+        if (!empty($query)) {
+            $path .= '?' . $query;
+        }
 
+        $body = $request->getRawPayload() ?? '';
+        $method = $request->getMethod();
 
-//         $body = $swooleRequest->getContent() ?? '';
-//         $method = $swooleRequest->server['request_method'];
+        $requestHeaders = $request->getHeaders();
 
-//         $requestHeaders = $request->getHeaders();
+        $project = $auth->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
-//         $project = $auth->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+        $dbForProject = $getProjectDB($project);
 
-//         $dbForProject = $getProjectDB($project);
+        $function = $auth->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-//         $function = $auth->skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
+            throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
+        }
 
-//         if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-//             throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
-//         }
+        $version = $function->getAttribute('version', 'v2');
+        $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
 
-//         $version = $function->getAttribute('version', 'v2');
-//         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
+        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
-//         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
+        if (\is_null($runtime)) {
+            throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+        }
 
-//         if (\is_null($runtime)) {
-//             throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
-//         }
+        $deployment = $auth->skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
 
-//         $deployment = $auth->skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
+            throw new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
+        }
 
-//         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
-//             throw new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
-//         }
+        if ($deployment->isEmpty()) {
+            throw new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
+        }
 
-//         if ($deployment->isEmpty()) {
-//             throw new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
-//         }
+        /** Check if build has completed */
+        $build = $auth->skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        if ($build->isEmpty()) {
+            throw new AppwriteException(AppwriteException::BUILD_NOT_FOUND);
+        }
 
-//         /** Check if build has completed */
-//         $build = $auth->skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
-//         if ($build->isEmpty()) {
-//             throw new AppwriteException(AppwriteException::BUILD_NOT_FOUND);
-//         }
+        if ($build->getAttribute('status') !== 'ready') {
+            throw new AppwriteException(AppwriteException::BUILD_NOT_READY);
+        }
 
-//         if ($build->getAttribute('status') !== 'ready') {
-//             throw new AppwriteException(AppwriteException::BUILD_NOT_READY);
-//         }
+        $permissions = $function->getAttribute('execute');
 
-//         $permissions = $function->getAttribute('execute');
+        if (!(\in_array('any', $permissions)) && (\in_array('guests', $permissions))) {
+            throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED, 'To execute function using domain, execute permissions must include "any" or "guests"');
+        }
 
-//         if (!(\in_array('any', $permissions)) && (\in_array('guests', $permissions))) {
-//             throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED, 'To execute function using domain, execute permissions must include "any" or "guests"');
-//         }
+        $headers = \array_merge([], $requestHeaders);
+        $headers['x-appwrite-trigger'] = 'http';
+        $headers['x-appwrite-user-id'] = '';
+        $headers['x-appwrite-user-jwt'] = '';
+        $headers['x-appwrite-country-code'] = '';
+        $headers['x-appwrite-continent-code'] = '';
+        $headers['x-appwrite-continent-eu'] = 'false';
 
-//         $headers = \array_merge([], $requestHeaders);
-//         $headers['x-appwrite-trigger'] = 'http';
-//         $headers['x-appwrite-user-id'] = '';
-//         $headers['x-appwrite-user-jwt'] = '';
-//         $headers['x-appwrite-country-code'] = '';
-//         $headers['x-appwrite-continent-code'] = '';
-//         $headers['x-appwrite-continent-eu'] = 'false';
+        $ip = $headers['x-real-ip'] ?? '';
+        if (!empty($ip)) {
+            $record = $geodb->get($ip);
 
-//         $ip = $headers['x-real-ip'] ?? '';
-//         if (!empty($ip)) {
-//             $record = $geodb->get($ip);
+            if ($record) {
+                $eu = Config::getParam('locale-eu');
 
-//             if ($record) {
-//                 $eu = Config::getParam('locale-eu');
+                $headers['x-appwrite-country-code'] = $record['country']['iso_code'] ?? '';
+                $headers['x-appwrite-continent-code'] = $record['continent']['code'] ?? '';
+                $headers['x-appwrite-continent-eu'] = (\in_array($record['country']['iso_code'], $eu)) ? 'true' : 'false';
+            }
+        }
 
-//                 $headers['x-appwrite-country-code'] = $record['country']['iso_code'] ?? '';
-//                 $headers['x-appwrite-continent-code'] = $record['continent']['code'] ?? '';
-//                 $headers['x-appwrite-continent-eu'] = (\in_array($record['country']['iso_code'], $eu)) ? 'true' : 'false';
-//             }
-//         }
+        $headersFiltered = [];
+        foreach ($headers as $key => $value) {
+            if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
+                $headersFiltered[] = ['name' => $key, 'value' => $value];
+            }
+        }
 
-//         $headersFiltered = [];
-//         foreach ($headers as $key => $value) {
-//             if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
-//                 $headersFiltered[] = ['name' => $key, 'value' => $value];
-//             }
-//         }
+        $executionId = ID::unique();
 
-//         $executionId = ID::unique();
+        $execution = new Document([
+            '$id' => $executionId,
+            '$permissions' => [],
+            'functionInternalId' => $function->getInternalId(),
+            'functionId' => $function->getId(),
+            'deploymentInternalId' => $deployment->getInternalId(),
+            'deploymentId' => $deployment->getId(),
+            'trigger' => 'http', // http / schedule / event
+            'status' =>  'processing', // waiting / processing / completed / failed
+            'responseStatusCode' => 0,
+            'responseHeaders' => [],
+            'requestPath' => $path,
+            'requestMethod' => $method,
+            'requestHeaders' => $headersFiltered,
+            'errors' => '',
+            'logs' => '',
+            'duration' => 0.0,
+            'search' => implode(' ', [$functionId, $executionId]),
+        ]);
 
-//         $execution = new Document([
-//             '$id' => $executionId,
-//             '$permissions' => [],
-//             'functionInternalId' => $function->getInternalId(),
-//             'functionId' => $function->getId(),
-//             'deploymentInternalId' => $deployment->getInternalId(),
-//             'deploymentId' => $deployment->getId(),
-//             'trigger' => 'http', // http / schedule / event
-//             'status' =>  'processing', // waiting / processing / completed / failed
-//             'responseStatusCode' => 0,
-//             'responseHeaders' => [],
-//             'requestPath' => $path,
-//             'requestMethod' => $method,
-//             'requestHeaders' => $headersFiltered,
-//             'errors' => '',
-//             'logs' => '',
-//             'duration' => 0.0,
-//             'search' => implode(' ', [$functionId, $executionId]),
-//         ]);
+        $queueForEvents
+            ->setParam('functionId', $function->getId())
+            ->setParam('executionId', $execution->getId())
+            ->setContext('function', $function);
 
-//         $queueForEvents
-//             ->setParam('functionId', $function->getId())
-//             ->setParam('executionId', $execution->getId())
-//             ->setContext('function', $function);
+        $durationStart = \microtime(true);
 
-//         $durationStart = \microtime(true);
+        $vars = [];
 
-//         $vars = [];
+        // V2 vars
+        if ($version === 'v2') {
+            $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
+                'APPWRITE_FUNCTION_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
+                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
+            ]);
+        }
 
-//         // V2 vars
-//         if ($version === 'v2') {
-//             $vars = \array_merge($vars, [
-//                 'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
-//                 'APPWRITE_FUNCTION_DATA' => $body ?? '',
-//                 'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
-//                 'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
-//             ]);
-//         }
+        // Shared vars
+        foreach ($function->getAttribute('varsProject', []) as $var) {
+            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
+        }
 
-//         // Shared vars
-//         foreach ($function->getAttribute('varsProject', []) as $var) {
-//             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
-//         }
+        // Function vars
+        foreach ($function->getAttribute('vars', []) as $var) {
+            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
+        }
 
-//         // Function vars
-//         foreach ($function->getAttribute('vars', []) as $var) {
-//             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
-//         }
+        // Appwrite vars
+        $vars = \array_merge($vars, [
+            'APPWRITE_FUNCTION_ID' => $functionId,
+            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
+            'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
+            'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
+            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
+            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+        ]);
 
-//         // Appwrite vars
-//         $vars = \array_merge($vars, [
-//             'APPWRITE_FUNCTION_ID' => $functionId,
-//             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
-//             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-//             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-//             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
-//             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-//         ]);
+        /** Execute function */
+        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
+        try {
+            $version = $function->getAttribute('version', 'v2');
+            $command = $runtime['startCommand'];
+            $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
+            $executionResponse = $executor->createExecution(
+                projectId: $project->getId(),
+                deploymentId: $deployment->getId(),
+                body: \strlen($body) > 0 ? $body : null,
+                variables: $vars,
+                timeout: $function->getAttribute('timeout', 0),
+                image: $runtime['image'],
+                source: $build->getAttribute('path', ''),
+                entrypoint: $deployment->getAttribute('entrypoint', ''),
+                version: $version,
+                path: $path,
+                method: $method,
+                headers: $headers,
+                runtimeEntrypoint: $command,
+                requestTimeout: 30
+            );
 
-//         /** Execute function */
-//         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
-//         try {
-//             $version = $function->getAttribute('version', 'v2');
-//             $command = $runtime['startCommand'];
-//             $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
-//             $executionResponse = $executor->createExecution(
-//                 projectId: $project->getId(),
-//                 deploymentId: $deployment->getId(),
-//                 body: \strlen($body) > 0 ? $body : null,
-//                 variables: $vars,
-//                 timeout: $function->getAttribute('timeout', 0),
-//                 image: $runtime['image'],
-//                 source: $build->getAttribute('path', ''),
-//                 entrypoint: $deployment->getAttribute('entrypoint', ''),
-//                 version: $version,
-//                 path: $path,
-//                 method: $method,
-//                 headers: $headers,
-//                 runtimeEntrypoint: $command,
-//                 requestTimeout: 30
-//             );
+            $headersFiltered = [];
+            foreach ($executionResponse['headers'] as $key => $value) {
+                if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
+                    $headersFiltered[] = ['name' => $key, 'value' => $value];
+                }
+            }
 
-//             $headersFiltered = [];
-//             foreach ($executionResponse['headers'] as $key => $value) {
-//                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
-//                     $headersFiltered[] = ['name' => $key, 'value' => $value];
-//                 }
-//             }
+            /** Update execution status */
+            $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
+            $execution->setAttribute('status', $status);
+            $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
+            $execution->setAttribute('responseHeaders', $headersFiltered);
+            $execution->setAttribute('logs', $executionResponse['logs']);
+            $execution->setAttribute('errors', $executionResponse['errors']);
+            $execution->setAttribute('duration', $executionResponse['duration']);
+        } catch (\Throwable $th) {
+            $durationEnd = \microtime(true);
 
-//             /** Update execution status */
-//             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
-//             $execution->setAttribute('status', $status);
-//             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
-//             $execution->setAttribute('responseHeaders', $headersFiltered);
-//             $execution->setAttribute('logs', $executionResponse['logs']);
-//             $execution->setAttribute('errors', $executionResponse['errors']);
-//             $execution->setAttribute('duration', $executionResponse['duration']);
-//         } catch (\Throwable $th) {
-//             $durationEnd = \microtime(true);
+            $execution
+                ->setAttribute('duration', $durationEnd - $durationStart)
+                ->setAttribute('status', 'failed')
+                ->setAttribute('responseStatusCode', 500)
+                ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
+            Console::error($th->getMessage());
+        } finally {
+            $queueForUsage
+                ->addMetric(METRIC_EXECUTIONS, 1)
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
+            ;
+        }
 
-//             $execution
-//                 ->setAttribute('duration', $durationEnd - $durationStart)
-//                 ->setAttribute('status', 'failed')
-//                 ->setAttribute('responseStatusCode', 500)
-//                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
-//             Console::error($th->getMessage());
-//         } finally {
-//             $queueForUsage
-//                 ->addMetric(METRIC_EXECUTIONS, 1)
-//                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
-//                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
-//                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-//             ;
-//         }
+        if ($function->getAttribute('logging')) {
+            /** @var Document $execution */
+            $execution = $auth->skip(fn () => $dbForProject->createDocument('executions', $execution));
+        }
 
-//         if ($function->getAttribute('logging')) {
-//             /** @var Document $execution */
-//             $execution = $auth->skip(fn () => $dbForProject->createDocument('executions', $execution));
-//         }
+        $execution->setAttribute('logs', '');
+        $execution->setAttribute('errors', '');
 
-//         $execution->setAttribute('logs', '');
-//         $execution->setAttribute('errors', '');
+        $headers = [];
+        foreach (($executionResponse['headers'] ?? []) as $key => $value) {
+            $headers[] = ['name' => $key, 'value' => $value];
+        }
 
-//         $headers = [];
-//         foreach (($executionResponse['headers'] ?? []) as $key => $value) {
-//             $headers[] = ['name' => $key, 'value' => $value];
-//         }
+        $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
+        $execution->setAttribute('responseHeaders', $headers);
 
-//         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
-//         $execution->setAttribute('responseHeaders', $headers);
+        $body = $execution['responseBody'] ?? '';
 
-//         $body = $execution['responseBody'] ?? '';
+        $encodingKey = \array_search('x-open-runtimes-encoding', \array_column($execution['responseHeaders'], 'name'));
+        if ($encodingKey !== false) {
+            if (($execution['responseHeaders'][$encodingKey]['value'] ?? '') === 'base64') {
+                $body = \base64_decode($body);
+            }
+        }
 
-//         $encodingKey = \array_search('x-open-runtimes-encoding', \array_column($execution['responseHeaders'], 'name'));
-//         if ($encodingKey !== false) {
-//             if (($execution['responseHeaders'][$encodingKey]['value'] ?? '') === 'base64') {
-//                 $body = \base64_decode($body);
-//             }
-//         }
+        $contentType = 'text/plain';
+        foreach ($execution['responseHeaders'] as $header) {
+            if (\strtolower($header['name']) === 'content-type') {
+                $contentType = $header['value'];
+            }
 
-//         $contentType = 'text/plain';
-//         foreach ($execution['responseHeaders'] as $header) {
-//             if (\strtolower($header['name']) === 'content-type') {
-//                 $contentType = $header['value'];
-//             }
+            $response->setHeader($header['name'], $header['value']);
+        }
 
-//             $response->setHeader($header['name'], $header['value']);
-//         }
+        $response
+            ->setContentType($contentType)
+            ->setStatusCode($execution['responseStatusCode'] ?? 200)
+            ->send($body);
 
-//         $response
-//             ->setContentType($contentType)
-//             ->setStatusCode($execution['responseStatusCode'] ?? 200)
-//             ->send($body);
-
-//         return true;
-//     } elseif ($type === 'api') {
-//         $utopia->getRoute()?->label('error', '');
-//         return false;
-//     } else {
-//         throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Unknown resource type ' . $type);
-//     }
-
-//     $utopia->getRoute()?->label('error', '');
-//     return false;
-// }
+        return true;
+    } elseif ($type === 'api') {
+        $route?->label('error', '');
+        return false;
+    } else {
+        throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Unknown resource type ' . $type);
+    }
+}
 
 Http::init()
     ->groups(['api', 'web'])
@@ -365,13 +361,13 @@ Http::init()
     ->inject('console')
     ->inject('project')
     ->inject('dbForConsole')
-    // ->inject('getProjectDB')
+    ->inject('getProjectDB')
     ->inject('locale')
     ->inject('localeCodes')
     ->inject('clients')
-    // ->inject('geodb')
-    // ->inject('queueForUsage')
-    // ->inject('queueForEvents')
+    ->inject('geodb')
+    ->inject('queueForUsage')
+    ->inject('queueForEvents')
     ->inject('queueForCertificates')
     ->inject('authorization')
     ->action(function (
@@ -381,15 +377,16 @@ Http::init()
         Document $console,
         Document $project,
         Database $dbForConsole,
+        $getProjectDB,
         Locale $locale,
         array $localeCodes,
         array $clients,
         /**
          * @disregard P1009 Undefined type
          */
-        // Reader $geodb,
-        // Usage $queueForUsage,
-        // Event $queueForEvents,
+        Reader $geodb,
+        Usage $queueForUsage,
+        Event $queueForEvents,
         Certificate $queueForCertificates,
         Authorization $authorization
     ) {
@@ -399,11 +396,11 @@ Http::init()
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
-        // if ($host !== $mainDomain) {
-        //     if (router($utopia, $dbForConsole, $getProjectDB, $request, $response, $queueForEvents, $queueForUsage, $geodb, $auth)) {
-        //         return;
-        //     }
-        // }
+        if ($host !== $mainDomain) {
+            if (router($dbForConsole, $getProjectDB, $request, $response, $route, $queueForEvents, $queueForUsage, $geodb, $authorization)) {
+                return;
+            }
+        }
 
         /*
         * Request format
@@ -590,41 +587,41 @@ Http::init()
         }
     });
 
-// Http::options()
-//     ->inject('utopia')
-//     ->inject('swooleRequest')
-//     ->inject('request')
-//     ->inject('response')
-//     ->inject('dbForConsole')
-//     ->inject('getProjectDB')
-//     ->inject('queueForEvents')
-//     ->inject('queueForUsage')
-//     ->inject('geodb')
-//     ->inject('auth')
-//     ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Authorization $auth) {
-//         /*
-//         * Appwrite Router
-//         */
-//         $host = $request->getHostname() ?? '';
-//         $mainDomain = System::getEnv('_APP_DOMAIN', '');
-//         // Only run Router when external domain
-//         if ($host !== $mainDomain) {
-//             if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb, $auth)) {
-//                 return;
-//             }
-//         }
+Http::options()
+    ->inject('route')
+    ->inject('swooleRequest')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->inject('getProjectDB')
+    ->inject('queueForEvents')
+    ->inject('queueForUsage')
+    ->inject('geodb')
+    ->inject('auth')
+    ->action(function (Route $route, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Authorization $auth) {
+        /*
+        * Appwrite Router
+        */
+        $host = $request->getHostname() ?? '';
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
+        // Only run Router when external domain
+        if ($host !== $mainDomain) {
+            if (router($dbForConsole, $getProjectDB, $request, $response, $route, $queueForEvents, $queueForUsage, $geodb, $auth)) {
+                return;
+            }
+        }
 
-//         $origin = $request->getOrigin();
+        $origin = $request->getOrigin();
 
-//         $response
-//             ->addHeader('Server', 'Appwrite')
-//             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-//             ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent')
-//             ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
-//             ->addHeader('Access-Control-Allow-Origin', $origin)
-//             ->addHeader('Access-Control-Allow-Credentials', 'true')
-//             ->noContent();
-//     });
+        $response
+            ->addHeader('Server', 'Appwrite')
+            ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent')
+            ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
+            ->addHeader('Access-Control-Allow-Origin', $origin)
+            ->addHeader('Access-Control-Allow-Credentials', 'true')
+            ->noContent();
+    });
 
 Http::error()
     ->inject('error')

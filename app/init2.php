@@ -1016,3 +1016,40 @@ $requestTimestamp
         return $requestTimestamp;
     });
 $container->set($requestTimestamp);
+
+$getProjectDB = new Dependency();
+$getProjectDB
+    ->setName('getProjectDB')
+    ->inject('pools')
+    ->inject('dbForConsole')
+    ->inject('cache')
+    ->inject('authorization')
+    ->inject('connections')
+    ->setCallback(function (array $pools, Database $dbForConsole, $cache, Authorization $authorization, Connections $connections) {
+        return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $authorization, $connections): Database {
+            if ($project->isEmpty() || $project->getId() === 'console') {
+                return $dbForConsole;
+            }
+
+            $databaseName = $project->getAttribute('database');
+
+            $pool = $pools['pools-database-'.$databaseName]['pool'];
+            $dsn = $pools['pools-database-'.$databaseName]['dsn'];
+
+            $connection = $pool->get();
+            $connections->add($connection, $pool);
+            $adapter = match ($dsn->getScheme()) {
+                'mariadb' => new MariaDB($connection),
+                'mysql' => new MySQL($connection),
+                default => null
+            };
+            $adapter->setDatabase($dsn->getPath());
+
+            $database = new Database($adapter, $cache);
+            $database->setAuthorization($authorization);
+            $database->setNamespace('_' . $project->getInternalId());
+
+            return $database;
+        };
+    });
+$container->set($getProjectDB);
