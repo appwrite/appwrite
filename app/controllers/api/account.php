@@ -216,6 +216,9 @@ Http::post('/v1/account')
             $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
             if ($total >= $limit) {
+                if ('console' === $project->getId()) {
+                    throw new Exception(Exception::USER_CONSOLE_COUNT_EXCEEDED);
+                }
                 throw new Exception(Exception::USER_COUNT_EXCEEDED);
             }
         }
