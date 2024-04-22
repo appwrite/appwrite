@@ -2287,12 +2287,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "309796b08891eac135540c241d8943dd42eccc9e"
+                "reference": "8749796c05bf9a0abc9c949af5ceb2efa8531960"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/309796b08891eac135540c241d8943dd42eccc9e",
-                "reference": "309796b08891eac135540c241d8943dd42eccc9e",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/8749796c05bf9a0abc9c949af5ceb2efa8531960",
+                "reference": "8749796c05bf9a0abc9c949af5ceb2efa8531960",
                 "shasum": ""
             },
             "require": {
@@ -2342,7 +2342,7 @@
                 "issues": "https://github.com/utopia-php/queue/issues",
                 "source": "https://github.com/utopia-php/queue/tree/feat-coroutine-and-di"
             },
-            "time": "2024-04-21T18:59:04+00:00"
+            "time": "2024-04-22T18:32:34+00:00"
         },
         {
             "name": "utopia-php/registry",

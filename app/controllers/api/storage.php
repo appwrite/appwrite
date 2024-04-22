@@ -1621,7 +1621,7 @@ Http::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         // Make sure we don't delete the file before the document permission check occurs
-        if ($fileSecurity && !$valid && !$authorization->isValid($file->getDelete())) {
+        if ($fileSecurity && !$valid && !$authorization->isValid(new Input(Database::PERMISSION_DELETE, $file->getDelete()))) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
