@@ -21,6 +21,7 @@ class DatabasesPermissionsGuestTest extends Scope
 
     public function setUp(): void
     {
+        parent::setUp();
         $this->auth = new Authorization();
     }
 

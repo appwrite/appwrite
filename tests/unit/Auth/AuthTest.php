@@ -17,6 +17,7 @@ class AuthTest extends TestCase
 
     public function setUp(): void
     {
+        parent::setUp();
         $this->auth = new Authorization();
     }
 
