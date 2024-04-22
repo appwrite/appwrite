@@ -169,8 +169,8 @@ Http::post('/v1/functions')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->inject('auth')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github, Authorization $auth) use ($redeployVcs) {
+    ->inject('authorization')
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github, Authorization $authorization) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
@@ -232,7 +232,7 @@ Http::post('/v1/functions')
             'providerSilentMode' => $providerSilentMode,
         ]));
 
-        $schedule = $auth->skip(
+        $schedule = $authorization->skip(
             fn () => $dbForConsole->createDocument('schedules', new Document([
                 'region' => System::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                 'resourceType' => 'function',
@@ -289,7 +289,7 @@ Http::post('/v1/functions')
             $routeSubdomain = ID::unique();
             $domain = "{$routeSubdomain}.{$functionsDomain}";
 
-            $rule = $auth->skip(
+            $rule = $authorization->skip(
                 fn () => $dbForConsole->createDocument('rules', new Document([
                     '$id' => $ruleId,
                     'projectId' => $project->getId(),
@@ -481,8 +481,8 @@ Http::get('/v1/functions/:functionId/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('auth')
-    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject, Authorization $authorization) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -503,7 +503,7 @@ Http::get('/v1/functions/:functionId/usage')
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE),
         ];
 
-        $auth->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -579,8 +579,8 @@ Http::get('/v1/functions/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('auth')
-    ->action(function (string $range, Response $response, Database $dbForProject, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $range, Response $response, Database $dbForProject, Authorization $authorization) {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
@@ -596,7 +596,7 @@ Http::get('/v1/functions/usage')
             METRIC_EXECUTIONS_COMPUTE,
         ];
 
-        $auth->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -698,8 +698,8 @@ Http::put('/v1/functions/:functionId')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->inject('auth')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github, Authorization $auth) use ($redeployVcs) {
+    ->inject('authorization')
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github, Authorization $authorization) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -833,7 +833,7 @@ Http::put('/v1/functions/:functionId')
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        $auth->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForEvents->setParam('functionId', $function->getId());
 
@@ -945,8 +945,8 @@ Http::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('dbForConsole')
-    ->inject('auth')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForConsole, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForConsole, Authorization $authorization) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -979,7 +979,7 @@ Http::patch('/v1/functions/:functionId/deployments/:deploymentId')
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        $auth->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForEvents
             ->setParam('functionId', $function->getId())
@@ -1007,8 +1007,8 @@ Http::delete('/v1/functions/:functionId')
     ->inject('queueForDeletes')
     ->inject('queueForEvents')
     ->inject('dbForConsole')
-    ->inject('auth')
-    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Database $dbForConsole, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Database $dbForConsole, Authorization $authorization) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1025,7 +1025,7 @@ Http::delete('/v1/functions/:functionId')
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('active', false);
-        $auth->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -1458,8 +1458,8 @@ Http::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId'
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('queueForBuilds')
-    ->inject('auth')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Authorization $authorization) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1473,7 +1473,7 @@ Http::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId'
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $build = $auth->skip(fn () => $dbForProject->getDocument('builds', $buildId));
+        $build = $authorization->skip(fn () => $dbForProject->getDocument('builds', $buildId));
 
         if ($build->isEmpty()) {
             throw new Exception(Exception::BUILD_NOT_FOUND);
@@ -1530,13 +1530,13 @@ Http::post('/v1/functions/:functionId/executions')
     ->inject('mode')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->inject('auth')
-    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, string $mode, Func $queueForFunctions, Reader $geodb, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, string $mode, Func $queueForFunctions, Reader $geodb, Authorization $authorization) {
 
-        $function = $auth->skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        $isAPIKey = Auth::isAppUser($auth->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($auth->getRoles());
+        $isAPIKey = Auth::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
@@ -1551,7 +1551,7 @@ Http::post('/v1/functions/:functionId/executions')
             throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $deployment = $auth->skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
+        $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
@@ -1562,7 +1562,7 @@ Http::post('/v1/functions/:functionId/executions')
         }
 
         /** Check if build has completed */
-        $build = $auth->skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        $build = $authorization->skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
         if ($build->isEmpty()) {
             throw new Exception(Exception::BUILD_NOT_FOUND);
         }
@@ -1571,8 +1571,8 @@ Http::post('/v1/functions/:functionId/executions')
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
-        if (!$auth->isValid(new Input('execute', $function->getAttribute('execute')))) { // Check if user has write access to execute function
-            throw new Exception(Exception::USER_UNAUTHORIZED, $auth->getDescription());
+        if (!$authorization->isValid(new Input('execute', $function->getAttribute('execute')))) { // Check if user has write access to execute function
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         $jwt = ''; // initialize
@@ -1653,7 +1653,7 @@ Http::post('/v1/functions/:functionId/executions')
         if ($async) {
             if ($function->getAttribute('logging')) {
                 /** @var Document $execution */
-                $execution = $auth->skip(fn () => $dbForProject->createDocument('executions', $execution));
+                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
             }
 
             $queueForFunctions
@@ -1768,10 +1768,10 @@ Http::post('/v1/functions/:functionId/executions')
 
         if ($function->getAttribute('logging')) {
             /** @var Document $execution */
-            $execution = $auth->skip(fn () => $dbForProject->createDocument('executions', $execution));
+            $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
@@ -1810,12 +1810,12 @@ Http::get('/v1/functions/:functionId/executions')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('auth')
-    ->action(function (string $functionId, array $queries, string $search, Response $response, Database $dbForProject, string $mode, Authorization $auth) {
-        $function = $auth->skip(fn () => $dbForProject->getDocument('functions', $functionId));
+    ->inject('authorization')
+    ->action(function (string $functionId, array $queries, string $search, Response $response, Database $dbForProject, string $mode, Authorization $authorization) {
+        $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        $isAPIKey = Auth::isAppUser($auth->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($auth->getRoles());
+        $isAPIKey = Auth::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
@@ -1858,7 +1858,7 @@ Http::get('/v1/functions/:functionId/executions')
         $results = $dbForProject->find('executions', $queries);
         $total = $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT);
 
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
         if (!$isPrivilegedUser && !$isAppUser) {
@@ -1891,12 +1891,12 @@ Http::get('/v1/functions/:functionId/executions/:executionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('auth')
-    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, string $mode, Authorization $auth) {
-        $function = $auth->skip(fn () => $dbForProject->getDocument('functions', $functionId));
+    ->inject('authorization')
+    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, string $mode, Authorization $authorization) {
+        $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        $isAPIKey = Auth::isAppUser($auth->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($auth->getRoles());
+        $isAPIKey = Auth::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
@@ -1912,7 +1912,7 @@ Http::get('/v1/functions/:functionId/executions/:executionId')
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
-        $roles = $auth->getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
         if (!$isPrivilegedUser && !$isAppUser) {
@@ -1944,8 +1944,8 @@ Http::post('/v1/functions/:functionId/variables')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForConsole')
-    ->inject('auth')
-    ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $authorization) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1983,7 +1983,7 @@ Http::post('/v1/functions/:functionId/variables')
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        $auth->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -2076,8 +2076,8 @@ Http::put('/v1/functions/:functionId/variables/:variableId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForConsole')
-    ->inject('auth')
-    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $authorization) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -2113,7 +2113,7 @@ Http::put('/v1/functions/:functionId/variables/:variableId')
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        $auth->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
@@ -2135,8 +2135,8 @@ Http::delete('/v1/functions/:functionId/variables/:variableId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForConsole')
-    ->inject('auth')
-    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $authorization) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -2162,7 +2162,7 @@ Http::delete('/v1/functions/:functionId/variables/:variableId')
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-        $auth->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response->noContent();
     });

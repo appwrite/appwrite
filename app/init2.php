@@ -1,4 +1,6 @@
 <?php
+use PHPMailer\PHPMailer\PHPMailer;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 require_once __DIR__ . '/init/constants.php';
 require_once __DIR__ . '/init/config.php';
@@ -333,6 +335,35 @@ $global->set('pools', (function () {
         return $pools;
     };
 })());
+
+$global->set('smtp', function () {
+    $mail = new PHPMailer(true);
+
+    $mail->isSMTP();
+
+    $username = System::getEnv('_APP_SMTP_USERNAME');
+    $password = System::getEnv('_APP_SMTP_PASSWORD');
+
+    $mail->XMailer = 'Appwrite Mailer';
+    $mail->Host = System::getEnv('_APP_SMTP_HOST', 'smtp');
+    $mail->Port = System::getEnv('_APP_SMTP_PORT', 25);
+    $mail->SMTPAuth = !empty($username) && !empty($password);
+    $mail->Username = $username;
+    $mail->Password = $password;
+    $mail->SMTPSecure = System::getEnv('_APP_SMTP_SECURE', '');
+    $mail->SMTPAutoTLS = false;
+    $mail->CharSet = 'UTF-8';
+
+    $from = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+    $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+
+    $mail->setFrom($email, $from);
+    $mail->addReplyTo($email, $from);
+
+    $mail->isHTML(true);
+
+    return $mail;
+});
 
 $mode = new Dependency();
 $mode
@@ -956,8 +987,16 @@ $hooks
     ->setCallback(function (Registry $registry) {
         return $registry->get('hooks');
     });
-
 $container->set($hooks);
+
+$github = new Dependency();
+$github
+    ->setName('gitHub')
+    ->inject('cache')
+    ->setCallback(function (Cache $cache) {
+        return new GitHub($cache);
+    });
+$container->set($github);
 
 $requestTimestamp = new Dependency();
 $requestTimestamp

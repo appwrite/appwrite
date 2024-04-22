@@ -977,6 +977,7 @@ Http::post('/v1/account/sessions/token')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('authorization')
     ->action($createSession);
 
 Http::get('/v1/account/sessions/oauth2/:provider')
