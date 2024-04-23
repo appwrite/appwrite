@@ -529,8 +529,6 @@ class Databases extends Action
             ],
             $dbForProject,
             function ($attribute) use ($dbForProject, $databaseInternalId) {
-                $dbForProject->deleteDocument('attributes', $attribute->getId());
-                Console::success('Deleted document "' . $attribute->getId() . '" related collection successfully');
                 $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
                 $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
             }
