@@ -280,18 +280,16 @@ App::init()
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
-        if ($mode !== APP_MODE_ADMIN) {
-            $mfaEnabled = $user->getAttribute('mfa', false);
-            $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
-            $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
-            $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
-            $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
-            $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
+        $mfaEnabled = $user->getAttribute('mfa', false);
+        $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
+        $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
+        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
+        $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
+        $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
-            if (!in_array('mfa', $route->getGroups())) {
-                if ($session && \count($session->getAttribute('factors')) < $minimumFactors) {
-                    throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
-                }
+        if (!in_array('mfa', $route->getGroups())) {
+            if ($session && \count($session->getAttribute('factors')) < $minimumFactors) {
+                throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
         }
     });
