@@ -33,7 +33,7 @@ class BatchTest extends Scope
         $this->assertArrayNotHasKey('errors', $response['body'][1]);
         $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
         $this->assertArrayHasKey('localeListContinents', $response['body'][1]['data']);
-        $this->assertEquals(195, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(196, $response['body'][0]['data']['localeListCountries']['total']);
         $this->assertEquals(7, $response['body'][1]['data']['localeListContinents']['total']);
     }
 
@@ -56,8 +56,8 @@ class BatchTest extends Scope
         $this->assertArrayNotHasKey('errors', $response['body'][1]);
         $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
         $this->assertArrayHasKey('localeListCountries', $response['body'][1]['data']);
-        $this->assertEquals(195, $response['body'][0]['data']['localeListCountries']['total']);
-        $this->assertEquals(195, $response['body'][1]['data']['localeListCountries']['total']);
+        $this->assertEquals(196, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(196, $response['body'][1]['data']['localeListCountries']['total']);
     }
 
     public function testArrayBatchedMutations()
@@ -184,7 +184,7 @@ class BatchTest extends Scope
         $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
         $this->assertArrayHasKey('localeListContinents', $response['body'][1]['data']);
         $this->assertArrayHasKey('accountCreate', $response['body'][2]['data']);
-        $this->assertEquals(195, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(196, $response['body'][0]['data']['localeListCountries']['total']);
         $this->assertEquals(7, $response['body'][1]['data']['localeListContinents']['total']);
         $this->assertEquals('Tester 1', $response['body'][2]['data']['accountCreate']['name']);
     }
@@ -225,8 +225,8 @@ class BatchTest extends Scope
         $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
         $this->assertArrayHasKey('localeListCountries', $response['body'][1]['data']);
         $this->assertArrayHasKey('accountCreate', $response['body'][2]['data']);
-        $this->assertEquals(195, $response['body'][0]['data']['localeListCountries']['total']);
-        $this->assertEquals(195, $response['body'][1]['data']['localeListCountries']['total']);
+        $this->assertEquals(196, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(196, $response['body'][1]['data']['localeListCountries']['total']);
         $this->assertArrayHasKey('_id', $response['body'][2]['data']['accountCreate']);
     }
 
@@ -251,7 +251,7 @@ class BatchTest extends Scope
         $this->assertArrayNotHasKey('errors', $response['body']);
         $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
         $this->assertArrayHasKey('localeListContinents', $response['body']['data']);
-        $this->assertEquals(195, $response['body']['data']['localeListCountries']['total']);
+        $this->assertEquals(196, $response['body']['data']['localeListCountries']['total']);
         $this->assertEquals(7, $response['body']['data']['localeListContinents']['total']);
     }
 
@@ -275,7 +275,7 @@ class BatchTest extends Scope
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
         $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
-        $this->assertEquals(195, $response['body']['data']['localeListCountries']['total']);
+        $this->assertEquals(196, $response['body']['data']['localeListCountries']['total']);
     }
 
     public function testQueryBatchedMutations()
