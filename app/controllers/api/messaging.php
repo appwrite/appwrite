@@ -902,8 +902,7 @@ Http::get('/v1/messaging/providers/:providerId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('authorization')
-    ->action(function (string $providerId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization) {
+    ->action(function (string $providerId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {

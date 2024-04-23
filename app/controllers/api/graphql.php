@@ -24,12 +24,12 @@ use Utopia\System\System;
 Http::init()
     ->groups(['graphql'])
     ->inject('project')
-    ->inject('auth')
-    ->action(function (Document $project, Authorization $auth) {
+    ->inject('authorization')
+    ->action(function (Document $project, Authorization $authorization) {
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !(Auth::isPrivilegedUser($auth->getRoles()) || Auth::isAppUser($auth->getRoles()))
+            && !(Auth::isPrivilegedUser($authorization->getRoles()) || Auth::isAppUser($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }

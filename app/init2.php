@@ -34,6 +34,8 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
+use Appwrite\GraphQL\Promises\Adapter\Swoole;
+use Appwrite\GraphQL\Schema;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\URL\URL;
@@ -41,7 +43,6 @@ use Appwrite\Utopia\Queue\Connections;
 use MaxMind\Db\Reader;
 use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
-use Swoole\Database\PDOProxy;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Utopia\Cache\Adapter\None;
@@ -52,6 +53,7 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
@@ -366,6 +368,10 @@ $global->set('smtp', function () {
     $mail->isHTML(true);
 
     return $mail;
+});
+
+$global->set('promiseAdapter', function () {
+    return new Swoole();
 });
 
 $mode = new Dependency();
@@ -1056,3 +1062,102 @@ $getProjectDB
         };
     });
 $container->set($getProjectDB);
+
+$promiseAdapter = new Dependency();
+$promiseAdapter
+    ->setName('promiseAdapter')
+    ->inject('register')
+    ->setCallback(function ($register) {
+        return $register->get('promiseAdapter');
+    });
+$container->set($promiseAdapter);
+
+$schema = new Dependency();
+$schema
+    ->setName('schema')
+    ->inject('utopia')
+    ->inject('dbForProject')
+    ->inject('auth')
+    ->setCallback(function (Http $utopia, Database $dbForProject, Authorization $auth) {
+        $complexity = function (int $complexity, array $args) {
+            $queries = Query::parseQueries($args['queries'] ?? []);
+            $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
+            $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
+
+            return $complexity * $limit;
+        };
+
+        $attributes = function (int $limit, int $offset) use ($dbForProject, $auth) {
+            $attrs = $auth->skip(fn () => $dbForProject->find('attributes', [
+                Query::limit($limit),
+                Query::offset($offset),
+            ]));
+
+            return \array_map(function ($attr) {
+                return $attr->getArrayCopy();
+            }, $attrs);
+        };
+
+        $urls = [
+            'list' => function (string $databaseId, string $collectionId, array $args) {
+                return "/v1/databases/$databaseId/collections/$collectionId/documents";
+            },
+            'create' => function (string $databaseId, string $collectionId, array $args) {
+                return "/v1/databases/$databaseId/collections/$collectionId/documents";
+            },
+            'read' => function (string $databaseId, string $collectionId, array $args) {
+                return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+            },
+            'update' => function (string $databaseId, string $collectionId, array $args) {
+                return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+            },
+            'delete' => function (string $databaseId, string $collectionId, array $args) {
+                return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+            },
+        ];
+
+        $params = [
+            'list' => function (string $databaseId, string $collectionId, array $args) {
+                return [ 'queries' => $args['queries']];
+            },
+            'create' => function (string $databaseId, string $collectionId, array $args) {
+                $id = $args['id'] ?? 'unique()';
+                $permissions = $args['permissions'] ?? null;
+
+                unset($args['id']);
+                unset($args['permissions']);
+
+                return [
+                    'databaseId' => $databaseId,
+                    'documentId' => $id,
+                    'collectionId' => $collectionId,
+                    'data' => $args,
+                    'permissions' => $permissions,
+                ];
+            },
+            'update' => function (string $databaseId, string $collectionId, array $args) {
+                $documentId = $args['id'];
+                $permissions = $args['permissions'] ?? null;
+
+                unset($args['id']);
+                unset($args['permissions']);
+
+                return [
+                    'databaseId' => $databaseId,
+                    'collectionId' => $collectionId,
+                    'documentId' => $documentId,
+                    'data' => $args,
+                    'permissions' => $permissions,
+                ];
+            },
+        ];
+
+        return Schema::build(
+            $utopia,
+            $complexity,
+            $attributes,
+            $urls,
+            $params,
+        );
+    });
+$container->set($schema);
