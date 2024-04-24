@@ -639,7 +639,7 @@ return [
     Exception::PROJECT_PROVIDER_UNSUPPORTED => [
         'name' => Exception::PROJECT_PROVIDER_UNSUPPORTED,
         'description' => 'The chosen OAuth provider is unsupported. Please check the <a href="/docs/client/account?sdk=web-default#accountCreateOAuth2Session">Create OAuth2 Session docs</a> for the complete list of supported OAuth providers.',
-        'code' => 501,
+        'code' => 400,
     ],
     Exception::PROJECT_INVALID_SUCCESS_URL => [
         'name' => Exception::PROJECT_INVALID_SUCCESS_URL,

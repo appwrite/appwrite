@@ -227,9 +227,9 @@ trait LocaleBase
         /**
          * Test for SUCCESS
          */
-        $languages           = require('app/config/locale/codes.php');
-        $defaultCountries    = require('app/config/locale/countries.php');
-        $defaultContinents   = require('app/config/locale/continents.php');
+        $languages           = require(__DIR__ . '/../../../../app/config/locale/codes.php');
+        $defaultCountries    = require(__DIR__ . '/../../../../app/config/locale/countries.php');
+        $defaultContinents   = require(__DIR__ . '/../../../../app/config/locale/continents.php');
 
         foreach ($languages as $lang) {
             $response = $this->client->call(Client::METHOD_GET, '/locale/countries', [

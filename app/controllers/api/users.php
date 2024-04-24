@@ -941,7 +941,7 @@ App::patch('/v1/users/:userId/email')
         // Makes sure this email is not already used in another identity
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
-            Query::notEqual('userId', $user->getId()),
+            Query::notEqual('userInternalId', $user->getInternalId()),
         ]);
         if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
