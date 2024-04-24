@@ -14,7 +14,6 @@ use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -26,6 +25,8 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Adapter\FPM\Server as FPMServer;
+use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\System\System;
 use Utopia\WebSocket\Adapter;
@@ -38,7 +39,7 @@ require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-function getConsoleDB(): Database
+function getConsoleDB(Authorization $auth): Database
 {
     global $register;
 
@@ -52,6 +53,7 @@ function getConsoleDB(): Database
     ;
 
     $database = new Database($dbAdapter, getCache());
+    $database->setAuthorization($auth);
 
     $database
         ->setNamespace('_console')
@@ -61,7 +63,7 @@ function getConsoleDB(): Database
     return $database;
 }
 
-function getProjectDB(Document $project): Database
+function getProjectDB(Document $project, Authorization $auth): Database
 {
     global $register;
 
@@ -69,7 +71,7 @@ function getProjectDB(Document $project): Database
     $pools = $register->get('pools');
 
     if ($project->isEmpty() || $project->getId() === 'console') {
-        return getConsoleDB();
+        return getConsoleDB($auth);
     }
 
     $dbAdapter = $pools
@@ -79,6 +81,7 @@ function getProjectDB(Document $project): Database
     ;
 
     $database = new Database($dbAdapter, getCache());
+    $database->setAuthorization($auth);
 
     $database
         ->setNamespace('_' . $project->getInternalId())
@@ -171,15 +174,17 @@ $logError = function (Throwable $error, string $action) use ($register) {
 $server->error($logError);
 
 $server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
+    $auth = new Authorization();
+
     sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started successfully');
 
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($register, $containerId, &$statsDocument) {
+    go(function () use ($register, $containerId, &$statsDocument, $auth) {
         $attempts = 0;
-        $database = getConsoleDB();
+        $database = getConsoleDB($auth);
 
         do {
             try {
@@ -193,7 +198,8 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                     'value' => '{}'
                 ]);
 
-                $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
+                $auth = new Authorization();
+                $statsDocument = $auth->skip(fn () => $database->createDocument('realtime', $document));
                 break;
             } catch (Throwable) {
                 Console::warning("Collection not ready. Retrying connection ({$attempts})...");
@@ -206,7 +212,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
+    Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError, $auth) {
         $payload = [];
         foreach ($stats as $projectId => $value) {
             $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
@@ -216,13 +222,14 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
         }
 
         try {
-            $database = getConsoleDB();
+            $database = getConsoleDB($auth);
 
             $statsDocument
                 ->setAttribute('timestamp', DateTime::now())
                 ->setAttribute('value', json_encode($payload));
 
-            Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+            $auth = new Authorization();
+            $auth->skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
         } catch (Throwable $th) {
             call_user_func($logError, $th, "updateWorkerDocument");
         } finally {
@@ -237,16 +244,18 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $attempts = 0;
     $start = time();
 
-    Timer::tick(5000, function () use ($server, $register, $realtime, $stats, $logError) {
+    $auth = new Authorization();
+
+    Timer::tick(5000, function () use ($server, $register, $realtime, $stats, $logError, $auth) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
         if ($realtime->hasSubscriber('console', Role::users()->toString(), 'project')) {
-            $database = getConsoleDB();
+            $database = getConsoleDB($auth);
 
             $payload = [];
 
-            $list = Authorization::skip(fn () => $database->find('realtime', [
+            $list = $auth->skip(fn () => $database->find('realtime', [
                 Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
             ]));
 
@@ -332,7 +341,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $redis->subscribe(['realtime'], function (Redis $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
+            $redis->subscribe(['realtime'], function (Redis $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $auth) {
                 $event = json_decode($payload, true);
 
                 if ($event['permissionsChanged'] && isset($event['userId'])) {
@@ -341,13 +350,14 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                        $consoleDatabase = getConsoleDB();
-                        $project = Authorization::skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
-                        $database = getProjectDB($project);
+                        $consoleDatabase = getConsoleDB($auth);
+                        $auth = new Authorization();
+                        $project = $auth->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
+                        $database = getProjectDB($project, $auth);
 
                         $user = $database->getDocument('users', $userId);
 
-                        $roles = Auth::getRoles($user);
+                        $roles = Auth::getRoles($user, $auth);
 
                         $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
 
@@ -357,7 +367,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $receivers = $realtime->getSubscribers($event);
 
-                if (App::isDevelopment() && !empty($receivers)) {
+                if (Http::isDevelopment() && !empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
                     Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
                     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
@@ -391,19 +401,21 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 });
 
 $server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
-    $app = new App('UTC');
+    $auth = new Authorization();
+
+    $http = new Http(new FPMServer(), 'UTC');
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
 
     Console::info("Connection open (user: {$connection})");
 
-    App::setResource('pools', fn () => $register->get('pools'));
-    App::setResource('request', fn () => $request);
-    App::setResource('response', fn () => $response);
+    Http::setResource('pools', fn () => $register->get('pools'));
+    Http::setResource('request', fn () => $request);
+    Http::setResource('response', fn () => $response);
 
     try {
         /** @var Document $project */
-        $project = $app->getResource('project');
+        $project = $http->getResource('project');
 
         /*
          *  Project Check
@@ -412,29 +424,30 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing or unknown project ID');
         }
 
+
         if (
             array_key_exists('realtime', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['realtime']
-            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+            && !(Auth::isPrivilegedUser($auth->getRoles()) || Auth::isAppUser($auth->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
 
-        $dbForProject = getProjectDB($project);
-        $console = $app->getResource('console'); /** @var Document $console */
-        $user = $app->getResource('user'); /** @var Document $user */
+        $dbForProject = getProjectDB($project, $auth);
+        $console = $http->getResource('console'); /** @var Document $console */
+        $user = $http->getResource('user'); /** @var Document $user */
 
         /*
          * Abuse Check
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $dbForProject);
+        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $dbForProject, $auth);
         $timeLimit
             ->setParam('{ip}', $request->getIP())
             ->setParam('{url}', $request->getURI());
 
-        $abuse = new Abuse($timeLimit);
+        $abuse = new Abuse($timeLimit, $auth);
 
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many requests');
@@ -452,7 +465,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 
-        $roles = Auth::getRoles($user);
+        $auth = new Authorization();
+        $roles = Auth::getRoles($user, $auth);
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
 
@@ -495,7 +509,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $server->send([$connection], json_encode($response));
         $server->close($connection, $th->getCode());
 
-        if (App::isDevelopment()) {
+        if (Http::isDevelopment()) {
             Console::error('[Error] Connection Error');
             Console::error('[Error] Code: ' . $response['data']['code']);
             Console::error('[Error] Message: ' . $response['data']['message']);
@@ -506,14 +520,17 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 });
 
 $server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
+    $auth = new Authorization();
+
     try {
         $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'];
-        $database = getConsoleDB();
+        $database = getConsoleDB($auth);
 
         if ($projectId !== 'console') {
-            $project = Authorization::skip(fn () => $database->getDocument('projects', $projectId));
-            $database = getProjectDB($project);
+            $auth = new Authorization();
+            $project = $auth->skip(fn () => $database->getDocument('projects', $projectId));
+            $database = getProjectDB($project, $auth);
         } else {
             $project = null;
         }
@@ -523,13 +540,13 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $database);
+        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $database, $auth);
 
         $timeLimit
             ->setParam('{connection}', $connection)
             ->setParam('{container}', $containerId);
 
-        $abuse = new Abuse($timeLimit);
+        $abuse = new Abuse($timeLimit, $auth);
 
         if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');
@@ -564,7 +581,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
                 }
 
-                $roles = Auth::getRoles($user);
+                $roles = Auth::getRoles($user, $auth);
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
                 $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
 

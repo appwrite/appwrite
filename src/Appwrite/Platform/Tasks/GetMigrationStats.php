@@ -2,14 +2,17 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Utopia\Queue\Connections;
 use League\Csv\CannotInsertRecord;
 use League\Csv\Writer;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
+use Utopia\Http\Adapter\FPM\Server;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
@@ -47,8 +50,10 @@ class GetMigrationStats extends Action
             ->inject('cache')
             ->inject('dbForConsole')
             ->inject('register')
-            ->callback(function (Group $pools, Cache $cache, Database $dbForConsole, Registry $register) {
-                $this->action($pools, $cache, $dbForConsole, $register);
+            ->inject('auth')
+            ->inject('connections')
+            ->callback(function (Group $pools, Cache $cache, Database $dbForConsole, Registry $register, ValidatorAuthorization $auth, Connections $connections) {
+                $this->action($pools, $cache, $dbForConsole, $register, $auth, $connections);
             });
     }
 
@@ -56,7 +61,7 @@ class GetMigrationStats extends Action
      * @throws \Utopia\Exception
      * @throws CannotInsertRecord
      */
-    public function action(Group $pools, Cache $cache, Database $dbForConsole, Registry $register): void
+    public function action(Group $pools, Cache $cache, Database $dbForConsole, Registry $register, ValidatorAuthorization $auth, Connections $connections): void
     {
         //docker compose exec -t appwrite get-migration-stats
 
@@ -64,8 +69,8 @@ class GetMigrationStats extends Action
         Console::success(APP_NAME . ' Migration stats calculation has started');
 
         /* Initialise new Utopia app */
-        $app = new App('UTC');
-        $console = $app->getResource('console');
+        $http = new Http(new Server(), 'UTC');
+        $console = $http->getResource('console');
 
         /** CSV stuff */
         $this->date = date('Y-m-d');
@@ -96,13 +101,13 @@ class GetMigrationStats extends Action
 
                 try {
                     $db = $project->getAttribute('database');
-                    $adapter = $pools
-                        ->get($db)
-                        ->pop()
-                        ->getResource();
+                    $connection = $pools->get($db)->pop();
+                    $connections->add($connection);
+                    $adapter = $connection->getResource();
 
-                    $dbForProject = new Database($adapter, $cache);
-                    $dbForProject->setDefaultDatabase('appwrite');
+                    $dbForProject = new Database($adapter, $cache); // TODO: Use getProjectDB instead, or reclaim connections properly
+                    $dbForProject->setAuthorization($auth);
+                    $dbForProject->setDatabase('appwrite');
                     $dbForProject->setNamespace('_' . $project->getInternalId());
 
                     /** Get Project ID */

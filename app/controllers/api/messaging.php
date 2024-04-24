@@ -20,7 +20,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
-use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -30,25 +29,27 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\Integer;
+use Utopia\Http\Validator\JSON;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Integer;
-use Utopia\Validator\JSON;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
 
 use function Swoole\Coroutine\batch;
 
-App::post('/v1/messaging/providers/mailgun')
+Http::post('/v1/messaging/providers/mailgun')
     ->desc('Create Mailgun provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -135,7 +136,7 @@ App::post('/v1/messaging/providers/mailgun')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/sendgrid')
+Http::post('/v1/messaging/providers/sendgrid')
     ->desc('Create Sendgrid provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -210,7 +211,7 @@ App::post('/v1/messaging/providers/sendgrid')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/smtp')
+Http::post('/v1/messaging/providers/smtp')
     ->desc('Create SMTP provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -298,7 +299,7 @@ App::post('/v1/messaging/providers/smtp')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/msg91')
+Http::post('/v1/messaging/providers/msg91')
     ->desc('Create Msg91 provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -375,7 +376,7 @@ App::post('/v1/messaging/providers/msg91')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/telesign')
+Http::post('/v1/messaging/providers/telesign')
     ->desc('Create Telesign provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -452,7 +453,7 @@ App::post('/v1/messaging/providers/telesign')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/textmagic')
+Http::post('/v1/messaging/providers/textmagic')
     ->desc('Create Textmagic provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -529,7 +530,7 @@ App::post('/v1/messaging/providers/textmagic')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/twilio')
+Http::post('/v1/messaging/providers/twilio')
     ->desc('Create Twilio provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -606,7 +607,7 @@ App::post('/v1/messaging/providers/twilio')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/vonage')
+Http::post('/v1/messaging/providers/vonage')
     ->desc('Create Vonage provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -683,7 +684,7 @@ App::post('/v1/messaging/providers/vonage')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/fcm')
+Http::post('/v1/messaging/providers/fcm')
     ->desc('Create FCM provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -746,7 +747,7 @@ App::post('/v1/messaging/providers/fcm')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/apns')
+Http::post('/v1/messaging/providers/apns')
     ->desc('Create APNS provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -832,7 +833,7 @@ App::post('/v1/messaging/providers/apns')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::get('/v1/messaging/providers')
+Http::get('/v1/messaging/providers')
     ->desc('List providers')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
@@ -847,7 +848,8 @@ App::get('/v1/messaging/providers')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
+    ->inject('authorization')
+    ->action(function (array $queries, string $search, Database $dbForProject, Response $response, Authorization $authorization) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -868,7 +870,7 @@ App::get('/v1/messaging/providers')
 
         if ($cursor) {
             $providerId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
@@ -883,7 +885,7 @@ App::get('/v1/messaging/providers')
         ]), Response::MODEL_PROVIDER_LIST);
     });
 
-App::get('/v1/messaging/providers/:providerId/logs')
+Http::get('/v1/messaging/providers/:providerId/logs')
     ->desc('List provider logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
@@ -900,7 +902,8 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $providerId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('authorization')
+    ->action(function (string $providerId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -917,7 +920,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $authorization);
         $resource = 'provider/' . $providerId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
         $output = [];
@@ -971,7 +974,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::get('/v1/messaging/providers/:providerId')
+Http::get('/v1/messaging/providers/:providerId')
     ->desc('Get provider')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
@@ -995,7 +998,7 @@ App::get('/v1/messaging/providers/:providerId')
         $response->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/mailgun/:providerId')
+Http::patch('/v1/messaging/providers/mailgun/:providerId')
     ->desc('Update Mailgun provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1101,7 +1104,7 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/sendgrid/:providerId')
+Http::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->desc('Update Sendgrid provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1192,7 +1195,7 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/smtp/:providerId')
+Http::patch('/v1/messaging/providers/smtp/:providerId')
     ->desc('Update SMTP provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1314,7 +1317,7 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/msg91/:providerId')
+Http::patch('/v1/messaging/providers/msg91/:providerId')
     ->desc('Update Msg91 provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1396,7 +1399,7 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/telesign/:providerId')
+Http::patch('/v1/messaging/providers/telesign/:providerId')
     ->desc('Update Telesign provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1478,7 +1481,7 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/textmagic/:providerId')
+Http::patch('/v1/messaging/providers/textmagic/:providerId')
     ->desc('Update Textmagic provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1560,7 +1563,7 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/twilio/:providerId')
+Http::patch('/v1/messaging/providers/twilio/:providerId')
     ->desc('Update Twilio provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1642,7 +1645,7 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/vonage/:providerId')
+Http::patch('/v1/messaging/providers/vonage/:providerId')
     ->desc('Update Vonage provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1724,7 +1727,7 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/fcm/:providerId')
+Http::patch('/v1/messaging/providers/fcm/:providerId')
     ->desc('Update FCM provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1793,7 +1796,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     });
 
 
-App::patch('/v1/messaging/providers/apns/:providerId')
+Http::patch('/v1/messaging/providers/apns/:providerId')
     ->desc('Update APNS provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1888,7 +1891,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::delete('/v1/messaging/providers/:providerId')
+Http::delete('/v1/messaging/providers/:providerId')
     ->desc('Delete provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.delete')
@@ -1923,7 +1926,7 @@ App::delete('/v1/messaging/providers/:providerId')
             ->noContent();
     });
 
-App::post('/v1/messaging/topics')
+Http::post('/v1/messaging/topics')
     ->desc('Create topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.create')
@@ -1966,7 +1969,7 @@ App::post('/v1/messaging/topics')
             ->dynamic($topic, Response::MODEL_TOPIC);
     });
 
-App::get('/v1/messaging/topics')
+Http::get('/v1/messaging/topics')
     ->desc('List topics')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
@@ -1981,7 +1984,8 @@ App::get('/v1/messaging/topics')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
+    ->inject('authorization')
+    ->action(function (array $queries, string $search, Database $dbForProject, Response $response, Authorization $authorization) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2002,7 +2006,7 @@ App::get('/v1/messaging/topics')
 
         if ($cursor) {
             $topicId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Topic '{$topicId}' for the 'cursor' value not found.");
@@ -2017,7 +2021,7 @@ App::get('/v1/messaging/topics')
         ]), Response::MODEL_TOPIC_LIST);
     });
 
-App::get('/v1/messaging/topics/:topicId/logs')
+Http::get('/v1/messaging/topics/:topicId/logs')
     ->desc('List topic logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
@@ -2034,7 +2038,8 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $topicId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('authorization')
+    ->action(function (string $topicId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2051,7 +2056,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $authorization);
         $resource = 'topic/' . $topicId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -2106,7 +2111,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::get('/v1/messaging/topics/:topicId')
+Http::get('/v1/messaging/topics/:topicId')
     ->desc('Get topic')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
@@ -2131,7 +2136,7 @@ App::get('/v1/messaging/topics/:topicId')
             ->dynamic($topic, Response::MODEL_TOPIC);
     });
 
-App::patch('/v1/messaging/topics/:topicId')
+Http::patch('/v1/messaging/topics/:topicId')
     ->desc('Update topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.update')
@@ -2175,7 +2180,7 @@ App::patch('/v1/messaging/topics/:topicId')
             ->dynamic($topic, Response::MODEL_TOPIC);
     });
 
-App::delete('/v1/messaging/topics/:topicId')
+Http::delete('/v1/messaging/topics/:topicId')
     ->desc('Delete topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.delete')
@@ -2215,7 +2220,7 @@ App::delete('/v1/messaging/topics/:topicId')
             ->noContent();
     });
 
-App::post('/v1/messaging/topics/:topicId/subscribers')
+Http::post('/v1/messaging/topics/:topicId/subscribers')
     ->desc('Create subscriber')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.create')
@@ -2235,28 +2240,29 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->inject('authorization')
+    ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Response $response, Authorization $authorization) {
         $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
 
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        $validator = new Authorization('subscribe');
+        $validator = new Authorization();
 
-        if (!$validator->isValid($topic->getAttribute('subscribe'))) {
+        if (!$validator->isValid(new Input('subscribe', $topic->getAttribute('subscribe')))) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
         }
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber = new Document([
             '$id' => $subscriberId,
@@ -2289,7 +2295,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
                 default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
             };
 
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute(
+            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute(
                 'topics',
                 $topicId,
                 $totalAttribute,
@@ -2311,7 +2317,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
     });
 
-App::get('/v1/messaging/topics/:topicId/subscribers')
+Http::get('/v1/messaging/topics/:topicId/subscribers')
     ->desc('List subscribers')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
@@ -2327,7 +2333,8 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, array $queries, string $search, Database $dbForProject, Response $response) {
+    ->inject('authorization')
+    ->action(function (string $topicId, array $queries, string $search, Database $dbForProject, Response $response, Authorization $authorization) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2338,7 +2345,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             $queries[] = Query::search('search', $search);
         }
 
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2356,7 +2363,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
 
         if ($cursor) {
             $subscriberId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Subscriber '{$subscriberId}' for the 'cursor' value not found.");
@@ -2367,10 +2374,10 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
 
         $subscribers = $dbForProject->find('subscribers', $queries);
 
-        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject) {
-            return function () use ($subscriber, $dbForProject) {
-                $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-                $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject, $authorization) {
+            return function () use ($subscriber, $dbForProject, $authorization) {
+                $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+                $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
                 return $subscriber
                     ->setAttribute('target', $target)
@@ -2385,7 +2392,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             ]), Response::MODEL_SUBSCRIBER_LIST);
     });
 
-App::get('/v1/messaging/subscribers/:subscriberId/logs')
+Http::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->desc('List subscriber logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
@@ -2402,7 +2409,8 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $subscriberId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('authorization')
+    ->action(function (string $subscriberId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization) {
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
         if ($subscriber->isEmpty()) {
@@ -2419,7 +2427,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $authorization);
         $resource = 'subscriber/' . $subscriberId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -2474,7 +2482,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
+Http::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->desc('Get subscriber')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
@@ -2489,8 +2497,9 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response) {
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+    ->inject('authorization')
+    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response, Authorization $authorization) {
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2502,8 +2511,8 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber
             ->setAttribute('target', $target)
@@ -2513,7 +2522,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
     });
 
-App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
+Http::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->desc('Delete subscriber')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.delete')
@@ -2532,8 +2541,9 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Response $response) {
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+    ->inject('authorization')
+    ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Response $response, Authorization $authorization) {
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2556,7 +2566,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
         };
 
-        Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute(
+        $authorization->skip(fn () => $dbForProject->decreaseDocumentAttribute(
             'topics',
             $topicId,
             $totalAttribute,
@@ -2572,7 +2582,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             ->noContent();
     });
 
-App::post('/v1/messaging/messages/email')
+Http::post('/v1/messaging/messages/email')
     ->desc('Create email')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
@@ -2724,7 +2734,7 @@ App::post('/v1/messaging/messages/email')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::post('/v1/messaging/messages/sms')
+Http::post('/v1/messaging/messages/sms')
     ->desc('Create SMS')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
@@ -2840,7 +2850,7 @@ App::post('/v1/messaging/messages/sms')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::post('/v1/messaging/messages/push')
+Http::post('/v1/messaging/messages/push')
     ->desc('Create push notification')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
@@ -3018,7 +3028,7 @@ App::post('/v1/messaging/messages/push')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::get('/v1/messaging/messages')
+Http::get('/v1/messaging/messages')
     ->desc('List messages')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
@@ -3033,7 +3043,8 @@ App::get('/v1/messaging/messages')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
+    ->inject('authorization')
+    ->action(function (array $queries, string $search, Database $dbForProject, Response $response, Authorization $authorization) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -3054,7 +3065,7 @@ App::get('/v1/messaging/messages')
 
         if ($cursor) {
             $messageId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('messages', $messageId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('messages', $messageId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Message '{$messageId}' for the 'cursor' value not found.");
@@ -3069,7 +3080,7 @@ App::get('/v1/messaging/messages')
         ]), Response::MODEL_MESSAGE_LIST);
     });
 
-App::get('/v1/messaging/messages/:messageId/logs')
+Http::get('/v1/messaging/messages/:messageId/logs')
     ->desc('List message logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
@@ -3086,7 +3097,8 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('authorization')
+    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3103,7 +3115,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $authorization);
         $resource = 'message/' . $messageId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -3158,7 +3170,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::get('/v1/messaging/messages/:messageId/targets')
+Http::get('/v1/messaging/messages/:messageId/targets')
     ->desc('List message targets')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
@@ -3223,7 +3235,7 @@ App::get('/v1/messaging/messages/:messageId/targets')
         ]), Response::MODEL_TARGET_LIST);
     });
 
-App::get('/v1/messaging/messages/:messageId')
+Http::get('/v1/messaging/messages/:messageId')
     ->desc('Get message')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
@@ -3247,7 +3259,7 @@ App::get('/v1/messaging/messages/:messageId')
         $response->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::patch('/v1/messaging/messages/email/:messageId')
+Http::patch('/v1/messaging/messages/email/:messageId')
     ->desc('Update email')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
@@ -3422,7 +3434,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::patch('/v1/messaging/messages/sms/:messageId')
+Http::patch('/v1/messaging/messages/sms/:messageId')
     ->desc('Update SMS')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
@@ -3577,7 +3589,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::patch('/v1/messaging/messages/push/:messageId')
+Http::patch('/v1/messaging/messages/push/:messageId')
     ->desc('Update push notification')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
@@ -3817,7 +3829,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::delete('/v1/messaging/messages/:messageId')
+Http::delete('/v1/messaging/messages/:messageId')
     ->desc('Delete message')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.delete')

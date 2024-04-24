@@ -7,11 +7,11 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Validator;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Nullable;
-use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Nullable;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\WhiteList;
 
 class OpenAPI3 extends Format
 {
@@ -238,8 +238,11 @@ class OpenAPI3 extends Format
             }
 
             if ($route->getLabel('sdk.response.code', 500) === 204) {
-                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['description'] = 'No content';
-                unset($temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['schema']);
+                $labelCode = (string)$route->getLabel('sdk.response.code', '500');
+                $temp['responses'][$labelCode]['description'] = 'No content';
+                if(isset($temp['responses'][$labelCode]['schema'])) {
+                    unset($temp['responses'][$labelCode]['schema']);
+                }
             }
 
             if ((!empty($scope))) { //  && 'public' != $scope
@@ -270,9 +273,9 @@ class OpenAPI3 extends Format
 
             foreach ($route->getParams() as $name => $param) { // Set params
                 /**
-                 * @var \Utopia\Validator $validator
+                 * @var \Utopia\Http\Validator $validator
                  */
-                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['injections'])) : $param['validator'];
+                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->http->getResources($param['injections'])) : $param['validator'];
 
                 $node = [
                     'name' => $name,
@@ -289,11 +292,11 @@ class OpenAPI3 extends Format
 
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Database\Validator\UID':
-                    case 'Utopia\Validator\Text':
+                    case 'Utopia\Http\Validator\Text':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
-                    case 'Utopia\Validator\Boolean':
+                    case 'Utopia\Http\Validator\Boolean':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = false;
                         break;
@@ -314,15 +317,15 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'email';
                         $node['schema']['x-example'] = 'email@example.com';
                         break;
-                    case 'Utopia\Validator\Host':
-                    case 'Utopia\Validator\URL':
+                    case 'Utopia\Http\Validator\Host':
+                    case 'Utopia\Http\Validator\URL':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';
                         break;
-                    case 'Utopia\Validator\JSON':
-                    case 'Utopia\Validator\Mock':
-                    case 'Utopia\Validator\Assoc':
+                    case 'Utopia\Http\Validator\JSON':
+                    case 'Utopia\Http\Validator\Mock':
+                    case 'Utopia\Http\Validator\Assoc':
                         $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['type'] = 'object';
                         $node['schema']['x-example'] = '{}';
@@ -332,7 +335,7 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'binary';
                         break;
-                    case 'Utopia\Validator\ArrayList':
+                    case 'Utopia\Http\Validator\ArrayList':
                         /** @var ArrayList $validator */
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
@@ -394,25 +397,25 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'phone';
                         $node['schema']['x-example'] = '+12065550100'; // In the US, 555 is reserved like example.com
                         break;
-                    case 'Utopia\Validator\Range':
+                    case 'Utopia\Http\Validator\Range':
                         /** @var Range $validator */
                         $node['schema']['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();
                         $node['schema']['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
                         $node['schema']['x-example'] = $validator->getMin();
                         break;
-                    case 'Utopia\Validator\Numeric':
-                    case 'Utopia\Validator\Integer':
+                    case 'Utopia\Http\Validator\Numeric':
+                    case 'Utopia\Http\Validator\Integer':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'int32';
                         break;
-                    case 'Utopia\Validator\FloatValidator':
+                    case 'Utopia\Http\Validator\FloatValidator':
                         $node['schema']['type'] = 'number';
                         $node['schema']['format'] = 'float';
                         break;
-                    case 'Utopia\Validator\Length':
+                    case 'Utopia\Http\Validator\Length':
                         $node['schema']['type'] = $validator->getType();
                         break;
-                    case 'Utopia\Validator\WhiteList':
+                    case 'Utopia\Http\Validator\WhiteList':
                         /** @var WhiteList $validator */
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = $validator->getList()[0];

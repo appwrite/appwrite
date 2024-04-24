@@ -10,11 +10,11 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Validator\Text;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
-use Utopia\Validator\Text;
 
 class CalcTierStats extends Action
 {
@@ -73,13 +73,14 @@ class CalcTierStats extends Action
             ->inject('dbForConsole')
             ->inject('getProjectDB')
             ->inject('register')
-            ->callback(function ($after, $projectId, Group $pools, Cache $cache, Database $dbForConsole, callable $getProjectDB, Registry $register) {
-                $this->action($after, $projectId, $pools, $cache, $dbForConsole, $getProjectDB, $register);
+            ->inject('auth')
+            ->callback(function ($after, $projectId, Group $pools, Cache $cache, Database $dbForConsole, callable $getProjectDB, Registry $register, Authorization $auth) {
+                $this->action($after, $projectId, $pools, $cache, $dbForConsole, $getProjectDB, $register, $auth);
             });
     }
 
 
-    public function action(string $after, string $projectId, Group $pools, Cache $cache, Database $dbForConsole, callable $getProjectDB, Registry $register): void
+    public function action(string $after, string $projectId, Group $pools, Cache $cache, Database $dbForConsole, callable $getProjectDB, Registry $register, Authorization $auth): void
     {
         //docker compose exec -t appwrite calc-tier-stats
 
@@ -97,7 +98,7 @@ class CalcTierStats extends Action
                 console::log("Project " . $projectId);
                 $project = $dbForConsole->getDocument('projects', $projectId);
                 $dbForProject = call_user_func($getProjectDB, $project);
-                $data = $this->getData($project, $dbForConsole, $dbForProject);
+                $data = $this->getData($project, $dbForConsole, $dbForProject, $auth);
                 $csv->insertOne($data);
                 $this->sendMail($register);
 
@@ -121,12 +122,12 @@ class CalcTierStats extends Action
             Console::info("Iterating all projects");
         }
 
-        $this->foreachDocument($dbForConsole, 'projects', $queries, function (Document $project) use ($getProjectDB, $dbForConsole, $csv) {
+        $this->foreachDocument($dbForConsole, 'projects', $queries, function (Document $project) use ($getProjectDB, $dbForConsole, $csv, $auth) {
             $projectId = $project->getId();
             console::log("Project " . $projectId);
             try {
                 $dbForProject = call_user_func($getProjectDB, $project);
-                $data = $this->getData($project, $dbForConsole, $dbForProject);
+                $data = $this->getData($project, $dbForConsole, $dbForProject, $auth);
                 $csv->insertOne($data);
             } catch (\Throwable $th) {
                 Console::error("Unexpected error occured with Project ID {$projectId}");
@@ -204,7 +205,7 @@ class CalcTierStats extends Action
     }
 
 
-    private function getData(Document $project, Database $dbForConsole, Database $dbForProject): array
+    private function getData(Document $project, Database $dbForConsole, Database $dbForProject, Authorization $auth): array
     {
         $stats['Project ID'] = $project->getId();
         $stats['Organization ID']   = $project->getAttribute('teamId', null);
@@ -263,7 +264,7 @@ class CalcTierStats extends Action
 
         $tmp = [];
         $metrics = $this->usageStats;
-        Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$tmp) {
+        $auth->skip(function () use ($dbForProject, $periods, $range, $metrics, &$tmp) {
             foreach ($metrics as $metric => $name) {
                 $limit = $periods[$range]['limit'];
                 $period = $periods[$range]['period'];

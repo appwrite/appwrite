@@ -51,7 +51,7 @@ class ScheduleMessages extends ScheduleBase
                     $schedule['$id'],
                 );
 
-                $queue->reclaim();
+                $queue->reclaim(); // TODO: Do in try/catch/finally, or add to connectons resource
 
                 unset($this->schedules[$schedule['resourceId']]);
             });

@@ -90,10 +90,10 @@ abstract class Migration
      */
     protected array $collections;
 
-    public function __construct()
+    public function __construct(Authorization $auth)
     {
-        Authorization::disable();
-        Authorization::setDefaultStatus(false);
+        $auth->disable();
+        $auth->setDefaultStatus(false);
 
         $this->collections = Config::getParam('collections', []);
 

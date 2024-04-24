@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Hamster as EventHamster;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Utopia\Queue\Connections;
 use Utopia\Analytics\Adapter\Mixpanel;
 use Utopia\Analytics\Event as AnalyticsEvent;
 use Utopia\Cache\Cache;
@@ -13,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Queue\Message;
@@ -53,7 +55,9 @@ class Hamster extends Action
             ->inject('pools')
             ->inject('cache')
             ->inject('dbForConsole')
-            ->callback(fn (Message $message, Group $pools, Cache $cache, Database $dbForConsole) => $this->action($message, $pools, $cache, $dbForConsole));
+            ->inject('auth')
+            ->inject('connections')
+            ->callback(fn (Message $message, Group $pools, Cache $cache, Database $dbForConsole, Authorization $auth, Connections $connections) => $this->action($message, $pools, $cache, $dbForConsole, $auth, $connections));
     }
 
     /**
@@ -65,12 +69,14 @@ class Hamster extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Group $pools, Cache $cache, Database $dbForConsole): void
+    public function action(Message $message, Group $pools, Cache $cache, Database $dbForConsole, Authorization $auth, Connections $connections): void
     {
         $token = System::getEnv('_APP_MIXPANEL_TOKEN', '');
+       
         if (empty($token)) {
             throw new \Exception('Missing MixPanel Token');
         }
+       
         $this->mixpanel = new Mixpanel($token);
 
         $payload = $message->getPayload() ?? [];
@@ -83,7 +89,7 @@ class Hamster extends Action
 
         switch ($type) {
             case EventHamster::TYPE_PROJECT:
-                $this->getStatsForProject(new Document($payload['project']), $pools, $cache, $dbForConsole);
+                $this->getStatsForProject(new Document($payload['project']), $pools, $cache, $dbForConsole, $auth, $connections);
                 break;
             case EventHamster::TYPE_ORGANISATION:
                 $this->getStatsForOrganization(new Document($payload['organization']), $dbForConsole);
@@ -101,7 +107,7 @@ class Hamster extends Action
      * @param Database $dbForConsole
      * @throws \Utopia\Database\Exception
      */
-    private function getStatsForProject(Document $project, Group $pools, Cache $cache, Database $dbForConsole): void
+    private function getStatsForProject(Document $project, Group $pools, Cache $cache, Database $dbForConsole, Authorization $auth, Connections $connections): void
     {
         /**
          * Skip user projects with id 'console'
@@ -115,13 +121,13 @@ class Hamster extends Action
 
         try {
             $db = $project->getAttribute('database');
-            $adapter = $pools
-                ->get($db)
-                ->pop()
-                ->getResource();
+            $connection = $pools->get($db)->pop();
+            $connections->add($connection);
+            $adapter = $connection->getResource();
 
-            $dbForProject = new Database($adapter, $cache);
-            $dbForProject->setDefaultDatabase('appwrite');
+            $dbForProject = new Database($adapter, $cache); // TODO: Use getProjectDB instead, or reclaim connections properly
+            $dbForProject->setAuthorization($auth);
+            $dbForProject->setDatabase('appwrite');
             $dbForProject->setNamespace('_' . $project->getInternalId());
 
             $statsPerProject = [];
@@ -279,7 +285,7 @@ class Hamster extends Action
                 ],
             ];
 
-            Authorization::skip(function () use ($dbForProject, $periods, &$statsPerProject) {
+            $auth->skip(function () use ($dbForProject, $periods, &$statsPerProject) {
                 foreach ($this->metrics as $key => $metric) {
                     foreach ($periods as $periodKey => $periodValue) {
                         $limit = $periodValue['limit'];

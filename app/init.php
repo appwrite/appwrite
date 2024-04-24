@@ -40,10 +40,10 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Utopia\Queue\Connections;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
-use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -61,6 +61,14 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
+use Utopia\Http\Http;
+use Utopia\Http\Request;
+use Utopia\Http\Response;
+use Utopia\Http\Validator\Hostname;
+use Utopia\Http\Validator\IP;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\URL;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
@@ -78,11 +86,6 @@ use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
-use Utopia\Validator\Hostname;
-use Utopia\Validator\IP;
-use Utopia\Validator\Range;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
 const APP_NAME = 'Appwrite';
@@ -112,8 +115,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 405;
-const APP_VERSION_STABLE = '1.5.4';
+const APP_CACHE_BUSTER = 331;
+const APP_VERSION_STABLE = '1.5.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -245,9 +248,9 @@ const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 
 $register = new Registry();
 
-App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
+Http::setMode(System::getEnv('_APP_ENV', Http::MODE_TYPE_PRODUCTION));
 
-if (!App::isProduction()) {
+if (!Http::isProduction()) {
     // Allow specific domains to skip public domain validation in dev environment
     // Useful for existing tests involving webhooks
     PublicDomain::allow(['request-catcher']);
@@ -258,7 +261,7 @@ if (!App::isProduction()) {
  */
 Config::load('events', __DIR__ . '/config/events.php');
 Config::load('auth', __DIR__ . '/config/auth.php');
-Config::load('apis', __DIR__ . '/config/apis.php');  // List of APIs
+Config::load('apis', __DIR__ . '/config/apis.php');
 Config::load('errors', __DIR__ . '/config/errors.php');
 Config::load('oAuthProviders', __DIR__ . '/config/oAuthProviders.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
@@ -437,7 +440,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database->find('sessions', [
+        return $database->getAuthorization()->skip(fn () => $database->find('sessions', [
             Query::equal('userInternalId', [$document->getInternalId()]),
             Query::limit(APP_LIMIT_SUBQUERY),
         ]));
@@ -450,7 +453,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database
+        return $database->getAuthorization()->skip(fn () => $database
             ->find('tokens', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -464,7 +467,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database
+        return $database->getAuthorization()->skip(fn () => $database
             ->find('challenges', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -478,7 +481,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database
+        return $database->getAuthorization()->skip(fn () => $database
             ->find('authenticators', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -492,7 +495,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database
+        return $database->getAuthorization()->skip(fn () => $database
             ->find('memberships', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -584,7 +587,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database
+        return $database->getAuthorization()->skip(fn () => $database
             ->find('targets', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY)
@@ -598,7 +601,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        $targetIds = Authorization::skip(fn () => \array_map(
+        $targetIds = $database->getAuthorization()->skip(fn () => \array_map(
             fn ($document) => $document->getAttribute('targetInternalId'),
             $database->find('subscribers', [
                 Query::equal('topicInternalId', [$document->getInternalId()]),
@@ -821,7 +824,7 @@ $register->set('pools', function () {
                 //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
             }
-
+            
             $dsn = new DSN($dsn);
             $dsnHost = $dsn->getHost();
             $dsnPort = $dsn->getPort();
@@ -1012,60 +1015,66 @@ foreach ($locales as $locale) {
 ]);
 
 // Runtime Execution
-App::setResource('log', fn () => new Log());
-App::setResource('logger', function ($register) {
+Http::setResource('log', fn () => new Log());
+Http::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
 
-App::setResource('hooks', function ($register) {
+Http::setResource('hooks', function ($register) {
     return $register->get('hooks');
 }, ['register']);
 
-App::setResource('register', fn () => $register);
-App::setResource('locale', fn () => new Locale(System::getEnv('_APP_LOCALE', 'en')));
+Http::setResource('register', fn () => $register);
+Http::setResource('locale', fn () => new Locale(System::getEnv('_APP_LOCALE', 'en')));
 
-App::setResource('localeCodes', function () {
+Http::setResource('localeCodes', function () {
     return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
 });
 
+Http::setResource('connections', function () {
+    return new Connections();
+});
+
 // Queues
-App::setResource('queue', function (Group $pools) {
-    return $pools->get('queue')->pop()->getResource();
-}, ['pools']);
-App::setResource('queueForMessaging', function (Connection $queue) {
+Http::setResource('queue', function (Group $pools, Connections $connections) {
+    $connection = $pools->get('queue')->pop();
+    $connections->add($connection);
+    return $connection->getResource();
+}, ['pools', 'connections']);
+Http::setResource('queueForMessaging', function (Connection $queue) {
     return new Messaging($queue);
 }, ['queue']);
-App::setResource('queueForMails', function (Connection $queue) {
+Http::setResource('queueForMails', function (Connection $queue) {
     return new Mail($queue);
 }, ['queue']);
-App::setResource('queueForBuilds', function (Connection $queue) {
+Http::setResource('queueForBuilds', function (Connection $queue) {
     return new Build($queue);
 }, ['queue']);
-App::setResource('queueForDatabase', function (Connection $queue) {
+Http::setResource('queueForDatabase', function (Connection $queue) {
     return new EventDatabase($queue);
 }, ['queue']);
-App::setResource('queueForDeletes', function (Connection $queue) {
+Http::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
-App::setResource('queueForEvents', function (Connection $queue) {
+Http::setResource('queueForEvents', function (Connection $queue) {
     return new Event($queue);
 }, ['queue']);
-App::setResource('queueForAudits', function (Connection $queue) {
+Http::setResource('queueForAudits', function (Connection $queue) {
     return new Audit($queue);
 }, ['queue']);
-App::setResource('queueForFunctions', function (Connection $queue) {
+Http::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-App::setResource('queueForUsage', function (Connection $queue) {
+Http::setResource('queueForUsage', function (Connection $queue) {
     return new Usage($queue);
 }, ['queue']);
-App::setResource('queueForCertificates', function (Connection $queue) {
+Http::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
-App::setResource('queueForMigrations', function (Connection $queue) {
+Http::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
-App::setResource('clients', function ($request, $console, $project) {
+Http::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
@@ -1116,15 +1125,9 @@ App::setResource('clients', function ($request, $console, $project) {
     return $clients;
 }, ['request', 'console', 'project']);
 
-App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForConsole) {
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Database\Database $dbForProject */
-    /** @var Utopia\Database\Database $dbForConsole */
-    /** @var string $mode */
+Http::setResource('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $auth) {
 
-    Authorization::setDefaultStatus(true);
+    $auth->setDefaultStatus(true);
 
     Auth::setCookieName('a_session_' . $project->getId());
 
@@ -1188,7 +1191,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     if (APP_MODE_ADMIN === $mode) {
         if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
-            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+            $auth->setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
             $user = new Document([]);
         }
@@ -1221,12 +1224,9 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     $dbForConsole->setMetadata('user', $user->getId());
 
     return $user;
-}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole']);
+}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole', 'auth']);
 
-App::setResource('project', function ($dbForConsole, $request, $console) {
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Utopia\Database\Database $dbForConsole */
-    /** @var Utopia\Database\Document $console */
+Http::setResource('project', function (Database $dbForConsole, Request $request, Document $console, Authorization $auth) {
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
 
@@ -1234,12 +1234,12 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
         return $console;
     }
 
-    $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+    $project = $auth->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
     return $project;
-}, ['dbForConsole', 'request', 'console']);
+}, ['dbForConsole', 'request', 'console', 'auth']);
 
-App::setResource('session', function (Document $user, Document $project) {
+Http::setResource('session', function (Document $user, Document $project) {
     if ($user->isEmpty()) {
         return;
     }
@@ -1261,7 +1261,7 @@ App::setResource('session', function (Document $user, Document $project) {
     return;
 }, ['user', 'project']);
 
-App::setResource('console', function () {
+Http::setResource('console', function () {
     return new Document([
         '$id' => ID::custom('console'),
         '$internalId' => ID::custom('console'),
@@ -1301,17 +1301,17 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
+Http::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project, Authorization $auth, Connections $connections) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
     }
 
-    $dbAdapter = $pools
-        ->get($project->getAttribute('database'))
-        ->pop()
-        ->getResource();
+    $connection = $pools->get($project->getAttribute('database'))->pop();
+    $connections->add($connection);
+    $dbAdapter = $connection->getResource();
 
     $database = new Database($dbAdapter, $cache);
+    $database->setAuthorization($auth);
 
     $database
         ->setNamespace('_' . $project->getInternalId())
@@ -1320,16 +1320,15 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
-}, ['pools', 'dbForConsole', 'cache', 'project']);
+}, ['pools', 'dbForConsole', 'cache', 'project', 'auth', 'connections']);
 
-App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource()
-    ;
+Http::setResource('dbForConsole', function (Group $pools, Cache $cache, Authorization $auth, Connections $connections) {
+    $connection = $pools->get('console')->pop();
+    $connections->add($connection);
+    $dbAdapter = $connection->getResource();
 
     $database = new Database($dbAdapter, $cache);
+    $database->setAuthorization($auth);
 
     $database
         ->setNamespace('_console')
@@ -1338,12 +1337,12 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
-}, ['pools', 'cache']);
+}, ['pools', 'cache', 'auth', 'connections']);
 
-App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+Http::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache, Authorization $auth, Connections $connections) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $auth, $connections) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -1362,12 +1361,12 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get($databaseName)
-            ->pop()
-            ->getResource();
+        $connection = $pools->get($databaseName)->pop();
+        $connections->add($connection);
+        $dbAdapter = $connection->getResource();
 
         $database = new Database($dbAdapter, $cache);
+        $database->setAuthorization($auth);
 
         $databases[$databaseName] = $database;
 
@@ -1381,36 +1380,34 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
     };
 
     return $getProjectDB;
-}, ['pools', 'dbForConsole', 'cache']);
+}, ['pools', 'dbForConsole', 'cache', 'auth', 'connections']);
 
-App::setResource('cache', function (Group $pools) {
+Http::setResource('cache', function (Group $pools, Connections $connections) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
     foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource()
-        ;
+        $connection = $pools->get($value)->pop();
+        $connections->add($connection);
+        $adapters[] = $connection->getResource();
     }
 
     return new Cache(new Sharding($adapters));
-}, ['pools']);
+}, ['pools', 'connections']);
 
-App::setResource('deviceForLocal', function () {
+Http::setResource('deviceForLocal', function () {
     return new Local();
 });
 
-App::setResource('deviceForFiles', function ($project) {
+Http::setResource('deviceForFiles', function ($project) {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
-App::setResource('deviceForFunctions', function ($project) {
+Http::setResource('deviceForFunctions', function ($project) {
     return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
 }, ['project']);
 
-App::setResource('deviceForBuilds', function ($project) {
+Http::setResource('deviceForBuilds', function ($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
 
@@ -1496,7 +1493,7 @@ function getDevice($root): Device
     }
 }
 
-App::setResource('mode', function ($request) {
+Http::setResource('mode', function ($request) {
     /** @var Appwrite\Utopia\Request $request */
 
     /**
@@ -1507,18 +1504,18 @@ App::setResource('mode', function ($request) {
     return $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
 }, ['request']);
 
-App::setResource('geodb', function ($register) {
+Http::setResource('geodb', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
 }, ['register']);
 
-App::setResource('passwordsDictionary', function ($register) {
+Http::setResource('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('passwordsDictionary');
 }, ['register']);
 
 
-App::setResource('servers', function () {
+Http::setResource('servers', function () {
     $platforms = Config::getParam('platforms');
     $server = $platforms[APP_PLATFORM_SERVER];
 
@@ -1529,11 +1526,11 @@ App::setResource('servers', function () {
     return $languages;
 });
 
-App::setResource('promiseAdapter', function ($register) {
+Http::setResource('promiseAdapter', function ($register) {
     return $register->get('promiseAdapter');
 }, ['register']);
 
-App::setResource('schema', function ($utopia, $dbForProject) {
+Http::setResource('schema', function (Http $utopia, Database $dbForProject, Authorization $auth) {
 
     $complexity = function (int $complexity, array $args) {
         $queries = Query::parseQueries($args['queries'] ?? []);
@@ -1543,8 +1540,8 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         return $complexity * $limit;
     };
 
-    $attributes = function (int $limit, int $offset) use ($dbForProject) {
-        $attrs = Authorization::skip(fn () => $dbForProject->find('attributes', [
+    $attributes = function (int $limit, int $offset) use ($dbForProject, $auth) {
+        $attrs = $auth->skip(fn () => $dbForProject->find('attributes', [
             Query::limit($limit),
             Query::offset($offset),
         ]));
@@ -1617,31 +1614,31 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         $urls,
         $params,
     );
-}, ['utopia', 'dbForProject']);
+}, ['utopia', 'dbForProject', 'auth']);
 
-App::setResource('contributors', function () {
+Http::setResource('contributors', function () {
     $path = 'app/config/contributors.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     return $list;
 });
 
-App::setResource('employees', function () {
+Http::setResource('employees', function () {
     $path = 'app/config/employees.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     return $list;
 });
 
-App::setResource('heroes', function () {
+Http::setResource('heroes', function () {
     $path = 'app/config/heroes.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     return $list;
 });
 
-App::setResource('gitHub', function (Cache $cache) {
+Http::setResource('gitHub', function (Cache $cache) {
     return new VcsGitHub($cache);
 }, ['cache']);
 
-App::setResource('requestTimestamp', function ($request) {
+Http::setResource('requestTimestamp', function ($request) {
     //TODO: Move this to the Request class itself
     $timestampHeader = $request->getHeader('x-appwrite-timestamp');
     $requestTimestamp = null;
@@ -1654,3 +1651,9 @@ App::setResource('requestTimestamp', function ($request) {
     }
     return $requestTimestamp;
 }, ['request']);
+
+Http::setResource('auth', fn () => new Authorization());
+
+Http::setResource('pools', function ($register) {
+    return $register->get('pools');
+}, ['pools']);

@@ -2,17 +2,20 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\App;
+use Appwrite\Utopia\Queue\Connections;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Adapter\FPM\Server;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\Boolean;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
-use Utopia\Validator\Boolean;
 
 class DeleteOrphanedProjects extends Action
 {
@@ -31,13 +34,15 @@ class DeleteOrphanedProjects extends Action
             ->inject('cache')
             ->inject('dbForConsole')
             ->inject('register')
-            ->callback(function (bool $commit, Group $pools, Cache $cache, Database $dbForConsole, Registry $register) {
-                $this->action($commit, $pools, $cache, $dbForConsole, $register);
+            ->inject('auth')
+            ->inject('connections')
+            ->callback(function (bool $commit, Group $pools, Cache $cache, Database $dbForConsole, Registry $register, Authorization $auth, Connections $connections) {
+                $this->action($commit, $pools, $cache, $dbForConsole, $register, $auth, $connections);
             });
     }
 
 
-    public function action(bool $commit, Group $pools, Cache $cache, Database $dbForConsole, Registry $register): void
+    public function action(bool $commit, Group $pools, Cache $cache, Database $dbForConsole, Registry $register, Authorization $auth, Connections $connections): void
     {
 
         Console::title('Delete orphaned projects V1');
@@ -58,8 +63,8 @@ class DeleteOrphanedProjects extends Action
         ], $collectionsConfig);
 
         /* Initialise new Utopia app */
-        $app = new App('UTC');
-        $console = $app->getResource('console');
+        $http = new Http(new Server(), 'UTC');
+        $console = $http->getResource('console');
         $projects = [$console];
 
         /** Database connections */
@@ -84,12 +89,12 @@ class DeleteOrphanedProjects extends Action
 
                 try {
                     $db = $project->getAttribute('database');
-                    $adapter = $pools
-                        ->get($db)
-                        ->pop()
-                        ->getResource();
+                    $connection = $pools->get($db)->pop();
+                    $connections->add($connection);
+                    $adapter = $connection->getResource();
 
                     $dbForProject = new Database($adapter, $cache);
+                    $dbForProject->setAuthorization($auth);
                     $dbForProject->setDatabase('appwrite');
                     $dbForProject->setNamespace('_' . $project->getInternalId());
 
@@ -123,7 +128,7 @@ class DeleteOrphanedProjects extends Action
                         $dbForConsole->deleteDocument('projects', $project->getId());
                         $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
-                        if ($dbForProject->exists($dbForProject->getDefaultDatabase(), Database::METADATA)) {
+                        if ($dbForProject->exists($dbForProject->getDatabase(), Database::METADATA)) {
                             try {
                                 $dbForProject->deleteCollection(Database::METADATA);
                                 $dbForProject->purgeCachedCollection(Database::METADATA);

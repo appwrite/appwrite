@@ -13,7 +13,8 @@
     "scripts": {
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/pint --test",
-        "format": "vendor/bin/pint"
+        "format": "vendor/bin/pint",
+        "check": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit 1G app src tests"
     },
     "autoload": {
         "psr-4": {
@@ -44,28 +45,29 @@
         "ext-sockets": "*",
         "appwrite/php-runtimes": "0.13.*",
         "appwrite/php-clamav": "2.0.*",
-        "utopia-php/abuse": "0.36.*",
-        "utopia-php/analytics": "0.10.*",
-        "utopia-php/audit": "0.38.*",
+        "utopia-php/abuse": "dev-feat-framework-v2 as 0.37.99",
+        "utopia-php/analytics": "dev-feat-framework-v2 as 0.10.99",
+        "utopia-php/audit": "dev-feat-framework-v2 as 0.39.99",
         "utopia-php/cache": "0.9.*",
-        "utopia-php/cli": "0.15.*",
+        "utopia-php/cli": "0.17.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.48.*",
-        "utopia-php/domains": "0.5.*",
+        "utopia-php/database": "dev-feat-framework-v2 as 0.49.99",
+        "utopia-php/di": "dev-main",
+        "utopia-php/domains": "dev-feat-framework-v2 as 0.5.99",
         "utopia-php/dsn": "0.2.*",
-        "utopia-php/framework": "0.33.*",
+        "utopia-php/framework": "dev-feat-di-upgrade as 0.34.99",
         "utopia-php/image": "0.6.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.3.*",
         "utopia-php/messaging": "0.10.*",
         "utopia-php/migration": "0.4.*",
-        "utopia-php/orchestration": "0.9.*",
-        "utopia-php/platform": "0.5.*",
-        "utopia-php/pools": "0.4.*",
-        "utopia-php/queue": "0.7.*",
+        "utopia-php/orchestration": "dev-feat-framework-v2 as 0.9.99",
+        "utopia-php/platform": "dev-feat-framework-v2 as 0.5.99",
+        "utopia-php/pools": "dev-feat-coroutine-support as 0.4.99",
+        "utopia-php/view": "0.2.*",
+        "utopia-php/queue": "dev-feat-framework-v2-v2 as 0.7.99",
         "utopia-php/registry": "0.5.*",
-        "utopia-php/storage": "0.18.*",
-        "utopia-php/swoole": "0.8.*",
+        "utopia-php/storage": "dev-feat-framework-v2-v2 as 0.18.99",
         "utopia-php/system": "0.8.*",
         "utopia-php/vcs": "0.6.*",
         "utopia-php/websocket": "0.1.*",
@@ -85,7 +87,8 @@
         "swoole/ide-helper": "5.0.2",
         "textalk/websocket": "1.5.7",
         "utopia-php/fetch": "0.1.*",
-        "laravel/pint": "^1.14"
+        "laravel/pint": "^1.14",
+        "phpstan/phpstan": "1.8.*"
     },
     "provide": {
         "ext-phpiredis": "*"
@@ -94,5 +97,11 @@
         "platform": {
             "php": "8.3"
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/di"
+        }
+    ]
 }

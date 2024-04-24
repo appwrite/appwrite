@@ -2,7 +2,6 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
-use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -13,10 +12,11 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 
-App::get('/v1/project/usage')
+Http::get('/v1/project/usage')
     ->desc('Get project usage stats')
     ->groups(['api', 'usage'])
     ->label('scope', 'projects.read')
@@ -31,7 +31,8 @@ App::get('/v1/project/usage')
     ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject, Authorization $auth) {
         $stats = $total = $usage = [];
         $format = 'Y-m-d 00:00:00';
         $firstDay = (new DateTime($startDate))->format($format);
@@ -70,7 +71,7 @@ App::get('/v1/project/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        Authorization::skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, &$total, &$stats) {
+        $auth->skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, &$total, &$stats) {
             foreach ($metrics['total'] as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -182,7 +183,7 @@ App::get('/v1/project/usage')
 
 
 // Variables
-App::post('/v1/project/variables')
+Http::post('/v1/project/variables')
     ->desc('Create Variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
@@ -237,7 +238,7 @@ App::post('/v1/project/variables')
             ->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::get('/v1/project/variables')
+Http::get('/v1/project/variables')
     ->desc('List Variables')
     ->groups(['api'])
     ->label('scope', 'projects.read')
@@ -262,7 +263,7 @@ App::get('/v1/project/variables')
         ]), Response::MODEL_VARIABLE_LIST);
     });
 
-App::get('/v1/project/variables/:variableId')
+Http::get('/v1/project/variables/:variableId')
     ->desc('Get Variable')
     ->groups(['api'])
     ->label('scope', 'projects.read')
@@ -286,7 +287,7 @@ App::get('/v1/project/variables/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::put('/v1/project/variables/:variableId')
+Http::put('/v1/project/variables/:variableId')
     ->desc('Update Variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
@@ -332,7 +333,7 @@ App::put('/v1/project/variables/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::delete('/v1/project/variables/:variableId')
+Http::delete('/v1/project/variables/:variableId')
     ->desc('Delete Variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')

@@ -102,16 +102,15 @@ use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
-use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
 use Utopia\Database\Document;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as HttpResponse;
 
 /**
  * @method int getStatusCode()
  * @method Response setStatusCode(int $code = 200)
  */
-class Response extends SwooleResponse
+class Response extends HttpResponse
 {
     // General
     public const MODEL_NONE = 'none';
@@ -313,7 +312,7 @@ class Response extends SwooleResponse
      *
      * @param float $time
      */
-    public function __construct(SwooleHTTPResponse $response)
+    public function __construct(HttpResponse $response)
     {
         $this
             // General
@@ -459,7 +458,7 @@ class Response extends SwooleResponse
             // Tests (keep last)
             ->setModel(new Mock());
 
-        parent::__construct($response);
+            parent::__construct($response->swoole);
     }
 
     /**

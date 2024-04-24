@@ -7,20 +7,23 @@ use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
 use Appwrite\Utopia\Response;
 use Exception;
-use Swoole\Http\Response as HttpResponse;
-use Utopia\App;
+use Swoole\Http\Request as SwooleHttpRequest;
+use Swoole\Http\Response as SwooleHttpResponse;
+use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Http\Adapter\Swoole\Response as HttpResponse;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
+use Utopia\Http\Adapter\FPM\Server;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
-use Utopia\Request;
 use Utopia\System\System;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 
 class Specs extends Action
 {
@@ -41,15 +44,15 @@ class Specs extends Action
 
     public function action(string $version, string $mode, Registry $register): void
     {
-        $appRoutes = App::getRoutes();
-        $response = new Response(new HttpResponse());
+        $appRoutes = Http::getRoutes();
+        $response = new Response(new HttpResponse(new SwooleHttpResponse));
         $mocks = ($mode === 'mocks');
 
         // Mock dependencies
-        App::setResource('request', fn () => new Request());
-        App::setResource('response', fn () => $response);
-        App::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
-        App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        Http::setResource('request', fn () => new Request(new SwooleHttpRequest));
+        Http::setResource('response', fn () => $response);
+        Http::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
+        Http::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
 
         $platforms = [
             'client' => APP_PLATFORM_CLIENT,
@@ -249,7 +252,7 @@ class Specs extends Action
                 }
             }
 
-            $arguments = [new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
+            $arguments = [new Http(new Server(), 'UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = match ($format) {
                     'swagger2' => new Swagger2(...$arguments),

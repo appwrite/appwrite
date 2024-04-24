@@ -3,10 +3,11 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\ClamAV\Network;
-use Utopia\App;
+use Appwrite\Utopia\Queue\Connections;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
+use Utopia\Http\Http;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
@@ -26,10 +27,11 @@ class Doctor extends Action
         $this
             ->desc('Validate server health')
             ->inject('register')
-            ->callback(fn (Registry $register) => $this->action($register));
+            ->inject('connections')
+            ->callback(fn (Registry $register, Connections $connections) => $this->action($register, $connections));
     }
 
-    public function action(Registry $register): void
+    public function action(Registry $register, Connections $connections): void
     {
         Console::log("  __   ____  ____  _  _  ____  __  ____  ____     __  __  
  / _\ (  _ \(  _ \/ )( \(  _ \(  )(_  _)(  __)   (  )/  \ 
@@ -127,7 +129,9 @@ class Doctor extends Action
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
                 try {
-                    $adapter = $pools->get($database)->pop()->getResource();
+                    $connection = $pools->get($database)->pop();
+                    $connections->add($connection);
+                    $adapter = $connection->getResource();
 
                     if ($adapter->ping()) {
                         Console::success('🟢 ' . str_pad("{$key}({$database})", 50, '.') . 'connected');
@@ -150,7 +154,9 @@ class Doctor extends Action
         foreach ($configs as $key => $config) {
             foreach ($config as $pool) {
                 try {
-                    $adapter = $pools->get($pool)->pop()->getResource();
+                    $connection = $pools->get($pool)->pop();
+                    $connections->add($connection);
+                    $adapter = $connection->getResource();
 
                     if ($adapter->ping()) {
                         Console::success('🟢 ' . str_pad("{$key}({$pool})", 50, '.') . 'connected');
@@ -250,7 +256,7 @@ class Doctor extends Action
         }
 
         try {
-            if (App::isProduction()) {
+            if (Http::isProduction()) {
                 Console::log('');
                 $version = \json_decode(@\file_get_contents(System::getEnv('_APP_HOME', 'http://localhost') . '/version'), true);
 

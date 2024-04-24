@@ -14,27 +14,28 @@ use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
-use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
-use Utopia\Validator\JSON;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\JSON;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Http;
 
-App::init()
+Http::init()
     ->groups(['graphql'])
     ->inject('project')
-    ->action(function (Document $project) {
+    ->inject('auth')
+    ->action(function (Document $project, Authorization $auth) {
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+            && !(Auth::isPrivilegedUser($auth->getRoles()) || Auth::isAppUser($auth->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
     });
 
-App::get('/v1/graphql')
+Http::get('/v1/graphql')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -74,7 +75,7 @@ App::get('/v1/graphql')
             ->json($output);
     });
 
-App::post('/v1/graphql/mutation')
+Http::post('/v1/graphql/mutation')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -119,7 +120,7 @@ App::post('/v1/graphql/mutation')
             ->json($output);
     });
 
-App::post('/v1/graphql')
+Http::post('/v1/graphql')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -205,7 +206,7 @@ function execute(
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);
     }
-    if (App::getMode() === App::MODE_TYPE_PRODUCTION) {
+    if (Http::getMode() === Http::MODE_TYPE_PRODUCTION) {
         $flags = DebugFlag::NONE;
     }
 
@@ -306,7 +307,7 @@ function processResult($result, $debugFlags): array
     );
 }
 
-App::shutdown()
+Http::shutdown()
     ->groups(['schema'])
     ->inject('project')
     ->action(function (Document $project) {

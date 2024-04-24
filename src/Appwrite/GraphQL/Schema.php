@@ -6,9 +6,9 @@ use Appwrite\GraphQL\Types\Mapper;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema as GQLSchema;
-use Utopia\App;
 use Utopia\Exception;
-use Utopia\Route;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
 
 class Schema
 {
@@ -17,7 +17,7 @@ class Schema
 
     /**
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param callable $complexity  Function to calculate complexity
      * @param callable $attributes  Function to get attributes
      * @param array $urls           Array of functions to get urls for specific method types
@@ -26,13 +26,13 @@ class Schema
      * @throws Exception
      */
     public static function build(
-        App $utopia,
+        Http $utopia,
         callable $complexity,
         callable $attributes,
         array $urls,
         array $params,
     ): GQLSchema {
-        App::setResource('utopia:graphql', static function () use ($utopia) {
+        Http::setResource('utopia:graphql', static function () use ($utopia) {
             return $utopia;
         });
 
@@ -80,12 +80,12 @@ class Schema
      * This function iterates all API routes and builds a GraphQL
      * schema defining types and resolvers for all response models.
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param callable $complexity
      * @return array
      * @throws Exception
      */
-    protected static function api(App $utopia, callable $complexity): array
+    protected static function api(Http $utopia, callable $complexity): array
     {
         Mapper::init($utopia
             ->getResource('response')
@@ -134,7 +134,7 @@ class Schema
      * Iterates all of a projects attributes and builds GraphQL
      * queries and mutations for the collections they make up.
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param callable $complexity
      * @param callable $attributes
      * @param array $urls
@@ -143,7 +143,7 @@ class Schema
      * @throws \Exception
      */
     protected static function collections(
-        App $utopia,
+        Http $utopia,
         callable $complexity,
         callable $attributes,
         array $urls,

@@ -10,13 +10,15 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
+use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -25,23 +27,24 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\Hostname;
+use Utopia\Http\Validator\Integer;
+use Utopia\Http\Validator\Multiple;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\URL;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Locale\Locale;
-use Utopia\Pools\Group;
 use Utopia\System\System;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Hostname;
-use Utopia\Validator\Integer;
-use Utopia\Validator\Multiple;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
 
-App::init()
+Http::init()
     ->groups(['projects'])
     ->inject('project')
     ->action(function (Document $project) {
@@ -50,7 +53,7 @@ App::init()
         }
     });
 
-App::post('/v1/projects')
+Http::post('/v1/projects')
     ->desc('Create project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -77,7 +80,9 @@ App::post('/v1/projects')
     ->inject('dbForConsole')
     ->inject('cache')
     ->inject('pools')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools) {
+    ->inject('authorization')
+    ->inject('connections')
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, array $pools, Authorization $authorization, Connections $connections) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -91,9 +96,9 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_REGION_UNSUPPORTED, 'Region "' . $region . '" is not supported');
         }
 
-        $auth = Config::getParam('auth', []);
+        $authConfig = Config::getParam('auth', []);
         $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordDictionary' => false, 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, 'personalDataCheck' => false];
-        foreach ($auth as $index => $method) {
+        foreach ($authConfig as $index => $method) {
             $auths[$method['key'] ?? ''] = true;
         }
 
@@ -177,16 +182,27 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
 
-        $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
+        $pool = $pools['pools-database-'.$project->getAttribute('database')]['pool'];
+        $dsn = $pools['pools-database-'.$project->getAttribute('database')]['dsn'];
+        $connection = $pool->get();
+        $connections->add($connection, $pool);
+        $adapter = match ($dsn->getScheme()) {
+            'mariadb' => new MariaDB($connection),
+            'mysql' => new MySQL($connection),
+            default => null
+        };
+
+        $adapter->setDatabase($dsn->getPath());
+
+        $dbForProject = new Database($adapter, $cache);
+        $dbForProject->setAuthorization($authorization);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create();
-
-        $audit = new Audit($dbForProject);
+        
+        $audit = new Audit($dbForProject, $authorization);
         $audit->setup();
-
-        $adapter = new TimeLimit('', 0, 1, $dbForProject);
+        $adapter = new TimeLimit('', 0, 1, $dbForProject, $authorization);
         $adapter->setup();
-
         /** @var array $collections */
         $collections = Config::getParam('collections', [])['projects'] ?? [];
 
@@ -229,7 +245,7 @@ App::post('/v1/projects')
             ->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::get('/v1/projects')
+Http::get('/v1/projects')
     ->desc('List projects')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -282,7 +298,7 @@ App::get('/v1/projects')
         ]), Response::MODEL_PROJECT_LIST);
     });
 
-App::get('/v1/projects/:projectId')
+Http::get('/v1/projects/:projectId')
     ->desc('Get project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -306,7 +322,7 @@ App::get('/v1/projects/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId')
+Http::patch('/v1/projects/:projectId')
     ->desc('Update project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -353,7 +369,7 @@ App::patch('/v1/projects/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/team')
+Http::patch('/v1/projects/:projectId/team')
     ->desc('Update Project Team')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -421,7 +437,7 @@ App::patch('/v1/projects/:projectId/team')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/service')
+Http::patch('/v1/projects/:projectId/service')
     ->desc('Update service status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -452,7 +468,7 @@ App::patch('/v1/projects/:projectId/service')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/service/all')
+Http::patch('/v1/projects/:projectId/service/all')
     ->desc('Update all service status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -486,7 +502,7 @@ App::patch('/v1/projects/:projectId/service/all')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/api')
+Http::patch('/v1/projects/:projectId/api')
     ->desc('Update API status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -517,7 +533,7 @@ App::patch('/v1/projects/:projectId/api')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/api/all')
+Http::patch('/v1/projects/:projectId/api/all')
     ->desc('Update all API status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -551,7 +567,7 @@ App::patch('/v1/projects/:projectId/api/all')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/oauth2')
+Http::patch('/v1/projects/:projectId/oauth2')
     ->desc('Update project OAuth2')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -595,7 +611,7 @@ App::patch('/v1/projects/:projectId/oauth2')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/limit')
+Http::patch('/v1/projects/:projectId/auth/limit')
     ->desc('Update project users limit')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -626,7 +642,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/duration')
+Http::patch('/v1/projects/:projectId/auth/duration')
     ->desc('Update project authentication duration')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -657,7 +673,7 @@ App::patch('/v1/projects/:projectId/auth/duration')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/:method')
+Http::patch('/v1/projects/:projectId/auth/:method')
     ->desc('Update project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -675,8 +691,8 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->action(function (string $projectId, string $method, bool $status, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
-        $auth = Config::getParam('auth')[$method] ?? [];
-        $authKey = $auth['key'] ?? '';
+        $authConfig = Config::getParam('auth')[$method] ?? [];
+        $authKey = $authConfig['key'] ?? '';
         $status = ($status === '1' || $status === 'true' || $status === 1 || $status === true);
 
         if ($project->isEmpty()) {
@@ -691,7 +707,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/password-history')
+Http::patch('/v1/projects/:projectId/auth/password-history')
     ->desc('Update authentication password history. Use this endpoint to set the number of password history to save and 0 to disable password history.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -722,7 +738,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/password-dictionary')
+Http::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->desc('Update authentication password dictionary status. Use this endpoint to enable or disable the dicitonary check for user password')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -753,7 +769,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/personal-data')
+Http::patch('/v1/projects/:projectId/auth/personal-data')
     ->desc('Enable or disable checking user passwords for similarity with their personal data.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -784,7 +800,7 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/max-sessions')
+Http::patch('/v1/projects/:projectId/auth/max-sessions')
     ->desc('Update project user sessions limit')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -815,7 +831,7 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::delete('/v1/projects/:projectId')
+Http::delete('/v1/projects/:projectId')
     ->desc('Delete project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -849,7 +865,7 @@ App::delete('/v1/projects/:projectId')
 
 // Webhooks
 
-App::post('/v1/projects/:projectId/webhooks')
+Http::post('/v1/projects/:projectId/webhooks')
     ->desc('Create webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -907,7 +923,7 @@ App::post('/v1/projects/:projectId/webhooks')
             ->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::get('/v1/projects/:projectId/webhooks')
+Http::get('/v1/projects/:projectId/webhooks')
     ->desc('List webhooks')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -939,7 +955,7 @@ App::get('/v1/projects/:projectId/webhooks')
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
-App::get('/v1/projects/:projectId/webhooks/:webhookId')
+Http::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Get webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -973,7 +989,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::put('/v1/projects/:projectId/webhooks/:webhookId')
+Http::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Update webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1032,7 +1048,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
+Http::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
     ->desc('Update webhook signature key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1071,7 +1087,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::delete('/v1/projects/:projectId/webhooks/:webhookId')
+Http::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Delete webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1110,7 +1126,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 
 // Keys
 
-App::post('/v1/projects/:projectId/keys')
+Http::post('/v1/projects/:projectId/keys')
     ->desc('Create key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1160,7 +1176,7 @@ App::post('/v1/projects/:projectId/keys')
             ->dynamic($key, Response::MODEL_KEY);
     });
 
-App::get('/v1/projects/:projectId/keys')
+Http::get('/v1/projects/:projectId/keys')
     ->desc('List keys')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1192,7 +1208,7 @@ App::get('/v1/projects/:projectId/keys')
         ]), Response::MODEL_KEY_LIST);
     });
 
-App::get('/v1/projects/:projectId/keys/:keyId')
+Http::get('/v1/projects/:projectId/keys/:keyId')
     ->desc('Get key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1226,7 +1242,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
-App::put('/v1/projects/:projectId/keys/:keyId')
+Http::put('/v1/projects/:projectId/keys/:keyId')
     ->desc('Update key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1272,7 +1288,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
-App::delete('/v1/projects/:projectId/keys/:keyId')
+Http::delete('/v1/projects/:projectId/keys/:keyId')
     ->desc('Delete key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1311,7 +1327,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
 // Platforms
 
-App::post('/v1/projects/:projectId/platforms')
+Http::post('/v1/projects/:projectId/platforms')
     ->desc('Create platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1361,7 +1377,7 @@ App::post('/v1/projects/:projectId/platforms')
             ->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::get('/v1/projects/:projectId/platforms')
+Http::get('/v1/projects/:projectId/platforms')
     ->desc('List platforms')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1393,7 +1409,7 @@ App::get('/v1/projects/:projectId/platforms')
         ]), Response::MODEL_PLATFORM_LIST);
     });
 
-App::get('/v1/projects/:projectId/platforms/:platformId')
+Http::get('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Get platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1427,7 +1443,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::put('/v1/projects/:projectId/platforms/:platformId')
+Http::put('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Update platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1474,7 +1490,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::delete('/v1/projects/:projectId/platforms/:platformId')
+Http::delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1513,7 +1529,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
 
 // CUSTOM SMTP and Templates
-App::patch('/v1/projects/:projectId/smtp')
+Http::patch('/v1/projects/:projectId/smtp')
     ->desc('Update SMTP')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1603,7 +1619,7 @@ App::patch('/v1/projects/:projectId/smtp')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::post('/v1/projects/:projectId/smtp/tests')
+Http::post('/v1/projects/:projectId/smtp/tests')
     ->desc('Create SMTP test')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1662,7 +1678,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
         return $response->noContent();
     });
 
-App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
+Http::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Get custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1703,7 +1719,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     });
 
 
-App::get('/v1/projects/:projectId/templates/email/:type/:locale')
+Http::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Get custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1735,7 +1751,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
             $message
                 ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
                 ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
-                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'), escapeHtml: false)
+                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'), escape: false)
                 ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
                 ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
                 ->setParam('{{direction}}', $localeObj->getText('settings.direction'));
@@ -1755,7 +1771,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         $response->dynamic(new Document($template), Response::MODEL_EMAIL_TEMPLATE);
     });
 
-App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
+Http::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Update custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1795,7 +1811,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
         ]), Response::MODEL_SMS_TEMPLATE);
     });
 
-App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
+Http::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Update custom email templates')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1845,7 +1861,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
         ]), Response::MODEL_EMAIL_TEMPLATE);
     });
 
-App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
+Http::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Reset custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1888,7 +1904,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
         ]), Response::MODEL_SMS_TEMPLATE);
     });
 
-App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
+Http::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Reset custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')

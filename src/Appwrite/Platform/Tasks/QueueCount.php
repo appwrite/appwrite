@@ -4,10 +4,10 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Event;
 use Utopia\CLI\Console;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Platform\Action;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
-use Utopia\Validator\WhiteList;
 
 class QueueCount extends Action
 {

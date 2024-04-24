@@ -11,7 +11,6 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
 use Exception;
 use Throwable;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -22,6 +21,7 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -338,7 +338,7 @@ class Certificates extends Action
         $stdout = '';
         $stderr = '';
 
-        $staging = (App::isProduction()) ? '' : ' --dry-run';
+        $staging = (Http::isProduction()) ? '' : ' --dry-run';
         $exit = Console::execute("certbot certonly -v --webroot --noninteractive --agree-tos{$staging}"
             . " --email " . $email
             . " --cert-name " . $folder
@@ -453,7 +453,7 @@ class Certificates extends Action
 
         $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl');
         $message
-            ->setParam('{{body}}', $locale->getText("emails.certificate.body"), escapeHtml: false)
+            ->setParam('{{body}}', $locale->getText("emails.certificate.body"), escape: false)
             ->setParam('{{hello}}', $locale->getText("emails.certificate.hello"))
             ->setParam('{{footer}}', $locale->getText("emails.certificate.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.certificate.thanks"))

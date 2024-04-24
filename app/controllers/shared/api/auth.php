@@ -4,13 +4,14 @@ use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
-use Utopia\App;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\System\System;
 
-App::init()
+Http::init()
     ->groups(['mfaProtected'])
     ->inject('session')
     ->action(function (Document $session) {
@@ -29,13 +30,14 @@ App::init()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['auth'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('project')
     ->inject('geodb')
-    ->action(function (App $utopia, Request $request, Document $project, Reader $geodb) {
+    ->inject('authorization')
+    ->action(function (Route $route, Request $request, Document $project, Reader $geodb, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {
             $countries = explode(',', $denylist);
@@ -46,10 +48,8 @@ App::init()
             }
         }
 
-        $route = $utopia->match($request);
-
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
+        $isAppUser = Auth::isAppUser($authorization->getRoles());
 
         if ($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
             return;

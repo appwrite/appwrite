@@ -1,6 +1,7 @@
 <?php
 
-require_once __DIR__ . '/init.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/init2.php';
 
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
@@ -16,11 +17,15 @@ use Appwrite\Event\Migration;
 use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Utopia\Queue\Connections;
 use Swoole\Runtime;
+use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -30,29 +35,47 @@ use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
+use Utopia\Queue\Connection\Redis;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 
-Authorization::disable();
+global $gloabl;
+
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-Server::setResource('register', fn () => $register);
+Server::setResource('register', fn () => $gloabl);
 
-Server::setResource('dbForConsole', function (Cache $cache, Registry $register) {
-    $pools = $register->get('pools');
-    $database = $pools
-        ->get('console')
-        ->pop()
-        ->getResource();
+Server::setResource('connections', function () {
+    return new Connections();
+});
 
-    $adapter = new Database($database, $cache);
-    $adapter->setNamespace('_console');
+Server::setResource('pools', function () use ($gloabl) {
+    return $gloabl->get('pools');
+});
 
-    return $adapter;
-}, ['cache', 'register']);
+Server::setResource('dbForConsole', function (Cache $cache, array $pools, Authorization $auth, Connections $connections) {
+    $pool = $pools['pools-console-main']['pool'];
+    $dsn = $pools['pools-console-main']['dsn'];
+    $connection = $pool->get();
+    $connections->add($connection, $pool);
+
+    $adapter = match ($dsn->getScheme()) {
+        'mariadb' => new MariaDB($connection),
+        'mysql' => new MySQL($connection),
+        default => null
+    };
+
+    $adapter->setDatabase($dsn->getPath());
+
+    $database = new Database($adapter, $cache);
+    $database->setAuthorization($auth);
+    $database->setNamespace('_console');
+
+    return $database;
+}, ['cache', 'pools', 'auth', 'connections']);
 
 Server::setResource('project', function (Message $message, Database $dbForConsole) {
     $payload = $message->getPayload() ?? [];
@@ -65,26 +88,36 @@ Server::setResource('project', function (Message $message, Database $dbForConsol
     return $dbForConsole->getDocument('projects', $project->getId());
 }, ['message', 'dbForConsole']);
 
-Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForConsole) {
+Server::setResource('dbForProject', function (Cache $cache, array $pools, Message $message, Document $project, Database $dbForConsole, Authorization $auth, Connections $connections) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
     }
 
-    $pools = $register->get('pools');
-    $database = $pools
-        ->get($project->getAttribute('database'))
-        ->pop()
-        ->getResource();
+    $pool = $pools['pools-database-'.$project->getAttribute('database')]['pool'];
+    $dsn = $pools['pools-database-'.$project->getAttribute('database')]['dsn'];
 
-    $adapter = new Database($database, $cache);
-    $adapter->setNamespace('_' . $project->getInternalId());
-    return $adapter;
-}, ['cache', 'register', 'message', 'project', 'dbForConsole']);
+    $connection = $pool->get();
+    $connections->add($connection, $pool);
+    $adapter = match ($dsn->getScheme()) {
+        'mariadb' => new MariaDB($connection),
+        'mysql' => new MySQL($connection),
+        default => null
+    };
 
-Server::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+    $adapter->setDatabase($dsn->getPath());
+    
+    $database = new Database($adapter, $cache);
+
+    $database = new Database($adapter, $cache);
+    $database->setAuthorization($auth);
+    $database->setNamespace('_' . $project->getInternalId());
+    return $database;
+}, ['cache', 'pools', 'message', 'project', 'dbForConsole', 'auth', 'connections']);
+
+Server::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache, Authorization $auth, Connections $connections) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases): Database {
+    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $auth, $connections): Database {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -97,12 +130,12 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
             return $database;
         }
 
-        $dbAdapter = $pools
-            ->get($databaseName)
-            ->pop()
-            ->getResource();
+        $connection = $pools->get($databaseName)->pop();
+        $connections->add($connection);
+        $dbAdapter = $connection->getResource();
 
         $database = new Database($dbAdapter, $cache);
+        $database->setAuthorization($auth);
 
         $databases[$databaseName] = $database;
 
@@ -110,7 +143,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
         return $database;
     };
-}, ['pools', 'dbForConsole', 'cache']);
+}, ['pools', 'dbForConsole', 'cache', 'auth', 'connections']);
 
 Server::setResource('abuseRetention', function () {
     return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
@@ -124,21 +157,9 @@ Server::setResource('executionRetention', function () {
     return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
 });
 
-Server::setResource('cache', function (Registry $register) {
-    $pools = $register->get('pools');
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
-
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource()
-        ;
-    }
-
-    return new Cache(new Sharding($adapters));
-}, ['register']);
+Server::setResource('cache', function () {
+    return new Cache(new None());
+}, []);
 
 Server::setResource('log', fn () => new Log());
 
@@ -150,9 +171,14 @@ Server::setResource('queueForUsageDump', function (Connection $queue) {
     return new UsageDump($queue);
 }, ['queue']);
 
-Server::setResource('queue', function (Group $pools) {
-    return $pools->get('queue')->pop()->getResource();
-}, ['pools']);
+Server::setResource('queue', function (array $pools, Connections $connections) {
+    $pool = $pools['pools-queue-main']['pool'];
+    $dsn = $pools['pools-queue-main']['dsn'];
+    $connection = $pool->get();
+    $connections->add($connection, $pool);
+
+    return new Redis($dsn->getHost(), $dsn->getPort());
+}, ['pools', 'connections']);
 
 Server::setResource('queueForDatabase', function (Connection $queue) {
     return new EventDatabase($queue);
@@ -226,7 +252,8 @@ Server::setResource('deviceForLocalFiles', function (Document $project) {
     return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
-$pools = $register->get('pools');
+Server::setResource('auth', fn () => new Authorization());
+
 $platform = new Appwrite();
 $args = $_SERVER['argv'];
 
@@ -258,7 +285,7 @@ try {
      */
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => System::getEnv('_APP_WORKERS_NUM', 1),
-        'connection' => $pools->get('queue')->pop()->getResource(),
+        'connection' => $global->get('pools')['pools-queue-main']['pool']->get(),
         'workerName' => strtolower($workerName) ?? null,
         'queueName' => $queueName
     ]);
@@ -269,10 +296,17 @@ try {
 $worker = $platform->getWorker();
 
 $worker
+    ->init()
+    ->inject('auth')
+    ->action(function (Authorization $auth) {
+        $auth->disable();
+    });
+
+$worker
     ->shutdown()
-    ->inject('pools')
-    ->action(function (Group $pools) {
-        $pools->reclaim();
+    ->inject('connections')
+    ->action(function (Connections $connections) {
+        $connections->reclaim();
     });
 
 $worker
@@ -280,10 +314,11 @@ $worker
     ->inject('error')
     ->inject('logger')
     ->inject('log')
-    ->inject('pools')
+    ->inject('connections')
     ->inject('project')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($queueName) {
-        $pools->reclaim();
+    ->inject('auth')
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Connections $connections, Document $project, Authorization $auth) use ($queueName) {
+        $connections->reclaim();
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
@@ -304,7 +339,7 @@ $worker
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
             $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', Authorization::getRoles());
+            $log->addExtra('roles', $auth->getRoles());
 
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);

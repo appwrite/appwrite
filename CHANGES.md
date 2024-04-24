@@ -384,7 +384,7 @@
 * Bump console to version 3.2.7 [#7148](https://github.com/appwrite/appwrite/pull/7148)
 * Chore update database to 0.45.2 [#7138](https://github.com/appwrite/appwrite/pull/7138)
 * Implement queue thresholds for the health API [#7123](https://github.com/appwrite/appwrite/pull/7123)
-* Add Authorization::skip to the usage worker [#7124](https://github.com/appwrite/appwrite/pull/7124)
+* Add $auth->skip to the usage worker [#7124](https://github.com/appwrite/appwrite/pull/7124)
 
 ## Bug fixes
 * fix: use queueForDeletes in git installation delete endpoint [#7140](https://github.com/appwrite/appwrite/pull/7140)
