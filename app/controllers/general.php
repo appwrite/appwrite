@@ -167,7 +167,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $permissions = $function->getAttribute('execute');
 
-        if (!(\in_array('any', $permissions)) && (\in_array('guests', $permissions))) {
+        if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
             throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED, 'To execute function using domain, execute permissions must include "any" or "guests"');
         }
 
@@ -366,6 +366,18 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     $utopia->getRoute()?->label('error', '');
     return false;
 }
+
+/*
+App::init()
+    ->groups(['api'])
+    ->inject('project')
+    ->inject('mode')
+    ->action(function (Document $project, string $mode) {
+        if ($mode === APP_MODE_ADMIN && $project->getId() === 'console') {
+            throw new AppwriteException(AppwriteException::GENERAL_BAD_REQUEST, 'Admin mode is not allowed for console project');
+        }
+    });
+*/
 
 App::init()
     ->groups(['api', 'web'])
@@ -630,7 +642,7 @@ App::init()
             : Role::users()->toString();
 
         // Add user roles
-        $memberships = $user->find('teamId', $project->getAttribute('teamId'), 'memberships');
+        $memberships = $user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships');
 
         if ($memberships) {
             foreach ($memberships->getAttribute('roles', []) as $memberRole) {
@@ -820,31 +832,24 @@ App::error()
                 }
                 break;
             case 'Utopia\Database\Exception\Conflict':
-                \var_dump('Wrapping conflict exception');
                 $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
                 break;
             case 'Utopia\Database\Exception\Timeout':
-                \var_dump('Wrapping timeout exception');
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
                 break;
             case 'Utopia\Database\Exception\Query':
-                \var_dump('Wrapping query exception');
                 $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, $error->getMessage(), previous: $error);
                 break;
             case 'Utopia\Database\Exception\Structure':
-                \var_dump('Wrapping structure exception');
                 $error = new AppwriteException(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $error->getMessage(), previous: $error);
                 break;
             case 'Utopia\Database\Exception\Duplicate':
-                \var_dump('Wrapping duplicate exception');
                 $error = new AppwriteException(AppwriteException::DOCUMENT_ALREADY_EXISTS);
                 break;
             case 'Utopia\Database\Exception\Restricted':
-                \var_dump('Wrapping restricted exception');
                 $error = new AppwriteException(AppwriteException::DOCUMENT_DELETE_RESTRICTED);
                 break;
             case 'Utopia\Database\Exception\Authorization':
-                \var_dump('Wrapping authorization exception');
                 $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
                 break;
         }
@@ -858,6 +863,7 @@ App::error()
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
 
+        /*
         if ($error->getCode() >= 400 && $error->getCode() < 500) {
             // Register error logger
             $providerName = App::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
@@ -874,6 +880,7 @@ App::error()
                 $publish = true;
             }
         }
+        */
 
         if ($logger && $publish) {
             try {
