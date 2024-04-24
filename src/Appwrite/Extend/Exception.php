@@ -63,6 +63,7 @@ class Exception extends \Exception
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
+    public const USER_CONSOLE_COUNT_EXCEEDED       = 'user_console_count_exceeded';
     public const USER_JWT_INVALID                  = 'user_jwt_invalid';
     public const USER_ALREADY_EXISTS               = 'user_already_exists';
     public const USER_BLOCKED                      = 'user_blocked';
