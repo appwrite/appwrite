@@ -13,6 +13,7 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
+use Utopia\System\System;
 
 class GetMigrationStats extends Action
 {
@@ -164,8 +165,8 @@ class GetMigrationStats extends Action
 
         try {
             /** Addresses */
-            $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
-            $recipients = explode(',', App::getEnv('_APP_USERS_STATS_RECIPIENTS', ''));
+            $mail->setFrom(System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
+            $recipients = explode(',', System::getEnv('_APP_USERS_STATS_RECIPIENTS', ''));
 
             foreach ($recipients as $recipient) {
                 $mail->addAddress($recipient);

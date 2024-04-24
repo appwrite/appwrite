@@ -26,6 +26,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
@@ -288,7 +289,7 @@ App::init()
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
         if (!in_array('mfa', $route->getGroups())) {
-            if ($session && \count($session->getAttribute('factors')) < $minimumFactors) {
+            if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
         }
@@ -368,11 +369,10 @@ App::init()
                 $response
                     ->addHeader('X-RateLimit-Limit', $limit)
                     ->addHeader('X-RateLimit-Remaining', $remaining)
-                    ->addHeader('X-RateLimit-Reset', $time)
-                ;
+                    ->addHeader('X-RateLimit-Reset', $time);
             }
 
-            $enabled = App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+            $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
 
             if (
                 $enabled                // Abuse is enabled
@@ -407,8 +407,7 @@ App::init()
 
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
-        ;
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject));
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
@@ -461,8 +460,7 @@ App::init()
                     ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'))
-                    ->send($data)
-                ;
+                    ->send($data);
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
             }
@@ -737,7 +735,7 @@ App::shutdown()
 App::init()
     ->groups(['usage'])
     ->action(function () {
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
+        if (System::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
             throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
     });

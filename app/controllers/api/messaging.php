@@ -37,6 +37,7 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
@@ -2123,8 +2124,6 @@ App::get('/v1/messaging/topics/:topicId')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        $topic = $dbForProject->getDocument('topics', $topicId);
-
         $response
             ->dynamic($topic, Response::MODEL_TOPIC);
     });
@@ -2692,7 +2691,7 @@ App::post('/v1/messaging/messages/email')
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
-                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
@@ -2808,7 +2807,7 @@ App::post('/v1/messaging/messages/sms')
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
-                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
@@ -2930,8 +2929,8 @@ App::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $host = App::getEnv('_APP_DOMAIN', 'localhost');
-            $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $host = System::getEnv('_APP_DOMAIN', 'localhost');
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
 
             $scheduleTime = $currentScheduledAt ?? $scheduledAt;
             if (!\is_null($scheduleTime)) {
@@ -2940,7 +2939,7 @@ App::post('/v1/messaging/messages/push')
                 $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $encoder = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'));
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'));
 
             $jwt = $encoder->encode([
                 'iat' => \time(),
@@ -2986,7 +2985,7 @@ App::post('/v1/messaging/messages/push')
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
-                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
@@ -3330,7 +3329,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForConsole->createDocument('schedules', new Document([
-                'region' => App::getEnv('_APP_REGION', 'default'),
+                'region' => System::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getInternalId(),
@@ -3525,7 +3524,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForConsole->createDocument('schedules', new Document([
-                'region' => App::getEnv('_APP_REGION', 'default'),
+                'region' => System::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getInternalId(),
@@ -3689,7 +3688,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForConsole->createDocument('schedules', new Document([
-                'region' => App::getEnv('_APP_REGION', 'default'),
+                'region' => System::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getInternalId(),
@@ -3792,8 +3791,8 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $host = App::getEnv('_APP_DOMAIN', 'localhost');
-            $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $host = System::getEnv('_APP_DOMAIN', 'localhost');
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
 
             $scheduleTime = $currentScheduledAt ?? $scheduledAt;
             if (!\is_null($scheduleTime)) {
@@ -3802,7 +3801,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $encoder = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'));
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'));
 
             $jwt = $encoder->encode([
                 'iat' => \time(),

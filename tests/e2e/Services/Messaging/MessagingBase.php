@@ -5,7 +5,6 @@ namespace Tests\E2E\Services\Messaging;
 use Appwrite\Messaging\Status as MessageStatus;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\App;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -13,6 +12,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
+use Utopia\System\System;
 
 trait MessagingBase
 {
@@ -1210,11 +1210,11 @@ trait MessagingBase
 
     public function testSendEmail()
     {
-        if (empty(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
+        if (empty(System::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
             $this->markTestSkipped('Email DSN not provided');
         }
 
-        $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
+        $emailDSN = new DSN(System::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
         $to = $emailDSN->getParam('to');
         $fromName = $emailDSN->getParam('fromName');
         $fromEmail = $emailDSN->getParam('fromEmail');
@@ -1370,11 +1370,11 @@ trait MessagingBase
 
     public function testSendSMS()
     {
-        if (empty(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
+        if (empty(System::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
             $this->markTestSkipped('SMS DSN not provided');
         }
 
-        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
+        $smsDSN = new DSN(System::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
         $to = $smsDSN->getParam('to');
         $senderId = $smsDSN->getUser();
         $authKey = $smsDSN->getPassword();
@@ -1534,11 +1534,11 @@ trait MessagingBase
 
     public function testSendPushNotification()
     {
-        if (empty(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
+        if (empty(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
             $this->markTestSkipped('Push DSN empty');
         }
 
-        $dsn = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
+        $dsn = new DSN(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
         $to = $dsn->getParam('to');
         $serviceAccountJSON = $dsn->getParam('serviceAccountJSON');
 

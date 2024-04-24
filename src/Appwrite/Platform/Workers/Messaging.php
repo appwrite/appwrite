@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\Usage;
 use Appwrite\Messaging\Status as MessageStatus;
 use Swoole\Runtime;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -37,6 +36,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
+use Utopia\System\System;
 
 use function Swoole\Coroutine\batch;
 
@@ -363,7 +363,7 @@ class Messaging extends Action
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Usage $queueForUsage, Log $log): void
     {
-        if (empty(App::getEnv('_APP_SMS_PROVIDER')) || empty(App::getEnv('_APP_SMS_FROM'))) {
+        if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
             throw new \Exception('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
         }
 
@@ -373,7 +373,7 @@ class Messaging extends Action
 
         Console::log('Project: ' . $project->getId());
 
-        $denyList = App::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
+        $denyList = System::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
         $denyList = explode(',', $denyList);
 
         if (\in_array($project->getId(), $denyList)) {
@@ -381,14 +381,14 @@ class Messaging extends Action
             return;
         }
 
-        $smsDSN = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
+        $smsDSN = new DSN(System::getEnv('_APP_SMS_PROVIDER'));
         $host = $smsDSN->getHost();
         $password = $smsDSN->getPassword();
         $user = $smsDSN->getUser();
 
         $log->addTag('type', $host);
 
-        $from = App::getEnv('_APP_SMS_FROM');
+        $from = System::getEnv('_APP_SMS_FROM');
 
         $provider = new Document([
             '$id' => ID::unique(),

@@ -15,6 +15,7 @@ use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
+use Utopia\System\System;
 use Utopia\Validator\Domain;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Multiple;
@@ -816,13 +817,13 @@ App::get('/v1/health/anti-virus')
             'version' => ''
         ];
 
-        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
+        if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
             $output['status'] = 'disabled';
             $output['version'] = '';
         } else {
             $antivirus = new Network(
-                App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
+                System::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
             );
 
             try {
