@@ -2,16 +2,16 @@
 
 namespace Appwrite\Migration;
 
+use Exception;
 use Swoole\Runtime;
-use Utopia\Database\Document;
-use Utopia\Database\Database;
-use Utopia\Database\Query;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Exception;
-use Utopia\App;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
@@ -78,7 +78,11 @@ abstract class Migration
         '1.4.11' => 'V19',
         '1.4.12' => 'V19',
         '1.4.13' => 'V19',
-        '1.4.14' => 'V20'
+        '1.5.0'  => 'V20',
+        '1.5.1'  => 'V20',
+        '1.5.2'  => 'V20',
+        '1.5.3'  => 'V20',
+        '1.5.4'  => 'V20',
     ];
 
     /**
@@ -248,7 +252,7 @@ abstract class Migration
             default => 'projects',
         };
 
-        if (!$this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
+        if (!$this->projectDB->exists(System::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
             $attributes = [];
             $indexes = [];
             $collection = $this->collections[$collectionType][$id];
@@ -397,11 +401,11 @@ abstract class Migration
      */
     protected function changeAttributeInternalType(string $collection, string $attribute, string $type): void
     {
-        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
+        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
 
         try {
             $stmt->execute();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::warning($e->getMessage());
         }
     }

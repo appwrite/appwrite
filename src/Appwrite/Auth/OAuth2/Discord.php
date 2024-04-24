@@ -28,8 +28,8 @@ class Discord extends OAuth2
      * @var array
      */
     protected array $scopes = [
-            'identify',
-            'email'
+        'identify',
+        'email'
     ];
 
     /**

@@ -4,7 +4,6 @@ namespace Tests\Unit\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
 use Appwrite\Utopia\Request\Filters\V16;
-use Appwrite\Utopia\Response\Model;
 use PHPUnit\Framework\TestCase;
 
 class V16Test extends TestCase

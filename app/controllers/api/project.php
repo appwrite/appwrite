@@ -3,22 +3,21 @@
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 App::get('/v1/project/usage')
-    ->desc('Get usage stats for a project')
+    ->desc('Get project usage stats')
     ->groups(['api', 'usage'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -39,21 +38,21 @@ App::get('/v1/project/usage')
         $lastDay = (new DateTime($endDate))->format($format);
 
         $metrics = [
-           'total' => [
+            'total' => [
                 METRIC_EXECUTIONS,
                 METRIC_DOCUMENTS,
                 METRIC_DATABASES,
                 METRIC_USERS,
                 METRIC_BUCKETS,
                 METRIC_FILES_STORAGE
-           ],
-           'period' => [
+            ],
+            'period' => [
                 METRIC_NETWORK_REQUESTS,
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
                 METRIC_USERS,
                 METRIC_EXECUTIONS
-             ]
+            ]
         ];
 
         $factor = match ($period) {
@@ -144,9 +143,30 @@ App::get('/v1/project/usage')
             ];
         }, $dbForProject->find('buckets'));
 
+        // merge network inbound + outbound
+        $projectBandwidth = [];
+        foreach ($usage[METRIC_NETWORK_INBOUND] as $item) {
+            $projectBandwidth[$item['date']] ??= 0;
+            $projectBandwidth[$item['date']] += $item['value'];
+        }
+
+        foreach ($usage[METRIC_NETWORK_OUTBOUND] as $item) {
+            $projectBandwidth[$item['date']] ??= 0;
+            $projectBandwidth[$item['date']] += $item['value'];
+        }
+
+
+        $network = [];
+        foreach ($projectBandwidth as $date => $value) {
+            $network[] = [
+                'date' => $date,
+                'value' => $value
+            ];
+        }
+
         $response->dynamic(new Document([
             'requests' => ($usage[METRIC_NETWORK_REQUESTS]),
-            'network' => ($usage[METRIC_NETWORK_INBOUND] + $usage[METRIC_NETWORK_OUTBOUND]),
+            'network' => $network,
             'users' => ($usage[METRIC_USERS]),
             'executions' => ($usage[METRIC_EXECUTIONS]),
             'executionsTotal' => $total[METRIC_EXECUTIONS],

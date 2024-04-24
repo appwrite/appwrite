@@ -338,6 +338,14 @@ class Mail extends Event
         return $this;
     }
 
+    /**
+     * Set attachment
+     * @param string $content
+     * @param string $filename
+     * @param string $encoding
+     * @param string $type
+     * @return self
+     */
     public function setAttachment(string $content, string $filename, string $encoding = 'base64', string $type = 'plain/text')
     {
         $this->attachment = [
@@ -349,9 +357,43 @@ class Mail extends Event
         return $this;
     }
 
+    /**
+     * Get attachment
+     *
+     * @return array
+     */
     public function getAttachment(): array
     {
         return $this->attachment;
+    }
+
+    /**
+     * Reset attachment
+     *
+     * @return self
+     */
+    public function resetAttachment(): self
+    {
+        $this->attachment = [];
+        return $this;
+    }
+
+    /**
+     * Reset
+     *
+     * @return self
+     */
+    public function reset(): self
+    {
+        $this->project = null;
+        $this->recipient = '';
+        $this->name = '';
+        $this->subject = '';
+        $this->body = '';
+        $this->variables = [];
+        $this->bodyTemplate = '';
+        $this->attachment = [];
+        return $this;
     }
 
     /**
@@ -365,6 +407,7 @@ class Mail extends Event
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
+            'project' => $this->project,
             'recipient' => $this->recipient,
             'name' => $this->name,
             'subject' => $this->subject,
