@@ -281,7 +281,7 @@ App::init()
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
-        if ($mode !== APP_MODE_ADMIN && !Auth::isPrivilegedUser(Authorization::getRoles())) {
+        if ($mode !== APP_MODE_ADMIN) {
             $mfaEnabled = $user->getAttribute('mfa', false);
             $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
             $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
