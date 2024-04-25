@@ -63,7 +63,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '12.0.1',
+                'version' => '12.0.3',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
