@@ -22,7 +22,6 @@ use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
 use Appwrite\Spec\Swagger2;
-use Exception;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Platform\Action;
