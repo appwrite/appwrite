@@ -2,7 +2,15 @@
 ## What's Changed
 ### Fixes
 
-* Fix function build command by @abnegate in https://github.com/appwrite/appwrite/pull/7813
+* Fix function build command in [#7813](https://github.com/appwrite/appwrite/pull/7813)
+* Bump executor version to fix docker conflict error in [#7804](https://github.com/appwrite/appwrite/pull/7804)
+* Fix webhooks failed connection in [#7848](https://github.com/appwrite/appwrite/pull/7848)
+* Fix msg91 params in [#7824](https://github.com/appwrite/appwrite/pull/7824)
+* Fix functions domain permissions in [#7853](https://github.com/appwrite/appwrite/pull/7853)
+
+### Miscellaneous
+
+* Bump console to version 4.0.5 in [#7863](https://github.com/appwrite/appwrite/pull/7863)
 
 # Version 1.5.3
 ## What's Changed

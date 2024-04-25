@@ -157,7 +157,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $permissions = $function->getAttribute('execute');
 
-        if (!(\in_array('any', $permissions)) && (\in_array('guests', $permissions))) {
+        if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
             throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED, 'To execute function using domain, execute permissions must include "any" or "guests"');
         }
 

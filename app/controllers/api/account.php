@@ -215,6 +215,9 @@ App::post('/v1/account')
             $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
             if ($total >= $limit) {
+                if ('console' === $project->getId()) {
+                    throw new Exception(Exception::USER_CONSOLE_COUNT_EXCEEDED);
+                }
                 throw new Exception(Exception::USER_COUNT_EXCEEDED);
             }
         }
@@ -3522,12 +3525,16 @@ App::get('/v1/account/mfa/factors')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
 
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+        $recoveryCodeEnabled = \is_array($mfaRecoveryCodes) && \count($mfaRecoveryCodes) > 0;
+
         $totp = TOTP::getAuthenticatorFromUser($user);
 
         $factors = new Document([
             Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
             Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
-            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
+            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false),
+            Type::RECOVERY_CODE => $recoveryCodeEnabled
         ]);
 
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
@@ -3795,7 +3802,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
     ->label('sdk.description', '/docs/references/account/delete-mfa-authenticator.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('response')
@@ -3822,6 +3829,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
             $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
             if (in_array($otp, $mfaRecoveryCodes)) {
                 $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
+                $mfaRecoveryCodes = array_values($mfaRecoveryCodes);
                 $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
                 $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -4065,11 +4073,12 @@ App::put('/v1/account/mfa/challenge')
         $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {
             if (
                 $challenge->isSet('type') &&
-                $challenge->getAttribute('type') === Type::RECOVERY_CODE
+                $challenge->getAttribute('type') === \strtolower(Type::RECOVERY_CODE)
             ) {
                 $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
                 if (in_array($otp, $mfaRecoveryCodes)) {
                     $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
+                    $mfaRecoveryCodes = array_values($mfaRecoveryCodes);
                     $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
                     $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -4086,7 +4095,7 @@ App::put('/v1/account/mfa/challenge')
             Type::TOTP => Challenge\TOTP::challenge($challenge, $user, $otp),
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
-            Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
+            \strtolower(Type::RECOVERY_CODE) => $recoveryCodeChallenge($challenge, $user, $otp),
             default => false
         });
 
