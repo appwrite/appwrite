@@ -1,3 +1,7 @@
+## 12.0.2
+
+* Fixed realtime multiple subscription issues
+
 ## 12.0.1
 
 * Fixed parameters using enum types
