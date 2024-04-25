@@ -1,3 +1,45 @@
+# Version 1.5.5
+## What's Changed
+### Notable changes
+
+* Change SMS verification message to only have the code in [#7912](https://github.com/appwrite/appwrite/pull/7912)
+* Add new country `Taiwan` with its translations in [#7873](https://github.com/appwrite/appwrite/pull/7873)
+* Add Hong Kong (HK) to countries list in [#7962](https://github.com/appwrite/appwrite/pull/7962)
+* Add French Polynesia flag to flags.php in [#8007](https://github.com/appwrite/appwrite/pull/8007)
+* Enable auto upgrade for mariadb container in [#8020](https://github.com/appwrite/appwrite/pull/8020)
+
+## Fixes
+
+* Use team internal ID for checks and queries for membership in [#7836](https://github.com/appwrite/appwrite/pull/7836)
+* Use internal IDs for queries and checks in [#7839](https://github.com/appwrite/appwrite/pull/7839)
+* Remove redundant commas in [#7764](https://github.com/appwrite/appwrite/pull/7764)
+* Remove a redundant call to fetch the topic document again in [#7894](https://github.com/appwrite/appwrite/pull/7894)
+* Fix wrong refresh var for Autodesk in [#7897](https://github.com/appwrite/appwrite/pull/7897)
+* Fix email attachment example in [#7681](https://github.com/appwrite/appwrite/pull/7681)
+* Add missing chunkId param to create file abuse key in [#7913](https://github.com/appwrite/appwrite/pull/7913)
+* Fix delete message event not firing in [#7906](https://github.com/appwrite/appwrite/pull/7906)
+* Fix worker crash when using custom SMTP provider in [#7915](https://github.com/appwrite/appwrite/pull/7915)
+* Update email attachments param in [#7885](https://github.com/appwrite/appwrite/pull/7885)
+* Fix MFA protected group in [#7947](https://github.com/appwrite/appwrite/pull/7947)
+* Fix recovery code removal in [#7950](https://github.com/appwrite/appwrite/pull/7950)
+* Add recovery code to List factors in [#7949](https://github.com/appwrite/appwrite/pull/7949)
+* Fix challenge type check in [#7981](https://github.com/appwrite/appwrite/pull/7981)
+* Fix MFA links in specs in [#7966](https://github.com/appwrite/appwrite/pull/7966)
+* Add missing 'apis' attribute to projects collection in [#7997](https://github.com/appwrite/appwrite/pull/7997)
+* Update user create error message for console to be console specific in [#7996](https://github.com/appwrite/appwrite/pull/7996)
+* Add DB environment variables to appwrite-worker-mails in [#8002](https://github.com/appwrite/appwrite/pull/8002)
+* Delete related attributes on delete collection  in [#7985](https://github.com/appwrite/appwrite/pull/7985)
+* Fix server errors from invalid or outdated cookies in [#8008](https://github.com/appwrite/appwrite/pull/8008)
+* Fix delete MFA authenticator response model in [#8005](https://github.com/appwrite/appwrite/pull/8005)
+* Fix MFA with admin mode in [#7984](https://github.com/appwrite/appwrite/pull/7984)
+
+## Miscellaneous
+
+* Update getEnv to use system lib in [#7895](https://github.com/appwrite/appwrite/pull/7895)
+* Update SDK and docs links in readme in [#7978](https://github.com/appwrite/appwrite/pull/7978)
+* Update README.md in [#6358](https://github.com/appwrite/appwrite/pull/6358)
+* Bump console to version 4.0.6 in [#8017](https://github.com/appwrite/appwrite/pull/8017)
+
 # Version 1.5.4
 ## What's Changed
 ### Fixes
