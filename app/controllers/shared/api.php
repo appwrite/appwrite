@@ -702,7 +702,7 @@ App::shutdown()
 
 
         if ($project->getId() !== 'console') {
-            if ($mode !== APP_MODE_ADMIN) {
+            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {
