@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "Kattintson az alábbi gombra, hogy biztonságosan bejelentkezzen a {{project}} fiókjába. A link 1 óra múlva lejár.",
     "emails.magicSession.buttonText": "Jelentkezzen be a {{project}} szolgáltatásba.",
     "emails.magicSession.clientInfo": "Ezt a bejelentkezést a(z) {{agentClient}} használatával kérték az Ön {{agentDevice}} {{agentOs}} eszközén. Ha Ön nem kezdeményezte ezt a bejelentkezést, nyugodtan hagyja figyelmen kívül ezt az e-mailt.",
-    "sms.verification.body": "{{secret}} a(z) {{project}} megerősítő kódja.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "Az e-mailhez tartozó biztonsági kifejezés: {{phrase}}. Megbízhat ebben az e-mailben, ha ez a kifejezés megegyezik a bejelentkezéskor megjelenített kifejezéssel.",
     "emails.magicSession.optionUrl": "Amennyiben az előző gomb használatával nem tud bejelentkezni, kérjük látogassa meg a következő linket:",
     "emails.otpSession.subject": "{{project}} Bejelentkezés",

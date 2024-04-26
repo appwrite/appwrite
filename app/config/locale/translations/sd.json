@@ -248,5 +248,5 @@
     "emails.certificate.footer": "توهان جو اڳيون سرٽيفڪيٽ اولهو فئيلر جي ݙينهن کان ٣٠ ݙينهن لاءِ ماني ويندو. اسان ان جي چھان بني جي بھرپور خواهش ڪنداسين، نہ ته توهان جو ݙومين بغير ڪوري SSL ڪميونڪيشن آڻي ويندي.",
     "emails.certificate.thanks": "شُكريا",
     "emails.certificate.signature": "ٽيم",
-    "sms.verification.body": "{{secret}} توهان جي {{project}} تصديقي ڪوڊ آهي."
+    "sms.verification.body": "{{secret}}"
 }

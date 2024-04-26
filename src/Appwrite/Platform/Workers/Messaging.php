@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Usage;
 use Appwrite\Messaging\Status as MessageStatus;
+use Swoole\Runtime;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -80,6 +81,7 @@ class Messaging extends Action
         Device $deviceForLocalFiles,
         Usage $queueForUsage
     ): void {
+        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -409,7 +411,8 @@ class Messaging extends Action
                 ],
                 'msg91' => [
                     'senderId' => $user,
-                    'authKey' => $password
+                    'authKey' => $password,
+                    'templateId' => $smsDSN->getParam('templateId', $from),
                 ],
                 'vonage' => [
                     'apiKey' => $user,

@@ -13,7 +13,7 @@ val response = messaging.updateMsg91Provider(
     providerId = "<PROVIDER_ID>",
     name = "<NAME>", // optional
     enabled = false, // optional
+    templateId = "<TEMPLATE_ID>", // optional
     senderId = "<SENDER_ID>", // optional
-    authKey = "<AUTH_KEY>", // optional
-    from = "<FROM>" // optional
+    authKey = "<AUTH_KEY>" // optional
 )

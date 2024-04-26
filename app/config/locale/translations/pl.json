@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "Kliknij przycisk poniżej, aby bezpiecznie zalogować się na swoje konto {{project}}. Link wygaśnie po 1 godzinie.",
     "emails.magicSession.buttonText": "Zaloguj się do {{project}}",
     "emails.magicSession.clientInfo": "To logowanie zostało zażądane przy użyciu {{agentClient}} na {{agentDevice}} {{agentOs}}. Jeśli nie zażądałeś logowania, możesz zignorować tę wiadomość e-mail.",
-    "sms.verification.body": "{{secret}} jest twoim kodem weryfikacyjnym do {{project}}.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "Hasło bezpieczeństwa dla tego e-maila to {{phrase}}. Możesz ufać temu e-mailowi, jeśli hasło to jest zgodne z hasłem wyświetlonym podczas logowania.",
     "emails.magicSession.optionUrl": "Jeśli nie możesz się zalogować, używając powyższego przycisku, odwiedź następujący link:",
     "emails.otpSession.subject": "Login do {{project}}",

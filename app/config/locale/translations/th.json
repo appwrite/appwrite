@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "คลิกที่ปุ่มด้านล่างเพื่อเข้าสู่บัญชี {{project}} ของคุณอย่างปลอดภัย ลิงก์นี้จะหมดอายุใน 1 ชั่วโมง",
     "emails.magicSession.buttonText": "เข้าสู่ระบบใน {{project}}",
     "emails.magicSession.clientInfo": "การลงชื่อเข้าใช้นี้ถูกขอใช้งานผ่าน {{agentClient}} บน {{agentDevice}} {{agentOs}} หากคุณไม่ได้ขอลงชื่อเข้าใช้นี้ คุณสามารถละเลยอีเมลนี้ได้อย่างปลอดภัย",
-    "sms.verification.body": "{{secret}} เป็นรหัสการตรวจสอบ{{project}}ของคุณ.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "วลีรักษาความปลอดภัยสำหรับอีเมลนี้คือ {{phrase}} คุณสามารถเชื่อถืออีเมลนี้ได้หากวลีนี้ตรงกับวลีที่แสดงในระหว่างการเข้าสู่ระบบ",
     "emails.magicSession.optionUrl": "หากคุณไม่สามารถเข้าสู่ระบบโดยใช้ปุ่มด้านบน โปรดเยี่ยมชมลิงก์ต่อไปนี้:",
     "emails.otpSession.subject": "การเข้าสู่ระบบ {{project}}",
