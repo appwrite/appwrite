@@ -7,6 +7,8 @@ use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
+use Appwrite\Platform\Tasks\QueueCount;
+use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\ScheduleFunctions;
 use Appwrite\Platform\Tasks\ScheduleMessages;
 use Appwrite\Platform\Tasks\SDKs;
@@ -16,8 +18,6 @@ use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
 use Utopia\Platform\Service;
-use Appwrite\Platform\Tasks\QueueRetry;
-use Appwrite\Platform\Tasks\QueueCount;
 
 class Tasks extends Service
 {

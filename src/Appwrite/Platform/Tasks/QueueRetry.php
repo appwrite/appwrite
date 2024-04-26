@@ -2,14 +2,11 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Event;
 use Utopia\CLI\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
-use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
 use Utopia\Validator\Wildcard;
 
 class QueueRetry extends Action
