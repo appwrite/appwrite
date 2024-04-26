@@ -290,7 +290,7 @@ App::init()
             $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
             if (!in_array('mfa', $route->getGroups())) {
-                if ($session && \count($session->getAttribute('factors')) < $minimumFactors) {
+                if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
                     throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
                 }
             }
@@ -702,7 +702,7 @@ App::shutdown()
 
 
         if ($project->getId() !== 'console') {
-            if ($mode !== APP_MODE_ADMIN) {
+            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {

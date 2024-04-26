@@ -136,6 +136,11 @@ return [
         'description' => 'The current project has exceeded the maximum number of users. Please check your user limit in the Appwrite console.',
         'code' => 501,
     ],
+    Exception::USER_CONSOLE_COUNT_EXCEEDED => [
+        'name' => Exception::USER_CONSOLE_COUNT_EXCEEDED,
+        'description' => 'Sign up to the console is restricted. You can contact an administrator to update console sign up restrictions by setting _APP_CONSOLE_WHITELIST_ROOT to "disabled".',
+        'code' => 501,
+    ],
     Exception::USER_JWT_INVALID => [
         'name' => Exception::USER_JWT_INVALID,
         'description' => 'The JWT token is invalid. Please check the value of the X-Appwrite-JWT header to ensure the correct token is being used.',
