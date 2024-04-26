@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "Spustelėkite žemiau esantį mygtuką, kad saugiai prisijungtumėte prie savo {{project}} paskyros. Galiojimas baigsis po 1 valandos.",
     "emails.magicSession.buttonText": "Prisijunkite prie {{project}}",
     "emails.magicSession.clientInfo": "Šis prisijungimas buvo užklaustas naudojant {{agentClient}} {{agentDevice}} {{agentOs}}. Jei neprašėte prisijungimo, galite saugiai ignoruoti šį el. laišką.",
-    "sms.verification.body": "{{secret}} yra jūsų {{project}} patvirtinimo kodas.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "Šio el. laiško saugumo frazė yra {{phrase}}. Šiam el. laiškui galite pasitikėti, jei ši frazė atitinka prisijungimo metu rodytą frazę.",
     "emails.magicSession.optionUrl": "Jei negalite prisijungti naudodami aukščiau esantį mygtuką, apsilankykite šioje nuorodoje:",
     "emails.otpSession.subject": "{{project}} Prisijungimas",

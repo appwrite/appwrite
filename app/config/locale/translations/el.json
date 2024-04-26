@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "Κάντε κλικ στο κουμπί παρακάτω για να συνδεθείτε με ασφάλεια στον λογαριασμό σας στο {{project}}. Θα λήξει σε 1 ώρα.",
     "emails.magicSession.buttonText": "Συνδεθείτε στο {{project}}",
     "emails.magicSession.clientInfo": "Η σύνδεση αυτή ζητήθηκε χρησιμοποιώντας το {{agentClient}} στο {{agentDevice}} {{agentOs}}. Εάν δεν ζητήσατε τη σύνδεση, μπορείτε να αγνοήσετε με ασφάλεια αυτό το email.",
-    "sms.verification.body": "το {{secret}} είναι ο κωδικός επαλήθευσης του {{project}} σας.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "Η φράση ασφαλείας για αυτό το email είναι {{phrase}}. Μπορείτε να εμπιστευτείτε αυτό το email αν αυτή η φράση ταιριάζει με τη φράση που εμφανίζεται κατά την είσοδο.",
     "emails.magicSession.optionUrl": "Εάν δεν μπορείτε να συνδεθείτε χρησιμοποιώντας το παραπάνω κουμπί, παρακαλώ επισκεφτείτε τον παρακάτω σύνδεσμο:",
     "emails.otpSession.subject": "{{project}} Σύνδεση",

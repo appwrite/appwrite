@@ -234,7 +234,7 @@
     "emails.magicSession.buttonText": "{{project}}'a giriş yapın",
     "emails.magicSession.optionUrl": "Yukarıdaki buton gözükmezse, aşağıdaki bağlantıyı kullanın:",
     "emails.magicSession.clientInfo": "Bu oturum açma işlemi, {{agentClient}} kullanılarak {{agentDevice}} {{agentOs}} üzerinde istendi. Eğer oturum açma işlemini siz talep etmediyseniz, bu e-postayı güvenle yok sayabilirsiniz.",
-    "sms.verification.body": "{{secret}} sizin {{project}} doğrulama kodunuzdur.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "Bu e-postanın güvenlik ifadesi {{phrase}}'dir. Bu ifade, giriş sırasında gösterilen ifadeyle eşleşiyorsa bu e-postaya güvenebilirsiniz.",
     "emails.otpSession.subject": "{{project}} Giriş",
     "emails.otpSession.hello": "Merhaba,",

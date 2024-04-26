@@ -7,7 +7,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -1227,59 +1229,77 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
-    // Adds several minutes to test to replicate coverage in Utopia\Database unit tests
-    // and messes with subsequent tests as DatabaseV1 queue gets overwhelmed
-    // TODO@kodumbeats either fix or remove testAttributeCountLimit
-    // Options to fix:
-    // - Enable attribute creation in batches
-    // - Use additional database workers
-    // - Wait for worker to complete before moving onto next test
-    // - Remove since this is unit tested in Utopia\Database
-    //
-    // public function testAttributeCountLimit()
-    // {
-    //     $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //         'x-appwrite-key' => $this->getProject()['apiKey']
-    //     ]), [
-    //         'collectionId' => ID::unique(),
-    //         'name' => 'attributeCountLimit',
-    //         'read' => ['any'],
-    //         'write' => ['any'],
-    //         'documentSecurity' => true,
-    //     ]);
+    /**
+     * @throws Exception
+     */
+    public function testDeleteCollectionDeletesRelatedAttributes(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'databaseId' => ID::unique(),
+            'name' => 'TestDeleteCollectionDeletesRelatedAttributes',
+        ]);
 
-    //     $collectionId = $collection['body']['$id'];
+        $databaseId = $database['body']['$id'];
 
-    //     // load the collection up to the limit
-    //     for ($i=0; $i < 1012; $i++) {
-    //         $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer', array_merge([
-    //             'content-type' => 'application/json',
-    //             'x-appwrite-project' => $this->getProject()['$id'],
-    //             'x-appwrite-key' => $this->getProject()['apiKey']
-    //         ]), [
-    //             'key' => "attribute{$i}",
-    //             'required' => false,
-    //         ]);
+        $collection1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Collection1',
+            'documentSecurity' => false,
+            'permissions' => [],
+        ]);
 
-    //         $this->assertEquals(201, $attribute['headers']['status-code']);
-    //     }
+        $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Collection2',
+            'documentSecurity' => false,
+            'permissions' => [],
+        ]);
 
-    //     sleep(30);
+        $collection1 = $collection1['body']['$id'];
+        $collection2 = $collection2['body']['$id'];
 
-    //     $tooMany = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //         'x-appwrite-key' => $this->getProject()['apiKey']
-    //     ]), [
-    //         'key' => "tooMany",
-    //         'required' => false,
-    //     ]);
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1 . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'relatedCollectionId' => $collection2,
+            'type' => Database::RELATION_MANY_TO_ONE,
+            'twoWay' => false,
+            'key' => 'collection2'
+        ]);
 
-    //     $this->assertEquals(400, $tooMany['headers']['status-code']);
-    //     $this->assertEquals('Attribute limit exceeded', $tooMany['body']['message']);
-    // }
+        sleep(2);
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collection2, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()));
+
+        sleep(2);
+
+        $attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection1 . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()));
+
+        \var_dump($attributes['body']);
+
+        $this->assertEquals(0, $attributes['body']['total']);
+    }
 
     public function testAttributeRowWidthLimit()
     {

@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "कृपया तलको बटनमा क्लिक गरी आफ्नो {{project}} खातामा सुरक्षित रूपमा साइन इन गर्नुहोस्। यो १ घण्टामा समाप्त हुनेछ।",
     "emails.magicSession.buttonText": "Connectez-vous à {{project}}",
     "emails.magicSession.clientInfo": "यो साइन इन अनुरोध गरिएको थियो {{agentClient}} प्रयोग गरेर {{agentDevice}} {{agentOs}} मा। यदि तपाईंले साइन इन अनुरोध गर्नुभएको छैन भने, यो इमेललाई सुरक्षित रूपमा अनदेखा गर्न सक्नुहुन्छ।",
-    "sms.verification.body": "{{secret}} तपाईंको {{project}} प्रमाणीकरण कोड हो।",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "यस ईमेलको लागि सुरक्षा वाक्य {{phrase}} हो। यो वाक्य साइन इन गर्दा देखाइएको वाक्यसँग मेल खाए मात्र तपाईंले यस ईमेललाई विश्वास गर्न सक्नुहुन्छ।",
     "emails.magicSession.optionUrl": "सँगै उल्लेख गरिएको बटन प्रयोग गरेर साइन इन गर्न असमर्थ हुनुहुन्छ भने, कृपया तलको लिंकमा भ्रमण गर्नुहोस्:",
     "emails.otpSession.subject": "{{project}} लगइन",

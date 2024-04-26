@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "નીચે આપેલ બટન પર ક્લિક કરો તમારા {{project}} ખાતામાં સુરક્ષિત રીતે સાઇન ઈન કરવા માટે. તે 1 કલાકમાં સમાપ્ત થઈ જશે.",
     "emails.magicSession.buttonText": "સાઇન ઇન કરો {{project}}",
     "emails.magicSession.clientInfo": "આ સાઇન ઇન વિનંતી {{agentClient}} નો ઉપયોગ કરીને {{agentDevice}} {{agentOs}} પર કરવામાં આવી હતી. જો તમે સાઇન ઇનની વિનંતી કરી ન હોય, તો આ ઇમેઇલને સલામત રીતે અવગણી શકો છો.",
-    "sms.verification.body": "{{secret}} તમારા {{project}} ચકાસણી કોડ છે.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "આ ઇમેઇલ માટેનું સુરક્ષા વાક્ય {{phrase}} છે. જો આ વાક્ય સાઇન ઇન દરમિયાન દર્શાવેલા વાક્ય સાથે મેળ ખાય તો તમે આ ઇમેઇલ પર વિશ્વાસ કરી શકો છો.",
     "emails.magicSession.optionUrl": "જો તમે ઉપરની બટનનો ઉપયોગ કરીને સાઇન ઇન કરી શકતા નથી, કૃપા કરીને નીચેની લિંક પર જાઓ:",
     "emails.otpSession.subject": "{{project}} લૉગિન",

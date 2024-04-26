@@ -248,5 +248,5 @@
     "emails.certificate.footer": "Ваш папярэдні сертыфікат будзе дзейнічаць 30 дзён з моманту першай няўдачы. Мы высока рэкамендуем расследаваць гэтую сітуацыю, інакш ваш дамен апынецца без дзейнага сертыфіката SSL-злучэння.",
     "emails.certificate.thanks": "Дзякуй",
     "emails.certificate.signature": "каманда {{project}}",
-    "sms.verification.body": "{{secret}} з'яўляецца вашым кодам праверкі для {{project}}."
+    "sms.verification.body": "{{secret}}"
 }
