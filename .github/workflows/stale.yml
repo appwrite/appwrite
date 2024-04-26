@@ -1,0 +1,23 @@
+name: Mark stale issues
+
+on:
+  schedule:
+    - cron: "0 0 * * *"  # Midnight Runtime
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: "This issue has been labeled as a 'question', indicating that it requires additional information from the requestor. It has been inactive for 7 days. If no further activity occurs, this issue will be closed in 14 days."
+          stale-issue-label: "stale"
+          days-before-stale: 7
+          days-before-close: 14
+          remove-stale-when-updated: true
+          close-issue-message: "This issue has been closed due to inactivity. If you still require assistance, please provide the requested information."
+          close-issue-reason: "not-planned"
+          operations-per-run: 100
+          only-labels: "question"

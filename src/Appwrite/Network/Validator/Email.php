@@ -13,6 +13,13 @@ use Utopia\Validator;
  */
 class Email extends Validator
 {
+    protected bool $allowEmpty;
+
+    public function __construct(bool $allowEmpty = false)
+    {
+        $this->allowEmpty = $allowEmpty;
+    }
+
     /**
      * Get Description
      *
@@ -35,6 +42,10 @@ class Email extends Validator
      */
     public function isValid($value): bool
     {
+        if ($this->allowEmpty && \strlen($value) === 0) {
+            return true;
+        }
+
         if (!\filter_var($value, FILTER_VALIDATE_EMAIL)) {
             return false;
         }

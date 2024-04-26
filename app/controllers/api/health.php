@@ -15,6 +15,7 @@ use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
+use Utopia\System\System;
 use Utopia\Validator\Domain;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Multiple;
@@ -659,6 +660,60 @@ App::get('/v1/health/queue/functions')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
+App::get('/v1/health/queue/usage')
+    ->desc('Get usage queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueUsage')
+    ->label('sdk.description', '/docs/references/health/get-queue-usage.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->inject('queue')
+    ->inject('response')
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
+
+        $client = new Client(Event::USAGE_QUEUE_NAME, $queue);
+        $size = $client->getQueueSize();
+
+        if ($size >= $threshold) {
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+        }
+
+        $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
+    });
+
+App::get('/v1/health/queue/usage-dump')
+    ->desc('Get usage dump queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueUsageDump')
+    ->label('sdk.description', '/docs/references/health/get-queue-usage-dump.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->inject('queue')
+    ->inject('response')
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
+
+        $client = new Client(Event::USAGE_DUMP_QUEUE_NAME, $queue);
+        $size = $client->getQueueSize();
+
+        if ($size >= $threshold) {
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+        }
+
+        $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
+    });
+
 App::get('/v1/health/storage/local')
     ->desc('Get local storage')
     ->groups(['api', 'health'])
@@ -714,11 +769,11 @@ App::get('/v1/health/storage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
-    ->inject('deviceFiles')
-    ->inject('deviceFunctions')
-    ->inject('deviceBuilds')
-    ->action(function (Response $response, Device $deviceFiles, Device $deviceFunctions, Device $deviceBuilds) {
-        $devices = [$deviceFiles, $deviceFunctions, $deviceBuilds];
+    ->inject('deviceForFiles')
+    ->inject('deviceForFunctions')
+    ->inject('deviceForBuilds')
+    ->action(function (Response $response, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds) {
+        $devices = [$deviceForFiles, $deviceForFunctions, $deviceForBuilds];
         $checkStart = \microtime(true);
 
         foreach ($devices as $device) {
@@ -762,19 +817,19 @@ App::get('/v1/health/anti-virus')
             'version' => ''
         ];
 
-        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
+        if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
             $output['status'] = 'disabled';
             $output['version'] = '';
         } else {
             $antivirus = new Network(
-                App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
+                System::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
             );
 
             try {
                 $output['version'] = @$antivirus->version();
                 $output['status'] = (@$antivirus->ping()) ? 'pass' : 'fail';
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Antivirus is not available');
             }
         }
@@ -833,8 +888,8 @@ App::get('/v1/health/stats') // Currently only used internally
     ->label('docs', false)
     ->inject('response')
     ->inject('register')
-    ->inject('deviceFiles')
-    ->action(function (Response $response, Registry $register, Device $deviceFiles) {
+    ->inject('deviceForFiles')
+    ->action(function (Response $response, Registry $register, Device $deviceForFiles) {
 
         $cache = $register->get('cache');
 
@@ -843,9 +898,9 @@ App::get('/v1/health/stats') // Currently only used internally
         $response
             ->json([
                 'storage' => [
-                    'used' => Storage::human($deviceFiles->getDirectorySize($deviceFiles->getRoot() . '/')),
-                    'partitionTotal' => Storage::human($deviceFiles->getPartitionTotalSpace()),
-                    'partitionFree' => Storage::human($deviceFiles->getPartitionFreeSpace()),
+                    'used' => Storage::human($deviceForFiles->getDirectorySize($deviceForFiles->getRoot() . '/')),
+                    'partitionTotal' => Storage::human($deviceForFiles->getPartitionTotalSpace()),
+                    'partitionFree' => Storage::human($deviceForFiles->getPartitionFreeSpace()),
                 ],
                 'cache' => [
                     'uptime' => $cacheStats['uptime_in_seconds'] ?? 0,
