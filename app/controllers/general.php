@@ -693,7 +693,6 @@ App::error()
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
 
-        /*
         if ($error->getCode() >= 400 && $error->getCode() < 500) {
             // Register error logger
             $providerName = App::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
@@ -710,7 +709,6 @@ App::error()
                 $publish = true;
             }
         }
-        */
 
         if ($logger && $publish) {
             try {
