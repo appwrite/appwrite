@@ -9,7 +9,7 @@ client
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-const promise = account.createEmailSession('email@example.com', 'password');
+const promise = account.createEmailPasswordSession('email@example.com', 'password');
 
 promise.then(function (response) {
     console.log(response); // Success
