@@ -3,12 +3,12 @@
 namespace Tests\E2E\General;
 
 use Appwrite\Tests\Retry;
+use CURLFile;
+use DateTime;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use CURLFile;
-use DateTime;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;

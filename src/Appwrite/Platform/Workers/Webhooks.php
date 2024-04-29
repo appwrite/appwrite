@@ -5,13 +5,13 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\Mail;
 use Appwrite\Template\Template;
 use Exception;
-use Utopia\App;
-use Utopia\Database\Document;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Webhooks extends Action
 {
@@ -103,8 +103,8 @@ class Webhooks extends Action
         \curl_setopt($ch, CURLOPT_MAXFILESIZE, self::MAX_FILE_SIZE);
         \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
             APP_USERAGENT,
-            App::getEnv('_APP_VERSION', 'UNKNOWN'),
-            App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+            System::getEnv('_APP_VERSION', 'UNKNOWN'),
+            System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
         ));
         \curl_setopt(
             $ch,
@@ -156,7 +156,7 @@ class Webhooks extends Action
 
             $webhook->setAttribute('logs', $logs);
 
-            if ($attempts >= \intval(App::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
+            if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
                 $webhook->setAttribute('enabled', false);
                 $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForConsole, $queueForMails);
             }

@@ -1,12 +1,33 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Utopia\Request;
-use Utopia\App;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Request;
+use MaxMind\Db\Reader;
+use Utopia\App;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use MaxMind\Db\Reader;
+use Utopia\System\System;
+
+App::init()
+    ->groups(['mfaProtected'])
+    ->inject('session')
+    ->action(function (Document $session) {
+        $isSessionFresh = false;
+
+        $lastUpdate = $session->getAttribute('mfaUpdatedAt');
+        if (!empty($lastUpdate)) {
+            $now = DateTime::now();
+            $maxAllowedDate = DateTime::addSeconds(new \DateTime($lastUpdate), Auth::MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
+
+            $isSessionFresh = DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz($now);
+        }
+
+        if (!$isSessionFresh) {
+            throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
+        }
+    });
 
 App::init()
     ->groups(['auth'])
@@ -15,7 +36,7 @@ App::init()
     ->inject('project')
     ->inject('geodb')
     ->action(function (App $utopia, Request $request, Document $project, Reader $geodb) {
-        $denylist = App::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
+        $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {
             $countries = explode(',', $denylist);
             $record = $geodb->get($request->getIP()) ?? [];

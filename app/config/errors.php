@@ -29,10 +29,15 @@ return [
         'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
         'code' => 403,
     ],
+    Exception::GENERAL_API_DISABLED => [
+        'name' => Exception::GENERAL_API_DISABLED,
+        'description' => 'The requested API is disabled. You can enable the API from the Appwrite console.',
+        'code' => 403,
+    ],
     Exception::GENERAL_SERVICE_DISABLED => [
         'name' => Exception::GENERAL_SERVICE_DISABLED,
         'description' => 'The requested service is disabled. You can enable the service from the Appwrite console.',
-        'code' => 503,
+        'code' => 403,
     ],
     Exception::GENERAL_UNAUTHORIZED_SCOPE => [
         'name' => Exception::GENERAL_UNAUTHORIZED_SCOPE,
@@ -119,11 +124,21 @@ return [
         'description' => 'Your location is not supported due to legal requirements.',
         'code' => 451,
     ],
+    Exception::GENERAL_BAD_REQUEST => [
+        'name' => Exception::GENERAL_BAD_REQUEST,
+        'description' => 'There was an error processing your request. Please check the inputs and try again.',
+        'code' => 400,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
         'name' => Exception::USER_COUNT_EXCEEDED,
         'description' => 'The current project has exceeded the maximum number of users. Please check your user limit in the Appwrite console.',
+        'code' => 501,
+    ],
+    Exception::USER_CONSOLE_COUNT_EXCEEDED => [
+        'name' => Exception::USER_CONSOLE_COUNT_EXCEEDED,
+        'description' => 'Sign up to the console is restricted. You can contact an administrator to update console sign up restrictions by setting _APP_CONSOLE_WHITELIST_ROOT to "disabled".',
         'code' => 501,
     ],
     Exception::USER_JWT_INVALID => [
@@ -232,6 +247,26 @@ return [
         'description' => 'A user with the same phone number already exists in the current project.',
         'code' => 409,
     ],
+    Exception::USER_RECOVERY_CODES_ALREADY_EXISTS => [
+        'name' => Exception::USER_RECOVERY_CODES_ALREADY_EXISTS,
+        'description' => 'The current user already generated recovery codes and they can only be read once for security reasons.',
+        'code' => 409,
+    ],
+    Exception::USER_AUTHENTICATOR_NOT_FOUND => [
+        'name' => Exception::USER_AUTHENTICATOR_NOT_FOUND,
+        'description' => 'Authenticator could not be found on the current user.',
+        'code' => 404,
+    ],
+    Exception::USER_RECOVERY_CODES_NOT_FOUND => [
+        'name' => Exception::USER_RECOVERY_CODES_NOT_FOUND,
+        'description' => 'Recovery codes could not be found on the current user.',
+        'code' => 404,
+    ],
+    Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED => [
+        'name' => Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED,
+        'description' => 'This authenticator is already verified on the current user.',
+        'code' => 409,
+    ],
     Exception::USER_PHONE_NOT_FOUND => [
         'name' => Exception::USER_PHONE_NOT_FOUND,
         'description' => 'The current user does not have a phone number associated with their account.',
@@ -245,6 +280,11 @@ return [
     Exception::USER_MORE_FACTORS_REQUIRED => [
         'name' => Exception::USER_MORE_FACTORS_REQUIRED,
         'description' => 'More factors are required to complete the sign in process.',
+        'code' => 401,
+    ],
+    Exception::USER_CHALLENGE_REQUIRED => [
+        'name' => Exception::USER_CHALLENGE_REQUIRED,
+        'description' => 'A recently succeessful challenge is required to complete this action. A challenge is considered recent for 5 minutes.',
         'code' => 401,
     ],
     Exception::USER_OAUTH2_BAD_REQUEST => [

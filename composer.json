@@ -12,8 +12,8 @@
     ],
     "scripts": {
         "test": "vendor/bin/phpunit",
-        "lint": "vendor/bin/phpcs",
-        "format": "vendor/bin/phpcbf"
+        "lint": "vendor/bin/pint --test",
+        "format": "vendor/bin/pint"
     },
     "autoload": {
         "psr-4": {
@@ -66,6 +66,7 @@
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "0.18.*",
         "utopia-php/swoole": "0.8.*",
+        "utopia-php/system": "0.8.*",
         "utopia-php/vcs": "0.6.*",
         "utopia-php/websocket": "0.1.*",
         "matomo/device-detector": "6.1.*",
@@ -79,19 +80,19 @@
     },
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "0.36.*",
+        "appwrite/sdk-generator": "0.38.*",
         "phpunit/phpunit": "9.5.20",
-        "squizlabs/php_codesniffer": "^3.7",
         "swoole/ide-helper": "5.0.2",
         "textalk/websocket": "1.5.7",
-        "utopia-php/fetch": "0.1.*"
+        "utopia-php/fetch": "0.1.*",
+        "laravel/pint": "^1.14"
     },
     "provide": {
         "ext-phpiredis": "*"
     },
     "config": {
         "platform": {
-            "php": "8.2"
+            "php": "8.3"
         }
     }
 }

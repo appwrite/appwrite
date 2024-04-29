@@ -4,8 +4,6 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use stdClass;
-use Utopia\Database\Document;
 
 class Func extends Model
 {

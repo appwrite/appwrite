@@ -2,10 +2,10 @@
 
 namespace Appwrite\Specification;
 
+use Appwrite\Utopia\Response\Model;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Route;
-use Appwrite\Utopia\Response\Model;
 
 abstract class Format
 {
@@ -122,21 +122,18 @@ abstract class Format
                                 return 'OAuthProvider';
                         }
                         break;
-                    case 'addAuthenticator':
-                    case 'verifyAuthenticator':
-                    case 'deleteAuthenticator':
+                    case 'createMfaAuthenticator':
+                    case 'updateMfaAuthenticator':
+                    case 'deleteMfaAuthenticator':
                         switch ($param) {
-                            case 'factor':
-                                return 'AuthenticatorFactor';
-                            case 'provider':
-                                return 'AuthenticatorProvider';
+                            case 'type':
+                                return 'AuthenticatorType';
                         }
                         break;
-                    case 'createChallenge':
-                    case 'verifyChallenge':
+                    case 'createMfaChallenge':
                         switch ($param) {
-                            case 'provider':
-                                return 'AuthenticatorProvider';
+                            case 'factor':
+                                return 'AuthenticationFactor';
                         }
                         break;
                 }
@@ -321,12 +318,12 @@ abstract class Format
                                 return 'UserUsageRange';
                         }
                         break;
-                    case 'deleteAuthenticator':
+                    case 'createMfaAuthenticator':
+                    case 'updateMfaAuthenticator':
+                    case 'deleteMfaAuthenticator':
                         switch ($param) {
-                            case 'factor':
-                                return 'AuthenticatorFactor';
-                            case 'provider':
-                                return 'AuthenticatorProvider';
+                            case 'type':
+                                return 'AuthenticatorType';
                         }
                         break;
                     case 'createTarget':

@@ -5,12 +5,12 @@
 
 x-logging: &x-logging
   logging:
-    driver: 'json-file'
+    driver: "json-file"
     options:
-      max-file: '5'
-      max-size: '10m'
+      max-file: "5"
+      max-size: "10m"
 
-version: '3'
+version: "3"
 
 services:
   traefik:
@@ -188,7 +188,7 @@ services:
       - _APP_MESSAGE_EMAIL_TEST_DSN
       - _APP_MESSAGE_PUSH_TEST_DSN
       - _APP_CONSOLE_COUNTRIES_DENYLIST
-      
+
   appwrite-realtime:
     entrypoint: realtime
     <<: *x-logging
@@ -850,7 +850,7 @@ services:
     hostname: appwrite-executor
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.5
+    image: openruntimes/executor:0.4.12
     restart: unless-stopped
     networks:
       - appwrite
@@ -933,7 +933,8 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync' # add ' --query_cache_size=0' for DB tests
+      - MARIADB_AUTO_UPGRADE=1
+    command: "mysqld --innodb-flush-method=fsync" # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
   # smtp:
@@ -989,7 +990,7 @@ services:
     container_name: appwrite-mailcatcher
     <<: *x-logging
     ports:
-      - '9503:1080'
+      - "9503:1080"
     networks:
       - appwrite
 
@@ -998,7 +999,7 @@ services:
     container_name: appwrite-requestcatcher
     <<: *x-logging
     ports:
-      - '9504:5000'
+      - "9504:5000"
     networks:
       - appwrite
 
@@ -1016,11 +1017,11 @@ services:
     image: redis/redisinsight:latest
     restart: unless-stopped
     networks:
-    - appwrite
+      - appwrite
     environment:
-    - REDIS_HOSTS=redis
+      - REDIS_HOSTS=redis
     ports:
-    - "8081:5540"
+      - "8081:5540"
 
   graphql-explorer:
     container_name: appwrite-graphql-explorer
@@ -1032,7 +1033,6 @@ services:
       - "9509:3000"
     environment:
       - SERVER_URL=http://localhost/v1/graphql
-
 
   # Dev Tools End   ------------------------------------------------------------------------------------------
 

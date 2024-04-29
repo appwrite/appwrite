@@ -16,142 +16,6 @@ use Utopia\Validator\JSON;
 
 trait DatabasesBase
 {
-    /**
-     * @throws \Utopia\Database\Exception
-     * @throws \Utopia\Database\Exception\Query
-     */
-    public function testOrQueries(): void
-    {
-        // Create database
-        $database = $this->client->call(Client::METHOD_POST, '/databases', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'databaseId' => ID::unique(),
-            'name' => 'Or queries'
-        ]);
-
-        $this->assertNotEmpty($database['body']['$id']);
-        $this->assertEquals(201, $database['headers']['status-code']);
-        $this->assertEquals('Or queries', $database['body']['name']);
-
-        $databaseId = $database['body']['$id'];
-
-        // Create Collection
-        $presidents = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => ID::unique(),
-            'name' => 'USA Presidents',
-            'documentSecurity' => true,
-            'permissions' => [
-                Permission::create(Role::user($this->getUser()['$id'])),
-            ],
-        ]);
-
-        $this->assertEquals(201, $presidents['headers']['status-code']);
-        $this->assertEquals($presidents['body']['name'], 'USA Presidents');
-
-        // Create Attributes
-        $firstName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'first_name',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $firstName['headers']['status-code']);
-
-        $lastName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'last_name',
-            'size' => 256,
-            'required' => true,
-        ]);
-
-        $this->assertEquals(202, $lastName['headers']['status-code']);
-
-        // Wait for worker
-        sleep(2);
-
-        $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
-            'data' => [
-                'first_name' => 'Donald',
-                'last_name' => 'Trump',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
-        ]);
-        $this->assertEquals(201, $document1['headers']['status-code']);
-
-        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
-            'data' => [
-                'first_name' => 'George',
-                'last_name' => 'Bush',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
-        ]);
-        $this->assertEquals(201, $document2['headers']['status-code']);
-
-        $document3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
-            'data' => [
-                'first_name' => 'Joe',
-                'last_name' => 'Biden',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
-        ]);
-
-        $this->assertEquals(201, $document3['headers']['status-code']);
-
-        $documents = $this->client->call(
-            Client::METHOD_GET,
-            '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
-            array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()),
-            [
-                'queries' => [
-                    Query::select(['first_name', 'last_name'])->toString(),
-                    Query::or([
-                        Query::equal('first_name', ['Donald']),
-                        Query::equal('last_name', ['Bush'])
-                    ])->toString(),
-                    Query::limit(999)->toString(),
-                    Query::offset(0)->toString()
-                ],
-            ]
-        );
-
-        $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertCount(2, $documents['body']['documents']);
-    }
-
     public function testCreateDatabase(): array
     {
         /**
@@ -4539,7 +4403,7 @@ trait DatabasesBase
     /**
      * @depends testOneToManyRelationship
      */
-    public function testSelectsQueries(array $data): void
+    public function testSelectQueries(array $data): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -4582,6 +4446,142 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('fullName', $response['body']);
         $this->assertArrayNotHasKey('libraries', $response['body']);
+    }
+
+    /**
+     * @throws \Utopia\Database\Exception
+     * @throws \Utopia\Database\Exception\Query
+     */
+    public function testOrQueries(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Or queries'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('Or queries', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
+
+        // Create Collection
+        $presidents = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'USA Presidents',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $presidents['headers']['status-code']);
+        $this->assertEquals($presidents['body']['name'], 'USA Presidents');
+
+        // Create Attributes
+        $firstName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'first_name',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $firstName['headers']['status-code']);
+
+        $lastName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'last_name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $lastName['headers']['status-code']);
+
+        // Wait for worker
+        sleep(2);
+
+        $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'first_name' => 'Donald',
+                'last_name' => 'Trump',
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $document1['headers']['status-code']);
+
+        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'first_name' => 'George',
+                'last_name' => 'Bush',
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $document2['headers']['status-code']);
+
+        $document3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'first_name' => 'Joe',
+                'last_name' => 'Biden',
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $this->assertEquals(201, $document3['headers']['status-code']);
+
+        $documents = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::select(['first_name', 'last_name'])->toString(),
+                    Query::or([
+                        Query::equal('first_name', ['Donald']),
+                        Query::equal('last_name', ['Bush'])
+                    ])->toString(),
+                    Query::limit(999)->toString(),
+                    Query::offset(0)->toString()
+                ],
+            ]
+        );
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertCount(2, $documents['body']['documents']);
     }
 
     /**

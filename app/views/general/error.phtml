@@ -59,7 +59,7 @@ $title = $this->getParam('title', '')
     <link rel="stylesheet" href="/fonts/main.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="content-security-policy" content="">
-    <title><?php echo $this->print($title, self::FILTER_ESCAPE); ?></title>
+    <title><?php echo $this->print($title); ?></title>
 
     <style>
         @media(min-width:768px) {
@@ -74,11 +74,11 @@ $title = $this->getParam('title', '')
     <div class="container u-margin-block-start-24">
         <article class="card u-padding-16">
             <div class="u-flex u-flex-vertical u-gap-16">
-                <h1 class="heading-level-4 u-trim-1">Error <?php echo $this->print($code, self::FILTER_ESCAPE); ?></h1>
-                <p class="text"><?php echo $this->print($message, self::FILTER_ESCAPE); ?></p>
+                <h1 class="heading-level-4 u-trim-1">Error <?php echo $this->print($code); ?></h1>
+                <p class="text"><?php echo $this->print($message); ?></p>
                 <div class="u-flex u-flex-vertical u-gap-8">
                     <p class="text">Type</p>
-                    <p><code class="inline-code"><?php echo $this->print($type, self::FILTER_ESCAPE); ?></code></p>
+                    <p><code class="inline-code"><?php echo $this->print($type); ?></code></p>
                 </div>
                 <?php if ($development) : ?>
                     <h2 class="heading-level-5 u-trim-1">Error Trace</h2>
@@ -111,45 +111,6 @@ $title = $this->getParam('title', '')
             </div>
         </article>
     </div>
-    <!--section>
-        <h1>Error <?php echo $this->print($code, self::FILTER_ESCAPE); ?></h1>
-
-        <p><?php echo $this->print($message, self::FILTER_ESCAPE); ?></p>
-
-        <small>Error ID: <?php echo $this->print($errorID, self::FILTER_ESCAPE); ?></small>
-
-        <?php if (!empty($projectURL)) : ?>
-            <hr />
-
-            <p><a href="<?php echo $this->print($projectURL, self::FILTER_ESCAPE); ?>" rel="noopener">Back to <?php echo $this->print($projectName, self::FILTER_ESCAPE); ?></a></p>
-        <?php endif; ?>
-
-        <?php if ($development) : ?>
-            <div>
-
-                <h2>Error Trace</h2>
-
-                <?php foreach ($trace as $log) : ?>
-                    <table>
-                        <?php foreach ($log as $key => $value) : ?>
-                            <tr>
-                                <td style="width: 120px"><?php echo $this->print($key, self::FILTER_ESCAPE); ?></td>
-                                <td>
-                                    <?php if (is_array($value)) : ?>
-                                        <?php echo $this->print(var_export($value, true), self::FILTER_ESCAPE); ?>
-                                    <?php else : ?>
-                                        <?php echo $this->print($value, self::FILTER_ESCAPE); ?>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-
-                        <?php endforeach; ?>
-                    </table>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-
-    </section-->
     <script type="text/javascript">
         const app = (JSON.parse(localStorage.getItem('appwrite')) ?? {});
         const theme = app.theme ?? 'auto';

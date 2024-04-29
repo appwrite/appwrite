@@ -2,27 +2,24 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Usage;
-use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
-use Utopia\App;
+use Swoole\Runtime;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Validator\Authorization;
-use Utopia\DSN\DSN;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
-use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
-use Utopia\Messaging\Adapter\Push as PushAdapter;
+use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push\APNS;
+use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\Mock;
@@ -39,6 +36,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
+use Utopia\System\System;
 
 use function Swoole\Coroutine\batch;
 
@@ -62,7 +60,7 @@ class Messaging extends Action
             ->inject('deviceForFiles')
             ->inject('deviceForLocalFiles')
             ->inject('queueForUsage')
-            ->callback(fn(Message $message, Log $log, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocalFiles, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $deviceForFiles, $deviceForLocalFiles, $queueForUsage));
+            ->callback(fn (Message $message, Log $log, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocalFiles, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $deviceForFiles, $deviceForLocalFiles, $queueForUsage));
     }
 
     /**
@@ -83,6 +81,7 @@ class Messaging extends Action
         Device $deviceForLocalFiles,
         Usage $queueForUsage
     ): void {
+        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -102,7 +101,7 @@ class Messaging extends Action
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $deviceForLocalFiles,);
+                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $deviceForLocalFiles, );
                 break;
             default:
                 throw new \Exception('Unknown message type: ' . $type);
@@ -364,7 +363,7 @@ class Messaging extends Action
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Usage $queueForUsage, Log $log): void
     {
-        if (empty(App::getEnv('_APP_SMS_PROVIDER')) || empty(App::getEnv('_APP_SMS_FROM'))) {
+        if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
             throw new \Exception('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
         }
 
@@ -374,7 +373,7 @@ class Messaging extends Action
 
         Console::log('Project: ' . $project->getId());
 
-        $denyList = App::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
+        $denyList = System::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
         $denyList = explode(',', $denyList);
 
         if (\in_array($project->getId(), $denyList)) {
@@ -382,14 +381,14 @@ class Messaging extends Action
             return;
         }
 
-        $smsDSN = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
+        $smsDSN = new DSN(System::getEnv('_APP_SMS_PROVIDER'));
         $host = $smsDSN->getHost();
         $password = $smsDSN->getPassword();
         $user = $smsDSN->getUser();
 
         $log->addTag('type', $host);
 
-        $from = App::getEnv('_APP_SMS_FROM');
+        $from = System::getEnv('_APP_SMS_FROM');
 
         $provider = new Document([
             '$id' => ID::unique(),
@@ -412,7 +411,8 @@ class Messaging extends Action
                 ],
                 'msg91' => [
                     'senderId' => $user,
-                    'authKey' => $password
+                    'authKey' => $password,
+                    'templateId' => $smsDSN->getParam('templateId', $from),
                 ],
                 'vonage' => [
                     'apiKey' => $user,
@@ -442,8 +442,8 @@ class Messaging extends Action
                     $adapter->send($data);
 
                     $queueForUsage
-                        ->setProject($project)
                         ->addMetric(METRIC_MESSAGES, 1)
+                        ->setProject($project)
                         ->trigger();
                 } catch (\Throwable $e) {
                     throw new \Exception('Failed sending to targets with error: ' . $e->getMessage());
@@ -630,7 +630,7 @@ class Messaging extends Action
         $body = $message['data']['body'];
         $data = $message['data']['data'] ?? null;
         $action = $message['data']['action'] ?? null;
-        $image = $message['data']['image'] ?? null;
+        $image = $message['data']['image']['url'] ?? null;
         $sound = $message['data']['sound'] ?? null;
         $icon = $message['data']['icon'] ?? null;
         $color = $message['data']['color'] ?? null;

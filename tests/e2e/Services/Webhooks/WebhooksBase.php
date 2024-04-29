@@ -5,7 +5,6 @@ namespace Tests\E2E\Services\Webhooks;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -27,19 +26,19 @@ trait WebhooksBase
          * Create database
          */
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
-           'content-type' => 'application/json',
-           'x-appwrite-project' => $this->getProject()['$id'],
-           'x-appwrite-key' => $this->getProject()['apiKey']
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-           'databaseId' => ID::unique(),
-           'name' => 'Actors DB',
+            'databaseId' => ID::unique(),
+            'name' => 'Actors DB',
         ]);
 
         $databaseId = $database['body']['$id'];
 
-       /**
-         * Test for SUCCESS
-         */
+        /**
+          * Test for SUCCESS
+          */
         $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

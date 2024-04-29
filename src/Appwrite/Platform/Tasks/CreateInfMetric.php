@@ -2,13 +2,13 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
-use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Validator\Text;
 
 class CreateInfMetric extends Action

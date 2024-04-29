@@ -3,8 +3,8 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
-use Utopia\Queue\Connection;
 use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Messaging extends Event
 {

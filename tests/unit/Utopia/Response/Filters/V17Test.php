@@ -2,12 +2,9 @@
 
 namespace Tests\Unit\Utopia\Response\Filters;
 
-use Appwrite\Utopia\Response\Filters\V17;
-use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
-use Cron\CronExpression;
+use Appwrite\Utopia\Response\Filters\V17;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\DateTime;
 
 class V17Test extends TestCase
 {
@@ -74,7 +71,6 @@ class V17Test extends TestCase
                 [
                     'targets' => 'test',
                     'mfa' => 'test',
-                    'totp' => 'test',
                 ],
                 [
                 ],

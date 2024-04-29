@@ -432,9 +432,9 @@ class OpenAPI3 extends Format
                         }
 
                         if ($allowed) {
-                                $node['schema']['enum'] = $validator->getList();
-                                $node['schema']['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $method, $name);
-                                $node['schema']['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $method, $name);
+                            $node['schema']['enum'] = $validator->getList();
+                            $node['schema']['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $method, $name);
+                            $node['schema']['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $method, $name);
                         }
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
