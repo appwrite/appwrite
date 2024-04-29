@@ -2,29 +2,30 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Event\Event;
+use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Permission;
+use Appwrite\Role;
 use Exception;
+use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Platform\Action;
-use Utopia\Queue\Message;
-use Appwrite\Event\Event;
-use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Permission;
-use Appwrite\Role;
-use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
+use Utopia\Logger\Log;
 use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
-use Utopia\Migration\Resource;
+use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
+use Utopia\Platform\Action;
+use Utopia\Queue\Message;
 
 class Migrations extends Action
 {
@@ -46,17 +47,19 @@ class Migrations extends Action
             ->inject('message')
             ->inject('dbForProject')
             ->inject('dbForConsole')
-            ->callback(fn(Message $message, Database $dbForProject, Database $dbForConsole) => $this->action($message, $dbForProject, $dbForConsole));
+            ->inject('log')
+            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $log));
     }
 
     /**
      * @param Message $message
      * @param Database $dbForProject
      * @param Database $dbForConsole
+     * @param Log $log
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForConsole): void
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -82,7 +85,9 @@ class Migrations extends Action
             return;
         }
 
-        $this->processMigration($project, $migration);
+        $log->addTag('projectId', $project->getId());
+
+        $this->processMigration($project, $migration, $log);
     }
 
     /**
@@ -220,7 +225,7 @@ class Migrations extends Action
         ]);
 
         $this->dbForConsole->createDocument('keys', $key);
-        $this->dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $this->dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         return $key;
     }
@@ -228,6 +233,7 @@ class Migrations extends Action
     /**
      * @param Document $project
      * @param Document $migration
+     * @param Log $log
      * @return void
      * @throws Authorization
      * @throws Conflict
@@ -235,7 +241,7 @@ class Migrations extends Action
      * @throws Structure
      * @throws \Utopia\Database\Exception
      */
-    protected function processMigration(Document $project, Document $migration): void
+    protected function processMigration(Document $project, Document $migration, Log $log): void
     {
         /**
          * @var Document $migrationDocument
@@ -251,6 +257,8 @@ class Migrations extends Action
             $migrationDocument->setAttribute('stage', 'processing');
             $migrationDocument->setAttribute('status', 'processing');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
+
+            $log->addTag('type', $migrationDocument->getAttribute('source'));
 
             $source = $this->processSource($migrationDocument->getAttribute('source'), $migrationDocument->getAttribute('credentials'));
 
@@ -277,15 +285,21 @@ class Migrations extends Action
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
             });
 
-            $errors = $transfer->getReport(Resource::STATUS_ERROR);
+            $sourceErrors = $source->getErrors();
+            $destinationErrors = $destination->getErrors();
 
-            if (count($errors) > 0) {
+            if (!empty($sourceErrors) || !empty($destinationErrors)) {
                 $migrationDocument->setAttribute('status', 'failed');
                 $migrationDocument->setAttribute('stage', 'finished');
 
                 $errorMessages = [];
-                foreach ($errors as $error) {
-                    $errorMessages[] = "Failed to transfer resource '{$error['id']}:{$error['resource']}' with message '{$error['message']}'";
+                foreach ($sourceErrors as $error) {
+                    /** @var MigrationException $error */
+                    $errorMessages[] = "Error occurred while fetching '{$error->getResourceType()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
+                }
+                foreach ($destinationErrors as $error) {
+                    /** @var MigrationException $error */
+                    $errorMessages[] = "Error occurred while pushing '{$error->getResourceType()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
                 }
 
                 $migrationDocument->setAttribute('errors', $errorMessages);
@@ -310,20 +324,31 @@ class Migrations extends Action
             }
 
             if ($transfer) {
-                $errors = $transfer->getReport(Resource::STATUS_ERROR);
+                $sourceErrors = $source->getErrors();
+                $destinationErrors = $destination->getErrors();
 
-                if (count($errors) > 0) {
-                    $migrationDocument->setAttribute('status', 'failed');
-                    $migrationDocument->setAttribute('stage', 'finished');
-                    $migrationDocument->setAttribute('errors', $errors);
+                $errorMessages = [];
+                foreach ($sourceErrors as $error) {
+                    /** @var MigrationException $error */
+                    $errorMessages[] = "Error occurred while fetching '{$error->getResourceType()}:{$error->getResourceId()}' from source with message '{$error->getMessage()}'";
                 }
+                foreach ($destinationErrors as $error) {
+                    /** @var MigrationException $error */
+                    $errorMessages[] = "Error occurred while pushing '{$error->getResourceType()}:{$error->getResourceId()}' to destination with message '{$error->getMessage()}'";
+                }
+
+                $migrationDocument->setAttribute('errors', $errorMessages);
             }
         } finally {
-            if ($migrationDocument) {
-                $this->updateMigrationDocument($migrationDocument, $projectDocument);
-            }
             if ($tempAPIKey) {
                 $this->removeAPIKey($tempAPIKey);
+            }
+            if ($migrationDocument) {
+                $this->updateMigrationDocument($migrationDocument, $projectDocument);
+
+                if ($migrationDocument->getAttribute('status', '') == 'failed') {
+                    throw new Exception(implode("\n", $migrationDocument->getAttribute('errors', [])));
+                }
             }
         }
     }

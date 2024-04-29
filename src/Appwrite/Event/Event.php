@@ -451,9 +451,9 @@ class Event
                             if ($subCurrent === $current || $subCurrent === $key) {
                                 continue;
                             }
-                            $filtered1 = \array_filter($paramKeys, fn(string $k) => $k === $subCurrent);
+                            $filtered1 = \array_filter($paramKeys, fn (string $k) => $k === $subCurrent);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered1, '*', $eventPattern));
-                            $filtered2 = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                            $filtered2 = \array_filter($paramKeys, fn (string $k) => $k === $current);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', \str_replace($filtered1, '*', $eventPattern)));
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', $eventPattern));
                         }
@@ -461,7 +461,7 @@ class Event
                         if ($current === $key) {
                             continue;
                         }
-                        $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                        $filtered = \array_filter($paramKeys, fn (string $k) => $k === $current);
                         $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
                     }
                 }

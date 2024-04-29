@@ -4,7 +4,6 @@ namespace Tests\Unit\Auth\Validator;
 
 use Appwrite\Auth\Validator\PasswordDictionary;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Document;
 
 class PasswordDictionaryTest extends TestCase
 {
@@ -24,5 +23,16 @@ class PasswordDictionaryTest extends TestCase
         $this->assertEquals($this->object->isValid('123456'), false);
         $this->assertEquals($this->object->isValid('password'), false);
         $this->assertEquals($this->object->isValid('myPasswordIsRight'), true);
+
+        $pass = ''; // 256 chars
+        for ($i = 0; $i < 256; $i++) {
+            $pass .= 'p';
+        }
+
+        $this->assertEquals($this->object->isValid($pass), true);
+
+        $pass .= 'p'; // 257 chars
+
+        $this->assertEquals($this->object->isValid($pass), false);
     }
 }

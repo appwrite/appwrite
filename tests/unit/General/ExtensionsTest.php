@@ -21,11 +21,6 @@ class ExtensionsTest extends TestCase
         $this->assertEquals(true, extension_loaded('yaml'));
     }
 
-    public function testOPCache(): void
-    {
-        $this->assertEquals(true, extension_loaded('Zend OPcache'));
-    }
-
     public function testDOM(): void
     {
         $this->assertEquals(true, extension_loaded('dom'));

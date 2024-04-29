@@ -2,10 +2,10 @@
 
 namespace Appwrite\Specification;
 
+use Appwrite\Utopia\Response\Model;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Route;
-use Appwrite\Utopia\Response\Model;
 
 abstract class Format
 {
@@ -116,7 +116,26 @@ abstract class Format
             case 'account':
                 switch ($method) {
                     case 'createOAuth2Session':
-                        return 'Provider';
+                    case 'createOAuth2Token':
+                        switch ($param) {
+                            case 'provider':
+                                return 'OAuthProvider';
+                        }
+                        break;
+                    case 'createMfaAuthenticator':
+                    case 'updateMfaAuthenticator':
+                    case 'deleteMfaAuthenticator':
+                        switch ($param) {
+                            case 'type':
+                                return 'AuthenticatorType';
+                        }
+                        break;
+                    case 'createMfaChallenge':
+                        switch ($param) {
+                            case 'factor':
+                                return 'AuthenticationFactor';
+                        }
+                        break;
                 }
                 break;
             case 'avatars':
@@ -129,20 +148,16 @@ abstract class Format
                         return  'Flag';
                 }
                 break;
-            case 'storage':
-                switch ($method) {
-                    case 'getFilePreview':
-                        switch ($param) {
-                            case 'gravity':
-                                return 'ImageGravity';
-                            case 'output':
-                                return  'ImageFormat';
-                        }
-                        break;
-                }
-                break;
             case 'databases':
                 switch ($method) {
+                    case 'getUsage':
+                    case 'getCollectionUsage':
+                    case 'getDatabaseUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'DatabaseUsageRange';
+                        }
+                        break;
                     case 'createRelationshipAttribute':
                         switch ($param) {
                             case 'type':
@@ -166,12 +181,161 @@ abstract class Format
                         }
                 }
                 break;
+            case 'functions':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'getFunctionUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'FunctionUsageRange';
+                        }
+                        break;
+                    case 'createExecution':
+                        switch ($param) {
+                            case 'method':
+                                return 'ExecutionMethod';
+                        }
+                        break;
+                }
+                break;
+            case 'messaging':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'period':
+                                return 'MessagingUsageRange';
+                        }
+                        break;
+                    case 'createSms':
+                    case 'createPush':
+                    case 'createEmail':
+                    case 'updateSms':
+                    case 'updatePush':
+                    case 'updateEmail':
+                        switch ($param) {
+                            case 'status':
+                                return 'MessageStatus';
+                        }
+                        break;
+                    case 'createSmtpProvider':
+                    case 'updateSmtpProvider':
+                        switch ($param) {
+                            case 'encryption':
+                                return 'SmtpEncryption';
+                        }
+                        break;
+                }
+                break;
+            case 'project':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'period':
+                                return 'ProjectUsageRange';
+                        }
+                        break;
+                }
+                break;
             case 'projects':
                 switch ($method) {
+                    case 'getEmailTemplate':
+                    case 'updateEmailTemplate':
+                    case 'deleteEmailTemplate':
+                        switch ($param) {
+                            case 'type':
+                                return 'EmailTemplateType';
+                            case 'locale':
+                                return 'EmailTemplateLocale';
+                        }
+                        break;
+                    case 'getSmsTemplate':
+                    case 'updateSmsTemplate':
+                    case 'deleteSmsTemplate':
+                        switch ($param) {
+                            case 'type':
+                                return 'SmsTemplateType';
+                            case 'locale':
+                                return 'SmsTemplateLocale';
+                        }
+                        break;
                     case 'createPlatform':
                         switch ($param) {
                             case 'type':
                                 return 'PlatformType';
+                        }
+                        break;
+                    case 'createSmtpTest':
+                    case 'updateSmtp':
+                        switch ($param) {
+                            case 'secure':
+                                return 'SMTPSecure';
+                        }
+                        break;
+                    case 'updateOAuth2':
+                        switch ($param) {
+                            case 'provider':
+                                return 'OAuthProvider';
+                        }
+                        break;
+                    case 'updateAuthStatus':
+                        switch ($param) {
+                            case 'method':
+                                return 'AuthMethod';
+                        }
+                        break;
+                    case 'updateServiceStatus':
+                        switch ($param) {
+                            case 'service':
+                                return 'ApiService';
+                        }
+                        break;
+                }
+                break;
+            case 'storage':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'getBucketUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'StorageUsageRange';
+                        }
+                        break;
+                    case 'getFilePreview':
+                        switch ($param) {
+                            case 'gravity':
+                                return 'ImageGravity';
+                            case 'output':
+                                return  'ImageFormat';
+                        }
+                        break;
+                }
+                break;
+            case 'users':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UserUsageRange';
+                        }
+                        break;
+                    case 'createMfaAuthenticator':
+                    case 'updateMfaAuthenticator':
+                    case 'deleteMfaAuthenticator':
+                        switch ($param) {
+                            case 'type':
+                                return 'AuthenticatorType';
+                        }
+                        break;
+                    case 'createTarget':
+                        switch ($param) {
+                            case 'providerType':
+                                return 'MessagingProviderType';
+                        }
+                        break;
+                    case 'createSHAUser':
+                        switch ($param) {
+                            case 'passwordVersion':
+                                return 'PasswordHash';
                         }
                         break;
                 }
@@ -211,27 +375,23 @@ abstract class Format
                     case 'getCollectionUsage':
                     case 'getDatabaseUsage':
                         // Range Enum Keys
-                        $values  = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-                        return $values;
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
                 break;
-            case 'function':
+            case 'functions':
                 switch ($method) {
                     case 'getUsage':
                     case 'getFunctionUsage':
                         // Range Enum Keys
-                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-                        return $values;
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
                 break;
             case 'users':
                 switch ($method) {
                     case 'getUsage':
-                    case 'getUserUsage':
                         // Range Enum Keys
                         if ($param == 'range') {
-                            $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-                            return $values;
+                            return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                         }
                 }
                 break;
@@ -240,9 +400,16 @@ abstract class Format
                     case 'getUsage':
                     case 'getBucketUsage':
                         // Range Enum Keys
-                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-                        return $values;
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
+                break;
+            case 'project':
+                switch ($method) {
+                    case 'getUsage':
+                        // Range Enum Keys
+                        return ['One Hour', 'One Day'];
+                }
+                break;
         }
         return $values;
     }

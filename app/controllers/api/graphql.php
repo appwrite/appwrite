@@ -1,6 +1,8 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Utopia\Request;
@@ -14,8 +16,23 @@ use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
+
+App::init()
+    ->groups(['graphql'])
+    ->inject('project')
+    ->action(function (Document $project) {
+        if (
+            array_key_exists('graphql', $project->getAttribute('apis', []))
+            && !$project->getAttribute('apis', [])['graphql']
+            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+        ) {
+            throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
+        }
+    });
 
 App::get('/v1/graphql')
     ->desc('GraphQL endpoint')
@@ -161,9 +178,9 @@ function execute(
     Adapter $promiseAdapter,
     array $query
 ): array {
-    $maxBatchSize = App::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
-    $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
-    $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
+    $maxBatchSize = System::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
+    $maxComplexity = System::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
+    $maxDepth = System::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
 
     if (!empty($query) && !isset($query[0])) {
         $query = [$query];
@@ -183,7 +200,7 @@ function execute(
     $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
 
-    if (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+    if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         $validations[] = new DisableIntrospection();
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);
