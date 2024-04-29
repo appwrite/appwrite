@@ -228,5 +228,18 @@
     "continents.eu": "Եվրոպա",
     "continents.na": "Հյուսիսային Ամերիկա",
     "continents.oc": "Օկեանիա",
-    "continents.sa": "Հարավային Ամերիկա"
+    "continents.sa": "Հարավային Ամերիկա",
+    "emails.magicSession.optionButton": "Սեղմեք ներքևի կոճակը՝ ապահով մուտք գործելու {{project}} հաշիվդ։ Այն կանցնի 1 ժամից։",
+    "emails.magicSession.buttonText": "Մուտք գործեք {{project}} համար",
+    "emails.magicSession.clientInfo": "Սա մուտք գործելը խնդրվել է `{{agentClient}}`-ի միջոցով {{agentDevice}} {{agentOs}}-ում: Եթե դուք չեք խնդրել մուտք գործելը, ապա կարող եք անտեղյակ մնալ այս էլփոստից:",
+    "sms.verification.body": "{{secret}}-ն ձեր {{project}} վավերացման կոդն է։",
+    "emails.magicSession.securityPhrase": "Այս էլհասցեի անվտանգության արտահայտությունը {{phrase}} է: Դուք կարող եք հավատալ այս էլհասցեին, եթե այդ արտահայտությունը համընկնում է ներմուծման պրոցեսին՝ երբ դուք գրանցվել եք։",
+    "emails.magicSession.optionUrl": "Եթե չեք կարող մուտք գործել վերը նշված կոճակով, այցելեք հետևյալ հղումը՝",
+    "emails.otpSession.subject": "{{project}} Մուտք",
+    "emails.otpSession.hello": "Բարև,",
+    "emails.otpSession.description": "Երբ Ձեզ հարցնեն մուտքագրել վավերացման կոդը ապահով մուտքի համար Ձեր {{project}} հաշիվը, մուտքագրեք հետևյալ կոդը։ Այն կարճատև է 15 րոպե:",
+    "emails.otpSession.clientInfo": "Սույն մուտքը խնդրված է {{agentClient}}-ի կողմից {{agentDevice}} {{agentOs}}-ում։ Եթե Դուք չեք խնդրել մուտքը, ապա հանգիստ անտեսել այս էլփոստը։",
+    "emails.otpSession.securityPhrase": "Այս էլ.փոստի անվտանգության արտահայտությունը {{phrase}} է: Կարող եք վստահել այս էլ.փոստին, եթե այս արտահայտությունը համընկնում է մուտք գործելու պահին տրված արտահայտության հետ։",
+    "emails.otpSession.thanks": "Շնորհակալ եմ,",
+    "emails.otpSession.signature": "{{project}} թիմ"
 }

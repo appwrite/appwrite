@@ -4,10 +4,9 @@ namespace Tests\E2E\Services\Webhooks;
 
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
@@ -824,7 +823,6 @@ class WebhooksCustomClientTest extends Scope
             'userId' => $id,
             'secret' => $secret,
             'password' => $password,
-            'passwordAgain' => $password,
         ]);
 
         $recoveryId = $recovery['body']['$id'];

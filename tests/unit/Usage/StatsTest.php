@@ -20,12 +20,12 @@ class StatsTest extends TestCase
     public function setUp(): void
     {
         $env =  App::getEnv('_APP_CONNECTIONS_QUEUE', AppwriteURL::unparse([
-                    'scheme' => 'redis',
-                    'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
-                    'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
-                    'user' => App::getEnv('_APP_REDIS_USER', ''),
-                    'pass' => App::getEnv('_APP_REDIS_PASS', ''),
-                ]));
+            'scheme' => 'redis',
+            'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
+            'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
+            'user' => App::getEnv('_APP_REDIS_USER', ''),
+            'pass' => App::getEnv('_APP_REDIS_PASS', ''),
+        ]));
 
         $dsn = explode('=', $env);
         $dsn = count($dsn) > 1 ? $dsn[1] : $dsn[0];

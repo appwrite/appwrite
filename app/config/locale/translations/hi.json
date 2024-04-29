@@ -228,5 +228,18 @@
     "continents.eu": "यूरोप",
     "continents.na": "उत्तरी अमेरिका",
     "continents.oc": "ओशिनिया",
-    "continents.sa": "दक्षिण अमेरिका"
+    "continents.sa": "दक्षिण अमेरिका",
+    "emails.magicSession.optionButton": "नीचे दिए गए बटन पर क्लिक करके अपने {{project}} खाते में सुरक्षित रूप से साइन इन करें। यह 1 घंटे में समाप्त हो जाएगा।",
+    "emails.magicSession.buttonText": "{{project}} में साइन इन करें",
+    "emails.magicSession.clientInfo": "यह साइन इन {{agentClient}} का उपयोग करके {{agentDevice}} {{agentOs}} पर किया गया था। यदि आपने साइन इन का अनुरोध नहीं किया है, तो आप इस ईमेल को सुरक्षित रूप से अनदेखा कर सकते हैं।",
+    "sms.verification.body": "{{secret}} आपके {{project}} सत्यापन कोड है।",
+    "emails.magicSession.securityPhrase": "इस ईमेल का सुरक्षा वाक्यांश {{phrase}} है। यदि यह वाक्यांश साइन इन के दौरान दिखाए गए वाक्यांश से मेल खाता है तो आप इस ईमेल पर भरोसा कर सकते हैं।",
+    "emails.magicSession.optionUrl": "यदि आप ऊपर दिए गए बटन का उपयोग करके साइन इन नहीं कर पा रहे हैं, कृपया निम्नलिखित लिंक पर जाएँ:",
+    "emails.otpSession.subject": "{{project}} लॉगिन",
+    "emails.otpSession.hello": "नमस्ते,",
+    "emails.otpSession.description": "निर्दिष्ट सत्यापन कोड दर्ज करें जब आपको आपके {{project}} खाते में सुरक्षित रूप से साइन इन करने के लिए कहा जाए। यह 15 मिनट में समाप्त हो जाएगा।",
+    "emails.otpSession.clientInfo": "यह साइन इन {{agentClient}} का उपयोग करके {{agentDevice}} {{agentOs}} पर किया गया था। यदि आपने साइन इन का अनुरोध नहीं किया है, तो आप इस ईमेल को नजरअंदाज कर सकते हैं।",
+    "emails.otpSession.securityPhrase": "इस ईमेल के लिए सुरक्षा वाक्यांश {{phrase}} है। अगर यह वाक्यांश साइन इन के दौरान दिखाए गए वाक्यांश से मेल खाता है, तो आप इस ईमेल पर भरोसा कर सकते हैं।",
+    "emails.otpSession.thanks": "धन्यवाद,",
+    "emails.otpSession.signature": "{{project}} टीम"
 }

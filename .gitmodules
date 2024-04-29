@@ -1,4 +1,4 @@
 [submodule "app/console"]
 	path = app/console
 	url = https://github.com/appwrite/console
-	branch = 3.2.16
+	branch = 4.0.4

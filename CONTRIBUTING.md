@@ -344,13 +344,13 @@ Things to remember when releasing SDKs:
 
 ## Debug
 
-Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code's [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension. 
+Appwrite uses [XDebug](https://github.com/xdebug/xdebug) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code's [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension. 
 
 If you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection: 
 
-1. Create an init file. 
-2. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php**.
-3. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+1. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+2. If needed edit the **dev/xdebug.ini** file to your needs.
+3. Launch your Appwrite instance while your debugger is listening for connections.
 
 ### VS Code Launch Configuration
 

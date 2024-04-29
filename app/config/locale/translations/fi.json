@@ -228,5 +228,18 @@
     "continents.eu": "Eurooppa",
     "continents.na": "Pohjois Amerikka",
     "continents.oc": "Oceania",
-    "continents.sa": "Etelä Amerikka"
+    "continents.sa": "Etelä Amerikka",
+    "emails.magicSession.optionButton": "Napsauta alla olevaa painiketta kirjautuaksesi turvallisesti {{project}}-tiliisi. Se vanhenee tunnissa.",
+    "emails.magicSession.buttonText": "Kirjaudu sisään {{project}}",
+    "emails.magicSession.clientInfo": "Tämä kirjautuminen pyydettiin käyttäen {{agentClient}} {{agentDevice}} {{agentOs}}. Jos et pyytänyt kirjautumista, voit huoletta jättää tämän sähköpostin huomiotta.",
+    "sms.verification.body": "{{secret}} on sinun {{project}} vahvistuskoodisi.",
+    "emails.magicSession.securityPhrase": "Tämän sähköpostin turvalause on {{phrase}}. Voit luottaa tähän sähköpostiin, jos tämä lause vastaa kirjautumisen yhteydessä näytettyä lausetta.",
+    "emails.magicSession.optionUrl": "Jos et pysty kirjautumaan sisään yllä olevaa painiketta käyttäen, käy seuraavassa linkissä:",
+    "emails.otpSession.subject": "{{project}} Kirjautuminen",
+    "emails.otpSession.hello": "Hei,",
+    "emails.otpSession.description": "Syötä seuraava vahvistuskoodi, kun sinua pyydetään tekemään se turvallisesti kirjautuaksesi {{project}}-tilillesi. Se vanhenee 15 minuutin kuluttua.",
+    "emails.otpSession.clientInfo": "Tämä kirjautumispyyntö tehtiin käyttämällä {{agentClient}} laitteella {{agentDevice}} {{agentOs}}. Jos et pyytänyt kirjautumista, voit huoletta ohittaa tämän sähköpostin.",
+    "emails.otpSession.securityPhrase": "Tämän sähköpostin turvalause on {{phrase}}. Voit luottaa tähän sähköpostiin, jos tämä lause vastaa kirjautumisen yhteydessä näytettyä lausetta.",
+    "emails.otpSession.thanks": "Kiitos,",
+    "emails.otpSession.signature": "{{project}} -tiimi"
 }

@@ -228,5 +228,18 @@
     "continents.eu": "Europa",
     "continents.na": "Nordamerika",
     "continents.oc": "Oceanien",
-    "continents.sa": "Sydamerika"
+    "continents.sa": "Sydamerika",
+    "emails.magicSession.optionButton": "Klicka på knappen nedan för att säkert logga in på ditt {{project}} konto. Den kommer att gå ut om 1 timme.",
+    "emails.magicSession.buttonText": "Inicia sesión en {{project}}",
+    "emails.magicSession.clientInfo": "Den här inloggningen begärdes med hjälp av {{agentClient}} på {{agentDevice}} {{agentOs}}. Om du inte begärde inloggningen kan du bortse från det här e-postmeddelandet.",
+    "sms.verification.body": "{{secret}} är din {{project}} verifieringskod.",
+    "emails.magicSession.securityPhrase": "Frasen för säkerhet i detta e-postmeddelande är {{phrase}}. Du kan lita på detta e-postmeddelande om frasen stämmer överens med den fras som visas vid inloggning.",
+    "emails.magicSession.optionUrl": "Si no puedes iniciar sesión utilizando el botón de arriba, por favor visita el siguiente enlace:",
+    "emails.otpSession.subject": "{{project}} Inloggning",
+    "emails.otpSession.hello": "Hej,",
+    "emails.otpSession.description": "Ange följande verifieringskod när du uppmanas att säkert logga in på ditt {{project}}-konto. Den kommer att löpa ut om 15 minuter.",
+    "emails.otpSession.clientInfo": "Den här inloggningsbegäran gjordes med {{agentClient}} på {{agentDevice}} {{agentOs}}. Om du inte har begärt inloggningen kan du ignorera detta e-postmeddelande.",
+    "emails.otpSession.securityPhrase": "Säkerhetsfrasen för detta e-postmeddelande är {{phrase}}. Du kan lita på detta e-postmeddelande om frasen stämmer överens med frasen som visades vid inloggningen.",
+    "emails.otpSession.thanks": "Tack,",
+    "emails.otpSession.signature": "{{project}} team"
 }

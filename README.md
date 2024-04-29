@@ -1,4 +1,4 @@
-> Great news! Appwrite Cloud is now in public beta! Sign up at [cloud.appwrite.io](https://cloud.appwrite.io) for a hassle-free, hosted experience. Join us in the Cloud today! ☁️🎉
+> Our Appwrite Init event has concluded. You can check out all the new and upcoming features [on our Init website](https://appwrite.io/init) 🚀
 
 <br />
 <p align="center">
@@ -76,7 +76,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.4.13
+    appwrite/appwrite:1.5.3
 ```
 
 ### Windows
@@ -88,7 +88,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.4.13
+    appwrite/appwrite:1.5.3
 ```
 
 #### PowerShell
@@ -98,7 +98,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.4.13
+    appwrite/appwrite:1.5.3
 ```
 
 Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.

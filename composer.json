@@ -1,4 +1,5 @@
 {
+
     "name": "appwrite/server-ce",
     "description": "End to end backend server for frontend and mobile apps.",
     "type": "project",
@@ -11,8 +12,8 @@
     ],
     "scripts": {
         "test": "vendor/bin/phpunit",
-        "lint": "vendor/bin/phpcs",
-        "format": "vendor/bin/phpcbf"
+        "lint": "vendor/bin/pint --test",
+        "format": "vendor/bin/pint"
     },
     "autoload": {
         "psr-4": {
@@ -43,59 +44,54 @@
         "ext-sockets": "*",
         "appwrite/php-runtimes": "0.13.*",
         "appwrite/php-clamav": "2.0.*",
-        "utopia-php/abuse": "0.33.*",
+        "utopia-php/abuse": "0.36.*",
         "utopia-php/analytics": "0.10.*",
-        "utopia-php/audit": "0.35.*",
+        "utopia-php/audit": "0.38.*",
         "utopia-php/cache": "0.9.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.45.*",
+        "utopia-php/database": "0.48.*",
         "utopia-php/domains": "0.5.*",
-        "utopia-php/dsn": "0.1.*",
+        "utopia-php/dsn": "0.2.*",
         "utopia-php/framework": "0.33.*",
-        "utopia-php/image": "0.5.*",
+        "utopia-php/image": "0.6.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.3.*",
-        "utopia-php/messaging": "0.2.*",
-        "utopia-php/migration": "0.3.*",
+        "utopia-php/messaging": "0.10.*",
+        "utopia-php/migration": "0.4.*",
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "0.5.*",
         "utopia-php/pools": "0.4.*",
-        "utopia-php/preloader": "0.2.*",
         "utopia-php/queue": "0.7.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "0.18.*",
-        "utopia-php/swoole": "0.5.*",
+        "utopia-php/swoole": "0.8.*",
         "utopia-php/vcs": "0.6.*",
         "utopia-php/websocket": "0.1.*",
         "matomo/device-detector": "6.1.*",
         "dragonmantank/cron-expression": "3.3.2",
-        "phpmailer/phpmailer": "6.8.0",
+        "phpmailer/phpmailer": "6.9.1",
         "chillerlan/php-qrcode": "4.3.4",
         "adhocore/jwt": "1.1.2",
+        "spomky-labs/otphp": "^10.0",
         "webonyx/graphql-php": "14.11.*",
-        "league/csv": "9.7.1"
+        "league/csv": "9.14.*"
     },
-    "repositories": [
-        {
-            "url": "https://github.com/appwrite/runtimes.git",
-            "type": "git"
-        }
-    ],
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "0.36.*",
+        "appwrite/sdk-generator": "0.37.*",
         "phpunit/phpunit": "9.5.20",
-        "squizlabs/php_codesniffer": "^3.7",
         "swoole/ide-helper": "5.0.2",
-        "textalk/websocket": "1.5.7"
+        "textalk/websocket": "1.5.7",
+        "utopia-php/fetch": "0.1.*",
+        "laravel/pint": "^1.14"
     },
     "provide": {
         "ext-phpiredis": "*"
     },
     "config": {
         "platform": {
-            "php": "8.0"
+            "php": "8.3"
         }
     }
 }

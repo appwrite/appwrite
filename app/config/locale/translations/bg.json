@@ -228,5 +228,18 @@
     "continents.eu": "Европа",
     "continents.na": "Северна Америка",
     "continents.oc": "Океания",
-    "continents.sa": "Южна Америка"
+    "continents.sa": "Южна Америка",
+    "emails.magicSession.optionButton": "Натиснете бутона по-долу, за да се впишете сигурно във вашия {{project}} акаунт. Той ще изтече след 1 час.",
+    "emails.magicSession.buttonText": "Влезте в {{project}}",
+    "emails.magicSession.clientInfo": "Този вход беше заявен чрез {{agentClient}} на {{agentDevice}} {{agentOs}}. Ако не сте поискали входа, можете безопасно да игнорирате този имейл.",
+    "sms.verification.body": "{{secret}} е вашият код за верификация за {{project}}.",
+    "emails.magicSession.securityPhrase": "Фразата за сигурност на този имейл е {{phrase}}. Можете да се доверите на този имейл, ако тази фраза съвпада с фразата, показана по време на вписването.",
+    "emails.magicSession.optionUrl": "Ако не можете да влезете чрез горния бутон, моля, посетете следния линк:",
+    "emails.otpSession.subject": "Вход в {{project}}",
+    "emails.otpSession.hello": "Здравейте,",
+    "emails.otpSession.description": "Въведете следния верификационен код, когато ви бъде поискано, за да се впишете сигурно в своята {{project}} сметка. Ще изтече след 15 минути.",
+    "emails.otpSession.clientInfo": "Този вход беше заявен чрез {{agentClient}} на {{agentDevice}} {{agentOs}}. Ако не сте заявили входа, можете спокойно да пренебрегнете този имейл.",
+    "emails.otpSession.securityPhrase": "Фразата за сигурност за този имейл е {{phrase}}. Можете да се доверите на този имейл, ако тази фраза съвпада с фразата, показана по време на вписването.",
+    "emails.otpSession.thanks": "Благодаря,",
+    "emails.otpSession.signature": "екип на {{project}}"
 }

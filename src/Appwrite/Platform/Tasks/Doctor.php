@@ -2,16 +2,16 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\ClamAV\Network;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Appwrite\ClamAV\Network;
-use Utopia\Logger\Logger;
-use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
+use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
 
 class Doctor extends Action
 {
@@ -200,10 +200,10 @@ class Doctor extends Action
 
         foreach (
             [
-            'Uploads' => APP_STORAGE_UPLOADS,
-            'Cache' => APP_STORAGE_CACHE,
-            'Config' => APP_STORAGE_CONFIG,
-            'Certs' => APP_STORAGE_CERTIFICATES
+                'Uploads' => APP_STORAGE_UPLOADS,
+                'Cache' => APP_STORAGE_CACHE,
+                'Config' => APP_STORAGE_CONFIG,
+                'Certs' => APP_STORAGE_CERTIFICATES
             ] as $key => $volume
         ) {
             $device = new Local($volume);
@@ -228,10 +228,10 @@ class Doctor extends Action
 
         foreach (
             [
-            'Uploads' => APP_STORAGE_UPLOADS,
-            'Cache' => APP_STORAGE_CACHE,
-            'Config' => APP_STORAGE_CONFIG,
-            'Certs' => APP_STORAGE_CERTIFICATES
+                'Uploads' => APP_STORAGE_UPLOADS,
+                'Cache' => APP_STORAGE_CACHE,
+                'Config' => APP_STORAGE_CONFIG,
+                'Certs' => APP_STORAGE_CERTIFICATES
             ] as $key => $volume
         ) {
             $device = new Local($volume);

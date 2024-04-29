@@ -228,5 +228,18 @@
     "continents.eu": "Europa",
     "continents.na": "Sjeverna Amerika",
     "continents.oc": "Okeanija",
-    "continents.sa": "Južna Amerika"
+    "continents.sa": "Južna Amerika",
+    "emails.magicSession.optionButton": "Kliknite na dugme ispod kako biste se sigurno prijavili na svoj {{project}} račun. Istek će se dogoditi za 1 sat.",
+    "emails.magicSession.buttonText": "Prijavi se na {{project}}",
+    "emails.magicSession.clientInfo": "Ova prijava je zatražena korištenjem {{agentClient}} na {{agentDevice}} {{agentOs}}. Ako niste zahtjevali prijavu, možete sigurno ignorirati ovaj e-mail.",
+    "sms.verification.body": "{{secret}} je vaš {{project}} verifikacijski kod.",
+    "emails.magicSession.securityPhrase": "Sigurnosna fraza za ovaj email je {{phrase}}. Ovom emailu možete vjerovati ako se fraza poklapa sa frazom prikazanom prilikom prijave.",
+    "emails.magicSession.optionUrl": "Ako ne možete da se prijavite koristeći gornje dugme, molimo posetite sledeći link:",
+    "emails.otpSession.subject": "{{project}} Prijava",
+    "emails.otpSession.hello": "Zdravo,",
+    "emails.otpSession.description": "Unesite sljedeći verifikacijski kod kada budete upitani kako biste sigurno pristupili vašem {{project}} računu. Istjeći će za 15 minuta.",
+    "emails.otpSession.clientInfo": "Ovaj zahtjev za prijavom je poslan koristeći {{agentClient}} na {{agentDevice}} {{agentOs}}. Ako niste zatražili prijavu, možete sigurno ignorisati ovaj email.",
+    "emails.otpSession.securityPhrase": "Sigurnosna fraza za ovaj email je {{phrase}}. Možete vjerovati ovom emailu ako se ova fraza podudara sa frazom prikazanom prilikom prijave.",
+    "emails.otpSession.thanks": "Hvala,",
+    "emails.otpSession.signature": "tim {{project}}"
 }

@@ -2,8 +2,8 @@
 
 namespace Appwrite\Vcs;
 
-use Utopia\Database\Document;
 use Utopia\App;
+use Utopia\Database\Document;
 
 class Comment
 {

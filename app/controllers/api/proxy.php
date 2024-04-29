@@ -10,6 +10,7 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
@@ -90,7 +91,7 @@ App::post('/v1/proxy/rules')
 
         try {
             $domain = new Domain($domain);
-        } catch (\Exception) {
+        } catch (\Throwable) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
@@ -156,7 +157,11 @@ App::get('/v1/proxy/rules')
     ->inject('project')
     ->inject('dbForConsole')
     ->action(function (array $queries, string $search, Response $response, Document $project, Database $dbForConsole) {
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -164,8 +169,12 @@ App::get('/v1/proxy/rules')
 
         $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */

@@ -2,16 +2,16 @@
 
 namespace Tests\E2E\Services\VCS;
 
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\App;
+use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Cache;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\VCS\Adapter\Git\GitHub;
-use Utopia\Cache\Adapter\None;
-use Utopia\Cache\Cache;
 
 class VCSConsoleClientTest extends Scope
 {

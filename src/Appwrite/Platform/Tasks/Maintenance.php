@@ -7,8 +7,8 @@ use Appwrite\Event\Delete;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 
@@ -60,6 +60,7 @@ class Maintenance extends Action
             $this->renewCertificates($dbForConsole, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
+            $this->notifyDeleteTargets($queueForDeletes);
         }, $interval, $delay);
     }
 
@@ -92,28 +93,28 @@ class Maintenance extends Action
 
     private function notifyDeleteExecutionLogs(Delete $queueForDeletes): void
     {
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_EXECUTIONS)
             ->trigger();
     }
 
     private function notifyDeleteAbuseLogs(Delete $queueForDeletes): void
     {
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_ABUSE)
             ->trigger();
     }
 
     private function notifyDeleteAuditLogs(Delete $queueForDeletes): void
     {
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_AUDIT)
             ->trigger();
     }
 
     private function notifyDeleteUsageStats(int $usageStatsRetentionHourly, Delete $queueForDeletes): void
     {
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_USAGE)
             ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
             ->trigger();
@@ -121,7 +122,7 @@ class Maintenance extends Action
 
     private function notifyDeleteConnections(Delete $queueForDeletes): void
     {
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_REALTIME)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -60))
             ->trigger();
@@ -129,7 +130,7 @@ class Maintenance extends Action
 
     private function notifyDeleteExpiredSessions(Delete $queueForDeletes): void
     {
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_SESSIONS)
             ->trigger();
     }
@@ -162,8 +163,7 @@ class Maintenance extends Action
 
     private function notifyDeleteCache($interval, Delete $queueForDeletes): void
     {
-
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_CACHE_BY_TIMESTAMP)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
             ->trigger();
@@ -171,10 +171,16 @@ class Maintenance extends Action
 
     private function notifyDeleteSchedules($interval, Delete $queueForDeletes): void
     {
-
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_SCHEDULES)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
+            ->trigger();
+    }
+
+    private function notifyDeleteTargets(Delete $queueForDeletes): void
+    {
+        $queueForDeletes
+            ->setType(DELETE_TYPE_EXPIRED_TARGETS)
             ->trigger();
     }
 }
