@@ -10,6 +10,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
+use Executor\Executor;
 use Swoole\Coroutine as Co;
 use Utopia\App;
 use Utopia\Cache\Cache;
@@ -156,13 +157,11 @@ class Builds extends Action
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
         $buildId = $deployment->getAttribute('buildId', '');
-        if ($buildId->isEmpty()) {
+        $build = $dbForProject->getDocument('builds', $buildId);
+        if ($build->isEmpty()) {
             throw new AppwriteException(AppwriteException::BUILD_NOT_FOUND);
         }
 
-        $deviceFunctions = $getFunctionsDevice($project->getId());
-
-        $build = $dbForProject->getDocument('builds', $buildId);
         if ($build->getAttribute('status') === 'cancelled') {
             return;
         }
@@ -170,7 +169,7 @@ class Builds extends Action
         $isNewBuild = empty($build->getAttribute('startTime'));
         $build->setAttribute('status', 'processing');
         $build->setAttribute('startTime', $startTime);
-        $build->setAttribute('sourceType', strtolower($deviceFunctions->getType()));
+        $build->setAttribute('sourceType', strtolower($deviceForFunctions->getType()));
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
         $source = $deployment->getAttribute('path', '');

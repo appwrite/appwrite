@@ -1234,7 +1234,7 @@ App::post('/v1/functions/:functionId/deployments')
                 'path' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
-                'sourceType' => strtolower($deviceFunctions->getType()),
+                'sourceType' => strtolower($deviceForFunctions->getType()),
                 'logs' => '',
                 'endTime' => null,
                 'duration' => 0,
