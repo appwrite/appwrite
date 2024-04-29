@@ -21,7 +21,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
