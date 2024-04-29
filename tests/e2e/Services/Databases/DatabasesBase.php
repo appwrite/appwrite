@@ -248,7 +248,7 @@ trait DatabasesBase
             ], $this->getHeaders())
         );
         $this->assertEquals(401, $response['headers']['status-code']);
-        $this->assertEquals('No Appwrite project was specified. Please specify your Appwrite Project ID in the "x-appwrite-project" header or when you initialize your Appwrite SDK.', $response['body']['message']);
+        $this->assertEquals('No Appwrite project was specified. Please specify your project ID when initializing your Appwrite SDK.', $response['body']['message']);
     }
 
     /**
