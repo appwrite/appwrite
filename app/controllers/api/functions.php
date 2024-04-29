@@ -1524,26 +1524,26 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         ]));
 
         $buildId = ID::unique();
-            $build = $dbForProject->createDocument('builds', new Document([
-                '$id' => $buildId,
-                '$permissions' => [],
-                'startTime' => null,
-                'deploymentInternalId' => $deployment->getInternalId(),
-                'deploymentId' => $deployment->getId(),
-                'status' => 'waiting',
-                'path' => '',
-                'runtime' => $function->getAttribute('runtime'),
-                'source' => $deployment->getAttribute('path', ''),
-                'sourceType' => '',
-                'logs' => '',
-                'endTime' => null,
-                'duration' => 0,
-                'size' => 0
-            ]));
+        $build = $dbForProject->createDocument('builds', new Document([
+            '$id' => $buildId,
+            '$permissions' => [],
+            'startTime' => null,
+            'deploymentInternalId' => $deployment->getInternalId(),
+            'deploymentId' => $deployment->getId(),
+            'status' => 'waiting',
+            'path' => '',
+            'runtime' => $function->getAttribute('runtime'),
+            'source' => $deployment->getAttribute('path', ''),
+            'sourceType' => '',
+            'logs' => '',
+            'endTime' => null,
+            'duration' => 0,
+            'size' => 0
+        ]));
 
-            $deployment->setAttribute('buildId', $build->getId());
-            $deployment->setAttribute('buildInternalId', $build->getInternalId());
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+        $deployment->setAttribute('buildId', $build->getId());
+        $deployment->setAttribute('buildInternalId', $build->getInternalId());
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
@@ -1557,7 +1557,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $response->noContent();
     });
 
-    App::patch('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
+App::patch('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Update build status')
     ->label('scope', 'functions.write')
@@ -1606,7 +1606,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $response->dynamic($build, Response::MODEL_BUILD);
     });
 
-    App::post('/v1/functions/:functionId/executions')
+App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create execution')
     ->label('scope', 'execution.write')
@@ -1897,7 +1897,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             ->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
-    App::get('/v1/functions/:functionId/executions')
+App::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('List executions')
     ->label('scope', 'execution.read')
@@ -1978,7 +1978,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         ]), Response::MODEL_EXECUTION_LIST);
     });
 
-    App::get('/v1/functions/:functionId/executions/:executionId')
+App::get('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
     ->desc('Get execution')
     ->label('scope', 'execution.read')
@@ -2027,7 +2027,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
 // Variables
 
-    App::post('/v1/functions/:functionId/variables')
+App::post('/v1/functions/:functionId/variables')
     ->desc('Create variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
@@ -2091,7 +2091,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             ->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-    App::get('/v1/functions/:functionId/variables')
+App::get('/v1/functions/:functionId/variables')
     ->desc('List variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
@@ -2118,7 +2118,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         ]), Response::MODEL_VARIABLE_LIST);
     });
 
-    App::get('/v1/functions/:functionId/variables/:variableId')
+App::get('/v1/functions/:functionId/variables/:variableId')
     ->desc('Get variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
@@ -2157,7 +2157,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-    App::put('/v1/functions/:functionId/variables/:variableId')
+App::put('/v1/functions/:functionId/variables/:variableId')
     ->desc('Update variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
@@ -2218,7 +2218,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-    App::delete('/v1/functions/:functionId/variables/:variableId')
+App::delete('/v1/functions/:functionId/variables/:variableId')
     ->desc('Delete variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
