@@ -195,6 +195,9 @@ class Exception extends \Exception
     public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
     public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
 
+    /** Relationship */
+    public const RELATIONSHIP_VALUE_INVALID        = 'relationship_value_invalid';
+
     /** Indexes */
     public const INDEX_NOT_FOUND                   = 'index_not_found';
     public const INDEX_LIMIT_EXCEEDED              = 'index_limit_exceeded';
