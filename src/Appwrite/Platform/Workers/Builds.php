@@ -335,14 +335,13 @@ class Builds extends Action
             $deploymentModel = new Deployment();
             $deploymentUpdate =
                 $queueForEvents
-                    ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-                    ->setClass(Event::WEBHOOK_CLASS_NAME)
-                    ->setProject($project)
-                    ->setEvent('functions.[functionId].deployments.[deploymentId].update')
-                    ->setParam('functionId', $function->getId())
-                    ->setParam('deploymentId', $deployment->getId())
-                    ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())))
-            ;
+                ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+                ->setClass(Event::WEBHOOK_CLASS_NAME)
+                ->setProject($project)
+                ->setEvent('functions.[functionId].deployments.[deploymentId].update')
+                ->setParam('functionId', $function->getId())
+                ->setParam('deploymentId', $deployment->getId())
+                ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
 
             $deploymentUpdate->trigger();
 
@@ -438,8 +437,8 @@ class Builds extends Action
                                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
 
                                     /**
-                                         * Send realtime Event
-                                         */
+                                     * Send realtime Event
+                                     */
                                     $target = Realtime::fromPayload(
                                         // Pass first, most verbose event pattern
                                         event: $allEvents[0],
