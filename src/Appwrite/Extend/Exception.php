@@ -296,7 +296,7 @@ class Exception extends \Exception
     protected array $errors = [];
     protected bool $publish;
 
-    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, $code = null, \Throwable $previous = null)
+    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int|string $code = null, \Throwable $previous = null)
     {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
