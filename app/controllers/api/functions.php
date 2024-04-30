@@ -1594,6 +1594,10 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId'
             throw new Exception(Exception::BUILD_NOT_FOUND);
         }
 
+        if (\in_array($build->getAttribute('status'), ['ready', 'failed'])) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Build is already completed and cannot be cancelled.');
+        }
+
         $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('status', 'cancelled'));
 
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
