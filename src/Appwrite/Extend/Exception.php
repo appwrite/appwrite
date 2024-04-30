@@ -302,7 +302,6 @@ class Exception extends \Exception
         $this->type = $type;
         $this->code = $code ?? $this->errors[$type]['code'];
 
-        // todo: Handle better PDOExceptions or string errors
         if(\is_string($this->code) && !\is_numeric($this->code)) {
             $this->code = 500;
         }
