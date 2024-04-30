@@ -302,8 +302,12 @@ class Exception extends \Exception
         $this->type = $type;
         $this->code = $code ?? $this->errors[$type]['code'];
 
-        if(\is_string($this->code) && !\is_numeric($this->code)) {
-            $this->code = 500;
+        if(\is_string($this->code)) {
+            if (\is_numeric($this->code)) {
+                $this->code = (int) $this->code;
+            } else {
+                $this->code = 500;
+            }
         }
 
         $this->message = $message ?? $this->errors[$type]['description'];
