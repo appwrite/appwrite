@@ -10,11 +10,13 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
+use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -43,7 +45,7 @@ App::post('/v1/proxy/rules')
     ->inject('dbForConsole')
     ->inject('dbForProject')
     ->action(function (string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForConsole, Database $dbForProject) {
-        $mainDomain = App::getEnv('_APP_DOMAIN', '');
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
         if ($domain === $mainDomain) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your main domain to specific resource. Please use subdomain or a different domain.');
         }
@@ -90,7 +92,7 @@ App::post('/v1/proxy/rules')
 
         try {
             $domain = new Domain($domain);
-        } catch (\Exception) {
+        } catch (\Throwable) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
@@ -107,13 +109,13 @@ App::post('/v1/proxy/rules')
         ]);
 
         $status = 'created';
-        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS');
         if (!empty($functionsDomain) && \str_ends_with($domain->get(), $functionsDomain)) {
             $status = 'verified';
         }
 
         if ($status === 'created') {
-            $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+            $target = new Domain(System::getEnv('_APP_DOMAIN_TARGET', ''));
             $validator = new CNAME($target->get()); // Verify Domain with DNS records
 
             if ($validator->isValid($domain->get())) {
@@ -156,7 +158,11 @@ App::get('/v1/proxy/rules')
     ->inject('project')
     ->inject('dbForConsole')
     ->action(function (array $queries, string $search, Response $response, Document $project, Database $dbForConsole) {
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -164,8 +170,12 @@ App::get('/v1/proxy/rules')
 
         $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -287,7 +297,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
-        $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+        $target = new Domain(System::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Domain target must be configured as environment variable.');

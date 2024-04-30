@@ -2,15 +2,15 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Platform\Action;
-use Utopia\CLI\Console;
 use Appwrite\Migration\Migration;
 use Utopia\App;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
 

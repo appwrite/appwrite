@@ -251,4 +251,17 @@ return [
         'optional' => false,
         'icon' => '/images/services/migrations.png',
     ],
+    'messaging' => [
+        'key' => 'messaging',
+        'name' => 'Messaging',
+        'subtitle' => 'The Messaging service allows you to send messages to any provider type (SMTP, push notification, SMS, etc.).',
+        'description' => '/docs/services/messaging.md',
+        'controller' => 'api/messaging.php',
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/server/messaging',
+        'tests' => true,
+        'optional' => true,
+        'icon' => '/images/services/messaging.png',
+    ]
 ];

@@ -3,22 +3,21 @@
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 App::get('/v1/project/usage')
-    ->desc('Get usage stats for a project')
+    ->desc('Get project usage stats')
     ->groups(['api', 'usage'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -39,21 +38,21 @@ App::get('/v1/project/usage')
         $lastDay = (new DateTime($endDate))->format($format);
 
         $metrics = [
-           'total' => [
+            'total' => [
                 METRIC_EXECUTIONS,
                 METRIC_DOCUMENTS,
                 METRIC_DATABASES,
                 METRIC_USERS,
                 METRIC_BUCKETS,
                 METRIC_FILES_STORAGE
-           ],
-           'period' => [
+            ],
+            'period' => [
                 METRIC_NETWORK_REQUESTS,
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
                 METRIC_USERS,
                 METRIC_EXECUTIONS
-             ]
+            ]
         ];
 
         $factor = match ($period) {
@@ -73,7 +72,7 @@ App::get('/v1/project/usage')
 
         Authorization::skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, &$total, &$stats) {
             foreach ($metrics['total'] as $metric) {
-                $result = $dbForProject->findOne('stats_v2', [
+                $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -81,7 +80,7 @@ App::get('/v1/project/usage')
             }
 
             foreach ($metrics['period'] as $metric) {
-                $results = $dbForProject->find('stats_v2', [
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::greaterThanEqual('time', $firstDay),
@@ -116,7 +115,7 @@ App::get('/v1/project/usage')
             $id = $function->getId();
             $name = $function->getAttribute('name');
             $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS);
-            $value = $dbForProject->findOne('stats_v2', [
+            $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
             ]);
@@ -132,7 +131,7 @@ App::get('/v1/project/usage')
             $id = $bucket->getId();
             $name = $bucket->getAttribute('name');
             $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE);
-            $value = $dbForProject->findOne('stats_v2', [
+            $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
             ]);

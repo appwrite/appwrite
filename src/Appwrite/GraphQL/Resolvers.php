@@ -9,6 +9,7 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Route;
+use Utopia\System\System;
 
 class Resolvers
 {
@@ -23,7 +24,7 @@ class Resolvers
         App $utopia,
         ?Route $route,
     ): callable {
-        return static fn($type, $args, $context, $info) => new Swoole(
+        return static fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $route, $args, $context, $info) {
                 /** @var App $utopia */
                 /** @var Response $response */
@@ -94,7 +95,7 @@ class Resolvers
         string $collectionId,
         callable $url,
     ): callable {
-        return static fn($type, $args, $context, $info) => new Swoole(
+        return static fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $type, $args) {
                 $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
@@ -125,7 +126,7 @@ class Resolvers
         callable $url,
         callable $params,
     ): callable {
-        return static fn($type, $args, $context, $info) => new Swoole(
+        return static fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $type, $args) {
                 $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
@@ -161,7 +162,7 @@ class Resolvers
         callable $url,
         callable $params,
     ): callable {
-        return static fn($type, $args, $context, $info) => new Swoole(
+        return static fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $type, $args) {
                 $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
@@ -193,7 +194,7 @@ class Resolvers
         callable $url,
         callable $params,
     ): callable {
-        return static fn($type, $args, $context, $info) => new Swoole(
+        return static fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $type, $args) {
                 $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
@@ -223,7 +224,7 @@ class Resolvers
         string $collectionId,
         callable $url,
     ): callable {
-        return static fn($type, $args, $context, $info) => new Swoole(
+        return static fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $type, $args) {
                 $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
@@ -263,7 +264,7 @@ class Resolvers
         }
 
         $request = clone $request;
-        $utopia->setResource('request', static fn() => $request);
+        $utopia->setResource('request', static fn () => $request);
         $response->setContentType(Response::CONTENT_TYPE_NULL);
 
         try {
@@ -302,7 +303,7 @@ class Resolvers
 
     private static function escapePayload(array $payload, int $depth)
     {
-        if ($depth > App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
+        if ($depth > System::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
             return;
         }
 
