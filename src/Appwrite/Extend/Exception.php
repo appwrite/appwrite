@@ -311,7 +311,6 @@ class Exception extends \Exception
 
         parent::__construct($this->message, $this->code, $previous);
     }
-
     /**
      * Get the type of the exception.
      *
