@@ -142,7 +142,7 @@ return [
                 'url' => 'https://github.com/appwrite/sdk-for-react-native',
                 'package' => 'https://npmjs.com/package/react-native-appwrite',
                 'enabled' => true,
-                'beta' => false,
+                'beta' => true,
                 'dev' => false,
                 'hidden' => false,
                 'family' => APP_PLATFORM_CLIENT,
