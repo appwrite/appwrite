@@ -85,6 +85,7 @@ class Migrations extends Action
             return;
         }
 
+        $log->addTag('migrationId', $migration->getId());
         $log->addTag('projectId', $project->getId());
 
         $this->processMigration($project, $migration, $log);
@@ -256,6 +257,7 @@ class Migrations extends Action
             $migrationDocument = $this->dbForProject->getDocument('migrations', $migration->getId());
             $migrationDocument->setAttribute('stage', 'processing');
             $migrationDocument->setAttribute('status', 'processing');
+            $log->addTag('stage', 'processing');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
             $log->addTag('type', $migrationDocument->getAttribute('source'));
@@ -277,6 +279,7 @@ class Migrations extends Action
 
             /** Start Transfer */
             $migrationDocument->setAttribute('stage', 'migrating');
+            $log->addTag('stage', 'migrating');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
             $transfer->run($migrationDocument->getAttribute('resources'), function () use ($migrationDocument, $transfer, $projectDocument) {
                 $migrationDocument->setAttribute('resourceData', json_encode($transfer->getCache()));
@@ -291,6 +294,7 @@ class Migrations extends Action
             if (!empty($sourceErrors) || !empty($destinationErrors)) {
                 $migrationDocument->setAttribute('status', 'failed');
                 $migrationDocument->setAttribute('stage', 'finished');
+                $log->addTag('stage', 'finished');
 
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
@@ -303,6 +307,7 @@ class Migrations extends Action
                 }
 
                 $migrationDocument->setAttribute('errors', $errorMessages);
+                $log->addTag('migrationErrors', json_encode($errorMessages));
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
                 return;
@@ -338,6 +343,7 @@ class Migrations extends Action
                 }
 
                 $migrationDocument->setAttribute('errors', $errorMessages);
+                $log->addTag('migrationErrors', json_encode($errorMessages));
             }
         } finally {
             if ($tempAPIKey) {
