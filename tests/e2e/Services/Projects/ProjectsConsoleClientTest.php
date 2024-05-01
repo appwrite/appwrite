@@ -3929,6 +3929,31 @@ class ProjectsConsoleClientTest extends Scope
             'name' => 'Amazing Collection',
         ]);
 
-        $this->assertEquals(201, $collection5['headers']['status-code']);
+        // Assert that users across projects on shared tables can have the same email as they're unique on tenant + email not just email
+        $user1 = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project2['body']['$id'],
+            'x-appwrite-key' => $key1['body']['secret']
+        ], [
+            'userId' => 'user',
+            'email' => 'test@localhost',
+            'password' => 'password',
+            'name' => 'Test User',
+        ]);
+
+        $this->assertEquals(201, $user1['headers']['status-code']);
+
+        $user2 = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project4['body']['$id'],
+            'x-appwrite-key' => $key2['body']['secret']
+        ], [
+            'userId' => 'user',
+            'email' => 'test@localhost',
+            'password' => 'password',
+            'name' => 'Test User',
+        ]);
+
+        $this->assertEquals(201, $user2['headers']['status-code']);
     }
 }
