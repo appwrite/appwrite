@@ -305,7 +305,8 @@ class Migrations extends Action
                 }
                 foreach ($destinationErrors as $error) {
                     /** @var MigrationException $error */
-                    $errorMessages[] = "Error occurred while pushing '{$error->getResourceType()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
+                    $prettyMessages[] = "Error occurred while pushing '{$error->getResourceType()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
+                    $simpleMessages[] = "[Destination] ['{$error->getResourceType()}:{$error->getResourceId()}'] '{$error->getMessage()}'";
                 }
 
                 $migrationDocument->setAttribute('errors', $prettyMessages);
