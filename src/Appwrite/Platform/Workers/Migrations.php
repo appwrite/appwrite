@@ -313,7 +313,7 @@ class Migrations extends Action
                 $log->addExtra('migrationErrors', json_encode($simpleMessages));
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
-                throw new Exception('Migration Failed');
+                throw new Exception('Migration failed');
                 return;
             }
 
