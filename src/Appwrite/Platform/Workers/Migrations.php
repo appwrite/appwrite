@@ -296,20 +296,24 @@ class Migrations extends Action
                 $migrationDocument->setAttribute('stage', 'finished');
                 $log->addTag('stage', 'finished');
 
-                $errorMessages = [];
+                $prettyMessages = [];
+                $simpleMessages = [];
                 foreach ($sourceErrors as $error) {
                     /** @var MigrationException $error */
-                    $errorMessages[] = "Error occurred while fetching '{$error->getResourceType()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
+                    $prettyMessages[] = "Error occurred while fetching '{$error->getResourceType()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
+                    $simpleMessages[] = "[Source] ['{$error->getResourceType()}:{$error->getResourceId()}'] '{$error->getMessage()}'";
                 }
                 foreach ($destinationErrors as $error) {
                     /** @var MigrationException $error */
-                    $errorMessages[] = "Error occurred while pushing '{$error->getResourceType()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
+                    $prettyMessages[] = "Error occurred while pushing '{$error->getResourceType()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
+                    $simpleMessages[] = "[Destination] ['{$error->getResourceType()}:{$error->getResourceId()}'] '{$error->getMessage()}'";
                 }
 
-                $migrationDocument->setAttribute('errors', $errorMessages);
-                $log->addTag('migrationErrors', json_encode($errorMessages));
+                $migrationDocument->setAttribute('errors', $prettyMessages);
+                $log->addExtra('migrationErrors', json_encode($simpleMessages));
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
+                throw new Exception('Migration Failed');
                 return;
             }
 
