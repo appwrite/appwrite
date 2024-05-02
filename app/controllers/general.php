@@ -545,7 +545,7 @@ App::init()
 
         $response
             ->addHeader('Server', 'Appwrite')
-            ->addHeader('X-Appwrite-Version', System::getEnv('_APP_VERSION', 'UNKNOWN'))
+            ->addHeader('X-Appwrite-Response-Format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', 'UNKNOWN'))
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
             ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Forwarded-For, X-Forwarded-User-Agent')
