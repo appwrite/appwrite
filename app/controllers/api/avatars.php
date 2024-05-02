@@ -16,9 +16,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Fetch\Client;
 use Utopia\Image\Image;
-use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
-use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
@@ -156,33 +154,6 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
             'id' => $githubId
         ];
     } catch (Exception $error) {
-        if ($logger) {
-            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-            $log = new Log();
-            $log->setNamespace('console');
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-
-            $log->addTag('code', $error->getCode());
-            $log->addTag('verboseType', get_class($error));
-
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
-
-            $log->setAction('avatarsGetGitHub');
-
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            $responseCode = $logger->addLog($log);
-            Console::info('GitHub error log pushed with status code: ' . $responseCode);
-        }
-
         Console::warning("Failed: {$error->getMessage()}");
         Console::warning($error->getTraceAsString());
 
