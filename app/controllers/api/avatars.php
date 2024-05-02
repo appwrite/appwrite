@@ -6,7 +6,6 @@ use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -154,13 +153,8 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
             'id' => $githubId
         ];
     } catch (Exception $error) {
-        Console::warning("Failed: {$error->getMessage()}");
-        Console::warning($error->getTraceAsString());
-
         return [];
     }
-
-    return [];
 };
 
 App::get('/v1/avatars/credit-cards/:code')
