@@ -135,6 +135,7 @@ return [
         'name' => Exception::USER_COUNT_EXCEEDED,
         'description' => 'The current project has exceeded the maximum number of users. Please check your user limit in the Appwrite console.',
         'code' => 501,
+        'publish' => false,
     ],
     Exception::USER_CONSOLE_COUNT_EXCEEDED => [
         'name' => Exception::USER_CONSOLE_COUNT_EXCEEDED,
