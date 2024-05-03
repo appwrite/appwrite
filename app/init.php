@@ -203,7 +203,7 @@ const APP_AUTH_TYPE_JWT = 'JWT';
 const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
-const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_OUTPUT_CHUNK_SIZE = 7 * 1024 * 1024; // 7MB
 // Function headers
 const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
 const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
