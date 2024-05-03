@@ -543,7 +543,7 @@ App::init()
             $response->addHeader('Strict-Transport-Security', 'max-age=' . (60 * 60 * 24 * 126)); // 126 days
         }
 
-        $responseVersion = System::getEnv('_APP_VERSION', 'UNKNOWN');
+        $responseVersion = APP_VERSION_STABLE;
         if ($responseVersion !== 'UNKNOWN') {
             $responseVersion = \explode('.', $responseVersion);
             $responseVersion[2] = '0';
