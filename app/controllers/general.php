@@ -543,16 +543,16 @@ App::init()
             $response->addHeader('Strict-Transport-Security', 'max-age=' . (60 * 60 * 24 * 126)); // 126 days
         }
 
-        $responseVersion = APP_VERSION_STABLE;
-        if ($responseVersion !== 'UNKNOWN') {
-            $responseVersion = \explode('.', $responseVersion);
-            $responseVersion[2] = '0';
-            $responseVersion = \implode('.', $responseVersion);
+        $defaultResponseFormat = APP_VERSION_STABLE;
+        if ($defaultResponseFormat !== 'UNKNOWN') {
+            $defaultResponseFormat = \explode('.', $defaultResponseFormat);
+            $defaultResponseFormat[2] = '0';
+            $defaultResponseFormat = \implode('.', $defaultResponseFormat);
         }
 
         $response
             ->addHeader('Server', 'Appwrite')
-            ->addHeader('X-Appwrite-Version', $responseVersion)
+            ->addHeader('X-Appwrite-Default-Response-Format', $defaultResponseFormat)
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
             ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Forwarded-For, X-Forwarded-User-Agent')
