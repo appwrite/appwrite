@@ -16,6 +16,7 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
+use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -82,7 +83,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
-            ->setNamespace('');
+            ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
     } else {
         $database
             ->setSharedTables(false)
@@ -110,7 +111,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
-                    ->setNamespace('');
+                    ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
             } else {
                 $database
                     ->setSharedTables(false)
@@ -134,7 +135,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
-                ->setNamespace('');
+                ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
         } else {
             $database
                 ->setSharedTables(false)

@@ -89,7 +89,7 @@ if (!function_exists("getProjectDB")) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
-                ->setNamespace('');
+                ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
         } else {
             $database
                 ->setSharedTables(false)

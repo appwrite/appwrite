@@ -1318,7 +1318,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
-            ->setNamespace('');
+            ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
     } else {
         $database
             ->setSharedTables(false)
@@ -1366,7 +1366,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
-                    ->setNamespace('');
+                    ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
             } else {
                 $database
                     ->setSharedTables(false)

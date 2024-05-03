@@ -7,6 +7,7 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
+use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\CLI;
@@ -107,7 +108,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
-                    ->setNamespace('');
+                    ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
             } else {
                 $database
                     ->setSharedTables(false)
@@ -131,7 +132,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
-                ->setNamespace('');
+                ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
         } else {
             $database
                 ->setSharedTables(false)

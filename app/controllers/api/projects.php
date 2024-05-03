@@ -211,7 +211,7 @@ App::post('/v1/projects')
             $dbForProject
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
-                ->setNamespace('');
+                ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
         } else {
             $dbForProject
                 ->setSharedTables(false)
