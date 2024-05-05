@@ -103,7 +103,7 @@ class CalcTierStats extends Action
 
                 return;
             } catch (\Throwable $th) {
-                Console::error("Unexpected error occured with Project ID {$projectId}");
+                Console::error("Unexpected error occurred with Project ID {$projectId}");
                 Console::error('[Error] Type: ' . get_class($th));
                 Console::error('[Error] Message: ' . $th->getMessage());
                 Console::error('[Error] File: ' . $th->getFile());
@@ -129,7 +129,7 @@ class CalcTierStats extends Action
                 $data = $this->getData($project, $dbForConsole, $dbForProject);
                 $csv->insertOne($data);
             } catch (\Throwable $th) {
-                Console::error("Unexpected error occured with Project ID {$projectId}");
+                Console::error("Unexpected error occurred with Project ID {$projectId}");
                 Console::error('[Error] Type: ' . get_class($th));
                 Console::error('[Error] Message: ' . $th->getMessage());
                 Console::error('[Error] File: ' . $th->getFile());
