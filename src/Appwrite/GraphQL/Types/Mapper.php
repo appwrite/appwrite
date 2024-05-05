@@ -87,7 +87,7 @@ class Mapper
 
         $names = $route->getLabel('sdk.response.model', 'none');
         $models = \is_array($names)
-            ? \array_map(static fn($m) => static::$models[$m], $names)
+            ? \array_map(static fn ($m) => static::$models[$m], $names)
             : [static::$models[$names]];
 
         foreach ($models as $model) {
@@ -150,7 +150,7 @@ class Mapper
                 'resolve' => static function ($object, $args, $context, $info) {
                     $data = \array_filter(
                         (array)$object,
-                        fn($key) => !\str_starts_with($key, '_'),
+                        fn ($key) => !\str_starts_with($key, '_'),
                         ARRAY_FILTER_USE_KEY
                     );
 
@@ -165,7 +165,7 @@ class Mapper
             $fields['status'] = [
                 'type' => Type::string(),
                 'description' => 'Status',
-                'resolve' => static fn($object, $args, $context, $info) => 'OK',
+                'resolve' => static fn ($object, $args, $context, $info) => 'OK',
             ];
         }
 

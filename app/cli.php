@@ -3,29 +3,28 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
-use Appwrite\Event\Delete;
 use Appwrite\Event\Certificate;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
-use Appwrite\Event\Hamster;
 use Appwrite\Platform\Appwrite;
-use Utopia\CLI\CLI;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Service;
-use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\CLI\CLI;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
+use Utopia\Platform\Service;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
+use Utopia\System\System;
 
 Authorization::disable();
 
-CLI::setResource('register', fn()=>$register);
+CLI::setResource('register', fn () => $register);
 
 CLI::setResource('cache', function ($pools) {
     $list = Config::getParam('pools-cache', []);
@@ -72,12 +71,12 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             $collections = Config::getParam('collections', [])['console'];
             $last = \array_key_last($collections);
 
-            if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) { /** TODO cache ready variable using registry */
+            if (!($dbForConsole->exists($dbForConsole->getDatabase(), $last))) { /** TODO cache ready variable using registry */
                 throw new Exception('Tables not ready yet.');
             }
 
             $ready = true;
-        } catch (\Exception $err) {
+        } catch (\Throwable $err) {
             Console::warning($err->getMessage());
             $pools->get('console')->reclaim();
             sleep($sleep);
@@ -142,7 +141,7 @@ CLI::setResource('logError', function (Registry $register) {
         $logger = $register->get('logger');
 
         if ($logger) {
-            $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
             $log = new Log();
             $log->setNamespace($namespace);
@@ -161,7 +160,7 @@ CLI::setResource('logError', function (Registry $register) {
 
             $log->setAction($action);
 
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);
