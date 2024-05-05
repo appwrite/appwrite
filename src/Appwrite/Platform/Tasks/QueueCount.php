@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Event;
 use Utopia\CLI\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Client;

@@ -5,7 +5,6 @@ namespace Tests\E2E\Services\Webhooks;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -27,19 +26,19 @@ trait WebhooksBase
          * Create database
          */
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
-           'content-type' => 'application/json',
-           'x-appwrite-project' => $this->getProject()['$id'],
-           'x-appwrite-key' => $this->getProject()['apiKey']
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-           'databaseId' => ID::unique(),
-           'name' => 'Actors DB',
+            'databaseId' => ID::unique(),
+            'name' => 'Actors DB',
         ]);
 
         $databaseId = $database['body']['$id'];
 
-       /**
-         * Test for SUCCESS
-         */
+        /**
+          * Test for SUCCESS
+          */
         $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -996,5 +995,129 @@ trait WebhooksBase
         $this->assertCount(2, $webhook['data']['roles']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['invited']));
         $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
+    }
+
+    public function testCreateWebhookWithPrivateDomain(): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        $projectId = $this->getProject()['$id'];
+        $webhook = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/webhooks', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'name' => 'Webhook Test',
+            'enabled' => true,
+            'events' => [
+                'databases.*',
+                'functions.*',
+                'buckets.*',
+                'teams.*',
+                'users.*'
+            ],
+            'url' => 'http://localhost/webhook', // private domains not allowed
+            'security' => false,
+        ]);
+
+        $this->assertEquals(400, $webhook['headers']['status-code']);
+    }
+
+    public function testUpdateWebhookWithPrivateDomain(): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        $projectId = $this->getProject()['$id'];
+        $webhookId = $this->getProject()['webhookId'];
+        $webhook = $this->client->call(Client::METHOD_PUT, '/projects/' . $projectId . '/webhooks/' . $webhookId, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'name' => 'Webhook Test',
+            'enabled' => true,
+            'events' => [
+                'databases.*',
+                'functions.*',
+                'buckets.*',
+                'teams.*',
+                'users.*'
+            ],
+            'url' => 'http://localhost/webhook', // private domains not allowed
+            'security' => false,
+        ]);
+
+        $this->assertEquals(400, $webhook['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateCollection
+     */
+    public function testWebhookAutoDisable(array $data): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $webhookId = $this->getProject()['webhookId'];
+        $databaseId = $data['databaseId'];
+
+        $webhook = $this->client->call(Client::METHOD_PUT, '/projects/' . $projectId . '/webhooks/' . $webhookId, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'name' => 'Webhook Test',
+            'enabled' => true,
+            'events' => [
+                'databases.*',
+                'functions.*',
+                'buckets.*',
+                'teams.*',
+                'users.*'
+            ],
+            'url' => 'http://appwrite-non-existing-domain.com', // set non-existent URL
+            'security' => false,
+        ]);
+
+        $this->assertEquals(200, $webhook['headers']['status-code']);
+        $this->assertNotEmpty($webhook['body']);
+
+        // trigger webhook for failure event 10 times
+        for ($i = 0; $i < 10; $i++) {
+            $newCollection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'collectionId' => ID::unique(),
+                'name' => 'newCollection' . $i,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'documentSecurity' => true,
+            ]);
+
+            $this->assertEquals($newCollection['headers']['status-code'], 201);
+            $this->assertNotEmpty($newCollection['body']['$id']);
+        }
+
+        sleep(10);
+
+        $webhook = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/webhooks/' . $webhookId, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ]));
+
+        // assert that the webhook is now disabled after 10 consecutive failures
+        $this->assertEquals($webhook['body']['enabled'], false);
+        $this->assertEquals($webhook['body']['attempts'], 10);
     }
 }

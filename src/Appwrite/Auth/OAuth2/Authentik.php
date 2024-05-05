@@ -171,11 +171,11 @@ class Authentik extends OAuth2
         return '';
     }
 
-     /**
-     * @param string $accessToken
-     *
-     * @return array
-     */
+    /**
+    * @param string $accessToken
+    *
+    * @return array
+    */
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
@@ -199,11 +199,11 @@ class Authentik extends OAuth2
         return $secret['clientSecret'] ?? '';
     }
 
-     /**
-     * Extracts the authentik Domain from the JSON stored in appSecret
-     *
-     * @return string
-     */
+    /**
+    * Extracts the authentik Domain from the JSON stored in appSecret
+    *
+    * @return string
+    */
     protected function getAuthentikDomain(): string
     {
         $secret = $this->getAppSecret();

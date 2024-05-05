@@ -9,7 +9,6 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Execution;
 use Exception;
 use Executor\Executor;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -24,6 +23,7 @@ use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Functions extends Action
 {
@@ -46,7 +46,7 @@ class Functions extends Action
             ->inject('queueForEvents')
             ->inject('queueForUsage')
             ->inject('log')
-            ->callback(fn(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+            ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
     }
 
     /**
@@ -90,6 +90,10 @@ class Functions extends Action
         if ($project->getId() === 'console') {
             return;
         }
+
+        $log->addTag('functionId', $function->getId());
+        $log->addTag('projectId', $project->getId());
+        $log->addTag('type', $type);
 
         if (!empty($events)) {
             $limit = 30;
@@ -301,15 +305,14 @@ class Functions extends Action
         string $eventData = null,
         string $executionId = null,
     ): void {
-            $user ??= new Document();
-            $functionId = $function->getId();
-            $deploymentId = $function->getAttribute('deployment', '');
+        $user ??= new Document();
+        $functionId = $function->getId();
+        $deploymentId = $function->getAttribute('deployment', '');
 
-            $log->addTag('functionId', $functionId);
-            $log->addTag('projectId', $project->getId());
+        $log->addTag('deploymentId', $deploymentId);
 
-            /** Check if deployment exists */
-            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        /** Check if deployment exists */
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
@@ -323,8 +326,12 @@ class Functions extends Action
             return;
         }
 
-        /** Check if the build exists */
-        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
+        $buildId = $deployment->getAttribute('buildId', '');
+
+        $log->addTag('buildId', $buildId);
+
+        /** Check if build has exists */
+        $build = $dbForProject->getDocument('builds', $buildId);
         if ($build->isEmpty()) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
             $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
@@ -447,7 +454,7 @@ class Functions extends Action
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
             $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
@@ -531,7 +538,7 @@ class Functions extends Action
             'executionId' => $execution->getId()
         ]);
         $target = Realtime::fromPayload(
-        // Pass first, most verbose event pattern
+            // Pass first, most verbose event pattern
             event: $allEvents[0],
             payload: $execution
         );

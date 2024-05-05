@@ -66,7 +66,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.4.13
+    appwrite/appwrite:1.5.5
 ```
 
 ### Windows
@@ -78,7 +78,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.4.13
+    appwrite/appwrite:1.5.5
 ```
 
 #### PowerShell
@@ -88,7 +88,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.4.13
+    appwrite/appwrite:1.5.5
 ```
 
 运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。在非 Linux 的本机主机上完成安装后，服务器可能需要几分钟才能启动。
@@ -104,12 +104,29 @@ docker run -it --rm `
 
 开始使用 Appwrite 只需要在控制台创建一个新项目，选择开发平台，然后抓取我们的开发套件。您可以从以下的教程中找到你喜欢的平台开始使用 Appwrite。
 
-* [开始使用 Web](https://appwrite.io/docs/getting-started-for-web)
-* [开始使用 Flutter](https://appwrite.io/docs/getting-started-for-flutter)
-* [开始使用 Apple](https://appwrite.io/docs/getting-started-for-apple)
-* [开始使用 Android](https://appwrite.io/docs/getting-started-for-android)
-* [开始使用 Server](https://appwrite.io/docs/getting-started-for-server)
-* [开始使用 CLI](https://appwrite.io/docs/command-line)
+| 类别                | 技术 |
+|---------------------|------|
+| **Web 应用**         | [Web 快速开始](/docs/quick-starts/web) |
+|                     | [Next.js 快速开始](/docs/quick-starts/nextjs) |
+|                     | [React 快速开始](/docs/quick-starts/react) |
+|                     | [Vue.js 快速开始](/docs/quick-starts/vue) |
+|                     | [Nuxt 快速开始](/docs/quick-starts/nuxt) |
+|                     | [SvelteKit 快速开始](/docs/quick-starts/sveltekit) |
+|                     | [Refine 快速开始](/docs/quick-starts/refine) |
+|                     | [Angular 快速开始](/docs/quick-starts/angular) |
+| **苹果于安卓应用**    | [React Native 快速开始](/docs/quick-starts/react-native) |
+|                     | [Flutter 快速开始](/docs/quick-starts/flutter) |
+|                     | [Apple 快速开始](/docs/quick-starts/apple) |
+|                     | [Android 快速开始](/docs/quick-starts/android) |
+| **服务器**           | [Node.js 快速开始](/docs/quick-starts/node) |
+|                     | [Python 快速开始](/docs/quick-starts/python) |
+|                     | [.NET 快速开始](/docs/quick-starts/dotnet) |
+|                     | [Dart 快速开始](/docs/quick-starts/dart) |
+|                     | [Ruby 快速开始](/docs/quick-starts/ruby) |
+|                     | [Deno 快速开始](/docs/quick-starts/deno) |
+|                     | [PHP 快速开始](/docs/quick-starts/php) |
+|                     | [Kotlin 快速开始](/docs/quick-starts/kotlin) |
+|                     | [Swift 快速开始](/docs/quick-starts/swift) |
 
 ### 软件服务
 
@@ -119,6 +136,7 @@ docker run -it --rm `
 * [**数据库**](https://appwrite.io/docs/references/cloud/client-web/databases) - 管理数据库文档和文档集。用检索界面来对文档和文档集进行读取，创建，更新，和删除。
 * [**贮存**](https://appwrite.io/docs/references/cloud/client-web/storage) - 管理文件的阅读、创建、删除和预览。设置文件的预览来满足程序的个性化需求。所有文件都由 ClamAV 扫描并安全存储和加密。
 * [**云函数**](https://appwrite.io/docs/server/functions) - 在安全，隔离的环境中运行自定义代码。这些代码可以被事件，CRON，或者手动操作触发。
+* [**消息传递**](https://appwrite.io/docs/references/cloud/client-web/messaging) - 使用 Appwrite 消息传递功能通过推送通知、电子邮件和短信与用户进行通信。
 * [**语言适配**](https://appwrite.io/docs/references/cloud/client-web/locale) - 根据用户所在的的国家和地区做出合适的语言适配。
 * [**头像**](https://appwrite.io/docs/references/cloud/client-web/avatars) -管理用户头像、国家旗帜、浏览器图标、信用卡符号，和生成二维码。 
 如需完整的 API 界面文档，请访问 [https://appwrite.io/docs](https://appwrite.io/docs)。如需更多教程、新闻和公告，请订阅我们的 [博客](https://medium.com/appwrite-io) 和 加入我们的[Discord 社区](https://discord.gg/GSeTUeA)。
@@ -130,18 +148,19 @@ docker run -it --rm `
 #### 客户端
 * ✅  &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (由 Appwrite 团队维护)
 * ✅  &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (由 Appwrite 团队维护)
-* ✅  &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **公测** (由 Appwrite 团队维护)
+* ✅  &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) (由 Appwrite 团队维护)
 * ✅  &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (由 Appwrite 团队维护)
+* ✅  &nbsp; [React Native](https://github.com/appwrite/sdk-for-react-native) - **公测** (由 Appwrite 团队维护)
 
 #### 服务器
 * ✅  &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (由 Appwrite 团队维护)
 * ✅  &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (由 Appwrite 团队维护)
-* ✅  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) - (由 Appwrite 团队维护)
-* ✅  &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **公测** (由 Appwrite 团队维护)
+* ✅  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) (由 Appwrite 团队维护)
+* ✅  &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) (由 Appwrite 团队维护)
 * ✅  &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (由 Appwrite 团队维护)
 * ✅  &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (由 Appwrite 团队维护)
-* ✅  &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **公测** (由 Appwrite 团队维护)
-* ✅  &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **公测** (由 Appwrite 团队维护)
+* ✅  &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) (由 Appwrite 团队维护)
+* ✅  &nbsp; [Swift](https://github.com/appwrite/sdk-for-swift) (由 Appwrite 团队维护)
 * ✅  &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **公测** (由 Appwrite 团队维护)
 
 #### 开发者社区

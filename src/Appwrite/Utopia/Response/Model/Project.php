@@ -138,9 +138,9 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('providers', [
-                'type' => Response::MODEL_PROVIDER,
-                'description' => 'List of Providers.',
+            ->addRule('oAuthProviders', [
+                'type' => Response::MODEL_AUTH_PROVIDER,
+                'description' => 'List of Auth Providers.',
                 'default' => [],
                 'example' => [new \stdClass()],
                 'array' => true,
@@ -328,9 +328,9 @@ class Project extends Model
             $document->setAttribute('auth' . ucfirst($key), $value);
         }
 
-        // Providers
-        $providers = Config::getParam('providers', []);
-        $providerValues = $document->getAttribute('authProviders', []);
+        // OAuth Providers
+        $providers = Config::getParam('oAuthProviders', []);
+        $providerValues = $document->getAttribute('oAuthProviders', []);
         $projectProviders = [];
 
         foreach ($providers as $key => $provider) {
@@ -348,7 +348,7 @@ class Project extends Model
             ]);
         }
 
-        $document->setAttribute("providers", $projectProviders);
+        $document->setAttribute('oAuthProviders', $projectProviders);
 
         return $document;
     }
