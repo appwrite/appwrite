@@ -7,7 +7,7 @@ on:
 jobs:
   stale:
     runs-on: ubuntu-latest
-
+    if: github.repository == 'appwrite/appwrite'
     steps:
       - uses: actions/stale@v9
         with:

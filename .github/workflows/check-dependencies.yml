@@ -8,6 +8,10 @@ on:
   merge_group:
     branches: [main, 1.*.x]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   # Require writing security events to upload SARIF file to security tab
   security-events: write
