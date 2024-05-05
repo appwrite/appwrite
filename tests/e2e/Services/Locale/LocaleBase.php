@@ -247,7 +247,7 @@ trait LocaleBase
             }
 
             $this->assertEquals($response['headers']['status-code'], 200);
-            $this->assertEquals(196, $response['body']['total']);
+            $this->assertEquals(197, $response['body']['total']);
 
             $response = $this->client->call(Client::METHOD_GET, '/locale/continents', [
                 'content-type' => 'application/json',
