@@ -15,7 +15,6 @@ use Appwrite\SDK\Language\Kotlin;
 use Appwrite\SDK\Language\Node;
 use Appwrite\SDK\Language\PHP;
 use Appwrite\SDK\Language\Python;
-use Appwrite\SDK\Language\ReactNative;
 use Appwrite\SDK\Language\REST;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Swift;
@@ -159,10 +158,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'flutter':
                         $config = new Flutter();
                         $config->setPackageName('appwrite');
-                        break;
-                    case 'react-native':
-                        $config = new ReactNative();
-                        $config->setNPMPackage('react-native-appwrite');
                         break;
                     case 'flutter-dev':
                         $config = new Flutter();
