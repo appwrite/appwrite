@@ -13,11 +13,6 @@ class ProjectsCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    public function testMock()
-    {
-        $this->assertEquals(true, true);
-    }
-
     // Domains
 
     public function testCreateProjectRule()
@@ -28,7 +23,6 @@ class ProjectsCustomServerTest extends Scope
             'x-appwrite-mode' => 'admin',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]);
-
 
         $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
             'resourceType' => 'api',
