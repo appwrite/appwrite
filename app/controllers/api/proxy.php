@@ -50,7 +50,7 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your main domain to specific resource. Please use subdomain or a different domain.');
         }
 
-        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         if (str_ends_with($domain, $functionsDomain)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
         }
