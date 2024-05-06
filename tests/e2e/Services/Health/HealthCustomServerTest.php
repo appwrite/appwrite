@@ -3,9 +3,8 @@
 namespace Tests\E2E\Services\Health;
 
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
-use Tests\E2E\Scopes\SideClient;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 
 class HealthCustomServerTest extends Scope
@@ -407,6 +406,24 @@ class HealthCustomServerTest extends Scope
         return [];
     }
 
+    public function testStorageSuccess(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/storage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('pass', $response['body']['status']);
+        $this->assertIsInt($response['body']['ping']);
+        $this->assertLessThan(100, $response['body']['ping']);
+
+        return [];
+    }
+
     public function testStorageAntiVirusSuccess(): array
     {
         /**
@@ -423,5 +440,123 @@ class HealthCustomServerTest extends Scope
         $this->assertIsString($response['body']['version']);
 
         return [];
+    }
+
+    public function testCertificateValidity(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=www.google.com', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('/CN=www.google.com', $response['body']['name']);
+        $this->assertEquals('www.google.com', $response['body']['subjectSN']);
+        $this->assertEquals('Google Trust Services LLC', $response['body']['issuerOrganisation']);
+        $this->assertIsInt($response['body']['validFrom']);
+        $this->assertIsInt($response['body']['validTo']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=appwrite.io', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('/CN=appwrite.io', $response['body']['name']);
+        $this->assertEquals('appwrite.io', $response['body']['subjectSN']);
+        $this->assertEquals("Let's Encrypt", $response['body']['issuerOrganisation']);
+        $this->assertIsInt($response['body']['validFrom']);
+        $this->assertIsInt($response['body']['validTo']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=https://google.com', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=localhost', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=doesnotexist.com', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=www.google.com/usr/src/local', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        return [];
+    }
+
+    public function testUsageSuccess()
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['size']);
+        $this->assertLessThan(100, $response['body']['size']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage?threshold=0', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(503, $response['headers']['status-code']);
+    }
+
+    public function testUsageDumpSuccess()
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage-dump', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['size']);
+        $this->assertLessThan(100, $response['body']['size']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage-dump?threshold=0', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(503, $response['headers']['status-code']);
     }
 }

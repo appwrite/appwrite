@@ -3,12 +3,12 @@
 namespace Tests\Unit\Auth;
 
 use Appwrite\Auth\Auth;
+use PHPUnit\Framework\TestCase;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use PHPUnit\Framework\TestCase;
 use Utopia\Database\Validator\Roles;
 
 class AuthTest extends TestCase
@@ -189,8 +189,8 @@ class AuthTest extends TestCase
 
     public function testTokenGenerator(): void
     {
-        $this->assertEquals(\mb_strlen(Auth::tokenGenerator()), 256);
-        $this->assertEquals(\mb_strlen(Auth::tokenGenerator(5)), 10);
+        $this->assertEquals(\strlen(Auth::tokenGenerator()), 256);
+        $this->assertEquals(\strlen(Auth::tokenGenerator(5)), 5);
     }
 
     public function testCodeGenerator(): void
@@ -213,12 +213,14 @@ class AuthTest extends TestCase
                 'secret' => $hash,
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
+                'expire' => DateTime::addSeconds(new \DateTime(), $expireTime1),
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
                 'secret' => 'secret2',
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
+                'expire' => DateTime::addSeconds(new \DateTime(), $expireTime1),
             ]),
         ];
 
@@ -230,19 +232,21 @@ class AuthTest extends TestCase
                 'secret' => $hash,
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
+                'expire' => DateTime::addSeconds(new \DateTime(), $expireTime2),
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
                 'secret' => 'secret2',
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
+                'expire' => DateTime::addSeconds(new \DateTime(), $expireTime2),
             ]),
         ];
 
-        $this->assertEquals(Auth::sessionVerify($tokens1, $secret, $expireTime1), 'token1');
-        $this->assertEquals(Auth::sessionVerify($tokens1, 'false-secret', $expireTime1), false);
-        $this->assertEquals(Auth::sessionVerify($tokens2, $secret, $expireTime2), false);
-        $this->assertEquals(Auth::sessionVerify($tokens2, 'false-secret', $expireTime2), false);
+        $this->assertEquals(Auth::sessionVerify($tokens1, $secret), 'token1');
+        $this->assertEquals(Auth::sessionVerify($tokens1, 'false-secret'), false);
+        $this->assertEquals(Auth::sessionVerify($tokens2, $secret), false);
+        $this->assertEquals(Auth::sessionVerify($tokens2, 'false-secret'), false);
     }
 
     public function testTokenVerify(): void
@@ -294,7 +298,8 @@ class AuthTest extends TestCase
             ]),
         ];
 
-        $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, $secret), 'token1');
+        $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, $secret), $tokens1[0]);
+        $this->assertEquals(Auth::tokenVerify($tokens1, null, $secret), $tokens1[0]);
         $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
         $this->assertEquals(Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_RECOVERY, $secret), false);
         $this->assertEquals(Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
