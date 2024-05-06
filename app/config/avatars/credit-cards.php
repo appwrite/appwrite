@@ -4,7 +4,7 @@ return [
     'amex' => ['name' => 'American Express', 'path' => __DIR__ . '/credit-cards/amex.png'],
     'argencard' => ['name' => 'Argencard', 'path' => __DIR__ . '/credit-cards/argencard.png'],
     'cabal' => ['name' => 'Cabal', 'path' => __DIR__ . '/credit-cards/cabal.png'],
-    'cencosud' => ['name' => 'Consosud', 'path' => __DIR__ . '/credit-cards/cencosud.png'],
+    'cencosud' => ['name' => 'Cencosud', 'path' => __DIR__ . '/credit-cards/cencosud.png'],
     'diners' => ['name' => 'Diners Club', 'path' => __DIR__ . '/credit-cards/diners.png'],
     'discover' => ['name' => 'Discover', 'path' => __DIR__ . '/credit-cards/discover.png'],
     'elo' => ['name' => 'Elo', 'path' => __DIR__ . '/credit-cards/elo.png'],
