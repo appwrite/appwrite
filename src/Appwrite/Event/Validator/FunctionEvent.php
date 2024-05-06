@@ -2,8 +2,6 @@
 
 namespace Appwrite\Event\Validator;
 
-use Utopia\Config\Config;
-
 class FunctionEvent extends Event
 {
     /**

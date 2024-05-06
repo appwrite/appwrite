@@ -326,6 +326,7 @@ services:
       - MYSQL_DATABASE=appwrite
       - MYSQL_USER=user
       - MYSQL_PASSWORD=password
+      - MARIADB_AUTO_UPGRADE=1
     command: 'mysqld --innodb-flush-method=fsync'
 
   maildev:

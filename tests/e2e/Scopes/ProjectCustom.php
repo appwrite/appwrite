@@ -82,7 +82,18 @@ trait ProjectCustom
                 'avatars.read',
                 'health.read',
                 'rules.read',
-                'rules.write'
+                'rules.write',
+                'sessions.write',
+                'targets.read',
+                'targets.write',
+                'providers.read',
+                'providers.write',
+                'messages.read',
+                'messages.write',
+                'topics.write',
+                'topics.read',
+                'subscribers.write',
+                'subscribers.read',
             ],
         ]);
 
