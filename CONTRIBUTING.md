@@ -301,12 +301,53 @@ This will allow the Appwrite community to sufficiently discuss the new feature v
 
 This is also important for the Appwrite lead developers to be able to provide technical input and potentially a different emphasis regarding the feature design and architecture. Some bigger features might need to go through our [RFC process](https://github.com/appwrite/rfc).
 
-## Adding new usage metrics
+## Adding New Usage Metrics
+
+These are the current metrics we collect usage stats for:
+
+| Metric | Description                                       |
+|--------|---------------------------------------------------|
+| teams  | Total number of teams per project                 |
+| users | Total number of users per project                 |
+| executions | Total number of executions per project           | 
+| databases | Total number of databases per project             | 
+| collections | Total number of collections per project           | 
+| {databaseInternalId}.collections | Total number of collections per database          | 
+| documents | Total number of documents per project             | 
+| {databaseInternalId}.{collectionInternalId}.documents | Total number of documents per collection          | 
+| buckets | Total number of buckets per project               | 
+| files | Total number of files per project                 |  
+| files.storage | Sum of files storage per project  (in bytes)      | 
+| {bucketInternalId}.files.storage | Sum of files.storage per bucket                   |
+| functions | Total number of functions per project             |
+| deployments | Total number of deployments per project           |
+| deployments.storage | Sum of deployments storage per project (in bytes) |
+| builds | Total number of builds per project                |
+| builds.storage | Sum of builds storage per project (in bytes)      |
+| builds.compute | Sum of compute duration per project (in seconds)  |
+| {functionInternalId}.builds.storage | Sum of builds storage per function                |
+| {functionInternalId}.builds.compute | Sum of compute duration per function (in seconds) |
+| {resourceType}.{resourceInternalId}.deployments | Total number of deployments per function           |
+| {resourceType}.{resourceInternalId}.deployments.storage | Sum of deployments storage per function           |
+| executions | Total number of executions per project |
+| executions.compute | Sum of compute duration per project (in seconds) |
+| {functionInternalId}.executions | Total number of executions per function  |
+| network.requests | Total number of network requests per project |
+| network.inbound | Sum of network inbound traffic per project |
+| network.outbound | Sum of network outbound traffic per project |
+
+* The curly brackets in the metric name act as placeholders and will be replaced with a value.
+
+Metrics are collected into 3 scopes: Daily, monthly, and infinity. Adding new usage metrics to aggregate usage stats is simple but depends on whether you want to collect the statistics via API or background worker. Here are the steps needed for both cases:
+
+For both cases, add a const variable in `app/init.php` under the usage metrics list:
+
+* The curly brackets in the metric name acts as a placeholder and will be replaced with a value.
 
 metrics are collected to 3 scopes :
 Daily, monthly, an infinity.
-Adding new usage metrics in order to aggregate  usage stats is very simple but very much depends on where do you want to collect.
-the statistics( via API or via background worker)
+Adding new usage metrics in order to aggregate  usage stats is very simple but very much depends on where do you want to collect
+the statistics(API or via background worker).
 Here are the steps needs to be taken in both cases:
 
 For both cases you need to add a const variable in app/init.php under the usage metrics list.
@@ -315,16 +356,22 @@ For both cases you need to add a const variable in app/init.php under the usage 
 const METRIC_FUNCTIONS  = 'functions';
 const METRIC_DEPLOYMENTS  = 'deployments';
 const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
-const METRIC_BUILDS  = 'builds';
-const METRIC_BUILDS_STORAGE  = 'builds.storage';
-const METRIC_BUILDS_COMPUTE  = 'builds.compute';
 ```
 
 **API**
 
-On database listener, Add to existing or create a new switch case.
-Add a call to the usage worker with your new metric const like so:
+In the database listener, add to an existing or create a new switch case. Add a call to the usage worker with your new metric const like so:
 
+```php
+      case $document->getCollection() === 'teams':
+            $queueForUsage
+                ->addMetric(METRIC_TEAMS, $value); // per project
+            break;
+```
+There are cases when you need to handle metric the is a parent entity, like buckets.
+Files are linked to a parent bucket, you should verify you remove the files stats when you delete a bucket.
+
+In that case you need also to handle children removal using addReduce() method call.
 ```php
  case $document->getCollection() === 'functions':
             $queueForUsage
@@ -336,8 +383,34 @@ Add a call to the usage worker with your new metric const like so:
             break;
 ```
 
+On top of that also adding logic on the usage worker located in /src/Appwrite/Platform/Workers/Usage.php,  on the reduce method.
+```php
+private function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void
+```
+
 
 **Background worker**
+
+On that case you need to inject the usage queue to the desired worker
+```php
+/**
+* @throws Exception
+*/
+public function __construct()
+{
+$this
+->desc('Functions worker')
+->groups(['functions'])
+->inject('message')
+->inject('dbForProject')
+->inject('queueForFunctions')
+->inject('queueForEvents')
+->inject('queueForUsage')
+->inject('log')
+->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+```
+
+and then trigger the queue with the new metric like so: 
 
 ```php
 $queueForUsage
