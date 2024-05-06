@@ -301,6 +301,57 @@ This will allow the Appwrite community to sufficiently discuss the new feature v
 
 This is also important for the Appwrite lead developers to be able to provide technical input and potentially a different emphasis regarding the feature design and architecture. Some bigger features might need to go through our [RFC process](https://github.com/appwrite/rfc).
 
+## Adding new usage metrics
+
+metrics are collected to 3 scopes :
+Daily, monthly, an infinity.
+Adding new usage metrics in order to aggregate  usage stats is very simple but very much depends on where do you want to collect.
+the statistics( via API or via background worker)
+Here are the steps needs to be taken in both cases:
+
+For both cases you need to add a const variable in app/init.php under the usage metrics list.
+```php
+// Usage metrics
+const METRIC_FUNCTIONS  = 'functions';
+const METRIC_DEPLOYMENTS  = 'deployments';
+const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
+const METRIC_BUILDS  = 'builds';
+const METRIC_BUILDS_STORAGE  = 'builds.storage';
+const METRIC_BUILDS_COMPUTE  = 'builds.compute';
+```
+
+**API**
+
+On database listener, Add to existing or create a new switch case.
+Add a call to the usage worker with your new metric const like so:
+
+```php
+ case $document->getCollection() === 'functions':
+            $queueForUsage
+                ->addMetric(METRIC_FUNCTIONS, $value);
+  if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
+```
+
+
+**Background worker**
+
+```php
+$queueForUsage
+  ->addMetric(METRIC_BUILDS, 1)
+  ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+  ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+  ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) 
+  ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+  ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+  ->setProject($project)
+  ->trigger();
+```
+
+
 ## Build
 
 To build a new version of the Appwrite server, all you need to do is run the build.sh file like this:
