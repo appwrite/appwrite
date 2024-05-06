@@ -73,8 +73,14 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
 
     $pools = $register->get('pools');
 
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
+
     $adapter = $pools
-        ->get($project->getAttribute('database'))
+        ->get($dsn->getHost())
         ->pop()
         ->getResource();
 

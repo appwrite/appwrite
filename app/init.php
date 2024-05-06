@@ -1302,8 +1302,14 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         return $dbForConsole;
     }
 
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
+
     $dbAdapter = $pools
-        ->get($project->getAttribute('database'))
+        ->get($dsn->getHost())
         ->pop()
         ->getResource();
 
