@@ -1314,7 +1314,11 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-    $dsn = new DSN($project->getAttribute('database'));
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
 
     if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
         $database
@@ -1356,8 +1360,11 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             return $dbForConsole;
         }
 
-        $dsn = new DSN($project->getAttribute('database'));
-        $databaseName = empty($dsn->getHost()) ? $dsn->getPath() : $dsn->getHost();
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
 
         $configure = (function (Database $database) use ($project, $dsn) {
             $database
@@ -1378,19 +1385,19 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             }
         });
 
-        if (isset($databases[$databaseName])) {
-            $database = $databases[$databaseName];
+        if (isset($databases[$dsn->getHost()])) {
+            $database = $databases[$dsn->getHost()];
             $configure($database);
             return $database;
         }
 
         $dbAdapter = $pools
-            ->get($databaseName)
+            ->get($dsn->getHost())
             ->pop()
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
-        $databases[$databaseName] = $database;
+        $databases[$dsn->getHost()] = $database;
         $configure($database);
 
         return $database;

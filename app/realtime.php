@@ -78,11 +78,14 @@ if (!function_exists("getProjectDB")) {
             return getConsoleDB();
         }
 
-        $dsn = new DSN($project->getAttribute('database'));
-        $databaseName = empty($dsn->getHost()) ? $dsn->getPath() : $dsn->getHost();
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
 
         $adapter = $pools
-            ->get($databaseName)
+            ->get($dsn->getHost())
             ->pop()
             ->getResource();
 

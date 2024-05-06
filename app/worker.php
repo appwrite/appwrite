@@ -80,7 +80,11 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
 
     $database = new Database($adapter, $cache);
 
-    $dsn = new DSN($project->getAttribute('database'));
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
 
     if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
         $database
@@ -105,11 +109,14 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
             return $dbForConsole;
         }
 
-        $dsn = new DSN($project->getAttribute('database'));
-        $databaseName = empty($dsn->getHost()) ? $dsn->getPath() : $dsn->getHost();
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
 
-        if (isset($databases[$databaseName])) {
-            $database = $databases[$databaseName];
+        if (isset($databases[$dsn->getHost()])) {
+            $database = $databases[$dsn->getHost()];
 
             if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
                 $database
@@ -127,13 +134,13 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
         }
 
         $dbAdapter = $pools
-            ->get($databaseName)
+            ->get($dsn->getHost())
             ->pop()
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
 
-        $databases[$databaseName] = $database;
+        $databases[$dsn->getHost()] = $database;
 
         if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
             $database

@@ -220,9 +220,14 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
 
-        $dsn = new DSN($dsn);
-        $databaseName = empty($dsn->getHost()) ? $dsn->getPath() : $dsn->getHost();
-        $dbForProject = new Database($pools->get($databaseName)->pop()->getResource(), $cache);
+        try {
+            $dsn = new DSN($dsn);
+        } catch (\InvalidArgumentException) {
+            $dsn = new DSN('mysql://' . $dsn);
+        }
+
+        $adapter = $pools->get($dsn->getHost())->pop()->getResource();
+        $dbForProject = new Database($adapter, $cache);
 
         if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
             $dbForProject

@@ -99,12 +99,14 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             return $dbForConsole;
         }
 
-        $dsn = new DSN($project->getAttribute('database'));
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
 
-        $databaseName = empty($dsn->getHost()) ? $dsn->getPath() : $dsn->getHost();
-
-        if (isset($databases[$databaseName])) {
-            $database = $databases[$databaseName];
+        if (isset($databases[$dsn->getHost()])) {
+            $database = $databases[$dsn->getHost()];
 
             if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
                 $database
@@ -122,13 +124,13 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         }
 
         $dbAdapter = $pools
-            ->get($databaseName)
+            ->get($dsn->getHost())
             ->pop()
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
 
-        $databases[$databaseName] = $database;
+        $databases[$dsn->getHost()] = $database;
 
         if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
             $database
