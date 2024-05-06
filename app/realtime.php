@@ -26,6 +26,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\System\System;
 use Utopia\WebSocket\Adapter;
@@ -77,19 +78,21 @@ if (!function_exists("getProjectDB")) {
             return getConsoleDB();
         }
 
-        $dbAdapter = $pools
-            ->get($project->getAttribute('database'))
+        $dsn = new DSN($project->getAttribute('database'));
+        $databaseName = empty($dsn->getHost()) ? $dsn->getPath() : $dsn->getHost();
+
+        $adapter = $pools
+            ->get($databaseName)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
 
-        $database = new Database($dbAdapter, getCache());
+        $database = new Database($adapter, getCache());
 
-        if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
-                ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
+                ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
                 ->setSharedTables(false)

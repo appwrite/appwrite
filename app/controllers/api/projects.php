@@ -30,6 +30,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
+use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Pools\Group;
 use Utopia\System\System;
@@ -142,9 +143,9 @@ App::post('/v1/projects')
         $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE');
         $index = \array_search($databaseOverride, $databases);
         if ($index !== false) {
-            $database = $databases[$index];
+            $dsn = $databases[$index];
         } else {
-            $database = $databases[array_rand($databases)];
+            $dsn = $databases[array_rand($databases)];
         }
 
         if ($projectId === 'console') {
@@ -156,7 +157,14 @@ App::post('/v1/projects')
             !\mt_rand(0, 19)
             && App::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
         ) {
-            $database = DATABASE_SHARED_TABLES;
+            $schema = 'appwrite';
+            $database = 'appwrite';
+            $namespace = App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+            $dsn = $schema . '://' . DATABASE_SHARED_TABLES . '?database=' . $database;
+
+            if (!empty($namespace)) {
+                $dsn .= '&namespace=' . $namespace;
+            }
         }
 
         // TODO: Allow overriding in development mode. Temporary until all projects are using shared tables.
@@ -165,7 +173,14 @@ App::post('/v1/projects')
             && App::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
             && $request->getHeader('x-appwrite-share-tables', false)
         ) {
-            $database = DATABASE_SHARED_TABLES;
+            $schema = 'appwrite';
+            $database = 'appwrite';
+            $namespace = App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+            $dsn = $schema . '://' . DATABASE_SHARED_TABLES . '?database=' . $database;
+
+            if (!empty($namespace)) {
+                $dsn .= '&namespace=' . $namespace;
+            }
         }
 
         try {
@@ -199,19 +214,21 @@ App::post('/v1/projects')
                 'keys' => null,
                 'auths' => $auths,
                 'search' => implode(' ', [$projectId, $name]),
-                'database' => $database,
+                'database' => $dsn,
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
 
-        $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
+        $dsn = new DSN($dsn);
+        $databaseName = empty($dsn->getHost()) ? $dsn->getPath() : $dsn->getHost();
+        $dbForProject = new Database($pools->get($databaseName)->pop()->getResource(), $cache);
 
-        if ($database === DATABASE_SHARED_TABLES) {
+        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
             $dbForProject
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
-                ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
+                ->setNamespace($dsn->getParam('namespace'));
         } else {
             $dbForProject
                 ->setSharedTables(false)
@@ -224,8 +241,8 @@ App::post('/v1/projects')
         $audit = new Audit($dbForProject);
         $audit->setup();
 
-        $adapter = new TimeLimit('', 0, 1, $dbForProject);
-        $adapter->setup();
+        $abuse = new TimeLimit('', 0, 1, $dbForProject);
+        $abuse->setup();
 
         /** @var array $collections */
         $collections = Config::getParam('collections', [])['projects'] ?? [];

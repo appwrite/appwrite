@@ -10,8 +10,6 @@ x-logging: &x-logging
       max-file: "5"
       max-size: "10m"
 
-version: "3"
-
 services:
   traefik:
     image: traefik:2.11
@@ -94,6 +92,7 @@ services:
       - app/http.php
     environment:
       - _APP_ENV
+      - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT

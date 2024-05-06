@@ -1314,11 +1314,13 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-    if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+    $dsn = new DSN($project->getAttribute('database'));
+
+    if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
         $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
-            ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
+            ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
             ->setSharedTables(false)
@@ -1354,19 +1356,20 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             return $dbForConsole;
         }
 
-        $databaseName = $project->getAttribute('database');
+        $dsn = new DSN($project->getAttribute('database'));
+        $databaseName = empty($dsn->getHost()) ? $dsn->getPath() : $dsn->getHost();
 
-        $configure = (function (Database $database) use ($project) {
+        $configure = (function (Database $database) use ($project, $dsn) {
             $database
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-            if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
-                    ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
+                    ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
                     ->setSharedTables(false)

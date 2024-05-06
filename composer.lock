@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "28ecd4705def24ce61eee0f6676439d6",
+    "content-hash": "7276ce4fa8a3c75f95f952153fdca69f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1672,16 +1672,16 @@
         },
         {
             "name": "utopia-php/dsn",
-            "version": "0.2.0",
+            "version": "dev-feat-allow-nullable-scheme",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/dsn.git",
-                "reference": "c11f37a12c3f6aaf9fea97ca7cb363dcc93668d7"
+                "reference": "09521c1fb6dc5488df5e89eeb6b3ca5e736fd97c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dsn/zipball/c11f37a12c3f6aaf9fea97ca7cb363dcc93668d7",
-                "reference": "c11f37a12c3f6aaf9fea97ca7cb363dcc93668d7",
+                "url": "https://api.github.com/repos/utopia-php/dsn/zipball/09521c1fb6dc5488df5e89eeb6b3ca5e736fd97c",
+                "reference": "09521c1fb6dc5488df5e89eeb6b3ca5e736fd97c",
                 "shasum": ""
             },
             "require": {
@@ -1713,9 +1713,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/dsn/issues",
-                "source": "https://github.com/utopia-php/dsn/tree/0.2.0"
+                "source": "https://github.com/utopia-php/dsn/tree/feat-allow-nullable-scheme"
             },
-            "time": "2023-11-02T12:01:43+00:00"
+            "time": "2024-05-06T05:15:19+00:00"
         },
         {
             "name": "utopia-php/fetch",
@@ -5505,7 +5505,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/dsn": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

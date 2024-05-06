@@ -16,6 +16,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
@@ -99,16 +100,18 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             return $dbForConsole;
         }
 
-        $databaseName = $project->getAttribute('database');
+        $dsn = new DSN($project->getAttribute('database'));
+
+        $databaseName = empty($dsn->getHost()) ? $dsn->getPath() : $dsn->getHost();
 
         if (isset($databases[$databaseName])) {
             $database = $databases[$databaseName];
 
-            if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
-                    ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
+                    ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
                     ->setSharedTables(false)
@@ -128,11 +131,11 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $databases[$databaseName] = $database;
 
-        if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
-                ->setNamespace(App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
+                ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
                 ->setSharedTables(false)
