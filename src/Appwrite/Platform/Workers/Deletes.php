@@ -93,12 +93,6 @@ class Deletes extends Action
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
                         break;
-                    case DELETE_TYPE_TEAMS:
-                        $this->deleteMemberships($getProjectDB, $document, $project);
-                        if ($project->getId() === 'console') {
-                            $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $document);
-                        }
-                        break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
                         break;
@@ -410,53 +404,6 @@ class Deletes extends Action
         ], $dbForProject);
     }
 
-    /**
-     * @param callable $getProjectDB
-     * @param Document $document teams document
-     * @param Document $project
-     * @return void
-     * @throws Exception
-     */
-    private function deleteMemberships(callable $getProjectDB, Document $document, Document $project): void
-    {
-        $dbForProject = $getProjectDB($project);
-        $teamInternalId = $document->getInternalId();
-
-        // Delete Memberships
-        $this->deleteByGroup(
-            'memberships',
-            [
-                Query::equal('teamInternalId', [$teamInternalId])
-            ],
-            $dbForProject,
-            function (Document $membership) use ($dbForProject) {
-                $userId = $membership->getAttribute('userId');
-                $dbForProject->purgeCachedDocument('users', $userId);
-            }
-        );
-    }
-
-    /**
-     * @param Database $dbForConsole
-     * @param Document $document
-     * @return void
-     * @throws Authorization
-     * @throws \Utopia\Database\Exception
-     * @throws Conflict
-     * @throws Restricted
-     * @throws Structure
-     */
-    private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
-    {
-
-        $projects = $dbForConsole->find('projects', [
-            Query::equal('teamInternalId', [$document->getInternalId()])
-        ]);
-        foreach ($projects as $project) {
-            $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $project);
-            $dbForConsole->deleteDocument('projects', $project->getId());
-        }
-    }
 
     /**
      * @param Database $dbForConsole
