@@ -206,6 +206,7 @@
     "countries.tn": "Tunisia",
     "countries.tr": "Tyrkia",
     "countries.tv": "Tuvalu",
+    "countries.tw": "Taiwan",
     "countries.tz": "Tanzania",
     "countries.ug": "Uganda",
     "countries.ua": "Ukraina",
@@ -247,5 +248,5 @@
     "emails.certificate.footer": "Førre sertifikatet ditt vil vere gyldig i 30 dagar sidan den første feilen. Vi rår sterkt til at du undersøkjer denne saka, elles vil domenet ditt ende opp utan gyldig SSL-kommunikasjon.",
     "emails.certificate.thanks": "Takk",
     "emails.certificate.signature": "{{project}} team",
-    "sms.verification.body": "{{secret}} er verifiseringskoden din for {{project}}."
+    "sms.verification.body": "{{secret}}"
 }
