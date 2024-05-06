@@ -42,6 +42,7 @@ services:
     networks:
       - gateway
       - appwrite
+      - runtimes
 
   appwrite:
     container_name: appwrite
