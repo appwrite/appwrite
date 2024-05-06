@@ -183,7 +183,7 @@ return [
                 'description' => 'This is the email address used to issue SSL certificates for custom domains',
                 'introduction' => '1.5.1',
                 'default' => '',
-                'required' => false,
+                'required' => true,
                 'question' => '',
                 'filter' => ''
             ],
