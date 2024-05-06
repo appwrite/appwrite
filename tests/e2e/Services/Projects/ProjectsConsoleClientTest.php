@@ -950,7 +950,7 @@ class ProjectsConsoleClientTest extends Scope
     public function testUpdateProjectOAuth($data): array
     {
         $id = $data['projectId'] ?? '';
-        $providers = require('app/config/oAuthProviders.php');
+        $providers = require(__DIR__ . '/../../../../app/config/oAuthProviders.php');
 
         /**
          * Test for SUCCESS
