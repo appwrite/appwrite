@@ -285,12 +285,12 @@ class Functions extends Action
 
         $jwtExpiry = $function->getAttribute('timeout', 900);
         $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 10);
-        $apiToken = $jwtObj->encode([
+        $apiKey = $jwtObj->encode([
             'projectId' => $project->getId(),
-            'scopes' => $function->getAttribute('apiTokenScopes', [])
+            'scopes' => $function->getAttribute('scopes', [])
         ]);
 
-        $headers['x-appwrite-api-token'] = $apiToken;
+        $headers['x-appwrite-key'] = $apiKey;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';

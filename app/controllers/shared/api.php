@@ -199,70 +199,24 @@ App::init()
 
         $authKey = $request->getHeader('x-appwrite-key', '');
 
-        if (!empty($authKey)) { // API Key authentication
+        // API Key authentication
+        if (!empty($authKey)) {
             // Do not allow API key and session to be set at the same time
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
 
-            // Check if given key match project API keys
-            $key = $project->find('secret', $authKey, 'keys');
-            if ($key) {
-                $user = new Document([
-                    '$id' => '',
-                    'status' => true,
-                    'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
-                    'password' => '',
-                    'name' => $project->getAttribute('name', 'Untitled'),
-                ]);
+            if(str_contains($authKey, '.')) {
+                // Dynamic key
 
-                $role = Auth::USER_ROLE_APPS;
-                $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+                $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10);
 
-                $expire = $key->getAttribute('expire');
-                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
-                    throw new Exception(Exception::PROJECT_KEY_EXPIRED);
+                try {
+                    $payload = $jwtObj->decode($authKey);
+                } catch (JWTException $error) {
+                    throw new Exception(Exception::API_KEY_EXPIRED);
                 }
 
-                Authorization::setRole(Auth::USER_ROLE_APPS);
-                Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
-
-                $accessedAt = $key->getAttribute('accessedAt', '');
-                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
-                    $key->setAttribute('accessedAt', DateTime::now());
-                    $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                    $dbForConsole->purgeCachedDocument('projects', $project->getId());
-                }
-
-                $sdkValidator = new WhiteList($servers, true);
-                $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
-                if ($sdkValidator->isValid($sdk)) {
-                    $sdks = $key->getAttribute('sdks', []);
-                    if (!in_array($sdk, $sdks)) {
-                        array_push($sdks, $sdk);
-                        $key->setAttribute('sdks', $sdks);
-
-                        /** Update access time as well */
-                        $key->setAttribute('accessedAt', Datetime::now());
-                        $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                        $dbForConsole->purgeCachedDocument('projects', $project->getId());
-                    }
-                }
-            }
-        }
-
-        // API Token authentication (like API Key but JWT short-term)
-        $apiToken = $request->getHeader('x-appwrite-token', '');
-        if (!empty($apiToken) && $user->isEmpty() && empty($authKey)) {
-            $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10);
-
-            try {
-                $payload = $jwtObj->decode($apiToken);
-            } catch (JWTException $error) {
-                // Ignore if token is invalid
-            }
-
-            if (!empty($payload)) {
                 $projectId = $payload['projectId'] ?? '';
                 $tokenScopes = $payload['scopes'] ?? [];
 
@@ -281,6 +235,53 @@ App::init()
 
                     Authorization::setRole(Auth::USER_ROLE_APPS);
                     Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+                }
+            } else {
+                // Regular key
+
+                // Check if given key match project API keys
+                $key = $project->find('secret', $authKey, 'keys');
+                if ($key) {
+                    $user = new Document([
+                        '$id' => '',
+                        'status' => true,
+                        'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
+                        'password' => '',
+                        'name' => $project->getAttribute('name', 'Untitled'),
+                    ]);
+
+                    $role = Auth::USER_ROLE_APPS;
+                    $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+
+                    $expire = $key->getAttribute('expire');
+                    if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
+                        throw new Exception(Exception::PROJECT_KEY_EXPIRED);
+                    }
+
+                    Authorization::setRole(Auth::USER_ROLE_APPS);
+                    Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+
+                    $accessedAt = $key->getAttribute('accessedAt', '');
+                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
+                        $key->setAttribute('accessedAt', DateTime::now());
+                        $dbForConsole->updateDocument('keys', $key->getId(), $key);
+                        $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                    }
+
+                    $sdkValidator = new WhiteList($servers, true);
+                    $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+                    if ($sdkValidator->isValid($sdk)) {
+                        $sdks = $key->getAttribute('sdks', []);
+                        if (!in_array($sdk, $sdks)) {
+                            array_push($sdks, $sdk);
+                            $key->setAttribute('sdks', $sdks);
+
+                            /** Update access time as well */
+                            $key->setAttribute('accessedAt', Datetime::now());
+                            $dbForConsole->updateDocument('keys', $key->getId(), $key);
+                            $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                        }
+                    }
                 }
             }
         }

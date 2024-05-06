@@ -3056,7 +3056,7 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('apiTokenScopes'),
+                '$id' => ID::custom('scopes'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
