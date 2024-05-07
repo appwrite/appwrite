@@ -342,7 +342,6 @@ Metrics are collected into 3 scopes: Daily, monthly, and infinity. Adding new us
 
 For both cases, add a const variable in `app/init.php` under the usage metrics list:
 
-* The curly brackets in the metric name acts as a placeholder and will be replaced with a value.
 
 metrics are collected to 3 scopes :
 Daily, monthly, an infinity.
