@@ -367,7 +367,7 @@ On file  `app/controllers/shared/api.php`  in database listener, add to an exist
                 ->addMetric(METRIC_TEAMS, $value); // per project
             break;
 ```
-There are cases when you need to handle metric the is a parent entity, like buckets.
+There are cases when you need to handle metric that has a parent entity, like buckets.
 Files are linked to a parent bucket, you should verify you remove the files stats when you delete a bucket.
 
 In that case you need also to handle children removal using addReduce() method call.
