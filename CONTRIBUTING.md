@@ -333,8 +333,8 @@ These are the current metrics we collect usage stats for:
 | {functionInternalId}.builds.compute | Sum of compute duration per function (in seconds) |
 | network.requests | Total number of network requests per project |
 | executions.compute | Sum of compute duration per project (in seconds) |
-| network.inbound | Sum of network inbound traffic per project |
-| network.outbound | Sum of network outbound traffic per project |
+| network.inbound | Sum of network inbound traffic per project (in bytes)|
+| network.outbound | Sum of network outbound traffic per project (in bytes)|
 
 > Note: The curly brackets in the metric name represents a template and is replaced with a value when the metric is processed.
 
@@ -354,7 +354,7 @@ Next follow the appropriate steps below depending on whether you're adding the m
 
 **API**
 
-On file  `app/controllers/shared/api.php`  in database listener, add to an existing or create a new switch case. Add a call to the usage worker with your new metric const like so:
+In file `app/controllers/shared/api.php` On the database listener, add to an existing or create a new switch case. Add a call to the usage worker with your new metric const like so:
 
 ```php
       case $document->getCollection() === 'teams':
@@ -397,7 +397,7 @@ private function reduce(Document $project, Document $document, array &$metrics, 
 
 **Background worker**
 
-On that case you need to inject the usage queue to the desired worker
+You need to inject the usage queue in the desired worker on the constructor method
 ```php
 /**
 * @throws Exception
