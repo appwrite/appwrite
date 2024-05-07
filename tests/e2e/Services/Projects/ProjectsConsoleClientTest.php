@@ -3530,7 +3530,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Key Test',
-            'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.read', 'attributes.write', 'indexes.read', 'indexes.write', 'documents.read', 'documents.write'],
+            'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.read', 'attributes.write', 'indexes.read', 'indexes.write', 'documents.read', 'documents.write', 'users.read', 'users.write'],
         ]);
 
         $key2 = $this->client->call(Client::METHOD_POST, '/projects/' . $project2['body']['$id'] . '/keys', array_merge([
@@ -3538,7 +3538,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Key Test',
-            'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.read', 'attributes.write', 'indexes.read', 'indexes.write', 'documents.read', 'documents.write'],
+            'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.read', 'attributes.write', 'indexes.read', 'indexes.write', 'documents.read', 'documents.write', 'users.read', 'users.write'],
         ]);
 
         $key3 = $this->client->call(Client::METHOD_POST, '/projects/' . $project3['body']['$id'] . '/keys', array_merge([
@@ -3546,7 +3546,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Key Test',
-            'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.read', 'attributes.write', 'indexes.read', 'indexes.write', 'documents.read', 'documents.write'],
+            'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.read', 'attributes.write', 'indexes.read', 'indexes.write', 'documents.read', 'documents.write', 'users.read', 'users.write'],
         ]);
 
         $key4 = $this->client->call(Client::METHOD_POST, '/projects/' . $project4['body']['$id'] . '/keys', array_merge([
@@ -3554,7 +3554,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Key Test',
-            'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.read', 'attributes.write', 'indexes.read', 'indexes.write', 'documents.read', 'documents.write'],
+            'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.read', 'attributes.write', 'indexes.read', 'indexes.write', 'documents.read', 'documents.write', 'users.read', 'users.write'],
         ]);
 
         // Create a database in each project
@@ -3933,10 +3933,10 @@ class ProjectsConsoleClientTest extends Scope
         $user1 = $this->client->call(Client::METHOD_POST, '/users', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $project2['body']['$id'],
-            'x-appwrite-key' => $key1['body']['secret']
+            'x-appwrite-key' => $key2['body']['secret']
         ], [
             'userId' => 'user',
-            'email' => 'test@localhost',
+            'email' => 'test@appwrite.io',
             'password' => 'password',
             'name' => 'Test User',
         ]);
@@ -3946,10 +3946,10 @@ class ProjectsConsoleClientTest extends Scope
         $user2 = $this->client->call(Client::METHOD_POST, '/users', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $project4['body']['$id'],
-            'x-appwrite-key' => $key2['body']['secret']
+            'x-appwrite-key' => $key4['body']['secret']
         ], [
             'userId' => 'user',
-            'email' => 'test@localhost',
+            'email' => 'test@appwrite.io',
             'password' => 'password',
             'name' => 'Test User',
         ]);
