@@ -360,7 +360,7 @@ Next follow the appropriate steps below depending on whether you're adding the m
 
 **API**
 
-On file  app/controllers/shared/api.php  in database listener, add to an existing or create a new switch case. Add a call to the usage worker with your new metric const like so:
+On file  `app/controllers/shared/api.php`  in database listener, add to an existing or create a new switch case. Add a call to the usage worker with your new metric const like so:
 
 ```php
       case $document->getCollection() === 'teams':
