@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7276ce4fa8a3c75f95f952153fdca69f",
+    "content-hash": "6ce62f5b54254e5023c5ace349a0ced7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1672,16 +1672,16 @@
         },
         {
             "name": "utopia-php/dsn",
-            "version": "dev-feat-allow-nullable-scheme",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/dsn.git",
-                "reference": "09521c1fb6dc5488df5e89eeb6b3ca5e736fd97c"
+                "reference": "42ee37a3d1785100b2f69091c9d4affadb6846eb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dsn/zipball/09521c1fb6dc5488df5e89eeb6b3ca5e736fd97c",
-                "reference": "09521c1fb6dc5488df5e89eeb6b3ca5e736fd97c",
+                "url": "https://api.github.com/repos/utopia-php/dsn/zipball/42ee37a3d1785100b2f69091c9d4affadb6846eb",
+                "reference": "42ee37a3d1785100b2f69091c9d4affadb6846eb",
                 "shasum": ""
             },
             "require": {
@@ -1713,9 +1713,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/dsn/issues",
-                "source": "https://github.com/utopia-php/dsn/tree/feat-allow-nullable-scheme"
+                "source": "https://github.com/utopia-php/dsn/tree/0.2.1"
             },
-            "time": "2024-05-06T05:15:19+00:00"
+            "time": "2024-05-07T02:01:25+00:00"
         },
         {
             "name": "utopia-php/fetch",
@@ -5142,16 +5142,16 @@
         },
         {
             "name": "swoole/ide-helper",
-            "version": "5.0.2",
+            "version": "5.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swoole/ide-helper.git",
-                "reference": "16cfee44a6ec92254228c39bcab2fb8ae74cc2ea"
+                "reference": "33ec7af9111b76d06a70dd31191cc74793551112"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/16cfee44a6ec92254228c39bcab2fb8ae74cc2ea",
-                "reference": "16cfee44a6ec92254228c39bcab2fb8ae74cc2ea",
+                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/33ec7af9111b76d06a70dd31191cc74793551112",
+                "reference": "33ec7af9111b76d06a70dd31191cc74793551112",
                 "shasum": ""
             },
             "type": "library",
@@ -5168,9 +5168,9 @@
             "description": "IDE help files for Swoole.",
             "support": {
                 "issues": "https://github.com/swoole/ide-helper/issues",
-                "source": "https://github.com/swoole/ide-helper/tree/5.0.2"
+                "source": "https://github.com/swoole/ide-helper/tree/5.1.2"
             },
-            "time": "2023-03-20T06:05:55+00:00"
+            "time": "2024-02-01T22:28:11+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -5505,9 +5505,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/dsn": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

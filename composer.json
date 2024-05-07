@@ -52,7 +52,7 @@
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.49.*",
         "utopia-php/domains": "0.5.*",
-        "utopia-php/dsn": "dev-feat-allow-nullable-scheme",
+        "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "0.33.*",
         "utopia-php/fetch": "0.2.*",
         "utopia-php/image": "0.6.*",
