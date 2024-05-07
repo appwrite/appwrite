@@ -336,7 +336,7 @@ These are the current metrics we collect usage stats for:
 | network.inbound | Sum of network inbound traffic per project |
 | network.outbound | Sum of network outbound traffic per project |
 
-* The curly brackets in the metric name act as placeholders and will be replaced with a value.
+> Note: The curly brackets in the metric name represents a template and is replaced with a value when the metric is processed.
 
 Metrics are collected into 3 scopes: Daily, monthly, and infinity. Adding new usage metrics to aggregate usage stats is simple but depends on whether you want to collect the statistics via API or background worker. Here are the steps needed for both cases:
 
