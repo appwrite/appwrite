@@ -155,6 +155,7 @@ App::post('/v1/projects')
         // TODO: One in 20 projects use shared tables. Temporary until all projects are using shared tables.
         if (
             !\mt_rand(0, 19)
+            && App::getEnv('_APP_DATABASE_SHARED_TABLES', 'enabled') === 'enabled'
             && App::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
         ) {
             $schema = 'appwrite';
