@@ -382,7 +382,7 @@ In that case you need also to handle children removal using addReduce() method c
             break;
 ```
 
-On top of that also adding logic on the usage worker located in /src/Appwrite/Platform/Workers/Usage.php,  on the reduce method.
+In addition, you also need to add some logic to the `reduce()` method of the Usage worker located in `/src/Appwrite/Platform/Workers/Usage.php`.
 ```php
 private function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void
 ```
