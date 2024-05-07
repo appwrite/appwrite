@@ -349,7 +349,6 @@ Adding new usage metrics in order to aggregate  usage stats is very simple but v
 the statistics(API or via background worker).
 Here are the steps needs to be taken in both cases:
 
-For both cases you need to add a const variable in app/init.php under the usage metrics list.
 ```php
 // Usage metrics
 const METRIC_FUNCTIONS  = 'functions';
