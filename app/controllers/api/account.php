@@ -3495,13 +3495,32 @@ App::patch('/v1/account/mfa')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
+    ->inject('session')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (bool $mfa, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (bool $mfa, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $session, Database $dbForProject, Event $queueForEvents) {
 
         $user->setAttribute('mfa', $mfa);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+
+        if ($mfa) {
+            $factors = $session->getAttribute('factors', []);
+            $totp = TOTP::getAuthenticatorFromUser($user);
+            if ($totp !== null && $totp->getAttribute('verified', false)) {
+                $factors[] = Type::TOTP;
+            }
+            if ($user->getAttribute('email', false) && $user->getAttribute('emailVerification', false)) {
+                $factors[] = Type::EMAIL;
+            }
+            if ($user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)) {
+                $factors[] = Type::PHONE;
+            }
+            $factors = \array_unique($factors);
+
+            $session->setAttribute('factors', $factors);
+            $dbForProject->updateDocument('sessions', $session->getId(), $session);
+        }
 
         $queueForEvents->setParam('userId', $user->getId());
 
