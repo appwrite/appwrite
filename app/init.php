@@ -721,25 +721,29 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
  */
 $register->set('logger', function () {
     // Register error logger
-    $fallbackName = System::getEnv('_APP_LOGGING_PROVIDER', '');
-    $fallbackConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
+    $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
+    $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
-    $fallbackConfig    = str_replace(';', '@', $fallbackConfig);
-    $fallbackForLogger = $fallbackName . "://" . $fallbackConfig;
+    try {
+        $providerConfig = str_replace(';', '@', $providerConfig);
+        $fallbackForLogger = $providerName . "://" . $providerConfig;
 
-    $loggingProvider = new DSN(System::getEnv('_APP_LOGGING', $fallbackForLogger));
-    $providerName    = $loggingProvider->getScheme();
+        $loggingProvider = new DSN(System::getEnv('_APP_LOGGING', $fallbackForLogger));
 
-    if(empty($providerName) || empty($loggingProvider->getHost()) || ($providerName === 'sentry' && empty($loggingProvider->getUser()))) {
+        $providerName = $loggingProvider->getScheme();
+        $providerConfig = match ($providerName) {
+            'sentry' => ($loggingProvider->getUser() ?? '') . ';' . $loggingProvider->getHost(),
+            default => $loggingProvider->getHost(),
+        };
+    } catch (Throwable) {
+
+    }
+
+    if (empty($providerName) || empty($providerConfig)) {
         return;
     }
 
-    $providerConfig = match ($providerName) {
-        'sentry' => $loggingProvider->getUser() ?? ';' . $loggingProvider->getHost(),
-        default => $loggingProvider->getHost(),
-    };
-
-    if(!Logger::hasProvider($providerName)) {
+    if (!Logger::hasProvider($providerName)) {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
