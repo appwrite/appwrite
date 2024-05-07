@@ -356,6 +356,7 @@ const METRIC_FUNCTIONS  = 'functions';
 const METRIC_DEPLOYMENTS  = 'deployments';
 const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
 ```
+Next follow the appropriate steps below depending on whether you're adding the metric to the API or the worker. 
 
 **API**
 
