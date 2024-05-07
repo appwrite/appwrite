@@ -637,9 +637,7 @@ App::shutdown()
         }
 
         if (!empty($queueForDatabase->getType())) {
-            \var_dump('Before triggering database event');
             $queueForDatabase->trigger();
-            \var_dump('After triggering database event');
         }
 
         if (!empty($queueForBuilds->getType())) {

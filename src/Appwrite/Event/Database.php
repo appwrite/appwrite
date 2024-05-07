@@ -111,8 +111,6 @@ class Database extends Event
 
         $client = new Client($this->queue, $this->connection);
 
-        \var_dump('Event queue name is: ' . $this->queue);
-
         try {
             $result = $client->enqueue([
                 'project' => $this->project,
@@ -123,12 +121,8 @@ class Database extends Event
                 'database' => $this->database,
                 'events' => Event::generateEvents($this->getEvent(), $this->getParams())
             ]);
-            \var_dump('Enqueued event');
-            \var_dump($result);
             return $result;
         } catch (\Throwable $th) {
-            \var_dump('Enqueue event failed');
-            \var_dump($th);
             return false;
         }
     }
