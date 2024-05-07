@@ -179,6 +179,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_LOGGING',
+                'description' => 'This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, set the value to one of \'sentry://SENTRY_API_KEY@SENTRY_APP_ID/\', \'raygun://RAYGUN_API_KEY/\', \'appSignal://API_KEY/\', \'logOwl://LOGOWL_SERVICE_TICKET/\' to enable the logger.',
+                'introduction' => '1.5.6',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_LOGGING_PROVIDER',
                 'description' => 'This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, set the value to one of \'sentry\', \'raygun\', \'appSignal\', \'logOwl\' to enable the logger.',
                 'introduction' => '0.12.0',
