@@ -3495,13 +3495,32 @@ App::patch('/v1/account/mfa')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
+    ->inject('session')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (bool $mfa, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (bool $mfa, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $session, Database $dbForProject, Event $queueForEvents) {
 
         $user->setAttribute('mfa', $mfa);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+
+        if ($mfa) {
+            $factors = $session->getAttribute('factors', []);
+            $totp = TOTP::getAuthenticatorFromUser($user);
+            if ($totp !== null && $totp->getAttribute('verified', false)) {
+                $factors[] = Type::TOTP;
+            }
+            if ($user->getAttribute('email', false) && $user->getAttribute('emailVerification', false)) {
+                $factors[] = Type::EMAIL;
+            }
+            if ($user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)) {
+                $factors[] = Type::PHONE;
+            }
+            $factors = \array_unique($factors);
+
+            $session->setAttribute('factors', $factors);
+            $dbForProject->updateDocument('sessions', $session->getId(), $session);
+        }
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3633,10 +3652,10 @@ App::put('/v1/account/mfa/authenticators/:type')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('response')
     ->inject('user')
-    ->inject('project')
+    ->inject('session')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $type, string $otp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, string $otp, Response $response, Document $user, Document $session, Database $dbForProject, Event $queueForEvents) {
 
         $authenticator = (match ($type) {
             Type::TOTP => TOTP::getAuthenticatorFromUser($user),
@@ -3665,10 +3684,12 @@ App::put('/v1/account/mfa/authenticators/:type')
         $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
-        $session = $dbForProject->getDocument('sessions', $sessionId);
-        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $type, Document::SET_TYPE_APPEND));
+        $factors = $session->getAttribute('factors', []);
+        $factors[] = $type;
+        $factors = \array_unique($factors);
+
+        $session->setAttribute('factors', $factors);
+        $dbForProject->updateDocument('sessions', $session->getId(), $session);
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -4057,9 +4078,10 @@ App::put('/v1/account/mfa/challenge')
     ->inject('project')
     ->inject('response')
     ->inject('user')
+    ->inject('session')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $challengeId, string $otp, Document $project, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $challengeId, string $otp, Document $project, Response $response, Document $user, Document $session, Database $dbForProject, Event $queueForEvents) {
 
         $challenge = $dbForProject->getDocument('challenges', $challengeId);
 
@@ -4105,15 +4127,15 @@ App::put('/v1/account/mfa/challenge')
         $dbForProject->deleteDocument('challenges', $challengeId);
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
-        $session = $dbForProject->getDocument('sessions', $sessionId);
+        $factors = $session->getAttribute('factors', []);
+        $factors[] = $type;
+        $factors = \array_unique($factors);
 
-        $session = $session
-            ->setAttribute('factors', $type, Document::SET_TYPE_APPEND)
+        $session
+            ->setAttribute('factors', $factors)
             ->setAttribute('mfaUpdatedAt', DateTime::now());
 
-        $dbForProject->updateDocument('sessions', $sessionId, $session);
+        $dbForProject->updateDocument('sessions', $session->getId(), $session);
 
         $queueForEvents
                     ->setParam('userId', $user->getId())
