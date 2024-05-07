@@ -1658,3 +1658,6 @@ App::setResource('requestTimestamp', function ($request) {
     }
     return $requestTimestamp;
 }, ['request']);
+App::setResource('plan', function (array $plan = []) {
+    return [];
+});
