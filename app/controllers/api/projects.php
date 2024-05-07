@@ -223,6 +223,7 @@ App::post('/v1/projects')
         try {
             $dsn = new DSN($dsn);
         } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
             $dsn = new DSN('mysql://' . $dsn);
         }
 

@@ -1305,6 +1305,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     try {
         $dsn = new DSN($project->getAttribute('database'));
     } catch (\InvalidArgumentException) {
+        // TODO: Temporary until all projects are using shared tables
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
@@ -1323,6 +1324,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     try {
         $dsn = new DSN($project->getAttribute('database'));
     } catch (\InvalidArgumentException) {
+        // TODO: Temporary until all projects are using shared tables
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
@@ -1369,6 +1371,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         try {
             $dsn = new DSN($project->getAttribute('database'));
         } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
             $dsn = new DSN('mysql://' . $project->getAttribute('database'));
         }
 

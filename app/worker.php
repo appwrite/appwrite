@@ -76,6 +76,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     try {
         $dsn = new DSN($project->getAttribute('database'));
     } catch (\InvalidArgumentException) {
+        // TODO: Temporary until all projects are using shared tables
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
@@ -89,6 +90,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     try {
         $dsn = new DSN($project->getAttribute('database'));
     } catch (\InvalidArgumentException) {
+        // TODO: Temporary until all projects are using shared tables
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
@@ -118,6 +120,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
         try {
             $dsn = new DSN($project->getAttribute('database'));
         } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
             $dsn = new DSN('mysql://' . $project->getAttribute('database'));
         }
 
