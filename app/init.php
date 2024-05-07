@@ -339,8 +339,8 @@ Database::addFilter(
         $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
         if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
             $attribute
-             ->setAttribute('min', $formatOptions['min'])
-             ->setAttribute('max', $formatOptions['max'])
+                ->setAttribute('min', $formatOptions['min'])
+                ->setAttribute('max', $formatOptions['max'])
             ;
         }
 
@@ -381,11 +381,11 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return $database
-         ->find('indexes', [
-             Query::equal('collectionInternalId', [$document->getInternalId()]),
-             Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-             Query::limit($database->getLimitForIndexes()),
-         ]);
+            ->find('indexes', [
+                Query::equal('collectionInternalId', [$document->getInternalId()]),
+                Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
+                Query::limit($database->getLimitForIndexes()),
+            ]);
     }
 );
 
@@ -396,10 +396,10 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return $database
-         ->find('platforms', [
-             Query::equal('projectInternalId', [$document->getInternalId()]),
-             Query::limit(APP_LIMIT_SUBQUERY),
-         ]);
+            ->find('platforms', [
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
     }
 );
 
@@ -410,10 +410,10 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return $database
-         ->find('keys', [
-             Query::equal('projectInternalId', [$document->getInternalId()]),
-             Query::limit(APP_LIMIT_SUBQUERY),
-         ]);
+            ->find('keys', [
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
     }
 );
 
@@ -424,10 +424,10 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return $database
-         ->find('webhooks', [
-             Query::equal('projectInternalId', [$document->getInternalId()]),
-             Query::limit(APP_LIMIT_SUBQUERY),
-         ]);
+            ->find('webhooks', [
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
     }
 );
 
@@ -451,10 +451,10 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
-         ->find('tokens', [
-             Query::equal('userInternalId', [$document->getInternalId()]),
-             Query::limit(APP_LIMIT_SUBQUERY),
-         ]));
+            ->find('tokens', [
+                Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
     }
 );
 
@@ -465,10 +465,10 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
-         ->find('challenges', [
-             Query::equal('userInternalId', [$document->getInternalId()]),
-             Query::limit(APP_LIMIT_SUBQUERY),
-         ]));
+            ->find('challenges', [
+                Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
     }
 );
 
@@ -479,10 +479,10 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
-         ->find('authenticators', [
-             Query::equal('userInternalId', [$document->getInternalId()]),
-             Query::limit(APP_LIMIT_SUBQUERY),
-         ]));
+            ->find('authenticators', [
+                Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
     }
 );
 
@@ -493,10 +493,10 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
-         ->find('memberships', [
-             Query::equal('userInternalId', [$document->getInternalId()]),
-             Query::limit(APP_LIMIT_SUBQUERY),
-         ]));
+            ->find('memberships', [
+                Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
     }
 );
 
@@ -507,11 +507,11 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return $database
-         ->find('variables', [
-             Query::equal('resourceInternalId', [$document->getInternalId()]),
-             Query::equal('resourceType', ['function']),
-             Query::limit(APP_LIMIT_SUBQUERY),
-         ]);
+            ->find('variables', [
+                Query::equal('resourceInternalId', [$document->getInternalId()]),
+                Query::equal('resourceType', ['function']),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
     }
 );
 
@@ -548,10 +548,10 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return $database
-         ->find('variables', [
-             Query::equal('resourceType', ['project']),
-             Query::limit(APP_LIMIT_SUBQUERY)
-         ]);
+            ->find('variables', [
+                Query::equal('resourceType', ['project']),
+                Query::limit(APP_LIMIT_SUBQUERY)
+            ]);
     }
 );
 
@@ -585,10 +585,10 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
-         ->find('targets', [
-             Query::equal('userInternalId', [$document->getInternalId()]),
-             Query::limit(APP_LIMIT_SUBQUERY)
-         ]));
+            ->find('targets', [
+                Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY)
+            ]));
     }
 );
 
@@ -721,14 +721,14 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
  */
 $register->set('logger', function () {
     // Register error logger
-    $fallbackName   = System::getEnv('_APP_LOGGING_PROVIDER', '');
+    $fallbackName = System::getEnv('_APP_LOGGING_PROVIDER', '');
     $fallbackConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
-    $fallbackConfig = str_replace(';', '@', $fallbackConfig);
+    $fallbackConfig    = str_replace(';', '@', $fallbackConfig);
     $fallbackForLogger = $fallbackName . "://" . $fallbackConfig;
 
     $loggingProvider = new DSN(System::getEnv('_APP_LOGGING', $fallbackForLogger));
-    $providerName = $loggingProvider->getScheme();
+    $providerName    = $loggingProvider->getScheme();
 
     if(empty($providerName) || empty($loggingProvider->getHost()) || ($providerName === 'sentry' && empty($loggingProvider->getUser()))) {
         return;
@@ -744,7 +744,7 @@ $register->set('logger', function () {
     }
 
     $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
-    $adapter   = new $classname($providerConfig);
+    $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
 $register->set('pools', function () {
