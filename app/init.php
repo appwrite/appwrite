@@ -1239,14 +1239,13 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     return $project;
 }, ['dbForConsole', 'request', 'console']);
 
-App::setResource('session', function (Document $user, Document $project) {
+App::setResource('session', function (Document $user) {
     if ($user->isEmpty()) {
         return;
     }
 
     $sessions = $user->getAttribute('sessions', []);
-    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration);
+    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
 
     if (!$sessionId) {
         return;
@@ -1259,7 +1258,7 @@ App::setResource('session', function (Document $user, Document $project) {
     }
 
     return;
-}, ['user', 'project']);
+}, ['user']);
 
 App::setResource('console', function () {
     return new Document([

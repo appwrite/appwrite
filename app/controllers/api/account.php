@@ -3665,8 +3665,7 @@ App::put('/v1/account/mfa/authenticators/:type')
         $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
+        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret);
         $session = $dbForProject->getDocument('sessions', $sessionId);
         $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $type, Document::SET_TYPE_APPEND));
 
@@ -4105,8 +4104,7 @@ App::put('/v1/account/mfa/challenge')
         $dbForProject->deleteDocument('challenges', $challengeId);
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
+        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret);
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
         $session = $session
