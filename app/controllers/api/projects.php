@@ -140,7 +140,7 @@ App::post('/v1/projects')
             }
         }
 
-        $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE');
+        $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
         $index = \array_search($databaseOverride, $databases);
         if ($index !== false) {
             $dsn = $databases[$index];
@@ -155,12 +155,12 @@ App::post('/v1/projects')
         // TODO: One in 20 projects use shared tables. Temporary until all projects are using shared tables.
         if (
             !\mt_rand(0, 19)
-            && App::getEnv('_APP_DATABASE_SHARED_TABLES', 'enabled') === 'enabled'
-            && App::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
+            && System::getEnv('_APP_DATABASE_SHARED_TABLES', 'enabled') === 'enabled'
+            && System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
         ) {
             $schema = 'appwrite';
             $database = 'appwrite';
-            $namespace = App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
             $dsn = $schema . '://' . DATABASE_SHARED_TABLES . '?database=' . $database;
 
             if (!empty($namespace)) {
@@ -171,12 +171,12 @@ App::post('/v1/projects')
         // TODO: Allow overriding in development mode. Temporary until all projects are using shared tables.
         if (
             App::isDevelopment()
-            && App::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
+            && System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
             && $request->getHeader('x-appwrited-share-tables', false)
         ) {
             $schema = 'appwrite';
             $database = 'appwrite';
-            $namespace = App::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
             $dsn = $schema . '://' . DATABASE_SHARED_TABLES . '?database=' . $database;
 
             if (!empty($namespace)) {
