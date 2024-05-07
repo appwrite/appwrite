@@ -1318,35 +1318,35 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     }
 
     $dbAdapter = $pools
-     ->get($project->getAttribute('database'))
-     ->pop()
-     ->getResource();
+        ->get($project->getAttribute('database'))
+        ->pop()
+        ->getResource();
 
     $database = new Database($dbAdapter, $cache);
 
     $database
-     ->setNamespace('_' . $project->getInternalId())
-     ->setMetadata('host', \gethostname())
-     ->setMetadata('project', $project->getId())
-     ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+        ->setNamespace('_' . $project->getInternalId())
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', $project->getId())
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
 
 App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     $dbAdapter = $pools
-     ->get('console')
-     ->pop()
-     ->getResource()
+        ->get('console')
+        ->pop()
+        ->getResource()
     ;
 
     $database = new Database($dbAdapter, $cache);
 
     $database
-     ->setNamespace('_console')
-     ->setMetadata('host', \gethostname())
-     ->setMetadata('project', 'console')
-     ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+        ->setNamespace('_console')
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', 'console')
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
 }, ['pools', 'cache']);
@@ -1365,28 +1365,28 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             $database = $databases[$databaseName];
 
             $database
-             ->setNamespace('_' . $project->getInternalId())
-             ->setMetadata('host', \gethostname())
-             ->setMetadata('project', $project->getId())
-             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+                ->setNamespace('_' . $project->getInternalId())
+                ->setMetadata('host', \gethostname())
+                ->setMetadata('project', $project->getId())
+                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
             return $database;
         }
 
         $dbAdapter = $pools
-         ->get($databaseName)
-         ->pop()
-         ->getResource();
+            ->get($databaseName)
+            ->pop()
+            ->getResource();
 
         $database = new Database($dbAdapter, $cache);
 
         $databases[$databaseName] = $database;
 
         $database
-         ->setNamespace('_' . $project->getInternalId())
-         ->setMetadata('host', \gethostname())
-         ->setMetadata('project', $project->getId())
-         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+            ->setNamespace('_' . $project->getInternalId())
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId())
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
         return $database;
     };
@@ -1400,9 +1400,9 @@ App::setResource('cache', function (Group $pools) {
 
     foreach ($list as $value) {
         $adapters[] = $pools
-         ->get($value)
-         ->pop()
-         ->getResource()
+            ->get($value)
+            ->pop()
+            ->getResource()
         ;
     }
 
