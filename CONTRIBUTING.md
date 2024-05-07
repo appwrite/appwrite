@@ -306,48 +306,42 @@ This is also important for the Appwrite lead developers to be able to provide te
 These are the current metrics we collect usage stats for:
 
 | Metric | Description                                       |
-|--------|---------------------------------------------------|
-| teams  | Total number of teams per project                 |
-| users | Total number of users per project                 |
+|--------|-------------------------------------------------|
+| teams  | Total number of teams per project |
+| users | Total number of users per project|
 | executions | Total number of executions per project           | 
 | databases | Total number of databases per project             | 
-| collections | Total number of collections per project           | 
-| {databaseInternalId}.collections | Total number of collections per database          | 
+| collections | Total number of collections per project | 
+| {databaseInternalId}.collections | Total number of collections per database| 
 | documents | Total number of documents per project             | 
-| {databaseInternalId}.{collectionInternalId}.documents | Total number of documents per collection          | 
+| {databaseInternalId}.{collectionInternalId}.documents | Total number of documents per collection | 
 | buckets | Total number of buckets per project               | 
-| files | Total number of files per project                 |  
-| files.storage | Sum of files storage per project  (in bytes)      | 
-| {bucketInternalId}.files.storage | Sum of files.storage per bucket                   |
+| files | Total number of files per project                 |
+| {bucketInternalId}.files.storage | Sum of files.storage per bucket (in bytes)                  |
 | functions | Total number of functions per project             |
 | deployments | Total number of deployments per project           |
-| deployments.storage | Sum of deployments storage per project (in bytes) |
 | builds | Total number of builds per project                |
+| {resourceType}.{resourceInternalId}.deployments | Total number of deployments per function           |
+| executions | Total number of executions per project |
+| {functionInternalId}.executions | Total number of executions per function  |
+| files.storage | Sum of files storage per project  (in bytes)      | 
+| deployments.storage | Sum of deployments storage per project (in bytes) |
+| {resourceType}.{resourceInternalId}.deployments.storage | Sum of deployments storage per function (in bytes)         |
 | builds.storage | Sum of builds storage per project (in bytes)      |
 | builds.compute | Sum of compute duration per project (in seconds)  |
-| {functionInternalId}.builds.storage | Sum of builds storage per function                |
+| {functionInternalId}.builds.storage | Sum of builds storage per function (in bytes)              |
 | {functionInternalId}.builds.compute | Sum of compute duration per function (in seconds) |
-| {resourceType}.{resourceInternalId}.deployments | Total number of deployments per function           |
-| {resourceType}.{resourceInternalId}.deployments.storage | Sum of deployments storage per function           |
-| executions | Total number of executions per project |
-| executions.compute | Sum of compute duration per project (in seconds) |
-| {functionInternalId}.executions | Total number of executions per function  |
 | network.requests | Total number of network requests per project |
+| executions.compute | Sum of compute duration per project (in seconds) |
 | network.inbound | Sum of network inbound traffic per project |
 | network.outbound | Sum of network outbound traffic per project |
 
 > Note: The curly brackets in the metric name represents a template and is replaced with a value when the metric is processed.
 
-Metrics are collected into 3 scopes: Daily, monthly, and infinity. Adding new usage metrics to aggregate usage stats is simple but depends on whether you want to collect the statistics via API or background worker. Here are the steps needed for both cases:
-
-For both cases, add a const variable in `app/init.php` under the usage metrics list:
-
-
-metrics are collected to 3 scopes :
-Daily, monthly, an infinity.
-Adding new usage metrics in order to aggregate  usage stats is very simple but very much depends on where do you want to collect
-the statistics(API or via background worker).
-Here are the steps needs to be taken in both cases:
+Metrics are collected within 3 scopes Daily, monthly, an infinity.
+Adding new usage metric in order to aggregate usage stats is very simple, but very much dependent on where do you want to collect
+statistics ,via API or via background worker.
+For both cases you will need to add a const variable in `app/init.php` under the usage metrics list.
 
 ```php
 // Usage metrics
@@ -355,6 +349,7 @@ const METRIC_FUNCTIONS  = 'functions';
 const METRIC_DEPLOYMENTS  = 'deployments';
 const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
 ```
+
 Next follow the appropriate steps below depending on whether you're adding the metric to the API or the worker. 
 
 **API**
@@ -372,21 +367,33 @@ Files are linked to a parent bucket, you should verify you remove the files stat
 
 In that case you need also to handle children removal using addReduce() method call.
 ```php
- case $document->getCollection() === 'functions':
-            $queueForUsage
-                ->addMetric(METRIC_FUNCTIONS, $value);
-  if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForUsage
-                    ->addReduce($document);
-            }
-            break;
+  case $document->getCollection() === 'buckets':
+       $files = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{bucketInternalId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES)));
+       $storage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{bucketInternalId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE)));
+
+       if (!empty($files['value'])) {
+           $metrics[] = [
+              'key' => METRIC_FILES,
+              'value' => ($files['value'] * -1),
+           ];
+        }
+
+        if (!empty($storage['value'])) {
+           $metrics[] = [
+              'key' => METRIC_FILES_STORAGE,
+              'value' => ($storage['value'] * -1),
+             ];
+         }
+       break;
 ```
 
 In addition, you also need to add some logic to the `reduce()` method of the Usage worker located in `/src/Appwrite/Platform/Workers/Usage.php`.
 ```php
-private function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void
-```
+private function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void 
+{
 
+}
+```
 
 **Background worker**
 
@@ -397,16 +404,17 @@ On that case you need to inject the usage queue to the desired worker
 */
 public function __construct()
 {
-$this
-->desc('Functions worker')
-->groups(['functions'])
-->inject('message')
-->inject('dbForProject')
-->inject('queueForFunctions')
-->inject('queueForEvents')
-->inject('queueForUsage')
-->inject('log')
-->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+   $this
+      ->desc('Functions worker')
+      ->groups(['functions'])
+      ->inject('message')
+      ->inject('dbForProject')
+      ->inject('queueForFunctions')
+      ->inject('queueForEvents')
+      ->inject('queueForUsage')
+      ->inject('log')
+      ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+}
 ```
 
 and then trigger the queue with the new metric like so: 
