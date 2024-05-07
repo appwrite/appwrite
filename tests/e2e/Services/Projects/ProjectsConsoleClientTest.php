@@ -3480,7 +3480,7 @@ class ProjectsConsoleClientTest extends Scope
         $project1 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-share-tables' => false
+            'x-appwrite-shared-tables' => false
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Amazing Project',
@@ -3492,7 +3492,7 @@ class ProjectsConsoleClientTest extends Scope
         $project2 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-share-tables' => true
+            'x-appwrite-shared-tables' => true
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Amazing Project',
@@ -3504,7 +3504,7 @@ class ProjectsConsoleClientTest extends Scope
         $project3 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-share-tables' => false
+            'x-appwrite-shared-tables' => false
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Amazing Project',
@@ -3516,7 +3516,7 @@ class ProjectsConsoleClientTest extends Scope
         $project4 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-share-tables' => true
+            'x-appwrite-shared-tables' => true
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Amazing Project',

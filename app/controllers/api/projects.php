@@ -172,7 +172,7 @@ App::post('/v1/projects')
         if (
             App::isDevelopment()
             && App::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
-            && $request->getHeader('x-appwrite-share-tables', false)
+            && $request->getHeader('x-appwrited-share-tables', false)
         ) {
             $schema = 'appwrite';
             $database = 'appwrite';
