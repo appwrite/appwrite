@@ -268,54 +268,54 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
-        if ($realtime->hasSubscriber('console', Role::users()->toString(), 'project')) {
-            $database = getConsoleDB();
+        // if ($realtime->hasSubscriber('console', Role::users()->toString(), 'project')) {
+        //     $database = getConsoleDB();
 
-            $payload = [];
+        //     $payload = [];
 
-            $list = Authorization::skip(fn () => $database->find('realtime', [
-                Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
-            ]));
+        //     $list = Authorization::skip(fn () => $database->find('realtime', [
+        //         Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
+        //     ]));
 
-            /**
-             * Aggregate stats across containers.
-             */
-            foreach ($list as $document) {
-                foreach (json_decode($document->getAttribute('value')) as $projectId => $value) {
-                    if (array_key_exists($projectId, $payload)) {
-                        $payload[$projectId] +=  $value;
-                    } else {
-                        $payload[$projectId] =  $value;
-                    }
-                }
-            }
+        //     /**
+        //      * Aggregate stats across containers.
+        //      */
+        //     foreach ($list as $document) {
+        //         foreach (json_decode($document->getAttribute('value')) as $projectId => $value) {
+        //             if (array_key_exists($projectId, $payload)) {
+        //                 $payload[$projectId] +=  $value;
+        //             } else {
+        //                 $payload[$projectId] =  $value;
+        //             }
+        //         }
+        //     }
 
-            foreach ($stats as $projectId => $value) {
-                if (!array_key_exists($projectId, $payload)) {
-                    continue;
-                }
+        //     foreach ($stats as $projectId => $value) {
+        //         if (!array_key_exists($projectId, $payload)) {
+        //             continue;
+        //         }
 
-                $event = [
-                    'project' => 'console',
-                    'roles' => ['team:' . $stats->get($projectId, 'teamId')],
-                    'data' => [
-                        'events' => ['stats.connections'],
-                        'channels' => ['project'],
-                        'timestamp' => DateTime::formatTz(DateTime::now()),
-                        'payload' => [
-                            $projectId => $payload[$projectId]
-                        ]
-                    ]
-                ];
+        //         $event = [
+        //             'project' => 'console',
+        //             'roles' => ['team:' . $stats->get($projectId, 'teamId')],
+        //             'data' => [
+        //                 'events' => ['stats.connections'],
+        //                 'channels' => ['project'],
+        //                 'timestamp' => DateTime::formatTz(DateTime::now()),
+        //                 'payload' => [
+        //                     $projectId => $payload[$projectId]
+        //                 ]
+        //             ]
+        //         ];
 
-                $server->send($realtime->getSubscribers($event), json_encode([
-                    'type' => 'event',
-                    'data' => $event['data']
-                ]));
-            }
+        //         $server->send($realtime->getSubscribers($event), json_encode([
+        //             'type' => 'event',
+        //             'data' => $event['data']
+        //         ]));
+        //     }
 
-            $register->get('pools')->reclaim();
-        }
+        //     $register->get('pools')->reclaim();
+        // }
         /**
          * Sending test message for SDK E2E tests every 5 seconds.
          */
