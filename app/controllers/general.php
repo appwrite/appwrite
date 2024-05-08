@@ -26,6 +26,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
+use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
@@ -740,13 +741,20 @@ App::error()
                 $log->setUser(new User($user->getId()));
             }
 
+            try {
+                $dsn = new DSN($project->getAttribute('database', 'console'));
+            } catch (\InvalidArgumentException) {
+                // TODO: Temporary until all projects are using shared tables
+                $dsn = new DSN('mysql://' . $project->getAttribute('database', 'console'));
+            }
+
             $log->setNamespace("http");
             $log->setServer(\gethostname());
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
 
-            $log->addTag('database', $project->getAttribute('database', 'console'));
+            $log->addTag('database', $dsn->getHost());
             $log->addTag('method', $route->getMethod());
             $log->addTag('url', $route->getPath());
             $log->addTag('verboseType', get_class($error));
