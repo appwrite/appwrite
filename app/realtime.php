@@ -26,6 +26,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\System\System;
 use Utopia\WebSocket\Adapter;
@@ -77,16 +78,33 @@ if (!function_exists("getProjectDB")) {
             return getConsoleDB();
         }
 
-        $dbAdapter = $pools
-            ->get($project->getAttribute('database'))
-            ->pop()
-            ->getResource()
-        ;
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
 
-        $database = new Database($dbAdapter, getCache());
+        $adapter = $pools
+            ->get($dsn->getHost())
+            ->pop()
+            ->getResource();
+
+        $database = new Database($adapter, getCache());
+
+        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+            $database
+                ->setSharedTables(true)
+                ->setTenant($project->getInternalId())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getInternalId());
+        }
 
         $database
-            ->setNamespace('_' . $project->getInternalId())
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 

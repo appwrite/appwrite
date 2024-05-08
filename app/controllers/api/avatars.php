@@ -16,6 +16,7 @@ use Utopia\Domains\Domain;
 use Utopia\Fetch\Client;
 use Utopia\Image\Image;
 use Utopia\Logger\Logger;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
@@ -319,8 +320,8 @@ App::get('/v1/avatars/favicon')
                 ->setAllowRedirects(false)
                 ->setUserAgent(\sprintf(
                     APP_USERAGENT,
-                    App::getEnv('_APP_VERSION', 'UNKNOWN'),
-                    App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+                    System::getEnv('_APP_VERSION', 'UNKNOWN'),
+                    System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
                 ))
                 ->fetch($url);
         } catch (\Throwable) {
