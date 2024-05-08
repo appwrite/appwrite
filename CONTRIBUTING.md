@@ -366,8 +366,24 @@ There are cases when you need to handle metric that has a parent entity, like bu
 Files are linked to a parent bucket, you should verify you remove the files stats when you delete a bucket.
 
 In that case you need also to handle children removal using addReduce() method call.
+
 ```php
-  case $document->getCollection() === 'buckets':
+
+ case $document->getCollection() === 'buckets': //buckets
+            $queueForUsage
+                ->addMetric(METRIC_BUCKETS, $value); // per project
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
+  
+```
+
+In addition, you will also need to add some logic to the `reduce()` method of the Usage worker located in `/src/Appwrite/Platform/Workers/Usage.php`, like so:
+
+```php
+case $document->getCollection() === 'buckets':
        $files = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{bucketInternalId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES)));
        $storage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{bucketInternalId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE)));
 
@@ -385,14 +401,6 @@ In that case you need also to handle children removal using addReduce() method c
              ];
          }
        break;
-```
-
-In addition, you also need to add some logic to the `reduce()` method of the Usage worker located in `/src/Appwrite/Platform/Workers/Usage.php`.
-```php
-private function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void 
-{
-
-}
 ```
 
 **Background worker**
