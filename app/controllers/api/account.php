@@ -1543,7 +1543,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
                 $target
                     ->setAttribute('sessionId', $session->getId())
-                    ->setAttrubte('sessionInternalId', $session->getInternalId());
+                    ->setAttribute('sessionInternalId', $session->getInternalId());
 
                 $dbForProject->updateDocument('targets', $target->getId(), $target);
             }
