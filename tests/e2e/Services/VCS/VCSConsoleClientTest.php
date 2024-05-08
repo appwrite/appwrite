@@ -2,16 +2,16 @@
 
 namespace Tests\E2E\Services\VCS;
 
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\App;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
+use Utopia\System\System;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 class VCSConsoleClientTest extends Scope
 {
@@ -278,8 +278,8 @@ class VCSConsoleClientTest extends Scope
          */
 
         $github = new GitHub(new Cache(new None()));
-        $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
         $github->initializeVariables($this->providerInstallationId, $privateKey, $githubAppId);
 
         $repository = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([

@@ -76,7 +76,24 @@ class Webhook extends Model
                 'default' => '',
                 'example' => 'ad3d581ca230e2b7059c545e5a',
             ])
-        ;
+            ->addRule('enabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Indicates if this webhook is enabled.',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('logs', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Webhook error logs from the most recent failure.',
+                'default' => '',
+                'example' => 'Failed to connect to remote server.',
+            ])
+            ->addRule('attempts', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of consecutive failed webhook attempts.',
+                'default' => 0,
+                'example' => 10,
+            ]);
     }
 
     /**

@@ -2,16 +2,17 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\ClamAV\Network;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Appwrite\ClamAV\Network;
-use Utopia\Logger\Logger;
-use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
+use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
+use Utopia\System\System;
 
 class Doctor extends Action
 {
@@ -35,11 +36,11 @@ class Doctor extends Action
 /    \ ) __/ ) __/\ /\ / )   / )(   )(   ) _)  _  )((  O )
 \_/\_/(__)  (__)  (_/\_)(__\_)(__) (__) (____)(_)(__)\__/ ");
 
-        Console::log("\n" . '👩‍⚕️ Running ' . APP_NAME . ' Doctor for version ' . App::getEnv('_APP_VERSION', 'UNKNOWN') . ' ...' . "\n");
+        Console::log("\n" . '👩‍⚕️ Running ' . APP_NAME . ' Doctor for version ' . System::getEnv('_APP_VERSION', 'UNKNOWN') . ' ...' . "\n");
 
         Console::log('[Settings]');
 
-        $domain = new Domain(App::getEnv('_APP_DOMAIN'));
+        $domain = new Domain(System::getEnv('_APP_DOMAIN'));
 
         if (!$domain->isKnown() || $domain->isTest()) {
             Console::log('🔴 Hostname has no public suffix (' . $domain->get() . ')');
@@ -47,7 +48,7 @@ class Doctor extends Action
             Console::log('🟢 Hostname has a public suffix (' . $domain->get() . ')');
         }
 
-        $domain = new Domain(App::getEnv('_APP_DOMAIN_TARGET'));
+        $domain = new Domain(System::getEnv('_APP_DOMAIN_TARGET'));
 
         if (!$domain->isKnown() || $domain->isTest()) {
             Console::log('🔴 CNAME target has no public suffix (' . $domain->get() . ')');
@@ -55,27 +56,27 @@ class Doctor extends Action
             Console::log('🟢 CNAME target has a public suffix (' . $domain->get() . ')');
         }
 
-        if (App::getEnv('_APP_OPENSSL_KEY_V1') === 'your-secret-key' || empty(App::getEnv('_APP_OPENSSL_KEY_V1'))) {
+        if (System::getEnv('_APP_OPENSSL_KEY_V1') === 'your-secret-key' || empty(System::getEnv('_APP_OPENSSL_KEY_V1'))) {
             Console::log('🔴 Not using a unique secret key for encryption');
         } else {
             Console::log('🟢 Using a unique secret key for encryption');
         }
 
-        if (App::getEnv('_APP_ENV', 'development') !== 'production') {
+        if (System::getEnv('_APP_ENV', 'development') !== 'production') {
             Console::log('🔴 App environment is set for development');
         } else {
             Console::log('🟢 App environment is set for production');
         }
 
-        if ('enabled' !== App::getEnv('_APP_OPTIONS_ABUSE', 'disabled')) {
+        if ('enabled' !== System::getEnv('_APP_OPTIONS_ABUSE', 'disabled')) {
             Console::log('🔴 Abuse protection is disabled');
         } else {
             Console::log('🟢 Abuse protection is enabled');
         }
 
-        $authWhitelistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', null);
-        $authWhitelistEmails = App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null);
-        $authWhitelistIPs = App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null);
+        $authWhitelistRoot = System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', null);
+        $authWhitelistEmails = System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null);
+        $authWhitelistIPs = System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null);
 
         if (
             empty($authWhitelistRoot)
@@ -87,20 +88,20 @@ class Doctor extends Action
             Console::log('🟢 Console access limits are enabled');
         }
 
-        if ('enabled' !== App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled')) {
+        if ('enabled' !== System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled')) {
             Console::log('🔴 HTTPS force option is disabled');
         } else {
             Console::log('🟢 HTTPS force option is enabled');
         }
 
-        if ('enabled' !== App::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled')) {
+        if ('enabled' !== System::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled')) {
             Console::log('🔴 HTTPS force option is disabled for function domains');
         } else {
             Console::log('🟢 HTTPS force option is enabled for function domains');
         }
 
-        $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
-        $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
+        $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
+        $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
         if (empty($providerName) || empty($providerConfig) || !Logger::hasProvider($providerName)) {
             Console::log('🔴 Logging adapter is disabled');
@@ -162,11 +163,11 @@ class Doctor extends Action
             }
         }
 
-        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
+        if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
             try {
                 $antivirus = new Network(
-                    App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                    (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
+                    System::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                    (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
                 );
 
                 if ((@$antivirus->ping())) {
@@ -200,10 +201,10 @@ class Doctor extends Action
 
         foreach (
             [
-            'Uploads' => APP_STORAGE_UPLOADS,
-            'Cache' => APP_STORAGE_CACHE,
-            'Config' => APP_STORAGE_CONFIG,
-            'Certs' => APP_STORAGE_CERTIFICATES
+                'Uploads' => APP_STORAGE_UPLOADS,
+                'Cache' => APP_STORAGE_CACHE,
+                'Config' => APP_STORAGE_CONFIG,
+                'Certs' => APP_STORAGE_CERTIFICATES
             ] as $key => $volume
         ) {
             $device = new Local($volume);
@@ -228,10 +229,10 @@ class Doctor extends Action
 
         foreach (
             [
-            'Uploads' => APP_STORAGE_UPLOADS,
-            'Cache' => APP_STORAGE_CACHE,
-            'Config' => APP_STORAGE_CONFIG,
-            'Certs' => APP_STORAGE_CERTIFICATES
+                'Uploads' => APP_STORAGE_UPLOADS,
+                'Cache' => APP_STORAGE_CACHE,
+                'Config' => APP_STORAGE_CONFIG,
+                'Certs' => APP_STORAGE_CERTIFICATES
             ] as $key => $volume
         ) {
             $device = new Local($volume);
@@ -251,10 +252,10 @@ class Doctor extends Action
         try {
             if (App::isProduction()) {
                 Console::log('');
-                $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost') . '/version'), true);
+                $version = \json_decode(@\file_get_contents(System::getEnv('_APP_HOME', 'http://localhost') . '/version'), true);
 
                 if ($version && isset($version['version'])) {
-                    if (\version_compare($version['version'], App::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
+                    if (\version_compare($version['version'], System::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
                         Console::info('You are running the latest version of ' . APP_NAME . '! 🥳');
                     } else {
                         Console::info('A new version (' . $version['version'] . ') is available! 🥳' . "\n");
