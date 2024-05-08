@@ -11,6 +11,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -29,6 +30,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
+use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Pools\Group;
 use Utopia\System\System;
@@ -74,12 +76,13 @@ App::post('/v1/projects')
     ->param('legalCity', '', new Text(256), 'Project legal City. Max length: 256 chars.', true)
     ->param('legalAddress', '', new Text(256), 'Project legal Address. Max length: 256 chars.', true)
     ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
+    ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('cache')
     ->inject('pools')
     ->inject('hooks')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools, Hooks $hooks) {
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForConsole, Cache $cache, Group $pools, Hooks $hooks) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -94,8 +97,15 @@ App::post('/v1/projects')
         }
 
         $auth = Config::getParam('auth', []);
-        $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordDictionary' => false, 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, 'personalDataCheck' => false];
-        foreach ($auth as $index => $method) {
+        $auths = [
+            'limit' => 0,
+            'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
+            'passwordHistory' => 0,
+            'passwordDictionary' => false,
+            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+            'personalDataCheck' => false
+        ];
+        foreach ($auth as $method) {
             $auths[$method['key'] ?? ''] = true;
         }
 
@@ -130,16 +140,48 @@ App::post('/v1/projects')
             }
         }
 
-        $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE', null);
-        $index = array_search($databaseOverride, $databases);
+        $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
+        $index = \array_search($databaseOverride, $databases);
         if ($index !== false) {
-            $database = $databases[$index];
+            $dsn = $databases[$index];
         } else {
-            $database = $databases[array_rand($databases)];
+            $dsn = $databases[array_rand($databases)];
         }
 
         if ($projectId === 'console') {
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
+        }
+
+        // TODO: One in 20 projects use shared tables. Temporary until all projects are using shared tables.
+        if (
+            !\mt_rand(0, 19)
+            && System::getEnv('_APP_DATABASE_SHARED_TABLES', 'enabled') === 'enabled'
+            && System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
+        ) {
+            $schema = 'appwrite';
+            $database = 'appwrite';
+            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+            $dsn = $schema . '://' . DATABASE_SHARED_TABLES . '?database=' . $database;
+
+            if (!empty($namespace)) {
+                $dsn .= '&namespace=' . $namespace;
+            }
+        }
+
+        // TODO: Allow overriding in development mode. Temporary until all projects are using shared tables.
+        if (
+            App::isDevelopment()
+            && System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
+            && $request->getHeader('x-appwrited-share-tables', false)
+        ) {
+            $schema = 'appwrite';
+            $database = 'appwrite';
+            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+            $dsn = $schema . '://' . DATABASE_SHARED_TABLES . '?database=' . $database;
+
+            if (!empty($namespace)) {
+                $dsn .= '&namespace=' . $namespace;
+            }
         }
 
         try {
@@ -173,21 +215,41 @@ App::post('/v1/projects')
                 'keys' => null,
                 'auths' => $auths,
                 'search' => implode(' ', [$projectId, $name]),
-                'database' => $database
+                'database' => $dsn,
             ]));
-        } catch (Duplicate $th) {
+        } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
 
-        $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
-        $dbForProject->setNamespace("_{$project->getInternalId()}");
+        try {
+            $dsn = new DSN($dsn);
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $dsn);
+        }
+
+        $adapter = $pools->get($dsn->getHost())->pop()->getResource();
+        $dbForProject = new Database($adapter, $cache);
+
+        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+            $dbForProject
+                ->setSharedTables(true)
+                ->setTenant($project->getInternalId())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $dbForProject
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getInternalId());
+        }
+
         $dbForProject->create();
 
         $audit = new Audit($dbForProject);
         $audit->setup();
 
-        $adapter = new TimeLimit('', 0, 1, $dbForProject);
-        $adapter->setup();
+        $abuse = new TimeLimit('', 0, 1, $dbForProject);
+        $abuse->setup();
 
         /** @var array $collections */
         $collections = Config::getParam('collections', [])['projects'] ?? [];
@@ -197,33 +259,19 @@ App::post('/v1/projects')
                 continue;
             }
 
-            $attributes = [];
-            $indexes = [];
+            $attributes = \array_map(function (array $attribute) {
+                return new Document($attribute);
+            }, $collection['attributes']);
 
-            foreach ($collection['attributes'] as $attribute) {
-                $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
-                    'type' => $attribute['type'],
-                    'size' => $attribute['size'],
-                    'required' => $attribute['required'],
-                    'signed' => $attribute['signed'],
-                    'array' => $attribute['array'],
-                    'filters' => $attribute['filters'],
-                    'default' => $attribute['default'] ?? null,
-                    'format' => $attribute['format'] ?? ''
-                ]);
-            }
+            $indexes = \array_map(function (array $index) {
+                return new Document($index);
+            }, $collection['indexes']);
 
-            foreach ($collection['indexes'] as $index) {
-                $indexes[] = new Document([
-                    '$id' => $index['$id'],
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]);
+            try {
+                $dbForProject->createCollection($key, $attributes, $indexes);
+            } catch (Duplicate) {
+                // Collection already exists
             }
-            $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
         $hooks->trigger('afterProjectCreation', [ $project, $pools, $cache ]);

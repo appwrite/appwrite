@@ -111,14 +111,19 @@ class Database extends Event
 
         $client = new Client($this->queue, $this->connection);
 
-        return $client->enqueue([
-            'project' => $this->project,
-            'user' => $this->user,
-            'type' => $this->type,
-            'collection' => $this->collection,
-            'document' => $this->document,
-            'database' => $this->database,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
-        ]);
+        try {
+            $result = $client->enqueue([
+                'project' => $this->project,
+                'user' => $this->user,
+                'type' => $this->type,
+                'collection' => $this->collection,
+                'document' => $this->document,
+                'database' => $this->database,
+                'events' => Event::generateEvents($this->getEvent(), $this->getParams())
+            ]);
+            return $result;
+        } catch (\Throwable $th) {
+            return false;
+        }
     }
 }
