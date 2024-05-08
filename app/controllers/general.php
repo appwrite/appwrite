@@ -544,11 +544,11 @@ App::init()
         }
 
         $defaultResponseFormat = APP_VERSION_STABLE;
-        if ($defaultResponseFormat !== 'UNKNOWN') {
-            $defaultResponseFormat = \explode('.', $defaultResponseFormat);
+        $defaultResponseFormat = \explode('.', $defaultResponseFormat);
+        if (\count($defaultResponseFormat) === 3) {
             $defaultResponseFormat[2] = '0';
-            $defaultResponseFormat = \implode('.', $defaultResponseFormat);
         }
+        $defaultResponseFormat = \implode('.', $defaultResponseFormat);
 
         $response
             ->addHeader('Server', 'Appwrite')
