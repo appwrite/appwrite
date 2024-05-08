@@ -1069,17 +1069,15 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
 
+        $params = $request->getParams();
+        $params['project'] = $projectId;
+        unset($params['projectId']);
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query([
-                    'project' => $projectId,
-                    'code' => $code,
-                    'state' => $state,
-                    'error' => $error,
-                    'error_description' => $error_description
-                ]));
+                . \http_build_query($params));
     });
 
 App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
@@ -1102,17 +1100,15 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
 
+        $params = $request->getParams();
+        $params['project'] = $projectId;
+        unset($params['projectId']);
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query([
-                    'project' => $projectId,
-                    'code' => $code,
-                    'state' => $state,
-                    'error' => $error,
-                    'error_description' => $error_description
-                ]));
+                . \http_build_query($params));
     });
 
 App::get('/v1/account/sessions/oauth2/:provider/redirect')
