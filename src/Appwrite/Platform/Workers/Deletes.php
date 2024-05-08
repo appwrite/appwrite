@@ -475,6 +475,7 @@ class Deletes extends Action
     {
         $projectId = $document->getId();
         $projectInternalId = $document->getInternalId();
+
         // Delete project tables
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($document);
