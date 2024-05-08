@@ -74,15 +74,6 @@ class Deletes extends Action
         $resourceType = $payload['resourceType'] ?? null;
         $document = new Document($payload['document'] ?? []);
         $project  = new Document($payload['project'] ?? []);
-var_dump('=============================');
-var_dump($project->getId());
-var_dump($project->getId());
-var_dump($document->getId());
-
-        if ($project->getId() === 'console') {
-            // todo: Where is this coming from?
-           // throw new \Exception('Console Project is forbidden');
-        }
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
