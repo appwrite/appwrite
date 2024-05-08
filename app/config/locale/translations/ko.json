@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "아래 버튼을 클릭하여 안전하게 {{project}} 계정에 로그인하세요. 1시간 후에 만료됩니다.",
     "emails.magicSession.buttonText": "{{project}}에 로그인하세요",
     "emails.magicSession.clientInfo": "이 로그인은 {{agentClient}}을(를) 사용하여 {{agentDevice}} {{agentOs}}에서 요청되었습니다. 로그인을 요청하지 않았다면, 이 이메일을 안전하게 무시하셔도 됩니다.",
-    "sms.verification.body": "{{secret}}는 귀하의 {{project}} 인증 코드입니다.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "이 이메일의 보안 구절은 {{phrase}}입니다. 로그인할 때 표시되는 구절과 일치한다면 이 이메일을 신뢰할 수 있습니다.",
     "emails.magicSession.optionUrl": "위의 버튼을 사용하여 로그인할 수 없다면, 다음 링크를 방문해 주세요:",
     "emails.otpSession.subject": "{{project}} 로그인",

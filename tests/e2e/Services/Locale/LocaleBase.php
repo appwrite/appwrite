@@ -45,7 +45,7 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertEquals(195, $response['body']['total']);
+        $this->assertEquals(196, $response['body']['total']);
         $this->assertEquals($response['body']['countries'][0]['name'], 'Afghanistan');
         $this->assertEquals($response['body']['countries'][0]['code'], 'AF');
 
@@ -59,7 +59,7 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertEquals(195, $response['body']['total']);
+        $this->assertEquals(196, $response['body']['total']);
         $this->assertEquals($response['body']['countries'][0]['name'], 'Afganistán');
         $this->assertEquals($response['body']['countries'][0]['code'], 'AF');
 
@@ -247,7 +247,7 @@ trait LocaleBase
             }
 
             $this->assertEquals($response['headers']['status-code'], 200);
-            $this->assertEquals(195, $response['body']['total']);
+            $this->assertEquals(196, $response['body']['total']);
 
             $response = $this->client->call(Client::METHOD_GET, '/locale/continents', [
                 'content-type' => 'application/json',

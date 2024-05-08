@@ -1852,8 +1852,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_MSG91_PROVIDER:
-                return 'mutation createMsg91Provider($providerId: String!, $name: String!, $from: String!, $senderId: String!, $authKey: String!, $enabled: Boolean) {
-                    messagingCreateMsg91Provider(providerId: $providerId, name: $name, from: $from, senderId: $senderId, authKey: $authKey, enabled: $enabled) {
+                return 'mutation createMsg91Provider($providerId: String!, $name: String!, $templateId: String!, $senderId: String!, $authKey: String!, $enabled: Boolean) {
+                    messagingCreateMsg91Provider(providerId: $providerId, name: $name, templateId: $templateId, senderId: $senderId, authKey: $authKey, enabled: $enabled) {
                         _id
                         name
                         provider
@@ -1976,8 +1976,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_MSG91_PROVIDER:
-                return 'mutation updateMsg91Provider($providerId: String!, $name: String!, $senderId: String!, $authKey: String!) {
-                    messagingUpdateMsg91Provider(providerId: $providerId, name: $name, senderId: $senderId, authKey: $authKey) {
+                return 'mutation updateMsg91Provider($providerId: String!, $name: String!, $templateId: String!, $senderId: String!, $authKey: String!) {
+                    messagingUpdateMsg91Provider(providerId: $providerId, name: $name, templateId: $templateId, senderId: $senderId, authKey: $authKey) {
                         _id
                         name
                         provider

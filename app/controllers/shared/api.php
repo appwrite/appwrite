@@ -283,18 +283,16 @@ Http::init()
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
-        if ($mode !== APP_MODE_ADMIN) {
-            $mfaEnabled = $user->getAttribute('mfa', false);
-            $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
-            $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
-            $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
-            $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
-            $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
+        $mfaEnabled = $user->getAttribute('mfa', false);
+        $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
+        $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
+        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
+        $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
+        $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
-            if (!in_array('mfa', $route->getGroups())) {
-                if ($session && \count($session->getAttribute('factors')) < $minimumFactors) {
-                    throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
-                }
+        if (!in_array('mfa', $route->getGroups())) {
+            if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
+                throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
         }
     });
@@ -371,8 +369,7 @@ Http::init()
                 $response
                     ->addHeader('X-RateLimit-Limit', $limit)
                     ->addHeader('X-RateLimit-Remaining', $remaining)
-                    ->addHeader('X-RateLimit-Reset', $time)
-                ;
+                    ->addHeader('X-RateLimit-Reset', $time);
             }
 
             $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
@@ -410,8 +407,7 @@ Http::init()
 
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
-        ;
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject));
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
@@ -463,8 +459,7 @@ Http::init()
                     ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'))
-                    ->send($data)
-                ;
+                    ->send($data);
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
             }
@@ -718,7 +713,7 @@ Http::shutdown()
         }
 
         if ($project->getId() !== 'console') {
-            if ($mode !== APP_MODE_ADMIN) {
+            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {

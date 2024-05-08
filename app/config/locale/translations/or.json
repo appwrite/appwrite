@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "Kliknite na gumb ispod kako biste se sigurno prijavili na svoj {{project}} račun. Istječe za 1 sat.",
     "emails.magicSession.buttonText": "Inicia sesión en {{project}}",
     "emails.magicSession.clientInfo": "Tento přihlašovací požadavek byl zaznamenán pomocí {{agentClient}} na {{agentDevice}} {{agentOs}}. Pokud jste o přihlášení nepožádali, můžete tento e-mail bezpečně ignorovat.",
-    "sms.verification.body": "{{secret}} est votre code de vérification pour {{project}}.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "Frase de segurança para este e-mail é {{phrase}}. Você pode confiar neste e-mail se essa frase coincidir com a frase mostrada durante o acesso.",
     "emails.magicSession.optionUrl": "אם אתם לא מצליחים להיכנס באמצעות הכפתור שמעל, אנא בקרו בקישור הבא:",
     "emails.otpSession.subject": "{{project}} ଲଗଇନ্",

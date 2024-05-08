@@ -1,3 +1,7 @@
+## 11.0.2
+
+* Fixed MSG91 missing template ID
+
 ## 11.0.1
 
 * Fixed parameters using enum types

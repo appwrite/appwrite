@@ -43,7 +43,7 @@
     "emails.invitation.footer": "If you are not interested, you can ignore this message.",
     "emails.invitation.thanks": "Thanks",
     "emails.invitation.signature": "{{project}} team",
-    "sms.verification.body": "{{secret}} is your {{project}} verification code.",
+    "sms.verification.body": "{{secret}}",
     "locale.country.unknown": "Unknown",
     "countries.af": "Afghanistan",
     "countries.ao": "Angola",

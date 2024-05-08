@@ -234,7 +234,7 @@
     "emails.magicSession.buttonText": "Connectez-vous à {{project}}",
     "emails.magicSession.optionUrl": "Si le bouton ci-dessus ne s'affiche pas, utilisez le lien suivant :",
     "emails.magicSession.clientInfo": "Cette connexion a été demandée en utilisant {{agentClient}} sur {{agentDevice}} {{agentOs}}. Si vous n'avez pas demandé cette connexion, vous pouvez ignorer cet email en toute sécurité.",
-    "sms.verification.body": "{{secret}} est votre code de vérification pour {{project}}.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "La phrase de sécurité pour cet email est {{phrase}}. Vous pouvez faire confiance à cet email si cette phrase correspond à celle affichée lors de la connexion.",
     "emails.otpSession.subject": "Connexion {{project}}",
     "emails.otpSession.hello": "Bonjour,",

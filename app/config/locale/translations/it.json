@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "Fai clic sul pulsante qui sotto per accedere in modo sicuro al tuo account {{project}}. Scadrà tra 1 ora.",
     "emails.magicSession.buttonText": "Accedi a {{project}}",
     "emails.magicSession.clientInfo": "Questo accesso è stato richiesto utilizzando {{agentClient}} su {{agentDevice}} {{agentOs}}. Se non hai richiesto l'accesso, puoi tranquillamente ignorare questa email.",
-    "sms.verification.body": "{{secret}} è il tuo codice di verifica per {{project}}.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "La frase di sicurezza per questa email è {{phrase}}. Puoi fidarti di questa email se questa frase corrisponde alla frase mostrata durante l'accesso.",
     "emails.magicSession.optionUrl": "Se non riesci ad accedere utilizzando il pulsante qui sopra, ti preghiamo di visitare il seguente link:",
     "emails.otpSession.subject": "Accesso a {{project}}",

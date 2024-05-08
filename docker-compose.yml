@@ -187,55 +187,55 @@ services:
       - _APP_MESSAGE_EMAIL_TEST_DSN
       - _APP_MESSAGE_PUSH_TEST_DSN
       - _APP_CONSOLE_COUNTRIES_DENYLIST
-      
-  # appwrite-realtime:
-  #   entrypoint: realtime
-  #   <<: *x-logging
-  #   container_name: appwrite-realtime
-  #   image: appwrite-dev
-  #   restart: unless-stopped
-  #   ports:
-  #     - 9505:80
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.constraint-label-stack=appwrite"
-  #     - "traefik.docker.network=appwrite"
-  #     - "traefik.http.services.appwrite_realtime.loadbalancer.server.port=80"
-  #     #ws
-  #     - traefik.http.routers.appwrite_realtime_ws.entrypoints=appwrite_web
-  #     - traefik.http.routers.appwrite_realtime_ws.rule=PathPrefix(`/v1/realtime`)
-  #     - traefik.http.routers.appwrite_realtime_ws.service=appwrite_realtime
-  #     # wss
-  #     - traefik.http.routers.appwrite_realtime_wss.entrypoints=appwrite_websecure
-  #     - traefik.http.routers.appwrite_realtime_wss.rule=PathPrefix(`/v1/realtime`)
-  #     - traefik.http.routers.appwrite_realtime_wss.service=appwrite_realtime
-  #     - traefik.http.routers.appwrite_realtime_wss.tls=true
-  #   networks:
-  #     - appwrite
-  #   volumes:
-  #     - ./app:/usr/src/code/app
-  #     - ./src:/usr/src/code/src
-  #   depends_on:
-  #     - mariadb
-  #     - redis
-  #   environment:
-  #     - _APP_ENV
-  #     - _APP_WORKER_PER_CORE
-  #     - _APP_OPTIONS_ABUSE
-  #     - _APP_OPTIONS_ROUTER_PROTECTION
-  #     - _APP_OPENSSL_KEY_V1
-  #     - _APP_REDIS_HOST
-  #     - _APP_REDIS_PORT
-  #     - _APP_REDIS_USER
-  #     - _APP_REDIS_PASS
-  #     - _APP_DB_HOST
-  #     - _APP_DB_PORT
-  #     - _APP_DB_SCHEMA
-  #     - _APP_DB_USER
-  #     - _APP_DB_PASS
-  #     - _APP_USAGE_STATS
-  #     - _APP_LOGGING_PROVIDER
-  #     - _APP_LOGGING_CONFIG
+
+  appwrite-realtime:
+    entrypoint: realtime
+    <<: *x-logging
+    container_name: appwrite-realtime
+    image: appwrite-dev
+    restart: unless-stopped
+    ports:
+      - 9505:80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.constraint-label-stack=appwrite"
+      - "traefik.docker.network=appwrite"
+      - "traefik.http.services.appwrite_realtime.loadbalancer.server.port=80"
+      #ws
+      - traefik.http.routers.appwrite_realtime_ws.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_realtime_ws.rule=PathPrefix(`/v1/realtime`)
+      - traefik.http.routers.appwrite_realtime_ws.service=appwrite_realtime
+      # wss
+      - traefik.http.routers.appwrite_realtime_wss.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_realtime_wss.rule=PathPrefix(`/v1/realtime`)
+      - traefik.http.routers.appwrite_realtime_wss.service=appwrite_realtime
+      - traefik.http.routers.appwrite_realtime_wss.tls=true
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_OPTIONS_ABUSE
+      - _APP_OPTIONS_ROUTER_PROTECTION
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_USAGE_STATS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-worker-audits:
     entrypoint: worker-audits
@@ -849,7 +849,7 @@ services:
     hostname: appwrite-executor
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.9
+    image: openruntimes/executor:0.4.12
     restart: unless-stopped
     networks:
       - appwrite
@@ -933,7 +933,8 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: "mysqld --innodb-flush-method=fsync --max-connections=10000" # add ' --query_cache_size=0' for DB tests
+      - MARIADB_AUTO_UPGRADE=1
+    command: "mysqld --innodb-flush-method=fsync" # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
   # smtp:

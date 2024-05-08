@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "Натисніть кнопку нижче, щоб безпечно увійти в свій обліковий запис {{project}}. Термін дії закінчиться через 1 годину.",
     "emails.magicSession.buttonText": "Увійти в {{project}}",
     "emails.magicSession.clientInfo": "Цей запит на вхід було здійснено за допомогою {{agentClient}} на {{agentDevice}} {{agentOs}}. Якщо ви не надсилали запит на вхід, ви можете сміливо ігнорувати цей електронний лист.",
-    "sms.verification.body": "{{secret}} є вашим кодом підтвердження для {{project}}.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "Фраза безпеки для цього листа - {{phrase}}. Ви можете довіряти цьому листу, якщо ця фраза збігається з фразою, показаною під час входу в систему.",
     "emails.magicSession.optionUrl": "Якщо вам не вдається увійти, використовуючи кнопку вище, будь ласка, перейдіть за наступним посиланням:",
     "emails.otpSession.subject": "вхід в {{project}}",

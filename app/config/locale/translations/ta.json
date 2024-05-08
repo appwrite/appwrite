@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "கீழே உள்ள பொத்தானை அழுத்தி, உங்கள் {{project}} கணக்கில் பாதுகாப்பாக உள்நுழையவும். இது 1 மணி நேரத்தில் காலாவதியாகும்.",
     "emails.magicSession.buttonText": "{{project}} இல் உள்நுழைக",
     "emails.magicSession.clientInfo": "இந்த உள்நுழைவு {{agentClient}} மூலம் {{agentDevice}} {{agentOs}} இல் கோரப்பட்டது. நீங்கள் உள்நுழைவு கோரவில்லை என்றால், இந்த மின்னஞ்சலை புறக்கணிக்கலாம்.",
-    "sms.verification.body": "{{secret}} உங்கள் {{project}} சரிபார்ப்பு குறியீடு ஆகும்.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "இந்த மின்னஞ்சலுக்கான பாதுகாப்பு வாசகம் {{phrase}}. இந்த வாசகம் உள்நுழைவு போது காட்டப்பட்ட வாசகத்துடன் பொருந்தும் போது இந்த மின்னஞ்சலை நம்பலாம்.",
     "emails.magicSession.optionUrl": "மேலே உள்ள பொத்தானை பயன்படுத்தி உள்நுழைய முடியாவிட்டால், கீழே உள்ள இணைப்பை பார்வையிடவும்:",
     "emails.otpSession.subject": "{{project}} உள்நுழைவு",

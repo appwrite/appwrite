@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "Haz clic en el botón de abajo para iniciar sesión de manera segura en tu cuenta de {{project}}. Expirará en una hora.",
     "emails.magicSession.buttonText": "Inicia sesión en {{project}}",
     "emails.magicSession.clientInfo": "Este ingreso fue solicitado usando {{agentClient}} en {{agentDevice}} {{agentOs}}. Si no solicitaste el ingreso, puedes ignorar este correo electrónico sin problema.",
-    "sms.verification.body": "El {{secret}} es tu código de verificación de {{project}}.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "La frase de seguridad para este correo electrónico es {{phrase}}. Puedes confiar en este correo si esta frase coincide con la frase que se muestra al iniciar sesión.",
     "emails.magicSession.optionUrl": "Si no puedes iniciar sesión utilizando el botón superior, por favor visita el siguiente enlace:",
     "emails.otpSession.subject": "{{project}} ਲਾਗਿਨ",

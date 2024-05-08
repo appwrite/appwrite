@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "Kliknite spodnji gumb, da varno vstopite v svoj {{project}} račun. Poteče čez 1 uro.",
     "emails.magicSession.buttonText": "Prijavite se v {{project}}",
     "emails.magicSession.clientInfo": "Ta prijava je bila zahtevana z uporabo {{agentClient}} na {{agentDevice}} {{agentOs}}. Če te prijave niste zahtevali, lahko to e-pošto varno prezrete.",
-    "sms.verification.body": "{{secret}} je vaša {{project}} koda za preverjanje.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "Zaščitna fraza za ta e-poštni naslov je {{phrase}}. Temu e-poštnemu naslovu lahko zaupate, če se ta fraza ujema s frazo, prikazano med prijavo.",
     "emails.magicSession.optionUrl": "Če se z zgornjim gumbom ne morete prijaviti, obiščite naslednjo povezavo:",
     "emails.otpSession.subject": "{{project}} පිවිසුම",

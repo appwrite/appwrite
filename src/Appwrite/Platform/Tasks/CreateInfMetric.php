@@ -50,7 +50,7 @@ class CreateInfMetric extends Action
                 $dbForProject = call_user_func($getProjectDB, $project);
                 $this->getUsageData($dbForProject, $project);
             } catch (\Throwable $th) {
-                Console::error("Unexpected error occured with Project ID {$projectId}");
+                Console::error("Unexpected error occurred with Project ID {$projectId}");
                 Console::error('[Error] Type: ' . get_class($th));
                 Console::error('[Error] Message: ' . $th->getMessage());
                 Console::error('[Error] File: ' . $th->getFile());
@@ -72,7 +72,7 @@ class CreateInfMetric extends Action
                     $dbForProject = call_user_func($getProjectDB, $project);
                     $this->getUsageData($dbForProject, $project);
                 } catch (\Throwable $th) {
-                    Console::error("Unexpected error occured with Project ID {$projectId}");
+                    Console::error("Unexpected error occurred with Project ID {$projectId}");
                     Console::error('[Error] Type: ' . get_class($th));
                     Console::error('[Error] Message: ' . $th->getMessage());
                     Console::error('[Error] File: ' . $th->getFile());

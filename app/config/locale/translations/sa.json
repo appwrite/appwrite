@@ -233,7 +233,7 @@
     "emails.magicSession.optionButton": "اضغط على الزر أدناه لتسجيل الدخول بأمان إلى حساب {{project}} الخاص بك. سينتهي في غضون ساعة واحدة.",
     "emails.magicSession.buttonText": "تسجيل الدخول إلى {{project}}",
     "emails.magicSession.clientInfo": "هذا الطلب لتسجيل الدخول قد تم باستخدام {{agentClient}} على {{agentDevice}} {{agentOs}}. إذا لم تطلب تسجيل الدخول، يمكنك تجاهل هذا البريد الإلكتروني بأمان.",
-    "sms.verification.body": "سري هو رمز التحقق الخاص بمشروعك.",
+    "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "العبارة الأمنية لهذا البريد الإلكتروني هي {{phrase}}. يمكنك الوثوق بهذا البريد الإلكتروني إذا كانت هذه العبارة متطابقة مع العبارة المعروضة أثناء تسجيل الدخول.",
     "emails.magicSession.optionUrl": "إذا لم تتمكن من تسجيل الدخول باستخدام الزر أعلاه، يرجى زيارة الرابط التالي:",
     "emails.otpSession.subject": "प्रवेशनम्",

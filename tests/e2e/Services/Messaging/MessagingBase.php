@@ -71,7 +71,7 @@ trait MessagingBase
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
-                'from' => '+123456789'
+                'templateId' => '123456'
             ],
             'vonage' => [
                 'providerId' => ID::unique(),
@@ -1376,9 +1376,9 @@ trait MessagingBase
 
         $smsDSN = new DSN(System::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
         $to = $smsDSN->getParam('to');
-        $from = $smsDSN->getParam('from');
         $senderId = $smsDSN->getUser();
         $authKey = $smsDSN->getPassword();
+        $templateId = $smsDSN->getParam('templateId');
 
         if (empty($to) || empty($from) || empty($senderId) || empty($authKey)) {
             $this->markTestSkipped('SMS provider not configured');
@@ -1394,7 +1394,7 @@ trait MessagingBase
             'name' => 'Msg91Sender',
             'senderId' => $senderId,
             'authKey' => $authKey,
-            'from' => $from,
+            'templateId' => $templateId,
             'enabled' => true,
         ]);
 

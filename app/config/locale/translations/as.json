@@ -248,5 +248,5 @@
     "emails.certificate.footer": "আপোনাৰ পূৰ্বৰ প্ৰমাণপত্ৰটো প্ৰথম ব্ৰিফল হোৱাৰ দিনৰ পৰা ৩০ দিনলৈ বৈধ থাকিব। আমি এই ঘটনাটোৰ তদন্ত কৰিবলৈ উচ্চ পৰামৰ্শ দিয়ে, অন্যথা আপোনাৰ ডোমেইনটো অবৈধ SSL যোগাযোগ অবিহনে থাকিব।",
     "emails.certificate.thanks": "ধন্যবাদ",
     "emails.certificate.signature": "{{project}} দল",
-    "sms.verification.body": "{{secret}} আপোনাৰ {{project}} যাচাইকৰণ কোড।"
+    "sms.verification.body": "{{secret}}"
 }
