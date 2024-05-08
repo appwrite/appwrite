@@ -3820,6 +3820,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(1, $attributesProject1['body']['total']);
         $this->assertEquals(1, \count($attributesProject1['body']['attributes']));
+        $this->assertEquals('available', $attributesProject1['body']['attributes'][0]['status']);
 
         $attributesProject2 = $this->client->call(Client::METHOD_GET, '/databases/' . $database2['body']['$id'] . '/collections/' . $collection2['body']['$id'] . '/attributes', [
             'content-type' => 'application/json',
@@ -3829,6 +3830,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(1, $attributesProject2['body']['total']);
         $this->assertEquals(1, \count($attributesProject2['body']['attributes']));
+        $this->assertEquals('available', $attributesProject2['body']['attributes'][0]['status']);
 
         $attributesProject3 = $this->client->call(Client::METHOD_GET, '/databases/' . $database3['body']['$id'] . '/collections/' . $collection3['body']['$id'] . '/attributes', [
             'content-type' => 'application/json',
@@ -3838,6 +3840,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(1, $attributesProject3['body']['total']);
         $this->assertEquals(1, \count($attributesProject3['body']['attributes']));
+        $this->assertEquals('available', $attributesProject3['body']['attributes'][0]['status']);
 
         $attributesProject4 = $this->client->call(Client::METHOD_GET, '/databases/' . $database4['body']['$id'] . '/collections/' . $collection4['body']['$id'] . '/attributes', [
             'content-type' => 'application/json',
@@ -3847,6 +3850,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(1, $attributesProject4['body']['total']);
         $this->assertEquals(1, \count($attributesProject4['body']['attributes']));
+        $this->assertEquals('available', $attributesProject4['body']['attributes'][0]['status']);
 
         $indexesProject1 = $this->client->call(Client::METHOD_GET, '/databases/' . $database1['body']['$id'] . '/collections/' . $collection1['body']['$id'] . '/indexes', [
             'content-type' => 'application/json',
