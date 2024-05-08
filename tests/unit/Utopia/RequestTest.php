@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 use Swoole\Http\Request as SwooleRequest;
 use Tests\Unit\Utopia\Request\Filters\First;
 use Tests\Unit\Utopia\Request\Filters\Second;
-use Utopia\Route;
+use Utopia\Http\Route;
 
 class RequestTest extends TestCase
 {
