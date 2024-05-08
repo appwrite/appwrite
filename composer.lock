@@ -1556,16 +1556,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.49.6",
+            "version": "0.49.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "ebc2d3b9435ca56659ab58479a0f755329599f7c"
+                "reference": "69b9cb52cc81a7f606ea7586f6c0af3394cc3601"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/ebc2d3b9435ca56659ab58479a0f755329599f7c",
-                "reference": "ebc2d3b9435ca56659ab58479a0f755329599f7c",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/69b9cb52cc81a7f606ea7586f6c0af3394cc3601",
+                "reference": "69b9cb52cc81a7f606ea7586f6c0af3394cc3601",
                 "shasum": ""
             },
             "require": {
@@ -1606,9 +1606,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.49.6"
+                "source": "https://github.com/utopia-php/database/tree/0.49.7"
             },
-            "time": "2024-04-30T01:33:56+00:00"
+            "time": "2024-05-08T09:04:08+00:00"
         },
         {
             "name": "utopia-php/domains",
