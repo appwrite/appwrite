@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3f703f77225d4022cd5823814ab7c3e7",
+    "content-hash": "bb3213cfb05b043e7d2ea2002069bb98",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -822,16 +822,16 @@
         },
         {
             "name": "paragonie/constant_time_encoding",
-            "version": "v2.6.3",
+            "version": "v2.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/constant_time_encoding.git",
-                "reference": "58c3f47f650c94ec05a151692652a868995d2938"
+                "reference": "52a0d99e69f56b9ec27ace92ba56897fe6993105"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paragonie/constant_time_encoding/zipball/58c3f47f650c94ec05a151692652a868995d2938",
-                "reference": "58c3f47f650c94ec05a151692652a868995d2938",
+                "url": "https://api.github.com/repos/paragonie/constant_time_encoding/zipball/52a0d99e69f56b9ec27ace92ba56897fe6993105",
+                "reference": "52a0d99e69f56b9ec27ace92ba56897fe6993105",
                 "shasum": ""
             },
             "require": {
@@ -885,7 +885,7 @@
                 "issues": "https://github.com/paragonie/constant_time_encoding/issues",
                 "source": "https://github.com/paragonie/constant_time_encoding"
             },
-            "time": "2022-06-14T06:56:20+00:00"
+            "time": "2024-05-08T12:18:48+00:00"
         },
         {
             "name": "phpmailer/phpmailer",
@@ -1737,16 +1737,16 @@
         },
         {
             "name": "utopia-php/dsn",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/dsn.git",
-                "reference": "c11f37a12c3f6aaf9fea97ca7cb363dcc93668d7"
+                "reference": "42ee37a3d1785100b2f69091c9d4affadb6846eb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dsn/zipball/c11f37a12c3f6aaf9fea97ca7cb363dcc93668d7",
-                "reference": "c11f37a12c3f6aaf9fea97ca7cb363dcc93668d7",
+                "url": "https://api.github.com/repos/utopia-php/dsn/zipball/42ee37a3d1785100b2f69091c9d4affadb6846eb",
+                "reference": "42ee37a3d1785100b2f69091c9d4affadb6846eb",
                 "shasum": ""
             },
             "require": {
@@ -1778,9 +1778,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/dsn/issues",
-                "source": "https://github.com/utopia-php/dsn/tree/0.2.0"
+                "source": "https://github.com/utopia-php/dsn/tree/0.2.1"
             },
-            "time": "2023-11-02T12:01:43+00:00"
+            "time": "2024-05-07T02:01:25+00:00"
         },
         {
             "name": "utopia-php/fetch",
@@ -2075,16 +2075,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.4.0",
+            "version": "0.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "a72f27bd3dde68752fb185d306c4820e1b8d9657"
+                "reference": "ae3cfe93f6d313105d226aeb68806660c806a925"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/a72f27bd3dde68752fb185d306c4820e1b8d9657",
-                "reference": "a72f27bd3dde68752fb185d306c4820e1b8d9657",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/ae3cfe93f6d313105d226aeb68806660c806a925",
+                "reference": "ae3cfe93f6d313105d226aeb68806660c806a925",
                 "shasum": ""
             },
             "require": {
@@ -2117,9 +2117,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.4.0"
+                "source": "https://github.com/utopia-php/migration/tree/0.4.1"
             },
-            "time": "2024-02-25T12:35:21+00:00"
+            "time": "2024-05-01T13:19:18+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -2397,17 +2397,88 @@
             "time": "2021-03-10T10:45:22+00:00"
         },
         {
-            "name": "utopia-php/storage",
-            "version": "0.18.4",
+            "name": "utopia-php/servers",
+            "version": "dev-dev",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/storage.git",
-                "reference": "94ab8758fabcefee5c5fa723616e45719833f922"
+                "url": "https://github.com/utopia-php/servers.git",
+                "reference": "e7eee7f82399c89adc28cf79912a9a41d7bb3233"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/94ab8758fabcefee5c5fa723616e45719833f922",
-                "reference": "94ab8758fabcefee5c5fa723616e45719833f922",
+                "url": "https://api.github.com/repos/utopia-php/servers/zipball/e7eee7f82399c89adc28cf79912a9a41d7bb3233",
+                "reference": "e7eee7f82399c89adc28cf79912a9a41d7bb3233",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0",
+                "utopia-php/di": "dev-main"
+            },
+            "require-dev": {
+                "laravel/pint": "^0.2.3",
+                "phpstan/phpstan": "^1.8",
+                "phpunit/phpunit": "^9.5.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Servers\\": "src/Servers"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\E2E\\": "tests/Servers/Unit"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "analyse": [
+                    "vendor/bin/phpstan analyse"
+                ],
+                "format": [
+                    "vendor/bin/pint"
+                ],
+                "lint": [
+                    "vendor/bin/pint --test"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Team Appwrite",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "A base library for building Utopia style servers.",
+            "keywords": [
+                "framework",
+                "php",
+                "servers",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "source": "https://github.com/utopia-php/servers/tree/dev",
+                "issues": "https://github.com/utopia-php/servers/issues"
+            },
+            "time": "2024-04-22T21:23:28+00:00"
+        },
+        {
+            "name": "utopia-php/storage",
+            "version": "dev-feat-framework-v2-v2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/storage.git",
+                "reference": "80eafa63cb86b33ce35d48c0189bae6ebdc02734"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/80eafa63cb86b33ce35d48c0189bae6ebdc02734",
+                "reference": "80eafa63cb86b33ce35d48c0189bae6ebdc02734",
                 "shasum": ""
             },
             "require": {
@@ -2447,60 +2518,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.18.4"
+                "source": "https://github.com/utopia-php/storage/tree/feat-framework-v2-v2"
             },
-            "time": "2024-04-02T08:24:09+00:00"
-        },
-        {
-            "name": "utopia-php/swoole",
-            "version": "0.8.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "5fa9d42c608ad46a4ce42a6d2b2eae00592fccd4"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/5fa9d42c608ad46a4ce42a6d2b2eae00592fccd4",
-                "reference": "5fa9d42c608ad46a4ce42a6d2b2eae00592fccd4",
-                "shasum": ""
-            },
-            "require": {
-                "ext-swoole": "*",
-                "php": ">=8.0",
-                "utopia-php/framework": "0.33.*"
-            },
-            "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^9.3",
-                "swoole/ide-helper": "5.0.2"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Swoole\\": "src/Swoole"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "An extension for Utopia Framework to work with PHP Swoole as a PHP FPM alternative",
-            "keywords": [
-                "framework",
-                "http",
-                "php",
-                "server",
-                "swoole",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/0.8.2"
-            },
-            "time": "2024-02-01T14:54:12+00:00"
+            "time": "2024-03-08T09:39:46+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -3004,16 +3024,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.15.2",
+            "version": "v1.15.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "2c9f8004899815f3f0ee3cb28ef7281e2b589134"
+                "reference": "3600b5d17aff52f6100ea4921849deacbbeb8656"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/2c9f8004899815f3f0ee3cb28ef7281e2b589134",
-                "reference": "2c9f8004899815f3f0ee3cb28ef7281e2b589134",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/3600b5d17aff52f6100ea4921849deacbbeb8656",
+                "reference": "3600b5d17aff52f6100ea4921849deacbbeb8656",
                 "shasum": ""
             },
             "require": {
@@ -3066,7 +3086,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2024-04-23T15:42:34+00:00"
+            "time": "2024-04-30T15:02:26+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -3486,16 +3506,16 @@
         },
         {
             "name": "phpdocumentor/reflection-docblock",
-            "version": "5.4.0",
+            "version": "5.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "298d2febfe79d03fe714eb871d5538da55205b1a"
+                "reference": "2f7b34c2ee49829a36cec9f545605d385bf3e291"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/298d2febfe79d03fe714eb871d5538da55205b1a",
-                "reference": "298d2febfe79d03fe714eb871d5538da55205b1a",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/2f7b34c2ee49829a36cec9f545605d385bf3e291",
+                "reference": "2f7b34c2ee49829a36cec9f545605d385bf3e291",
                 "shasum": ""
             },
             "require": {
@@ -3545,9 +3565,9 @@
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
             "support": {
                 "issues": "https://github.com/phpDocumentor/ReflectionDocBlock/issues",
-                "source": "https://github.com/phpDocumentor/ReflectionDocBlock/tree/5.4.0"
+                "source": "https://github.com/phpDocumentor/ReflectionDocBlock/tree/5.x"
             },
-            "time": "2024-04-09T21:13:58+00:00"
+            "time": "2024-05-07T05:11:38+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -3680,16 +3700,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.28.0",
+            "version": "1.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "cd06d6b1a1b3c75b0b83f97577869fd85a3cd4fb"
+                "reference": "536889f2b340489d328f5ffb7b02bb6b183ddedc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/cd06d6b1a1b3c75b0b83f97577869fd85a3cd4fb",
-                "reference": "cd06d6b1a1b3c75b0b83f97577869fd85a3cd4fb",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/536889f2b340489d328f5ffb7b02bb6b183ddedc",
+                "reference": "536889f2b340489d328f5ffb7b02bb6b183ddedc",
                 "shasum": ""
             },
             "require": {
@@ -3721,9 +3741,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.28.0"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.29.0"
             },
-            "time": "2024-04-03T18:51:33+00:00"
+            "time": "2024-05-06T12:04:23+00:00"
         },
         {
             "name": "phpstan/phpstan",
