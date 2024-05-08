@@ -1235,7 +1235,17 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failureRedirect(Exception::USER_MISSING_ID);
         }
 
-        $name = $oauth2->getUserName($accessToken);
+        $name = '';
+        $nameOAuth = $oauth2->getUserName($accessToken);
+        $userParam = \json_decode($request->getParam('user'), true);
+        if (!empty($nameOAuth)) {
+            $name = $nameOAuth;
+        } elseif (is_array($userParam)) {
+            $nameParam = $userParam['name'];
+            if (is_array($nameParam) && isset($nameParam['firstName']) && isset($nameParam['lastName'])) {
+                $name = $nameParam['firstName'] . ' ' . $nameParam['lastName'];
+            }
+        }
         $email = $oauth2->getUserEmail($accessToken);
 
         // Check if this identity is connected to a different user
