@@ -60,7 +60,7 @@
         "utopia-php/messaging": "0.10.*",
         "utopia-php/migration": "0.4.*",
         "utopia-php/orchestration": "0.9.*",
-        "utopia-php/platform": "0.7.*",
+        "utopia-php/platform": "0.5.*",
         "utopia-php/pools": "0.4.*",
         "utopia-php/queue": "0.7.*",
         "utopia-php/registry": "0.5.*",
