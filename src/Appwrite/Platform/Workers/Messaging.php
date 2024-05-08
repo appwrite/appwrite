@@ -441,30 +441,23 @@ class Messaging extends Action
                 try {
                     $adapter->send($data);
 
-            $countryCode = $sms->getCountryCode($payload['recipient']);
-
-            if (!empty($countryCode)) {
-                $queueForUsage
-                    ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_MESSAGES_COUNTRY_CODE), 1);
-            }
-
-            $queueForUsage
-                ->setProject($project)
-                ->addMetric(METRIC_MESSAGES, 1)
-                ->trigger();
-        } catch (\Exception $error) {
-            throw new Exception('Error sending message: ' . $error->getMessage(), 500);
-        }
+                    $countryCode = $adapter->getCountryCode($message['to']);
+                    if (!empty($countryCode)) {
+                        $queueForUsage
+                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_MESSAGES_COUNTRY_CODE), 1);
+                    }
                     $queueForUsage
                         ->addMetric(METRIC_MESSAGES, 1)
                         ->setProject($project)
                         ->trigger();
-                } catch (\Throwable $e) {
-                    throw new \Exception('Failed sending to targets with error: ' . $e->getMessage());
+                } catch (\Throwable $th) {
+                    throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
                 }
             };
         }, $batches));
     }
+
+
 
     private function getSmsAdapter(Document $provider): ?SMSAdapter
     {
