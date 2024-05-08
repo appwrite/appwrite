@@ -1,13 +1,5 @@
 <?php
 
-/**
- * ISO 3166 standard country codes
- * https://www.iso.org/iso-3166-country-codes.html
- *
- * Source:
- * https://www.iso.org/obp/ui/#search/code/
- */
-
 return [
     'AF',
     'AO',

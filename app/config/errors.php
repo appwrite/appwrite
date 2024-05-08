@@ -11,7 +11,7 @@ return [
     /** General Errors */
     Exception::GENERAL_UNKNOWN => [
         'name' => Exception::GENERAL_UNKNOWN,
-        'description' => 'An unknown error has occurred. Please check the logs for more information.',
+        'description' => 'An unknown error has occured. Please check the logs for more information.',
         'code' => 500,
     ],
     Exception::GENERAL_MOCK => [
@@ -284,7 +284,7 @@ return [
     ],
     Exception::USER_CHALLENGE_REQUIRED => [
         'name' => Exception::USER_CHALLENGE_REQUIRED,
-        'description' => 'A recently successful challenge is required to complete this action. A challenge is considered recent for 5 minutes.',
+        'description' => 'A recently succeessful challenge is required to complete this action. A challenge is considered recent for 5 minutes.',
         'code' => 401,
     ],
     Exception::USER_OAUTH2_BAD_REQUEST => [
@@ -489,7 +489,7 @@ return [
     ],
     Exception::REPOSITORY_NOT_FOUND => [
         'name' => Exception::REPOSITORY_NOT_FOUND,
-        'description' => 'Repository with the requested ID could not be found. Check to see if the ID is correct, or create the repository.',
+        'description' => 'Repository with the requested ID could not be found. Check to see if the ID is correct, or create the respository.',
         'code' => 404,
     ],
     Exception::PROVIDER_CONTRIBUTION_CONFLICT => [
@@ -499,7 +499,7 @@ return [
     ],
     Exception::GENERAL_PROVIDER_FAILURE => [
         'name' => Exception::GENERAL_PROVIDER_FAILURE,
-        'description' => 'VCS (Version Control System) provider failed to process the request. We believe this is an error with the VCS provider. Try again, or contact support for more information.',
+        'description' => 'VCS (Version Control System) provider failed to proccess the request. We believe this is an error with the VCS provider. Try again, or contact support for more information.',
         'code' => 400,
     ],
 
