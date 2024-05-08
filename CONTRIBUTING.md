@@ -338,10 +338,8 @@ These are the current metrics we collect usage stats for:
 
 > Note: The curly brackets in the metric name represents a template and is replaced with a value when the metric is processed.
 
-Metrics are collected within 3 scopes Daily, monthly, an infinity.
-Adding new usage metric in order to aggregate usage stats is very simple, but very much dependent on where do you want to collect
-statistics ,via API or via background worker.
-For both cases you will need to add a const variable in `app/init.php` under the usage metrics list.
+Metrics are collected within 3 scopes Daily, monthly, an infinity. Adding new usage metric in order to aggregate usage stats is very simple, but very much dependent on where do you want to collect
+statistics ,via API or via background worker. For both cases you will need to add a `const` variable in `app/init.php` under the usage metrics list using the naming convention `METRIC_<RESOURCE_NAME>` as shown below.
 
 ```php
 // Usage metrics
