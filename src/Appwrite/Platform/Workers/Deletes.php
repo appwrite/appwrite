@@ -12,6 +12,7 @@ use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -21,6 +22,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -476,18 +478,38 @@ class Deletes extends Action
         $projectId = $document->getId();
         $projectInternalId = $document->getInternalId();
 
-        // Delete project tables
+        try {
+            $dsn = new DSN($document->getAttribute('database', 'console'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $document->getAttribute('database', 'console'));
+        }
+
         $dbForProject = $getProjectDB($document);
+        $projectCollectionIds = \array_keys(Config::getParam('collections', [])['projects']);
+        $limit = \count($projectCollectionIds) + 25;
 
         while (true) {
-            $collections = $dbForProject->listCollections();
+            $collections = $dbForProject->listCollections($limit);
 
-            if (empty($collections)) {
-                break;
+            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+                $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
+
+                if ($collectionsIds == $projectCollectionIds) {
+                    break;
+                }
+            } else {
+                if (empty($collections)) {
+                    break;
+                }
             }
 
             foreach ($collections as $collection) {
-                $dbForProject->deleteCollection($collection->getId());
+                if ($dsn->getHost() !== DATABASE_SHARED_TABLES || !\in_array($collection->getId(), $projectCollectionIds)) {
+                    $dbForProject->deleteCollection($collection->getId());
+                } else {
+                    $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
+                }
             }
         }
 
@@ -523,17 +545,14 @@ class Deletes extends Action
             Query::equal('projectInternalId', [$projectInternalId]),
         ], $dbForConsole);
 
-        // Delete VCS commments
+        // Delete VCS comments
         $this->deleteByGroup('vcsComments', [
             Query::equal('projectInternalId', [$projectInternalId]),
         ], $dbForConsole);
 
-        // Delete metadata tables
-        try {
+        // Delete metadata table
+        if ($dsn->getHost() !== DATABASE_SHARED_TABLES) {
             $dbForProject->deleteCollection('_metadata');
-        } catch (\Throwable) {
-            // Ignore: deleteCollection tries to delete a metadata entry after the collection is deleted,
-            // which will throw an exception here because the metadata collection is already deleted.
         }
 
         // Delete all storage directories
