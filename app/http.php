@@ -32,7 +32,7 @@ $http = new Server(
     mode: SWOOLE_PROCESS,
 );
 
-$payloadSize = 12 * (1024 * 1024); // 12MB
+$payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
 $workerNumber = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $http
