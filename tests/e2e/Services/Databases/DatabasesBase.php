@@ -1743,6 +1743,21 @@ trait DatabasesBase
 
         $this->assertEquals(400, $documents['headers']['status-code']);
 
+        /**
+         * Test null value for cursor
+         */
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                '{"method":"cursorAfter","values":[null]}',
+            ],
+        ]);
+
+        $this->assertEquals(400, $documents['headers']['status-code']);
+
         return [];
     }
 
