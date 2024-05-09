@@ -45,7 +45,7 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertEquals(194, $response['body']['total']);
+        $this->assertEquals(196, $response['body']['total']);
         $this->assertEquals($response['body']['countries'][0]['name'], 'Afghanistan');
         $this->assertEquals($response['body']['countries'][0]['code'], 'AF');
 
@@ -59,7 +59,7 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertEquals(194, $response['body']['total']);
+        $this->assertEquals(196, $response['body']['total']);
         $this->assertEquals($response['body']['countries'][0]['name'], 'Afganistán');
         $this->assertEquals($response['body']['countries'][0]['code'], 'AF');
 
@@ -120,7 +120,7 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertEquals(194, $response['body']['total']);
+        $this->assertEquals(195, $response['body']['total']);
         $this->assertIsArray($response['body']['phones']);
         $this->assertEquals($response['body']['phones'][0]['code'], '+1');
         $this->assertEquals($response['body']['phones'][0]['countryName'], 'Canada');
@@ -205,15 +205,15 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertEquals(184, $response['body']['total']);
+        $this->assertEquals(186, $response['body']['total']);
 
         $this->assertEquals($response['body']['languages'][0]['code'], 'aa');
         $this->assertEquals($response['body']['languages'][0]['name'], 'Afar');
         $this->assertEquals($response['body']['languages'][0]['nativeName'], 'Afar');
 
-        $this->assertEquals($response['body']['languages'][183]['code'], 'zu');
-        $this->assertEquals($response['body']['languages'][183]['name'], 'Zulu');
-        $this->assertEquals($response['body']['languages'][183]['nativeName'], 'isiZulu');
+        $this->assertEquals($response['body']['languages'][185]['code'], 'zu');
+        $this->assertEquals($response['body']['languages'][185]['name'], 'Zulu');
+        $this->assertEquals($response['body']['languages'][185]['nativeName'], 'isiZulu');
 
         /**
          * Test for FAILURE
@@ -247,7 +247,7 @@ trait LocaleBase
             }
 
             $this->assertEquals($response['headers']['status-code'], 200);
-            $this->assertEquals(194, $response['body']['total']);
+            $this->assertEquals(196, $response['body']['total']);
 
             $response = $this->client->call(Client::METHOD_GET, '/locale/continents', [
                 'content-type' => 'application/json',

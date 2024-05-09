@@ -10,11 +10,9 @@ x-logging: &x-logging
       max-file: "5"
       max-size: "10m"
 
-version: "3"
-
 services:
   traefik:
-    image: traefik:2.9
+    image: traefik:2.11
     <<: *x-logging
     container_name: appwrite-traefik
     command:
@@ -92,9 +90,9 @@ services:
       - php
       - -e
       - app/http.php
-      - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
     environment:
       - _APP_ENV
+      - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT
@@ -185,6 +183,10 @@ services:
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_ASSISTANT_OPENAI_API_KEY
+      - _APP_MESSAGE_SMS_TEST_DSN
+      - _APP_MESSAGE_EMAIL_TEST_DSN
+      - _APP_MESSAGE_PUSH_TEST_DSN
+      - _APP_CONSOLE_COUNTRIES_DENYLIST
       - _APP_EXPERIMENT_LOGGING_PROVIDER
       - _APP_EXPERIMENT_LOGGING_CONFIG
 
@@ -285,12 +287,18 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
 
   appwrite-worker-deletes:
     entrypoint: worker-deletes
@@ -550,6 +558,8 @@ services:
       - _APP_SMTP_PASSWORD
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_DOMAIN
+      - _APP_OPTIONS_FORCE_HTTPS
 
   appwrite-worker-messaging:
     entrypoint: worker-messaging
@@ -567,15 +577,21 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_SMS_PROVIDER
-      - _APP_SMS_FROM
-      - _APP_SMS_PROJECTS_DENY_LIST
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_SMS_FROM
+      - _APP_SMS_PROVIDER
+      - _APP_SMS_PROJECTS_DENY_LIST
 
   appwrite-worker-migrations:
     entrypoint: worker-migrations
@@ -711,10 +727,37 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
 
-  appwrite-schedule:
-    entrypoint: schedule
+  appwrite-scheduler-functions:
+    entrypoint: schedule-functions
     <<: *x-logging
-    container_name: appwrite-schedule
+    container_name: appwrite-scheduler-functions
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-scheduler-messages:
+    entrypoint: schedule-messages
+    <<: *x-logging
+    container_name: appwrite-scheduler-messages
     image: appwrite-dev
     networks:
       - appwrite
@@ -740,7 +783,7 @@ services:
 
   appwrite-assistant:
     container_name: appwrite-assistant
-    image: appwrite/assistant:0.3.0
+    image: appwrite/assistant:0.4.0
     networks:
       - appwrite
     environment:
@@ -820,7 +863,7 @@ services:
       - OPR_PROXY_HEALTHCHECK=enabled
 
   mariadb:
-    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
     networks:
@@ -834,6 +877,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
+      - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync" # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
@@ -850,7 +894,7 @@ services:
   #     - SMARTHOST_PORT=587
 
   redis:
-    image: redis:7.0.4-alpine
+    image: redis:7.2.4-alpine
     <<: *x-logging
     container_name: appwrite-redis
     command: >
@@ -872,6 +916,7 @@ services:
   #     - appwrite
   #   volumes:
   #     - appwrite-uploads:/storage/uploads
+
   # Dev Tools Start ------------------------------------------------------------------------------------------
   #
   # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack

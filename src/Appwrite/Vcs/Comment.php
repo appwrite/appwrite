@@ -2,8 +2,10 @@
 
 namespace Appwrite\Vcs;
 
-use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\System\System;
+
+// TODO this class should be moved to a more appropriate place in the architecture
 
 class Comment
 {
@@ -66,6 +68,13 @@ class Comment
         }
 
         foreach ($projects as $projectId => $project) {
+            $text .= "**{$project['name']}** `{$projectId}`\n\n";
+            $text .= "| Function | ID | Status | Action |\n";
+            $text .= "| :- | :-  | :-  | :- |\n";
+
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $hostname = System::getEnv('_APP_DOMAIN');
+
             foreach ($project['functions'] as $functionId => $function) {
                 if ($function['status'] === 'waiting' || $function['status'] === 'processing' || $function['status'] === 'building') {
                     $text .= "**Your function deployment is in progress. Please check back in a few minutes for the updated status.**\n\n";
@@ -78,9 +87,6 @@ class Comment
                 $text .= "Project name: **{$project['name']}** \nProject ID: `{$projectId}`\n\n";
                 $text .= "| Function | ID | Status | Action |\n";
                 $text .= "| :- | :-  | :-  | :- |\n";
-
-                $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-                $hostname = App::getEnv('_APP_DOMAIN');
 
                 $generateImage = function (string $status) use ($protocol, $hostname) {
                     $extention = $status === 'building' ? 'gif' : 'png';
