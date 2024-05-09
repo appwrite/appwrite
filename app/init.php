@@ -725,17 +725,14 @@ $register->set('logger', function () {
     $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
     try {
-        $providerConfig = str_replace(';', '@', $providerConfig ?? '');
-        $fallbackForLogger = $providerName . "://" . $providerConfig;
-
-        $loggingProvider = new DSN(System::getEnv('_APP_LOGGING') ?? $fallbackForLogger);
+        $loggingProvider = new DSN($providerConfig ?? '');
 
         $providerName = $loggingProvider->getScheme();
         $providerConfig = match ($providerName) {
             'sentry' => ($loggingProvider->getUser() ?? '') . ';' . $loggingProvider->getHost(),
             default => $loggingProvider->getHost(),
         };
-    } catch (Throwable) {
+    } catch (Throwable $th) {
 
     }
 

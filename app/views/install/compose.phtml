@@ -140,7 +140,6 @@ services:
       - _APP_FUNCTIONS_RUNTIMES
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_MAINTENANCE_INTERVAL
@@ -207,7 +206,6 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_USAGE_STATS
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -235,7 +233,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -264,7 +261,6 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -319,7 +315,6 @@ services:
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_EXECUTOR_SECRET
@@ -349,7 +344,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -382,7 +376,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_VCS_GITHUB_APP_NAME
@@ -449,7 +442,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -488,7 +480,6 @@ services:
       - _APP_DOCKER_HUB_USERNAME
       - _APP_DOCKER_HUB_PASSWORD
       - _APP_LOGGING_CONFIG
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
 
   appwrite-worker-mails:
@@ -521,7 +512,6 @@ services:
       - _APP_SMTP_SECURE
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -548,7 +538,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_SMS_FROM
@@ -580,7 +569,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
@@ -645,7 +633,6 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_USAGE_STATS
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
@@ -674,7 +661,6 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_USAGE_STATS
-      - _APP_LOGGING
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
@@ -765,7 +751,6 @@ services:
       - OPR_EXECUTOR_ENV=$_APP_ENV
       - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_EXECUTOR_LOGGING=$_APP_LOGGING
       - OPR_EXECUTOR_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
