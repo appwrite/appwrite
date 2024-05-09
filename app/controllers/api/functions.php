@@ -1711,7 +1711,7 @@ App::post('/v1/functions/:functionId/executions')
 
         // Appwrite vars
         $vars = \array_merge($vars, [
-            'APPWRITE_FUNCTION_ENDPOINT' => $endpoint,
+            'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
