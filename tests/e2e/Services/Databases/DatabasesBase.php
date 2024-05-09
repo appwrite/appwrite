@@ -4402,7 +4402,7 @@ trait DatabasesBase
                 Query::isNotNull('$id')->toString(),
                 Query::startsWith('fullName', 'Stevie')->toString(),
                 Query::endsWith('fullName', 'Wonder')->toString(),
-                Query::between('$createdAt', '1975-12-06', '2050-12-0')->toString(),
+                Query::between('$createdAt', '1975-12-06', '2050-12-01')->toString(),
             ],
         ]);
 
