@@ -433,7 +433,7 @@ class Builds extends Action
                                         throw new \Exception('Build not found', 404);
                                     }
 
-                                    $logs = \mb_substr($logs, 0, \mb_strlen($logs, 'UTF-8') - 1, 'UTF-8'); // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
+                                    $logs = \mb_substr($logs, 0, null, 'UTF-8'); // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
 
                                     $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
                                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
