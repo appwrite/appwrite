@@ -1562,12 +1562,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "0d7b914c7770a5c488f104a36147d91db3b71368"
+                "reference": "f53d63bc5903ea6d6ff8f61293a20235e912b242"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/0d7b914c7770a5c488f104a36147d91db3b71368",
-                "reference": "0d7b914c7770a5c488f104a36147d91db3b71368",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f53d63bc5903ea6d6ff8f61293a20235e912b242",
+                "reference": "f53d63bc5903ea6d6ff8f61293a20235e912b242",
                 "shasum": ""
             },
             "require": {
@@ -1575,7 +1575,6 @@
                 "ext-pdo": "*",
                 "php": ">=8.0",
                 "utopia-php/cache": "0.9.*",
-                "utopia-php/fetch": "0.1.*",
                 "utopia-php/framework": "0.34.*",
                 "utopia-php/mongo": "0.3.*"
             },
@@ -1609,9 +1608,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-framework-v2"
+                "source": "https://github.com/utopia-php/database/tree/feat-framework-v2-1"
             },
-            "time": "2024-04-19T14:37:34+00:00"
+            "time": "2024-05-09T18:33:47+00:00"
         },
         {
             "name": "utopia-php/di",
@@ -1781,45 +1780,6 @@
                 "source": "https://github.com/utopia-php/dsn/tree/0.2.1"
             },
             "time": "2024-05-07T02:01:25+00:00"
-        },
-        {
-            "name": "utopia-php/fetch",
-            "version": "0.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/fetch.git",
-                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/2fa214b9262acd1a3583515a364da4f35929d5c5",
-                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.5.0",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^9.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Fetch\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple library that provides an interface for making HTTP Requests.",
-            "support": {
-                "issues": "https://github.com/utopia-php/fetch/issues",
-                "source": "https://github.com/utopia-php/fetch/tree/0.1.0"
-            },
-            "time": "2023-10-10T11:58:32+00:00"
         },
         {
             "name": "utopia-php/framework",
@@ -3510,12 +3470,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "2f7b34c2ee49829a36cec9f545605d385bf3e291"
+                "reference": "88a07d262854c827db22f2eac8b072138e492f65"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/2f7b34c2ee49829a36cec9f545605d385bf3e291",
-                "reference": "2f7b34c2ee49829a36cec9f545605d385bf3e291",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/88a07d262854c827db22f2eac8b072138e492f65",
+                "reference": "88a07d262854c827db22f2eac8b072138e492f65",
                 "shasum": ""
             },
             "require": {
@@ -3567,7 +3527,7 @@
                 "issues": "https://github.com/phpDocumentor/ReflectionDocBlock/issues",
                 "source": "https://github.com/phpDocumentor/ReflectionDocBlock/tree/5.x"
             },
-            "time": "2024-05-07T05:11:38+00:00"
+            "time": "2024-05-08T18:52:15+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -5604,6 +5564,45 @@
                 }
             ],
             "time": "2023-11-21T18:54:41+00:00"
+        },
+        {
+            "name": "utopia-php/fetch",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/fetch.git",
+                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/2fa214b9262acd1a3583515a364da4f35929d5c5",
+                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.5.0",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Fetch\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library that provides an interface for making HTTP Requests.",
+            "support": {
+                "issues": "https://github.com/utopia-php/fetch/issues",
+                "source": "https://github.com/utopia-php/fetch/tree/0.1.0"
+            },
+            "time": "2023-10-10T11:58:32+00:00"
         }
     ],
     "aliases": [
