@@ -511,16 +511,22 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     } catch (Throwable $th) {
         call_user_func($logError, $th, "initServer");
 
+        // Handle SQL error code is 'HY000'
+        $code = $th->getCode();
+        if (!is_int($code)) {
+            $code = 500;
+        }
+
         $response = [
             'type' => 'error',
             'data' => [
-                'code' => $th->getCode(),
+                'code' => $code,
                 'message' => $th->getMessage()
             ]
         ];
 
         $server->send([$connection], json_encode($response));
-        $server->close($connection, $th->getCode());
+        $server->close($connection, $code);
 
         if (App::isDevelopment()) {
             Console::error('[Error] Connection Error');
