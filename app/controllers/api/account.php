@@ -123,7 +123,8 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     Authorization::skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
-    if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_MAGIC_URL) {
+    // Magic URL + Email OTP
+    if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_MAGIC_URL || $verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_EMAIL) {
         $user->setAttribute('emailVerification', true);
     }
 
