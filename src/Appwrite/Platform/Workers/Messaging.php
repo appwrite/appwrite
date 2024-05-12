@@ -440,8 +440,8 @@ class Messaging extends Action
 
                 try {
                     $adapter->send($data);
-                    var_dump($message['to']);
-                    $countryCode = $adapter->getCountryCode($message['to']);
+
+                    $countryCode = $adapter->getCountryCode($message['to'][0] ?? '');
                     if (!empty($countryCode)) {
                         $queueForUsage
                             ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_MESSAGES_COUNTRY_CODE), 1);

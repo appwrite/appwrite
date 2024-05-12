@@ -28,6 +28,7 @@
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
+    "minimum-stability": "dev",
     "require": {
         "php": ">=8.0.0",
         "ext-curl": "*",
@@ -58,7 +59,7 @@
         "utopia-php/image": "0.6.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.3.*",
-        "utopia-php/messaging": "dev-get-country-code as 0.10.0",
+        "utopia-php/messaging": "dev-get-country-code",
         "utopia-php/migration": "0.4.*",
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "0.5.*",
