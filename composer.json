@@ -52,7 +52,7 @@
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.49.*",
         "utopia-php/domains": "0.5.*",
-        "utopia-php/dsn": "0.2.*",
+        "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "0.33.*",
         "utopia-php/fetch": "0.2.*",
         "utopia-php/image": "0.6.*",
@@ -84,7 +84,7 @@
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "0.38.*",
         "phpunit/phpunit": "9.5.20",
-        "swoole/ide-helper": "5.0.2",
+        "swoole/ide-helper": "5.1.2",
         "textalk/websocket": "1.5.7",
         "laravel/pint": "^1.14"
     },
