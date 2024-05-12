@@ -440,7 +440,7 @@ class Messaging extends Action
 
                 try {
                     $adapter->send($data);
-
+                    var_dump($message['to']);
                     $countryCode = $adapter->getCountryCode($message['to']);
                     if (!empty($countryCode)) {
                         $queueForUsage
