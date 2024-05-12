@@ -28,7 +28,6 @@
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
-    "minimum-stability": "dev",
     "require": {
         "php": ">=8.0.0",
         "ext-curl": "*",
@@ -53,13 +52,13 @@
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.49.*",
         "utopia-php/domains": "0.5.*",
-        "utopia-php/dsn": "0.2.1",
+        "utopia-php/dsn": "0.2.*",
         "utopia-php/framework": "0.33.*",
         "utopia-php/fetch": "0.2.*",
         "utopia-php/image": "0.6.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.3.*",
-        "utopia-php/messaging": "dev-get-country-code",
+        "utopia-php/messaging": "0.10.*",
         "utopia-php/migration": "0.4.*",
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "0.5.*",
@@ -85,7 +84,7 @@
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "0.38.*",
         "phpunit/phpunit": "9.5.20",
-        "swoole/ide-helper": "5.1.2",
+        "swoole/ide-helper": "5.0.2",
         "textalk/websocket": "1.5.7",
         "laravel/pint": "^1.14"
     },
