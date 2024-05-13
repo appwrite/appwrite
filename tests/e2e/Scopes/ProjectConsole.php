@@ -6,6 +6,7 @@ use Utopia\Database\Helpers\ID;
 
 trait ProjectConsole
 {
+    
     public function getProject(): array
     {
         return [
