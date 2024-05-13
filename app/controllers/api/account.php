@@ -1291,7 +1291,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 throw new Exception(Exception::USER_UNAUTHORIZED, 'OAuth provider failed to return email.');
             }
 
-            $isEmailVerified = $oauth2->isEmailVerified($accessToken);
+            $isVerified = $oauth2->isEmailVerified($accessToken);
 
             $userWithEmail = $dbForProject->findOne('users', [
                 Query::equal('email', [$email]),
@@ -1341,8 +1341,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                             Permission::delete(Role::user($userId)),
                         ],
                         'email' => $email,
-                        'emailVerification' => $isEmailVerified,
-                        'status' => true,
+                        'emailVerification' => $isVerified,
+                        'status' => true, // Email should already be authenticated by OAuth2 provider
                         'password' => null,
                         'hash' => Auth::DEFAULT_ALGO,
                         'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
