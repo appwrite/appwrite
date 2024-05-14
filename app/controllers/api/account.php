@@ -1069,17 +1069,15 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
 
+        $params = $request->getParams();
+        $params['project'] = $projectId;
+        unset($params['projectId']);
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query([
-                    'project' => $projectId,
-                    'code' => $code,
-                    'state' => $state,
-                    'error' => $error,
-                    'error_description' => $error_description
-                ]));
+                . \http_build_query($params));
     });
 
 App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
@@ -1102,17 +1100,15 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
 
+        $params = $request->getParams();
+        $params['project'] = $projectId;
+        unset($params['projectId']);
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query([
-                    'project' => $projectId,
-                    'code' => $code,
-                    'state' => $state,
-                    'error' => $error,
-                    'error_description' => $error_description
-                ]));
+                . \http_build_query($params));
     });
 
 App::get('/v1/account/sessions/oauth2/:provider/redirect')
@@ -1239,7 +1235,17 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failureRedirect(Exception::USER_MISSING_ID);
         }
 
-        $name = $oauth2->getUserName($accessToken);
+        $name = '';
+        $nameOAuth = $oauth2->getUserName($accessToken);
+        $userParam = \json_decode($request->getParam('user'), true);
+        if (!empty($nameOAuth)) {
+            $name = $nameOAuth;
+        } elseif (is_array($userParam)) {
+            $nameParam = $userParam['name'];
+            if (is_array($nameParam) && isset($nameParam['firstName']) && isset($nameParam['lastName'])) {
+                $name = $nameParam['firstName'] . ' ' . $nameParam['lastName'];
+            }
+        }
         $email = $oauth2->getUserEmail($accessToken);
 
         // Check if this identity is connected to a different user
