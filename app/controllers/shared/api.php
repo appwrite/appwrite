@@ -242,7 +242,7 @@ App::init()
                 // Regular key
 
                 // Check if given key match project API keys
-                $key = $project->find('secret', $apiKey, 'keys');
+                $key = $project->find('secret', $authKey, 'keys');
                 if ($key) {
                     $user = new Document([
                         '$id' => '',
