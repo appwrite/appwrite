@@ -208,7 +208,7 @@ App::init()
 
             [ $keyType, $authKey ] = \explode('_', $apiKey, 2);
 
-            if($keyType === API_KEY_STANDARD) {
+            if($keyType === API_KEY_DYNAMIC) {
                 // Dynamic key
 
                 $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10);
@@ -238,11 +238,11 @@ App::init()
                     Authorization::setRole(Auth::USER_ROLE_APPS);
                     Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
                 }
-            } elseif($keyType === API_KEY_DYNAMIC) {
+            } elseif($keyType === API_KEY_STANDARD) {
                 // Regular key
 
                 // Check if given key match project API keys
-                $key = $project->find('secret', $authKey, 'keys');
+                $key = $project->find('secret', $apiKey, 'keys');
                 if ($key) {
                     $user = new Document([
                         '$id' => '',
