@@ -1600,7 +1600,7 @@ App::post('/v1/functions/:functionId/executions')
             'scopes' => $function->getAttribute('scopes', [])
         ]);
 
-        $headers['x-appwrite-key'] = $apiKey;
+        $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';

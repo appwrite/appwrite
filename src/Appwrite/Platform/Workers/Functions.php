@@ -290,7 +290,7 @@ class Functions extends Action
             'scopes' => $function->getAttribute('scopes', [])
         ]);
 
-        $headers['x-appwrite-key'] = $apiKey;
+        $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';

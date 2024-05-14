@@ -197,16 +197,18 @@ App::init()
         $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
         $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
 
-        $authKey = $request->getHeader('x-appwrite-key', '');
+        $apiKey = $request->getHeader('x-appwrite-key', '');
 
         // API Key authentication
-        if (!empty($authKey)) {
+        if (!empty($apiKey)) {
             // Do not allow API key and session to be set at the same time
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
 
-            if(str_contains($authKey, '.')) {
+            [ $keyType, $authKey ] = \explode('_', $apiKey, 2);
+
+            if($keyType === API_KEY_STANDARD) {
                 // Dynamic key
 
                 $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10);
@@ -236,7 +238,7 @@ App::init()
                     Authorization::setRole(Auth::USER_ROLE_APPS);
                     Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
                 }
-            } else {
+            } elseif($keyType === API_KEY_DYNAMIC) {
                 // Regular key
 
                 // Check if given key match project API keys
