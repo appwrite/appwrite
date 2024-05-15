@@ -521,6 +521,9 @@ App::init()
             if (version_compare($responseFormat, '1.5.0', '<')) {
                 $response->addFilter(new ResponseV17());
             }
+            if (version_compare($responseFormat, APP_VERSION_FORMAT, '>')) {
+                $response->addHeader('X-Appwrite-Warning', 'Request made with SDK for Appwrite version ' . $responseFormat . '. Response format is meant for Appwrite version ' . APP_VERSION_FORMAT . '. Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks');
+            }
         }
 
         /*
@@ -543,16 +546,8 @@ App::init()
             $response->addHeader('Strict-Transport-Security', 'max-age=' . (60 * 60 * 24 * 126)); // 126 days
         }
 
-        $defaultResponseFormat = APP_VERSION_STABLE;
-        $defaultResponseFormat = \explode('.', $defaultResponseFormat);
-        if (\count($defaultResponseFormat) === 3) {
-            $defaultResponseFormat[2] = '0';
-        }
-        $defaultResponseFormat = \implode('.', $defaultResponseFormat);
-
         $response
             ->addHeader('Server', 'Appwrite')
-            ->addHeader('X-Appwrite-Default-Response-Format', $defaultResponseFormat)
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
             ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Forwarded-For, X-Forwarded-User-Agent')

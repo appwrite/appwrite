@@ -114,6 +114,7 @@ const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 406;
 const APP_VERSION_STABLE = '1.5.5';
+const APP_VERSION_FORMAT = '1.5.0'; // Response format version, typically the last minor version
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
