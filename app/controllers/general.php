@@ -750,12 +750,12 @@ App::error()
             'file' => $file,
             'line' => $line,
             'trace' => \json_encode($trace, JSON_UNESCAPED_UNICODE) === false ? [] : $trace, // check for failing encode
-            'version' => $version,
+            'version' => APP_VERSION_STABLE,
             'type' => $type,
         ] : [
             'message' => $message,
             'code' => $code,
-            'version' => $version,
+            'version' => APP_VERSION_STABLE,
             'type' => $type,
         ];
 
