@@ -189,7 +189,7 @@ services:
       - _APP_MESSAGE_PUSH_TEST_DSN
       - _APP_CONSOLE_COUNTRIES_DENYLIST
 
-  appwrite-task-realtime:
+  appwrite-realtime:
     entrypoint: realtime
     <<: *x-logging
     container_name: appwrite-realtime
@@ -780,7 +780,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
 
-  appwrite-task-assistant:
+  appwrite-assistant:
     container_name: appwrite-assistant
     image: appwrite/assistant:0.4.0
     networks:
