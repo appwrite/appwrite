@@ -50,7 +50,7 @@
         "utopia-php/cache": "0.9.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "dev-main as 0.49.9",
+        "utopia-php/database": "dev-original-exception as 0.49.9",
         "utopia-php/domains": "0.5.*",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "0.33.*",
