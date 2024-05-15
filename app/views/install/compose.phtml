@@ -578,7 +578,7 @@ services:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: maintenance
     <<: *x-logging
-    container_name: appwrite-maintenance
+    container_name: appwrite-task-maintenance
     restart: unless-stopped
     networks:
       - appwrite
@@ -668,7 +668,7 @@ services:
   appwrite-task-scheduler-functions:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: schedule-functions
-    container_name: appwrite-scheduler-functions
+    container_name: appwrite-task-scheduler-functions
     <<: *x-logging
     restart: unless-stopped
     networks:
@@ -693,7 +693,7 @@ services:
   appwrite-task-scheduler-messages:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: schedule-messages
-    container_name: appwrite-scheduler-messages
+    container_name: appwrite-task-scheduler-messages
     <<: *x-logging
     restart: unless-stopped
     networks:

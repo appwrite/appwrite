@@ -630,7 +630,7 @@ services:
   appwrite-task-maintenance:
     entrypoint: maintenance
     <<: *x-logging
-    container_name: appwrite-maintenance
+    container_name: appwrite-task-maintenance
     image: appwrite-dev
     networks:
       - appwrite
@@ -729,7 +729,7 @@ services:
   appwrite-task-scheduler-functions:
     entrypoint: schedule-functions
     <<: *x-logging
-    container_name: appwrite-scheduler-functions
+    container_name: appwrite-task-scheduler-functions
     image: appwrite-dev
     networks:
       - appwrite
@@ -756,7 +756,7 @@ services:
   appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
     <<: *x-logging
-    container_name: appwrite-scheduler-messages
+    container_name: appwrite-task-scheduler-messages
     image: appwrite-dev
     networks:
       - appwrite
