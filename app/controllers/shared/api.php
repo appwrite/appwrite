@@ -15,17 +15,23 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\View;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
+use Utopia\Logger\Log;
+use Utopia\Logger\Log\User;
+use Utopia\Logger\Logger;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
@@ -738,4 +744,39 @@ App::init()
         if (System::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
             throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
+    });
+
+App::error()
+    ->inject('error')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('queueForUsage')
+    ->action(function (Throwable $error, Request $request, Response $response, Document $project, Audit $queueForAudits, Usage $queueForUsage)  {
+
+        if ($error instanceof AppwriteException) {
+            $publish = $error->isPublishable();
+        } else {
+            $publish = $error->getCode() === 0 || $error->getCode() >= 500;
+        }
+
+        if ($publish && $project->getId() !== 'console') {
+            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+                $fileSize = 0;
+                $file = $request->getFiles('file');
+                if (!empty($file)) {
+                    $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+                }
+
+                $queueForUsage
+                    ->addMetric(METRIC_NETWORK_REQUESTS, 1)
+                    ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
+                    ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
+            }
+
+            $queueForUsage
+                ->setProject($project)
+                ->trigger();
+        }
+
     });
