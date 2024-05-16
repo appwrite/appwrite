@@ -1444,8 +1444,6 @@ class FunctionsCustomServerTest extends Scope
             'async' => false
         ]);
 
-        \var_dump($execution);
-
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);

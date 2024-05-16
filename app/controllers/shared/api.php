@@ -206,7 +206,12 @@ App::init()
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
 
-            [ $keyType, $authKey ] = \explode('_', $apiKey, 2);
+            if(!\str_contains($apiKey, '_')) {
+                $keyType = API_KEY_STANDARD;
+                $authKey = $apiKey;
+            } else {
+                [ $keyType, $authKey ] = \explode('_', $apiKey, 2);
+            }
 
             if($keyType === API_KEY_DYNAMIC) {
                 // Dynamic key
@@ -239,10 +244,11 @@ App::init()
                     Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
                 }
             } elseif($keyType === API_KEY_STANDARD) {
+                // No underline means no prefix. Backwards compatibility.
                 // Regular key
 
                 // Check if given key match project API keys
-                $key = $project->find('secret', $authKey, 'keys');
+                $key = $project->find('secret', $apiKey, 'keys');
                 if ($key) {
                     $user = new Document([
                         '$id' => '',

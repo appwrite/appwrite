@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use Utopia\Database\Document;
 
 class Key extends Model
 {
@@ -93,11 +92,5 @@ class Key extends Model
     public function getType(): string
     {
         return Response::MODEL_KEY;
-    }
-
-    public function filter(Document $document): Document
-    {
-        $document->setAttribute('secret', API_KEY_STANDARD . '_' . $document->getAttribute('secret', ''));
-        return $document;
     }
 }
