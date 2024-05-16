@@ -26,10 +26,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\DSN\DSN;
-use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
-use Utopia\Logger\Logger;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
@@ -750,7 +747,7 @@ App::error()
     ->inject('response')
     ->inject('project')
     ->inject('queueForUsage')
-    ->action(function (Throwable $error, Request $request, Response $response, Document $project, Audit $queueForAudits, Usage $queueForUsage)  {
+    ->action(function (Throwable $error, Request $request, Response $response, Document $project, Audit $queueForAudits, Usage $queueForUsage) {
 
         if ($error instanceof AppwriteException) {
             $publish = $error->isPublishable();
