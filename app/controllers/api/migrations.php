@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Auth\OAuth2\Firebase as OAuth2Firebase;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
@@ -22,6 +21,7 @@ use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Host;
 use Utopia\Validator\Integer;
@@ -110,8 +110,8 @@ App::post('/v1/migrations/firebase/oauth')
     ->inject('request')
     ->action(function (array $resources, string $projectId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations, Request $request) {
         $firebase = new OAuth2Firebase(
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
+            System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
+            System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
             $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
 
@@ -554,8 +554,8 @@ App::get('/v1/migrations/firebase/report/oauth')
     ->inject('dbForConsole')
     ->action(function (array $resources, string $projectId, Response $response, Request $request, Document $user, Database $dbForConsole) {
         $firebase = new OAuth2Firebase(
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
+            System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
+            System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
             $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
 
@@ -576,7 +576,7 @@ App::get('/v1/migrations/firebase/report/oauth')
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
-        if (App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', '') === '' || App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', '') === '') {
+        if (System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', '') === '' || System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', '') === '') {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
@@ -656,8 +656,8 @@ App::get('/v1/migrations/firebase/connect')
         $dbForConsole->updateDocument('users', $user->getId(), $user);
 
         $oauth2 = new OAuth2Firebase(
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
+            System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
+            System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
             $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
         $url = $oauth2->getLoginURL();
@@ -711,8 +711,8 @@ App::get('/v1/migrations/firebase/redirect')
         // OAuth Authroization
         if (!empty($code)) {
             $oauth2 = new OAuth2Firebase(
-                App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
-                App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
+                System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
+                System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
                 $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
             );
 
@@ -798,8 +798,8 @@ App::get('/v1/migrations/firebase/projects')
     ->inject('request')
     ->action(function (Document $user, Response $response, Document $project, Database $dbForConsole, Request $request) {
         $firebase = new OAuth2Firebase(
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
+            System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
+            System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
             $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
 
@@ -820,7 +820,7 @@ App::get('/v1/migrations/firebase/projects')
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
-        if (App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', '') === '' || App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', '') === '') {
+        if (System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', '') === '' || System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', '') === '') {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
@@ -1038,7 +1038,7 @@ App::delete('/v1/migrations/:migrationId')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'migrations')
     ->label('sdk.method', 'delete')
-    ->label('sdk.description', '/docs/references/functions/delete-migration.md')
+    ->label('sdk.description', '/docs/references/migrations/delete-migration.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('migrationId', '', new UID(), 'Migration ID.')

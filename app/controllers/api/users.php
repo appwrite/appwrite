@@ -1,50 +1,51 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\MFA\Challenge;
+use Appwrite\Auth\MFA\Type;
+use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Auth\Validator\PasswordDictionary;
+use Appwrite\Auth\Validator\PasswordHistory;
+use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
+use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Database\Validator\Queries\Targets;
-use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Locale\Locale;
-use Appwrite\Extend\Exception;
-use Utopia\Database\Document;
-use Utopia\Database\DateTime;
-use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Validator\UID;
-use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
+use Utopia\Database\Validator\UID;
+use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
-use Utopia\Validator\WhiteList;
-use Utopia\Validator\Text;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Range;
-use MaxMind\Db\Reader;
 use Utopia\Validator\Integer;
-use Appwrite\Auth\Validator\PasswordHistory;
-use Appwrite\Auth\Validator\PasswordDictionary;
-use Appwrite\Auth\Validator\PersonalData;
-use Appwrite\Hooks\Hooks;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks): Document
@@ -71,7 +72,14 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             : ID::custom($userId);
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
-            $personalDataValidator = new PersonalData($userId, $email, $name, $phone);
+            $personalDataValidator = new PersonalData(
+                $userId,
+                $email,
+                $name,
+                $phone,
+                strict: false,
+                allowEmpty: true
+            );
             if (!$personalDataValidator->isValid($plaintextPassword)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
@@ -463,15 +471,7 @@ App::post('/v1/users/:userId/targets')
     ->action(function (string $targetId, string $userId, string $providerType, string $identifier, string $providerId, string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
-        $provider = new Document();
-
-        if ($providerType === MESSAGE_TYPE_PUSH) {
-            $provider = $dbForProject->getDocument('providers', $providerId);
-
-            if ($provider->isEmpty()) {
-                throw new Exception(Exception::PROVIDER_NOT_FOUND);
-            }
-        }
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         switch ($providerType) {
             case 'email':
@@ -512,7 +512,7 @@ App::post('/v1/users/:userId/targets')
                     Permission::update(Role::user($user->getId())),
                     Permission::delete(Role::user($user->getId())),
                 ],
-                'providerId' => $providerId ?? null,
+                'providerId' => empty($provider->getId()) ? null : $provider->getId(),
                 'providerInternalId' => $provider->isEmpty() ? null : $provider->getInternalId(),
                 'providerType' =>  $providerType,
                 'userId' => $userId,
@@ -1206,7 +1206,7 @@ App::patch('/v1/users/:userId/email')
             // Makes sure this email is not already used in another identity
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
-                Query::notEqual('userId', $user->getId()),
+                Query::notEqual('userInternalId', $user->getInternalId()),
             ]);
             if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
@@ -1557,8 +1557,8 @@ App::get('/v1/users/:userId/mfa/factors')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'listFactors')
-    ->label('sdk.description', '/docs/references/users/list-factors.md')
+    ->label('sdk.method', 'listMfaFactors')
+    ->label('sdk.description', '/docs/references/users/list-mfa-factors.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MFA_FACTORS)
@@ -1572,16 +1572,144 @@ App::get('/v1/users/:userId/mfa/factors')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $providers = new Document([
-            'totp' => $user->getAttribute('totp', false) && $user->getAttribute('totpVerification', false),
-            'email' => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
-            'phone' => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
+        $totp = TOTP::getAuthenticatorFromUser($user);
+
+        $factors = new Document([
+            Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
+            Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
+            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
         ]);
 
-        $response->dynamic($providers, Response::MODEL_MFA_FACTORS);
+        $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
     });
 
-App::delete('/v1/users/:userId/mfa/:type')
+App::get('/v1/users/:userId/mfa/recovery-codes')
+    ->desc('Get MFA Recovery Codes')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'getMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/users/get-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, Response $response, Database $dbForProject) {
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+
+        if (empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_NOT_FOUND);
+        }
+
+        $document = new Document([
+            'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
+App::patch('/v1/users/:userId/mfa/recovery-codes')
+    ->desc('Create MFA Recovery Codes')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create.mfa.recovery-codes')
+    ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/users/create-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+
+        if (!empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_ALREADY_EXISTS);
+        }
+
+        $mfaRecoveryCodes = Type::generateBackupCodes();
+        $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+        $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $document = new Document([
+            'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
+App::put('/v1/users/:userId/mfa/recovery-codes')
+    ->desc('Regenerate MFA Recovery Codes')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].update.mfa.recovery-codes')
+    ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/users/update-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+        if (empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_NOT_FOUND);
+        }
+
+        $mfaRecoveryCodes = Type::generateBackupCodes();
+        $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+        $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $document = new Document([
+            'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
+App::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->desc('Delete Authenticator')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete.mfa')
@@ -1592,35 +1720,31 @@ App::delete('/v1/users/:userId/mfa/:type')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'deleteAuthenticator')
-    ->label('sdk.description', '/docs/references/users/delete-mfa.md')
+    ->label('sdk.method', 'deleteMfaAuthenticator')
+    ->label('sdk.description', '/docs/references/users/delete-mfa-authenticator.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
-    ->inject('requestTimestamp')
+    ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $type, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, string $type, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        if (!$user->getAttribute('totp')) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+        $authenticator = TOTP::getAuthenticatorFromUser($user);
+
+        if ($authenticator === null) {
+            throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
         }
 
-        $user
-            ->setAttribute('totp', false)
-            ->setAttribute('totpVerification', false)
-            ->setAttribute('totpSecret', null)
-            ->setAttribute('totpBackup', null);
-
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $dbForProject->deleteDocument('authenticators', $authenticator->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -1968,7 +2092,7 @@ App::delete('/v1/users/identities/:identityId')
     });
 
 App::get('/v1/users/usage')
-    ->desc('Get usage stats for the users API')
+    ->desc('Get users usage stats')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -2021,19 +2145,19 @@ App::get('/v1/users/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-    foreach ($metrics as $metric) {
-        $usage[$metric]['total'] =  $stats[$metric]['total'];
-        $usage[$metric]['data'] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric]['data'][] = [
-                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
+        foreach ($metrics as $metric) {
+            $usage[$metric]['total'] =  $stats[$metric]['total'];
+            $usage[$metric]['data'] = [];
+            $leap = time() - ($days['limit'] * $days['factor']);
+            while ($leap < time()) {
+                $leap += $days['factor'];
+                $formatDate = date($format, $leap);
+                $usage[$metric]['data'][] = [
+                    'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
+                ];
+            }
         }
-    }
 
         $response->dynamic(new Document([
             'range' => $range,

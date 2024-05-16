@@ -2,18 +2,16 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Cron\CronExpression;
 use Swoole\Timer;
-use Utopia\App;
-use Utopia\Database\Exception;
-use Utopia\Platform\Action;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception;
 use Utopia\Database\Query;
-use Utopia\Database\Database;
+use Utopia\Platform\Action;
 use Utopia\Pools\Group;
-use Appwrite\Event\Func;
+use Utopia\System\System;
 
 use function Swoole\Coroutine\run;
 
@@ -41,7 +39,7 @@ abstract class ScheduleBase extends Action
             ->inject('pools')
             ->inject('dbForConsole')
             ->inject('getProjectDB')
-            ->callback(fn(Group $pools, Database $dbForConsole, callable $getProjectDB) => $this->action($pools, $dbForConsole, $getProjectDB));
+            ->callback(fn (Group $pools, Database $dbForConsole, callable $getProjectDB) => $this->action($pools, $dbForConsole, $getProjectDB));
     }
 
     /**
@@ -101,7 +99,7 @@ abstract class ScheduleBase extends Action
             }
 
             $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
-                Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
+                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                 Query::equal('resourceType', [static::getSupportedResource()]),
                 Query::equal('active', [true]),
             ]));
@@ -155,7 +153,7 @@ abstract class ScheduleBase extends Action
                     }
 
                     $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
-                        Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
+                        Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                         Query::equal('resourceType', [static::getSupportedResource()]),
                         Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate),
                     ]));
@@ -192,7 +190,7 @@ abstract class ScheduleBase extends Action
 
             Timer::tick(
                 static::ENQUEUE_TIMER * 1000,
-                fn() => $this->enqueueResources($pools, $dbForConsole)
+                fn () => $this->enqueueResources($pools, $dbForConsole)
             );
 
             $this->enqueueResources($pools, $dbForConsole);

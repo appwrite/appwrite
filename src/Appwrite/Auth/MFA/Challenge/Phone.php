@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\MFA\Challenge;
 
 use Appwrite\Auth\MFA\Challenge;
+use Appwrite\Auth\MFA\Type;
 use Utopia\Database\Document;
 
 class Phone extends Challenge
@@ -15,8 +16,8 @@ class Phone extends Challenge
     public static function challenge(Document $challenge, Document $user, string $otp): bool
     {
         if (
-            $challenge->isSet('provider') &&
-            $challenge->getAttribute('provider') === 'phone'
+            $challenge->isSet('type') &&
+            $challenge->getAttribute('type') === Type::PHONE
         ) {
             return self::verify($challenge, $otp);
         }

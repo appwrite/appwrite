@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Platform\Action;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -10,6 +9,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Platform\Action;
 use Utopia\Validator\Text;
 
 class PatchRecreateRepositoriesDocuments extends Action
@@ -42,7 +42,7 @@ class PatchRecreateRepositoriesDocuments extends Action
                 $dbForProject = call_user_func($getProjectDB, $project);
                 $this->recreateRepositories($dbForConsole, $dbForProject, $project);
             } catch (\Throwable $th) {
-                Console::error("Unexpected error occured with Project ID {$projectId}");
+                Console::error("Unexpected error occurred with Project ID {$projectId}");
                 Console::error('[Error] Type: ' . get_class($th));
                 Console::error('[Error] Message: ' . $th->getMessage());
                 Console::error('[Error] File: ' . $th->getFile());
@@ -64,7 +64,7 @@ class PatchRecreateRepositoriesDocuments extends Action
                     $dbForProject = call_user_func($getProjectDB, $project);
                     $this->recreateRepositories($dbForConsole, $dbForProject, $project);
                 } catch (\Throwable $th) {
-                    Console::error("Unexpected error occured with Project ID {$projectId}");
+                    Console::error("Unexpected error occurred with Project ID {$projectId}");
                     Console::error('[Error] Type: ' . get_class($th));
                     Console::error('[Error] Message: ' . $th->getMessage());
                     Console::error('[Error] File: ' . $th->getFile());

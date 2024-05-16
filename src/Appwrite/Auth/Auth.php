@@ -9,8 +9,8 @@ use Appwrite\Auth\Hash\Phpass;
 use Appwrite\Auth\Hash\Scrypt;
 use Appwrite\Auth\Hash\Scryptmodified;
 use Appwrite\Auth\Hash\Sha;
-use Utopia\Database\Document;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
@@ -85,6 +85,11 @@ class Auth
     public const TOKEN_LENGTH_RECOVERY = 256;
     public const TOKEN_LENGTH_OAUTH2 = 64;
     public const TOKEN_LENGTH_SESSION = 256;
+
+    /**
+     * MFA
+     */
+    public const MFA_RECENT_DURATION = 1800; // 30 mins
 
     /**
      * @var string

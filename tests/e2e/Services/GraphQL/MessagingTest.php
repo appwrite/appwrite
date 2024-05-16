@@ -6,9 +6,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\App;
 use Utopia\Database\Helpers\ID;
 use Utopia\DSN\DSN;
+use Utopia\System\System;
 
 class MessagingTest extends Scope
 {
@@ -61,7 +61,7 @@ class MessagingTest extends Scope
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
-                'from' => '+123456789'
+                'templateId' => '123456'
             ],
             'Vonage' => [
                 'providerId' => ID::unique(),
@@ -152,6 +152,7 @@ class MessagingTest extends Scope
                 'name' => 'Ms91-2',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
+                'templateId' => '123456',
             ],
             'Vonage' => [
                 'providerId' => $providers[6]['_id'],
@@ -547,11 +548,11 @@ class MessagingTest extends Scope
 
     public function testSendEmail()
     {
-        if (empty(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
+        if (empty(System::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
             $this->markTestSkipped('Email DSN not provided');
         }
 
-        $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
+        $emailDSN = new DSN(System::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
         $to = $emailDSN->getParam('to');
         $fromName = $emailDSN->getParam('fromName');
         $fromEmail = $emailDSN->getParam('fromEmail');
@@ -757,11 +758,11 @@ class MessagingTest extends Scope
 
     public function testSendSMS()
     {
-        if (empty(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
+        if (empty(System::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
             $this->markTestSkipped('SMS DSN not provided');
         }
 
-        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
+        $smsDSN = new DSN(System::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
         $to = $smsDSN->getParam('to');
         $from = $smsDSN->getParam('from');
         $authKey = $smsDSN->getPassword();
@@ -960,11 +961,11 @@ class MessagingTest extends Scope
 
     public function testSendPushNotification()
     {
-        if (empty(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
+        if (empty(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
             $this->markTestSkipped('Push DSN empty');
         }
 
-        $pushDSN = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
+        $pushDSN = new DSN(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
         $to = $pushDSN->getParam('to');
         $serviceAccountJSON = $pushDSN->getParam('serviceAccountJSON');
 

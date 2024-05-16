@@ -3,13 +3,16 @@
 namespace Tests\E2E\Services\Messaging;
 
 use Appwrite\Messaging\Status as MessageStatus;
+use CURLFile;
 use Tests\E2E\Client;
-use Utopia\App;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
+use Utopia\System\System;
 
 trait MessagingBase
 {
@@ -68,7 +71,7 @@ trait MessagingBase
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
-                'from' => '+123456789'
+                'templateId' => '123456'
             ],
             'vonage' => [
                 'providerId' => ID::unique(),
@@ -799,6 +802,7 @@ trait MessagingBase
             'messageId' => ID::unique(),
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -867,6 +871,7 @@ trait MessagingBase
             'targets' => [$targetId1, $targetId2],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -876,13 +881,340 @@ trait MessagingBase
         return $message;
     }
 
+    public function testCreateDraftPushWithImage()
+    {
+        // Create User 1
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . "@example.com",
+            'password' => 'password',
+            'name' => 'Messaging User 1',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code'], "Error creating user: " . var_export($user['body'], true));
+        $this->assertEquals(1, \count($user['body']['targets']));
+
+        // Create push target
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'userId' => $user['body']['$id'],
+            'providerType' => 'push',
+            'identifier' => '123456',
+        ]);
+
+        $targetId = $target['body']['$id'];
+
+        // Create bucket
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'fileSecurity' => true,
+            'maximumFileSize' => 2000000, // 2MB
+            'allowedFileExtensions' => ['jpg', 'png'],
+            'permissions' => [
+                Permission::read(Role::user('x')),
+                Permission::create(Role::user('x')),
+                Permission::update(Role::user('x')),
+                Permission::delete(Role::user('x')),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        \sleep(1);
+
+        // Create file
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $fileId = $file['body']['$id'];
+
+        // Create Push
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'targets' => [$targetId],
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post at http://localhost',
+            'image' => "{$bucketId}:{$fileId}",
+            'draft' => true
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $message = $response['body'];
+
+        $this->assertEquals(MessageStatus::DRAFT, $message['status']);
+
+        $imageUrl = $message['data']['image']['url'];
+
+        $client = new Client();
+        $client->setEndpoint('');
+
+        $image = $client->call(Client::METHOD_GET, $imageUrl);
+
+        $this->assertEquals(200, $image['headers']['status-code']);
+
+        return $message;
+    }
+
+    public function testScheduledMessage(): void
+    {
+        // Create user
+        $response = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . "@example.com",
+            'password' => 'password',
+            'name' => 'Messaging User 1',
+        ]);
+
+        $targetId = $response['body']['targets'][0]['$id'];
+
+        // Create scheduled message
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'targets' => [$targetId],
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 3),
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+
+        \sleep(8);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
+    }
+
+    public function testScheduledToDraftMessage(): void
+    {
+        // Create user
+        $response = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . "@example.com",
+            'password' => 'password',
+            'name' => 'Messaging User 1',
+        ]);
+
+        $targetId = $response['body']['targets'][0]['$id'];
+
+        // Create scheduled message
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'targets' => [$targetId],
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 5),
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $message['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
+
+        \sleep(8);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
+    }
+
+    public function testDraftToScheduledMessage(): void
+    {
+        // Create user
+        $response = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . "@example.com",
+            'password' => 'password',
+            'name' => 'Messaging User 1',
+        ]);
+
+        $targetId = $response['body']['targets'][0]['$id'];
+
+        // Create draft message
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'targets' => [$targetId],
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
+
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $message['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => false,
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 3),
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+
+        \sleep(8);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
+    }
+
+    public function testUpdateScheduledAt(): void
+    {
+        // Create user
+        $response = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . "@example.com",
+            'password' => 'password',
+            'name' => 'Messaging User 1',
+        ]);
+
+        $targetId = $response['body']['targets'][0]['$id'];
+
+        // Create scheduled message
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'targets' => [$targetId],
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 3),
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+
+        $scheduledAt = DateTime::addSeconds(new \DateTime(), 10);
+
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $message['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'scheduledAt' => $scheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+
+        \sleep(8);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+
+        \sleep(8);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
+    }
+
     public function testSendEmail()
     {
-        if (empty(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
+        if (empty(System::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
             $this->markTestSkipped('Email DSN not provided');
         }
 
-        $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
+        $emailDSN = new DSN(System::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
         $to = $emailDSN->getParam('to');
         $fromName = $emailDSN->getParam('fromName');
         $fromEmail = $emailDSN->getParam('fromEmail');
@@ -1004,7 +1336,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'status' => 'draft',
+            'draft' => true,
             'topics' => [$email['body']['topics'][0]],
             'subject' => 'Khali beats Undertaker',
             'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -1017,7 +1349,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'status' => 'processing',
+            'draft' => false,
         ]);
 
         $this->assertEquals(200, $email['headers']['status-code']);
@@ -1038,15 +1370,15 @@ trait MessagingBase
 
     public function testSendSMS()
     {
-        if (empty(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
+        if (empty(System::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
             $this->markTestSkipped('SMS DSN not provided');
         }
 
-        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
+        $smsDSN = new DSN(System::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
         $to = $smsDSN->getParam('to');
-        $from = $smsDSN->getParam('from');
         $senderId = $smsDSN->getUser();
         $authKey = $smsDSN->getPassword();
+        $templateId = $smsDSN->getParam('templateId');
 
         if (empty($to) || empty($from) || empty($senderId) || empty($authKey)) {
             $this->markTestSkipped('SMS provider not configured');
@@ -1062,7 +1394,7 @@ trait MessagingBase
             'name' => 'Msg91Sender',
             'senderId' => $senderId,
             'authKey' => $authKey,
-            'from' => $from,
+            'templateId' => $templateId,
             'enabled' => true,
         ]);
 
@@ -1169,7 +1501,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'status' => 'draft',
+            'draft' => true,
             'topics' => [$sms['body']['topics'][0]],
             'content' => 'Your OTP code is 123456',
         ]);
@@ -1181,7 +1513,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'status' => 'processing',
+            'draft' => false,
         ]);
 
         $this->assertEquals(200, $sms['headers']['status-code']);
@@ -1202,11 +1534,11 @@ trait MessagingBase
 
     public function testSendPushNotification()
     {
-        if (empty(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
+        if (empty(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
             $this->markTestSkipped('Push DSN empty');
         }
 
-        $dsn = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
+        $dsn = new DSN(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
         $to = $dsn->getParam('to');
         $serviceAccountJSON = $dsn->getParam('serviceAccountJSON');
 
@@ -1330,7 +1662,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'status' => 'draft',
+            'draft' => true,
             'topics' => [$push['body']['topics'][0]],
             'title' => 'Test-Notification',
             'body' => 'Test-Notification-Body',
@@ -1343,7 +1675,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'status' => 'processing',
+            'draft' => false,
         ]);
 
         $this->assertEquals(200, $push['headers']['status-code']);
@@ -1387,7 +1719,6 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'status' => 'processing',
             'topics' => [$topic['$id']],
             'subject' => 'Test subject',
             'content' => 'Test content',

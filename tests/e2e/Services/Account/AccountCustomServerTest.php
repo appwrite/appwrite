@@ -6,8 +6,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class AccountCustomServerTest extends Scope
 {
@@ -62,7 +62,9 @@ class AccountCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['secret']);
         $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
-        // already logged in
+        /**
+         * Test for FAILURE
+         */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -72,11 +74,8 @@ class AccountCustomServerTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
-        /**
-         * Test for FAILURE
-         */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -113,7 +112,7 @@ class AccountCustomServerTest extends Scope
         ]);
     }
 
-        /**
+    /**
      * @depends testCreateAccountSession
      */
     public function testGetAccount($data): array

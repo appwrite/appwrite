@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -30,6 +29,7 @@ trait TeamsBaseClient
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
+        $this->assertFalse($response['body']['memberships'][0]['mfa']);
         $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['userName']);
         $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['userEmail']);
         $this->assertEquals($teamName, $response['body']['memberships'][0]['teamName']);
@@ -155,6 +155,7 @@ trait TeamsBaseClient
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertFalse($response['body']['mfa']);
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['userName']);
         $this->assertNotEmpty($response['body']['userEmail']);
@@ -633,9 +634,9 @@ trait TeamsBaseClient
         return $data;
     }
 
-     /**
-     * @depends testUpdateTeamMembershipRoles
-     */
+    /**
+    * @depends testUpdateTeamMembershipRoles
+    */
     public function testDeleteTeamMembership($data): array
     {
         $teamUid = $data['teamUid'] ?? '';

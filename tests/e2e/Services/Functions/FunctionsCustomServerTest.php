@@ -8,7 +8,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -370,10 +369,10 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-mode' => 'admin',
         ];
 
-         $variable = $this->client->call(Client::METHOD_POST, '/project/variables', $headers, [
+        $variable = $this->client->call(Client::METHOD_POST, '/project/variables', $headers, [
             'key' => 'GLOBAL_VARIABLE',
             'value' => 'Global Variable Value',
-         ]);
+        ]);
 
         $this->assertEquals(201, $variable['headers']['status-code']);
 

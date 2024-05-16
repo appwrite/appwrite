@@ -2,30 +2,30 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Event\Event;
+use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Permission;
+use Appwrite\Role;
 use Exception;
+use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Platform\Action;
-use Utopia\Queue\Message;
-use Appwrite\Event\Event;
-use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Permission;
-use Appwrite\Role;
-use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Logger\Log;
 use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
+use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
-use Utopia\Migration\Exception as MigrationException;
+use Utopia\Platform\Action;
+use Utopia\Queue\Message;
 
 class Migrations extends Action
 {
@@ -48,7 +48,7 @@ class Migrations extends Action
             ->inject('dbForProject')
             ->inject('dbForConsole')
             ->inject('log')
-            ->callback(fn(Message $message, Database $dbForProject, Database $dbForConsole, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $log));
+            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $log));
     }
 
     /**

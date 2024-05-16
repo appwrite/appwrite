@@ -2,12 +2,9 @@
 
 namespace Tests\Unit\Utopia\Response\Filters;
 
-use Appwrite\Utopia\Response\Filters\V17;
-use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
-use Cron\CronExpression;
+use Appwrite\Utopia\Response\Filters\V17;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\DateTime;
 
 class V17Test extends TestCase
 {
@@ -73,6 +70,7 @@ class V17Test extends TestCase
             'remove targets' => [
                 [
                     'targets' => 'test',
+                    'mfa' => 'test',
                 ],
                 [
                 ],
@@ -115,5 +113,71 @@ class V17Test extends TestCase
         $result = $this->filter->parse($content, $model);
 
         $this->assertEquals($expected, $result);
+    }
+
+    public function membershipProvider(): array
+    {
+        return [
+            'remove mfa' => [
+                [
+                    'mfa' => 'test',
+                ],
+                [
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider membershipProvider
+     */
+    public function testMembership(array $content, array $expected): void
+    {
+        $model = Response::MODEL_MEMBERSHIP;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function sessionProvider(): array
+    {
+        return [
+            'remove factors and secrets' => [
+                [
+                    'factors' => 'test',
+                    'secret' => 'test',
+                ],
+                [
+                ],
+            ]
+        ];
+    }
+
+    /**
+     * @dataProvider sessionProvider
+     */
+    public function testSession(array $content, array $expected): void
+    {
+        $model = Response::MODEL_SESSION;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function webhookProvider(): array
+    {
+        return [
+            'remove webhook additions' => [
+                [
+                    'enabled' => true,
+                    'logs' => ['test', 'test'],
+                    'attempts' => 1
+                ],
+                [
+                ],
+            ],
+        ];
     }
 }

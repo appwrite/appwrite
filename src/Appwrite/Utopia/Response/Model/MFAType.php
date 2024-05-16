@@ -10,13 +10,6 @@ class MFAType extends Model
     public function __construct()
     {
         $this
-            ->addRule('backups', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Backup codes.',
-                'array' => true,
-                'default' => [],
-                'example' => true
-            ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Secret token used for TOTP factor.',

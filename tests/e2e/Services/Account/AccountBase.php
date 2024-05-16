@@ -5,7 +5,6 @@ namespace Tests\E2E\Services\Account;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Database\Query;
 
 trait AccountBase
 {
@@ -203,6 +202,8 @@ trait AccountBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($userId, $response['body']['$id']);
+        $this->assertEquals($userId, $response['body']['$id']);
+        $this->assertTrue($response['body']['emailVerification']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', array_merge([
             'origin' => 'http://localhost',
@@ -277,43 +278,43 @@ trait AccountBase
 
     public function testDeleteAccount(): void
     {
-         $email = uniqid() . 'user@localhost.test';
-         $password = 'password';
-         $name = 'User Name';
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
 
-         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
-             'origin' => 'http://localhost',
-             'content-type' => 'application/json',
-             'x-appwrite-project' => $this->getProject()['$id'],
-         ]), [
-             'userId' => ID::unique(),
-             'email' => $email,
-             'password' => $password,
-             'name' => $name,
-         ]);
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
 
-         $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals($response['headers']['status-code'], 201);
 
-         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-             'origin' => 'http://localhost',
-             'content-type' => 'application/json',
-             'x-appwrite-project' => $this->getProject()['$id'],
-         ]), [
-             'email' => $email,
-             'password' => $password,
-         ]);
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
 
-         $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals($response['headers']['status-code'], 201);
 
-         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
-         $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
-             'origin' => 'http://localhost',
-             'content-type' => 'application/json',
-             'x-appwrite-project' => $this->getProject()['$id'],
-             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-         ]));
+        $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
 
-         $this->assertEquals($response['headers']['status-code'], 204);
+        $this->assertEquals($response['headers']['status-code'], 204);
     }
 }

@@ -9,11 +9,11 @@ use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -37,7 +37,7 @@ class Databases extends Action
             ->inject('dbForConsole')
             ->inject('dbForProject')
             ->inject('log')
-            ->callback(fn(Message $message, Database $dbForConsole, Database $dbForProject, Log $log) => $this->action($message, $dbForConsole, $dbForProject, $log));
+            ->callback(fn (Message $message, Database $dbForConsole, Database $dbForProject, Log $log) => $this->action($message, $dbForConsole, $dbForProject, $log));
     }
 
     /**
@@ -503,6 +503,7 @@ class Databases extends Action
      * @throws DatabaseException
      * @throws Restricted
      * @throws Structure
+     * @throws Exception
      */
     protected function deleteCollection(Document $database, Document $collection, Document $project, Database $dbForProject): void
     {
@@ -515,20 +516,23 @@ class Databases extends Action
         $databaseId = $database->getId();
         $databaseInternalId = $database->getInternalId();
 
-        $relationships = \array_filter(
-            $collection->getAttribute('attributes'),
-            fn ($attribute) => $attribute['type'] === Database::VAR_RELATIONSHIP
-        );
-
-        foreach ($relationships as $relationship) {
-            if (!$relationship['twoWay']) {
-                continue;
+        /**
+         * Related collections relating to current collection
+         */
+        $this->deleteByGroup(
+            'attributes',
+            [
+                Query::equal('databaseInternalId', [$databaseInternalId]),
+                Query::equal('type', [Database::VAR_RELATIONSHIP]),
+                Query::notEqual('collectionInternalId', $collectionInternalId),
+                Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
+            ],
+            $dbForProject,
+            function ($attribute) use ($dbForProject, $databaseInternalId) {
+                $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
+                $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
             }
-            $relatedCollection = $dbForProject->getDocument('database_' . $databaseInternalId, $relationship['relatedCollection']);
-            $dbForProject->deleteDocument('attributes', $databaseInternalId . '_' . $relatedCollection->getInternalId() . '_' . $relationship['twoWayKey']);
-            $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
-            $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
-        }
+        );
 
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
 
@@ -613,7 +617,7 @@ class Databases extends Action
         array $events
     ): void {
         $target = Realtime::fromPayload(
-        // Pass first, most verbose event pattern
+            // Pass first, most verbose event pattern
             event: $events[0],
             payload: $attribute,
             project: $project,

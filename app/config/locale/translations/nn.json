@@ -10,7 +10,7 @@
     "emails.verification.thanks": "Takk",
     "emails.verification.signature": "{{project}} team",
     "emails.magicSession.subject": "Pålogging",
-    "emails.magicSession.hello": "Hei,",
+    "emails.magicSession.hello": "Hei",
     "emails.magicSession.body": "Følg denne lenkja for å logge på.",
     "emails.magicSession.footer": "Om du ikkje ba om å logge på med denne e-postadressa, kan du ignorera denne meldinga.",
     "emails.magicSession.thanks": "Takk",
@@ -163,6 +163,7 @@
     "countries.nz": "New Zealand",
     "countries.om": "Oman",
     "countries.pk": "Pakistan",
+    "countries.ps": "Palestina",
     "countries.pa": "Panama",
     "countries.pe": "Peru",
     "countries.ph": "Filippinene",
@@ -206,6 +207,7 @@
     "countries.tn": "Tunisia",
     "countries.tr": "Tyrkia",
     "countries.tv": "Tuvalu",
+    "countries.tw": "Taiwan",
     "countries.tz": "Tanzania",
     "countries.ug": "Uganda",
     "countries.ua": "Ukraina",
@@ -247,5 +249,5 @@
     "emails.certificate.footer": "Førre sertifikatet ditt vil vere gyldig i 30 dagar sidan den første feilen. Vi rår sterkt til at du undersøkjer denne saka, elles vil domenet ditt ende opp utan gyldig SSL-kommunikasjon.",
     "emails.certificate.thanks": "Takk",
     "emails.certificate.signature": "{{project}} team",
-    "sms.verification.body": "{{secret}} er verifiseringskoden din for {{project}}."
+    "sms.verification.body": "{{secret}}"
 }

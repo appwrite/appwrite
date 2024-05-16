@@ -2,23 +2,14 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Delete;
-use Swoole\Timer;
-use Utopia\Database\Document;
-use Utopia\Platform\Action;
-use Utopia\CLI\Console;
-use Utopia\Database\DateTime;
-use Utopia\Database\Query;
+use Appwrite\Event\Messaging;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
-use Appwrite\Event\Messaging;
-
-use function Swoole\Coroutine\run;
 
 class ScheduleMessages extends ScheduleBase
 {
-    public const UPDATE_TIMER = 10; // seconds
-    public const ENQUEUE_TIMER = 60; // seconds
+    public const UPDATE_TIMER = 3; // seconds
+    public const ENQUEUE_TIMER = 4; // seconds
 
     public static function getName(): string
     {
@@ -37,14 +28,14 @@ class ScheduleMessages extends ScheduleBase
                 continue;
             }
 
-            $now = DateTime::now();
-            $scheduledAt = DateTime::formatTz($schedule['schedule']);
+            $now = new \DateTime();
+            $scheduledAt = new \DateTime($schedule['schedule']);
 
             if ($scheduledAt > $now) {
                 continue;
             }
 
-            \go(function () use ($schedule, $pools, $dbForConsole) {
+            \go(function () use ($now, $schedule, $pools, $dbForConsole) {
                 $queue = $pools->get('queue')->pop();
                 $connection = $queue->getResource();
                 $queueForMessaging = new Messaging($connection);
