@@ -791,7 +791,7 @@ services:
 
   openruntimes-executor:
     container_name: openruntimes-executor
-    hostname: exc-1
+    hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
     image: openruntimes/executor:0.5.1
@@ -857,7 +857,7 @@ services:
       - OPR_PROXY_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_PROXY_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_PROXY_ALGORITHM=random
-      - OPR_PROXY_EXECUTORS=exc-1
+      - OPR_PROXY_EXECUTORS=exc1
       - OPR_PROXY_HEALTHCHECK_INTERVAL=10000
       - OPR_PROXY_MAX_TIMEOUT=600
       - OPR_PROXY_HEALTHCHECK=enabled
