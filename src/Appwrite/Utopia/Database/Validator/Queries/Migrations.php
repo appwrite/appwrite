@@ -6,7 +6,6 @@ class Migrations extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'status',
-        'stage',
         'source',
         'resources',
         'statusCounters',

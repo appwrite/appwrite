@@ -15,7 +15,9 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Logger\Log;
+use Utopia\Logger\Log\Breadcrumb;
 use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
@@ -161,7 +163,7 @@ class Migrations extends Action
             roles: $target['roles'],
         );
 
-        return $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration);
+        return $this->dbForProject->updateDocument($migration->getCollection(), $migration->getId(), $migration);
     }
 
     /**
@@ -241,26 +243,28 @@ class Migrations extends Action
      * @throws Structure
      * @throws \Utopia\Database\Exception
      */
-    protected function processMigration(Document $project, Document $migration, Log $log): void
+    protected function processMigration(Document $project, Document $group, Log $log): void
     {
         /**
-         * @var Document $migrationDocument
+         * @var Document $migration
          * @var Transfer $transfer
          */
-        $migrationDocument = null;
+        $groupDocument = null;
         $transfer = null;
         $projectDocument = $this->dbForConsole->getDocument('projects', $project->getId());
         $tempAPIKey = $this->generateAPIKey($projectDocument);
 
         try {
-            $migrationDocument = $this->dbForProject->getDocument('migrations', $migration->getId());
-            $migrationDocument->setAttribute('stage', 'processing');
-            $migrationDocument->setAttribute('status', 'processing');
-            $this->updateMigrationDocument($migrationDocument, $projectDocument);
+            $group = $this->dbForProject->getDocument('groupMigrations', $group->getId());
 
-            $log->addTag('type', $migrationDocument->getAttribute('source'));
+            $migration = $this->dbForProject->getDocument('migrations', $group->getAttribute('migrationId', ''));
+            $migration->setAttribute('status', 'processing');
 
-            $source = $this->processSource($migrationDocument->getAttribute('source'), $migrationDocument->getAttribute('credentials'));
+            $this->updateMigrationDocument($migration, $projectDocument);
+
+            $log->addTag('type', $migration->getAttribute('source'));
+
+            $source = $this->processSource($migration->getAttribute('source'), $migration->getAttribute('credentials'));
 
             $source->report();
 
@@ -276,21 +280,43 @@ class Migrations extends Action
             );
 
             /** Start Transfer */
-            $migrationDocument->setAttribute('stage', 'migrating');
-            $this->updateMigrationDocument($migrationDocument, $projectDocument);
-            $transfer->run($migrationDocument->getAttribute('resources'), function () use ($migrationDocument, $transfer, $projectDocument) {
-                $migrationDocument->setAttribute('resourceData', json_encode($transfer->getCache()));
-                $migrationDocument->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
+            $this->updateMigrationDocument($migration, $projectDocument);
 
-                $this->updateMigrationDocument($migrationDocument, $projectDocument);
+            // Calculate group resources
+            $resources = $group->getAttribute('resources');
+
+            switch ($group->getAttribute('group')) {
+                case Transfer::GROUP_AUTH:
+                    $resources = array_intersect(Transfer::GROUP_AUTH_RESOURCES, $resources);
+                    break;
+                case Transfer::GROUP_STORAGE:
+                    $resources = array_intersect(Transfer::GROUP_STORAGE_RESOURCES, $resources);
+                    break;
+                case Transfer::GROUP_DATABASES:
+                    $resources = array_intersect(Transfer::GROUP_DATABASES_RESOURCES, $resources);
+                    break;
+                case Transfer::GROUP_FUNCTIONS:
+                    $resources = array_intersect(Transfer::GROUP_FUNCTIONS_RESOURCES, $resources);
+                    break;
+                default:
+                    throw new Exception('Migration worker was initialized with unknown group');
+            }
+
+            $log->addTag('migrationGroup', $group->getAttribute('group'));
+            $log->addExtra('migrationResources', json_encode($resources));
+
+            $transfer->run($resources, function () use ($group, $transfer, $projectDocument) {
+                $group->setAttribute('resourceData', json_encode($transfer->getCache()));
+                $group->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
+
+                $this->updateMigrationDocument($group, $projectDocument);
             });
 
             $sourceErrors = $source->getErrors();
             $destinationErrors = $destination->getErrors();
 
             if (!empty($sourceErrors) || !empty($destinationErrors)) {
-                $migrationDocument->setAttribute('status', 'failed');
-                $migrationDocument->setAttribute('stage', 'finished');
+                $migration->setAttribute('status', 'failed');
 
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
@@ -302,23 +328,48 @@ class Migrations extends Action
                     $errorMessages[] = "Error occurred while pushing '{$error->getResourceType()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
                 }
 
-                $migrationDocument->setAttribute('errors', $errorMessages);
-                $this->updateMigrationDocument($migrationDocument, $projectDocument);
+                $group->setAttribute('errors', $errorMessages);
+                $this->updateMigrationDocument($group, $projectDocument);
+                $this->updateMigrationDocument($migration, $projectDocument);
 
                 return;
             }
 
-            $migrationDocument->setAttribute('status', 'completed');
-            $migrationDocument->setAttribute('stage', 'finished');
+            $group->setAttribute('status', 'completed');
+            $this->updateMigrationDocument($group, $project);
+            
+            // Check if all other groups are finished, if so set parent document to completed aswell.
+            $groupDocuments = $this->dbForProject->find('groupMigrations', [Query::equal('migrationId', [$migration->getId()])]);
+
+            $result = 'completed';
+            foreach ($groupDocuments as $document) {
+                if ($document->getId() == $group->getId()) {
+                    continue;
+                }
+
+                $status = $document->getAttribute('status', 'processing');
+
+                if ($status == 'processing' || $status == 'pending') {
+                    $result = 'processing';
+                    break;
+                }
+
+                // Only fail parent if all have stopped processing.
+                if ($status == 'failed') {
+                    break;
+                }
+            }
+
+            $migration->setAttribute('status', $result);
+            $this->updateMigrationDocument($migration, $project);
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
 
-            if ($migrationDocument) {
+            if ($migration && $groupDocument) {
                 Console::error($th->getMessage());
                 Console::error($th->getTraceAsString());
-                $migrationDocument->setAttribute('status', 'failed');
-                $migrationDocument->setAttribute('stage', 'finished');
-                $migrationDocument->setAttribute('errors', [$th->getMessage()]);
+                $migration->setAttribute('status', 'failed');
+                $groupDocument->setAttribute('errors', [$th->getMessage()]);
 
                 return;
             }
@@ -337,17 +388,18 @@ class Migrations extends Action
                     $errorMessages[] = "Error occurred while pushing '{$error->getResourceType()}:{$error->getResourceId()}' to destination with message '{$error->getMessage()}'";
                 }
 
-                $migrationDocument->setAttribute('errors', $errorMessages);
+                $group->setAttribute('errors', $errorMessages);
             }
         } finally {
             if ($tempAPIKey) {
                 $this->removeAPIKey($tempAPIKey);
             }
-            if ($migrationDocument) {
-                $this->updateMigrationDocument($migrationDocument, $projectDocument);
+            if ($migration) {
+                $this->updateMigrationDocument($migration, $projectDocument);
+                $this->updateMigrationDocument($group, $projectDocument);
 
-                if ($migrationDocument->getAttribute('status', '') == 'failed') {
-                    throw new Exception(implode("\n", $migrationDocument->getAttribute('errors', [])));
+                if ($migration->getAttribute('status', '') == 'failed') {
+                    throw new Exception(implode("\n", $migration->getAttribute('errors', [])));
                 }
             }
         }

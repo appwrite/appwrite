@@ -34,12 +34,6 @@ class Migration extends Model
                 'default' => '',
                 'example' => 'pending',
             ])
-            ->addRule('stage', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Migration stage ( init, processing, source-check, destination-check, migrating, finished )',
-                'default' => '',
-                'example' => 'init',
-            ])
             ->addRule('source', [
                 'type' => self::TYPE_STRING,
                 'description' => 'A string containing the type of source of the migration.',

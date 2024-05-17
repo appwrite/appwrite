@@ -25,7 +25,6 @@ class GetMigrationStats extends Action
         '$id',
         '$createdAt',
         'status',
-        'stage',
         'source'
     ];
 
@@ -119,7 +118,6 @@ class GetMigrationStats extends Action
                             $migration->getAttribute('$id'),
                             $migration->getAttribute('$createdAt'),
                             $migration->getAttribute('status'),
-                            $migration->getAttribute('stage'),
                             $migration->getAttribute('source'),
                         ];
                     }, $migrations);
