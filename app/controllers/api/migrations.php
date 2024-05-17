@@ -32,81 +32,40 @@ use Utopia\Validator\WhiteList;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$triggerMigration = function (string $migrationId, array $resources, Migration $queueForMigrations) {
-    $groupDocument = new Document([
-        '$id' => ID::unique(),
-        'status' => 'pending',
-        'migrationId' => $migrationId,
-        'group' => '',
-        'resources' => [],
-        'statusCounters' => '',
-        'resourceData' => '',
-        'errors' => []
-    ]);
+$triggerMigration = function (string $migrationId, array $resources, Migration $queueForMigrations, Database $dbForProject) {
+    $groups = [
+        Transfer::GROUP_AUTH => Transfer::GROUP_AUTH_RESOURCES,
+        Transfer::GROUP_DATABASES => Transfer::GROUP_DATABASES_RESOURCES,
+        Transfer::GROUP_FUNCTIONS => Transfer::GROUP_FUNCTIONS_RESOURCES,
+        Transfer::GROUP_STORAGE => Transfer::GROUP_STORAGE_RESOURCES
+    ];
 
-    if (!empty(array_intersect(
-        Transfer::GROUP_AUTH_RESOURCES,
-        $resources
-    ))) {
-        $groupDocument->setAttribute('$id', ID::unique());
-        $groupDocument->setAttribute('group', Migration::TYPE_AUTH);
-        $groupDocument->setAttribute('resources', array_intersect(
-            Transfer::GROUP_AUTH_RESOURCES,
+    foreach ($groups as $group => $groupResources) {
+        if (!empty(array_intersect(
+            $groupResources,
             $resources
-        ));
-
-        $queueForMigrations
-            ->setType(Migration::TYPE_AUTH)
-            ->setMigration($groupDocument)
-            ->trigger();
-    }
-
-    if (!empty(array_intersect(
-        Transfer::GROUP_STORAGE_RESOURCES,
-        $resources
-    ))) {
-        $groupDocument->setAttribute('$id', ID::unique());
-        $groupDocument->setAttribute('group', Migration::TYPE_STORAGE);
-        $groupDocument->setAttribute('resources', array_intersect(
-            Transfer::GROUP_STORAGE_RESOURCES,
-            $resources
-        ));
-
-        $queueForMigrations
-            ->setMigration($groupDocument)
-            ->trigger();
-    }
-
-    if (!empty(array_intersect(
-        Transfer::GROUP_DATABASES_RESOURCES,
-        $resources
-    ))) {
-        $groupDocument->setAttribute('$id', ID::unique());
-        $groupDocument->setAttribute('group', Migration::TYPE_DATABASES);
-        $groupDocument->setAttribute('resources', array_intersect(
-            Transfer::GROUP_DATABASES_RESOURCES,
-            $resources
-        ));
-
-        $queueForMigrations
-            ->setMigration($groupDocument)
-            ->trigger();
-    }
-
-    if (!empty(array_intersect(
-        Transfer::GROUP_FUNCTIONS_RESOURCES,
-        $resources
-    ))) {
-        $groupDocument->setAttribute('$id', ID::unique());
-        $groupDocument->setAttribute('group', Migration::TYPE_FUNCTIONS);
-        $groupDocument->setAttribute('resources', array_intersect(
-            Transfer::GROUP_FUNCTIONS_RESOURCES,
-            $resources
-        ));
-
-        $queueForMigrations
-            ->setMigration($groupDocument)
-            ->trigger();
+        ))) {
+            $groupDocument = new Document([
+                '$id' => ID::unique(),
+                'status' => 'pending',
+                'migrationId' => $migrationId,
+                'group' => $group,
+                'resources' => array_intersect(
+                    $groupResources,
+                    $resources
+                ),
+                'statusCounters' => '',
+                'resourceData' => '',
+                'errors' => []
+            ]);
+    
+            $dbForProject->createDocument('groupMigrations', $groupDocument);
+    
+            $queueForMigrations
+                ->setType($group)
+                ->setMigration($groupDocument)
+                ->trigger();
+        }
     }
 };
 
@@ -154,7 +113,7 @@ App::post('/v1/migrations/appwrite')
             ->setProject($project)
             ->setUser($user);
 
-        $triggerMigration($migration->getId(), $resources, $queueForMigrations);
+        $triggerMigration($migration->getId(), $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -255,7 +214,7 @@ App::post('/v1/migrations/firebase/oauth')
             ->setProject($project)
             ->setUser($user);
 
-        $triggerMigration($migration->getId(), $resources, $queueForMigrations);
+        $triggerMigration($migration->getId(), $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -314,7 +273,7 @@ App::post('/v1/migrations/firebase')
             ->setProject($project)
             ->setUser($user);
 
-        $triggerMigration($migration->getId(), $resources, $queueForMigrations);
+        $triggerMigration($migration->getId(), $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -373,7 +332,7 @@ App::post('/v1/migrations/supabase')
             ->setProject($project)
             ->setUser($user);
 
-        $triggerMigration($migration->getId(), $resources, $queueForMigrations);
+        $triggerMigration($migration->getId(), $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -434,7 +393,7 @@ App::post('/v1/migrations/nhost')
             ->setProject($project)
             ->setUser($user);
 
-        $triggerMigration($migration->getId(), $resources, $queueForMigrations);
+        $triggerMigration($migration->getId(), $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

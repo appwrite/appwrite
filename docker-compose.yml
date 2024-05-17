@@ -595,7 +595,7 @@ services:
   appwrite-worker-migrations:
     entrypoint: worker-migrations
     <<: *x-logging
-    # container_name: appwrite-worker-migrations
+    container_name: appwrite-worker-migrations
     restart: unless-stopped
     image: appwrite-dev
     networks:
@@ -609,6 +609,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_WORKERS_NUM=8
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
@@ -624,9 +625,6 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-    deploy:
-      mode: replicated
-      replicas: 4
 
   appwrite-task-maintenance:
     entrypoint: maintenance
