@@ -112,7 +112,7 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 406;
+const APP_CACHE_BUSTER = 430;
 const APP_VERSION_STABLE = '1.5.5';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -837,7 +837,7 @@ $register->set('pools', function () {
             /**
              * Get Resource
              *
-             * Creation could be reused accross connection types like database, cache, queue, etc.
+             * Creation could be reused across connection types like database, cache, queue, etc.
              *
              * Resource assignment to an adapter will happen below.
              */
@@ -847,7 +847,7 @@ $register->set('pools', function () {
                     $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                         return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                             return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
-                                // No need to set PDO::ATTR_ERRMODE it is overwitten in PDOProxy
+                                // No need to set PDO::ATTR_ERRMODE it is overwritten in PDOProxy
                                 PDO::ATTR_TIMEOUT => 3, // Seconds
                                 PDO::ATTR_PERSISTENT => true,
                                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
