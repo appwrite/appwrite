@@ -11,9 +11,7 @@ $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
-?>version: '3'
-
-services:
+?>services:
   traefik:
     image: traefik:2.11
     container_name: appwrite-traefik
