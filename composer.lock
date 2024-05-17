@@ -1902,16 +1902,16 @@
         },
         {
             "name": "utopia-php/logger",
-            "version": "0.5.1",
+            "version": "0.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/logger.git",
-                "reference": "048042f9440a4517332872a9fa35e145e4aa5daf"
+                "reference": "c6dfdb672e41364c309b0c30dc03bc6d45446dba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/logger/zipball/048042f9440a4517332872a9fa35e145e4aa5daf",
-                "reference": "048042f9440a4517332872a9fa35e145e4aa5daf",
+                "url": "https://api.github.com/repos/utopia-php/logger/zipball/c6dfdb672e41364c309b0c30dc03bc6d45446dba",
+                "reference": "c6dfdb672e41364c309b0c30dc03bc6d45446dba",
                 "shasum": ""
             },
             "require": {
@@ -1950,9 +1950,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/logger/issues",
-                "source": "https://github.com/utopia-php/logger/tree/0.5.1"
+                "source": "https://github.com/utopia-php/logger/tree/0.5.2"
             },
-            "time": "2024-05-17T07:57:39+00:00"
+            "time": "2024-05-17T09:32:59+00:00"
         },
         {
             "name": "utopia-php/messaging",
