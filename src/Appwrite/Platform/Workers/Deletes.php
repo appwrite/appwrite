@@ -679,9 +679,11 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
         $timeLimit = new TimeLimit("", 0, 1, $dbForProject);
         $abuse = new Abuse($timeLimit);
-        $status = $abuse->cleanup($abuseRetention);
-        if (!$status) {
-            throw new Exception('Failed to delete Abuse logs for project ' . $projectId);
+
+        try {
+            $abuse->cleanup($abuseRetention);
+        } catch (DatabaseException $e) {
+            Console::error('Failed to delete abuse logs for project ' . $projectId . ': ' . $e->getMessage());
         }
     }
 
@@ -697,9 +699,11 @@ class Deletes extends Action
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
         $audit = new Audit($dbForProject);
-        $status = $audit->cleanup($auditRetention);
-        if (!$status) {
-            throw new Exception('Failed to delete Audit logs for project' . $projectId);
+
+        try {
+            $audit->cleanup($auditRetention);
+        } catch (DatabaseException $e) {
+            Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $e->getMessage());
         }
     }
 
@@ -954,7 +958,12 @@ class Deletes extends Action
         while ($sum === $limit) {
             $chunk++;
 
-            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
+            try {
+                $results = $database->find($collection, [Query::limit($limit), ...$queries]);
+            } catch (DatabaseException $e) {
+                Console::error('Failed to find documents for collection ' . $collection . ': ' . $e->getMessage());
+                return;
+            }
 
             $sum = count($results);
 
