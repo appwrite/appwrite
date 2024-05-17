@@ -725,6 +725,7 @@ App::error()
                 $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
                 $adapter = new $classname($providerConfig);
                 $logger = new Logger($adapter);
+                $logger->setSample(0.04);
                 $publish = true;
             }
         }
