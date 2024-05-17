@@ -1966,16 +1966,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.4.3",
+            "version": "0.4.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "117be70da329dac047d22b4250dfa435a725e187"
+                "reference": "a8a5d392bebf082faf289f4dfe09d9fd76844c33"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/117be70da329dac047d22b4250dfa435a725e187",
-                "reference": "117be70da329dac047d22b4250dfa435a725e187",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/a8a5d392bebf082faf289f4dfe09d9fd76844c33",
+                "reference": "a8a5d392bebf082faf289f4dfe09d9fd76844c33",
                 "shasum": ""
             },
             "require": {
@@ -2007,9 +2007,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.4.3"
+                "source": "https://github.com/utopia-php/migration/tree/0.4.4"
             },
-            "time": "2024-05-15T04:49:28+00:00"
+            "time": "2024-05-17T05:25:31+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -2498,16 +2498,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.6.5",
+            "version": "0.6.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "104e47ea8e38c156ec0e0bd415caa3dcd5046fe2"
+                "reference": "e538264cfee5e3efdfe1771efba04750cf20b2c4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/104e47ea8e38c156ec0e0bd415caa3dcd5046fe2",
-                "reference": "104e47ea8e38c156ec0e0bd415caa3dcd5046fe2",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/e538264cfee5e3efdfe1771efba04750cf20b2c4",
+                "reference": "e538264cfee5e3efdfe1771efba04750cf20b2c4",
                 "shasum": ""
             },
             "require": {
@@ -2541,9 +2541,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.6.5"
+                "source": "https://github.com/utopia-php/vcs/tree/0.6.6"
             },
-            "time": "2024-01-08T17:11:12+00:00"
+            "time": "2024-05-17T09:36:30+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -2730,16 +2730,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.38.4",
+            "version": "0.38.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "af7e4b53e9d5467fcb03d482d539669bf2eacdd8"
+                "reference": "830a46cc8e34ee096a76d4af6f00adf008a7cbf8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/af7e4b53e9d5467fcb03d482d539669bf2eacdd8",
-                "reference": "af7e4b53e9d5467fcb03d482d539669bf2eacdd8",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/830a46cc8e34ee096a76d4af6f00adf008a7cbf8",
+                "reference": "830a46cc8e34ee096a76d4af6f00adf008a7cbf8",
                 "shasum": ""
             },
             "require": {
@@ -2775,9 +2775,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.38.4"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.38.5"
             },
-            "time": "2024-05-15T00:35:29+00:00"
+            "time": "2024-05-17T00:59:59+00:00"
         },
         {
             "name": "doctrine/deprecations",
