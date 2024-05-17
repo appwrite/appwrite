@@ -443,7 +443,7 @@ class Deletes extends Action
      * @param Document $document
      * @return void
      * @throws Authorization
-     * @throws \Utopia\Database\Exception
+     * @throws DatabaseException
      * @throws Conflict
      * @throws Restricted
      * @throws Structure
@@ -471,11 +471,10 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      * @throws Authorization
-     * @throws \Utopia\Database\Exception
+     * @throws DatabaseException
      */
     private function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
     {
-        $projectId = $document->getId();
         $projectInternalId = $document->getInternalId();
 
         try {
@@ -486,23 +485,17 @@ class Deletes extends Action
         }
 
         $dbForProject = $getProjectDB($document);
-        $projectCollectionIds = \array_keys(Config::getParam('collections', [])['projects']);
+
+        $projectCollectionIds = [
+            ...\array_keys(Config::getParam('collections', [])['projects']),
+            Audit::COLLECTION,
+            TimeLimit::COLLECTION,
+        ];
+
         $limit = \count($projectCollectionIds) + 25;
 
         while (true) {
             $collections = $dbForProject->listCollections($limit);
-
-            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
-                $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
-
-                if ($collectionsIds == $projectCollectionIds) {
-                    break;
-                }
-            } else {
-                if (empty($collections)) {
-                    break;
-                }
-            }
 
             foreach ($collections as $collection) {
                 if ($dsn->getHost() !== DATABASE_SHARED_TABLES || !\in_array($collection->getId(), $projectCollectionIds)) {
@@ -510,6 +503,16 @@ class Deletes extends Action
                 } else {
                     $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                 }
+            }
+
+            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+                $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
+
+                if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
+                    break;
+                }
+            } elseif (empty($collections)) {
+                break;
             }
         }
 
@@ -553,6 +556,8 @@ class Deletes extends Action
         // Delete metadata table
         if ($dsn->getHost() !== DATABASE_SHARED_TABLES) {
             $dbForProject->deleteCollection('_metadata');
+        } else {
+            $this->deleteByGroup('_metadata', [], $dbForProject);
         }
 
         // Delete all storage directories
