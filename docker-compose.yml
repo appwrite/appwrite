@@ -189,7 +189,7 @@ services:
       - _APP_MESSAGE_PUSH_TEST_DSN
       - _APP_CONSOLE_COUNTRIES_DENYLIST
 
-  appwrite-task-realtime:
+  appwrite-realtime:
     entrypoint: realtime
     <<: *x-logging
     container_name: appwrite-realtime
@@ -629,7 +629,7 @@ services:
   appwrite-task-maintenance:
     entrypoint: maintenance
     <<: *x-logging
-    container_name: appwrite-maintenance
+    container_name: appwrite-task-maintenance
     image: appwrite-dev
     networks:
       - appwrite
@@ -728,7 +728,7 @@ services:
   appwrite-task-scheduler-functions:
     entrypoint: schedule-functions
     <<: *x-logging
-    container_name: appwrite-scheduler-functions
+    container_name: appwrite-task-scheduler-functions
     image: appwrite-dev
     networks:
       - appwrite
@@ -755,7 +755,7 @@ services:
   appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
     <<: *x-logging
-    container_name: appwrite-scheduler-messages
+    container_name: appwrite-task-scheduler-messages
     image: appwrite-dev
     networks:
       - appwrite
@@ -779,7 +779,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
 
-  appwrite-task-assistant:
+  appwrite-assistant:
     container_name: appwrite-assistant
     image: appwrite/assistant:0.4.0
     networks:
