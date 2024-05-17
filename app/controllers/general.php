@@ -288,6 +288,9 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
+
+        } catch (AppwriteException $ex) {
+            throw $ex;
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 
