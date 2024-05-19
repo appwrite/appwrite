@@ -27,6 +27,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log\User;
+use Utopia\Logger\Logger;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
@@ -754,6 +755,10 @@ App::error()
         } else {
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
+
+        if ($error->getCode() >= 400 && $error->getCode() < 500) {
+                $publish = true;
+            }
 
         if ($publish && $project->getId() !== 'console') {
             if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
