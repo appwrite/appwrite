@@ -668,6 +668,7 @@ services:
     entrypoint: worker-usage
     <<: *x-logging
     container_name: appwrite-worker-usage
+    restart: unless-stopped
     image: appwrite-dev
     networks:
       - appwrite
@@ -699,6 +700,7 @@ services:
     entrypoint: worker-usage-dump
     <<: *x-logging
     container_name: appwrite-worker-usage-dump
+    restart: unless-stopped
     image: appwrite-dev
     networks:
       - appwrite
