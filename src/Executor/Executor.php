@@ -194,7 +194,6 @@ class Executor
             'path' => $path,
             'method' => $method,
             'headers' => $headers,
-
             'image' => $image,
             'source' => $source,
             'entrypoint' => $entrypoint,
