@@ -519,6 +519,11 @@ return [
         'description' => 'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".',
         'code' => 404,
     ],
+    Exception::FUNCTION_SYNCHRONOUS_TIMEOUT => [
+        'name' => Exception::FUNCTION_SYNCHRONOUS_TIMEOUT,
+        'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
+        'code' => 408,
+    ],
 
     /** Builds  */
     Exception::BUILD_NOT_FOUND => [
