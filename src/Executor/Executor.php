@@ -3,7 +3,6 @@
 namespace Executor;
 
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Utopia\Response;
 use Exception;
 use Utopia\System\System;
 
@@ -333,7 +332,7 @@ class Executor
 
         if ($curlError) {
             if ($curlError == CURLE_OPERATION_TIMEDOUT) {
-                throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT, $curlErrorMessage, Response::STATUS_CODE_REQUEST_TIMEOUT);
+                throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT);
             }
             throw new Exception($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
         }
