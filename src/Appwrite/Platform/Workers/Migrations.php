@@ -17,7 +17,6 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Logger\Log;
-use Utopia\Logger\Log\Breadcrumb;
 use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
@@ -337,7 +336,7 @@ class Migrations extends Action
 
             $group->setAttribute('status', 'completed');
             $this->updateMigrationDocument($group, $project);
-            
+
             // Check if all other groups are finished, if so set parent document to completed aswell.
             $groupDocuments = $this->dbForProject->find('groupMigrations', [Query::equal('migrationId', [$migration->getId()])]);
 

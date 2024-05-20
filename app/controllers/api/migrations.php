@@ -58,9 +58,9 @@ $triggerMigration = function (string $migrationId, array $resources, Migration $
                 'resourceData' => '',
                 'errors' => []
             ]);
-    
+
             $dbForProject->createDocument('groupMigrations', $groupDocument);
-    
+
             $queueForMigrations
                 ->setType($group)
                 ->setMigration($groupDocument)

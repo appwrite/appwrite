@@ -11,10 +11,10 @@ class Migration extends Event
     protected string $type = '';
     protected ?Document $migration = null;
 
-    const TYPE_AUTH = 'Auth';
-    const TYPE_DATABASES = 'Databases';
-    const TYPE_STORAGE = 'Storage';
-    const TYPE_FUNCTIONS = 'Functions';
+    public const TYPE_AUTH = 'Auth';
+    public const TYPE_DATABASES = 'Databases';
+    public const TYPE_STORAGE = 'Storage';
+    public const TYPE_FUNCTIONS = 'Functions';
 
     public function __construct(protected Connection $connection)
     {
