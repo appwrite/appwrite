@@ -301,9 +301,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             Console::error($th->getMessage());
 
             if ($th instanceof AppwriteException) {
-                if ($function->getAttribute('logging')) {
-                    Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-                }
                 throw $th;
             }
         } finally {
@@ -313,11 +310,11 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
             ;
-        }
 
-        if ($function->getAttribute('logging')) {
-            /** @var Document $execution */
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            if ($function->getAttribute('logging')) {
+                /** @var Document $execution */
+                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            }
         }
 
         $execution->setAttribute('logs', '');
