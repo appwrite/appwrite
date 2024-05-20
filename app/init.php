@@ -62,6 +62,10 @@ use Utopia\Database\Validator\Structure;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
+use Utopia\Logger\Adapter\AppSignal;
+use Utopia\Logger\Adapter\LogOwl;
+use Utopia\Logger\Adapter\Raygun;
+use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
@@ -729,11 +733,18 @@ $register->set('logger', function () {
 
         $providerName = $loggingProvider->getScheme();
         $providerConfig = match ($providerName) {
-            'sentry' => ($loggingProvider->getUser() ?? '') . ';' . $loggingProvider->getHost(),
-            default => $loggingProvider->getHost(),
+            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost(),],
+            'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
+            default => ['key' => $loggingProvider->getHost()],
         };
     } catch (Throwable $th) {
+        $configChunks = \explode(";", $providerConfig);
 
+        $providerConfig = match ($providerName) {
+            'sentry' => [ 'key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
+            'logowl' => ['ticket' => $configChunks[0] ?? '', 'host' => ''],
+            default => ['key' => $providerConfig],
+        };
     }
 
     if (empty($providerName) || empty($providerConfig)) {
@@ -744,8 +755,14 @@ $register->set('logger', function () {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
-    $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
-    $adapter = new $classname($providerConfig);
+    $adapter = match ($providerName) {
+        'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
+        'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
+        'raygun' => new Raygun($providerConfig['key']),
+        'appsignal' => new AppSignal($providerConfig['key']),
+        default => throw new Exception('Provider "' . $providerName . '" not supported.')
+    };
+
     return new Logger($adapter);
 });
 $register->set('pools', function () {
