@@ -1753,6 +1753,9 @@ App::post('/v1/functions/:functionId/executions')
             Console::error($th->getMessage());
 
             if ($th instanceof AppwriteException) {
+                if ($function->getAttribute('logging')) {
+                    Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+                }
                 throw $th;
             }
         } finally {

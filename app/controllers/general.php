@@ -300,6 +300,9 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             Console::error($th->getMessage());
 
             if ($th instanceof AppwriteException) {
+                if ($function->getAttribute('logging')) {
+                    Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+                }
                 throw $th;
             }
         } finally {
