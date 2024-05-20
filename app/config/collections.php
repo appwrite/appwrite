@@ -3868,6 +3868,27 @@ $projectCollections = array_merge([
                 'orders' => [Database::ORDER_ASC],
             ],
             [
+                '$id' => ID::custom('_key_requestMethod'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['requestMethod'],
+                'lengths' => [128],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_requestPath'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['requestPath'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_deployment'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['deploymentId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
                 '$id' => ID::custom('_key_responseStatusCode'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['responseStatusCode'],
