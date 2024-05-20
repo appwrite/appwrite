@@ -145,6 +145,7 @@ return [
     'NZ',
     'OM',
     'PK',
+    'PS',
     'PA',
     'PE',
     'PH',
