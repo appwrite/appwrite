@@ -288,6 +288,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
+
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 
@@ -297,6 +298,13 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
             Console::error($th->getMessage());
+
+            if ($th instanceof AppwriteException) {
+                if ($function->getAttribute('logging')) {
+                    Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+                }
+                throw $th;
+            }
         } finally {
             $queueForUsage
                 ->addMetric(METRIC_EXECUTIONS, 1)
