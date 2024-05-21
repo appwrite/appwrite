@@ -177,14 +177,15 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         $this->listByGroup(
-            'backups', [
+            'backups',
+            [
                 'policyInternalId' => $policy->getId(),
             ],
             $dbForProject,
             function (Document $document) use ($dbForProject) {
                 $dbForProject->deleteDocument('backups', $document->getId());
                 Console::success('Deleted backup for resourceType: '. $document->getAttribute('policyId'));
-                }
+            }
         );
     }
 

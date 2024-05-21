@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Migration;
+use Appwrite\Utopia\Migration\Destinations\Backup;
 use Cron\CronExpression;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -10,7 +11,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Helpers\ID;
-use Appwrite\Utopia\Migration\Destinations\Backup;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Pools\Group;
@@ -112,7 +112,7 @@ class ScheduleBackups extends ScheduleBase
                             break;
                     }
 
-                    if(empty($resources)){
+                    if(empty($resources)) {
                         Console::error('No resources found');
                         continue;
                     }
@@ -120,7 +120,7 @@ class ScheduleBackups extends ScheduleBase
                     $project = $schedule['project'];
                     $apiKey = $project['keys'][0]['secret'] ?? null;
 
-                    if(empty($apiKey)){
+                    if(empty($apiKey)) {
                         Console::error('No api key was found for project: ' . $project->getId());
                         continue;
                     }

@@ -67,7 +67,8 @@ class BackupTest extends Scope
         }
     }
 
-    public function testCreateDatabase(){
+    public function testCreateDatabase()
+    {
         // Create database
         $database = $this->client->call(
             Client::METHOD_POST,
@@ -87,7 +88,8 @@ class BackupTest extends Scope
 
         // Create Collection
         $presidents = $this->client->call(
-            Client::METHOD_POST, '/databases/' . $databaseId . '/collections',
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections',
             $this->getConsoleHeaders(),
             [
                 'collectionId' => ID::unique(),
@@ -96,7 +98,8 @@ class BackupTest extends Scope
                 'permissions' => [
                     Permission::create(Role::user($this->getUser()['$id']))
                 ],
-        ]);
+            ]
+        );
 
         $this->assertEquals(201, $presidents['headers']['status-code']);
         $this->assertEquals($presidents['body']['name'], 'people');
@@ -173,7 +176,8 @@ class BackupTest extends Scope
          * Created Index
          */
         $index = $this->client->call(
-            Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/indexes',
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/indexes',
             $this->getConsoleHeaders(),
             [
                 'key' => 'key_lastName',
@@ -223,75 +227,78 @@ class BackupTest extends Scope
          * Created Documents
          */
         $document1 = $this->client->call(
-            Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
             $this->getConsoleHeaders(),
-                [
-                    'documentId' => ID::unique(),
-                    'data' => [
-                        'first_name' => 'Donald',
-                        'last_name' => 'Trump'
-                    ],
-                    'permissions' => [
-                        Permission::read(Role::user($this->getUser()['$id'])),
-                    ]
+            [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'first_name' => 'Donald',
+                    'last_name' => 'Trump'
+                ],
+                'permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
                 ]
-            );
-
-            $this->assertEquals(201, $document1['headers']['status-code']);
-
-            $document2 = $this->client->call(
-                Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
-                $this->getConsoleHeaders(),
-                [
-                    'documentId' => ID::unique(),
-                    'data' => [
-                        'first_name' => 'George',
-                        'last_name' => 'Bush'
-                    ],
-                    'permissions' => [
-                        Permission::read(Role::user($this->getUser()['$id']))
-                    ]
-                ]
-            );
-
-            $this->assertEquals(201, $document2['headers']['status-code']);
-
-            $document3 = $this->client->call(
-                Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
-                $this->getConsoleHeaders(),
-                [
-                    'documentId' => ID::unique(),
-                    'data' => [
-                        'first_name' => 'Joe',
-                        'last_name' => 'Biden',
-                        ],
-                    'permissions' => [
-                        Permission::read(Role::user($this->getUser()['$id'])),
-                    ]
             ]
-            );
+        );
 
-            $this->assertEquals(201, $document3['headers']['status-code']);
+        $this->assertEquals(201, $document1['headers']['status-code']);
 
-            $documents = $this->client->call(
-                Client::METHOD_GET,
-                '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
-                $this->getConsoleHeadersGet(),
-                [
-                    'queries' => [
-                        Query::select(['first_name', 'last_name'])->toString(),
-                        Query::or([
-                            Query::equal('first_name', ['Donald']),
-                            Query::equal('last_name', ['Bush'])
-                        ])->toString(),
-                        Query::limit(999)->toString(),
-                        Query::offset(0)->toString()
-                    ],
+        $document2 = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
+            $this->getConsoleHeaders(),
+            [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'first_name' => 'George',
+                    'last_name' => 'Bush'
+                ],
+                'permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id']))
                 ]
-            );
+            ]
+        );
 
-            $this->assertEquals(200, $documents['headers']['status-code']);
-            $this->assertCount(2, $documents['body']['documents']);
+        $this->assertEquals(201, $document2['headers']['status-code']);
+
+        $document3 = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
+            $this->getConsoleHeaders(),
+            [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'first_name' => 'Joe',
+                    'last_name' => 'Biden',
+                ],
+                'permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                ]
+            ]
+        );
+
+        $this->assertEquals(201, $document3['headers']['status-code']);
+
+        $documents = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
+            $this->getConsoleHeadersGet(),
+            [
+                'queries' => [
+                    Query::select(['first_name', 'last_name'])->toString(),
+                    Query::or([
+                        Query::equal('first_name', ['Donald']),
+                        Query::equal('last_name', ['Bush'])
+                    ])->toString(),
+                    Query::limit(999)->toString(),
+                    Query::offset(0)->toString()
+                ],
+            ]
+        );
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertCount(2, $documents['body']['documents']);
 
 
         return ['databaseId' => $databaseId];
@@ -519,164 +526,164 @@ class BackupTest extends Scope
 
 
 
-//        /**
-//         * Test create new Backup policy
-//         */
-//        $response = $this->client->call(
-//            Client::METHOD_POST,
-//            '/project/backups-policy',
-//            $this->getConsoleHeaders(),
-//            [
-//                'policyId' => 'policy2',
-//                'name' => 'Hourly Backups',
-//                'enabled' => true,
-//                'retention' => 6,
-//                'hours' => 4,
-//            ]
-//        );
-//
-//        $this->assertEquals(201, $response['headers']['status-code']);
-//        $this->assertNotEmpty($response['body']);
-//        $this->assertEquals('Hourly Backups', $response['body']['name']);
-//        $this->assertEquals('policy2', $response['body']['$id']);
-//        $this->assertEquals(4, $response['body']['hours']);
-//        $this->assertEquals(6, $response['body']['retention']);
-//        $this->assertEquals($this->getProject()['$id'], $response['body']['resourceId']);
-//        $this->assertEquals(true, $response['body']['enabled']);
-//        $this->assertEquals('backup-project', $response['body']['resourceType']);
-//
-//        /**
-//         * Test for Duplicate
-//         */
-//        $duplicate = $this->client->call(
-//            Client::METHOD_POST,
-//            '/project/backups-policy',
-//            $this->getConsoleHeaders(),
-//            [
-//                'policyId' => 'policy2',
-//                'name' => 'Hourly Backups',
-//                'enabled' => true,
-//                'retention' => 6,
-//                'hours' => 4,
-//            ]
-//        );
-//
-//        $this->assertEquals(409, $duplicate['headers']['status-code']);
-//
-//        /**
-//         * Test for Policy not found
-//         */
-//        $database = $this->client->call(
-//            Client::METHOD_GET,
-//            '/project/backups-policy/notfound',
-//            $this->getConsoleHeaders()
-//        );
-//
-//        $this->assertEquals(404, $database['headers']['status-code']);
-//
-//        $policy = $this->client->call(
-//            Client::METHOD_GET,
-//            '/project/backups-policy/policy2',
-//            $this->getConsoleHeadersGet()
-//        );
-//
-//        $this->assertEquals(200, $policy['headers']['status-code']);
-//        $this->assertEquals('policy2', $policy['body']['$id']);
-//        $this->assertEquals('Hourly Backups', $policy['body']['name']);
-//        $this->assertEquals(true, $policy['body']['enabled']);
-//
-//        /**
-//         * Test for update Policy
-//         */
-//        $policy = $this->client->call(
-//            Client::METHOD_PATCH,
-//            '/project/backups-policy/policy2',
-//            $this->getConsoleHeaders(),
-//            [
-//                'name' => 'Daily backups',
-//                'enabled' => false,
-//                'retention' => 10,
-//                'hours' => 3
-//            ]
-//        );
-//
-//        $policyId = $policy['body']['$id'];
-//
-//        $this->assertEquals(200, $policy['headers']['status-code']);
-//        $this->assertEquals('policy2', $policy['body']['$id']);
-//        $this->assertEquals('Daily backups', $policy['body']['name']);
-//        $this->assertEquals(false, $policy['body']['enabled']);
-//
-//        /**
-//         * Test create Second policy
-//         */
-//        $response = $this->client->call(
-//            Client::METHOD_POST,
-//            '/project/backups-policy',
-//            $this->getConsoleHeaders(),
-//            [
-//                'policyId' => 'my-policy2',
-//                'name' => 'New Hourly Backups',
-//                'enabled' => true,
-//                'retention' => 1,
-//                'hours' => 1,
-//            ]
-//        );
-//
-//        $this->assertEquals(201, $response['headers']['status-code']);
-//        $this->assertNotEmpty($response['body']);
-//        $this->assertEquals('New Hourly Backups', $response['body']['name']);
-//        $this->assertEquals('my-policy2', $response['body']['$id']);
-//        $this->assertEquals(1, $response['body']['hours']);
-//        $this->assertEquals(1, $response['body']['retention']);
-//        $this->assertEquals($this->getProject()['$id'], $response['body']['resourceId']);
-//        $this->assertEquals(true, $response['body']['enabled']);
-//        $this->assertEquals('backup-project', $response['body']['resourceType']);
-//
-//        /**
-//         * Test get backup policies list
-//         */
-//        $policies = $this->client->call(
-//            Client::METHOD_GET,
-//            '/project/backups-policy',
-//            $this->getConsoleHeadersGet(),
-//            [
-//                'queries' => [
-//                    Query::orderDesc()->toString()
-//                ]
-//            ]
-//        );
-//        $this->assertEquals(200, $policies['headers']['status-code']);
-//        $this->assertEquals(2, count($policies['body']['backupPolicies']));
-//
-//        /**
-//         * Test Delete policy
-//         */
-//        $response = $this->client->call(
-//            Client::METHOD_DELETE,
-//            "/project/backups-policy/{$policyId}",
-//            $this->getConsoleHeaders(),
-//            $this->getHeaders()
-//        );
-//
-//        $this->assertEquals(204, $response['headers']['status-code']);
-//        $this->assertEquals('', $response['body']);
-//
-//        /**
-//         * Test get backup policies list after delete
-//         */
-//        $policies = $this->client->call(
-//            Client::METHOD_GET,
-//            '/project/backups-policy',
-//            $this->getConsoleHeadersGet(),
-//            [
-//                'queries' => [
-//                    Query::orderDesc()->toString()
-//                ]
-//            ]
-//        );
-//        $this->assertEquals(200, $policies['headers']['status-code']);
-//        $this->assertEquals(1, count($policies['body']['backupPolicies']));
+        //        /**
+        //         * Test create new Backup policy
+        //         */
+        //        $response = $this->client->call(
+        //            Client::METHOD_POST,
+        //            '/project/backups-policy',
+        //            $this->getConsoleHeaders(),
+        //            [
+        //                'policyId' => 'policy2',
+        //                'name' => 'Hourly Backups',
+        //                'enabled' => true,
+        //                'retention' => 6,
+        //                'hours' => 4,
+        //            ]
+        //        );
+        //
+        //        $this->assertEquals(201, $response['headers']['status-code']);
+        //        $this->assertNotEmpty($response['body']);
+        //        $this->assertEquals('Hourly Backups', $response['body']['name']);
+        //        $this->assertEquals('policy2', $response['body']['$id']);
+        //        $this->assertEquals(4, $response['body']['hours']);
+        //        $this->assertEquals(6, $response['body']['retention']);
+        //        $this->assertEquals($this->getProject()['$id'], $response['body']['resourceId']);
+        //        $this->assertEquals(true, $response['body']['enabled']);
+        //        $this->assertEquals('backup-project', $response['body']['resourceType']);
+        //
+        //        /**
+        //         * Test for Duplicate
+        //         */
+        //        $duplicate = $this->client->call(
+        //            Client::METHOD_POST,
+        //            '/project/backups-policy',
+        //            $this->getConsoleHeaders(),
+        //            [
+        //                'policyId' => 'policy2',
+        //                'name' => 'Hourly Backups',
+        //                'enabled' => true,
+        //                'retention' => 6,
+        //                'hours' => 4,
+        //            ]
+        //        );
+        //
+        //        $this->assertEquals(409, $duplicate['headers']['status-code']);
+        //
+        //        /**
+        //         * Test for Policy not found
+        //         */
+        //        $database = $this->client->call(
+        //            Client::METHOD_GET,
+        //            '/project/backups-policy/notfound',
+        //            $this->getConsoleHeaders()
+        //        );
+        //
+        //        $this->assertEquals(404, $database['headers']['status-code']);
+        //
+        //        $policy = $this->client->call(
+        //            Client::METHOD_GET,
+        //            '/project/backups-policy/policy2',
+        //            $this->getConsoleHeadersGet()
+        //        );
+        //
+        //        $this->assertEquals(200, $policy['headers']['status-code']);
+        //        $this->assertEquals('policy2', $policy['body']['$id']);
+        //        $this->assertEquals('Hourly Backups', $policy['body']['name']);
+        //        $this->assertEquals(true, $policy['body']['enabled']);
+        //
+        //        /**
+        //         * Test for update Policy
+        //         */
+        //        $policy = $this->client->call(
+        //            Client::METHOD_PATCH,
+        //            '/project/backups-policy/policy2',
+        //            $this->getConsoleHeaders(),
+        //            [
+        //                'name' => 'Daily backups',
+        //                'enabled' => false,
+        //                'retention' => 10,
+        //                'hours' => 3
+        //            ]
+        //        );
+        //
+        //        $policyId = $policy['body']['$id'];
+        //
+        //        $this->assertEquals(200, $policy['headers']['status-code']);
+        //        $this->assertEquals('policy2', $policy['body']['$id']);
+        //        $this->assertEquals('Daily backups', $policy['body']['name']);
+        //        $this->assertEquals(false, $policy['body']['enabled']);
+        //
+        //        /**
+        //         * Test create Second policy
+        //         */
+        //        $response = $this->client->call(
+        //            Client::METHOD_POST,
+        //            '/project/backups-policy',
+        //            $this->getConsoleHeaders(),
+        //            [
+        //                'policyId' => 'my-policy2',
+        //                'name' => 'New Hourly Backups',
+        //                'enabled' => true,
+        //                'retention' => 1,
+        //                'hours' => 1,
+        //            ]
+        //        );
+        //
+        //        $this->assertEquals(201, $response['headers']['status-code']);
+        //        $this->assertNotEmpty($response['body']);
+        //        $this->assertEquals('New Hourly Backups', $response['body']['name']);
+        //        $this->assertEquals('my-policy2', $response['body']['$id']);
+        //        $this->assertEquals(1, $response['body']['hours']);
+        //        $this->assertEquals(1, $response['body']['retention']);
+        //        $this->assertEquals($this->getProject()['$id'], $response['body']['resourceId']);
+        //        $this->assertEquals(true, $response['body']['enabled']);
+        //        $this->assertEquals('backup-project', $response['body']['resourceType']);
+        //
+        //        /**
+        //         * Test get backup policies list
+        //         */
+        //        $policies = $this->client->call(
+        //            Client::METHOD_GET,
+        //            '/project/backups-policy',
+        //            $this->getConsoleHeadersGet(),
+        //            [
+        //                'queries' => [
+        //                    Query::orderDesc()->toString()
+        //                ]
+        //            ]
+        //        );
+        //        $this->assertEquals(200, $policies['headers']['status-code']);
+        //        $this->assertEquals(2, count($policies['body']['backupPolicies']));
+        //
+        //        /**
+        //         * Test Delete policy
+        //         */
+        //        $response = $this->client->call(
+        //            Client::METHOD_DELETE,
+        //            "/project/backups-policy/{$policyId}",
+        //            $this->getConsoleHeaders(),
+        //            $this->getHeaders()
+        //        );
+        //
+        //        $this->assertEquals(204, $response['headers']['status-code']);
+        //        $this->assertEquals('', $response['body']);
+        //
+        //        /**
+        //         * Test get backup policies list after delete
+        //         */
+        //        $policies = $this->client->call(
+        //            Client::METHOD_GET,
+        //            '/project/backups-policy',
+        //            $this->getConsoleHeadersGet(),
+        //            [
+        //                'queries' => [
+        //                    Query::orderDesc()->toString()
+        //                ]
+        //            ]
+        //        );
+        //        $this->assertEquals(200, $policies['headers']['status-code']);
+        //        $this->assertEquals(1, count($policies['body']['backupPolicies']));
     }
 
     public function tearDown(): void

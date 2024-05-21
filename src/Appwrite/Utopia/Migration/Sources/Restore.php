@@ -6,11 +6,8 @@ use Utopia\Database\Database;
 use Utopia\Migration\Source;
 use Utopia\Storage\Device;
 
-
 class Restore extends Source
 {
-
-
     protected Database $dbForProject;
 
     protected Device $storage;

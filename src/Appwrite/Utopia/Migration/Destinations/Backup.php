@@ -14,14 +14,12 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Attribute;
-use Utopia\Migration\Resources\Database\Collection;
 use Utopia\Migration\Resources\Database\Index;
 use Utopia\Migration\Resources\Functions\Deployment;
 use Utopia\Migration\Resources\Storage\File;
 use Utopia\Migration\Transfer;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
-
 
 /**
  * Local
@@ -110,37 +108,38 @@ class Backup extends Destination
 
         $this->backup->setAttribute('startedAt', DateTime::now());
         $this->backup->setAttribute('status', 'started');
-        $this->dbForProject->updateDocument('backups', $this->backup->getId() ,$this->backup);
+        $this->dbForProject->updateDocument('backups', $this->backup->getId(), $this->backup);
     }
 
-    public function shutDown(): void {
+    public function shutDown(): void
+    {
         Console::info('shutDown function');
 
-//        $files = [];
-//        foreach ($this->data as $group => $groupData){
-//            foreach ($groupData as $resource => $resourceData){
-//                $name = $group . '-' . $resource;
-//                $files[][] = $name;
-//
-//                $data = \json_encode($resourceData);
-//                if ($data === false) {
-//                    throw new \Exception('Unable to encode data to JSON, Are you accidentally encoding binary data?');
-//                }
-//
-//                \file_put_contents(
-//                    $this->path . '/'. $name .'.json',
-//                    \json_encode($data)
-//                );
-//            }
-//        }
-//
-//        \file_put_contents(
-//            $this->path . '/index.json',
-//            \json_encode($files, JSON_PRETTY_PRINT)
-//        );
+        //        $files = [];
+        //        foreach ($this->data as $group => $groupData){
+        //            foreach ($groupData as $resource => $resourceData){
+        //                $name = $group . '-' . $resource;
+        //                $files[][] = $name;
+        //
+        //                $data = \json_encode($resourceData);
+        //                if ($data === false) {
+        //                    throw new \Exception('Unable to encode data to JSON, Are you accidentally encoding binary data?');
+        //                }
+        //
+        //                \file_put_contents(
+        //                    $this->path . '/'. $name .'.json',
+        //                    \json_encode($data)
+        //                );
+        //            }
+        //        }
+        //
+        //        \file_put_contents(
+        //            $this->path . '/index.json',
+        //            \json_encode($files, JSON_PRETTY_PRINT)
+        //        );
 
         $this->backup->setAttribute('status', 'uploading');
-        $this->dbForProject->updateDocument('backups', $this->backup->getId() ,$this->backup);
+        $this->dbForProject->updateDocument('backups', $this->backup->getId(), $this->backup);
 
         $filesize = $this->upload();
 
@@ -155,9 +154,9 @@ class Backup extends Destination
             ->setAttribute('size', $filesize)
         ;
 
-        $this->dbForProject->updateDocument('backups', $this->backup->getId() ,$this->backup);
+        $this->dbForProject->updateDocument('backups', $this->backup->getId(), $this->backup);
 
-        if($this->policy->getAttribute('resourceType') === BACKUP_RESOURCE_DATABASE){
+        if($this->policy->getAttribute('resourceType') === BACKUP_RESOURCE_DATABASE) {
             /** Trigger usage queue */
             $this->queueForUsage
                 ->setProject($this->project)
@@ -190,36 +189,36 @@ class Backup extends Destination
 
             switch ($resource->getName()) {
                 case Resource::TYPE_DEPLOYMENT:
-//                    /** @var Deployment $resource */
-//                    if ($resource->getStart() === 0) {
-//                        $this->data[$resource->getGroup()][$resource->getName()][] = $resource->asArray();
-//                    }
-//
-//                    file_put_contents($this->path. '/deployments/'.$resource->getId().'.tar.gz', $resource->getData(), FILE_APPEND);
-//                    $resource->setData('');
+                    //                    /** @var Deployment $resource */
+                    //                    if ($resource->getStart() === 0) {
+                    //                        $this->data[$resource->getGroup()][$resource->getName()][] = $resource->asArray();
+                    //                    }
+                    //
+                    //                    file_put_contents($this->path. '/deployments/'.$resource->getId().'.tar.gz', $resource->getData(), FILE_APPEND);
+                    //                    $resource->setData('');
                     break;
 
                 case Resource::TYPE_FILE:
-//                    /** @var File $resource */
-//                    if (str_contains($resource->getFileName(), '/')) {
-//                        $folders = explode('/', $resource->getFileName());
-//                        $folderPath = $this->path. '/files';
-//
-//                        foreach ($folders as $folder) {
-//                            $folderPath .= '/'.$folder;
-//
-//                            if (! \file_exists($folderPath) && str_contains($folder, '.') === false) {
-//                                mkdir($folderPath, 0777, true);
-//                            }
-//                        }
-//                    }
-//
-//                    if ($resource->getStart() === 0 && \file_exists($this->path. '/files/'.$resource->getFileName())) {
-//                        unlink($this->path. '/files/'.$resource->getFileName());
-//                    }
-//
-//                    file_put_contents($this->path. '/files/'.$resource->getFileName(), $resource->getData(), FILE_APPEND);
-//                    $resource->setData('');
+                    //                    /** @var File $resource */
+                    //                    if (str_contains($resource->getFileName(), '/')) {
+                    //                        $folders = explode('/', $resource->getFileName());
+                    //                        $folderPath = $this->path. '/files';
+                    //
+                    //                        foreach ($folders as $folder) {
+                    //                            $folderPath .= '/'.$folder;
+                    //
+                    //                            if (! \file_exists($folderPath) && str_contains($folder, '.') === false) {
+                    //                                mkdir($folderPath, 0777, true);
+                    //                            }
+                    //                        }
+                    //                    }
+                    //
+                    //                    if ($resource->getStart() === 0 && \file_exists($this->path. '/files/'.$resource->getFileName())) {
+                    //                        unlink($this->path. '/files/'.$resource->getFileName());
+                    //                    }
+                    //
+                    //                    file_put_contents($this->path. '/files/'.$resource->getFileName(), $resource->getData(), FILE_APPEND);
+                    //                    $resource->setData('');
                     break;
 
                 case Resource::TYPE_ATTRIBUTE:
@@ -233,7 +232,7 @@ class Backup extends Destination
                     /** @var Index $resource */
                     //$data['__collectionId'] = $resource->getCollection()->getId();
                     //$data['__collectionInternalId'] = $resource->getCollection()->getInternalId();
-                   // $this->data[$resource->getGroup()][$resource->getName()][] = $data;
+                    // $this->data[$resource->getGroup()][$resource->getName()][] = $data;
                     break;
 
                 default:
@@ -253,16 +252,16 @@ class Backup extends Destination
             $resource->setStatus(Resource::STATUS_SUCCESS);
             $this->cache->update($resource);
 
-//            /**
-//             * json validation
-//             */
-//            $jsonEncodedData = \json_encode($this->data, JSON_PRETTY_PRINT);
-//            if ($jsonEncodedData === false) {
-//                throw new \Exception('Unable to encode data to JSON, Are you accidentally encoding binary data?');
-//            }
-//
-//            // todo: split to smaller resources
-//            \file_put_contents($this->path.'/backup.json', \json_encode($this->data, JSON_PRETTY_PRINT));
+            //            /**
+            //             * json validation
+            //             */
+            //            $jsonEncodedData = \json_encode($this->data, JSON_PRETTY_PRINT);
+            //            if ($jsonEncodedData === false) {
+            //                throw new \Exception('Unable to encode data to JSON, Are you accidentally encoding binary data?');
+            //            }
+            //
+            //            // todo: split to smaller resources
+            //            \file_put_contents($this->path.'/backup.json', \json_encode($this->data, JSON_PRETTY_PRINT));
         }
 
         $callback($resources);
@@ -273,7 +272,7 @@ class Backup extends Destination
      */
     public function upload(): int
     {
-        if (!file_exists($this->path)){
+        if (!file_exists($this->path)) {
             throw new \Exception('Nothing to upload');
         }
 
@@ -318,10 +317,10 @@ class Backup extends Destination
 
         $filesize = filesize($tarFile);
 
-//        if (!unlink($tarFile)) {
-//            Console::error('Error deleting: ' . $tarFile);
-//            throw new \Exception('Error deleting: ' . $tarFile);
-//        }
+        //        if (!unlink($tarFile)) {
+        //            Console::error('Error deleting: ' . $tarFile);
+        //            throw new \Exception('Error deleting: ' . $tarFile);
+        //        }
 
         return $filesize;
     }

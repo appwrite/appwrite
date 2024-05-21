@@ -7,6 +7,8 @@ use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
+use Appwrite\Utopia\Migration\Destinations\Backup;
+use Appwrite\Utopia\Migration\sources\Restore;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -17,13 +19,13 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Logger\Log;
-use Appwrite\Utopia\Migration\Destinations\Backup;
-use Appwrite\Utopia\Migration\sources\Restore;
 use Utopia\Migration\Destination;
+use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
-use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;;
+
+;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
@@ -121,8 +123,7 @@ class Migrations extends Action
      */
     protected function processDestination(string $destination, array $credentials): Destination
     {
-        return match ($destination)
-        {
+        return match ($destination) {
             Backup::getName() => new Backup(
                 $this->project,
                 $this->backup,
@@ -132,7 +133,8 @@ class Migrations extends Action
             ),
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $credentials['projectId'],
-                str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']
+                str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'],
+                $credentials['apiKey']
             ),
             default => throw new \Exception('Invalid destination type'),
         };
@@ -323,7 +325,8 @@ class Migrations extends Action
             );
 
             $destination = $this->processDestination(
-                $migrationDocument->getAttribute('destination'), [
+                $migrationDocument->getAttribute('destination'),
+                [
                     'projectId' => $projectDocument->getId(),
                     'endpoint'  => 'http://appwrite/v1',
                     'apiKey'    => $tempAPIKey['secret']
