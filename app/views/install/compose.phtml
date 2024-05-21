@@ -574,11 +574,11 @@ services:
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
 
-  appwrite-maintenance:
+  appwrite-task-maintenance:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: maintenance
     <<: *x-logging
-    container_name: appwrite-maintenance
+    container_name: appwrite-task-maintenance
     restart: unless-stopped
     networks:
       - appwrite
@@ -665,10 +665,10 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
 
-  appwrite-scheduler-functions:
+  appwrite-task-scheduler-functions:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: schedule-functions
-    container_name: appwrite-scheduler-functions
+    container_name: appwrite-task-scheduler-functions
     <<: *x-logging
     restart: unless-stopped
     networks:
@@ -690,10 +690,10 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
 
-  appwrite-scheduler-messages:
+  appwrite-task-scheduler-messages:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: schedule-messages
-    container_name: appwrite-scheduler-messages
+    container_name: appwrite-task-scheduler-messages
     <<: *x-logging
     restart: unless-stopped
     networks:
@@ -731,7 +731,7 @@ services:
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.12
+    image: openruntimes/executor:0.5.5
     networks:
       - appwrite
       - runtimes

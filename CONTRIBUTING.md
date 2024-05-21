@@ -148,6 +148,14 @@ Learn more at our [Technology Stack](#technology-stack) section.
 - [Microservices vs Monolithic](https://www.mulesoft.com/resources/api/microservices-vs-monolithic#:~:text=Microservices%20architecture%20vs%20monolithic%20architecture&text=A%20monolithic%20application%20is%20built%20as%20a%20single%20unit.&text=To%20make%20any%20alterations%20to,formally%20with%20business%2Doriented%20APIs.)
 - [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) - Appwrite console architecture
 
+##### Container Namespace Conventions
+To keep our services easy to understand within Docker we follow a naming convention for all our containers depending on it's intended use.
+
+`appwrite-worker-X` - Workers (`src/Appwrite/Platform/Workers/*`)
+`appwrite-task-X` - Tasks (`src/Appwrite/Platform/Tasks/*`)
+
+Other containes should be named the same as their service, for example `redis` should just be called `redis`.
+
 ##### Security
 
 - [Appwrite Auth and ACL](https://github.com/appwrite/appwrite/blob/master/docs/specs/authentication.drawio.svg)
@@ -481,9 +489,9 @@ Things to remember when releasing SDKs:
 
 ## Debug
 
-Appwrite uses [XDebug](https://github.com/xdebug/xdebug) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code's [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension. 
+Appwrite uses [XDebug](https://github.com/xdebug/xdebug) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code's [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
 
-If you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection: 
+If you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection:
 
 1. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
 2. If needed edit the **dev/xdebug.ini** file to your needs.
