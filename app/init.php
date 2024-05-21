@@ -203,7 +203,7 @@ const APP_AUTH_TYPE_JWT = 'JWT';
 const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
-const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_OUTPUT_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
 // Function headers
 const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
 const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
@@ -733,6 +733,16 @@ $register->set('logger', function () {
 
     if (!Logger::hasProvider($providerName)) {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
+    }
+
+    // Old Sentry Format conversion. Fallback until the old syntax is completely deprecated.
+    if (str_contains($providerConfig, ';') && strtolower($providerName) == 'sentry') {
+        $configChunks = \explode(";", $providerConfig);
+
+        $sentryKey = $configChunks[0];
+        $projectId = $configChunks[1];
+
+        $providerConfig = 'https://' . $sentryKey . '@sentry.io/' . $projectId;
     }
 
     $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
