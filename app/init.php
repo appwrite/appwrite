@@ -1431,6 +1431,7 @@ App::setResource('deviceForBackups', function ($project) {
 
 function getDevice($root, $connection): Device
 {
+    //todo: check $connection param is overwritten?
     $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
     if (!empty($connection)) {
