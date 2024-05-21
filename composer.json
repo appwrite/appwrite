@@ -57,7 +57,7 @@
         "utopia-php/fetch": "0.2.*",
         "utopia-php/image": "0.6.*",
         "utopia-php/locale": "0.4.*",
-        "utopia-php/logger": "0.3.*",
+        "utopia-php/logger": "0.5.*",
         "utopia-php/messaging": "0.10.*",
         "utopia-php/migration": "0.4.*",
         "utopia-php/orchestration": "0.9.*",
