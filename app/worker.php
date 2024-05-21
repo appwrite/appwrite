@@ -202,19 +202,19 @@ Server::setResource('pools', function (Registry $register) {
 }, ['register']);
 
 Server::setResource('deviceForFunctions', function (Document $project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), App::getEnv('_APP_CONNECTIONS_STORAGE', ''));
+    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), System::getEnv('_APP_CONNECTIONS_STORAGE', ''));
 }, ['project']);
 
 Server::setResource('deviceForFiles', function (Document $project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), App::getEnv('_APP_CONNECTIONS_STORAGE', ''));
+    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), System::getEnv('_APP_CONNECTIONS_STORAGE', ''));
 }, ['project']);
 
 Server::setResource('deviceForBuilds', function (Document $project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId(), App::getEnv('_APP_CONNECTIONS_STORAGE', ''));
+    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId(), System::getEnv('_APP_CONNECTIONS_STORAGE', ''));
 }, ['project']);
 
 Server::setResource('deviceForCache', function (Document $project) {
-    return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId(), App::getEnv('_APP_CONNECTIONS_STORAGE', ''));
+    return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId(), System::getEnv('_APP_CONNECTIONS_STORAGE', ''));
 }, ['project']);
 
 Server::setResource('deviceForLocalFiles', function (Document $project) {
@@ -222,7 +222,7 @@ Server::setResource('deviceForLocalFiles', function (Document $project) {
 }, ['project']);
 
 Server::setResource('deviceForBackups', function ($project) {
-    return getDevice(APP_STORAGE_BACKUPS . '/app-' . $project->getId(), App::getEnv('_APP_CONNECTIONS_STORAGE_BACKUPS', ''));
+    return getDevice(APP_STORAGE_BACKUPS . '/app-' . $project->getId(), System::getEnv('_APP_CONNECTIONS_STORAGE_BACKUPS', ''));
 }, ['project']);
 
 

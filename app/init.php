@@ -1414,19 +1414,19 @@ App::setResource('deviceForLocal', function () {
 });
 
 App::setResource('deviceForFiles', function ($project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), System::getEnv('_APP_CONNECTIONS_STORAGE', ''));
 }, ['project']);
 
 App::setResource('deviceForFunctions', function ($project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), System::getEnv('_APP_CONNECTIONS_STORAGE', ''));
 }, ['project']);
 
 App::setResource('deviceForBuilds', function ($project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId(), System::getEnv('_APP_CONNECTIONS_STORAGE', ''));
 }, ['project']);
 
 App::setResource('deviceForBackups', function ($project) {
-    return getDevice(APP_STORAGE_BACKUPS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_BACKUPS . '/app-' . $project->getId(), System::getEnv('_APP_CONNECTIONS_STORAGE_BACKUPS', ''));
 }, ['project']);
 
 function getDevice($root, $connection): Device
