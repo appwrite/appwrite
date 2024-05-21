@@ -79,7 +79,7 @@ App::get('/v1/project/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        Authorization::skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, &$total, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
             foreach ($metrics['total'] as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -94,6 +94,7 @@ App::get('/v1/project/usage')
                     Query::equal('period', [$period]),
                     Query::greaterThanEqual('time', $firstDay),
                     Query::lessThan('time', $lastDay),
+                    Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);
 

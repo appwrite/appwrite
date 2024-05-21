@@ -8,7 +8,6 @@ use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -26,6 +25,7 @@ use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
+use Utopia\System\System;
 
 class Deletes extends Action
 {
@@ -205,7 +205,7 @@ class Deletes extends Action
         $this->listByGroup(
             'schedules',
             [
-                Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
+                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
                 Query::equal('active', [false]),
             ],
@@ -1108,7 +1108,7 @@ class Deletes extends Action
      */
     private function deleteRuntimes(callable $getProjectDB, ?Document $function, Document $project): void
     {
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
         $deleteByFunction = function (Document $function) use ($getProjectDB, $project, $executor) {
             $this->listByGroup(

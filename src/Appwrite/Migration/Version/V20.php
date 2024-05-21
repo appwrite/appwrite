@@ -294,6 +294,13 @@ class V20 extends Migration
                         Console::warning("'oAuthProviders' from {$id}: {$th->getMessage()}");
                     }
 
+                    // Create apis attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'apis');
+                    } catch (Throwable $th) {
+                        Console::warning("'apis' from {$id}: {$th->getMessage()}");
+                    }
+
                     try {
                         $this->projectDB->purgeCachedCollection($id);
                     } catch (Throwable $th) {

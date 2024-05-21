@@ -77,6 +77,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
+use Utopia\System\System;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\IP;
 use Utopia\Validator\Range;
@@ -111,8 +112,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 405;
-const APP_VERSION_STABLE = '1.5.4';
+const APP_CACHE_BUSTER = 430;
+const APP_VERSION_STABLE = '1.5.5';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -256,7 +257,7 @@ const BACKUP_RESOURCE_POLICY = 'backup-policy';
 
 $register = new Registry();
 
-App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
+App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 
 if (!App::isProduction()) {
     // Allow specific domains to skip public domain validation in dev environment
@@ -529,7 +530,7 @@ Database::addFilter(
 Database::addFilter(
     'encrypt',
     function (mixed $value) {
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+        $key = System::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
 
@@ -546,7 +547,7 @@ Database::addFilter(
             return;
         }
         $value = json_decode($value, true);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
+        $key = System::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }
@@ -732,8 +733,8 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
  */
 $register->set('logger', function () {
     // Register error logger
-    $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
-    $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
+    $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
+    $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
     if (empty($providerName) || empty($providerConfig)) {
         return;
@@ -752,60 +753,60 @@ $register->set('pools', function () {
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => 'mariadb',
-        'host' => App::getEnv('_APP_DB_HOST', 'mariadb'),
-        'port' => App::getEnv('_APP_DB_PORT', '3306'),
-        'user' => App::getEnv('_APP_DB_USER', ''),
-        'pass' => App::getEnv('_APP_DB_PASS', ''),
-        'path' => App::getEnv('_APP_DB_SCHEMA', ''),
+        'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
+        'port' => System::getEnv('_APP_DB_PORT', '3306'),
+        'user' => System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
     $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
         'scheme' => 'redis',
-        'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
-        'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
-        'user' => App::getEnv('_APP_REDIS_USER', ''),
-        'pass' => App::getEnv('_APP_REDIS_PASS', ''),
+        'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
+        'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
+        'user' => System::getEnv('_APP_REDIS_USER', ''),
+        'pass' => System::getEnv('_APP_REDIS_PASS', ''),
     ]);
 
     $connections = [
         'console' => [
             'type' => 'database',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'database' => [
             'type' => 'database',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'queue' => [
             'type' => 'queue',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
+            'dsns' => System::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'pubsub' => [
             'type' => 'pubsub',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
+            'dsns' => System::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'cache' => [
             'type' => 'cache',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
+            'dsns' => System::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
             'multiple' => true,
             'schemes' => ['redis'],
         ],
     ];
 
-    $maxConnections = App::getEnv('_APP_CONNECTIONS_MAX', 151);
-    $instanceConnections = $maxConnections / App::getEnv('_APP_POOL_CLIENTS', 14);
+    $maxConnections = System::getEnv('_APP_CONNECTIONS_MAX', 151);
+    $instanceConnections = $maxConnections / System::getEnv('_APP_POOL_CLIENTS', 14);
 
-    $multiprocessing = App::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
+    $multiprocessing = System::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
 
     if ($multiprocessing) {
-        $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+        $workerCount = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
     } else {
         $workerCount = 1;
     }
@@ -848,7 +849,7 @@ $register->set('pools', function () {
             /**
              * Get Resource
              *
-             * Creation could be reused accross connection types like database, cache, queue, etc.
+             * Creation could be reused across connection types like database, cache, queue, etc.
              *
              * Resource assignment to an adapter will happen below.
              */
@@ -858,7 +859,7 @@ $register->set('pools', function () {
                     $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                         return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                             return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
-                                // No need to set PDO::ATTR_ERRMODE it is overwitten in PDOProxy
+                                // No need to set PDO::ATTR_ERRMODE it is overwritten in PDOProxy
                                 PDO::ATTR_TIMEOUT => 3, // Seconds
                                 PDO::ATTR_PERSISTENT => true,
                                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -931,11 +932,11 @@ $register->set('pools', function () {
 
 $register->set('db', function () {
     // This is usually for our workers or CLI commands scope
-    $dbHost = App::getEnv('_APP_DB_HOST', '');
-    $dbPort = App::getEnv('_APP_DB_PORT', '');
-    $dbUser = App::getEnv('_APP_DB_USER', '');
-    $dbPass = App::getEnv('_APP_DB_PASS', '');
-    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
+    $dbHost = System::getEnv('_APP_DB_HOST', '');
+    $dbPort = System::getEnv('_APP_DB_PORT', '');
+    $dbUser = System::getEnv('_APP_DB_USER', '');
+    $dbPass = System::getEnv('_APP_DB_PASS', '');
+    $dbScheme = System::getEnv('_APP_DB_SCHEMA', '');
 
     return new PDO(
         "mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4",
@@ -950,21 +951,21 @@ $register->set('smtp', function () {
 
     $mail->isSMTP();
 
-    $username = App::getEnv('_APP_SMTP_USERNAME');
-    $password = App::getEnv('_APP_SMTP_PASSWORD');
+    $username = System::getEnv('_APP_SMTP_USERNAME');
+    $password = System::getEnv('_APP_SMTP_PASSWORD');
 
     $mail->XMailer = 'Appwrite Mailer';
-    $mail->Host = App::getEnv('_APP_SMTP_HOST', 'smtp');
-    $mail->Port = App::getEnv('_APP_SMTP_PORT', 25);
+    $mail->Host = System::getEnv('_APP_SMTP_HOST', 'smtp');
+    $mail->Port = System::getEnv('_APP_SMTP_PORT', 25);
     $mail->SMTPAuth = !empty($username) && !empty($password);
     $mail->Username = $username;
     $mail->Password = $password;
-    $mail->SMTPSecure = App::getEnv('_APP_SMTP_SECURE', '');
+    $mail->SMTPSecure = System::getEnv('_APP_SMTP_SECURE', '');
     $mail->SMTPAutoTLS = false;
     $mail->CharSet = 'UTF-8';
 
-    $from = \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
-    $email = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+    $from = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+    $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
     $mail->setFrom($email, $from);
     $mail->addReplyTo($email, $from);
@@ -1015,8 +1016,8 @@ foreach ($locales as $locale) {
         'method' => 'GET',
         'user_agent' => \sprintf(
             APP_USERAGENT,
-            App::getEnv('_APP_VERSION', 'UNKNOWN'),
-            App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+            System::getEnv('_APP_VERSION', 'UNKNOWN'),
+            System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
         ),
         'timeout' => 2,
     ],
@@ -1033,7 +1034,7 @@ App::setResource('hooks', function ($register) {
 }, ['register']);
 
 App::setResource('register', fn () => $register);
-App::setResource('locale', fn () => new Locale(App::getEnv('_APP_LOCALE', 'en')));
+App::setResource('locale', fn () => new Locale(System::getEnv('_APP_LOCALE', 'en')));
 
 App::setResource('localeCodes', function () {
     return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
@@ -1084,7 +1085,7 @@ App::setResource('clients', function ($request, $console, $project) {
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
-    $hostnames = explode(',', App::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
+    $hostnames = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
     $validator = new Hostname();
     foreach ($hostnames as $hostname) {
         $hostname = trim($hostname);
@@ -1208,7 +1209,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
-        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         try {
             $payload = $jwt->decode($authJWT);
@@ -1250,14 +1251,13 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     return $project;
 }, ['dbForConsole', 'request', 'console']);
 
-App::setResource('session', function (Document $user, Document $project) {
+App::setResource('session', function (Document $user) {
     if ($user->isEmpty()) {
         return;
     }
 
     $sessions = $user->getAttribute('sessions', []);
-    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration);
+    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
 
     if (!$sessionId) {
         return;
@@ -1270,7 +1270,7 @@ App::setResource('session', function (Document $user, Document $project) {
     }
 
     return;
-}, ['user', 'project']);
+}, ['user']);
 
 App::setResource('console', function () {
     return new Document([
@@ -1298,16 +1298,16 @@ App::setResource('console', function () {
         'legalAddress' => '',
         'legalTaxId' => '',
         'auths' => [
-            'invites' => App::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
-            'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
+            'invites' => System::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
+            'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
         ],
-        'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
-        'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
+        'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
+        'authWhitelistIPs' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
         'oAuthProviders' => [
             'githubEnabled' => true,
-            'githubSecret' => App::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
-            'githubAppid' => App::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
+            'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
+            'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
         ],
     ]);
 }, []);
@@ -1414,23 +1414,24 @@ App::setResource('deviceForLocal', function () {
 });
 
 App::setResource('deviceForFiles', function ($project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), App::getEnv('_APP_CONNECTIONS_STORAGE', ''));
+    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
 App::setResource('deviceForFunctions', function ($project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), App::getEnv('_APP_CONNECTIONS_STORAGE', ''));
+    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
 }, ['project']);
 
 App::setResource('deviceForBuilds', function ($project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId(), App::getEnv('_APP_CONNECTIONS_STORAGE', ''));
+    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
 
 App::setResource('deviceForBackups', function ($project) {
-    return getDevice(APP_STORAGE_BACKUPS . '/app-' . $project->getId(), App::getEnv('_APP_CONNECTIONS_STORAGE_BACKUPS', ''));
+    return getDevice(APP_STORAGE_BACKUPS . '/app-' . $project->getId());
 }, ['project']);
 
 function getDevice($root, $connection): Device
 {
+    $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
     if (!empty($connection)) {
         $acl = 'private';
@@ -1467,44 +1468,43 @@ function getDevice($root, $connection): Device
                 return new Local($root);
         }
     } else {
-
-        switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) ?? '')) {
+        switch (strtolower(System::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) ?? '')) {
             case Storage::DEVICE_LOCAL:
             default:
                 return new Local($root);
             case Storage::DEVICE_S3:
-                $s3AccessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
-                $s3SecretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
-                $s3Region = App::getEnv('_APP_STORAGE_S3_REGION', '');
-                $s3Bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
+                $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+                $s3SecretKey = System::getEnv('_APP_STORAGE_S3_SECRET', '');
+                $s3Region = System::getEnv('_APP_STORAGE_S3_REGION', '');
+                $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
                 $s3Acl = 'private';
                 return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
             case Storage::DEVICE_DO_SPACES:
-                $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
-                $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
-                $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
-                $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
+                $doSpacesAccessKey = System::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
+                $doSpacesSecretKey = System::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
+                $doSpacesRegion = System::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
+                $doSpacesBucket = System::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
                 $doSpacesAcl = 'private';
                 return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
             case Storage::DEVICE_BACKBLAZE:
-                $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
-                $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
-                $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
-                $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
+                $backblazeAccessKey = System::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
+                $backblazeSecretKey = System::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
+                $backblazeRegion = System::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
+                $backblazeBucket = System::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
                 $backblazeAcl = 'private';
                 return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
             case Storage::DEVICE_LINODE:
-                $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
-                $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');
-                $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
-                $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
+                $linodeAccessKey = System::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
+                $linodeSecretKey = System::getEnv('_APP_STORAGE_LINODE_SECRET', '');
+                $linodeRegion = System::getEnv('_APP_STORAGE_LINODE_REGION', '');
+                $linodeBucket = System::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
                 $linodeAcl = 'private';
                 return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
             case Storage::DEVICE_WASABI:
-                $wasabiAccessKey = App::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
-                $wasabiSecretKey = App::getEnv('_APP_STORAGE_WASABI_SECRET', '');
-                $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
-                $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
+                $wasabiAccessKey = System::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
+                $wasabiSecretKey = System::getEnv('_APP_STORAGE_WASABI_SECRET', '');
+                $wasabiRegion = System::getEnv('_APP_STORAGE_WASABI_REGION', '');
+                $wasabiBucket = System::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
                 $wasabiAcl = 'private';
                 return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
         }

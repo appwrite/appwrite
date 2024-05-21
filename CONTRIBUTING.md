@@ -148,6 +148,14 @@ Learn more at our [Technology Stack](#technology-stack) section.
 - [Microservices vs Monolithic](https://www.mulesoft.com/resources/api/microservices-vs-monolithic#:~:text=Microservices%20architecture%20vs%20monolithic%20architecture&text=A%20monolithic%20application%20is%20built%20as%20a%20single%20unit.&text=To%20make%20any%20alterations%20to,formally%20with%20business%2Doriented%20APIs.)
 - [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) - Appwrite console architecture
 
+##### Container Namespace Conventions
+To keep our services easy to understand within Docker we follow a naming convention for all our containers depending on it's intended use.
+
+`appwrite-worker-X` - Workers (`src/Appwrite/Platform/Workers/*`)
+`appwrite-task-X` - Tasks (`src/Appwrite/Platform/Tasks/*`)
+
+Other containes should be named the same as their service, for example `redis` should just be called `redis`.
+
 ##### Security
 
 - [Appwrite Auth and ACL](https://github.com/appwrite/appwrite/blob/master/docs/specs/authentication.drawio.svg)
@@ -301,6 +309,143 @@ This will allow the Appwrite community to sufficiently discuss the new feature v
 
 This is also important for the Appwrite lead developers to be able to provide technical input and potentially a different emphasis regarding the feature design and architecture. Some bigger features might need to go through our [RFC process](https://github.com/appwrite/rfc).
 
+## Adding New Usage Metrics
+
+These are the current metrics we collect usage stats for:
+
+| Metric | Description                                       |
+|--------|-------------------------------------------------|
+| teams  | Total number of teams per project |
+| users | Total number of users per project|
+| executions | Total number of executions per project           | 
+| databases | Total number of databases per project             | 
+| collections | Total number of collections per project | 
+| {databaseInternalId}.collections | Total number of collections per database| 
+| documents | Total number of documents per project             | 
+| {databaseInternalId}.{collectionInternalId}.documents | Total number of documents per collection | 
+| buckets | Total number of buckets per project               | 
+| files | Total number of files per project                 |
+| {bucketInternalId}.files.storage | Sum of files.storage per bucket (in bytes)                  |
+| functions | Total number of functions per project             |
+| deployments | Total number of deployments per project           |
+| builds | Total number of builds per project                |
+| {resourceType}.{resourceInternalId}.deployments | Total number of deployments per function           |
+| executions | Total number of executions per project |
+| {functionInternalId}.executions | Total number of executions per function  |
+| files.storage | Sum of files storage per project  (in bytes)      | 
+| deployments.storage | Sum of deployments storage per project (in bytes) |
+| {resourceType}.{resourceInternalId}.deployments.storage | Sum of deployments storage per function (in bytes)         |
+| builds.storage | Sum of builds storage per project (in bytes)      |
+| builds.compute | Sum of compute duration per project (in seconds)  |
+| {functionInternalId}.builds.storage | Sum of builds storage per function (in bytes)              |
+| {functionInternalId}.builds.compute | Sum of compute duration per function (in seconds) |
+| network.requests | Total number of network requests per project |
+| executions.compute | Sum of compute duration per project (in seconds) |
+| network.inbound | Sum of network inbound traffic per project (in bytes)|
+| network.outbound | Sum of network outbound traffic per project (in bytes)|
+
+> Note: The curly brackets in the metric name represents a template and is replaced with a value when the metric is processed.
+
+Metrics are collected within 3 scopes Daily, monthly, an infinity. Adding new usage metric in order to aggregate usage stats is very simple, but very much dependent on where do you want to collect
+statistics ,via API or via background worker. For both cases you will need to add a `const` variable in `app/init.php` under the usage metrics list using the naming convention `METRIC_<RESOURCE_NAME>` as shown below.
+
+```php
+// Usage metrics
+const METRIC_FUNCTIONS  = 'functions';
+const METRIC_DEPLOYMENTS  = 'deployments';
+const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
+```
+
+Next follow the appropriate steps below depending on whether you're adding the metric to the API or the worker. 
+
+**API**
+
+In file `app/controllers/shared/api.php` On the database listener, add to an existing or create a new switch case. Add a call to the usage worker with your new metric const like so:
+
+```php
+      case $document->getCollection() === 'teams':
+            $queueForUsage
+                ->addMetric(METRIC_TEAMS, $value); // per project
+            break;
+```
+There are cases when you need to handle metric that has a parent entity, like buckets.
+Files are linked to a parent bucket, you should verify you remove the files stats when you delete a bucket.
+
+In that case you need also to handle children removal using addReduce() method call.
+
+```php
+
+ case $document->getCollection() === 'buckets': //buckets
+            $queueForUsage
+                ->addMetric(METRIC_BUCKETS, $value); // per project
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
+  
+```
+
+In addition, you will also need to add some logic to the `reduce()` method of the Usage worker located in `/src/Appwrite/Platform/Workers/Usage.php`, like so:
+
+```php
+case $document->getCollection() === 'buckets':
+       $files = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{bucketInternalId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES)));
+       $storage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{bucketInternalId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE)));
+
+       if (!empty($files['value'])) {
+           $metrics[] = [
+              'key' => METRIC_FILES,
+              'value' => ($files['value'] * -1),
+           ];
+        }
+
+        if (!empty($storage['value'])) {
+           $metrics[] = [
+              'key' => METRIC_FILES_STORAGE,
+              'value' => ($storage['value'] * -1),
+             ];
+         }
+       break;
+```
+
+**Background worker**
+
+You need to inject the usage queue in the desired worker on the constructor method
+```php
+/**
+* @throws Exception
+*/
+public function __construct()
+{
+   $this
+      ->desc('Functions worker')
+      ->groups(['functions'])
+      ->inject('message')
+      ->inject('dbForProject')
+      ->inject('queueForFunctions')
+      ->inject('queueForEvents')
+      ->inject('queueForUsage')
+      ->inject('log')
+      ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+}
+```
+
+and then trigger the queue with the new metric like so: 
+
+```php
+$queueForUsage
+  ->addMetric(METRIC_BUILDS, 1)
+  ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+  ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+  ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) 
+  ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+  ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+  ->setProject($project)
+  ->trigger();
+```
+
+
 ## Build
 
 To build a new version of the Appwrite server, all you need to do is run the build.sh file like this:
@@ -344,9 +489,9 @@ Things to remember when releasing SDKs:
 
 ## Debug
 
-Appwrite uses [XDebug](https://github.com/xdebug/xdebug) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code's [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension. 
+Appwrite uses [XDebug](https://github.com/xdebug/xdebug) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code's [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
 
-If you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection: 
+If you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection:
 
 1. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
 2. If needed edit the **dev/xdebug.ini** file to your needs.

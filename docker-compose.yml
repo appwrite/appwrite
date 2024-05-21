@@ -188,7 +188,7 @@ services:
       - _APP_MESSAGE_EMAIL_TEST_DSN
       - _APP_MESSAGE_PUSH_TEST_DSN
       - _APP_CONSOLE_COUNTRIES_DENYLIST
-      
+
   appwrite-realtime:
     entrypoint: realtime
     <<: *x-logging
@@ -630,10 +630,10 @@ services:
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_CONNECTIONS_STORAGE_BACKUPS
 
-  appwrite-maintenance:
+  appwrite-task-maintenance:
     entrypoint: maintenance
     <<: *x-logging
-    container_name: appwrite-maintenance
+    container_name: appwrite-task-maintenance
     image: appwrite-dev
     networks:
       - appwrite
@@ -729,10 +729,10 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
 
-  appwrite-scheduler-functions:
+  appwrite-task-scheduler-functions:
     entrypoint: schedule-functions
     <<: *x-logging
-    container_name: appwrite-scheduler-functions
+    container_name: appwrite-task-scheduler-functions
     image: appwrite-dev
     networks:
       - appwrite
@@ -756,10 +756,10 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
 
-  appwrite-scheduler-messages:
+  appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
     <<: *x-logging
-    container_name: appwrite-scheduler-messages
+    container_name: appwrite-task-scheduler-messages
     image: appwrite-dev
     networks:
       - appwrite
@@ -818,69 +818,12 @@ services:
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
 
-  appwrite-worker-hamster:
-    entrypoint: worker-hamster
-    <<: *x-logging
-    container_name: appwrite-worker-hamster
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - mariadb
-    environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_MIXPANEL_TOKEN
-
-  appwrite-hamster-scheduler:
-    entrypoint: hamster
-    <<: *x-logging
-    container_name: appwrite-hamster-scheduler
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - mariadb
-    environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_HAMSTER_TIME
-      - _APP_HAMSTER_INTERVAL
-
   openruntimes-executor:
     container_name: openruntimes-executor
     hostname: appwrite-executor
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.12
+    image: openruntimes/executor:0.5.5
     restart: unless-stopped
     networks:
       - appwrite
@@ -963,6 +906,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
+      - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync" # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 

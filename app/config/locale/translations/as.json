@@ -10,7 +10,7 @@
     "emails.verification.thanks": "ধন্যবাদ",
     "emails.verification.signature": "{{project}} দল",
     "emails.magicSession.subject": "লগইন",
-    "emails.magicSession.hello": "নমস্কাৰ,",
+    "emails.magicSession.hello": "নমস্কাৰ",
     "emails.magicSession.body": "লগইন কৰিবলৈ এই লিংকটো অনুসৰণ কৰক।",
     "emails.magicSession.footer": "যদি আপুনি এই ইমেইল ব্যৱহাৰ কৰি লগইন কৰিবলৈ কোৱা নাছিল, আপুনি এই বাৰ্তাটো উপেক্ষা কৰিব পাৰে।",
     "emails.magicSession.thanks": "ধন্যবাদ",
@@ -163,6 +163,7 @@
     "countries.nz": "নিউজিলেণ্ড",
     "countries.om": "ওমান",
     "countries.pk": "পাকিস্তান",
+    "countries.ps": "প্যালেস্টাইন",
     "countries.pa": "পানামা",
     "countries.pe": "পেৰু",
     "countries.ph": "ফিলিপাইনচ",
@@ -206,6 +207,7 @@
     "countries.tn": "টিউনিচিয়া",
     "countries.tr": "তুৰ্কী",
     "countries.tv": "টুভালু",
+    "countries.tw": "তাইওয়ান",
     "countries.tz": "তাঞ্জানিয়া",
     "countries.ug": "উগাণ্ডা",
     "countries.ua": "ইউক্ৰেইন",
@@ -247,5 +249,5 @@
     "emails.certificate.footer": "আপোনাৰ পূৰ্বৰ প্ৰমাণপত্ৰটো প্ৰথম ব্ৰিফল হোৱাৰ দিনৰ পৰা ৩০ দিনলৈ বৈধ থাকিব। আমি এই ঘটনাটোৰ তদন্ত কৰিবলৈ উচ্চ পৰামৰ্শ দিয়ে, অন্যথা আপোনাৰ ডোমেইনটো অবৈধ SSL যোগাযোগ অবিহনে থাকিব।",
     "emails.certificate.thanks": "ধন্যবাদ",
     "emails.certificate.signature": "{{project}} দল",
-    "sms.verification.body": "{{secret}} আপোনাৰ {{project}} যাচাইকৰণ কোড।"
+    "sms.verification.body": "{{secret}}"
 }
