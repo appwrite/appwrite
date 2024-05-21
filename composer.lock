@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e3975335737921ddfe4e35d891ea222a",
+    "content-hash": "10bacc8eeb0c277e404cfa44fdb3b8a1",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1556,16 +1556,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.49.10",
+            "version": "dev-original-exception",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "216209121bc97a2010f67a39c561fafe1e936bec"
+                "reference": "bffe396555d4e4ae9c3e21af0b40bddbb170eb79"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/216209121bc97a2010f67a39c561fafe1e936bec",
-                "reference": "216209121bc97a2010f67a39c561fafe1e936bec",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/bffe396555d4e4ae9c3e21af0b40bddbb170eb79",
+                "reference": "bffe396555d4e4ae9c3e21af0b40bddbb170eb79",
                 "shasum": ""
             },
             "require": {
@@ -1606,9 +1606,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.49.10"
+                "source": "https://github.com/utopia-php/database/tree/original-exception"
             },
-            "time": "2024-05-20T02:14:20+00:00"
+            "time": "2024-05-19T09:56:15+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2591,16 +2591,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.6.5",
+            "version": "0.6.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "104e47ea8e38c156ec0e0bd415caa3dcd5046fe2"
+                "reference": "e538264cfee5e3efdfe1771efba04750cf20b2c4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/104e47ea8e38c156ec0e0bd415caa3dcd5046fe2",
-                "reference": "104e47ea8e38c156ec0e0bd415caa3dcd5046fe2",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/e538264cfee5e3efdfe1771efba04750cf20b2c4",
+                "reference": "e538264cfee5e3efdfe1771efba04750cf20b2c4",
                 "shasum": ""
             },
             "require": {
@@ -2634,9 +2634,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.6.5"
+                "source": "https://github.com/utopia-php/vcs/tree/0.6.6"
             },
-            "time": "2024-01-08T17:11:12+00:00"
+            "time": "2024-05-17T09:36:30+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -2823,16 +2823,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.38.5",
+            "version": "0.38.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "830a46cc8e34ee096a76d4af6f00adf008a7cbf8"
+                "reference": "d7016d6d72545e84709892faca972eb4bf5bd699"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/830a46cc8e34ee096a76d4af6f00adf008a7cbf8",
-                "reference": "830a46cc8e34ee096a76d4af6f00adf008a7cbf8",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d7016d6d72545e84709892faca972eb4bf5bd699",
+                "reference": "d7016d6d72545e84709892faca972eb4bf5bd699",
                 "shasum": ""
             },
             "require": {
@@ -2868,9 +2868,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.38.5"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.38.6"
             },
-            "time": "2024-05-17T00:59:59+00:00"
+            "time": "2024-05-20T18:00:16+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -3469,16 +3469,16 @@
         },
         {
             "name": "phpdocumentor/reflection-docblock",
-            "version": "5.4.0",
+            "version": "5.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "298d2febfe79d03fe714eb871d5538da55205b1a"
+                "reference": "9d07b3f7fdcf5efec5d1609cba3c19c5ea2bdc9c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/298d2febfe79d03fe714eb871d5538da55205b1a",
-                "reference": "298d2febfe79d03fe714eb871d5538da55205b1a",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/9d07b3f7fdcf5efec5d1609cba3c19c5ea2bdc9c",
+                "reference": "9d07b3f7fdcf5efec5d1609cba3c19c5ea2bdc9c",
                 "shasum": ""
             },
             "require": {
@@ -3527,9 +3527,9 @@
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
             "support": {
                 "issues": "https://github.com/phpDocumentor/ReflectionDocBlock/issues",
-                "source": "https://github.com/phpDocumentor/ReflectionDocBlock/tree/5.4.0"
+                "source": "https://github.com/phpDocumentor/ReflectionDocBlock/tree/5.4.1"
             },
-            "time": "2024-04-09T21:13:58+00:00"
+            "time": "2024-05-21T05:55:05+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -5503,9 +5503,18 @@
             "time": "2023-11-21T18:54:41+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-original-exception",
+            "alias": "0.49.10",
+            "alias_normalized": "0.49.10.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
