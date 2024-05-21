@@ -15,5 +15,6 @@ X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
   "html": false,
   "cc": [],
   "bcc": [],
-  "scheduledAt": 
+  "scheduledAt": ,
+  "attachments": []
 }
