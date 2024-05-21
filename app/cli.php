@@ -6,9 +6,7 @@ require_once __DIR__ . '/controllers/general.php';
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
-use Appwrite\Event\Hamster;
 use Appwrite\Platform\Appwrite;
-use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\CLI;
@@ -22,6 +20,7 @@ use Utopia\Platform\Service;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
+use Utopia\System\System;
 
 Authorization::disable();
 
@@ -131,9 +130,6 @@ CLI::setResource('queue', function (Group $pools) {
 CLI::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-CLI::setResource('queueForHamster', function (Connection $queue) {
-    return new Hamster($queue);
-}, ['queue']);
 CLI::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
@@ -145,7 +141,7 @@ CLI::setResource('logError', function (Registry $register) {
         $logger = $register->get('logger');
 
         if ($logger) {
-            $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
             $log = new Log();
             $log->setNamespace($namespace);
@@ -164,7 +160,7 @@ CLI::setResource('logError', function (Registry $register) {
 
             $log->setAction($action);
 
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);

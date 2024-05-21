@@ -3,7 +3,7 @@
 namespace Executor;
 
 use Exception;
-use Utopia\App;
+use Utopia\System\System;
 
 class Executor
 {
@@ -34,11 +34,11 @@ class Executor
         }
 
         $this->endpoint = $endpoint;
-        $this->cpus = \intval(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
-        $this->memory = \intval(App::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
+        $this->cpus = \intval(System::getEnv('_APP_FUNCTIONS_CPUS', '1'));
+        $this->memory = \intval(System::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
         $this->headers = [
             'content-type' => 'application/json',
-            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', ''),
+            'authorization' => 'Bearer ' . System::getEnv('_APP_EXECUTOR_SECRET', ''),
             'x-opr-addressing-method' => 'anycast-efficient'
         ];
     }
@@ -72,7 +72,7 @@ class Executor
     ) {
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
-        $timeout = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
         $params = [
             'runtimeId' => $runtimeId,
             'source' => $source,
@@ -111,7 +111,7 @@ class Executor
         string $projectId,
         callable $callback
     ) {
-        $timeout = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes/{$runtimeId}/logs";
@@ -180,7 +180,7 @@ class Executor
         int $requestTimeout = null
     ) {
         if (empty($headers['host'])) {
-            $headers['host'] = App::getEnv('_APP_DOMAIN', '');
+            $headers['host'] = System::getEnv('_APP_DOMAIN', '');
         }
 
         $runtimeId = "$projectId-$deploymentId";

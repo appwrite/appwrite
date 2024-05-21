@@ -10,7 +10,7 @@
     "emails.verification.thanks": "നന്ദി",
     "emails.verification.signature": "{{project}} ടീം",
     "emails.magicSession.subject": "ലോഗിൻ",
-    "emails.magicSession.hello": "നമസ്കാരം,",
+    "emails.magicSession.hello": "നമസ്കാരം",
     "emails.magicSession.body": "ലോഗിൻ ചെയ്യുന്നതിനായി ഈ ലിങ്ക് പിന്തുടരുക.",
     "emails.magicSession.footer": "ഈ ഇമെയിൽ ഉപയോഗിച്ച് ലോഗിൻ ചെയ്യാൻ നിങ്ങൾ ആവശ്യപ്പെട്ടില്ലെങ്കിൽ, ഈ സന്ദേശം അവഗണിക്കാവുന്നതാണ്.",
     "emails.magicSession.thanks": "നന്ദി",
@@ -163,6 +163,7 @@
     "countries.nz": "ന്യൂസിലൻഡ്",
     "countries.om": "ഒമാൻ",
     "countries.pk": "പാക്കിസ്ഥാൻ",
+    "countries.ps": "പാലസ്തീൻ",
     "countries.pa": "പനാമ",
     "countries.pe": "പെറു",
     "countries.ph": "ഫിലിപ്പീൻസ്",
@@ -206,6 +207,7 @@
     "countries.tn": "ടുണീഷ്യ",
     "countries.tr": "തുർക്കി",
     "countries.tv": "തുവാളു",
+    "countries.tw": "തായ്വാൻ",
     "countries.tz": "ടാൻസാനിയ",
     "countries.ug": "ഉഗാണ്ട",
     "countries.ua": "ഉക്രൈൻ",
@@ -247,5 +249,5 @@
     "emails.certificate.footer": "നിങ്ങളുടെ മുൻപത്തെ സർട്ടിഫിക്കറ്റ് ആദ്യ പരാജയത്തിനു ശേഷം 30 ദിവസം വരെ സാധുവായിരിക്കും. ഈ കേസ് അന്വേഷിച്ചു നോക്കുന്നത് ഞങ്ങൾ ശക്തമായി ശുപാർശ ചെയ്യുന്നു, അല്ലെങ്കിൽ നിങ്ങളുടെ ഡൊമെയ്‌ൻ സാധുവായ SSL കമ്മ്യൂണിക്കേഷനില്ലാത്ത ഒരു അവസ്ഥയിലാകും.",
     "emails.certificate.thanks": "നന്ദി",
     "emails.certificate.signature": "{{project}} ടീം",
-    "sms.verification.body": "{{secret}} നിങ്ങളുടെ {{project}} പരിശോധന കോഡാണ്."
+    "sms.verification.body": "{{secret}}"
 }

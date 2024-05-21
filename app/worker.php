@@ -9,7 +9,6 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Hamster;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
@@ -17,7 +16,6 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
-use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -35,6 +33,7 @@ use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
+use Utopia\System\System;
 
 Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
@@ -113,15 +112,15 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 }, ['pools', 'dbForConsole', 'cache']);
 
 Server::setResource('abuseRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
+    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
 });
 
 Server::setResource('auditRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
+    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
 });
 
 Server::setResource('executionRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
+    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
 });
 
 Server::setResource('cache', function (Registry $register) {
@@ -194,10 +193,6 @@ Server::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
 
-Server::setResource('queueForHamster', function (Connection $queue) {
-    return new Hamster($queue);
-}, ['queue']);
-
 Server::setResource('logger', function (Registry $register) {
     return $register->get('logger');
 }, ['register']);
@@ -244,9 +239,9 @@ if (!empty($workerIndex)) {
 }
 
 if (\str_starts_with($workerName, 'databases')) {
-    $queueName = App::getEnv('_APP_QUEUE_NAME', 'database_db_main');
+    $queueName = System::getEnv('_APP_QUEUE_NAME', 'database_db_main');
 } else {
-    $queueName = App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
+    $queueName = System::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
 }
 
 try {
@@ -257,7 +252,7 @@ try {
      * - _APP_QUEUE_NAME  The name of the queue to read for database events
      */
     $platform->init(Service::TYPE_WORKER, [
-        'workersNum' => App::getEnv('_APP_WORKERS_NUM', 1),
+        'workersNum' => System::getEnv('_APP_WORKERS_NUM', 1),
         'connection' => $pools->get('queue')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
         'queueName' => $queueName
@@ -284,7 +279,7 @@ $worker
     ->inject('project')
     ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($queueName) {
         $pools->reclaim();
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
             throw $error;
@@ -306,7 +301,7 @@ $worker
             $log->addExtra('detailedTrace', $error->getTrace());
             $log->addExtra('roles', Authorization::getRoles());
 
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);
