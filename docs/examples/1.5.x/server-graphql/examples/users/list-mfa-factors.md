@@ -5,5 +5,6 @@ query {
         totp
         phone
         email
+        recoveryCode
     }
 }
