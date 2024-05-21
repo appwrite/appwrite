@@ -2591,16 +2591,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.6.5",
+            "version": "0.6.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "104e47ea8e38c156ec0e0bd415caa3dcd5046fe2"
+                "reference": "e538264cfee5e3efdfe1771efba04750cf20b2c4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/104e47ea8e38c156ec0e0bd415caa3dcd5046fe2",
-                "reference": "104e47ea8e38c156ec0e0bd415caa3dcd5046fe2",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/e538264cfee5e3efdfe1771efba04750cf20b2c4",
+                "reference": "e538264cfee5e3efdfe1771efba04750cf20b2c4",
                 "shasum": ""
             },
             "require": {
@@ -2634,9 +2634,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.6.5"
+                "source": "https://github.com/utopia-php/vcs/tree/0.6.6"
             },
-            "time": "2024-01-08T17:11:12+00:00"
+            "time": "2024-05-17T09:36:30+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -2823,16 +2823,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.38.5",
+            "version": "0.38.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "830a46cc8e34ee096a76d4af6f00adf008a7cbf8"
+                "reference": "d7016d6d72545e84709892faca972eb4bf5bd699"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/830a46cc8e34ee096a76d4af6f00adf008a7cbf8",
-                "reference": "830a46cc8e34ee096a76d4af6f00adf008a7cbf8",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d7016d6d72545e84709892faca972eb4bf5bd699",
+                "reference": "d7016d6d72545e84709892faca972eb4bf5bd699",
                 "shasum": ""
             },
             "require": {
@@ -2868,9 +2868,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.38.5"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.38.6"
             },
-            "time": "2024-05-17T00:59:59+00:00"
+            "time": "2024-05-20T18:00:16+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -3469,16 +3469,16 @@
         },
         {
             "name": "phpdocumentor/reflection-docblock",
-            "version": "5.4.0",
+            "version": "5.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "298d2febfe79d03fe714eb871d5538da55205b1a"
+                "reference": "9d07b3f7fdcf5efec5d1609cba3c19c5ea2bdc9c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/298d2febfe79d03fe714eb871d5538da55205b1a",
-                "reference": "298d2febfe79d03fe714eb871d5538da55205b1a",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/9d07b3f7fdcf5efec5d1609cba3c19c5ea2bdc9c",
+                "reference": "9d07b3f7fdcf5efec5d1609cba3c19c5ea2bdc9c",
                 "shasum": ""
             },
             "require": {
@@ -3527,9 +3527,9 @@
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
             "support": {
                 "issues": "https://github.com/phpDocumentor/ReflectionDocBlock/issues",
-                "source": "https://github.com/phpDocumentor/ReflectionDocBlock/tree/5.4.0"
+                "source": "https://github.com/phpDocumentor/ReflectionDocBlock/tree/5.4.1"
             },
-            "time": "2024-04-09T21:13:58+00:00"
+            "time": "2024-05-21T05:55:05+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
