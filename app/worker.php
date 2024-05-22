@@ -281,7 +281,6 @@ $pools = $register->get('pools');
 $platform = new Appwrite();
 $args = $platform->getEnv('argv');
 
-
 if (!isset($args[1])) {
     Console::error('Missing worker name');
     Console::exit(1);
