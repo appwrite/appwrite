@@ -1282,7 +1282,9 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals($response['body']['type'], Exception::USER_COUNT_EXCEEDED);
+        $this->assertEquals($response['headers']['status-code'], 400);
+
 
         /**
          * Test for FAILURE
