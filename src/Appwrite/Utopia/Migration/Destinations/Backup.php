@@ -245,6 +245,7 @@ class Backup extends Destination
                 throw new \Exception('Unable to encode JSON, Are you accidentally encoding binary data?');
             }
 
+            // todo add serialize $resource not using json encode;
             $path = $this->path . '/' . $resource->getGroup() . '-' .$resource->getName() . '.log';
             $data .= PHP_EOL;
             \file_put_contents($path, $data, FILE_APPEND);
