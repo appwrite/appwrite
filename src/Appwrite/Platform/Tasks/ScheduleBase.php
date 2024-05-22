@@ -111,6 +111,7 @@ abstract class ScheduleBase extends Action
 
             foreach ($results as $document) {
                 try {
+                    // todo: change to internal id
                     $this->schedules[$document['resourceId']] = $getSchedule($document);
                 } catch (\Throwable $th) {
                     $collectionId = match ($document->getAttribute('resourceType')) {
