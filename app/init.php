@@ -736,6 +736,16 @@ $register->set('logger', function () {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
+    // Old Sentry Format conversion. Fallback until the old syntax is completely deprecated.
+    if (str_contains($providerConfig, ';') && strtolower($providerName) == 'sentry') {
+        $configChunks = \explode(";", $providerConfig);
+
+        $sentryKey = $configChunks[0];
+        $projectId = $configChunks[1];
+
+        $providerConfig = 'https://' . $sentryKey . '@sentry.io/' . $projectId;
+    }
+
     $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
     $adapter = new $classname($providerConfig);
     return new Logger($adapter);

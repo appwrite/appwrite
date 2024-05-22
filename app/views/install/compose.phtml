@@ -727,11 +727,11 @@ services:
 
   openruntimes-executor:
     container_name: openruntimes-executor
-    hostname: appwrite-executor
+    hostname: exc1
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.12
+    image: openruntimes/executor:0.5.5
     networks:
       - appwrite
       - runtimes
