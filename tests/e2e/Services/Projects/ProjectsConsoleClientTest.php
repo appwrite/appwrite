@@ -1238,6 +1238,36 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
+        // Creating A Team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Test Team 1',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        $teamId = $team['body']['$id'];
+        $email = uniqid() . 'user@localhost.test';
+
+        // Creating A User Using Team membership
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', array_merge($this->getHeaders(), [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ]), [
+            'email' => $email,
+            'roles' => [],
+            'url' => 'http://localhost',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
         $email = uniqid() . 'user@localhost.test';
 
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
