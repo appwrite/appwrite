@@ -31,6 +31,10 @@ class ProjectsCustomServerTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
+        $response = $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $response['body']['$id'], $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
         // prevent functions domain
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 

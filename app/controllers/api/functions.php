@@ -1283,7 +1283,7 @@ App::get('/v1/functions/:functionId/deployments')
         }
 
         // Set resource queries
-        $queries[] = Query::equal('resourceId', [$function->getId()]);
+        $queries[] = Query::equal('resourceInternalId', [$function->getInternalId()]);
         $queries[] = Query::equal('resourceType', ['functions']);
 
         /**
