@@ -219,7 +219,7 @@ Server::setResource('deviceForCache', function (Document $project) {
 
 $pools = $register->get('pools');
 $platform = new Appwrite();
-$args = $_SERVER['argv'];
+$args = $platform->getEnv('argv');
 
 if (!isset($args[1])) {
     Console::error('Missing worker name');
