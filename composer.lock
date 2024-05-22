@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ddce40668e20709ace22219623303e38",
+    "content-hash": "e3975335737921ddfe4e35d891ea222a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1718,6 +1718,45 @@
             "time": "2024-05-07T02:01:25+00:00"
         },
         {
+            "name": "utopia-php/fetch",
+            "version": "0.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/fetch.git",
+                "reference": "1423c0ee3eef944d816ca6e31706895b585aea82"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/1423c0ee3eef944d816ca6e31706895b585aea82",
+                "reference": "1423c0ee3eef944d816ca6e31706895b585aea82",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.5.0",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Fetch\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library that provides an interface for making HTTP Requests.",
+            "support": {
+                "issues": "https://github.com/utopia-php/fetch/issues",
+                "source": "https://github.com/utopia-php/fetch/tree/0.2.1"
+            },
+            "time": "2024-03-18T11:50:59+00:00"
+        },
+        {
             "name": "utopia-php/framework",
             "version": "0.33.6",
             "source": {
@@ -1863,22 +1902,23 @@
         },
         {
             "name": "utopia-php/logger",
-            "version": "0.3.2",
+            "version": "0.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/logger.git",
-                "reference": "ba763c10688fe2ed715ad2bed3f13d18dfec6253"
+                "reference": "c6dfdb672e41364c309b0c30dc03bc6d45446dba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/logger/zipball/ba763c10688fe2ed715ad2bed3f13d18dfec6253",
-                "reference": "ba763c10688fe2ed715ad2bed3f13d18dfec6253",
+                "url": "https://api.github.com/repos/utopia-php/logger/zipball/c6dfdb672e41364c309b0c30dc03bc6d45446dba",
+                "reference": "c6dfdb672e41364c309b0c30dc03bc6d45446dba",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0"
             },
             "require-dev": {
+                "laravel/pint": "1.2.*",
                 "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
@@ -1910,9 +1950,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/logger/issues",
-                "source": "https://github.com/utopia-php/logger/tree/0.3.2"
+                "source": "https://github.com/utopia-php/logger/tree/0.5.2"
             },
-            "time": "2023-11-22T14:45:43+00:00"
+            "time": "2024-05-17T09:32:59+00:00"
         },
         {
             "name": "utopia-php/messaging",
@@ -2172,16 +2212,16 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "0.4.2",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "d2870ab74b31b7f4027799f082e85122154f8bed"
+                "reference": "6f716a213a08db95eda1b5dddfa90983c1834817"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/d2870ab74b31b7f4027799f082e85122154f8bed",
-                "reference": "d2870ab74b31b7f4027799f082e85122154f8bed",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/6f716a213a08db95eda1b5dddfa90983c1834817",
+                "reference": "6f716a213a08db95eda1b5dddfa90983c1834817",
                 "shasum": ""
             },
             "require": {
@@ -2217,9 +2257,62 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/0.4.2"
+                "source": "https://github.com/utopia-php/pools/tree/0.5.0"
             },
-            "time": "2022-11-22T07:55:45+00:00"
+            "time": "2024-04-19T11:11:54+00:00"
+        },
+        {
+            "name": "utopia-php/preloader",
+            "version": "0.2.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/preloader.git",
+                "reference": "65ef48392e72172f584b0baa2e224f9a1cebcce0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/preloader/zipball/65ef48392e72172f584b0baa2e224f9a1cebcce0",
+                "reference": "65ef48392e72172f584b0baa2e224f9a1cebcce0",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Preloader\\": "src/Preloader"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "Utopia Preloader library is simple and lite library for managing PHP preloading configuration",
+            "keywords": [
+                "framework",
+                "php",
+                "preload",
+                "preloader",
+                "preloading",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/preloader/issues",
+                "source": "https://github.com/utopia-php/preloader/tree/0.2.4"
+            },
+            "time": "2020-10-24T07:04:59+00:00"
         },
         {
             "name": "utopia-php/queue",
@@ -5049,16 +5142,16 @@
         },
         {
             "name": "swoole/ide-helper",
-            "version": "5.0.2",
+            "version": "5.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swoole/ide-helper.git",
-                "reference": "16cfee44a6ec92254228c39bcab2fb8ae74cc2ea"
+                "reference": "33ec7af9111b76d06a70dd31191cc74793551112"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/16cfee44a6ec92254228c39bcab2fb8ae74cc2ea",
-                "reference": "16cfee44a6ec92254228c39bcab2fb8ae74cc2ea",
+                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/33ec7af9111b76d06a70dd31191cc74793551112",
+                "reference": "33ec7af9111b76d06a70dd31191cc74793551112",
                 "shasum": ""
             },
             "type": "library",
@@ -5075,9 +5168,9 @@
             "description": "IDE help files for Swoole.",
             "support": {
                 "issues": "https://github.com/swoole/ide-helper/issues",
-                "source": "https://github.com/swoole/ide-helper/tree/5.0.2"
+                "source": "https://github.com/swoole/ide-helper/tree/5.1.2"
             },
-            "time": "2023-03-20T06:05:55+00:00"
+            "time": "2024-02-01T22:28:11+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -5408,45 +5501,6 @@
                 }
             ],
             "time": "2023-11-21T18:54:41+00:00"
-        },
-        {
-            "name": "utopia-php/fetch",
-            "version": "0.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/fetch.git",
-                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/2fa214b9262acd1a3583515a364da4f35929d5c5",
-                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.5.0",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^9.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Fetch\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple library that provides an interface for making HTTP Requests.",
-            "support": {
-                "issues": "https://github.com/utopia-php/fetch/issues",
-                "source": "https://github.com/utopia-php/fetch/tree/0.1.0"
-            },
-            "time": "2023-10-10T11:58:32+00:00"
         }
     ],
     "aliases": [],

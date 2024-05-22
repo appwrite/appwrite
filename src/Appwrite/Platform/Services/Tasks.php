@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Services;
 
+use Appwrite\Platform\Tasks\DevGenerateTranslations;
 use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
@@ -24,12 +25,11 @@ class Tasks extends Service
     {
         $this->type = self::TYPE_CLI;
         $this
+            ->addAction(DevGenerateTranslations::getName(), new DevGenerateTranslations())
             ->addAction(Doctor::getName(), new Doctor())
             ->addAction(Install::getName(), new Install())
             ->addAction(Maintenance::getName(), new Maintenance())
             ->addAction(Migrate::getName(), new Migrate())
-            ->addAction(QueueCount::getName(), new QueueCount())
-            ->addAction(QueueRetry::getName(), new QueueRetry())
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(SSL::getName(), new SSL())
             ->addAction(ScheduleFunctions::getName(), new ScheduleFunctions())
@@ -38,6 +38,8 @@ class Tasks extends Service
             ->addAction(Upgrade::getName(), new Upgrade())
             ->addAction(Vars::getName(), new Vars())
             ->addAction(Version::getName(), new Version())
+            ->addAction(QueueRetry::getName(), new QueueRetry())
+            ->addAction(QueueCount::getName(), new QueueCount())
         ;
     }
 }

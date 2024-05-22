@@ -196,6 +196,9 @@ class Exception extends \Exception
     public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
     public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
 
+    /** Relationship */
+    public const RELATIONSHIP_VALUE_INVALID        = 'relationship_value_invalid';
+
     /** Indexes */
     public const INDEX_NOT_FOUND                   = 'index_not_found';
     public const INDEX_LIMIT_EXCEEDED              = 'index_limit_exceeded';
@@ -298,11 +301,20 @@ class Exception extends \Exception
     protected array $errors = [];
     protected bool $publish;
 
-    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
+    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int|string $code = null, \Throwable $previous = null)
     {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
         $this->code = $code ?? $this->errors[$type]['code'];
+
+        if(\is_string($this->code)) {
+            if (\is_numeric($this->code)) {
+                $this->code = (int) $this->code;
+            } else {
+                $this->code = 500;
+            }
+        }
+
         $this->message = $message ?? $this->errors[$type]['description'];
 
         $this->publish = $this->errors[$type]['publish'] ?? ($this->code >= 500);

@@ -1550,7 +1550,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
                 $target
                     ->setAttribute('sessionId', $session->getId())
-                    ->setAttrubte('sessionInternalId', $session->getInternalId());
+                    ->setAttribute('sessionInternalId', $session->getInternalId());
 
                 $dbForProject->updateDocument('targets', $target->getId(), $target);
             }
@@ -2623,7 +2623,7 @@ App::patch('/v1/account/email')
         // Makes sure this email is not already used in another identity
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
-            Query::notEqual('userId', $user->getId()),
+            Query::notEqual('userInternalId', $user->getInternalId()),
         ]);
         if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
