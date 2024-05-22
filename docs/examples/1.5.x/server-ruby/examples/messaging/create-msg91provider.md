@@ -12,7 +12,7 @@ messaging = Messaging.new(client)
 result = messaging.create_msg91_provider(
     provider_id: '<PROVIDER_ID>',
     name: '<NAME>',
-    from: '+12065550100', # optional
+    template_id: '<TEMPLATE_ID>', # optional
     sender_id: '<SENDER_ID>', # optional
     auth_key: '<AUTH_KEY>', # optional
     enabled: false # optional

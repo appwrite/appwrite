@@ -26,10 +26,12 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
+use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
+use Utopia\System\System;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\Text;
 
@@ -51,15 +53,15 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     )[0] ?? null;
 
     if ($route === null) {
-        if ($host === App::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
+        if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
         }
 
-        if (\str_ends_with($host, App::getEnv('_APP_DOMAIN_FUNCTIONS', ''))) {
+        if (\str_ends_with($host, System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain is not connected to any Appwrite resource yet. Please configure custom domain or function domain to allow this request.');
         }
 
-        if (App::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
+        if (System::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
             if ($host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
                 throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite over this domain. Please add it as custom domain to your project or disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.');
             }
@@ -90,7 +92,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     $type = $route->getAttribute('resourceType');
 
     if ($type === 'function') {
-        if (App::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+        if (System::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https') {
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
@@ -156,7 +158,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $permissions = $function->getAttribute('execute');
 
-        if (!(\in_array('any', $permissions)) && (\in_array('guests', $permissions))) {
+        if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
             throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED, 'To execute function using domain, execute permissions must include "any" or "guests"');
         }
 
@@ -250,7 +252,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         ]);
 
         /** Execute function */
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
@@ -287,6 +289,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
+
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 
@@ -296,6 +299,10 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
             Console::error($th->getMessage());
+
+            if ($th instanceof AppwriteException) {
+                throw $th;
+            }
         } finally {
             $queueForUsage
                 ->addMetric(METRIC_EXECUTIONS, 1)
@@ -303,11 +310,11 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
             ;
-        }
 
-        if ($function->getAttribute('logging')) {
-            /** @var Document $execution */
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            if ($function->getAttribute('logging')) {
+                /** @var Document $execution */
+                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            }
         }
 
         $execution->setAttribute('logs', '');
@@ -356,6 +363,31 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     return false;
 }
 
+/*
+App::init()
+    ->groups(['api'])
+    ->inject('project')
+    ->inject('mode')
+    ->action(function (Document $project, string $mode) {
+        if ($mode === APP_MODE_ADMIN && $project->getId() === 'console') {
+            throw new AppwriteException(AppwriteException::GENERAL_BAD_REQUEST, 'Admin mode is not allowed for console project');
+        }
+    });
+*/
+
+App::init()
+    ->groups(['database', 'functions', 'storage', 'messaging'])
+    ->inject('project')
+    ->inject('request')
+    ->action(function (Document $project, Request $request) {
+        if ($project->getId() === 'console') {
+            $message = empty($request->getHeader('x-appwrite-project')) ?
+                'No Appwrite project was specified. Please specify your project ID when initializing your Appwrite SDK.' :
+                'This endpoint is not available for the console project. The Appwrite Console is a reserved project ID and cannot be used with the Appwrite SDKs and APIs. Please check if your project ID is correct.';
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, $message);
+        }
+    });
+
 App::init()
     ->groups(['api', 'web'])
     ->inject('utopia')
@@ -378,7 +410,7 @@ App::init()
         * Appwrite Router
         */
         $host = $request->getHostname() ?? '';
-        $mainDomain = App::getEnv('_APP_DOMAIN', '');
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
             if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
@@ -393,10 +425,12 @@ App::init()
         Request::setRoute($route);
 
         if ($route === null) {
-            return $response->setStatusCode(404)->send('Not Found');
+            return $response
+                ->setStatusCode(404)
+                ->send('Not Found');
         }
 
-        $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', null));
+        $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat) {
             if (version_compare($requestFormat, '1.4.0', '<')) {
                 $request->addFilter(new RequestV16());
@@ -419,7 +453,7 @@ App::init()
             } else {
                 Authorization::disable();
 
-                $envDomain = App::getEnv('_APP_DOMAIN', '');
+                $envDomain = System::getEnv('_APP_DOMAIN', '');
                 $mainDomain = null;
                 if (!empty($envDomain) && $envDomain !== 'localhost') {
                     $mainDomain = $envDomain;
@@ -496,7 +530,7 @@ App::init()
         $isIpAddress = filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false;
 
         $isConsoleProject = $project->getAttribute('$id', '') === 'console';
-        $isConsoleRootSession = App::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
+        $isConsoleRootSession = System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
 
         Config::setParam(
             'cookieDomain',
@@ -512,7 +546,7 @@ App::init()
         /*
         * Response format
         */
-        $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', null));
+        $responseFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
             if (version_compare($responseFormat, '1.4.0', '<')) {
                 $response->addFilter(new ResponseV16());
@@ -528,7 +562,7 @@ App::init()
         * As recommended at:
         * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
         */
-        if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+        if (System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== 'localhost' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
@@ -546,7 +580,7 @@ App::init()
             ->addHeader('Server', 'Appwrite')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Forwarded-For, X-Forwarded-User-Agent')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-Shared-Tables, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Forwarded-For, X-Forwarded-User-Agent')
             ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
             ->addHeader('Access-Control-Allow-Credentials', 'true');
@@ -584,7 +618,7 @@ App::options()
         * Appwrite Router
         */
         $host = $request->getHostname() ?? '';
-        $mainDomain = App::getEnv('_APP_DOMAIN', '');
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
             if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
@@ -597,7 +631,7 @@ App::options()
         $response
             ->addHeader('Server', 'Appwrite')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-Shared-Tables, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent')
             ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $origin)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -613,58 +647,9 @@ App::error()
     ->inject('logger')
     ->inject('log')
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log) {
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
-
-        if ($error instanceof AppwriteException) {
-            $publish = $error->isPublishable();
-        } else {
-            $publish = $error->getCode() === 0 || $error->getCode() >= 500;
-        }
-
-        if ($logger && ($publish || $error->getCode() === 0)) {
-            try {
-                /** @var Utopia\Database\Document $user */
-                $user = $utopia->getResource('user');
-            } catch (\Throwable $th) {
-                // All good, user is optional information for logger
-            }
-
-            if (isset($user) && !$user->isEmpty()) {
-                $log->setUser(new User($user->getId()));
-            }
-
-            $log->setNamespace("http");
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-
-            $log->addTag('database', $project->getAttribute('database', 'console'));
-            $log->addTag('method', $route->getMethod());
-            $log->addTag('url', $route->getPath());
-            $log->addTag('verboseType', get_class($error));
-            $log->addTag('code', $error->getCode());
-            $log->addTag('projectId', $project->getId());
-            $log->addTag('hostname', $request->getHostname());
-            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
-
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', Authorization::getRoles());
-
-            $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
-            $log->setAction($action);
-
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            $responseCode = $logger->addLog($log);
-            Console::info('Log pushed with status code: ' . $responseCode);
-        }
-
+        $class = \get_class($error);
         $code = $error->getCode();
         $message = $error->getMessage();
         $file = $error->getFile();
@@ -685,25 +670,119 @@ App::error()
             Console::error('[Error] Line: ' . $line);
         }
 
-        /** Handle Utopia Errors */
-        if ($error instanceof Utopia\Exception) {
-            $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
-            switch ($code) {
-                case 400:
-                    $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
-                    break;
-                case 404:
-                    $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
-                    break;
+        switch ($class) {
+            case 'Utopia\Exception':
+                $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
+                switch ($code) {
+                    case 400:
+                        $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
+                        break;
+                    case 404:
+                        $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+                        break;
+                }
+                break;
+            case 'Utopia\Database\Exception\Conflict':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Timeout':
+                $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Query':
+                $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, $error->getMessage(), previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Structure':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $error->getMessage(), previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Duplicate':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_ALREADY_EXISTS);
+                break;
+            case 'Utopia\Database\Exception\Restricted':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_DELETE_RESTRICTED);
+                break;
+            case 'Utopia\Database\Exception\Authorization':
+                $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
+                break;
+            case 'Utopia\Database\Exception\Relationship':
+                $error = new AppwriteException(AppwriteException::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
+                break;
+        }
+
+        $code = $error->getCode();
+        $message = $error->getMessage();
+
+        if ($error instanceof AppwriteException) {
+            $publish = $error->isPublishable();
+        } else {
+            $publish = $error->getCode() === 0 || $error->getCode() >= 500;
+        }
+
+        if ($error->getCode() >= 400 && $error->getCode() < 500) {
+            // Register error logger
+            $providerName = System::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
+            $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
+
+            if (!(empty($providerName) || empty($providerConfig))) {
+                if (!Logger::hasProvider($providerName)) {
+                    throw new Exception("Logging provider not supported. Logging is disabled");
+                }
+
+                $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
+                $adapter = new $classname($providerConfig);
+                $logger = new Logger($adapter);
+                $logger->setSample(0.04);
+                $publish = true;
             }
-        } elseif ($error instanceof Utopia\Database\Exception\Conflict) {
-            $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
-            $code = $error->getCode();
-            $message = $error->getMessage();
-        } elseif ($error instanceof Utopia\Database\Exception\Timeout) {
-            $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
-            $code = $error->getCode();
-            $message = $error->getMessage();
+        }
+
+        if ($logger && $publish) {
+            try {
+                /** @var Utopia\Database\Document $user */
+                $user = $utopia->getResource('user');
+            } catch (\Throwable) {
+                // All good, user is optional information for logger
+            }
+
+            if (isset($user) && !$user->isEmpty()) {
+                $log->setUser(new User($user->getId()));
+            }
+
+            try {
+                $dsn = new DSN($project->getAttribute('database', 'console'));
+            } catch (\InvalidArgumentException) {
+                // TODO: Temporary until all projects are using shared tables
+                $dsn = new DSN('mysql://' . $project->getAttribute('database', 'console'));
+            }
+
+            $log->setNamespace("http");
+            $log->setServer(\gethostname());
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($error->getMessage());
+
+            $log->addTag('database', $dsn->getHost());
+            $log->addTag('method', $route->getMethod());
+            $log->addTag('url', $route->getPath());
+            $log->addTag('verboseType', get_class($error));
+            $log->addTag('code', $error->getCode());
+            $log->addTag('projectId', $project->getId());
+            $log->addTag('hostname', $request->getHostname());
+            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
+
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
+            $log->addExtra('roles', Authorization::getRoles());
+
+            $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
+            $log->setAction($action);
+
+            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            $responseCode = $logger->addLog($log);
+            Console::info('Log pushed with status code: ' . $responseCode);
         }
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */

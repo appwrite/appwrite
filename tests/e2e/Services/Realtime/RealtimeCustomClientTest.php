@@ -1317,7 +1317,7 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), []);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
@@ -1327,7 +1327,7 @@ class RealtimeCustomClientTest extends Scope
             'async' => true
         ]);
 
-        $this->assertEquals($execution['headers']['status-code'], 202);
+        $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
 
         $response = json_decode($client->receive(), true);

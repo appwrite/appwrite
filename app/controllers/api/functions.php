@@ -9,6 +9,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -40,6 +41,7 @@ use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
 use Utopia\Swoole\Request;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
@@ -55,8 +57,8 @@ $redeployVcs = function (Request $request, Document $function, Document $project
     $deploymentId = ID::unique();
     $entrypoint = $function->getAttribute('entrypoint', '');
     $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
-    $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-    $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+    $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+    $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
     $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
     $owner = $github->getOwnerName($providerInstallationId);
     $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
@@ -144,7 +146,7 @@ App::post('/v1/functions')
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
+    ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
     ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
     ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
@@ -170,7 +172,7 @@ App::post('/v1/functions')
     ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
-        $allowList = \array_filter(\explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
+        $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
         if (!empty($allowList) && !\in_array($runtime, $allowList)) {
             throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $runtime . '" is not supported');
@@ -231,7 +233,7 @@ App::post('/v1/functions')
 
         $schedule = Authorization::skip(
             fn () => $dbForConsole->createDocument('schedules', new Document([
-                'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                'region' => System::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                 'resourceType' => 'function',
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getInternalId(),
@@ -280,7 +282,7 @@ App::post('/v1/functions')
             $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
         }
 
-        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         if (!empty($functionsDomain)) {
             $ruleId = ID::unique();
             $routeSubdomain = ID::unique();
@@ -422,7 +424,7 @@ App::get('/v1/functions/runtimes')
     ->action(function (Response $response) {
         $runtimes = Config::getParam('runtimes');
 
-        $allowList = \array_filter(\explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
+        $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
         $allowed = [];
         foreach ($runtimes as $key => $runtime) {
@@ -675,7 +677,7 @@ App::put('/v1/functions/:functionId')
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
+    ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
     ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
     ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
@@ -1091,7 +1093,7 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000'));
+        $fileSizeValidator = new FileSize(System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000'));
         $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way
@@ -1580,7 +1582,7 @@ App::post('/v1/functions/:functionId/executions')
             }
 
             if (!$current->isEmpty()) {
-                $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
                 $jwt = $jwtObj->encode([
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
@@ -1703,7 +1705,7 @@ App::post('/v1/functions/:functionId/executions')
         ]);
 
         /** Execute function */
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
@@ -1749,6 +1751,10 @@ App::post('/v1/functions/:functionId/executions')
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
             Console::error($th->getMessage());
+
+            if ($th instanceof AppwriteException) {
+                throw $th;
+            }
         } finally {
             $queueForUsage
                 ->addMetric(METRIC_EXECUTIONS, 1)
@@ -1756,11 +1762,11 @@ App::post('/v1/functions/:functionId/executions')
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
             ;
-        }
 
-        if ($function->getAttribute('logging')) {
-            /** @var Document $execution */
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            if ($function->getAttribute('logging')) {
+                /** @var Document $execution */
+                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            }
         }
 
         $roles = Authorization::getRoles();

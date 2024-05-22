@@ -45,9 +45,6 @@ class Event
     public const MIGRATIONS_QUEUE_NAME = 'v1-migrations';
     public const MIGRATIONS_CLASS_NAME = 'MigrationsV1';
 
-    public const HAMSTER_QUEUE_NAME = 'v1-hamster';
-    public const HAMSTER_CLASS_NAME = 'HamsterV1';
-
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';

@@ -134,6 +134,11 @@ return [
     Exception::USER_COUNT_EXCEEDED => [
         'name' => Exception::USER_COUNT_EXCEEDED,
         'description' => 'The current project has exceeded the maximum number of users. Please check your user limit in the Appwrite console.',
+        'code' => 400,
+    ],
+    Exception::USER_CONSOLE_COUNT_EXCEEDED => [
+        'name' => Exception::USER_CONSOLE_COUNT_EXCEEDED,
+        'description' => 'Sign up to the console is restricted. You can contact an administrator to update console sign up restrictions by setting _APP_CONSOLE_WHITELIST_ROOT to "disabled".',
         'code' => 501,
     ],
     Exception::USER_JWT_INVALID => [
@@ -514,6 +519,11 @@ return [
         'description' => 'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".',
         'code' => 404,
     ],
+    Exception::FUNCTION_SYNCHRONOUS_TIMEOUT => [
+        'name' => Exception::FUNCTION_SYNCHRONOUS_TIMEOUT,
+        'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
+        'code' => 408,
+    ],
 
     /** Builds  */
     Exception::BUILD_NOT_FOUND => [
@@ -663,6 +673,11 @@ return [
         'description' => 'The attribute type is invalid.',
         'code' => 400,
     ],
+    Exception::RELATIONSHIP_VALUE_INVALID => [
+        'name' => Exception::RELATIONSHIP_VALUE_INVALID,
+        'description' => 'The relationship value is invalid.',
+        'code' => 400,
+    ],
 
     /** Indexes */
     Exception::INDEX_NOT_FOUND => [
@@ -705,7 +720,7 @@ return [
     Exception::PROJECT_PROVIDER_UNSUPPORTED => [
         'name' => Exception::PROJECT_PROVIDER_UNSUPPORTED,
         'description' => 'The chosen OAuth provider is unsupported. Please check the <a href="/docs/client/account?sdk=web-default#accountCreateOAuth2Session">Create OAuth2 Session docs</a> for the complete list of supported OAuth providers.',
-        'code' => 501,
+        'code' => 400,
     ],
     Exception::PROJECT_INVALID_SUCCESS_URL => [
         'name' => Exception::PROJECT_INVALID_SUCCESS_URL,

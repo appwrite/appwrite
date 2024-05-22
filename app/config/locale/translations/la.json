@@ -10,7 +10,7 @@
     "emails.verification.thanks": "Gratias",
     "emails.verification.signature": "{{project}} Team",
     "emails.magicSession.subject": "Log in",
-    "emails.magicSession.hello": "Salve ibi,",
+    "emails.magicSession.hello": "Salve ibi",
     "emails.magicSession.body": "Hanc nexum cum login",
     "emails.magicSession.footer": "Si verificationem huius inscriptionis non postulasti, nuntium hunc ignorare potes.",
     "emails.magicSession.thanks": "Gratias",
@@ -206,6 +206,7 @@
     "countries.tn": "Tunisia",
     "countries.tr": "Turkey",
     "countries.tv": "Tuvalu",
+    "countries.tw": "Formosa",
     "countries.tz": "Tanzania",
     "countries.ug": "Uganda",
     "countries.ua": "Ukraine",
@@ -247,5 +248,5 @@
     "emails.certificate.footer": "Praeclarum tuum testificationem valet ad XXX dies a primo defectu. Magnopere suademus ut hoc casum investiges, alioquin dominium tuum sine valida SSL communicatione erit.",
     "emails.certificate.thanks": "Gratias",
     "emails.certificate.signature": "team {{project}}",
-    "sms.verification.body": "{{secret}} est codex verificatorius {{project}} tui."
+    "sms.verification.body": "{{secret}}"
 }
