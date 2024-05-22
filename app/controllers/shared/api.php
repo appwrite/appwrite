@@ -411,7 +411,7 @@ App::init()
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
-            $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+            $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
             $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
