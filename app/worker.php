@@ -338,10 +338,6 @@ $worker
         $pools->reclaim();
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
-        if ($error instanceof PDOException) {
-            throw $error;
-        }
-
         if ($logger) {
             $log->setNamespace("appwrite-worker");
             $log->setServer(\gethostname());

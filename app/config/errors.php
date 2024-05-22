@@ -134,7 +134,7 @@ return [
     Exception::USER_COUNT_EXCEEDED => [
         'name' => Exception::USER_COUNT_EXCEEDED,
         'description' => 'The current project has exceeded the maximum number of users. Please check your user limit in the Appwrite console.',
-        'code' => 501,
+        'code' => 400,
     ],
     Exception::USER_CONSOLE_COUNT_EXCEEDED => [
         'name' => Exception::USER_CONSOLE_COUNT_EXCEEDED,
@@ -518,6 +518,11 @@ return [
         'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
         'description' => 'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".',
         'code' => 404,
+    ],
+    Exception::FUNCTION_SYNCHRONOUS_TIMEOUT => [
+        'name' => Exception::FUNCTION_SYNCHRONOUS_TIMEOUT,
+        'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
+        'code' => 408,
     ],
 
     /** Builds  */
