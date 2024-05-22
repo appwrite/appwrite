@@ -215,6 +215,7 @@ const MESSAGE_TYPE_PUSH = 'push';
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
 const METRIC_MESSAGES  = 'messages';
+const METRIC_MESSAGES_COUNTRY_CODE  = '{countryCode}.messages';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
