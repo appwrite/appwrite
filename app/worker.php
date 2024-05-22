@@ -9,7 +9,6 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Hamster;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
@@ -33,7 +32,6 @@ use Utopia\Queue\Connection;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
-use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 
 Authorization::disable();
@@ -194,10 +192,6 @@ Server::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
 
-Server::setResource('queueForHamster', function (Connection $queue) {
-    return new Hamster($queue);
-}, ['queue']);
-
 Server::setResource('logger', function (Registry $register) {
     return $register->get('logger');
 }, ['register']);
@@ -222,9 +216,6 @@ Server::setResource('deviceForCache', function (Document $project) {
     return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 }, ['project']);
 
-Server::setResource('deviceForLocalFiles', function (Document $project) {
-    return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
 
 $pools = $register->get('pools');
 $platform = new Appwrite();

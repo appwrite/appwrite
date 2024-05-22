@@ -926,12 +926,12 @@ return [
     [
         "code" => "zh-cn",
         "name" => "Chinese (Simplified)",
-        "nativeName" => "中国人"
+        "nativeName" => "中文"
     ],
     [
         "code" => "zh-tw",
         "name" => "Chinese (Traditional)",
-        "nativeName" => "中國人"
+        "nativeName" => "中文"
     ],
     [
         "code" => "zu",
