@@ -1454,9 +1454,9 @@ App::setResource('deviceForBuilds', function ($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
 
-function getDevice($root): Device
+function getDevice(string $root, string $connection = null): Device
 {
-    $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    $connection = empty($connection) ? System::getEnv('_APP_CONNECTIONS_STORAGE', '') : System::getEnv($connection, '');
 
     if (!empty($connection)) {
         $acl = 'private';
