@@ -24,12 +24,7 @@ abstract class ScheduleBase extends Action
 
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
-
-    abstract protected function enqueueResources(
-        Group $pools,
-        Database $dbForConsole,
-        callable $getProjectDB
-    );
+    abstract protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB):void;
 
     public function __construct()
     {
