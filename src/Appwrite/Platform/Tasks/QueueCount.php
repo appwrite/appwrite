@@ -32,8 +32,7 @@ class QueueCount extends Action
                 Event::CERTIFICATES_QUEUE_NAME,
                 Event::BUILDS_QUEUE_NAME,
                 Event::MESSAGING_QUEUE_NAME,
-                Event::MIGRATIONS_QUEUE_NAME,
-                Event::HAMSTER_QUEUE_NAME
+                Event::MIGRATIONS_QUEUE_NAME
             ]), 'Queue name')
             ->param('type', '', new WhiteList([
                 'success',

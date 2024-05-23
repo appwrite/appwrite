@@ -8,7 +8,7 @@ X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
 {
   "providerId": "<PROVIDER_ID>",
   "name": "<NAME>",
-  "from": "+12065550100",
+  "templateId": "<TEMPLATE_ID>",
   "senderId": "<SENDER_ID>",
   "authKey": "<AUTH_KEY>",
   "enabled": false
