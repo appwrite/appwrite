@@ -628,10 +628,10 @@ services:
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
 
-  appwrite-maintenance:
+  appwrite-task-maintenance:
     entrypoint: maintenance
     <<: *x-logging
-    container_name: appwrite-maintenance
+    container_name: appwrite-task-maintenance
     image: appwrite-dev
     networks:
       - appwrite
@@ -727,10 +727,10 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
 
-  appwrite-scheduler-functions:
+  appwrite-task-scheduler-functions:
     entrypoint: schedule-functions
     <<: *x-logging
-    container_name: appwrite-scheduler-functions
+    container_name: appwrite-task-scheduler-functions
     image: appwrite-dev
     networks:
       - appwrite
@@ -754,10 +754,10 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
 
-  appwrite-scheduler-messages:
+  appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
     <<: *x-logging
-    container_name: appwrite-scheduler-messages
+    container_name: appwrite-task-scheduler-messages
     image: appwrite-dev
     networks:
       - appwrite
@@ -794,7 +794,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.5.1
+    image: openruntimes/executor:0.5.5
     restart: unless-stopped
     networks:
       - appwrite

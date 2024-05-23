@@ -153,6 +153,7 @@ class Exception extends \Exception
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
     public const FUNCTION_RUNTIME_UNSUPPORTED      = 'function_runtime_unsupported';
     public const FUNCTION_ENTRYPOINT_MISSING       = 'function_entrypoint_missing';
+    public const FUNCTION_SYNCHRONOUS_TIMEOUT      = 'function_synchronous_timeout';
 
     /** Deployments */
     public const DEPLOYMENT_NOT_FOUND              = 'deployment_not_found';

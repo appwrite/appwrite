@@ -443,7 +443,7 @@ class Deletes extends Action
      * @param Document $document
      * @return void
      * @throws Authorization
-     * @throws \Utopia\Database\Exception
+     * @throws DatabaseException
      * @throws Conflict
      * @throws Restricted
      * @throws Structure
@@ -471,11 +471,10 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      * @throws Authorization
-     * @throws \Utopia\Database\Exception
+     * @throws DatabaseException
      */
     private function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
     {
-        $projectId = $document->getId();
         $projectInternalId = $document->getInternalId();
 
         try {
@@ -486,23 +485,17 @@ class Deletes extends Action
         }
 
         $dbForProject = $getProjectDB($document);
-        $projectCollectionIds = \array_keys(Config::getParam('collections', [])['projects']);
+
+        $projectCollectionIds = [
+            ...\array_keys(Config::getParam('collections', [])['projects']),
+            Audit::COLLECTION,
+            TimeLimit::COLLECTION,
+        ];
+
         $limit = \count($projectCollectionIds) + 25;
 
         while (true) {
             $collections = $dbForProject->listCollections($limit);
-
-            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
-                $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
-
-                if ($collectionsIds == $projectCollectionIds) {
-                    break;
-                }
-            } else {
-                if (empty($collections)) {
-                    break;
-                }
-            }
 
             foreach ($collections as $collection) {
                 if ($dsn->getHost() !== DATABASE_SHARED_TABLES || !\in_array($collection->getId(), $projectCollectionIds)) {
@@ -510,6 +503,16 @@ class Deletes extends Action
                 } else {
                     $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                 }
+            }
+
+            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+                $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
+
+                if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
+                    break;
+                }
+            } elseif (empty($collections)) {
+                break;
             }
         }
 
@@ -553,6 +556,8 @@ class Deletes extends Action
         // Delete metadata table
         if ($dsn->getHost() !== DATABASE_SHARED_TABLES) {
             $dbForProject->deleteCollection('_metadata');
+        } else {
+            $this->deleteByGroup('_metadata', [], $dbForProject);
         }
 
         // Delete all storage directories
@@ -679,9 +684,11 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
         $timeLimit = new TimeLimit("", 0, 1, $dbForProject);
         $abuse = new Abuse($timeLimit);
-        $status = $abuse->cleanup($abuseRetention);
-        if (!$status) {
-            throw new Exception('Failed to delete Abuse logs for project ' . $projectId);
+
+        try {
+            $abuse->cleanup($abuseRetention);
+        } catch (DatabaseException $e) {
+            Console::error('Failed to delete abuse logs for project ' . $projectId . ': ' . $e->getMessage());
         }
     }
 
@@ -697,9 +704,11 @@ class Deletes extends Action
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
         $audit = new Audit($dbForProject);
-        $status = $audit->cleanup($auditRetention);
-        if (!$status) {
-            throw new Exception('Failed to delete Audit logs for project' . $projectId);
+
+        try {
+            $audit->cleanup($auditRetention);
+        } catch (DatabaseException $e) {
+            Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $e->getMessage());
         }
     }
 
@@ -954,7 +963,12 @@ class Deletes extends Action
         while ($sum === $limit) {
             $chunk++;
 
-            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
+            try {
+                $results = $database->find($collection, [Query::limit($limit), ...$queries]);
+            } catch (DatabaseException $e) {
+                Console::error('Failed to find documents for collection ' . $collection . ': ' . $e->getMessage());
+                return;
+            }
 
             $sum = count($results);
 

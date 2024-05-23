@@ -26,7 +26,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log\User;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
