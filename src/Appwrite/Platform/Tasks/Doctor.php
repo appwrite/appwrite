@@ -109,7 +109,7 @@ class Doctor extends Action
             Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');
         }
 
-        \sleep(0.2);
+        \usleep(200 * 1000); // Sleep for 0.2 seconds
 
         try {
             Console::log("\n" . '[Connectivity]');
@@ -194,7 +194,7 @@ class Doctor extends Action
             Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
         }
 
-        \sleep(0.2);
+        \usleep(200 * 1000); // Sleep for 0.2 seconds
 
         Console::log('');
         Console::log('[Volumes]');
@@ -222,7 +222,7 @@ class Doctor extends Action
             }
         }
 
-        \sleep(0.2);
+        \usleep(200 * 1000); // Sleep for 0.2 seconds
 
         Console::log('');
         Console::log('[Disk Space]');
