@@ -746,7 +746,7 @@ App::error()
     ->inject('response')
     ->inject('project')
     ->inject('queueForUsage')
-    ->action(function (Throwable $error, Request $request, Response $response, Document $project, Audit $queueForAudits, Usage $queueForUsage) {
+    ->action(function (Throwable $error, Request $request, Response $response, Document $project, Usage $queueForUsage) {
 
         if ($error instanceof AppwriteException) {
             $publish = $error->isPublishable();
