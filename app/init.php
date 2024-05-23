@@ -1454,7 +1454,7 @@ App::setResource('deviceForBuilds', function ($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
 
-function getDevice(string $root, string $connection = null): Device
+function getDevice(string $root, ?string $connection = null): Device
 {
     $connection = empty($connection) ? System::getEnv('_APP_CONNECTIONS_STORAGE', '') : System::getEnv($connection, '');
 
