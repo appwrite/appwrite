@@ -1,3 +1,9 @@
+# Version 1.5.7
+## What's Changed
+
+### Fixes
+* Change executor hostname back to exc1 to prevent name too long errors in the swoole table [#8147](https://github.com/appwrite/appwrite/pull/8147)
+
 # Version 1.5.6
 ## What's Changed
 
