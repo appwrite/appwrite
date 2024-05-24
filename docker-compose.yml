@@ -83,9 +83,12 @@ services:
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
     depends_on:
-      - mariadb
-      - redis
-      # - clamav
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      # clamav
+      #   condition: service_started
     entrypoint:
       - php
       - -e
@@ -215,8 +218,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
-      - redis
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -247,8 +252,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -276,9 +283,12 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
-      - request-catcher
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      request-catcher:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -305,8 +315,10 @@ services:
     networks:
       - appwrite
     depends_on:
-      - redis
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -365,8 +377,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -398,8 +412,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -458,8 +474,10 @@ services:
     networks:
       - appwrite
     depends_on:
-      - redis
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -496,9 +514,12 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
-      - openruntimes-executor
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      openruntimes-executor:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -625,7 +646,8 @@ services:
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -695,8 +717,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -726,8 +750,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -757,8 +783,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
-      - redis
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -784,8 +812,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
-      - redis
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -891,6 +921,12 @@ services:
       - appwrite-mariadb:/var/lib/mysql:rw
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
     environment:
       - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
