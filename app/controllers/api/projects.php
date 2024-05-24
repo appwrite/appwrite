@@ -125,33 +125,8 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        // TODO: 1 in 5 projects use shared tables. Temporary until all projects are using shared tables.
-        if (
-            (
-                !\mt_rand(0, 4)
-                && System::getEnv('_APP_DATABASE_SHARED_TABLES', 'enabled') === 'enabled'
-                && System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
-            ) ||
-            (
-                $dsn === DATABASE_SHARED_TABLES
-            )
-        ) {
-            $schema = 'appwrite';
-            $database = 'appwrite';
-            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-            $dsn = $schema . '://' . DATABASE_SHARED_TABLES . '?database=' . $database;
-
-            if (!empty($namespace)) {
-                $dsn .= '&namespace=' . $namespace;
-            }
-        }
-
-        // TODO: Allow overriding in development mode. Temporary until all projects are using shared tables.
-        if (
-            App::isDevelopment()
-            && System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
-            && $request->getHeader('x-appwrited-share-tables', false)
-        ) {
+        // TODO: Temporary until all projects are using shared tables.
+        if ($dsn === DATABASE_SHARED_TABLES || (App::isDevelopment() && $request->getHeader('x-appwrite-shared-tables', false))) {
             $schema = 'appwrite';
             $database = 'appwrite';
             $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
