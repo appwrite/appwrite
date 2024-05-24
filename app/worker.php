@@ -34,7 +34,6 @@ use Utopia\Queue\Connection;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
-use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 
 Authorization::disable();
@@ -273,9 +272,6 @@ Server::setResource('deviceForCache', function (Document $project) {
     return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 }, ['project']);
 
-Server::setResource('deviceForLocalFiles', function (Document $project) {
-    return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
 
 $pools = $register->get('pools');
 $platform = new Appwrite();
