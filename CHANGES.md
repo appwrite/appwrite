@@ -1,4 +1,10 @@
-# Version 1.5.7
+# Version 1.5.6
+## What's Changed
+
+### Fixes
+* Change executor hostname back to exc1 to prevent name too long errors in the swoole table [#8147](https://github.com/appwrite/appwrite/pull/8147)
+
+# Version 1.5.6
 ## What's Changed
 
 ### Notable Changes
@@ -17,7 +23,6 @@
 * Fix Deprecated Warning in Doctor.php in [#8105](https://github.com/appwrite/appwrite/pull/8105)
 * Set limit to retrieve all stats for the usage range in [#8117](https://github.com/appwrite/appwrite/pull/8117)
 * Fix email used for name when user is created via Apple OAuth2 in [#8102](https://github.com/appwrite/appwrite/pull/8102)
-* Change executor hostname back to exc1 to prevent name too long errors in the swoole table [#8147](https://github.com/appwrite/appwrite/pull/8147)
 
 ### Miscellaneous
 
