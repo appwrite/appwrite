@@ -2704,6 +2704,45 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
+    /**
+     * @depends testCreateProject
+     */
+    public function testCreateProjectKeyOutdated($data): void
+    {
+        $id = $data['projectId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_POST, '/mock/api-key-unprefixed', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $id
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertContains('users.read', $response['body']['scopes']);
+        $this->assertNotEmpty($response['body']['secret']);
+        $this->assertStringStartsNotWith(API_KEY_STANDARD . '_', $response['body']['secret']);
+
+        $keyId = $response['body']['$id'];
+        $secret = $response['body']['secret'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $secret
+        ], []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/keys/' . $keyId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+    }
+
     // Platforms
 
     /**

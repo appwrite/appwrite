@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
@@ -282,6 +283,14 @@ class Functions extends Action
 
         $runtime = $runtimes[$function->getAttribute('runtime')];
 
+        $jwtExpiry = $function->getAttribute('timeout', 900);
+        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 10);
+        $apiKey = $jwtObj->encode([
+            'projectId' => $project->getId(),
+            'scopes' => $function->getAttribute('scopes', [])
+        ]);
+
+        $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
@@ -369,8 +378,13 @@ class Functions extends Action
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = System::getEnv('_APP_DOMAIN');
+        $endpoint = $protocol . '://' . $hostname . "/v1";
+
         // Appwrite vars
         $vars = \array_merge($vars, [
+            'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deploymentId,

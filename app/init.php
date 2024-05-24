@@ -208,6 +208,9 @@ const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 const MESSAGE_TYPE_EMAIL = 'email';
 const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
+// API key types
+const API_KEY_STANDARD = 'standard';
+const API_KEY_DYNAMIC = 'dynamic';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';

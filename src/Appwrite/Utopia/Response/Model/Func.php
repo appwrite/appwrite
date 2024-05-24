@@ -71,6 +71,13 @@ class Func extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('scopes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Allowed permission scopes.',
+                'default' => [],
+                'example' => 'users.read',
+                'array' => true,
+            ])
             ->addRule('vars', [
                 'type' => Response::MODEL_VARIABLE,
                 'description' => 'Function variables.',
