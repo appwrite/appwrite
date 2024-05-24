@@ -586,7 +586,7 @@ App::shutdown()
 
                 Realtime::send(
                     projectId: $target['projectId'] ?? $project->getId(),
-                    payload: $queueForEvents->getPayload(),
+                    payload: $queueForEvents->getRealtimePayload(),
                     events: $allEvents,
                     channels: $target['channels'],
                     roles: $target['roles'],
