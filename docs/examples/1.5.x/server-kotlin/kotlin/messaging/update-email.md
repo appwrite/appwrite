@@ -20,5 +20,6 @@ val response = messaging.updateEmail(
     html = false, // optional
     cc = listOf(), // optional
     bcc = listOf(), // optional
-    scheduledAt = "" // optional
+    scheduledAt = "", // optional
+    attachments = listOf() // optional
 )
