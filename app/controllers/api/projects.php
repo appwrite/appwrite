@@ -279,6 +279,8 @@ App::post('/v1/projects')
             }
         }
 
+        // Hook allowing instant project mirroring during migration
+        // Outside of migration, hook is not registered and has no effect
         $hooks->trigger('afterProjectCreation', [ $project, $pools, $cache ]);
 
         $response
