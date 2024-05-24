@@ -112,8 +112,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 406;
-const APP_VERSION_STABLE = '1.5.5';
+const APP_CACHE_BUSTER = 432;
+const APP_VERSION_STABLE = '1.5.6';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -1239,14 +1239,13 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     return $project;
 }, ['dbForConsole', 'request', 'console']);
 
-App::setResource('session', function (Document $user, Document $project) {
+App::setResource('session', function (Document $user) {
     if ($user->isEmpty()) {
         return;
     }
 
     $sessions = $user->getAttribute('sessions', []);
-    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration);
+    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
 
     if (!$sessionId) {
         return;
@@ -1259,7 +1258,7 @@ App::setResource('session', function (Document $user, Document $project) {
     }
 
     return;
-}, ['user', 'project']);
+}, ['user']);
 
 App::setResource('console', function () {
     return new Document([
