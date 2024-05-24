@@ -5,16 +5,14 @@
 
 x-logging: &x-logging
   logging:
-    driver: 'json-file'
+    driver: "json-file"
     options:
-      max-file: '5'
-      max-size: '10m'
-
-version: '3'
+      max-file: "5"
+      max-size: "10m"
 
 services:
   traefik:
-    image: traefik:2.9
+    image: traefik:2.11
     <<: *x-logging
     container_name: appwrite-traefik
     command:
@@ -92,7 +90,6 @@ services:
       - php
       - -e
       - app/http.php
-      - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -185,6 +182,10 @@ services:
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_ASSISTANT_OPENAI_API_KEY
+      - _APP_MESSAGE_SMS_TEST_DSN
+      - _APP_MESSAGE_EMAIL_TEST_DSN
+      - _APP_MESSAGE_PUSH_TEST_DSN
+      - _APP_CONSOLE_COUNTRIES_DENYLIST
 
   appwrite-realtime:
     entrypoint: realtime
@@ -283,12 +284,18 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
 
   appwrite-worker-deletes:
     entrypoint: worker-deletes
@@ -548,6 +555,8 @@ services:
       - _APP_SMTP_PASSWORD
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_DOMAIN
+      - _APP_OPTIONS_FORCE_HTTPS
 
   appwrite-worker-messaging:
     entrypoint: worker-messaging
@@ -558,6 +567,7 @@ services:
     networks:
       - appwrite
     volumes:
+      - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -565,15 +575,42 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_SMS_PROVIDER
-      - _APP_SMS_FROM
-      - _APP_SMS_PROJECTS_DENY_LIST
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_SMS_FROM
+      - _APP_SMS_PROVIDER
+      - _APP_SMS_PROJECTS_DENY_LIST
+      - _APP_STORAGE_DEVICE
+      - _APP_STORAGE_S3_ACCESS_KEY
+      - _APP_STORAGE_S3_SECRET
+      - _APP_STORAGE_S3_REGION
+      - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
+      - _APP_STORAGE_DO_SPACES_SECRET
+      - _APP_STORAGE_DO_SPACES_REGION
+      - _APP_STORAGE_DO_SPACES_BUCKET
+      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
+      - _APP_STORAGE_BACKBLAZE_SECRET
+      - _APP_STORAGE_BACKBLAZE_REGION
+      - _APP_STORAGE_BACKBLAZE_BUCKET
+      - _APP_STORAGE_LINODE_ACCESS_KEY
+      - _APP_STORAGE_LINODE_SECRET
+      - _APP_STORAGE_LINODE_REGION
+      - _APP_STORAGE_LINODE_BUCKET
+      - _APP_STORAGE_WASABI_ACCESS_KEY
+      - _APP_STORAGE_WASABI_SECRET
+      - _APP_STORAGE_WASABI_REGION
+      - _APP_STORAGE_WASABI_BUCKET
 
   appwrite-worker-migrations:
     entrypoint: worker-migrations
@@ -610,10 +647,10 @@ services:
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
 
-  appwrite-maintenance:
+  appwrite-task-maintenance:
     entrypoint: maintenance
     <<: *x-logging
-    container_name: appwrite-maintenance
+    container_name: appwrite-task-maintenance
     image: appwrite-dev
     networks:
       - appwrite
@@ -709,11 +746,37 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
 
-
-  appwrite-schedule:
-    entrypoint: schedule
+  appwrite-task-scheduler-functions:
+    entrypoint: schedule-functions
     <<: *x-logging
-    container_name: appwrite-schedule
+    container_name: appwrite-task-scheduler-functions
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-task-scheduler-messages:
+    entrypoint: schedule-messages
+    <<: *x-logging
+    container_name: appwrite-task-scheduler-messages
     image: appwrite-dev
     networks:
       - appwrite
@@ -739,75 +802,18 @@ services:
 
   appwrite-assistant:
     container_name: appwrite-assistant
-    image: appwrite/assistant:0.3.0
+    image: appwrite/assistant:0.4.0
     networks:
       - appwrite
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
-
-  appwrite-worker-hamster:
-    entrypoint: worker-hamster
-    <<: *x-logging
-    container_name: appwrite-worker-hamster
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - mariadb
-    environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_MIXPANEL_TOKEN
-
-  appwrite-hamster-scheduler:
-    entrypoint: hamster
-    <<: *x-logging
-    container_name: appwrite-hamster-scheduler
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - mariadb
-    environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_HAMSTER_TIME
-      - _APP_HAMSTER_INTERVAL
 
   openruntimes-executor:
     container_name: openruntimes-executor
     hostname: appwrite-executor
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.5
+    image: openruntimes/executor:0.5.5
     restart: unless-stopped
     networks:
       - appwrite
@@ -876,7 +882,7 @@ services:
       - OPR_PROXY_HEALTHCHECK=enabled
 
   mariadb:
-    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
     networks:
@@ -890,7 +896,8 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync' # add ' --query_cache_size=0' for DB tests
+      - MARIADB_AUTO_UPGRADE=1
+    command: "mysqld --innodb-flush-method=fsync" # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
   # smtp:
@@ -906,7 +913,7 @@ services:
   #     - SMARTHOST_PORT=587
 
   redis:
-    image: redis:7.0.4-alpine
+    image: redis:7.2.4-alpine
     <<: *x-logging
     container_name: appwrite-redis
     command: >
@@ -946,7 +953,7 @@ services:
     container_name: appwrite-mailcatcher
     <<: *x-logging
     ports:
-      - '9503:1080'
+      - "9503:1080"
     networks:
       - appwrite
 
@@ -955,7 +962,7 @@ services:
     container_name: appwrite-requestcatcher
     <<: *x-logging
     ports:
-      - '9504:5000'
+      - "9504:5000"
     networks:
       - appwrite
 
@@ -973,11 +980,11 @@ services:
     image: redis/redisinsight:latest
     restart: unless-stopped
     networks:
-    - appwrite
+      - appwrite
     environment:
-    - REDIS_HOSTS=redis
+      - REDIS_HOSTS=redis
     ports:
-    - "8081:5540"
+      - "8081:5540"
 
   graphql-explorer:
     container_name: appwrite-graphql-explorer
@@ -989,7 +996,6 @@ services:
       - "9509:3000"
     environment:
       - SERVER_URL=http://localhost/v1/graphql
-
 
   # Dev Tools End   ------------------------------------------------------------------------------------------
 
