@@ -767,7 +767,7 @@ return [
                 'name' => '_APP_EXECUTOR_HOST',
                 'description' => 'The host used by Appwrite to communicate with the function executor!',
                 'introduction' => '0.13.0',
-                'default' => 'http://appwrite-executor/v1',
+                'default' => 'http://exc1/v1',
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
