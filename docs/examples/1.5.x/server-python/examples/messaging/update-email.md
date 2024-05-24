@@ -18,5 +18,6 @@ result = messaging.update_email(
     html = False, # optional
     cc = [], # optional
     bcc = [], # optional
-    scheduled_at = '' # optional
+    scheduled_at = '', # optional
+    attachments = [] # optional
 )
