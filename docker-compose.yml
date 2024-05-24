@@ -933,7 +933,7 @@ services:
       - MARIADB_USER=${_APP_DB_USER}
       - MARIADB_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
-    command: "--innodb-flush-method=fsync" # add ' --query_cache_size=0' for DB tests
+    command: "--loose-innodb-flush-method=fsync" # add ' --query_cache_size=0' for DB tests
 
   # smtp:
   #   image: appwrite/smtp:1.2.0
