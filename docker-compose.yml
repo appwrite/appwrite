@@ -928,10 +928,10 @@ services:
       timeout: 5s
       retries: 3
     environment:
-      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
-      - MYSQL_DATABASE=${_APP_DB_SCHEMA}
-      - MYSQL_USER=${_APP_DB_USER}
-      - MYSQL_PASSWORD=${_APP_DB_PASS}
+      - MARIADB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+      - MARIADB_DATABASE=${_APP_DB_SCHEMA}
+      - MARIADB_USER=${_APP_DB_USER}
+      - MARIADB_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
     command: "--innodb-flush-method=fsync" # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
