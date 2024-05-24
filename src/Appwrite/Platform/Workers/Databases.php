@@ -116,6 +116,11 @@ class Databases extends Action
          */
         $attribute = $dbForProject->getDocument('attributes', $attribute->getId());
 
+        if ($attribute->isEmpty()) {
+            // Attribute was deleted before job was processed
+            return;
+        }
+
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
         $type = $attribute->getAttribute('type', '');
@@ -175,7 +180,6 @@ class Databases extends Action
                     $relatedAttribute->setAttribute('error', $e->getMessage());
                 }
             }
-
 
             $dbForProject->updateDocument(
                 'attributes',

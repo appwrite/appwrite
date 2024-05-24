@@ -1,3 +1,45 @@
+# Version 1.5.7
+## What's Changed
+
+### Fixes
+* Change executor hostname back to exc1 to prevent name too long errors in the swoole table [#8147](https://github.com/appwrite/appwrite/pull/8147)
+
+# Version 1.5.6
+## What's Changed
+
+### Notable Changes
+
+* Prevent functions domain to be used as custom domain in [#7934](https://github.com/appwrite/appwrite/pull/7934)
+
+### Fixes
+
+* Fix auth mode check in [#7980](https://github.com/appwrite/appwrite/pull/7980)
+* Fix templates not copying hidden files in [#7610](https://github.com/appwrite/appwrite/pull/7610)
+* Use `resourceInternalId` for Querying Function Deployments in [#8038](https://github.com/appwrite/appwrite/pull/8038)
+* Fix Email OTP not verifying account in [#8084](https://github.com/appwrite/appwrite/pull/8084)
+* Fix MFA email verification code font in [#8082](https://github.com/appwrite/appwrite/pull/8082)
+* Don't kick user and require verification after enabling MFA in [#8081](https://github.com/appwrite/appwrite/pull/8081)
+* Fix typo in credit-cards.php credit card image filename in [#8074](https://github.com/appwrite/appwrite/pull/8074)
+* Fix Deprecated Warning in Doctor.php in [#8105](https://github.com/appwrite/appwrite/pull/8105)
+* Set limit to retrieve all stats for the usage range in [#8117](https://github.com/appwrite/appwrite/pull/8117)
+* Fix email used for name when user is created via Apple OAuth2 in [#8102](https://github.com/appwrite/appwrite/pull/8102)
+
+### Miscellaneous
+
+* Add GitHub action to close stale issues in [#7927](https://github.com/appwrite/appwrite/pull/7927)
+* Document the standard we follow for country codes in [#8014](https://github.com/appwrite/appwrite/pull/8014)
+* Add OSV Scanner for vulnerability scans in [#6506](https://github.com/appwrite/appwrite/pull/6506)
+* Fix stale action close reason in [#8046](https://github.com/appwrite/appwrite/pull/8046)
+* Add OSV Scanner for vulnerability scans in [#8021](https://github.com/appwrite/appwrite/pull/8021)
+* Fix some typos in comments in [#7993](https://github.com/appwrite/appwrite/pull/7993)
+* Replace missing domain paths in README.md in [#8049](https://github.com/appwrite/appwrite/pull/8049)
+* Add the React Native SDK in [#7776](https://github.com/appwrite/appwrite/pull/7776)
+* Bump database in [#8080](https://github.com/appwrite/appwrite/pull/8080)
+* Add documentation for metrics in [#8088](https://github.com/appwrite/appwrite/pull/8088)
+* Add new country Palestine with its translations in [#8031](https://github.com/appwrite/appwrite/pull/8031)
+* Update users create token description in [#8129](https://github.com/appwrite/appwrite/pull/8129)
+* Bump dependencies in [#8130](https://github.com/appwrite/appwrite/pull/8130)
+
 # Version 1.5.5
 ## What's Changed
 ### Notable changes
