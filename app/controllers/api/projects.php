@@ -111,34 +111,7 @@ App::post('/v1/projects')
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
-        $backups['database_db_fra1_v14x_02'] = ['from' => '03:00', 'to' => '05:00'];
-        $backups['database_db_fra1_v14x_03'] = ['from' => '00:00', 'to' => '02:00'];
-        $backups['database_db_fra1_v14x_04'] = ['from' => '00:00', 'to' => '02:00'];
-        $backups['database_db_fra1_v14x_05'] = ['from' => '00:00', 'to' => '02:00'];
-        $backups['database_db_fra1_v14x_06'] = ['from' => '00:00', 'to' => '02:00'];
-        $backups['database_db_fra1_v14x_07'] = ['from' => '00:00', 'to' => '02:00'];
-
         $databases = Config::getParam('pools-database', []);
-
-        /**
-         * Remove databases from the list that are currently undergoing an backup
-         */
-        if (count($databases) > 1) {
-            $now = new \DateTime();
-
-            foreach ($databases as $index => $database) {
-                if (empty($backups[$database])) {
-                    continue;
-                }
-                $backup = $backups[$database];
-                $from = \DateTime::createFromFormat('H:i', $backup['from']);
-                $to = \DateTime::createFromFormat('H:i', $backup['to']);
-                if ($now >= $from && $now <= $to) {
-                    unset($databases[$index]);
-                    break;
-                }
-            }
-        }
 
         $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
         $index = \array_search($databaseOverride, $databases);
