@@ -2,83 +2,84 @@
 ## What's Changed
 
 ### Fixes
-* Fix database exception wrapping by @abnegate in https://github.com/appwrite/appwrite/pull/7787
-* Fix exception wrap order by @abnegate in https://github.com/appwrite/appwrite/pull/7818
-* Fix membership query to use internalId by @lohanidamodar in https://github.com/appwrite/appwrite/pull/7834
-* Fix vcs silent mode by @vermakhushboo in https://github.com/appwrite/appwrite/pull/7683
-* Fix function domain permissions by @stnguyen90 in https://github.com/appwrite/appwrite/pull/7852
-* Fix tests required for Cloud by @lohanidamodar in https://github.com/appwrite/appwrite/pull/7777
-* Fix OAuth error code by @vermakhushboo in https://github.com/appwrite/appwrite/pull/7893
-* Fix connection reclaim logic. by @eldadfux in https://github.com/appwrite/appwrite/pull/6886
-* Fix shared queue name by @abnegate in https://github.com/appwrite/appwrite/pull/8092
-* Fix syntax error by @abnegate in https://github.com/appwrite/appwrite/pull/8093
-* Fix missing id attribute error by @abnegate in https://github.com/appwrite/appwrite/pull/8094
-* Fix tests for CL by @lohanidamodar in https://github.com/appwrite/appwrite/pull/8076
-* Fix project deletes for shared tables by @abnegate in https://github.com/appwrite/appwrite/pull/8107
-* Handle SQL error code 'HY000' in realtime by @stnguyen90 in https://github.com/appwrite/appwrite/pull/8106
-* Fix: Don't Override `robots.txt` for Other Domains by @ItzNotABug in https://github.com/appwrite/appwrite/pull/8185
-* Escape function build command by @stnguyen90 in https://github.com/appwrite/appwrite/pull/7808
-* Create failed execution from worker if deployment doesn't exist by @vermakhushboo in https://github.com/appwrite/appwrite/pull/7896
-* Fix: admin mode on console by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7951
-* Fix file size default limit by @shimonewman in https://github.com/appwrite/appwrite/pull/7843
-* Fix: Python failing builds by @Meldiron in https://github.com/appwrite/appwrite/pull/8078
-* Fix shared project delete by @abnegate in https://github.com/appwrite/appwrite/pull/8142
-* Fix TextMagic class name by @stnguyen90 in https://github.com/appwrite/appwrite/pull/8132
-* Prevent functions domain and subdomain to be added as custom domain by @lohanidamodar in https://github.com/appwrite/appwrite/pull/7933
-* Fix don't publish max users exceed by @vermakhushboo in https://github.com/appwrite/appwrite/pull/8067
-* Fix invalid cache document id by @stnguyen90 in https://github.com/appwrite/appwrite/pull/8183
-* Fix not hiding tokens for clients via realtime by @abnegate in https://github.com/appwrite/appwrite/pull/7870
+* Fix database exception wrapping by @abnegate in (#7787)[https://github.com/appwrite/appwrite/pull/7787]
+* Fix exception wrap order by @abnegate in (#7818)[https://github.com/appwrite/appwrite/pull/7818]
+* Fix membership query to use internalId by @lohanidamodar in (#7834)[https://github.com/appwrite/appwrite/pull/7834]
+* Fix vcs silent mode by @vermakhushboo in (#7683)[https://github.com/appwrite/appwrite/pull/7683]
+* Fix function domain permissions by @stnguyen90 in (#7852)[https://github.com/appwrite/appwrite/pull/7852]
+* Fix tests required for Cloud by @lohanidamodar in (#7777)[https://github.com/appwrite/appwrite/pull/7777]
+* Fix OAuth error code by @vermakhushboo in (#7893)[https://github.com/appwrite/appwrite/pull/7893]
+* Fix connection reclaim logic. by @eldadfux in (#6886)[https://github.com/appwrite/appwrite/pull/6886]
+* Fix shared queue name by @abnegate in (#8092)[https://github.com/appwrite/appwrite/pull/8092]
+* Fix syntax error by @abnegate in (#8093)[https://github.com/appwrite/appwrite/pull/8093]
+* Fix missing id attribute error by @abnegate in (#8094)[https://github.com/appwrite/appwrite/pull/8094]
+* Fix tests for CL by @lohanidamodar in (#8076)[https://github.com/appwrite/appwrite/pull/8076]
+* Fix project deletes for shared tables by @abnegate in (#8107)[https://github.com/appwrite/appwrite/pull/8107]
+* Handle SQL error code 'HY000' in realtime by @stnguyen90 in (#8106)[https://github.com/appwrite/appwrite/pull/8106]
+* Fix: Don't Override `robots.txt` for Other Domains by @ItzNotABug in (#8185)[https://github.com/appwrite/appwrite/pull/8185]
+* Escape function build command by @stnguyen90 in (#7808)[https://github.com/appwrite/appwrite/pull/7808]
+* Create failed execution from worker if deployment doesn't exist by @vermakhushboo in (#7896)[https://github.com/appwrite/appwrite/pull/7896]
+* Fix: admin mode on console by @TorstenDittmann in (#7951)[https://github.com/appwrite/appwrite/pull/7951]
+* Fix file size default limit by @shimonewman in (#7843)[https://github.com/appwrite/appwrite/pull/7843]
+* Fix: Python failing builds by @Meldiron in (#8078)[https://github.com/appwrite/appwrite/pull/8078]
+* Fix shared project delete by @abnegate in (#8142)[https://github.com/appwrite/appwrite/pull/8142]
+* Fix TextMagic class name by @stnguyen90 in (#8132)[https://github.com/appwrite/appwrite/pull/8132]
+* Prevent functions domain and subdomain to be added as custom domain by @lohanidamodar in (#7933)[https://github.com/appwrite/appwrite/pull/7933]
+* Fix don't publish max users exceed by @vermakhushboo in (#8067)[https://github.com/appwrite/appwrite/pull/8067]
+* Fix invalid cache document id by @stnguyen90 in (#8183)[https://github.com/appwrite/appwrite/pull/8183]
+* Fix not hiding tokens for clients via realtime by @abnegate in (#7870)[https://github.com/appwrite/appwrite/pull/7870]
 
 ### Miscellaneous
-* Upload 400s to separate error logger by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/7784
-* Admin mode use teamInternalId by @lohanidamodar in https://github.com/appwrite/appwrite/pull/7835
-* Chore: update avatars API by @christyjacob4 in https://github.com/appwrite/appwrite/pull/7840
-* Use internal ids for query by @lohanidamodar in https://github.com/appwrite/appwrite/pull/7838
-* Remove cloud related scripts by @shimonewman in https://github.com/appwrite/appwrite/pull/7414
-* Update VCS Comment by @vermakhushboo in https://github.com/appwrite/appwrite/pull/7854
-* Transaction and reconnection fixes by @fogelito in https://github.com/appwrite/appwrite/pull/7877
-* Feat configurable collections by @christyjacob4 in https://github.com/appwrite/appwrite/pull/7882
-* Remove var_dump calls by @stnguyen90 in https://github.com/appwrite/appwrite/pull/7884
-* Storage DO adapter http version by @lohanidamodar in https://github.com/appwrite/appwrite/pull/7905
-* Update executor version by @vermakhushboo in https://github.com/appwrite/appwrite/pull/7910
-* Comment timer tick by @vermakhushboo in https://github.com/appwrite/appwrite/pull/7911
-* Update db for relationships and object as array attributes fixes by @abnegate in https://github.com/appwrite/appwrite/pull/7917
-* Bump executor version to 0.5.1 by @vermakhushboo in https://github.com/appwrite/appwrite/pull/7925
-* Update database by @abnegate in https://github.com/appwrite/appwrite/pull/7937
-* Reclaim only current connection by @abnegate in https://github.com/appwrite/appwrite/pull/7941
-* Match memberships on internal ID by @abnegate in https://github.com/appwrite/appwrite/pull/7953
-* Chore: queue retry update by @shimonewman in https://github.com/appwrite/appwrite/pull/7991
-* Chore task addition by @shimonewman in https://github.com/appwrite/appwrite/pull/7992
-* Databases.php collection not found by @fogelito in https://github.com/appwrite/appwrite/pull/7341
-* Update database by @abnegate in https://github.com/appwrite/appwrite/pull/8036
-* Feat upgrade db by @abnegate in https://github.com/appwrite/appwrite/pull/8050
-* Handle string error codes by @fogelito in https://github.com/appwrite/appwrite/pull/7878
-* Migration Logging Improvements by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/8057
-* Remove logger code from avatars.php by @vermakhushboo in https://github.com/appwrite/appwrite/pull/8065
-* Update chunk size to 7 MB by @vermakhushboo in https://github.com/appwrite/appwrite/pull/8060
-* Shared tables support by @abnegate in https://github.com/appwrite/appwrite/pull/7206
-* Ensure namespace is set if override equals shared tables by @abnegate in https://github.com/appwrite/appwrite/pull/8091
-* Update database by @abnegate in https://github.com/appwrite/appwrite/pull/8095
-* Disable sending realtime stats by @stnguyen90 in https://github.com/appwrite/appwrite/pull/8104
-* Increase chunk size to 10 MB by @vermakhushboo in https://github.com/appwrite/appwrite/pull/8099
-* Update db by @abnegate in https://github.com/appwrite/appwrite/pull/8113
-* Update executor image name to exc-1 by @vermakhushboo in https://github.com/appwrite/appwrite/pull/8123
-* Catch DB errors on delete by @abnegate in https://github.com/appwrite/appwrite/pull/8143
-* Update Logger and migrations, implement sampler. by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/8146
-* Increase shared tables projects by @abnegate in https://github.com/appwrite/appwrite/pull/8161
-* Feat: improve cold start error, merge to cloud by @loks0n in https://github.com/appwrite/appwrite/pull/8165
-* Add tests for scheduled functions by @vermakhushboo in https://github.com/appwrite/appwrite/pull/8164
-* Remove throw PdoException in Error hook by @fogelito in https://github.com/appwrite/appwrite/pull/8169
-* Refactor localdevice injection by @byawitz in https://github.com/appwrite/appwrite/pull/8173
-* Usage sms per country code count by @shimonewman in https://github.com/appwrite/appwrite/pull/7592
-* GetEnv on worker.php by @shimonewman in https://github.com/appwrite/appwrite/pull/8026
-* Feat get env by @shimonewman in https://github.com/appwrite/appwrite/pull/8180
-* Chore: remove compose version by @loks0n in https://github.com/appwrite/appwrite/pull/8148
-* Chore update executor host default var by @abnegate in https://github.com/appwrite/appwrite/pull/8190
-* Wrap realtime stats in an edition check by @abnegate in https://github.com/appwrite/appwrite/pull/8192
-* Update executor image name by @vermakhushboo in https://github.com/appwrite/appwrite/pull/8147
-* Feat: improve header demo values by @loks0n in https://github.com/appwrite/appwrite/pull/8089
-* Feat: add warning header by @loks0n in https://github.com/appwrite/appwrite/pull/8063
+* Upload 400s to separate error logger by @PineappleIOnic in (#7784)[https://github.com/appwrite/appwrite/pull/7784]
+* Admin mode use teamInternalId by @lohanidamodar in (#7835)[https://github.com/appwrite/appwrite/pull/7835]
+* Chore: update avatars API by @christyjacob4 in (#7840)[https://github.com/appwrite/appwrite/pull/7840]
+* Use internal ids for query by @lohanidamodar in (#7838)[https://github.com/appwrite/appwrite/pull/7838]
+* Remove cloud related scripts by @shimonewman in (#7414)[https://github.com/appwrite/appwrite/pull/7414]
+* Update VCS Comment by @vermakhushboo in (#7854)[https://github.com/appwrite/appwrite/pull/7854]
+* Transaction and reconnection fixes by @fogelito in (#7877)[https://github.com/appwrite/appwrite/pull/7877]
+* Feat configurable collections by @christyjacob4 in (#7882)[https://github.com/appwrite/appwrite/pull/7882]
+* Remove var_dump calls by @stnguyen90 in (#7884)[https://github.com/appwrite/appwrite/pull/7884]
+* Storage DO adapter http version by @lohanidamodar in (#7905)[https://github.com/appwrite/appwrite/pull/7905]
+* Update executor version by @vermakhushboo in (#7910)[https://github.com/appwrite/appwrite/pull/7910]
+* Comment timer tick by @vermakhushboo in (#7911)[https://github.com/appwrite/appwrite/pull/7911]
+* Update db for relationships and object as array attributes fixes by @abnegate in (#7917)[https://github.com/appwrite/appwrite/pull/7917]
+* Bump executor version to 0.5.1 by @vermakhushboo in (#7925)[https://github.com/appwrite/appwrite/pull/7925]
+* Update database by @abnegate in (#7937)[https://github.com/appwrite/appwrite/pull/7937]
+* Reclaim only current connection by @abnegate in (#7941)[https://github.com/appwrite/appwrite/pull/7941]
+* Match memberships on internal ID by @abnegate in (#7953)[https://github.com/appwrite/appwrite/pull/7953]
+* Chore: queue retry update by @shimonewman in (#7991)[https://github.com/appwrite/appwrite/pull/7991]
+* Chore task addition by @shimonewman in (#7992)[https://github.com/appwrite/appwrite/pull/7992]
+* Databases.php collection not found by @fogelito in (#7341)[https://github.com/appwrite/appwrite/pull/7341]
+* Update database by @abnegate in (#8036)[https://github.com/appwrite/appwrite/pull/8036]
+* Feat upgrade db by @abnegate in (#8050)[https://github.com/appwrite/appwrite/pull/8050]
+* Handle string error codes by @fogelito in (#7878)[https://github.com/appwrite/appwrite/pull/7878]
+* Migration Logging Improvements by @PineappleIOnic in (#8057)[https://github.com/appwrite/appwrite/pull/8057]
+* Remove logger code from avatars.php by @vermakhushboo in (#)[https://github.com/appwrite/appwrite/pull/8065]
+* Remove logger code from avatars.php by @vermakhushboo in (#)[https://github.com/appwrite/appwrite/pull/8065]
+* Update chunk size to 7 MB by @vermakhushboo in (#8060)[https://github.com/appwrite/appwrite/pull/8060]
+* Shared tables support by @abnegate in (#7206)[https://github.com/appwrite/appwrite/pull/7206]
+* Ensure namespace is set if override equals shared tables by @abnegate in (#8091)[https://github.com/appwrite/appwrite/pull/8091]
+* Update database by @abnegate in (#8095)[https://github.com/appwrite/appwrite/pull/8095]
+* Disable sending realtime stats by @stnguyen90 in (#8104)[https://github.com/appwrite/appwrite/pull/8104]
+* Increase chunk size to 10 MB by @vermakhushboo in (#8099)[https://github.com/appwrite/appwrite/pull/8099]
+* Update db by @abnegate in (#8113)[https://github.com/appwrite/appwrite/pull/8113]
+* Update executor image name to exc-1 by @vermakhushboo in (#8123)[https://github.com/appwrite/appwrite/pull/8123]
+* Catch DB errors on delete by @abnegate in (#8143)[https://github.com/appwrite/appwrite/pull/8143]
+* Update Logger and migrations, implement sampler. by @PineappleIOnic in (#8146)[https://github.com/appwrite/appwrite/pull/8146]
+* Increase shared tables projects by @abnegate in (#8161)[https://github.com/appwrite/appwrite/pull/8161]
+* Feat: improve cold start error, merge to cloud by @loks0n in (#8165)[https://github.com/appwrite/appwrite/pull/8165]
+* Add tests for scheduled functions by @vermakhushboo in (#8164)[https://github.com/appwrite/appwrite/pull/8164]
+* Remove throw PdoException in Error hook by @fogelito in (#8169)[https://github.com/appwrite/appwrite/pull/8169]
+* Refactor localdevice injection by @byawitz in (#8173)[https://github.com/appwrite/appwrite/pull/8173]
+* Usage sms per country code count by @shimonewman in (#7592)[https://github.com/appwrite/appwrite/pull/7592]
+* GetEnv on worker.php by @shimonewman in (#8026)[https://github.com/appwrite/appwrite/pull/8026]
+* Feat get env by @shimonewman in (#8180)[https://github.com/appwrite/appwrite/pull/8180]
+* Chore: remove compose version by @loks0n in (#8148)[https://github.com/appwrite/appwrite/pull/8148]
+* Chore update executor host default var by @abnegate in (#8190)[https://github.com/appwrite/appwrite/pull/8190]
+* Wrap realtime stats in an edition check by @abnegate in (#8192)[https://github.com/appwrite/appwrite/pull/8192]
+* Update executor image name by @vermakhushboo in (#8147)[https://github.com/appwrite/appwrite/pull/8147]
+* Feat: improve header demo values by @loks0n in (#8089)[https://github.com/appwrite/appwrite/pull/8089]
+* Feat: add warning header by @loks0n in (#8063)[https://github.com/appwrite/appwrite/pull/8063]
 
 # Version 1.5.6
 ## What's Changed
