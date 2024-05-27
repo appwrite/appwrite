@@ -107,7 +107,7 @@ abstract class ScheduleBase extends Action
             foreach ($results as $document) {
                 try {
                     var_dump('=== ScheduleBase start');
-                    var_dump($getSchedule($document));
+                    var_dump($getSchedule($document)['resource']);
                     var_dump('=== ScheduleBase end');
                     $this->schedules[$document['resourceId']] = $getSchedule($document);
                 } catch (\Throwable $th) {
