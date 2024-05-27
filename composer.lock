@@ -1966,16 +1966,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.4.0",
+            "version": "0.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "a72f27bd3dde68752fb185d306c4820e1b8d9657"
+                "reference": "ae3cfe93f6d313105d226aeb68806660c806a925"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/a72f27bd3dde68752fb185d306c4820e1b8d9657",
-                "reference": "a72f27bd3dde68752fb185d306c4820e1b8d9657",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/ae3cfe93f6d313105d226aeb68806660c806a925",
+                "reference": "ae3cfe93f6d313105d226aeb68806660c806a925",
                 "shasum": ""
             },
             "require": {
@@ -2008,9 +2008,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.4.0"
+                "source": "https://github.com/utopia-php/migration/tree/0.4.1"
             },
-            "time": "2024-02-25T12:35:21+00:00"
+            "time": "2024-05-01T13:19:18+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -2918,16 +2918,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.15.2",
+            "version": "v1.15.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "2c9f8004899815f3f0ee3cb28ef7281e2b589134"
+                "reference": "3600b5d17aff52f6100ea4921849deacbbeb8656"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/2c9f8004899815f3f0ee3cb28ef7281e2b589134",
-                "reference": "2c9f8004899815f3f0ee3cb28ef7281e2b589134",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/3600b5d17aff52f6100ea4921849deacbbeb8656",
+                "reference": "3600b5d17aff52f6100ea4921849deacbbeb8656",
                 "shasum": ""
             },
             "require": {
@@ -2980,7 +2980,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2024-04-23T15:42:34+00:00"
+            "time": "2024-04-30T15:02:26+00:00"
         },
         {
             "name": "matthiasmullie/minify",

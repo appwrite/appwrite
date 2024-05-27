@@ -1,5 +1,7 @@
 <?php
 
+use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Audit;
@@ -195,55 +197,98 @@ App::init()
         $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
         $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
 
-        $authKey = $request->getHeader('x-appwrite-key', '');
+        $apiKey = $request->getHeader('x-appwrite-key', '');
 
-        if (!empty($authKey)) { // API Key authentication
+        // API Key authentication
+        if (!empty($apiKey)) {
             // Do not allow API key and session to be set at the same time
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
 
-            // Check if given key match project API keys
-            $key = $project->find('secret', $authKey, 'keys');
-            if ($key) {
-                $user = new Document([
-                    '$id' => '',
-                    'status' => true,
-                    'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
-                    'password' => '',
-                    'name' => $project->getAttribute('name', 'Untitled'),
-                ]);
+            if(!\str_contains($apiKey, '_')) {
+                $keyType = API_KEY_STANDARD;
+                $authKey = $apiKey;
+            } else {
+                [ $keyType, $authKey ] = \explode('_', $apiKey, 2);
+            }
 
-                $role = Auth::USER_ROLE_APPS;
-                $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+            if($keyType === API_KEY_DYNAMIC) {
+                // Dynamic key
 
-                $expire = $key->getAttribute('expire');
-                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
-                    throw new Exception(Exception::PROJECT_KEY_EXPIRED);
+                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10);
+
+                try {
+                    $payload = $jwtObj->decode($authKey);
+                } catch (JWTException $error) {
+                    throw new Exception(Exception::API_KEY_EXPIRED);
                 }
 
-                Authorization::setRole(Auth::USER_ROLE_APPS);
-                Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+                $projectId = $payload['projectId'] ?? '';
+                $tokenScopes = $payload['scopes'] ?? [];
 
-                $accessedAt = $key->getAttribute('accessedAt', '');
-                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
-                    $key->setAttribute('accessedAt', DateTime::now());
-                    $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                    $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                // JWT includes project ID for better security
+                if ($projectId === $project->getId()) {
+                    $user = new Document([
+                        '$id' => '',
+                        'status' => true,
+                        'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
+                        'password' => '',
+                        'name' => $project->getAttribute('name', 'Untitled'),
+                    ]);
+
+                    $role = Auth::USER_ROLE_APPS;
+                    $scopes = \array_merge($roles[$role]['scopes'], $tokenScopes);
+
+                    Authorization::setRole(Auth::USER_ROLE_APPS);
+                    Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
                 }
+            } elseif($keyType === API_KEY_STANDARD) {
+                // No underline means no prefix. Backwards compatibility.
+                // Regular key
 
-                $sdkValidator = new WhiteList($servers, true);
-                $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
-                if ($sdkValidator->isValid($sdk)) {
-                    $sdks = $key->getAttribute('sdks', []);
-                    if (!in_array($sdk, $sdks)) {
-                        array_push($sdks, $sdk);
-                        $key->setAttribute('sdks', $sdks);
+                // Check if given key match project API keys
+                $key = $project->find('secret', $apiKey, 'keys');
+                if ($key) {
+                    $user = new Document([
+                        '$id' => '',
+                        'status' => true,
+                        'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
+                        'password' => '',
+                        'name' => $project->getAttribute('name', 'Untitled'),
+                    ]);
 
-                        /** Update access time as well */
-                        $key->setAttribute('accessedAt', Datetime::now());
+                    $role = Auth::USER_ROLE_APPS;
+                    $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+
+                    $expire = $key->getAttribute('expire');
+                    if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
+                        throw new Exception(Exception::PROJECT_KEY_EXPIRED);
+                    }
+
+                    Authorization::setRole(Auth::USER_ROLE_APPS);
+                    Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+
+                    $accessedAt = $key->getAttribute('accessedAt', '');
+                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
+                        $key->setAttribute('accessedAt', DateTime::now());
                         $dbForConsole->updateDocument('keys', $key->getId(), $key);
                         $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                    }
+
+                    $sdkValidator = new WhiteList($servers, true);
+                    $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+                    if ($sdkValidator->isValid($sdk)) {
+                        $sdks = $key->getAttribute('sdks', []);
+                        if (!in_array($sdk, $sdks)) {
+                            array_push($sdks, $sdk);
+                            $key->setAttribute('sdks', $sdks);
+
+                            /** Update access time as well */
+                            $key->setAttribute('accessedAt', Datetime::now());
+                            $dbForConsole->updateDocument('keys', $key->getId(), $key);
+                            $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                        }
                     }
                 }
             }

@@ -3054,7 +3054,18 @@ $projectCollections = array_merge([
                 'required' => false,
                 'default' => null,
                 'filters' => [],
-            ]
+            ],
+            [
+                '$id' => ID::custom('scopes'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
