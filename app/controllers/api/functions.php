@@ -1562,7 +1562,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $response->noContent();
     });
 
-App::patch('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
+App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->groups(['api', 'functions'])
     ->desc('Update build status')
     ->label('scope', 'functions.write')
