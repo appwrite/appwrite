@@ -60,7 +60,8 @@ abstract class ScheduleBase extends Action
 
             $collectionId = match ($schedule->getAttribute('resourceType')) {
                 'function' => 'functions',
-                'message' => 'messages'
+                'message' => 'messages',
+                'backup' => 'backupsPolicy'
             };
 
             $resource = $getProjectDB($project)->getDocument(
