@@ -495,6 +495,11 @@ class Builds extends Action
                 $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
             }
 
+            $build = $dbForProject->getDocument('builds', $buildId);
+            if ($build->getAttribute('status') === 'cancelled') {
+                return;
+            }
+
             /** Update function schedule */
 
             // Inform scheduler if function is still active
