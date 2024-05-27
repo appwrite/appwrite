@@ -555,6 +555,9 @@ App::init()
             if (version_compare($responseFormat, '1.5.0', '<')) {
                 $response->addFilter(new ResponseV17());
             }
+            if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
+                $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is ". APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
+            }
         }
 
         /*
@@ -885,20 +888,50 @@ App::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('utopia')
+    ->inject('swooleRequest')
+    ->inject('request')
     ->inject('response')
-    ->action(function (Response $response) {
-        $template = new View(__DIR__ . '/../views/general/robots.phtml');
-        $response->text($template->render(false));
+    ->inject('dbForConsole')
+    ->inject('getProjectDB')
+    ->inject('queueForEvents')
+    ->inject('queueForUsage')
+    ->inject('geodb')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+        $host = $request->getHostname() ?? '';
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
+
+        if ($host === $mainDomain) {
+            $template = new View(__DIR__ . '/../views/general/robots.phtml');
+            $response->text($template->render(false));
+        } else {
+            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb);
+        }
     });
 
 App::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('utopia')
+    ->inject('swooleRequest')
+    ->inject('request')
     ->inject('response')
-    ->action(function (Response $response) {
-        $template = new View(__DIR__ . '/../views/general/humans.phtml');
-        $response->text($template->render(false));
+    ->inject('dbForConsole')
+    ->inject('getProjectDB')
+    ->inject('queueForEvents')
+    ->inject('queueForUsage')
+    ->inject('geodb')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+        $host = $request->getHostname() ?? '';
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
+
+        if ($host === $mainDomain) {
+            $template = new View(__DIR__ . '/../views/general/humans.phtml');
+            $response->text($template->render(false));
+        } else {
+            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb);
+        }
     });
 
 App::get('/.well-known/acme-challenge/*')

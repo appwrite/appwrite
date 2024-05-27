@@ -307,6 +307,7 @@ class Exception extends \Exception
         $this->type = $type;
         $this->code = $code ?? $this->errors[$type]['code'];
 
+        // Mark string errors like HY001 from PDO as 500 errors
         if(\is_string($this->code)) {
             if (\is_numeric($this->code)) {
                 $this->code = (int) $this->code;
