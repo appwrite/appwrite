@@ -1,5 +1,6 @@
 <?php
 
+use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
@@ -39,6 +40,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
@@ -2089,6 +2091,59 @@ App::delete('/v1/users/identities/:identityId')
             ->setPayload($response->output($identity, Response::MODEL_IDENTITY));
 
         return $response->noContent();
+    });
+
+App::post('/v1/users/:userId/jwts')
+    ->desc('Create user JWT')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createJWT')
+    ->label('sdk.description', '/docs/references/users/create-user-jwt.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_JWT)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('sessionId', 'current', new UID(), 'Session ID. Use the string \'current\' to use the most recent session. Defaults to the most recent session.')
+    ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, int $duration, string $sessionId, Response $response, Database $dbForProject) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $sessions = $user->getAttribute('sessions', []);
+        $session = new Document();
+
+        if($sessionId === 'current') {
+            // Get most recent
+            $session = \count($sessions) > 0 ? $sessions[\count($sessions) - 1] : new Document();
+        } else {
+            // Find by ID
+            foreach ($sessions as $loopSession) { /** @var Utopia\Database\Document $loopSession */
+                if ($loopSession->getId() == $sessionId) {
+                    $session = $loopSession;
+                }
+            }
+        }
+
+        if ($session->isEmpty()) {
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND);
+        }
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 10); // Instantiate with key, algo, maxAge and leeway.
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document(['jwt' => $jwt->encode([
+                'userId' => $user->getId(),
+                'sessionId' => $session->getId(),
+            ])]), Response::MODEL_JWT);
     });
 
 App::get('/v1/users/usage')

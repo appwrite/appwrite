@@ -2336,7 +2336,8 @@ App::post('/v1/account/tokens/phone')
         ;
     });
 
-App::post('/v1/account/jwt')
+App::post('/v1/account/jwts')
+    ->alias('/v1/account/jwt')
     ->desc('Create JWT')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')

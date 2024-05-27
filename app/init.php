@@ -440,10 +440,12 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database->find('sessions', [
+        $s = Authorization::skip(fn () => $database->find('sessions', [
             Query::equal('userInternalId', [$document->getInternalId()]),
             Query::limit(APP_LIMIT_SUBQUERY),
         ]));
+        \var_dump($s);
+        return $s;
     }
 );
 
