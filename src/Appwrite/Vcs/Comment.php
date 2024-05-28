@@ -67,9 +67,6 @@ class Comment
             ];
         }
 
-        //TODO: Update link to documentation
-        $text .= "**Your function has been automatically deployed.** Learn more about Appwrite [Function Deployments](https://appwrite.io/docs/functions).\n\n";
-
         foreach ($projects as $projectId => $project) {
             $text .= "**{$project['name']}** `{$projectId}`\n\n";
             $text .= "| Function | ID | Status | Action |\n";
@@ -79,6 +76,18 @@ class Comment
             $hostname = System::getEnv('_APP_DOMAIN');
 
             foreach ($project['functions'] as $functionId => $function) {
+                if ($function['status'] === 'waiting' || $function['status'] === 'processing' || $function['status'] === 'building') {
+                    $text .= "**Your function deployment is in progress. Please check back in a few minutes for the updated status.**\n\n";
+                } elseif ($function['status'] === 'ready') {
+                    $text .= "**Your function has been successfully deployed.**\n\n";
+                } else {
+                    $text .= "**Your function deployment has failed. Please check the logs for more details and retry.**\n\n";
+                }
+
+                $text .= "Project name: **{$project['name']}** \nProject ID: `{$projectId}`\n\n";
+                $text .= "| Function | ID | Status | Action |\n";
+                $text .= "| :- | :-  | :-  | :- |\n";
+
                 $generateImage = function (string $status) use ($protocol, $hostname) {
                     $extention = $status === 'building' ? 'gif' : 'png';
                     $imagesUrl = $protocol . '://' . $hostname . '/images/vcs/';
@@ -106,7 +115,9 @@ class Comment
 
             $text .= "\n\n";
         }
-        //TODO: Update did you know section
+        $functionUrl = $protocol . '://' . $hostname . '/console/project-' . $projectId . '/functions/function-' . $functionId;
+        $text .= "Only deployments on the production branch are activated automatically. If you'd like to activate this deployment, navigate to [your deployments]($functionUrl). Learn more about Appwrite [Function deployments](https://appwrite.io/docs/functions).\n\n";
+
         $tip = $this->tips[array_rand($this->tips)];
         $text .= "> **💡 Did you know?** \n " . $tip . "\n\n";
 

@@ -61,7 +61,7 @@ class FunctionsCustomClientTest extends Scope
                 'users.*.create',
                 'users.*.delete',
             ],
-            'schedule' => '0 0 1 1 *',
+            'schedule' => '* * * * *', // execute every minute
             'timeout' => 10,
         ]);
 
@@ -162,6 +162,24 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(202, $execution['headers']['status-code']);
+
+        // Wait for the first scheduled execution to be created
+        sleep(65);
+
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertCount(2, $executions['body']['executions']);
+        $this->assertIsArray($executions['body']['executions']);
+        $this->assertEquals($executions['body']['executions'][1]['trigger'], 'schedule');
+        $this->assertEquals($executions['body']['executions'][1]['status'], 'completed');
+        $this->assertEquals($executions['body']['executions'][1]['responseStatusCode'], 200);
+        $this->assertEquals($executions['body']['executions'][1]['responseBody'], '');
+        $this->assertEquals($executions['body']['executions'][1]['logs'], '');
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $function['body']['$id'], [
