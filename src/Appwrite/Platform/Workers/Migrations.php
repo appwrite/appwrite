@@ -6,6 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
+use Appwrite\Utopia\Migration\Destinations\Backup;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -17,7 +18,8 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\Breadcrumb;
-use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
+use Utopia\Migration\Destination;
+use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite;
@@ -126,6 +128,24 @@ class Migrations extends Action
             ),
             Appwrite::getName() => new Appwrite($credentials['projectId'], str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']),
             default => throw new \Exception('Invalid source type'),
+        };
+    }
+
+    /**
+     * @param string $destination
+     * @param array $credentials
+     * @return Destination
+     * @throws Exception
+     */
+    protected function processDestination(string $destination, array $credentials): Destination
+    {
+        return match ($destination) {
+            DestinationAppwrite::getName() => new DestinationAppwrite(
+                $credentials['projectId'],
+                str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'],
+                $credentials['apiKey']
+            ),
+            default => throw new \Exception('Invalid destination type'),
         };
     }
 
