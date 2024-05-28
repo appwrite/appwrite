@@ -20,6 +20,7 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Log\Breadcrumb;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
+use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite;
@@ -124,7 +125,7 @@ class Migrations extends Action
                 $credentials['password'],
                 $credentials['port'],
             ),
-            Appwrite::getName() => new Appwrite(
+            SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
                 str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'],
                 $credentials['apiKey']
@@ -302,12 +303,6 @@ class Migrations extends Action
             );
 
             $source->report();
-
-            $destination = new DestinationsAppwrite(
-                $projectDocument->getId(),
-                'http://appwrite/v1',
-                $tempAPIKey['secret'],
-            );
 
             $transfer = new Transfer(
                 $source,
