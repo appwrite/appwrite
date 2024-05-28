@@ -1296,8 +1296,6 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()));
 
-        \var_dump($attributes['body']);
-
         $this->assertEquals(0, $attributes['body']['total']);
     }
 

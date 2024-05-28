@@ -107,6 +107,8 @@ class Exception extends \Exception
     public const USER_TARGET_ALREADY_EXISTS        = 'user_target_already_exists';
     public const USER_API_KEY_AND_SESSION_SET      = 'user_key_and_session_set';
 
+    public const API_KEY_EXPIRED      = 'api_key_expired';
+
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
     public const TEAM_INVITE_ALREADY_EXISTS        = 'team_invite_already_exists';

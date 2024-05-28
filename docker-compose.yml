@@ -42,6 +42,7 @@ services:
     networks:
       - gateway
       - appwrite
+      - runtimes
 
   appwrite:
     container_name: appwrite
@@ -497,6 +498,8 @@ services:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DOMAIN
+      - _APP_OPTIONS_FORCE_HTTPS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER

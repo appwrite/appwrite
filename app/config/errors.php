@@ -332,6 +332,11 @@ return [
         'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
     ],
+    Exception::API_KEY_EXPIRED => [
+        'name' => Exception::API_KEY_EXPIRED,
+        'description' => 'The dynamic API key has expired. Please don\'t use dynamic API keys for more than duration of the execution.',
+        'code' => 401,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [
