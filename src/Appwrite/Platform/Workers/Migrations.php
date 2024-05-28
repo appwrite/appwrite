@@ -33,8 +33,9 @@ use Utopia\Queue\Message;
 
 class Migrations extends Action
 {
-    protected ?Database $dbForProject = null;
-    protected ?Database $dbForConsole = null;
+    protected Database $dbForProject;
+    protected Database $dbForConsole;
+    protected Document $project;
 
     public static function getName(): string
     {
@@ -81,6 +82,7 @@ class Migrations extends Action
 
         $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
+        $this->project = $project;
 
         /**
          * Handle Event execution.
@@ -92,7 +94,7 @@ class Migrations extends Action
         $log->addTag('migrationId', $migration->getId());
         $log->addTag('projectId', $project->getId());
 
-        $this->processMigration($project, $migration, $log);
+        $this->processMigration($migration, $log);
     }
 
     /**
@@ -268,14 +270,9 @@ class Migrations extends Action
      * @throws Structure
      * @throws \Utopia\Database\Exception
      */
-    protected function processMigration(Document $project, Document $migration, Log $log): void
+    protected function processMigration(Document $migration, Log $log): void
     {
-        /**
-         * @var Document $migrationDocument
-         * @var Transfer $transfer
-         */
-        $migrationDocument = null;
-        $transfer = null;
+        $project = $this->project;
         $projectDocument = $this->dbForConsole->getDocument('projects', $project->getId());
         $tempAPIKey = $this->generateAPIKey($projectDocument);
 
