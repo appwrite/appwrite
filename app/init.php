@@ -734,6 +734,7 @@ $register->set('logger', function () {
             default => ['key' => $loggingProvider->getHost()],
         };
     } catch (Throwable) {
+        // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
         $configChunks = \explode(";", $providerConfig);
 
         $providerConfig = match ($providerName) {
