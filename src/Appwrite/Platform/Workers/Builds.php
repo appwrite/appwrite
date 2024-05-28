@@ -546,6 +546,20 @@ class Builds extends Action
             );
 
             /** Trigger usage queue */
+            if ($build->getAttribute('status') === 'ready') {
+                $queueForUsage
+                    ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
+                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$build->getAttribute('duration', 0) * 1000)
+                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
+                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$build->getAttribute('duration', 0) * 1000);
+            } elseif ($build->getAttribute('status') === 'failed') {
+                $queueForUsage
+                    ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
+                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$build->getAttribute('duration', 0) * 1000)
+                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_FAILED), 1) // per function
+                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED), (int)$build->getAttribute('duration', 0) * 1000);
+            }
+
             $queueForUsage
                 ->addMetric(METRIC_BUILDS, 1) // per project
                 ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
