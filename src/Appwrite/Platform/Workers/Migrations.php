@@ -79,13 +79,6 @@ class Migrations extends Action
         $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
 
-        /**
-         * Handle Event execution.
-         */
-        if (! empty($events)) {
-            return;
-        }
-
         $log->addTag('projectId', $project->getId());
 
         $this->processMigration($project, $migration, $log);
