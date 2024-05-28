@@ -284,8 +284,9 @@ class Functions extends Action
         $runtime = $runtimes[$function->getAttribute('runtime')];
 
         $jwtExpiry = $function->getAttribute('timeout', 900);
-        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 10);
+        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
         $apiKey = $jwtObj->encode([
+            'iat' => \time(),
             'exp' => \intval((new \DateTime())->add(new \DateInterval('PT' . $jwtExpiry .  'S'))->format('U')),
             'projectId' => $project->getId(),
             'scopes' => $function->getAttribute('scopes', [])

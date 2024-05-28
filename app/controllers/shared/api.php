@@ -216,15 +216,11 @@ App::init()
             if($keyType === API_KEY_DYNAMIC) {
                 // Dynamic key
 
-                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 10);
+                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 
                 try {
                     $payload = $jwtObj->decode($authKey);
                 } catch (JWTException $error) {
-                    throw new Exception(Exception::API_KEY_EXPIRED);
-                }
-
-                if($payload['exp'] < \time()) {
                     throw new Exception(Exception::API_KEY_EXPIRED);
                 }
 

@@ -2939,7 +2939,7 @@ App::post('/v1/messaging/messages/push')
                 $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 10);
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 
             $jwt = $encoder->encode([
                 'iat' => \time(),
@@ -3801,7 +3801,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 10);
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 
             $jwt = $encoder->encode([
                 'iat' => \time(),
