@@ -30,8 +30,8 @@ use Utopia\Queue\Message;
 
 class Migrations extends Action
 {
-    private ?Database $dbForProject = null;
-    private ?Database $dbForConsole = null;
+    protected ?Database $dbForProject = null;
+    protected ?Database $dbForConsole = null;
 
     public static function getName(): string
     {
@@ -93,13 +93,15 @@ class Migrations extends Action
     }
 
     /**
-     * @param string $source
-     * @param array $credentials
+     * @param Document $document
      * @return Source
      * @throws Exception
      */
-    protected function processSource(string $source, array $credentials): Source
+    protected function processSource(Document $document): Source
     {
+        $source = $document->getAttribute('source');
+        $credentials = $document->getAttribute('credentials');
+
         return match ($source) {
             Firebase::getName() => new Firebase(
                 json_decode($credentials['serviceAccount'], true),
@@ -263,7 +265,8 @@ class Migrations extends Action
 
             $log->addTag('type', $migrationDocument->getAttribute('source'));
 
-            $source = $this->processSource($migrationDocument->getAttribute('source'), $migrationDocument->getAttribute('credentials'));
+            //$source = $this->processSource($migrationDocument->getAttribute('source'), $migrationDocument->getAttribute('credentials'));
+            $source = $this->processSource($migrationDocument);
 
             $source->report();
 
