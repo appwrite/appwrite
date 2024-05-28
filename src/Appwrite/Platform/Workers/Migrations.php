@@ -95,15 +95,13 @@ class Migrations extends Action
     }
 
     /**
-     * @param Document $document
+     * @param string $source
+     * @param array $credentials
      * @return Source
      * @throws Exception
      */
-    protected function processSource(Document $document): Source
+    protected function processSource(string $source, array $credentials): Source
     {
-        $source = $document->getAttribute('source');
-        $credentials = $document->getAttribute('credentials');
-
         return match ($source) {
             Firebase::getName() => new Firebase(
                 json_decode($credentials['serviceAccount'], true),
@@ -126,7 +124,11 @@ class Migrations extends Action
                 $credentials['password'],
                 $credentials['port'],
             ),
-            Appwrite::getName() => new Appwrite($credentials['projectId'], str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']),
+            Appwrite::getName() => new Appwrite(
+                $credentials['projectId'],
+                str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'],
+                $credentials['apiKey']
+            ),
             default => throw new \Exception('Invalid source type'),
         };
     }
@@ -285,8 +287,19 @@ class Migrations extends Action
 
             $log->addTag('type', $migrationDocument->getAttribute('source'));
 
-            //$source = $this->processSource($migrationDocument->getAttribute('source'), $migrationDocument->getAttribute('credentials'));
-            $source = $this->processSource($migrationDocument);
+            $source = $this->processSource(
+                $migrationDocument->getAttribute('source'),
+                $migrationDocument->getAttribute('credentials')
+            );
+
+            $destination = $this->processDestination(
+                $migrationDocument->getAttribute('destination'),
+                [
+                    'projectId' => $projectDocument->getId(),
+                    'endpoint'  => 'http://appwrite/v1',
+                    'apiKey'    => $tempAPIKey['secret']
+                ]
+            );
 
             $source->report();
 
