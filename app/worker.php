@@ -16,6 +16,7 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
+use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -24,6 +25,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
@@ -32,7 +34,6 @@ use Utopia\Queue\Connection;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
-use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 
 Authorization::disable();
@@ -70,14 +71,41 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     }
 
     $pools = $register->get('pools');
-    $database = $pools
-        ->get($project->getAttribute('database'))
+
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        // TODO: Temporary until all projects are using shared tables
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
+
+    $adapter = $pools
+        ->get($dsn->getHost())
         ->pop()
         ->getResource();
 
-    $adapter = new Database($database, $cache);
-    $adapter->setNamespace('_' . $project->getInternalId());
-    return $adapter;
+    $database = new Database($adapter, $cache);
+
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        // TODO: Temporary until all projects are using shared tables
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
+
+    if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+        $database
+            ->setSharedTables(true)
+            ->setTenant($project->getInternalId())
+            ->setNamespace($dsn->getParam('namespace'));
+    } else {
+        $database
+            ->setSharedTables(false)
+            ->setTenant(null)
+            ->setNamespace('_' . $project->getInternalId());
+    }
+
+    return $database;
 }, ['cache', 'register', 'message', 'project', 'dbForConsole']);
 
 Server::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
@@ -88,24 +116,51 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
             return $dbForConsole;
         }
 
-        $databaseName = $project->getAttribute('database');
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
 
-        if (isset($databases[$databaseName])) {
-            $database = $databases[$databaseName];
-            $database->setNamespace('_' . $project->getInternalId());
+        if (isset($databases[$dsn->getHost()])) {
+            $database = $databases[$dsn->getHost()];
+
+            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+                $database
+                    ->setSharedTables(true)
+                    ->setTenant($project->getInternalId())
+                    ->setNamespace($dsn->getParam('namespace'));
+            } else {
+                $database
+                    ->setSharedTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getInternalId());
+            }
+
             return $database;
         }
 
         $dbAdapter = $pools
-            ->get($databaseName)
+            ->get($dsn->getHost())
             ->pop()
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
 
-        $databases[$databaseName] = $database;
+        $databases[$dsn->getHost()] = $database;
 
-        $database->setNamespace('_' . $project->getInternalId());
+        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+            $database
+                ->setSharedTables(true)
+                ->setTenant($project->getInternalId())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getInternalId());
+        }
 
         return $database;
     };
@@ -217,13 +272,10 @@ Server::setResource('deviceForCache', function (Document $project) {
     return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 }, ['project']);
 
-Server::setResource('deviceForLocalFiles', function (Document $project) {
-    return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
 
 $pools = $register->get('pools');
 $platform = new Appwrite();
-$args = $_SERVER['argv'];
+$args = $platform->getEnv('argv');
 
 if (!isset($args[1])) {
     Console::error('Missing worker name');
@@ -249,7 +301,7 @@ try {
      * Any worker can be configured with the following env vars:
      * - _APP_WORKERS_NUM           The total number of worker processes
      * - _APP_WORKER_PER_CORE       The number of worker processes per core (ignored if _APP_WORKERS_NUM is set)
-     * - _APP_QUEUE_NAME  The name of the queue to read for database events
+     * - _APP_QUEUE_NAME            The name of the queue to read for database events
      */
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => System::getEnv('_APP_WORKERS_NUM', 1),
@@ -280,10 +332,6 @@ $worker
     ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($queueName) {
         $pools->reclaim();
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-        if ($error instanceof PDOException) {
-            throw $error;
-        }
 
         if ($logger) {
             $log->setNamespace("appwrite-worker");

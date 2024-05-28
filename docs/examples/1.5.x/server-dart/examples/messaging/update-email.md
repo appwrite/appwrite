@@ -19,4 +19,5 @@ Message result = await messaging.updateEmail(
     cc: [], // (optional)
     bcc: [], // (optional)
     scheduledAt: '', // (optional)
+    attachments: [], // (optional)
 );

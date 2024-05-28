@@ -17,6 +17,7 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Logger\Log;
+use Utopia\Logger\Log\Breadcrumb;
 use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
@@ -79,6 +80,7 @@ class Migrations extends Action
         $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
 
+        $log->addTag('migrationId', $migration->getId());
         $log->addTag('projectId', $project->getId());
 
         $this->processMigration($project, $migration, $log);
@@ -252,6 +254,8 @@ class Migrations extends Action
             $migration = $this->dbForProject->getDocument('migrations', $group->getAttribute('migrationId', ''));
             $migration->setAttribute('status', 'processing');
 
+            $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'processing'", \microtime(true)));
+
             $this->updateMigrationDocument($migration, $projectDocument);
 
             $log->addTag('type', $migration->getAttribute('source'));
@@ -270,9 +274,6 @@ class Migrations extends Action
                 $source,
                 $destination
             );
-
-            /** Start Transfer */
-            $this->updateMigrationDocument($migration, $projectDocument);
 
             // Calculate group resources
             $resources = $group->getAttribute('resources');
@@ -296,6 +297,7 @@ class Migrations extends Action
 
             $log->addTag('migrationGroup', $group->getAttribute('group'));
             $log->addExtra('migrationResources', json_encode($resources));
+            $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'migrating'", \microtime(true)));
 
             $transfer->run($resources, function () use ($group, $transfer, $projectDocument) {
                 $group->setAttribute('resourceData', json_encode($transfer->getCache()));
@@ -308,6 +310,7 @@ class Migrations extends Action
             $destinationErrors = $destination->getErrors();
 
             if (!empty($sourceErrors) || !empty($destinationErrors)) {
+                $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and failed", \microtime(true)));
                 $migration->setAttribute('status', 'failed');
 
                 $errorMessages = [];
@@ -323,11 +326,13 @@ class Migrations extends Action
                 $group->setAttribute('errors', $errorMessages);
                 $this->updateMigrationDocument($group, $projectDocument);
                 $this->updateMigrationDocument($migration, $projectDocument);
+                $log->addExtra('migrationErrors', json_encode($errorMessages));
 
                 return;
             }
 
             $group->setAttribute('status', 'completed');
+            $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and succeeded", \microtime(true)));
             $this->updateMigrationDocument($group, $project);
 
             // Check if all other groups are finished, if so set parent document to completed aswell.
@@ -381,6 +386,7 @@ class Migrations extends Action
                 }
 
                 $group->setAttribute('errors', $errorMessages);
+                $log->addTag('migrationErrors', json_encode($errorMessages));
             }
         } finally {
             if ($tempAPIKey) {
@@ -390,8 +396,8 @@ class Migrations extends Action
                 $this->updateMigrationDocument($migration, $projectDocument);
                 $this->updateMigrationDocument($group, $projectDocument);
 
-                if ($migration->getAttribute('status', '') == 'failed') {
-                    throw new Exception(implode("\n", $migration->getAttribute('errors', [])));
+                if ($group->getAttribute('status', '') == 'failed') {
+                    throw new Exception("Migration failed");
                 }
             }
         }
