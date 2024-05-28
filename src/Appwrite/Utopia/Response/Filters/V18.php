@@ -20,7 +20,8 @@ class V18 extends Filter
         return $parsedResponse;
     }
 
-    protected function parseMigration(array $content) {
+    protected function parseMigration(array $content)
+    {
         $content['stage'] = match($content['status']) {
             'pending' => 'init',
             'processing' => 'migrating',
