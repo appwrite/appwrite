@@ -2105,11 +2105,11 @@ App::post('/v1/users/:userId/jwts')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_JWT)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('sessionId', 'current', new UID(), 'Session ID. Use the string \'current\' to use the most recent session. Defaults to the most recent session.')
-    ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.')
+    ->param('sessionId', 'current', new UID(), 'Session ID. Use the string \'current\' to use the most recent session. Defaults to the most recent session.', true)
+    ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, int $duration, string $sessionId, Response $response, Database $dbForProject) {
+    ->action(function (string $userId, string $sessionId, int $duration, Response $response, Database $dbForProject) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -2136,13 +2136,14 @@ App::post('/v1/users/:userId/jwts')
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 10); // Instantiate with key, algo, maxAge and leeway.
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
+                'exp' => \intval((new \DateTime())->add(new \DateInterval('PT' . $duration .  'S'))->format('U')),
                 'userId' => $user->getId(),
-                'sessionId' => $session->getId(),
+                'sessionId' => $session->getId()
             ])]), Response::MODEL_JWT);
     });
 

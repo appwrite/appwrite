@@ -440,12 +440,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        $s = Authorization::skip(fn () => $database->find('sessions', [
+        return Authorization::skip(fn () => $database->find('sessions', [
             Query::equal('userInternalId', [$document->getInternalId()]),
             Query::limit(APP_LIMIT_SUBQUERY),
         ]));
-        \var_dump($s);
-        return $s;
     }
 );
 
@@ -1202,7 +1200,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 10); // Instantiate with key, algo, maxAge and leeway.
 
         try {
             $payload = $jwt->decode($authJWT);
@@ -1219,6 +1217,22 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
         if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
             $user = new Document([]);
+        }
+
+        $exp = $payload['exp'] ?? '';
+
+        // Fallback to 15m, just in case
+        if(empty($exp)) {
+            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+            try {
+                $payload = $jwt->decode($authJWT);
+            } catch (JWTException $error) {
+                $user = new Document([]);
+            }
+        } else {
+            if($exp < \time()) {
+                $user = new Document([]);
+            }
         }
     }
 

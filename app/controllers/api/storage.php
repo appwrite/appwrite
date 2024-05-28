@@ -1328,11 +1328,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
     ->action(function (string $bucketId, string $fileId, string $jwt, Response $response, Request $request, Database $dbForProject, Document $project, string $mode, Device $deviceForFiles) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $decoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'));
+        $decoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 10);
 
         try {
             $decoded = $decoder->decode($jwt);
         } catch (JWTException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        if($decoded['exp'] < \time()) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 

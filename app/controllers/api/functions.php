@@ -1585,8 +1585,10 @@ App::post('/v1/functions/:functionId/executions')
             }
 
             if (!$current->isEmpty()) {
-                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+                $jwtExpiry = $function->getAttribute('timeout', 900);
+                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 10); // Instantiate with key, algo, maxAge and leeway.
                 $jwt = $jwtObj->encode([
+                    'exp' => \intval((new \DateTime())->add(new \DateInterval('PT' . $jwtExpiry . 'S'))->format('U')),
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
                 ]);
@@ -1594,8 +1596,9 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $jwtExpiry = $function->getAttribute('timeout', 900);
-        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 10);
+        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 10);
         $apiKey = $jwtObj->encode([
+            'exp' => \intval((new \DateTime())->add(new \DateInterval('PT' . $jwtExpiry . 'S'))->format('U')),
             'projectId' => $project->getId(),
             'scopes' => $function->getAttribute('scopes', [])
         ]);

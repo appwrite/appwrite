@@ -2370,15 +2370,12 @@ App::post('/v1/account/jwts')
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 10); // Instantiate with key, algo, maxAge and leeway.
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
-                // 'uid'    => 1,
-                // 'aud'    => 'http://site.com',
-                // 'scopes' => ['user'],
-                // 'iss'    => 'http://api.mysite.com',
+                'exp' => \intval((new \DateTime())->add(new \DateInterval('PT900S'))->format('U')),
                 'userId' => $user->getId(),
                 'sessionId' => $current->getId(),
             ])]), Response::MODEL_JWT);
