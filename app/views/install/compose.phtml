@@ -11,9 +11,7 @@ $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
-?>version: '3'
-
-services:
+?>services:
   traefik:
     image: traefik:2.11
     container_name: appwrite-traefik
@@ -750,7 +748,7 @@ services:
 
   openruntimes-executor:
     container_name: openruntimes-executor
-    hostname: appwrite-executor
+    hostname: exc1
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT

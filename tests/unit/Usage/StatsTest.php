@@ -19,7 +19,7 @@ class StatsTest extends TestCase
 
     public function setUp(): void
     {
-        $env =  System::getEnv('_APP_CONNECTIONS_QUEUE', AppwriteURL::unparse([
+        $env = System::getEnv('_APP_CONNECTIONS_QUEUE', 'redis_main=' . AppwriteURL::unparse([
             'scheme' => 'redis',
             'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
             'port' => System::getEnv('_APP_REDIS_PORT', '6379'),

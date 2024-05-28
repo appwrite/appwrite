@@ -25,7 +25,7 @@ use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91;
 use Utopia\Messaging\Adapter\SMS\Telesign;
-use Utopia\Messaging\Adapter\SMS\Textmagic;
+use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
 use Utopia\Messaging\Adapter\SMS\Vonage;
 use Utopia\Messaging\Messages\Email;
@@ -441,16 +441,23 @@ class Messaging extends Action
                 try {
                     $adapter->send($data);
 
+                    $countryCode = $adapter->getCountryCode($message['to'][0] ?? '');
+                    if (!empty($countryCode)) {
+                        $queueForUsage
+                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_MESSAGES_COUNTRY_CODE), 1);
+                    }
                     $queueForUsage
                         ->addMetric(METRIC_MESSAGES, 1)
                         ->setProject($project)
                         ->trigger();
-                } catch (\Throwable $e) {
-                    throw new \Exception('Failed sending to targets with error: ' . $e->getMessage());
+                } catch (\Throwable $th) {
+                    throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
                 }
             };
         }, $batches));
     }
+
+
 
     private function getSmsAdapter(Document $provider): ?SMSAdapter
     {
@@ -459,7 +466,7 @@ class Messaging extends Action
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken']),
-            'textmagic' => new Textmagic($credentials['username'], $credentials['apiKey']),
+            'textmagic' => new TextMagic($credentials['username'], $credentials['apiKey']),
             'telesign' => new Telesign($credentials['customerId'], $credentials['apiKey']),
             'msg91' => new Msg91($credentials['senderId'], $credentials['authKey'], $credentials['templateId']),
             'vonage' => new Vonage($credentials['apiKey'], $credentials['apiSecret']),
