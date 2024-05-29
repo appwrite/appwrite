@@ -344,12 +344,8 @@ App::delete('/v1/teams/:teamId')
     ->inject('dbForProject')
     ->inject('dbForConsole')
     ->inject('queueForEvents')
-    ->inject('deviceForFiles')
-    ->inject('deviceForFunctions')
-    ->inject('deviceForBuilds')
-    ->inject('deviceForCache')
     ->inject('project')
-    ->action(function (string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, Database $dbForConsole, Event $queueForEvents, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $project) {
+    ->action(function (string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, Database $dbForConsole, Event $queueForEvents, Document $project) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -423,7 +419,7 @@ App::delete('/v1/teams/:teamId')
             Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
         };
 
-        $deleteProject = function (Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document) use ($deleteByGroup, $deleteRule): void {
+        $deleteProject = function (Database $dbForConsole, callable $getProjectDB, Document $document) use ($deleteByGroup, $deleteRule): void {
             $projectId = $document->getId();
             $projectInternalId = $document->getInternalId();
 
@@ -486,6 +482,10 @@ App::delete('/v1/teams/:teamId')
                 // Ignore: deleteCollection tries to delete a metadata entry after the collection is deleted,
                 // which will throw an exception here because the metadata collection is already deleted.
             }
+            $deviceForFiles = getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+            $deviceForFunctions = getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+            $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
+            $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $projectId);
 
             // Delete all storage directories
             $deviceForFiles->delete($deviceForFiles->getRoot(), true);
@@ -494,13 +494,13 @@ App::delete('/v1/teams/:teamId')
             $deviceForCache->delete($deviceForCache->getRoot(), true);
         };
 
-        $deleteProjectsByTeam = function (Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document) use ($deleteProject): void {
+        $deleteProjectsByTeam = function (Database $dbForConsole, callable $getProjectDB, Document $document) use ($deleteProject): void {
 
             $projects = $dbForConsole->find('projects', [
                 Query::equal('teamInternalId', [$document->getInternalId()])
             ]);
             foreach ($projects as $project) {
-                $deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $project);
+                $deleteProject($dbForConsole, $getProjectDB, $project);
                 $dbForConsole->deleteDocument('projects', $project->getId());
             }
         };
@@ -519,7 +519,7 @@ App::delete('/v1/teams/:teamId')
         );
 
         if ($project->getId() === 'console') {
-            $deleteProjectsByTeam($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $team);
+            $deleteProjectsByTeam($dbForConsole, $getProjectDB, $team);
         }
 
         $queueForEvents

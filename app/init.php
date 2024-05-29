@@ -1423,10 +1423,6 @@ App::setResource('deviceForBuilds', function ($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
 
-App::setResource('deviceForCache', function (Document $project) {
-    return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
-}, ['project']);
-
 function getDevice($root): Device
 {
     $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
