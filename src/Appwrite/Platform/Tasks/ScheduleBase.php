@@ -153,6 +153,7 @@ abstract class ScheduleBase extends Action
                         $paginationQueries[] = Query::cursorAfter($latestDocument);
                     }
 
+                    // do we need add query active = 1?
                     $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
                         Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                         Query::equal('resourceType', [static::getSupportedResource()]),
