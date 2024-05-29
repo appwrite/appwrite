@@ -94,10 +94,7 @@ class Deletes extends Action
                         $this->deleteUser($getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_TEAMS:
-                        $this->deleteMemberships($getProjectDB, $document, $project);
-                        if ($project->getId() === 'console') {
-                            $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $document);
-                        }
+                        $this->deleteTeams($dbForConsole, $getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
@@ -445,14 +442,21 @@ class Deletes extends Action
      * @throws Conflict
      * @throws Restricted
      * @throws Structure
+     * @throws Exception
      */
-    private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
+    private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, Document $document): void
     {
 
         $projects = $dbForConsole->find('projects', [
             Query::equal('teamInternalId', [$document->getInternalId()])
         ]);
+
         foreach ($projects as $project) {
+            $deviceForFiles = getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+            $deviceForFunctions = getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+            $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+            $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
+
             $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $project);
             $dbForConsole->deleteDocument('projects', $project->getId());
         }
@@ -1123,6 +1127,18 @@ class Deletes extends Action
                     $deleteByFunction($function);
                 }
             );
+        }
+    }
+
+    /**
+     * @throws Exception
+     * @throws Throwable
+     */
+    public function deleteTeams($dbForConsole, $getProjectDB, $team, $project): void
+    {
+        $this->deleteMemberships($getProjectDB, $team, $project);
+        if ($project->getId() === 'console') {
+            $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $team);
         }
     }
 }
