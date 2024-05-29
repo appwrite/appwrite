@@ -258,7 +258,6 @@ class Migrations extends Action
     }
 
     /**
-     * @param Document $project
      * @param Document $migration
      * @param Log $log
      * @return void
