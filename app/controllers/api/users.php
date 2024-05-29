@@ -2128,6 +2128,7 @@ App::post('/v1/users/:userId/jwts')
             foreach ($sessions as $loopSession) { /** @var Utopia\Database\Document $loopSession */
                 if ($loopSession->getId() == $sessionId) {
                     $session = $loopSession;
+                    break;
                 }
             }
         }
