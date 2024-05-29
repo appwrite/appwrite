@@ -1433,7 +1433,8 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         $response->noContent();
     });
 
-App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
+App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
+    ->alias('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Create build')
     ->label('scope', 'functions.write')
@@ -1448,7 +1449,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
-    ->param('buildId', '', new UID(), 'Build unique ID.')
+    ->param('buildId', '', new UID(), 'Build unique ID.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -1469,6 +1470,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        $buildId = $deployment->getAttribute('buildId', '');
         $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
 
         if ($build->isEmpty()) {
