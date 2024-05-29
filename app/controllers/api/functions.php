@@ -1586,10 +1586,8 @@ App::post('/v1/functions/:functionId/executions')
 
             if (!$current->isEmpty()) {
                 $jwtExpiry = $function->getAttribute('timeout', 900);
-                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
                 $jwt = $jwtObj->encode([
-                    'iat' => \time(),
-                    'exp' => \intval((new \DateTime())->add(new \DateInterval('PT' . $jwtExpiry . 'S'))->format('U')),
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
                 ]);
@@ -1597,10 +1595,8 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $jwtExpiry = $function->getAttribute('timeout', 900);
-        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
-            'iat' => \time(),
-            'exp' => \intval((new \DateTime())->add(new \DateInterval('PT' . $jwtExpiry . 'S'))->format('U')),
             'projectId' => $project->getId(),
             'scopes' => $function->getAttribute('scopes', [])
         ]);

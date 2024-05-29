@@ -2105,7 +2105,7 @@ App::post('/v1/users/:userId/jwts')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_JWT)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('sessionId', 'current', new UID(), 'Session ID. Use the string \'current\' to use the most recent session. Defaults to the most recent session.', true)
+    ->param('sessionId', 'recent', new UID(), 'Session ID. Use the string \'recent\' to use the most recent session. Defaults to the most recent session.', true)
     ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -2120,7 +2120,7 @@ App::post('/v1/users/:userId/jwts')
         $sessions = $user->getAttribute('sessions', []);
         $session = new Document();
 
-        if($sessionId === 'current') {
+        if($sessionId === 'recent') {
             // Get most recent
             $session = \count($sessions) > 0 ? $sessions[\count($sessions) - 1] : new Document();
         } else {
@@ -2137,13 +2137,11 @@ App::post('/v1/users/:userId/jwts')
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
-                'iat' => \time(),
-                'exp' => \intval((new \DateTime())->add(new \DateInterval('PT' . $duration .  'S'))->format('U')),
                 'userId' => $user->getId(),
                 'sessionId' => $session->getId()
             ])]), Response::MODEL_JWT);

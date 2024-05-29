@@ -2939,11 +2939,9 @@ App::post('/v1/messaging/messages/push')
                 $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
 
             $jwt = $encoder->encode([
-                'iat' => \time(),
-                'exp' => \intval($expiry),
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
                 'projectId' => $project->getId(),
@@ -3801,11 +3799,9 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
 
             $jwt = $encoder->encode([
-                'iat' => \time(),
-                'exp' => \intval($expiry),
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
                 'projectId' => $project->getId(),
