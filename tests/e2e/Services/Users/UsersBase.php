@@ -1553,7 +1553,7 @@ trait UsersBase
         return $data;
     }
 
-    public function testUsetJWT()
+    public function testUserJWT()
     {
         // Create user
         $userId = ID::unique();
