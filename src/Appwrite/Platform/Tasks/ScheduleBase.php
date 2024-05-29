@@ -143,7 +143,6 @@ abstract class ScheduleBase extends Action
                         $paginationQueries[] = Query::cursorAfter($latestDocument);
                     }
 
-                    // do we need add query active = 1?
                     $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
                         Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                         Query::equal('resourceType', [static::getSupportedResource()]),
@@ -154,7 +153,8 @@ abstract class ScheduleBase extends Action
                     $total = $total + $sum;
 
                     foreach ($results as $document) {
-                        $localDocument = $schedules[$document['resourceId']] ?? null;
+                        // todo: change this to Internal id or add projectId as
+                        $localDocument = $this->schedules[$document['resourceId']] ?? null;
 
                         // Check if resource has been updated since last sync
                         $org = $localDocument !== null ? \strtotime($localDocument['resourceUpdatedAt']) : null;
