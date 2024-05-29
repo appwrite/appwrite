@@ -231,11 +231,19 @@ const METRIC_FUNCTIONS  = 'functions';
 const METRIC_DEPLOYMENTS  = 'deployments';
 const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
 const METRIC_BUILDS  = 'builds';
+const METRIC_BUILDS_SUCCESS  = 'builds.success';
+const METRIC_BUILDS_FAILED  = 'builds.failed';
 const METRIC_BUILDS_STORAGE  = 'builds.storage';
 const METRIC_BUILDS_COMPUTE  = 'builds.compute';
+const METRIC_BUILDS_COMPUTE_SUCCESS  = 'builds.compute.success';
+const METRIC_BUILDS_COMPUTE_FAILED  = 'builds.compute.failed';
 const METRIC_FUNCTION_ID_BUILDS  = '{functionInternalId}.builds';
+const METRIC_FUNCTION_ID_BUILDS_SUCCESS  = '{functionInternalId}.builds.success';
+const METRIC_FUNCTION_ID_BUILDS_FAILED  = '{functionInternalId}.builds.failed';
 const METRIC_FUNCTION_ID_BUILDS_STORAGE = '{functionInternalId}.builds.storage';
 const METRIC_FUNCTION_ID_BUILDS_COMPUTE  = '{functionInternalId}.builds.compute';
+const METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS  = '{functionInternalId}.builds.compute.success';
+const METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED  = '{functionInternalId}.builds.compute.failed';
 const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
 const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
 const METRIC_EXECUTIONS  = 'executions';
@@ -343,8 +351,7 @@ Database::addFilter(
         if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
             $attribute
                 ->setAttribute('min', $formatOptions['min'])
-                ->setAttribute('max', $formatOptions['max'])
-            ;
+                ->setAttribute('max', $formatOptions['max']);
         }
 
         return $value;
