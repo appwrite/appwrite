@@ -21,6 +21,11 @@ class ScheduleMessages extends ScheduleBase
         return 'message';
     }
 
+    public static function getCollectionId(): string
+    {
+        return 'messages';
+    }
+
     protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         foreach ($this->schedules as $schedule) {
