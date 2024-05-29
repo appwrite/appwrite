@@ -153,7 +153,7 @@ abstract class ScheduleBase extends Action
                     $total = $total + $sum;
 
                     foreach ($results as $document) {
-                        // todo: change this to Internal id or add projectId as
+                        // todo: change resourceId to Internal id or add projectId as second nested key
                         $localDocument = $this->schedules[$document['resourceId']] ?? null;
 
                         // Check if resource has been updated since last sync
