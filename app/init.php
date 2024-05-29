@@ -28,6 +28,7 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Growth;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
@@ -1070,6 +1071,9 @@ App::setResource('queueForCertificates', function (Connection $queue) {
 }, ['queue']);
 App::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
+}, ['queue']);
+App::setResource('queueForGrowth', function (Connection $queue) {
+    return new Growth($queue);
 }, ['queue']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host

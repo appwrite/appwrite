@@ -8,6 +8,7 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Growth;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
@@ -145,6 +146,30 @@ $databaseListener = function (string $event, Document $document, Document $proje
             break;
         default:
             break;
+    }
+};
+
+$growthListener = function (string $event, string $projectId) {
+    // Global
+    if ($projectId == 'console') {
+        switch ($event) {
+            case 'users.[userId].create':
+            case 'users.[userId].delete':
+            case 'teams.[teamId].create':
+            case 'teams.[teamId].delete':
+            case 'teams.[teamId].memberships.[membershipId].create':
+            case 'teams.[teamId].memberships.[membershipId].delete':
+                return true;
+        };
+
+        return false;
+    }
+
+    // Project Scoped
+    switch ($event) {
+        case 'databases.[databaseId].create':
+        case 'functions.[functionId].create':
+            return true;
     }
 };
 
@@ -309,9 +334,10 @@ App::init()
     ->inject('queueForDatabase')
     ->inject('queueForBuilds')
     ->inject('queueForUsage')
+    ->inject('queueForGrowth')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Growth $queueForGrowth, Database $dbForProject, string $mode) use ($databaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -400,6 +426,11 @@ App::init()
             ->setProject($project)
             ->setUser($user);
 
+        $queueForGrowth
+            ->setEvent($route->getLabel('event', ''))
+            ->setProject($project)
+            ->setUser($user);
+
         $queueForDeletes->setProject($project);
         $queueForDatabase->setProject($project);
         $queueForBuilds->setProject($project);
@@ -411,7 +442,7 @@ App::init()
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
-            $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+            $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
             $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
@@ -535,11 +566,12 @@ App::shutdown()
     ->inject('queueForDatabase')
     ->inject('queueForBuilds')
     ->inject('queueForMessaging')
-    ->inject('dbForProject')
     ->inject('queueForFunctions')
+    ->inject('queueForGrowth')
+    ->inject('dbForProject')
     ->inject('mode')
     ->inject('dbForConsole')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Growth $queueForGrowth, Database $dbForProject, string $mode, Database $dbForConsole) use ($parseLabel, $growthListener) {
 
         $responsePayload = $response->getPayload();
 
@@ -562,6 +594,14 @@ App::shutdown()
                 ->setClass(Event::WEBHOOK_CLASS_NAME)
                 ->setQueue(Event::WEBHOOK_QUEUE_NAME)
                 ->trigger();
+            
+            if (System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted' && $growthListener($queueForEvents->getEvent(), $project->getId())) {
+                $queueForGrowth
+                    ->setResource($queueForEvents->getPayload())
+                    ->setClass(Event::GROWTH_CLASS_NAME)
+                    ->setQueue(Event::GROWTH_QUEUE_NAME)
+                    ->trigger();
+            }
 
             /**
              * Trigger realtime.
@@ -586,7 +626,7 @@ App::shutdown()
 
                 Realtime::send(
                     projectId: $target['projectId'] ?? $project->getId(),
-                    payload: $queueForEvents->getRealtimePayload(),
+                    payload: $queueForEvents->getPayload(),
                     events: $allEvents,
                     channels: $target['channels'],
                     roles: $target['roles'],
@@ -666,7 +706,7 @@ App::shutdown()
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
-                $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+                $key = md5($request->getURI() . '*' . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
                 $signature = md5($data['payload']);
                 $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
