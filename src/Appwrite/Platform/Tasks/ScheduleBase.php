@@ -59,6 +59,10 @@ abstract class ScheduleBase extends Action
         $getSchedule = function (Document $schedule) use ($dbForConsole, $getProjectDB): array {
             $project = $dbForConsole->getDocument('projects', $schedule->getAttribute('projectId'));
 
+            var_dump('===== $getSchedule getCollectionId = ');
+            var_dump(static::getCollectionId());
+            var_dump('===== $getSchedule getCollectionId = ');
+
             $resource = $getProjectDB($project)->getDocument(
                 static::getCollectionId(),
                 $schedule->getAttribute('resourceId')
