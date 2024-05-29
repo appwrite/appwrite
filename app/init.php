@@ -167,7 +167,6 @@ const DELETE_TYPE_PROJECTS = 'projects';
 const DELETE_TYPE_FUNCTIONS = 'functions';
 const DELETE_TYPE_DEPLOYMENTS = 'deployments';
 const DELETE_TYPE_USERS = 'users';
-const DELETE_TYPE_TEAMS = 'teams';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
@@ -1422,6 +1421,10 @@ App::setResource('deviceForFunctions', function ($project) {
 
 App::setResource('deviceForBuilds', function ($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+}, ['project']);
+
+App::setResource('deviceForCache', function (Document $project) {
+    return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 }, ['project']);
 
 function getDevice($root): Device

@@ -19,6 +19,7 @@ use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -37,6 +38,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
@@ -338,10 +340,16 @@ App::delete('/v1/teams/:teamId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
+    ->inject('getProjectDB')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
-    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->inject('deviceForFiles')
+    ->inject('deviceForFunctions')
+    ->inject('deviceForBuilds')
+    ->inject('deviceForCache')
+    ->inject('project')
+    ->action(function (string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, Database $dbForConsole, Event $queueForEvents, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $project) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -353,9 +361,166 @@ App::delete('/v1/teams/:teamId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($team);
+        $teamInternalId = $team->getInternalId();
+
+        // Loading deleting functions
+        $deleteById = function (Document $document, Database $database, callable $callback = null): void {
+            if ($database->deleteDocument($document->getCollection(), $document->getId())) {
+                if (is_callable($callback)) {
+                    $callback($document);
+                }
+            } else {
+                Console::error('Failed to delete document: ' . $document->getId());
+            }
+        };
+
+        $deleteRule = function (Database $dbForConsole, Document $document): void {
+
+            $domain = $document->getAttribute('domain');
+            $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
+            $checkTraversal = realpath($directory) === $directory;
+
+            if ($checkTraversal && is_dir($directory)) {
+                // Delete files, so Traefik is aware of change
+                array_map('unlink', glob($directory . '/*.*'));
+                rmdir($directory);
+                Console::info("Deleted certificate files for {$domain}");
+            } else {
+                Console::info("No certificate files found for {$domain}");
+            }
+
+            // Delete certificate document, so Appwrite is aware of change
+            if (isset($document['certificateId'])) {
+                $dbForConsole->deleteDocument('certificates', $document['certificateId']);
+            }
+        };
+
+        $deleteByGroup = function (string $collection, array $queries, Database $database, callable $callback = null) use ($deleteById): void {
+            $count = 0;
+            $chunk = 0;
+            $limit = 50;
+            $sum = $limit;
+
+            $executionStart = \microtime(true);
+
+            while ($sum === $limit) {
+                $chunk++;
+
+                $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
+
+                $sum = count($results);
+
+                Console::info('Deleting chunk #' . $chunk . '. Found ' . $sum . ' documents');
+
+                foreach ($results as $document) {
+                    $deleteById($document, $database, $callback);
+                    $count++;
+                }
+            }
+
+            $executionEnd = \microtime(true);
+
+            Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+        };
+
+        $deleteProject = function (Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document) use ($deleteByGroup, $deleteRule): void {
+            $projectId = $document->getId();
+            $projectInternalId = $document->getInternalId();
+
+            // Delete project tables
+            $dbForProject = $getProjectDB($document);
+
+            while (true) {
+                $collections = $dbForProject->listCollections();
+
+                if (empty($collections)) {
+                    break;
+                }
+
+                foreach ($collections as $collection) {
+                    $dbForProject->deleteCollection($collection->getId());
+                }
+            }
+
+            // Delete Platforms
+            $deleteByGroup('platforms', [
+                Query::equal('projectInternalId', [$projectInternalId])
+            ], $dbForConsole);
+
+            // Delete project and function rules
+            $deleteByGroup('rules', [
+                Query::equal('projectInternalId', [$projectInternalId])
+            ], $dbForConsole, function (Document $document) use ($dbForConsole, $deleteRule) {
+                $deleteRule($dbForConsole, $document);
+            });
+
+            // Delete Keys
+            $deleteByGroup('keys', [
+                Query::equal('projectInternalId', [$projectInternalId])
+            ], $dbForConsole);
+
+            // Delete Webhooks
+            $deleteByGroup('webhooks', [
+                Query::equal('projectInternalId', [$projectInternalId])
+            ], $dbForConsole);
+
+            // Delete VCS Installations
+            $deleteByGroup('installations', [
+                Query::equal('projectInternalId', [$projectInternalId])
+            ], $dbForConsole);
+
+            // Delete VCS Repositories
+            $deleteByGroup('repositories', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+            ], $dbForConsole);
+
+            // Delete VCS commments
+            $deleteByGroup('vcsComments', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+            ], $dbForConsole);
+
+            // Delete metadata tables
+            try {
+                $dbForProject->deleteCollection('_metadata');
+            } catch (\Throwable) {
+                // Ignore: deleteCollection tries to delete a metadata entry after the collection is deleted,
+                // which will throw an exception here because the metadata collection is already deleted.
+            }
+
+            // Delete all storage directories
+            $deviceForFiles->delete($deviceForFiles->getRoot(), true);
+            $deviceForFunctions->delete($deviceForFunctions->getRoot(), true);
+            $deviceForBuilds->delete($deviceForBuilds->getRoot(), true);
+            $deviceForCache->delete($deviceForCache->getRoot(), true);
+        };
+
+        $deleteProjectsByTeam = function (Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document) use ($deleteProject): void {
+
+            $projects = $dbForConsole->find('projects', [
+                Query::equal('teamInternalId', [$document->getInternalId()])
+            ]);
+            foreach ($projects as $project) {
+                $deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $project);
+                $dbForConsole->deleteDocument('projects', $project->getId());
+            }
+        };
+
+        // Delete Memberships
+        $deleteByGroup(
+            'memberships',
+            [
+                Query::equal('teamInternalId', [$teamInternalId])
+            ],
+            $dbForProject,
+            function (Document $membership) use ($dbForProject) {
+                $userId = $membership->getAttribute('userId');
+                $dbForProject->purgeCachedDocument('users', $userId);
+            }
+        );
+
+        if ($project->getId() === 'console') {
+            $deleteProjectsByTeam($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $team);
+        }
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
