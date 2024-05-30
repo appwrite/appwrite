@@ -2,14 +2,7 @@
 
 namespace Appwrite\GraphQL\Types;
 
-use GraphQL\Language\AST\BooleanValueNode;
-use GraphQL\Language\AST\FloatValueNode;
-use GraphQL\Language\AST\IntValueNode;
-use GraphQL\Language\AST\ListValueNode;
 use GraphQL\Language\AST\Node;
-use GraphQL\Language\AST\ObjectValueNode;
-use GraphQL\Language\AST\StringValueNode;
-use GraphQL\Type\Definition\ScalarType;
 
 // https://github.com/webonyx/graphql-php/issues/129#issuecomment-309366803
 class Assoc extends Json

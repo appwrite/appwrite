@@ -5,12 +5,13 @@
  */
 
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Status as MessageStatus;
 
 return [
     /** General Errors */
     Exception::GENERAL_UNKNOWN => [
         'name' => Exception::GENERAL_UNKNOWN,
-        'description' => 'An unknown error has occured. Please check the logs for more information.',
+        'description' => 'An unknown error has occurred. Please check the logs for more information.',
         'code' => 500,
     ],
     Exception::GENERAL_MOCK => [
@@ -26,6 +27,11 @@ return [
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
         'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
+        'code' => 403,
+    ],
+    Exception::GENERAL_API_DISABLED => [
+        'name' => Exception::GENERAL_API_DISABLED,
+        'description' => 'The requested API is disabled. You can enable the API from the Appwrite console.',
         'code' => 403,
     ],
     Exception::GENERAL_SERVICE_DISABLED => [
@@ -103,6 +109,21 @@ return [
         'description' => 'This method was not fully implemented yet. If you believe this is a mistake, please upgrade your Appwrite server version.',
         'code' => 405,
     ],
+    Exception::GENERAL_INVALID_EMAIL => [
+        'name' => Exception::GENERAL_INVALID_EMAIL,
+        'description' => 'Value must be a valid email address.',
+        'code' => 400,
+    ],
+    Exception::GENERAL_INVALID_PHONE => [
+        'name' => Exception::GENERAL_INVALID_PHONE,
+        'description' => 'Value must be a valid phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.',
+        'code' => 400,
+    ],
+    Exception::GENERAL_REGION_ACCESS_DENIED => [
+        'name' => Exception::GENERAL_REGION_ACCESS_DENIED,
+        'description' => 'Your location is not supported due to legal requirements.',
+        'code' => 451,
+    ],
     Exception::GENERAL_BAD_REQUEST => [
         'name' => Exception::GENERAL_BAD_REQUEST,
         'description' => 'There was an error processing your request. Please check the inputs and try again.',
@@ -113,6 +134,11 @@ return [
     Exception::USER_COUNT_EXCEEDED => [
         'name' => Exception::USER_COUNT_EXCEEDED,
         'description' => 'The current project has exceeded the maximum number of users. Please check your user limit in the Appwrite console.',
+        'code' => 400,
+    ],
+    Exception::USER_CONSOLE_COUNT_EXCEEDED => [
+        'name' => Exception::USER_CONSOLE_COUNT_EXCEEDED,
+        'description' => 'Sign up to the console is restricted. You can contact an administrator to update console sign up restrictions by setting _APP_CONSOLE_WHITELIST_ROOT to "disabled".',
         'code' => 501,
     ],
     Exception::USER_JWT_INVALID => [
@@ -167,7 +193,7 @@ return [
     ],
     Exception::USER_SESSION_ALREADY_EXISTS => [
         'name' => Exception::USER_SESSION_ALREADY_EXISTS,
-        'description' => 'Creation of anonymous users is prohibited when a session is active.',
+        'description' => 'Creation of a session is prohibited when a session is active.',
         'code' => 401,
     ],
     Exception::USER_NOT_FOUND => [
@@ -221,6 +247,26 @@ return [
         'description' => 'A user with the same phone number already exists in the current project.',
         'code' => 409,
     ],
+    Exception::USER_RECOVERY_CODES_ALREADY_EXISTS => [
+        'name' => Exception::USER_RECOVERY_CODES_ALREADY_EXISTS,
+        'description' => 'The current user already generated recovery codes and they can only be read once for security reasons.',
+        'code' => 409,
+    ],
+    Exception::USER_AUTHENTICATOR_NOT_FOUND => [
+        'name' => Exception::USER_AUTHENTICATOR_NOT_FOUND,
+        'description' => 'Authenticator could not be found on the current user.',
+        'code' => 404,
+    ],
+    Exception::USER_RECOVERY_CODES_NOT_FOUND => [
+        'name' => Exception::USER_RECOVERY_CODES_NOT_FOUND,
+        'description' => 'Recovery codes could not be found on the current user.',
+        'code' => 404,
+    ],
+    Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED => [
+        'name' => Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED,
+        'description' => 'This authenticator is already verified on the current user.',
+        'code' => 409,
+    ],
     Exception::USER_PHONE_NOT_FOUND => [
         'name' => Exception::USER_PHONE_NOT_FOUND,
         'description' => 'The current user does not have a phone number associated with their account.',
@@ -230,6 +276,16 @@ return [
         'name' => Exception::USER_MISSING_ID,
         'description' => 'Missing ID from OAuth2 provider.',
         'code' => 400,
+    ],
+    Exception::USER_MORE_FACTORS_REQUIRED => [
+        'name' => Exception::USER_MORE_FACTORS_REQUIRED,
+        'description' => 'More factors are required to complete the sign in process.',
+        'code' => 401,
+    ],
+    Exception::USER_CHALLENGE_REQUIRED => [
+        'name' => Exception::USER_CHALLENGE_REQUIRED,
+        'description' => 'A recently successful challenge is required to complete this action. A challenge is considered recent for 5 minutes.',
+        'code' => 401,
     ],
     Exception::USER_OAUTH2_BAD_REQUEST => [
         'name' => Exception::USER_OAUTH2_BAD_REQUEST,
@@ -260,6 +316,21 @@ return [
         'name' => Exception::USER_DELETION_PROHIBITED,
         'description' => 'User deletion is not allowed for users with active memberships. Please delete all confirmed memberships before deleting the account.',
         'code' => 400
+    ],
+    Exception::USER_TARGET_NOT_FOUND => [
+        'name' => Exception::USER_TARGET_NOT_FOUND,
+        'description' => 'The target could not be found.',
+        'code' => 404,
+    ],
+    Exception::USER_TARGET_ALREADY_EXISTS => [
+        'name' => Exception::USER_TARGET_ALREADY_EXISTS,
+        'description' => 'A target with the same ID already exists.',
+        'code' => 409,
+    ],
+    Exception::USER_API_KEY_AND_SESSION_SET => [
+        'name' => Exception::USER_API_KEY_AND_SESSION_SET,
+        'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
+        'code' => 403,
     ],
 
     /** Teams */
@@ -399,6 +470,11 @@ return [
         'description' => 'The value for x-appwrite-id header is invalid. Please check the value of the x-appwrite-id header is a valid id and not unique().',
         'code' => 400,
     ],
+    Exception::STORAGE_FILE_NOT_PUBLIC => [
+        'name' => Exception::STORAGE_FILE_NOT_PUBLIC,
+        'description' => 'The requested file is not publicly readable.',
+        'code' => 403,
+    ],
 
     /** VCS */
     Exception::INSTALLATION_NOT_FOUND => [
@@ -413,7 +489,7 @@ return [
     ],
     Exception::REPOSITORY_NOT_FOUND => [
         'name' => Exception::REPOSITORY_NOT_FOUND,
-        'description' => 'Repository with the requested ID could not be found. Check to see if the ID is correct, or create the respository.',
+        'description' => 'Repository with the requested ID could not be found. Check to see if the ID is correct, or create the repository.',
         'code' => 404,
     ],
     Exception::PROVIDER_CONTRIBUTION_CONFLICT => [
@@ -423,7 +499,7 @@ return [
     ],
     Exception::GENERAL_PROVIDER_FAILURE => [
         'name' => Exception::GENERAL_PROVIDER_FAILURE,
-        'description' => 'VCS (Version Control System) provider failed to proccess the request. We believe this is an error with the VCS provider. Try again, or contact support for more information.',
+        'description' => 'VCS (Version Control System) provider failed to process the request. We believe this is an error with the VCS provider. Try again, or contact support for more information.',
         'code' => 400,
     ],
 
@@ -442,6 +518,11 @@ return [
         'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
         'description' => 'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".',
         'code' => 404,
+    ],
+    Exception::FUNCTION_SYNCHRONOUS_TIMEOUT => [
+        'name' => Exception::FUNCTION_SYNCHRONOUS_TIMEOUT,
+        'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
+        'code' => 408,
     ],
 
     /** Builds  */
@@ -592,6 +673,11 @@ return [
         'description' => 'The attribute type is invalid.',
         'code' => 400,
     ],
+    Exception::RELATIONSHIP_VALUE_INVALID => [
+        'name' => Exception::RELATIONSHIP_VALUE_INVALID,
+        'description' => 'The relationship value is invalid.',
+        'code' => 400,
+    ],
 
     /** Indexes */
     Exception::INDEX_NOT_FOUND => [
@@ -625,11 +711,6 @@ return [
         'name' => Exception::PROJECT_ALREADY_EXISTS,
         'description' => 'Project with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
-    ],
-    Exception::PROJECT_UNKNOWN => [
-        'name' => Exception::PROJECT_UNKNOWN,
-        'description' => 'The project ID is either missing or not valid. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
-        'code' => 400,
     ],
     Exception::PROJECT_PROVIDER_DISABLED => [
         'name' => Exception::PROJECT_PROVIDER_DISABLED,
@@ -701,6 +782,11 @@ return [
         'name' => Exception::PROJECT_TEMPLATE_DEFAULT_DELETION,
         'description' => 'You can\'t delete default template. If you are trying to reset your template changes, you can ignore this error as it\'s already been reset.',
         'code' => 401,
+    ],
+    Exception::PROJECT_REGION_UNSUPPORTED => [
+        'name' => Exception::PROJECT_REGION_UNSUPPORTED,
+        'description' => 'The requested region is either inactive or unsupported. Please check the value of the _APP_REGIONS environment variable.',
+        'code' => 400,
     ],
     Exception::WEBHOOK_NOT_FOUND => [
         'name' => Exception::WEBHOOK_NOT_FOUND,
@@ -795,5 +881,115 @@ return [
         'name' => Exception::HEALTH_INVALID_HOST,
         'description' => 'Failed to establish a connection to the specified domain. Please verify the domain name and ensure that the server is running and accessible.',
         'code' => 404,
+    ],
+
+    /** Providers */
+    Exception::PROVIDER_NOT_FOUND => [
+        'name' => Exception::PROVIDER_NOT_FOUND,
+        'description' => 'Provider with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PROVIDER_ALREADY_EXISTS => [
+        'name' => Exception::PROVIDER_ALREADY_EXISTS,
+        'description' => 'Provider with the requested ID already exists.',
+        'code' => 409,
+    ],
+    Exception::PROVIDER_INCORRECT_TYPE => [
+        'name' => Exception::PROVIDER_INCORRECT_TYPE,
+        'description' => 'Provider with the requested ID is of the incorrect type.',
+        'code' => 400,
+    ],
+    Exception::PROVIDER_MISSING_CREDENTIALS => [
+        'name' => Exception::PROVIDER_MISSING_CREDENTIALS,
+        'description' => 'Provider with the requested ID is missing credentials.',
+        'code' => 400,
+    ],
+
+    /** Topics */
+    Exception::TOPIC_NOT_FOUND => [
+        'name' => Exception::TOPIC_NOT_FOUND,
+        'description' => 'Topic with the request ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::TOPIC_ALREADY_EXISTS => [
+        'name' => Exception::TOPIC_ALREADY_EXISTS,
+        'description' => 'Topic with the request ID already exists.',
+        'code' => 409,
+    ],
+
+    /** Subscribers */
+    Exception::SUBSCRIBER_NOT_FOUND => [
+        'name' => Exception::SUBSCRIBER_NOT_FOUND,
+        'description' => 'Subscriber with the request ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::SUBSCRIBER_ALREADY_EXISTS => [
+        'name' => Exception::SUBSCRIBER_ALREADY_EXISTS,
+        'description' => 'Subscriber with the request ID already exists.',
+        'code' => 409,
+    ],
+
+    /** Messages */
+    Exception::MESSAGE_NOT_FOUND => [
+        'name' => Exception::MESSAGE_NOT_FOUND,
+        'description' => 'Message with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::MESSAGE_MISSING_TARGET => [
+        'name' => Exception::MESSAGE_MISSING_TARGET,
+        'description' => 'Message with the requested ID has no recipients (topics or users or targets).',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_SENT => [
+        'name' => Exception::MESSAGE_ALREADY_SENT,
+        'description' => 'Message with the requested ID has already been sent.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_PROCESSING => [
+        'name' => Exception::MESSAGE_ALREADY_PROCESSING,
+        'description' => 'Message with the requested ID is already being processed.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_FAILED => [
+        'name' => Exception::MESSAGE_ALREADY_FAILED,
+        'description' => 'Message with the requested ID has already failed.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_SCHEDULED => [
+        'name' => Exception::MESSAGE_ALREADY_SCHEDULED,
+        'description' => 'Message with the requested ID has already been scheduled for delivery.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_EMAIL => [
+        'name' => Exception::MESSAGE_TARGET_NOT_EMAIL,
+        'description' => 'Message with the target ID is not an email target.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_SMS => [
+        'name' => Exception::MESSAGE_TARGET_NOT_SMS,
+        'description' => 'Message with the target ID is not an SMS target.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_PUSH => [
+        'name' => Exception::MESSAGE_TARGET_NOT_PUSH,
+        'description' => 'Message with the target ID is not a push target.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_MISSING_SCHEDULE => [
+        'name' => Exception::MESSAGE_MISSING_SCHEDULE,
+        'description' => 'Message can not have status ' . MessageStatus::SCHEDULED . ' without a schedule.',
+        'code' => 400,
+    ],
+    Exception::SCHEDULE_NOT_FOUND => [
+        'name' => Exception::SCHEDULE_NOT_FOUND,
+        'description' => 'Schedule with the requested ID could not be found.',
+        'code' => 404,
+    ],
+
+    /** Targets */
+    Exception::TARGET_PROVIDER_INVALID_TYPE => [
+        'name' => Exception::TARGET_PROVIDER_INVALID_TYPE,
+        'description' => 'Target has an invalid provider type.',
+        'code' => 400,
     ],
 ];

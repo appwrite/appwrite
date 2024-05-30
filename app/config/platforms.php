@@ -15,7 +15,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '13.0.1',
+                'version' => '14.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-web',
                 'package' => 'https://www.npmjs.com/package/appwrite',
                 'enabled' => true,
@@ -63,7 +63,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '11.0.1',
+                'version' => '12.0.4',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -81,7 +81,7 @@ return [
             [
                 'key' => 'apple',
                 'name' => 'Apple',
-                'version' => '4.0.2',
+                'version' => '6.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-apple',
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
@@ -116,7 +116,7 @@ return [
             [
                 'key' => 'android',
                 'name' => 'Android',
-                'version' => '4.0.1',
+                'version' => '5.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-android',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-android',
                 'enabled' => true,
@@ -134,6 +134,24 @@ return [
                     'Kotlin' => 'kotlin',
                     'Java' => 'java',
                 ],
+            ],
+            [
+                'key' => 'react-native',
+                'name' => 'React Native',
+                'version' => '0.3.2',
+                'url' => 'https://github.com/appwrite/sdk-for-react-native',
+                'package' => 'https://npmjs.com/package/react-native-appwrite',
+                'enabled' => true,
+                'beta' => true,
+                'dev' => false,
+                'hidden' => false,
+                'family' => APP_PLATFORM_CLIENT,
+                'prism' => 'javascript',
+                'source' => \realpath(__DIR__ . '/../sdks/client-react-native'),
+                'gitUrl' => 'git@github.com:appwrite/sdk-for-react-native.git',
+                'gitRepoName' => 'sdk-for-react-native',
+                'gitUserName' => 'appwrite',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'graphql',
@@ -185,7 +203,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Console',
-                'version' => '0.5.0',
+                'version' => '0.6.3',
                 'url' => 'https://github.com/appwrite/sdk-for-console',
                 'package' => '',
                 'enabled' => true,
@@ -195,7 +213,7 @@ return [
                 'family' => APP_PLATFORM_CONSOLE,
                 'prism' => 'javascript',
                 'source' => \realpath(__DIR__ . '/../sdks/console-web'),
-                'gitUrl' => 'https://github.com/appwrite/sdk-for-console.git',
+                'gitUrl' => 'git@github.com:appwrite/sdk-for-console.git',
                 'gitBranch' => 'main',
                 'gitRepoName' => 'sdk-for-console',
                 'gitUserName' => 'appwrite',
@@ -203,7 +221,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '4.2.0',
+                'version' => '5.0.5',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -231,7 +249,7 @@ return [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
-                'version' => '11.1.0',
+                'version' => '13.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-node',
                 'package' => 'https://www.npmjs.com/package/node-appwrite',
                 'enabled' => true,
@@ -249,7 +267,7 @@ return [
             [
                 'key' => 'deno',
                 'name' => 'Deno',
-                'version' => '9.1.0',
+                'version' => '10.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-deno',
                 'package' => 'https://deno.land/x/appwrite',
                 'enabled' => true,
@@ -267,7 +285,7 @@ return [
             [
                 'key' => 'php',
                 'name' => 'PHP',
-                'version' => '10.1.0',
+                'version' => '11.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-php',
                 'package' => 'https://packagist.org/packages/appwrite/appwrite',
                 'enabled' => true,
@@ -285,7 +303,7 @@ return [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '4.1.0',
+                'version' => '5.0.3',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'package' => 'https://pypi.org/project/appwrite/',
                 'enabled' => true,
@@ -303,7 +321,7 @@ return [
             [
                 'key' => 'ruby',
                 'name' => 'Ruby',
-                'version' => '10.1.1',
+                'version' => '11.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-ruby',
                 'package' => 'https://rubygems.org/gems/appwrite',
                 'enabled' => true,
@@ -321,7 +339,7 @@ return [
             [
                 'key' => 'go',
                 'name' => 'Go',
-                'version' => '3.1.0',
+                'version' => '4.0.1',
                 'url' => 'https://github.com/appwrite/sdk-for-go',
                 'package' => '',
                 'enabled' => false,
@@ -339,7 +357,7 @@ return [
             [
                 'key' => 'java',
                 'name' => 'Java',
-                'version' => '3.1.0',
+                'version' => '4.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-java',
                 'package' => '',
                 'enabled' => false,
@@ -357,7 +375,7 @@ return [
             [
                 'key' => 'dotnet',
                 'name' => '.NET',
-                'version' => '0.7.0',
+                'version' => '0.8.2',
                 'url' => 'https://github.com/appwrite/sdk-for-dotnet',
                 'package' => 'https://www.nuget.org/packages/Appwrite',
                 'enabled' => true,
@@ -375,7 +393,7 @@ return [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '10.1.0',
+                'version' => '11.0.3',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
@@ -393,7 +411,7 @@ return [
             [
                 'key' => 'kotlin',
                 'name' => 'Kotlin',
-                'version' => '4.1.0',
+                'version' => '5.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-kotlin',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-kotlin',
                 'enabled' => true,
@@ -415,7 +433,7 @@ return [
             [
                 'key' => 'swift',
                 'name' => 'Swift',
-                'version' => '4.1.0',
+                'version' => '5.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-swift',
                 'package' => 'https://github.com/appwrite/sdk-for-swift',
                 'enabled' => true,
