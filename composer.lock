@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "53996479cd4ba0c73dbc72d46b240be0",
+    "content-hash": "b37a830efbb0467d058a640b289a0a91",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1719,16 +1719,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.49.10",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "216209121bc97a2010f67a39c561fafe1e936bec"
+                "reference": "4f4b35d99ecdee971c3042279bb1ac8264825030"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/216209121bc97a2010f67a39c561fafe1e936bec",
-                "reference": "216209121bc97a2010f67a39c561fafe1e936bec",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/4f4b35d99ecdee971c3042279bb1ac8264825030",
+                "reference": "4f4b35d99ecdee971c3042279bb1ac8264825030",
                 "shasum": ""
             },
             "require": {
@@ -1749,6 +1749,7 @@
                 "swoole/ide-helper": "4.8.0",
                 "utopia-php/cli": "^0.14.0"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -1769,9 +1770,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.49.10"
+                "source": "https://github.com/utopia-php/database/tree/main"
             },
-            "time": "2024-05-20T02:14:20+00:00"
+            "time": "2024-05-30T12:40:27+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5587,9 +5588,18 @@
             "time": "2023-11-21T18:54:41+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-main",
+            "alias": "0.49.10",
+            "alias_normalized": "0.49.10.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5613,5 +5623,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }
