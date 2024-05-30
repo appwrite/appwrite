@@ -150,27 +150,18 @@ $databaseListener = function (string $event, Document $document, Document $proje
 };
 
 $growthListener = function (string $event, string $projectId) {
-    // Global
-    if ($projectId == 'console') {
-        switch ($event) {
-            case 'user.create':
-            case 'user.delete':
-            case 'team.create':
-            case 'team.delete':
-            case 'membership.create':
-            case 'membership.delete':
-            case 'session.create':
-                return true;
-        };
+    $events = Config::getParam('growthEvents', []);
 
+    // If no events are defined, we assume no events are allowed
+    if (empty($events)) {
         return false;
     }
 
-    // Project Scoped
-    switch ($event) {
-        case 'database.create':
-        case 'function.create':
-            return true;
+    // Global
+    if ($projectId == 'console') {
+        return in_array($event, ($events['console'] ?? []));
+    } else {
+        return in_array($event, ($events['project'] ?? []));
     }
 };
 
