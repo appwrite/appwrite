@@ -153,12 +153,13 @@ $growthListener = function (string $event, string $projectId) {
     // Global
     if ($projectId == 'console') {
         switch ($event) {
-            case 'users.[userId].create':
-            case 'users.[userId].delete':
-            case 'teams.[teamId].create':
-            case 'teams.[teamId].delete':
-            case 'teams.[teamId].memberships.[membershipId].create':
-            case 'teams.[teamId].memberships.[membershipId].delete':
+            case 'user.create':
+            case 'user.delete':
+            case 'team.create':
+            case 'team.delete':
+            case 'membership.create':
+            case 'membership.delete':
+            case 'session.create':
                 return true;
         };
 
@@ -167,8 +168,8 @@ $growthListener = function (string $event, string $projectId) {
 
     // Project Scoped
     switch ($event) {
-        case 'databases.[databaseId].create':
-        case 'functions.[functionId].create':
+        case 'database.create':
+        case 'function.create':
             return true;
     }
 };
@@ -427,7 +428,7 @@ App::init()
             ->setUser($user);
 
         $queueForGrowth
-            ->setEvent($route->getLabel('event', ''))
+            ->setEvent($route->getLabel('audits.event', ''))
             ->setProject($project)
             ->setUser($user);
 
