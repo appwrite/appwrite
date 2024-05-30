@@ -594,14 +594,6 @@ App::shutdown()
                 ->setClass(Event::WEBHOOK_CLASS_NAME)
                 ->setQueue(Event::WEBHOOK_QUEUE_NAME)
                 ->trigger();
-            
-            if (System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted' && $growthListener($queueForEvents->getEvent(), $project->getId())) {
-                $queueForGrowth
-                    ->setResource($queueForEvents->getPayload())
-                    ->setClass(Event::GROWTH_CLASS_NAME)
-                    ->setQueue(Event::GROWTH_QUEUE_NAME)
-                    ->trigger();
-            }
 
             /**
              * Trigger realtime.
@@ -635,6 +627,16 @@ App::shutdown()
                         'userId' => $queueForEvents->getParam('userId')
                     ]
                 );
+            }
+        }
+
+        if (!empty($queueForGrowth->getEvent())) {
+            if (System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted' && $growthListener($queueForEvents->getEvent(), $project->getId())) {
+                $queueForGrowth
+                    ->setResource($queueForEvents->getPayload())
+                    ->setClass(Event::GROWTH_CLASS_NAME)
+                    ->setQueue(Event::GROWTH_QUEUE_NAME)
+                    ->trigger();
             }
         }
 
