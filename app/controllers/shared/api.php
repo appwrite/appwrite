@@ -631,9 +631,13 @@ App::shutdown()
         }
 
         if (!empty($queueForGrowth->getEvent())) {
-            if (System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted' && $growthListener($queueForEvents->getEvent(), $project->getId())) {
+            if (empty($queueForGrowth->getPayload())) {
+                $queueForGrowth->setPayload($responsePayload);
+            }
+
+            if (System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted' && $growthListener($queueForGrowth->getEvent(), $project->getId())) {
                 $queueForGrowth
-                    ->setResource($queueForEvents->getPayload())
+                    ->setResource($queueForGrowth->getPayload())
                     ->setClass(Event::GROWTH_CLASS_NAME)
                     ->setQueue(Event::GROWTH_QUEUE_NAME)
                     ->trigger();
