@@ -1470,6 +1470,8 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        // buildId is added as param just for backward compatibility
+        // It is fetched from the deployments collection and not from the request as the user doesn't have to know the buildId
         $buildId = $deployment->getAttribute('buildId', '');
         $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
 
