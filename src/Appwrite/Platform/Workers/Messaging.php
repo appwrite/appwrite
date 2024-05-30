@@ -400,9 +400,7 @@ class Messaging extends Action
                 'twilio' => [
                     'accountSid' => $user,
                     'authToken' => $password,
-                    // Twilio Messaging Service SIDs always start with MG
-                    // https://www.twilio.com/docs/messaging/services
-                    'messagingServiceSid' => \str_starts_with($from, 'MG') ? $from : null
+                    'messagingServiceSid' => $smsDSN->getParam('messagingServiceSid') ?? null
                 ],
                 'textmagic' => [
                     'username' => $user,
@@ -425,7 +423,7 @@ class Messaging extends Action
             },
             'options' => match ($host) {
                 'twilio' => [
-                    'from' => \str_starts_with($from, 'MG') ? null : $from
+                    'from' => $smsDSN->getParam('messagingServiceSid') ? null : $from
                 ],
                 default => [
                     'from' => $from
