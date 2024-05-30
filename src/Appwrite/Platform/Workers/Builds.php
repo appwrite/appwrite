@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
-use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
@@ -21,6 +20,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -158,20 +158,33 @@ class Builds extends Action
         $durationStart = \microtime(true);
         $buildId = $deployment->getAttribute('buildId', '');
         $build = $dbForProject->getDocument('builds', $buildId);
+        $isNewBuild = empty($buildId);
         if ($build->isEmpty()) {
-            throw new AppwriteException(AppwriteException::BUILD_NOT_FOUND);
-        }
+            $buildId = ID::unique();
+            $build = $dbForProject->createDocument('builds', new Document([
+                '$id' => $buildId,
+                '$permissions' => [],
+                'startTime' => $startTime,
+                'deploymentInternalId' => $deployment->getInternalId(),
+                'deploymentId' => $deployment->getId(),
+                'status' => 'processing',
+                'path' => '',
+                'runtime' => $function->getAttribute('runtime'),
+                'source' => $deployment->getAttribute('path', ''),
+                'sourceType' => strtolower($deviceForFunctions->getType()),
+                'logs' => '',
+                'endTime' => null,
+                'duration' => 0,
+                'size' => 0
+            ]));
 
-        if ($build->getAttribute('status') === 'cancelled') {
+            $deployment->setAttribute('buildId', $build->getId());
+            $deployment->setAttribute('buildInternalId', $build->getInternalId());
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+        } elseif ($build->getAttribute('status') === 'cancelled') {
             Console::info('Build has been cancelled');
             return;
         }
-
-        $isNewBuild = empty($build->getAttribute('startTime'));
-        $build->setAttribute('status', 'processing');
-        $build->setAttribute('startTime', $startTime);
-        $build->setAttribute('sourceType', strtolower($deviceForFunctions->getType()));
-        $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
         $source = $deployment->getAttribute('path', '');
         $installationId = $deployment->getAttribute('installationId', '');
@@ -211,8 +224,8 @@ class Builds extends Action
                 $stderr = '';
                 Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
 
-                $build = $dbForProject->getDocument('builds', $buildId);
-                if ($build->getAttribute('status') === 'cancelled') {
+                $build1 = $dbForProject->getDocument('builds', $buildId);
+                if ($build1->getAttribute('status') === 'cancelled') {
                     Console::info('Build has been cancelled');
                     return;
                 }
@@ -393,8 +406,8 @@ class Builds extends Action
             $response = null;
             $err = null;
 
-            $build = $dbForProject->getDocument('builds', $buildId);
-            if ($build->getAttribute('status') === 'cancelled') {
+            $build1 = $dbForProject->getDocument('builds', $buildId);
+            if ($build1->getAttribute('status') === 'cancelled') {
                 Console::info('Build has been cancelled');
                 return;
             }
@@ -465,8 +478,8 @@ class Builds extends Action
             ]);
 
             if ($err) {
-                $build = $dbForProject->getDocument('builds', $buildId);
-                if ($build->getAttribute('status') === 'cancelled') {
+                $build1 = $dbForProject->getDocument('builds', $buildId);
+                if ($build1->getAttribute('status') === 'cancelled') {
                     Console::info('Build has been cancelled');
                     return;
                 }
@@ -499,8 +512,8 @@ class Builds extends Action
                 $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
             }
 
-            $build = $dbForProject->getDocument('builds', $buildId);
-            if ($build->getAttribute('status') === 'cancelled') {
+            $build1 = $dbForProject->getDocument('builds', $buildId);
+            if ($build1->getAttribute('status') === 'cancelled') {
                 Console::info('Build has been cancelled');
                 return;
             }
@@ -515,8 +528,8 @@ class Builds extends Action
                 ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
             Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
-            $build = $dbForProject->getDocument('builds', $buildId);
-            if ($build->getAttribute('status') === 'cancelled') {
+            $build1 = $dbForProject->getDocument('builds', $buildId);
+            if ($build1->getAttribute('status') === 'cancelled') {
                 Console::info('Build has been cancelled');
                 return;
             }

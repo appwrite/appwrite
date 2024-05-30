@@ -241,28 +241,6 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
             }
 
-            $buildId = ID::unique();
-            $build = $dbForProject->createDocument('builds', new Document([
-                '$id' => $buildId,
-                '$permissions' => [],
-                'startTime' => null,
-                'deploymentInternalId' => $deployment->getInternalId(),
-                'deploymentId' => $deployment->getId(),
-                'status' => 'waiting',
-                'path' => '',
-                'runtime' => $function->getAttribute('runtime'),
-                'source' => $deployment->getAttribute('path', ''),
-                'sourceType' => '',
-                'logs' => '',
-                'endTime' => null,
-                'duration' => 0,
-                'size' => 0
-            ]));
-
-            $deployment->setAttribute('buildId', $build->getId());
-            $deployment->setAttribute('buildInternalId', $build->getInternalId());
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)

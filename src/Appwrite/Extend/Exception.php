@@ -163,6 +163,7 @@ class Exception extends \Exception
     public const BUILD_NOT_FOUND                   = 'build_not_found';
     public const BUILD_NOT_READY                   = 'build_not_ready';
     public const BUILD_IN_PROGRESS                 = 'build_in_progress';
+    public const BUILD_ALREADY_COMPLETED           = 'build_already_completed';
 
     /** Execution */
     public const EXECUTION_NOT_FOUND               = 'execution_not_found';

@@ -118,28 +118,6 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         'activate' => true,
     ]));
 
-    $buildId = ID::unique();
-    $build = $dbForProject->createDocument('builds', new Document([
-        '$id' => $buildId,
-        '$permissions' => [],
-        'startTime' => null,
-        'deploymentInternalId' => $deployment->getInternalId(),
-        'deploymentId' => $deployment->getId(),
-        'status' => 'waiting',
-        'path' => '',
-        'runtime' => $function->getAttribute('runtime'),
-        'source' => $deployment->getAttribute('path', ''),
-        'sourceType' => '',
-        'logs' => '',
-        'endTime' => null,
-        'duration' => 0,
-        'size' => 0
-    ]));
-
-    $deployment->setAttribute('buildId', $build->getId());
-    $deployment->setAttribute('buildInternalId', $build->getInternalId());
-    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-
     $queueForBuilds
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
@@ -1228,28 +1206,6 @@ App::post('/v1/functions/:functionId/deployments')
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
             }
 
-            $buildId = ID::unique();
-            $build = $dbForProject->createDocument('builds', new Document([
-                '$id' => $buildId,
-                '$permissions' => [],
-                'startTime' => null,
-                'deploymentInternalId' => $deployment->getInternalId(),
-                'deploymentId' => $deployment->getId(),
-                'status' => 'waiting',
-                'path' => '',
-                'runtime' => $function->getAttribute('runtime'),
-                'source' => $deployment->getAttribute('path', ''),
-                'sourceType' => strtolower($deviceForFunctions->getType()),
-                'logs' => '',
-                'endTime' => null,
-                'duration' => 0,
-                'size' => 0
-            ]));
-
-            $deployment->setAttribute('buildId', $build->getId());
-            $deployment->setAttribute('buildInternalId', $build->getInternalId());
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-
             // Start the build
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
@@ -1528,28 +1484,6 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
         ]));
 
-        $buildId = ID::unique();
-        $build = $dbForProject->createDocument('builds', new Document([
-            '$id' => $buildId,
-            '$permissions' => [],
-            'startTime' => null,
-            'deploymentInternalId' => $deployment->getInternalId(),
-            'deploymentId' => $deployment->getId(),
-            'status' => 'waiting',
-            'path' => '',
-            'runtime' => $function->getAttribute('runtime'),
-            'source' => $deployment->getAttribute('path', ''),
-            'sourceType' => '',
-            'logs' => '',
-            'endTime' => null,
-            'duration' => 0,
-            'size' => 0
-        ]));
-
-        $deployment->setAttribute('buildId', $build->getId());
-        $deployment->setAttribute('buildInternalId', $build->getInternalId());
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($function)
@@ -1564,13 +1498,13 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
 App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->groups(['api', 'functions'])
-    ->desc('Update build status')
+    ->desc('Cancel deployment')
     ->label('scope', 'functions.write')
     ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'cancelBuild')
+    ->label('sdk.method', 'updateDeploymentBuild')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_BUILD)
@@ -1596,14 +1530,33 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
         $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
 
         if ($build->isEmpty()) {
-            throw new Exception(Exception::BUILD_NOT_FOUND);
-        }
+            $buildId = ID::unique();
+            $build = $dbForProject->createDocument('builds', new Document([
+                '$id' => $buildId,
+                '$permissions' => [],
+                'startTime' => DateTime::now(),
+                'deploymentInternalId' => $deployment->getInternalId(),
+                'deploymentId' => $deployment->getId(),
+                'status' => 'cancelled', //mark status as cancelled
+                'path' => '',
+                'runtime' => $function->getAttribute('runtime'),
+                'source' => $deployment->getAttribute('path', ''),
+                'sourceType' => '',
+                'logs' => '',
+                'endTime' => DateTime::now(),
+                'duration' => 0,
+                'size' => 0
+            ]));
 
-        if (\in_array($build->getAttribute('status'), ['ready', 'failed'])) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Build is already completed and cannot be cancelled.');
+            $deployment->setAttribute('buildId', $build->getId());
+            $deployment->setAttribute('buildInternalId', $build->getInternalId());
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+        } else {
+            if (\in_array($build->getAttribute('status'), ['ready', 'failed'])) {
+                throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
+            }
+            $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('status', 'cancelled'));
         }
-
-        $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('status', 'cancelled'));
 
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         $deleteBuild = $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
