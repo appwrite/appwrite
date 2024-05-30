@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "20844ba2607c2746ee92e3b9474086ab",
+    "content-hash": "bee024ec80d546d910563dc166baed9e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1719,7 +1719,7 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-main",
+            "version": "0.49.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
@@ -1749,7 +1749,6 @@
                 "swoole/ide-helper": "4.8.0",
                 "utopia-php/cli": "^0.14.0"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -1770,7 +1769,7 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/main"
+                "source": "https://github.com/utopia-php/database/tree/0.49.11"
             },
             "time": "2024-05-30T12:40:27+00:00"
         },
@@ -5588,18 +5587,9 @@
             "time": "2023-11-21T18:54:41+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-main",
-            "alias": "0.49.10",
-            "alias_normalized": "0.49.10.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
