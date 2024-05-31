@@ -2,12 +2,11 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Event;
 use Utopia\CLI\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
-use Utopia\Validator\WhiteList;
+use Utopia\Validator\Text;
 use Utopia\Validator\Wildcard;
 
 class QueueRetry extends Action
@@ -22,19 +21,7 @@ class QueueRetry extends Action
     {
         $this
             ->desc('Retry failed jobs from a specific queue identified by the name parameter')
-            ->param('name', '', new WhiteList([
-                Event::DATABASE_QUEUE_NAME,
-                Event::DELETE_QUEUE_NAME,
-                Event::AUDITS_QUEUE_NAME,
-                Event::MAILS_QUEUE_NAME,
-                Event::FUNCTIONS_QUEUE_NAME,
-                Event::USAGE_QUEUE_NAME,
-                Event::WEBHOOK_CLASS_NAME,
-                Event::CERTIFICATES_QUEUE_NAME,
-                Event::BUILDS_QUEUE_NAME,
-                Event::MESSAGING_QUEUE_NAME,
-                Event::MIGRATIONS_QUEUE_NAME
-            ]), 'Queue name')
+            ->param('name', '', new Text(100), 'Queue name')
             ->param('limit', 0, new Wildcard(), 'jobs limit', true)
             ->inject('queue')
             ->callback(fn ($name, $limit, $queue) => $this->action($name, $limit, $queue));

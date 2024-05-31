@@ -26,6 +26,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
+use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
@@ -300,9 +301,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             Console::error($th->getMessage());
 
             if ($th instanceof AppwriteException) {
-                if ($function->getAttribute('logging')) {
-                    Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-                }
                 throw $th;
             }
         } finally {
@@ -312,11 +310,11 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
             ;
-        }
 
-        if ($function->getAttribute('logging')) {
-            /** @var Document $execution */
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            if ($function->getAttribute('logging')) {
+                /** @var Document $execution */
+                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            }
         }
 
         $execution->setAttribute('logs', '');
@@ -365,6 +363,31 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     return false;
 }
 
+/*
+App::init()
+    ->groups(['api'])
+    ->inject('project')
+    ->inject('mode')
+    ->action(function (Document $project, string $mode) {
+        if ($mode === APP_MODE_ADMIN && $project->getId() === 'console') {
+            throw new AppwriteException(AppwriteException::GENERAL_BAD_REQUEST, 'Admin mode is not allowed for console project');
+        }
+    });
+*/
+
+App::init()
+    ->groups(['database', 'functions', 'storage', 'messaging'])
+    ->inject('project')
+    ->inject('request')
+    ->action(function (Document $project, Request $request) {
+        if ($project->getId() === 'console') {
+            $message = empty($request->getHeader('x-appwrite-project')) ?
+                'No Appwrite project was specified. Please specify your project ID when initializing your Appwrite SDK.' :
+                'This endpoint is not available for the console project. The Appwrite Console is a reserved project ID and cannot be used with the Appwrite SDKs and APIs. Please check if your project ID is correct.';
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, $message);
+        }
+    });
+
 App::init()
     ->groups(['api', 'web'])
     ->inject('utopia')
@@ -402,7 +425,9 @@ App::init()
         Request::setRoute($route);
 
         if ($route === null) {
-            return $response->setStatusCode(404)->send('Not Found');
+            return $response
+                ->setStatusCode(404)
+                ->send('Not Found');
         }
 
         $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
@@ -529,6 +554,9 @@ App::init()
             if (version_compare($responseFormat, '1.5.0', '<')) {
                 $response->addFilter(new ResponseV17());
             }
+            if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
+                $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is ". APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
+            }
         }
 
         /*
@@ -555,7 +583,7 @@ App::init()
             ->addHeader('Server', 'Appwrite')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Forwarded-For, X-Forwarded-User-Agent')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-Shared-Tables, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Forwarded-For, X-Forwarded-User-Agent')
             ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
             ->addHeader('Access-Control-Allow-Credentials', 'true');
@@ -606,7 +634,7 @@ App::options()
         $response
             ->addHeader('Server', 'Appwrite')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-Shared-Tables, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent')
             ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $origin)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -624,6 +652,67 @@ App::error()
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
+        $class = \get_class($error);
+        $code = $error->getCode();
+        $message = $error->getMessage();
+        $file = $error->getFile();
+        $line = $error->getLine();
+        $trace = $error->getTrace();
+
+        if (php_sapi_name() === 'cli') {
+            Console::error('[Error] Timestamp: ' . date('c', time()));
+
+            if ($route) {
+                Console::error('[Error] Method: ' . $route->getMethod());
+                Console::error('[Error] URL: ' . $route->getPath());
+            }
+
+            Console::error('[Error] Type: ' . get_class($error));
+            Console::error('[Error] Message: ' . $message);
+            Console::error('[Error] File: ' . $file);
+            Console::error('[Error] Line: ' . $line);
+        }
+
+        switch ($class) {
+            case 'Utopia\Exception':
+                $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
+                switch ($code) {
+                    case 400:
+                        $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
+                        break;
+                    case 404:
+                        $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+                        break;
+                }
+                break;
+            case 'Utopia\Database\Exception\Conflict':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Timeout':
+                $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Query':
+                $error = new AppwriteException(AppwriteException::GENERAL_QUERY_INVALID, $error->getMessage(), previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Structure':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $error->getMessage(), previous: $error);
+                break;
+            case 'Utopia\Database\Exception\Duplicate':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_ALREADY_EXISTS);
+                break;
+            case 'Utopia\Database\Exception\Restricted':
+                $error = new AppwriteException(AppwriteException::DOCUMENT_DELETE_RESTRICTED);
+                break;
+            case 'Utopia\Database\Exception\Authorization':
+                $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
+                break;
+            case 'Utopia\Database\Exception\Relationship':
+                $error = new AppwriteException(AppwriteException::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
+                break;
+        }
+
+        $code = $error->getCode();
+        $message = $error->getMessage();
 
         if ($error instanceof AppwriteException) {
             $publish = $error->isPublishable();
@@ -631,16 +720,41 @@ App::error()
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
 
-        if ($logger && ($publish || $error->getCode() === 0)) {
+        if ($error->getCode() >= 400 && $error->getCode() < 500) {
+            // Register error logger
+            $providerName = System::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
+            $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
+
+            if (!(empty($providerName) || empty($providerConfig))) {
+                if (!Logger::hasProvider($providerName)) {
+                    throw new Exception("Logging provider not supported. Logging is disabled");
+                }
+
+                $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
+                $adapter = new $classname($providerConfig);
+                $logger = new Logger($adapter);
+                $logger->setSample(0.04);
+                $publish = true;
+            }
+        }
+
+        if ($logger && $publish) {
             try {
                 /** @var Utopia\Database\Document $user */
                 $user = $utopia->getResource('user');
-            } catch (\Throwable $th) {
+            } catch (\Throwable) {
                 // All good, user is optional information for logger
             }
 
             if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
+            }
+
+            try {
+                $dsn = new DSN($project->getAttribute('database', 'console'));
+            } catch (\InvalidArgumentException) {
+                // TODO: Temporary until all projects are using shared tables
+                $dsn = new DSN('mysql://' . $project->getAttribute('database', 'console'));
             }
 
             $log->setNamespace("http");
@@ -649,7 +763,7 @@ App::error()
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
 
-            $log->addTag('database', $project->getAttribute('database', 'console'));
+            $log->addTag('database', $dsn->getHost());
             $log->addTag('method', $route->getMethod());
             $log->addTag('url', $route->getPath());
             $log->addTag('verboseType', get_class($error));
@@ -672,47 +786,6 @@ App::error()
 
             $responseCode = $logger->addLog($log);
             Console::info('Log pushed with status code: ' . $responseCode);
-        }
-
-        $code = $error->getCode();
-        $message = $error->getMessage();
-        $file = $error->getFile();
-        $line = $error->getLine();
-        $trace = $error->getTrace();
-
-        if (php_sapi_name() === 'cli') {
-            Console::error('[Error] Timestamp: ' . date('c', time()));
-
-            if ($route) {
-                Console::error('[Error] Method: ' . $route->getMethod());
-                Console::error('[Error] URL: ' . $route->getPath());
-            }
-
-            Console::error('[Error] Type: ' . get_class($error));
-            Console::error('[Error] Message: ' . $message);
-            Console::error('[Error] File: ' . $file);
-            Console::error('[Error] Line: ' . $line);
-        }
-
-        /** Handle Utopia Errors */
-        if ($error instanceof Utopia\Exception) {
-            $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
-            switch ($code) {
-                case 400:
-                    $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
-                    break;
-                case 404:
-                    $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
-                    break;
-            }
-        } elseif ($error instanceof Utopia\Database\Exception\Conflict) {
-            $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
-            $code = $error->getCode();
-            $message = $error->getMessage();
-        } elseif ($error instanceof Utopia\Database\Exception\Timeout) {
-            $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
-            $code = $error->getCode();
-            $message = $error->getMessage();
         }
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */
@@ -750,12 +823,12 @@ App::error()
             'file' => $file,
             'line' => $line,
             'trace' => \json_encode($trace, JSON_UNESCAPED_UNICODE) === false ? [] : $trace, // check for failing encode
-            'version' => $version,
+            'version' => APP_VERSION_STABLE,
             'type' => $type,
         ] : [
             'message' => $message,
             'code' => $code,
-            'version' => $version,
+            'version' => APP_VERSION_STABLE,
             'type' => $type,
         ];
 
@@ -793,20 +866,50 @@ App::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('utopia')
+    ->inject('swooleRequest')
+    ->inject('request')
     ->inject('response')
-    ->action(function (Response $response) {
-        $template = new View(__DIR__ . '/../views/general/robots.phtml');
-        $response->text($template->render(false));
+    ->inject('dbForConsole')
+    ->inject('getProjectDB')
+    ->inject('queueForEvents')
+    ->inject('queueForUsage')
+    ->inject('geodb')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+        $host = $request->getHostname() ?? '';
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
+
+        if ($host === $mainDomain) {
+            $template = new View(__DIR__ . '/../views/general/robots.phtml');
+            $response->text($template->render(false));
+        } else {
+            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb);
+        }
     });
 
 App::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('utopia')
+    ->inject('swooleRequest')
+    ->inject('request')
     ->inject('response')
-    ->action(function (Response $response) {
-        $template = new View(__DIR__ . '/../views/general/humans.phtml');
-        $response->text($template->render(false));
+    ->inject('dbForConsole')
+    ->inject('getProjectDB')
+    ->inject('queueForEvents')
+    ->inject('queueForUsage')
+    ->inject('geodb')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+        $host = $request->getHostname() ?? '';
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
+
+        if ($host === $mainDomain) {
+            $template = new View(__DIR__ . '/../views/general/humans.phtml');
+            $response->text($template->render(false));
+        } else {
+            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb);
+        }
     });
 
 App::get('/.well-known/acme-challenge/*')
