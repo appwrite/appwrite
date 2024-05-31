@@ -1050,7 +1050,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->param('entrypoint', null, new Text(1028), 'Entrypoint File.', true)
     ->param('commands', null, new Text(8192, 0), 'Build Commands.', true)
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
-    ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.')
+    ->param('activate', false, new Boolean(true), 'Activate the deployment when it is finished building.')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -1061,6 +1061,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('queueForBuilds')
     ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds) {
 
+        $activate = $request->getParam('activate');
         $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
         $function = $dbForProject->getDocument('functions', $functionId);
