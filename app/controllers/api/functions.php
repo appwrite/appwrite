@@ -1059,9 +1059,8 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('deviceForFunctions')
     ->inject('deviceForLocal')
     ->inject('queueForBuilds')
-    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds) {
+    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds) {
 
-        $activate = $request->getParam('activate');
         $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
         $function = $dbForProject->getDocument('functions', $functionId);
