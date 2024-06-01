@@ -51,7 +51,7 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
-    ports:
+    ports: 
       - 9501:80
     networks:
       - appwrite
@@ -92,6 +92,7 @@ services:
       - app/http.php
     environment:
       - _APP_ENV
+      - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT
@@ -186,6 +187,8 @@ services:
       - _APP_MESSAGE_EMAIL_TEST_DSN
       - _APP_MESSAGE_PUSH_TEST_DSN
       - _APP_CONSOLE_COUNTRIES_DENYLIST
+      - _APP_EXPERIMENT_LOGGING_PROVIDER
+      - _APP_EXPERIMENT_LOGGING_CONFIG
 
   appwrite-realtime:
     entrypoint: realtime
@@ -810,7 +813,7 @@ services:
 
   openruntimes-executor:
     container_name: openruntimes-executor
-    hostname: appwrite-executor
+    hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
     image: openruntimes/executor:0.5.5
@@ -876,7 +879,7 @@ services:
       - OPR_PROXY_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_PROXY_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_PROXY_ALGORITHM=random
-      - OPR_PROXY_EXECUTORS=appwrite-executor
+      - OPR_PROXY_EXECUTORS=exc1
       - OPR_PROXY_HEALTHCHECK_INTERVAL=10000
       - OPR_PROXY_MAX_TIMEOUT=600
       - OPR_PROXY_HEALTHCHECK=enabled
