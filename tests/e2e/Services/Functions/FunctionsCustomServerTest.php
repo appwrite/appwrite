@@ -896,6 +896,197 @@ class FunctionsCustomServerTest extends Scope
         return $data;
     }
 
+    public function testDeploymentWithActivation()
+    {
+        $functionId = 'activation-tester';
+
+        // create a function
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => $functionId,
+            'name' => 'Test Activation',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'execute' => ['any'],
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $folder = 'php-with-activation';
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
+        $this->packageCode($folder);
+
+        $deploymentOne = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
+        ]);
+
+        $deploymentOneId = $deploymentOne['body']['$id'] ?? '';
+
+        // Poll until deployment is built
+        while (true) {
+            $deploymentOne = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentOneId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deploymentOne['headers']['status-code'] >= 400
+                || \in_array($deploymentOne['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        // execute one
+        $executionOne = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => false,
+        ]);
+
+        $this->assertEquals(201, $executionOne['headers']['status-code']);
+        $this->assertEquals('OK1', $executionOne['body']['responseBody'] ?? '');
+
+        // upload 2 and execute 1.
+        $folder2 = 'php-without-activation';
+        $code2 = realpath(__DIR__ . '/../../../resources/functions') . "/$folder2/code.tar.gz";
+        $this->packageCode($folder2);
+
+        $deploymentTwo = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'code' => new CURLFile($code2, 'application/x-gzip', \basename($code2)),
+            'activate' => false
+        ]);
+
+        $deploymentTwoId = $deploymentTwo['body']['$id'] ?? '';
+
+        while (true) {
+            $deploymentTwo = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentTwoId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], []);
+
+            if (
+                $deploymentTwo['headers']['status-code'] >= 400
+                || \in_array($deploymentTwo['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        // execute first deployment again
+        $executionTwo = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => false,
+        ]);
+
+        $this->assertEquals(201, $executionTwo['headers']['status-code']);
+        $this->assertEquals('OK1', $executionTwo['body']['responseBody'] ?? '');
+
+        // activate second deployment
+        $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentTwoId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        // execute second deployment
+        $executionThree = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => false,
+        ]);
+
+        $this->assertEquals(201, $executionThree['headers']['status-code']);
+        $this->assertEquals('OK2', $executionThree['body']['responseBody'] ?? '');
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testDeploymentWithInvalidActivationParam()
+    {
+        // create a function
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test Activation',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'execute' => ['any'],
+        ]);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $folder = 'php-with-activation';
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
+        $this->packageCode($folder);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => "abc" // marked as false as it is invalid for .
+        ]);
+
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentTwoId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], []);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertFalse($deployment['body']['activate']);
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
     public function testTimeout()
     {
         $name = 'php-8.0';
@@ -1280,7 +1471,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertArrayHasKey('base', $runtime);
         $this->assertArrayHasKey('supports', $runtime);
     }
-
 
     public function testEventTrigger()
     {
