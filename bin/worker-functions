@@ -1,3 +1,3 @@
 #!/bin/sh
 
-QUEUE=v1-functions php /usr/src/code/app/workers/functions.php $@
+php /usr/src/code/app/worker.php functions $@

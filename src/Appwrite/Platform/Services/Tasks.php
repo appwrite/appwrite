@@ -2,20 +2,21 @@
 
 namespace Appwrite\Platform\Services;
 
-use Utopia\Platform\Service;
 use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
-use Appwrite\Platform\Tasks\Schedule;
-use Appwrite\Platform\Tasks\PatchCreateMissingSchedules;
+use Appwrite\Platform\Tasks\QueueCount;
+use Appwrite\Platform\Tasks\QueueRetry;
+use Appwrite\Platform\Tasks\ScheduleFunctions;
+use Appwrite\Platform\Tasks\ScheduleMessages;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
-use Appwrite\Platform\Tasks\Usage;
+use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
-use Appwrite\Platform\Tasks\VolumeSync;
+use Utopia\Platform\Service;
 use Appwrite\Platform\Tasks\EdgeSync;
 
 class Tasks extends Service
@@ -24,19 +25,22 @@ class Tasks extends Service
     {
         $this->type = self::TYPE_CLI;
         $this
-            ->addAction(Version::getName(), new Version())
-            ->addAction(Usage::getName(), new Usage())
-            ->addAction(Vars::getName(), new Vars())
-            ->addAction(SSL::getName(), new SSL())
             ->addAction(Doctor::getName(), new Doctor())
             ->addAction(Install::getName(), new Install())
             ->addAction(Maintenance::getName(), new Maintenance())
-            ->addAction(PatchCreateMissingSchedules::getName(), new PatchCreateMissingSchedules())
-            ->addAction(Schedule::getName(), new Schedule())
             ->addAction(Migrate::getName(), new Migrate())
+            ->addAction(QueueCount::getName(), new QueueCount())
+            ->addAction(QueueRetry::getName(), new QueueRetry())
             ->addAction(SDKs::getName(), new SDKs())
-            ->addAction(VolumeSync::getName(), new VolumeSync())
+            ->addAction(SSL::getName(), new SSL())
+            ->addAction(ScheduleFunctions::getName(), new ScheduleFunctions())
+            ->addAction(ScheduleMessages::getName(), new ScheduleMessages())
             ->addAction(Specs::getName(), new Specs())
+            ->addAction(Upgrade::getName(), new Upgrade())
+            ->addAction(Vars::getName(), new Vars())
+            ->addAction(Version::getName(), new Version())
             ->addAction(EdgeSync::getName(), new EdgeSync());
+
+        ;
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Executor;
 
+use Appwrite\Extend\Exception as AppwriteException;
 use Exception;
-use Utopia\App;
-use Utopia\CLI\Console;
+use Utopia\System\System;
 
 class Executor
 {
@@ -35,11 +35,12 @@ class Executor
         }
 
         $this->endpoint = $endpoint;
-        $this->cpus = \intval(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
-        $this->memory = intval(App::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
+        $this->cpus = \intval(System::getEnv('_APP_FUNCTIONS_CPUS', '1'));
+        $this->memory = \intval(System::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
         $this->headers = [
             'content-type' => 'application/json',
-            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', ''),
+            'authorization' => 'Bearer ' . System::getEnv('_APP_EXECUTOR_SECRET', ''),
+            'x-opr-addressing-method' => 'anycast-efficient'
         ];
     }
 
@@ -54,43 +55,90 @@ class Executor
      * @param string $image
      * @param bool $remove
      * @param string $entrypoint
-     * @param string $workdir
      * @param string $destination
      * @param array $variables
-     * @param array $commands
+     * @param string $command
      */
     public function createRuntime(
         string $deploymentId,
         string $projectId,
         string $source,
         string $image,
+        string $version,
         bool $remove = false,
         string $entrypoint = '',
-        string $workdir = '',
         string $destination = '',
         array $variables = [],
-        array $commands = []
+        string $command = null,
     ) {
-        $runtimeId = "$projectId-$deploymentId";
+        $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
-        $headers = [ 'x-opr-runtime-id' => $runtimeId ];
+        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
         $params = [
             'runtimeId' => $runtimeId,
             'source' => $source,
             'destination' => $destination,
             'image' => $image,
             'entrypoint' => $entrypoint,
-            'workdir' => $workdir,
             'variables' => $variables,
             'remove' => $remove,
-            'commands' => $commands,
+            'command' => $command,
             'cpus' => $this->cpus,
             'memory' => $this->memory,
+            'version' => $version,
+            'timeout' => $timeout,
         ];
 
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
-        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $timeout);
+        $status = $response['headers']['status-code'];
+        if ($status >= 400) {
+            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
+            throw new \Exception($message, $status);
+        }
+
+        return $response['body'];
+    }
+
+    /**
+     * Listen to realtime logs stream of a runtime
+     *
+     * @param string $deploymentId
+     * @param string $projectId
+     * @param callable $callback
+     */
+    public function getLogs(
+        string $deploymentId,
+        string $projectId,
+        callable $callback
+    ) {
+        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+
+        $runtimeId = "$projectId-$deploymentId-build";
+        $route = "/runtimes/{$runtimeId}/logs";
+        $params = [
+            'timeout' => $timeout
+        ];
+
+        $this->call(self::METHOD_GET, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, $callback);
+    }
+
+    /**
+     * Delete Runtime
+     *
+     * Deletes a runtime and cleans up any containers remaining.
+     *
+     * @param string $projectId
+     * @param string $deploymentId
+     */
+    public function deleteRuntime(string $projectId, string $deploymentId)
+    {
+        $runtimeId = "$projectId-$deploymentId";
+        $route = "/runtimes/$runtimeId";
+
+        $response = $this->call(self::METHOD_DELETE, $route, [
+            'x-opr-addressing-method' => 'broadcast'
+        ], [], true, 30);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -106,44 +154,62 @@ class Executor
      *
      * @param string $projectId
      * @param string $deploymentId
-     * @param string $payload
+     * @param string $body
      * @param array $variables
      * @param int $timeout
      * @param string $image
      * @param string $source
      * @param string $entrypoint
+     * @param string $runtimeEntrypoint
      *
      * @return array
      */
     public function createExecution(
         string $projectId,
         string $deploymentId,
-        string $payload,
+        ?string $body,
         array $variables,
         int $timeout,
         string $image,
         string $source,
         string $entrypoint,
+        string $version,
+        string $path,
+        string $method,
+        array $headers,
+        string $runtimeEntrypoint = null,
+        int $requestTimeout = null
     ) {
+        if (empty($headers['host'])) {
+            $headers['host'] = System::getEnv('_APP_DOMAIN', '');
+        }
+
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/execution';
-        $headers = [ 'x-opr-runtime-id' => $runtimeId ];
         $params = [
             'runtimeId' => $runtimeId,
             'variables' => $variables,
-            'payload' => $payload,
+            'body' => $body,
             'timeout' => $timeout,
-
+            'path' => $path,
+            'method' => $method,
+            'headers' => $headers,
             'image' => $image,
             'source' => $source,
             'entrypoint' => $entrypoint,
             'cpus' => $this->cpus,
             'memory' => $this->memory,
+            'version' => $version,
+            'runtimeEntrypoint' => $runtimeEntrypoint,
         ];
 
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        // Safety timeout. Executor has timeout, and open runtime has soft timeout.
+        // This one shouldn't really happen, but prevents from unexpected networking behaviours.
+        if ($requestTimeout == null) {
+            $requestTimeout = $timeout + 15;
+        }
 
-        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $timeout);
+        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $requestTimeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -167,7 +233,7 @@ class Executor
      * @return array|string
      * @throws Exception
      */
-    public function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15)
+    public function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, callable $callback = null)
     {
         $headers            = array_merge($this->headers, $headers);
         $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
@@ -195,8 +261,20 @@ class Executor
             unset($headers[$i]);
         }
 
+        if (isset($callback)) {
+            $headers[] = 'accept: text/event-stream';
+
+            $handleEvent = function ($ch, $data) use ($callback) {
+                $callback($data);
+                return \strlen($data);
+            };
+
+            curl_setopt($ch, CURLOPT_WRITEFUNCTION, $handleEvent);
+        } else {
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        }
+
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
@@ -225,8 +303,16 @@ class Executor
         }
 
         $responseBody   = curl_exec($ch);
+
+        if (isset($callback)) {
+            curl_close($ch);
+            return [];
+        }
+
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_errno($ch);
+        $curlErrorMessage = curl_error($ch);
 
         if ($decode) {
             switch (substr($responseType, 0, strpos($responseType, ';'))) {
@@ -243,8 +329,11 @@ class Executor
             }
         }
 
-        if ((curl_errno($ch)/* || 200 != $responseStatus*/)) {
-            throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
+        if ($curlError) {
+            if ($curlError == CURLE_OPERATION_TIMEDOUT) {
+                throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT);
+            }
+            throw new Exception($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
         }
 
         curl_close($ch);

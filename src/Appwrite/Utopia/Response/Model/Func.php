@@ -4,8 +4,6 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use stdClass;
-use Utopia\Database\Document;
 
 class Func extends Model
 {
@@ -49,6 +47,18 @@ class Func extends Model
                 'default' => true,
                 'example' => false,
             ])
+            ->addRule('live', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Is the function deployed with the latest configuration? This is set to false if you\'ve changed an environment variables, entrypoint, commands, or other settings that needs redeploy to be applied. When the value is false, redeploy the function to update it with the latest configuration.',
+                'default' => true,
+                'example' => false,
+            ])
+            ->addRule('logging', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.',
+                'default' => true,
+                'example' => false,
+            ])
             ->addRule('runtime', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function execution runtime.',
@@ -85,7 +95,55 @@ class Func extends Model
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Function execution timeout in seconds.',
                 'default' => 15,
-                'example' => 1592981237,
+                'example' => 300,
+            ])
+            ->addRule('entrypoint', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The entrypoint file used to execute the deployment.',
+                'default' => '',
+                'example' => 'index.js',
+            ])
+            ->addRule('commands', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The build command used to build the deployment.',
+                'default' => '',
+                'example' => 'npm install',
+            ])
+            ->addRule('version', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Version of Open Runtimes used for the function.',
+                'default' => 'v3',
+                'example' => 'v2',
+            ])
+            ->addRule('installationId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function VCS (Version Control System) installation id.',
+                'default' => '',
+                'example' => '6m40at4ejk5h2u9s1hboo',
+            ])
+            ->addRule('providerRepositoryId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'VCS (Version Control System) Repository ID',
+                'default' => '',
+                'example' => 'appwrite',
+            ])
+            ->addRule('providerBranch', [
+                'type' => self::TYPE_STRING,
+                'description' => 'VCS (Version Control System) branch name',
+                'default' => '',
+                'example' => 'main',
+            ])
+            ->addRule('providerRootDirectory', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Path to function in VCS (Version Control System) repository',
+                'default' => '',
+                'example' => 'functions/helloWorld',
+            ])
+            ->addRule('providerSilentMode', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Is VCS (Version Control System) connection is in silent mode? When in silence mode, no comments will be posted on the repository pull or merge requests',
+                'default' => false,
+                'example' => false,
             ])
         ;
     }

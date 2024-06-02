@@ -2,28 +2,29 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Platform\Action;
-use Utopia\Config\Config;
-use Utopia\CLI\Console;
-use Appwrite\Spec\Swagger2;
-use Appwrite\SDK\SDK;
+use Appwrite\SDK\Language\Android;
+use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\CLI;
-use Appwrite\SDK\Language\PHP;
-use Appwrite\SDK\Language\Web;
-use Appwrite\SDK\Language\Node;
-use Appwrite\SDK\Language\Python;
-use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Deno;
 use Appwrite\SDK\Language\DotNet;
 use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
+use Appwrite\SDK\Language\GraphQL;
 use Appwrite\SDK\Language\Kotlin;
-use Appwrite\SDK\Language\Android;
+use Appwrite\SDK\Language\Node;
+use Appwrite\SDK\Language\PHP;
+use Appwrite\SDK\Language\Python;
+use Appwrite\SDK\Language\ReactNative;
+use Appwrite\SDK\Language\REST;
+use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Swift;
-use Appwrite\SDK\Language\SwiftClient;
-use Exception;
-use Throwable;
+use Appwrite\SDK\Language\Web;
+use Appwrite\SDK\SDK;
+use Appwrite\Spec\Swagger2;
+use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Platform\Action;
 
 class SDKs extends Action
 {
@@ -42,19 +43,24 @@ class SDKs extends Action
     public function action(): void
     {
         $platforms = Config::getParam('platforms');
-        $selected = \strtolower(Console::confirm('Choose SDK ("*" for all):'));
+        $selectedPlatform = Console::confirm('Choose Platform ("' . APP_PLATFORM_CLIENT . '", "' . APP_PLATFORM_SERVER . '", "' . APP_PLATFORM_CONSOLE . '" or "*" for all):');
+        $selectedSDK = \strtolower(Console::confirm('Choose SDK ("*" for all):'));
         $version = Console::confirm('Choose an Appwrite version');
         $git = (Console::confirm('Should we use git push? (yes/no)') == 'yes');
         $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
         $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
 
-        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', 'latest'])) {
-            throw new Exception('Unknown version given');
+        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', '1.2.x', '1.3.x', '1.4.x', '1.5.x', 'latest'])) {
+            throw new \Exception('Unknown version given');
         }
 
         foreach ($platforms as $key => $platform) {
-            foreach ($platform['languages'] as $language) {
-                if ($selected !== $language['key'] && $selected !== '*') {
+            if ($selectedPlatform !== $key && $selectedPlatform !== '*') {
+                continue;
+            }
+
+            foreach ($platform['sdks'] as $language) {
+                if ($selectedSDK !== $language['key'] && $selectedSDK !== '*') {
                     continue;
                 }
 
@@ -65,19 +71,19 @@ class SDKs extends Action
 
                 Console::info('Fetching API Spec for ' . $language['name'] . ' for ' . $platform['name'] . ' (version: ' . $version . ')');
 
-                $spec = file_get_contents(__DIR__ . '/../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json');
+                $spec = file_get_contents(__DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json');
 
-                $cover = 'https://appwrite.io/images/github.png';
-                $result = \realpath(__DIR__ . '/../../../app') . '/sdks/' . $key . '-' . $language['key'];
-                $resultExamples = \realpath(__DIR__ . '/../../..') . '/docs/examples/' . $version . '/' . $key . '-' . $language['key'];
-                $target = \realpath(__DIR__ . '/../../../app') . '/sdks/git/' . $language['key'] . '/';
-                $readme = \realpath(__DIR__ . '/../../../docs/sdks/' . $language['key'] . '/README.md');
+                $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';
+                $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
+                $resultExamples = \realpath(__DIR__ . '/../../../..') . '/docs/examples/' . $version . '/' . $key . '-' . $language['key'];
+                $target = \realpath(__DIR__ . '/../../../../app') . '/sdks/git/' . $language['key'] . '/';
+                $readme = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/README.md');
                 $readme = ($readme) ? \file_get_contents($readme) : '';
-                $gettingStarted = \realpath(__DIR__ . '/../../../docs/sdks/' . $language['key'] . '/GETTING_STARTED.md');
+                $gettingStarted = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/GETTING_STARTED.md');
                 $gettingStarted = ($gettingStarted) ? \file_get_contents($gettingStarted) : '';
-                $examples = \realpath(__DIR__ . '/../../../docs/sdks/' . $language['key'] . '/EXAMPLES.md');
+                $examples = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/EXAMPLES.md');
                 $examples = ($examples) ? \file_get_contents($examples) : '';
-                $changelog = \realpath(__DIR__ . '/../../../docs/sdks/' . $language['key'] . '/CHANGELOG.md');
+                $changelog = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/CHANGELOG.md');
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
                 $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check [previous releases](' . $language['url'] . '/releases).**';
                 $license = 'BSD-3-Clause';
@@ -97,28 +103,33 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 switch ($language['key']) {
                     case 'web':
                         $config = new Web();
-                        $config->setNPMPackage('appwrite');
-                        $config->setBowerPackage('appwrite');
+                        if ($platform['key'] === APP_PLATFORM_CONSOLE) {
+                            $config->setNPMPackage('@appwrite.io/console');
+                            $config->setBowerPackage('@appwrite.io/console');
+                        } else {
+                            $config->setNPMPackage('appwrite');
+                            $config->setBowerPackage('appwrite');
+                        }
                         break;
                     case 'cli':
                         $config = new CLI();
                         $config->setNPMPackage('appwrite-cli');
                         $config->setExecutableName('appwrite');
                         $config->setLogo(json_encode("
-    _                            _ _           ___   __   _____ 
+    _                            _ _           ___   __   _____
    /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
   //_\\\| '_ \| '_ \ \ /\ / / '__| | __/ _ \  / /   / /     / /\/
- /  _  \ |_) | |_) \ V  V /| |  | | ||  __/ / /___/ /___/\/ /_  
- \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/  
-       |_|   |_|                                                
+ /  _  \ |_) | |_) \ V  V /| |  | | ||  __/ / /___/ /___/\/ /_
+ \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/
+       |_|   |_|
 
 "));
                         $config->setLogoUnescaped("
-     _                            _ _           ___   __   _____ 
+     _                            _ _           ___   __   _____
     /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
    //_\\\| '_ \| '_ \ \ /\ / / '__| | __/ _ \  / /   / /     / /\/
-  /  _  \ |_) | |_) \ V  V /| |  | | ||  __/ / /___/ /___/\/ /_  
-  \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/  
+  /  _  \ |_) | |_) \ V  V /| |  | | ||  __/ / /___/ /___/\/ /_
+  \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/
         |_|   |_|                                                ");
                         break;
                     case 'php':
@@ -149,6 +160,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Flutter();
                         $config->setPackageName('appwrite');
                         break;
+                    case 'react-native':
+                        $config = new ReactNative();
+                        $config->setNPMPackage('react-native-appwrite');
+                        break;
                     case 'flutter-dev':
                         $config = new Flutter();
                         $config->setPackageName('appwrite_dev');
@@ -166,7 +181,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $warning = $warning . "\n\n > This is the Swift SDK for integrating with Appwrite from your Swift server-side code. If you're looking for the Apple SDK you should check [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple)";
                         break;
                     case 'apple':
-                        $config = new SwiftClient();
+                        $config = new Apple();
                         break;
                     case 'dotnet':
                         $cover = '';
@@ -179,9 +194,14 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Kotlin();
                         $warning = $warning . "\n\n > This is the Kotlin SDK for integrating with Appwrite from your Kotlin server-side code. If you're looking for the Android SDK you should check [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)";
                         break;
-                    default:
-                        throw new Exception('Language "' . $language['key'] . '" not supported');
+                    case 'graphql':
+                        $config = new GraphQL();
                         break;
+                    case 'rest':
+                        $config = new REST();
+                        break;
+                    default:
+                        throw new \Exception('Language "' . $language['key'] . '" not supported');
                 }
 
                 Console::info("Generating {$language['name']} SDK...");
@@ -215,20 +235,22 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setTwitter(APP_SOCIAL_TWITTER_HANDLE)
                     ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
                     ->setDefaultHeaders([
-                        'X-Appwrite-Response-Format' => '1.0.0',
+                        'X-Appwrite-Response-Format' => '1.5.0',
                     ]);
+
+                // Make sure we have a clean slate.
+                // Otherwise, all files in this dir will be pushed,
+                // regardless of whether they were just generated or not.
+                \exec('rm -rf ' . $result);
 
                 try {
                     $sdk->generate($result);
-                } catch (Exception $exception) {
-                    Console::error($exception->getMessage());
-                } catch (Throwable $exception) {
+                } catch (\Throwable $exception) {
                     Console::error($exception->getMessage());
                 }
 
                 $gitUrl = $language['gitUrl'];
                 $gitBranch = $language['gitBranch'];
-
 
                 if (!$production) {
                     $gitUrl = 'git@github.com:aw-tests/' . $language['gitRepoName'] . '.git';
@@ -240,10 +262,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         cd ' . $target . ' && \
                         git init --initial-branch=' . $gitBranch . ' && \
                         git remote add origin ' . $gitUrl . ' && \
-                        git fetch && \
-                        git pull ' . $gitUrl . ' && \
+                        git fetch origin ' . $gitBranch . ' && \
+                        git pull origin ' . $gitBranch . ' && \
                         rm -rf ' . $target . '/* && \
-                        cp -r ' . $result . '/* ' . $target . '/ && \
+                        cp -r ' . $result . '/. ' . $target . '/ && \
                         git add . && \
                         git commit -m "' . $message . '" && \
                         git push -u origin ' . $gitBranch . '

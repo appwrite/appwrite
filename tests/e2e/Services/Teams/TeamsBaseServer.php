@@ -3,8 +3,7 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
-use Utopia\Database\Database;
-use Utopia\Database\DateTime;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait TeamsBaseServer
 {
@@ -52,12 +51,13 @@ trait TeamsBaseServer
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
+        $this->assertFalse($response['body']['mfa']);
         $this->assertNotEmpty($response['body']['userName']);
         $this->assertNotEmpty($response['body']['userEmail']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['joined'])); // is null in DB
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(true, $response['body']['confirm']);
 
         /**
@@ -108,7 +108,7 @@ trait TeamsBaseServer
         $this->assertEquals($email, $response['body']['userEmail']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['joined']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['joined']));
         $this->assertEquals(true, $response['body']['confirm']);
 
         $userUid = $response['body']['userId'];
@@ -251,7 +251,7 @@ trait TeamsBaseServer
         $this->assertEquals('Arsenal', $response['body']['name']);
         $this->assertEquals(1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
 
         /** Delete User */
         $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $userUid, array_merge([
@@ -270,12 +270,11 @@ trait TeamsBaseServer
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Arsenal', $response['body']['name']);
         $this->assertEquals(0, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
     }
 }

@@ -1,15 +1,13 @@
 <?php
 
-return function ($request, $response) {
-    return $response->json([
-        'APPWRITE_FUNCTION_ID' => $request['variables']['APPWRITE_FUNCTION_ID'],
-        'APPWRITE_FUNCTION_NAME' => $request['variables']['APPWRITE_FUNCTION_NAME'],
-        'APPWRITE_FUNCTION_DEPLOYMENT' => $request['variables']['APPWRITE_FUNCTION_DEPLOYMENT'],
-        'APPWRITE_FUNCTION_TRIGGER' => $request['variables']['APPWRITE_FUNCTION_TRIGGER'],
-        'APPWRITE_FUNCTION_RUNTIME_NAME' => $request['variables']['APPWRITE_FUNCTION_RUNTIME_NAME'],
-        'APPWRITE_FUNCTION_RUNTIME_VERSION' => $request['variables']['APPWRITE_FUNCTION_RUNTIME_VERSION'],
-        'APPWRITE_FUNCTION_EVENT' => $request['variables']['APPWRITE_FUNCTION_EVENT'],
-        'APPWRITE_FUNCTION_EVENT_DATA' => $request['variables']['APPWRITE_FUNCTION_EVENT_DATA'],
+return function ($context) {
+    return $context->res->json([
+        'APPWRITE_FUNCTION_ID' => \getenv('APPWRITE_FUNCTION_ID') ?: '',
+        'APPWRITE_FUNCTION_NAME' => \getenv('APPWRITE_FUNCTION_NAME') ?: '',
+        'APPWRITE_FUNCTION_DEPLOYMENT' => \getenv('APPWRITE_FUNCTION_DEPLOYMENT') ?: '',
+        'APPWRITE_FUNCTION_TRIGGER' => $context->req->headers['x-appwrite-trigger'] ?? '',
+        'APPWRITE_FUNCTION_RUNTIME_NAME' => \getenv('APPWRITE_FUNCTION_RUNTIME_NAME') ?: '',
+        'APPWRITE_FUNCTION_RUNTIME_VERSION' => \getenv('APPWRITE_FUNCTION_RUNTIME_VERSION') ?: '',
         'UNICODE_TEST' => "êä"
     ]);
 };

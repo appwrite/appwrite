@@ -1,0 +1,3 @@
+The VCS (Version Control System) service in Appwrite provides a way to interact with VCS providers like Git, GitHub etc. and manage your code repositories. You can use it to install the VCS app or to create, list, and delete repositories. You can also use the VCS service to clone, push, and pull code from your repositories.
+
+The VCS service helps you to either link an existing code repository to your Appwrite Function or to create a new repository from scratch using one of the available templates. If you link a repository to an Appwrite Function, it automatically creates a new deployment when you push changes.
