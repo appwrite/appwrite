@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "53996479cd4ba0c73dbc72d46b240be0",
+    "content-hash": "42f081ea081021d2f2734fde998ebae5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1569,16 +1569,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.9.1",
+            "version": "dev-refactor-redis-cache",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "552b4c554bb14d0c529631ce304cdf4a2b9d06a6"
+                "reference": "91166f3048af153b48bf7008415fe82785398970"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/552b4c554bb14d0c529631ce304cdf4a2b9d06a6",
-                "reference": "552b4c554bb14d0c529631ce304cdf4a2b9d06a6",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/91166f3048af153b48bf7008415fe82785398970",
+                "reference": "91166f3048af153b48bf7008415fe82785398970",
                 "shasum": ""
             },
             "require": {
@@ -1613,9 +1613,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.9.1"
+                "source": "https://github.com/utopia-php/cache/tree/refactor-redis-cache"
             },
-            "time": "2024-03-19T17:07:20+00:00"
+            "time": "2024-06-02T10:08:18+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -1719,16 +1719,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.49.10",
+            "version": "dev-refactor-cache-flow",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "216209121bc97a2010f67a39c561fafe1e936bec"
+                "reference": "13f4729eb2f13fe4b8db2be3c12ceae32489b4e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/216209121bc97a2010f67a39c561fafe1e936bec",
-                "reference": "216209121bc97a2010f67a39c561fafe1e936bec",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/13f4729eb2f13fe4b8db2be3c12ceae32489b4e5",
+                "reference": "13f4729eb2f13fe4b8db2be3c12ceae32489b4e5",
                 "shasum": ""
             },
             "require": {
@@ -1769,9 +1769,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.49.10"
+                "source": "https://github.com/utopia-php/database/tree/refactor-cache-flow"
             },
-            "time": "2024-05-20T02:14:20+00:00"
+            "time": "2024-06-02T11:00:00+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3824,16 +3824,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.29.0",
+            "version": "1.29.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "536889f2b340489d328f5ffb7b02bb6b183ddedc"
+                "reference": "fcaefacf2d5c417e928405b71b400d4ce10daaf4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/536889f2b340489d328f5ffb7b02bb6b183ddedc",
-                "reference": "536889f2b340489d328f5ffb7b02bb6b183ddedc",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/fcaefacf2d5c417e928405b71b400d4ce10daaf4",
+                "reference": "fcaefacf2d5c417e928405b71b400d4ce10daaf4",
                 "shasum": ""
             },
             "require": {
@@ -3865,9 +3865,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.29.0"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.29.1"
             },
-            "time": "2024-05-06T12:04:23+00:00"
+            "time": "2024-05-31T08:52:43+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -5587,9 +5587,25 @@
             "time": "2023-11-21T18:54:41+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/cache",
+            "version": "dev-refactor-redis-cache",
+            "alias": "0.9.1",
+            "alias_normalized": "0.9.1.0"
+        },
+        {
+            "package": "utopia-php/database",
+            "version": "dev-refactor-cache-flow",
+            "alias": "0.49.10",
+            "alias_normalized": "0.49.10.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/cache": 20,
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
