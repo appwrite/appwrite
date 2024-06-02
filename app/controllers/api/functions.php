@@ -1436,7 +1436,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
 App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->alias('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
-    ->desc('Create build')
+    ->desc('Rebuild deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
@@ -1449,7 +1449,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
-    ->param('buildId', '', new UID(), 'Build unique ID.', true)
+    ->param('buildId', '', new UID(), 'Build unique ID.', true) // added as optional param for backward compatibility
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -1457,7 +1457,6 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->inject('queueForEvents')
     ->inject('queueForBuilds')
     ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds) {
-
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1468,15 +1467,6 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
 
         if ($deployment->isEmpty()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
-        }
-
-        // buildId is added as param just for backward compatibility
-        // It is fetched from the deployments collection and not from the request as the user doesn't have to know the buildId
-        $buildId = $deployment->getAttribute('buildId', '');
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
-
-        if ($build->isEmpty()) {
-            throw new Exception(Exception::BUILD_NOT_FOUND);
         }
 
         $deploymentId = ID::unique();
