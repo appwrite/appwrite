@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Utopia\Queue\Connections;
 use Swoole\Timer;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -21,17 +22,19 @@ abstract class ScheduleBase extends Action
     protected const ENQUEUE_TIMER = 60; //seconds
 
     protected array $schedules = [];
+    protected Connections $connections;
 
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
 
     abstract protected function enqueueResources(
-        Group $pools,
+        array $pools,
         Database $dbForConsole
     );
 
     public function __construct()
     {
+        $this->connections = new Connections();
         $type = static::getSupportedResource();
 
         $this
@@ -39,7 +42,7 @@ abstract class ScheduleBase extends Action
             ->inject('pools')
             ->inject('dbForConsole')
             ->inject('getProjectDB')
-            ->callback(fn (Group $pools, Database $dbForConsole, callable $getProjectDB) => $this->action($pools, $dbForConsole, $getProjectDB));
+            ->callback(fn (array $pools, Database $dbForConsole, callable $getProjectDB) => $this->action($pools, $dbForConsole, $getProjectDB));
     }
 
     /**
@@ -47,7 +50,7 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(Group $pools, Database $dbForConsole, callable $getProjectDB): void
+    public function action(array $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
@@ -124,76 +127,71 @@ abstract class ScheduleBase extends Action
             $latestDocument = \end($results);
         }
 
-        $pools->reclaim();
 
         Console::success("{$total} resources were loaded in " . (\microtime(true) - $loadStart) . " seconds");
 
         Console::success("Starting timers at " . DateTime::now());
 
-        run(function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $pools) {
-            /**
-             * The timer synchronize $schedules copy with database collection.
-             */
-            Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $pools) {
-                $time = DateTime::now();
-                $timerStart = \microtime(true);
 
-                $limit = 1000;
-                $sum = $limit;
-                $total = 0;
-                $latestDocument = null;
+        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $pools) {
+            $time = DateTime::now();
+            $timerStart = \microtime(true);
 
-                Console::log("Sync tick: Running at $time");
+            $limit = 1000;
+            $sum = $limit;
+            $total = 0;
+            $latestDocument = null;
 
-                while ($sum === $limit) {
-                    $paginationQueries = [Query::limit($limit)];
+            Console::log("Sync tick: Running at $time");
 
-                    if ($latestDocument) {
-                        $paginationQueries[] = Query::cursorAfter($latestDocument);
-                    }
+            while ($sum === $limit) {
+                $paginationQueries = [Query::limit($limit)];
 
-                    $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
-                        Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
-                        Query::equal('resourceType', [static::getSupportedResource()]),
-                        Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate),
-                    ]));
-
-                    $sum = count($results);
-                    $total = $total + $sum;
-
-                    foreach ($results as $document) {
-                        $localDocument = $schedules[$document['resourceId']] ?? null;
-
-                        // Check if resource has been updated since last sync
-                        $org = $localDocument !== null ? \strtotime($localDocument['resourceUpdatedAt']) : null;
-                        $new = \strtotime($document['resourceUpdatedAt']);
-
-                        if (!$document['active']) {
-                            Console::info("Removing: {$document['resourceId']}");
-                            unset($this->schedules[$document['resourceId']]);
-                        } elseif ($new !== $org) {
-                            Console::info("Updating: {$document['resourceId']}");
-                            $this->schedules[$document['resourceId']] = $getSchedule($document);
-                        }
-                    }
-
-                    $latestDocument = \end($results);
+                if ($latestDocument) {
+                    $paginationQueries[] = Query::cursorAfter($latestDocument);
                 }
 
-                $lastSyncUpdate = $time;
-                $timerEnd = \microtime(true);
+                $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
+                    Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                    Query::equal('resourceType', [static::getSupportedResource()]),
+                    Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate),
+                ]));
 
-                $pools->reclaim();
+                $sum = count($results);
+                $total = $total + $sum;
 
-                Console::log("Sync tick: {$total} schedules were updated in " . ($timerEnd - $timerStart) . " seconds");
-            });
+                foreach ($results as $document) {
+                    $localDocument = $schedules[$document['resourceId']] ?? null;
 
-            Timer::tick(
-                static::ENQUEUE_TIMER * 1000,
-                fn () => $this->enqueueResources($pools, $dbForConsole)
-            );
+                    // Check if resource has been updated since last sync
+                    $org = $localDocument !== null ? \strtotime($localDocument['resourceUpdatedAt']) : null;
+                    $new = \strtotime($document['resourceUpdatedAt']);
 
-            $this->enqueueResources($pools, $dbForConsole);
+                    if (!$document['active']) {
+                        Console::info("Removing: {$document['resourceId']}");
+                        unset($this->schedules[$document['resourceId']]);
+                    } elseif ($new !== $org) {
+                        Console::info("Updating: {$document['resourceId']}");
+                        $this->schedules[$document['resourceId']] = $getSchedule($document);
+                    }
+                }
+
+                $latestDocument = \end($results);
+            }
+
+            $lastSyncUpdate = $time;
+            $timerEnd = \microtime(true);
+
+
+            Console::log("Sync tick: {$total} schedules were updated in " . ($timerEnd - $timerStart) . " seconds");
         });
+
+        Timer::tick(
+            static::ENQUEUE_TIMER * 1000,
+            fn() => $this->enqueueResources($pools, $dbForConsole)
+        );
+
+        $this->enqueueResources($pools, $dbForConsole);
+
     }
 }

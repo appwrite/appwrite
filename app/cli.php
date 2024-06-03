@@ -9,192 +9,236 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Hamster;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Utopia\Queue\Connections;
+use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
+use Utopia\Queue\Connection\Redis;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DI\Dependency;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
+use Swoole\Runtime;
+use Utopia\CLI\Adapters\Swoole as SwooleCLI;
 
-global $register;
+global $global, $container;
 
-CLI::setResource('register', fn () => $register);
+Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-CLI::setResource('connections', function () {
-    return new Connections();
-});
+$registry = new Dependency();
+$registry
+    ->setName('register')
+    ->setCallback(fn() => $global);
 
-CLI::setResource('cache', function ($pools, Connections $connections) {
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
+$connections = new Dependency();
+$connections
+    ->setName('connections')
+    ->setCallback(fn() => new Connections());
 
-    foreach ($list as $value) {
-        $connection = $pools->get($value)->pop();
-        $connections->add($connection);
-        $adapters[] = $connection->getResource();
-    }
+$cache = new Dependency();
+$cache
+    ->setName('cache')
+    ->setCallback(function () {
+        return new Cache(new None());
+    });
+$container->set($cache);
 
-    return new Cache(new Sharding($adapters));
-}, ['pools', 'connections']);
+$pools = new Dependency();
+$pools
+    ->setName('pools')
+    ->inject('register')
+    ->setCallback(function (Registry $register) {
+        return $register->get('pools');
+    });
 
-CLI::setResource('pools', function (Registry $register) {
-    return $register->get('pools');
-}, ['register']);
+$dbForConsole = new Dependency();
+$dbForConsole
+    ->setName('dbForConsole')
+    ->inject('pools')
+    ->inject('cache')
+    ->inject('auth')
+    ->inject('connections')
+    ->setCallback(function ($pools, $cache, $auth, Connections $connections) {
+        $pool = $pools['pools-console-main']['pool'];
+        $dsn = $pools['pools-console-main']['dsn'];
+        $connection = $pool->get();
+        $connections->add($connection, $pool);
 
-CLI::setResource('dbForConsole', function ($pools, $cache, $auth, Connections $connections) {
-    $sleep = 3;
-    $maxAttempts = 5;
-    $attempts = 0;
-    $ready = false;
+        $adapter = match ($dsn->getScheme()) {
+            'mariadb' => new MariaDB($connection),
+            'mysql' => new MySQL($connection),
+            default => null
+        };
 
-    $connection = null;
+        $adapter->setDatabase($dsn->getPath());
 
-    do {
-        $attempts++;
-        try {
-            // Prepare database connection
-            $connection = $pools->get('console')->pop();
-            $dbAdapter = $connection->getResource();
-
-            $dbForConsole = new Database($dbAdapter, $cache);
-            $dbForConsole->setAuthorization($auth);
-
-            $dbForConsole
-                ->setNamespace('_console')
-                ->setMetadata('host', \gethostname())
-                ->setMetadata('project', 'console');
-
-            // Ensure tables exist
-            $collections = Config::getParam('collections', [])['console'];
-            $last = \array_key_last($collections);
-
-            if (!($dbForConsole->exists($dbForConsole->getDatabase(), $last))) { /** TODO cache ready variable using registry */
-                throw new Exception('Tables not ready yet.');
-            }
-
-            $ready = true;
-        } catch (\Throwable $err) {
-            if($connection !== null) {
-                $connection->reclaim();
-                $connection = null;
-            }
-
-            Console::warning($err->getMessage());
-            sleep($sleep);
-        }
-    } while ($attempts < $maxAttempts && !$ready);
-
-    if($connection !== null) {
-        $connections->add($connection);
-    }
-
-    if (!$ready) {
-        throw new Exception("Console is not ready yet. Please try again later.");
-    }
-
-    return $dbForConsole;
-}, ['pools', 'cache', 'auth', 'connections']);
-
-CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache, $auth, Connections $connections) {
-    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
-
-    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $auth, $connections) {
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForConsole;
-        }
-
-        $databaseName = $project->getAttribute('database');
-
-        if (isset($databases[$databaseName])) {
-            $database = $databases[$databaseName];
-            $database->setNamespace('_' . $project->getInternalId());
-            return $database;
-        }
-
-        $connection = $pools->get($databaseName)->pop();
-        $connections->add($connection);
-        $dbAdapter = $connection->getResource();
-
-        $database = new Database($dbAdapter, $cache);
+        $database = new Database($adapter, $cache);
         $database->setAuthorization($auth);
-
-        $databases[$databaseName] = $database;
-
-        $database
-            ->setNamespace('_' . $project->getInternalId())
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', $project->getId());
+        $database->setNamespace('_console');
 
         return $database;
-    };
-}, ['pools', 'dbForConsole', 'cache', 'auth', 'connections']);
+    });
 
-CLI::setResource('queue', function (Group $pools, Connections $connections) {
-    $connection = $pools->get('queue')->pop();
-    $connections->add($connection);
-    return $connection->getResource();
-}, ['pools', 'connections']);
-CLI::setResource('queueForFunctions', function (Connection $queue) {
-    return new Func($queue);
-}, ['queue']);
-CLI::setResource('queueForHamster', function (Connection $queue) {
-    return new Hamster($queue);
-}, ['queue']);
-CLI::setResource('queueForDeletes', function (Connection $queue) {
-    return new Delete($queue);
-}, ['queue']);
-CLI::setResource('queueForCertificates', function (Connection $queue) {
-    return new Certificate($queue);
-}, ['queue']);
-CLI::setResource('logError', function (Registry $register) {
-    return function (Throwable $error, string $namespace, string $action) use ($register) {
-        $logger = $register->get('logger');
+$getProjectDB = new Dependency();
+$getProjectDB
+    ->setName('getProjectDB')
+    ->inject('pools')
+    ->inject('dbForConsole')
+    ->inject('cache')
+    ->inject('auth')
+    ->inject('connections')
+    ->setCallback(function (array $pools, Database $dbForConsole, Cache $cache, Authorization $auth, Connections $connections) {
+        return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $auth, $connections): Database {
+            if ($project->isEmpty() || $project->getId() === 'console') {
+                return $dbForConsole;
+            }
 
-        if ($logger) {
-            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
+            $databaseName = $project->getAttribute('database');
 
-            $log = new Log();
-            $log->setNamespace($namespace);
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
+            $pool = $pools['pools-database-' . $databaseName]['pool'];
+            $dsn = $pools['pools-database-' . $databaseName]['dsn'];
 
-            $log->addTag('code', $error->getCode());
-            $log->addTag('verboseType', get_class($error));
+            $connection = $pool->get();
+            $connections->add($connection, $pool);
+            $adapter = match ($dsn->getScheme()) {
+                'mariadb' => new MariaDB($connection),
+                'mysql' => new MySQL($connection),
+                default => null
+            };
+            $adapter->setDatabase($dsn->getPath());
 
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
+            $database = new Database($adapter, $cache);
+            $database->setAuthorization($auth);
+            $database->setNamespace('_' . $project->getInternalId());
 
-            $log->setAction($action);
+            return $database;
+        };
+    });
 
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+$queue = new Dependency();
+$queue
+    ->setName('queue')
+    ->inject('pools')
+    ->inject('connections')
+    ->setCallback(function (array $pools, Connections $connections) {
+        $pool = $pools['pools-queue-main']['pool'];
+        $dsn = $pools['pools-queue-main']['dsn'];
+        $connection = $pool->get();
+        $connections->add($connection, $pool);
 
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+        return new Redis($dsn->getHost(), $dsn->getPort());
+    });
 
-            $responseCode = $logger->addLog($log);
-            Console::info('Usage stats log pushed with status code: ' . $responseCode);
-        }
+$queueForFunctions = new Dependency();
+$queueForFunctions
+    ->setName('queueForFunctions')
+    ->inject('queue')
+    ->setCallback(function (Connection $queue) {
+        return new Func($queue);
+    });
 
-        Console::warning("Failed: {$error->getMessage()}");
-        Console::warning($error->getTraceAsString());
-    };
-}, ['register']);
+$queueForHamster = new Dependency();
+$queueForHamster
+    ->setName('queueForHamster')
+    ->inject('queue')
+    ->setCallback(function (Connection $queue) {
+        return new Hamster($queue);
+    });
 
-CLI::setResource('auth', fn () => new Authorization());
+$queueForDeletes = new Dependency();
+$queueForDeletes
+    ->setName('queueForDeletes')
+    ->inject('queue')
+    ->setCallback(function (Connection $queue) {
+        return new Delete($queue);
+    });
+
+$queueForCertificates = new Dependency();
+$queueForCertificates
+    ->setName('queueForCertificates')
+    ->inject('queue')
+    ->setCallback(function (Connection $queue) {
+        return new Certificate($queue);
+    });
+
+$queueForCertificates = new Dependency();
+$queueForCertificates
+    ->setName('queueForCertificates')
+    ->inject('queue')
+    ->setCallback(function (Connection $queue) {
+        return new Certificate($queue);
+    });
+
+$logError = new Dependency();
+$logError
+    ->setName('logError')
+    ->inject('register')
+    ->setCallback(function (Registry $register) {
+        return function (Throwable $error, string $namespace, string $action) use ($register) {
+            $logger = $register->get('logger');
+
+            if ($logger) {
+                $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
+
+                $log = new Log();
+                $log->setNamespace($namespace);
+                $log->setServer(\gethostname());
+                $log->setVersion($version);
+                $log->setType(Log::TYPE_ERROR);
+                $log->setMessage($error->getMessage());
+
+                $log->addTag('code', $error->getCode());
+                $log->addTag('verboseType', get_class($error));
+
+                $log->addExtra('file', $error->getFile());
+                $log->addExtra('line', $error->getLine());
+                $log->addExtra('trace', $error->getTraceAsString());
+                $log->addExtra('detailedTrace', $error->getTrace());
+
+                $log->setAction($action);
+
+                $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+
+                $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+                $responseCode = $logger->addLog($log);
+                Console::info('Usage stats log pushed with status code: ' . $responseCode);
+            }
+
+            Console::warning("Failed: {$error->getMessage()}");
+            Console::warning($error->getTraceAsString());
+        };
+    });
+
+$auth = new Dependency();
+$auth
+    ->setName('auth')
+    ->setCallback(fn() => new Authorization());
+
+$container->set($registry);
+$container->set($connections);
+$container->set($cache);
+$container->set($pools);
+$container->set($dbForConsole);
+$container->set($getProjectDB);
+$container->set($queue);
+$container->set($queueForFunctions);
+$container->set($queueForHamster);
+$container->set($queueForDeletes);
+$container->set($queueForCertificates);
+$container->set($logError);
+$container->set($auth);
 
 $platform = new Appwrite();
-$platform->init(Service::TYPE_CLI);
+$platform->init(Service::TYPE_CLI, ['adapter' => new SwooleCLI(1)]);
 
 $cli = $platform->getCli();
 
@@ -212,4 +256,6 @@ $cli
         Console::error($error->getMessage());
     });
 
-$cli->run();
+$cli
+    ->setContainer($container)
+    ->run();

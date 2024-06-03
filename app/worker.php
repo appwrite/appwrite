@@ -39,7 +39,7 @@ use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 
-global $gloabl, $container;
+global $global, $container;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 

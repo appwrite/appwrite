@@ -23,6 +23,8 @@ use Utopia\Http\Adapter\Swoole\Server;
 use Utopia\Http\Http;
 use Utopia\System\System;
 
+global $global, $container;
+
 $workerNumber = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 $payloadSize = 6 * (1024 * 1024); // 6MB
 
@@ -48,7 +50,7 @@ $server = new Server('0.0.0.0', '80', [
 
 $http = new Http($server, $container, 'UTC');
 
-// $http->loadFiles(__DIR__ . '/../console');
+$http->loadFiles(__DIR__ . '/../console');
 $http->setRequestClass(Request::class);
 $http->setResponseClass(Response::class);
 
