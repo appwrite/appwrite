@@ -717,7 +717,7 @@ class FunctionsCustomClientTest extends Scope
         return [];
     }
 
-    public function testExecutionWithUserId(): array
+    public function testNonOverrideOfHeaders(): array
     {
         /**
          * Test for SUCCESS
