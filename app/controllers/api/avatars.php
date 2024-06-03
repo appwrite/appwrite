@@ -595,7 +595,7 @@ Http::get('/v1/cards/cloud')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->inject('authp')
+    ->inject('auth')
     ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $auth) use ($getUserGitHub) {
         $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
