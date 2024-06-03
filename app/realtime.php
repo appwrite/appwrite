@@ -44,17 +44,21 @@ Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 function getConsoleDB(Authorization $auth): Database
 {
     global $global;
-
-    /** @var \Utopia\Pools\Group $pools */
     $pools = $global->get('pools');
 
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource()
-    ;
+    $pool = $pools['pools-console-main']['pool'];
+    $dsn = $pools['pools-console-main']['dsn'];
+    $connection = $pool->get();
 
-    $database = new Database($dbAdapter, getCache());
+    $adapter = match ($dsn->getScheme()) {
+        'mariadb' => new MariaDB($connection),
+        'mysql' => new MySQL($connection),
+        default => null
+    };
+
+    $adapter->setDatabase($dsn->getPath());
+
+    $database = new Database($adapter, getCache());
     $database->setAuthorization($auth);
 
     $database
@@ -67,22 +71,29 @@ function getConsoleDB(Authorization $auth): Database
 
 function getProjectDB(Document $project, Authorization $auth): Database
 {
-    global $global;
-
-    /** @var \Utopia\Pools\Group $pools */
-    $pools = $global->get('pools');
-
     if ($project->isEmpty() || $project->getId() === 'console') {
         return getConsoleDB($auth);
     }
 
-    $dbAdapter = $pools
-        ->get($project->getAttribute('database'))
-        ->pop()
-        ->getResource()
-    ;
+    global $global;
+    $pools = $global->get('pools');
 
-    $database = new Database($dbAdapter, getCache());
+    $databaseName = $project->getAttribute('database');
+
+    $pool = $pools['pools-database-' . $databaseName]['pool'];
+    $dsn = $pools['pools-database-' . $databaseName]['dsn'];
+
+    $connection = $pool->get();
+
+    $adapter = match ($dsn->getScheme()) {
+        'mariadb' => new MariaDB($connection),
+        'mysql' => new MySQL($connection),
+        default => null
+    };
+    $adapter->setDatabase($dsn->getPath());
+
+
+    $database = new Database($adapter, getCache());
     $database->setAuthorization($auth);
 
     $database
@@ -95,22 +106,23 @@ function getProjectDB(Document $project, Authorization $auth): Database
 
 function getCache(): Cache
 {
-    global $global;
-
-    $pools = $global->get('pools'); /** @var \Utopia\Pools\Group $pools */
-
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
-
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource()
-        ;
-    }
-
-    return new Cache(new Sharding($adapters));
+    return new Cache(new \Utopia\Cache\Adapter\None());
+//    global $global;
+//
+//    $pools = $global->get('pools'); /** @var \Utopia\Pools\Group $pools */
+//
+//    $list = Config::getParam('pools-cache', []);
+//    $adapters = [];
+//
+//    foreach ($list as $value) {
+//        $adapters[] = $pools
+//            ->get($value)
+//            ->pop()
+//            ->getResource()
+//        ;
+//    }
+//
+//    return new Cache(new Sharding($adapters));
 }
 
 $realtime = new Realtime();
@@ -334,7 +346,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $global, $stats, $
 
             $start = time();
 
-            $redis = $global->get('pools')->get('pubsub')->pop()->getResource(); /** @var Redis $redis */
+            $pools = $global->get('pools');
+            $pool = $pools['pools-pubsub-main']['pool'];
+            $dsn = $pools['pools-pubsub-main']['dsn'];
+            $redis = new \Redis();
+            $redis->connect($dsn->getHost(), $dsn->getPort());
+
             $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
             if ($redis->ping(true)) {
