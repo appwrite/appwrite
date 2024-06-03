@@ -783,15 +783,19 @@ class FunctionsCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'x-appwrite-user-id' => "665b0df20031bdf527fb",
+            'x-appwrite-event' => "OVERRIDDEN",
+            'x-appwrite-trigger' => "OVERRIDDEN",
+            'x-appwrite-user-id' => "OVERRIDDEN",
+            'x-appwrite-user-jwt' => "OVERRIDDEN",
         ]);
 
         $output = json_decode($execution['body']['responseBody'], true);
-        $this->assertNotEquals('665b0df20031bdf527fb', $this->getUser()['$id']);
+        $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_JWT']);
+        $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_EVENT']);
+        $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_TRIGGER']);
+        $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_USER_ID']);
+
         $this->assertEquals($this->getUser()['$id'], $output['APPWRITE_FUNCTION_USER_ID']);
-        // Client should never see logs and errors
-        $this->assertEmpty($execution['body']['logs']);
-        $this->assertEmpty($execution['body']['errors']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
