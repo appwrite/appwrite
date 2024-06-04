@@ -10,8 +10,6 @@ x-logging: &x-logging
       max-file: "5"
       max-size: "10m"
 
-version: "3"
-
 services:
   traefik:
     image: traefik:2.11
@@ -42,7 +40,6 @@ services:
     networks:
       - gateway
       - appwrite
-      - runtimes
 
   appwrite:
     container_name: appwrite
@@ -78,11 +75,9 @@ services:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-functions:/storage/functions:rw
-      - appwrite-builds:/storage/builds:rw
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
@@ -97,6 +92,7 @@ services:
       - app/http.php
     environment:
       - _APP_ENV
+      - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT
@@ -191,6 +187,9 @@ services:
       - _APP_MESSAGE_EMAIL_TEST_DSN
       - _APP_MESSAGE_PUSH_TEST_DSN
       - _APP_CONSOLE_COUNTRIES_DENYLIST
+      - _APP_EXPERIMENT_LOGGING_PROVIDER
+      - _APP_EXPERIMENT_LOGGING_CONFIG
+
   appwrite-realtime:
     entrypoint: realtime
     <<: *x-logging
@@ -217,7 +216,6 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - mariadb
@@ -250,7 +248,6 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
@@ -280,7 +277,6 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
@@ -321,7 +317,6 @@ services:
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     environment:
       - _APP_ENV
@@ -371,7 +366,6 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
@@ -405,7 +399,6 @@ services:
       - appwrite-functions:/storage/functions:rw
       - appwrite-builds:/storage/builds:rw
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
@@ -474,7 +467,6 @@ services:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     environment:
       - _APP_ENV
@@ -505,7 +497,6 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
@@ -515,8 +506,6 @@ services:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
-      - _APP_DOMAIN
-      - _APP_OPTIONS_FORCE_HTTPS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -547,7 +536,6 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
@@ -582,8 +570,8 @@ services:
     networks:
       - appwrite
     volumes:
+      - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
@@ -605,6 +593,27 @@ services:
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
       - _APP_SMS_PROJECTS_DENY_LIST
+      - _APP_STORAGE_DEVICE
+      - _APP_STORAGE_S3_ACCESS_KEY
+      - _APP_STORAGE_S3_SECRET
+      - _APP_STORAGE_S3_REGION
+      - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
+      - _APP_STORAGE_DO_SPACES_SECRET
+      - _APP_STORAGE_DO_SPACES_REGION
+      - _APP_STORAGE_DO_SPACES_BUCKET
+      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
+      - _APP_STORAGE_BACKBLAZE_SECRET
+      - _APP_STORAGE_BACKBLAZE_REGION
+      - _APP_STORAGE_BACKBLAZE_BUCKET
+      - _APP_STORAGE_LINODE_ACCESS_KEY
+      - _APP_STORAGE_LINODE_SECRET
+      - _APP_STORAGE_LINODE_REGION
+      - _APP_STORAGE_LINODE_BUCKET
+      - _APP_STORAGE_WASABI_ACCESS_KEY
+      - _APP_STORAGE_WASABI_SECRET
+      - _APP_STORAGE_WASABI_REGION
+      - _APP_STORAGE_WASABI_BUCKET
 
   appwrite-worker-migrations:
     entrypoint: worker-migrations
@@ -616,7 +625,6 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
     depends_on:
@@ -651,7 +659,6 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
@@ -689,7 +696,6 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
@@ -721,7 +727,6 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
@@ -753,7 +758,6 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - mariadb
@@ -781,7 +785,6 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - mariadb
@@ -810,10 +813,10 @@ services:
 
   openruntimes-executor:
     container_name: openruntimes-executor
-    hostname: appwrite-executor
+    hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.12
+    image: openruntimes/executor:0.5.5
     restart: unless-stopped
     networks:
       - appwrite
@@ -876,7 +879,7 @@ services:
       - OPR_PROXY_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_PROXY_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_PROXY_ALGORITHM=random
-      - OPR_PROXY_EXECUTORS=appwrite-executor
+      - OPR_PROXY_EXECUTORS=exc1
       - OPR_PROXY_HEALTHCHECK_INTERVAL=10000
       - OPR_PROXY_MAX_TIMEOUT=600
       - OPR_PROXY_HEALTHCHECK=enabled
@@ -907,7 +910,6 @@ services:
   #   networks:
   #     - appwrite
   #   environment:
-  #  PHP_IDE_CONFIG=serverName=Appwrite
   #     - LOCAL_DOMAINS=@
   #     - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
   #     - SMARTHOST_HOST=smtp
