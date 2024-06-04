@@ -65,7 +65,6 @@ jobs:
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
           sleep 10
-          docker compose logs
 
       - name: Doctor
         run: docker compose exec -T appwrite doctor
@@ -96,7 +95,6 @@ jobs:
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
           sleep 10
-          docker compose logs
 
       - name: Run General Tests
         run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/General --debug
