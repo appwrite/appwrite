@@ -152,10 +152,10 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        // TODO: One in 20 projects use shared tables. Temporary until all projects are using shared tables.
+        // TODO: 1 in 5 projects use shared tables. Temporary until all projects are using shared tables.
         if (
             (
-                !\mt_rand(0, 19)
+                !\mt_rand(0, 4)
                 && System::getEnv('_APP_DATABASE_SHARED_TABLES', 'enabled') === 'enabled'
                 && System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
             ) ||
@@ -279,6 +279,8 @@ App::post('/v1/projects')
             }
         }
 
+        // Hook allowing instant project mirroring during migration
+        // Outside of migration, hook is not registered and has no effect
         $hooks->trigger('afterProjectCreation', [ $project, $pools, $cache ]);
 
         $response

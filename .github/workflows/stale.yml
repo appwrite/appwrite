@@ -18,6 +18,6 @@ jobs:
           days-before-close: 14
           remove-stale-when-updated: true
           close-issue-message: "This issue has been closed due to inactivity. If you still require assistance, please provide the requested information."
-          close-issue-reason: "not-planned"
+          close-issue-reason: "not_planned"
           operations-per-run: 100
           only-labels: "question"

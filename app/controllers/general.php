@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../init.php';
 
+use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Usage;
@@ -289,6 +290,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
+
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 
@@ -298,6 +300,10 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
             Console::error($th->getMessage());
+
+            if ($th instanceof AppwriteException) {
+                throw $th;
+            }
         } finally {
             $queueForUsage
                 ->addMetric(METRIC_EXECUTIONS, 1)
@@ -305,11 +311,11 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
             ;
-        }
 
-        if ($function->getAttribute('logging')) {
-            /** @var Document $execution */
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            if ($function->getAttribute('logging')) {
+                /** @var Document $execution */
+                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            }
         }
 
         $execution->setAttribute('logs', '');
@@ -549,6 +555,9 @@ App::init()
             if (version_compare($responseFormat, '1.5.0', '<')) {
                 $response->addFilter(new ResponseV17());
             }
+            if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
+                $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is ". APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
+            }
         }
 
         /*
@@ -641,7 +650,8 @@ App::error()
     ->inject('project')
     ->inject('logger')
     ->inject('log')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log) {
+    ->inject('queueForUsage')
+    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Usage $queueForUsage) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
@@ -725,9 +735,30 @@ App::error()
                 $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
                 $adapter = new $classname($providerConfig);
                 $logger = new Logger($adapter);
+                $logger->setSample(0.04);
                 $publish = true;
             }
         }
+
+        if ($publish && $project->getId() !== 'console') {
+            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+                $fileSize = 0;
+                $file = $request->getFiles('file');
+                if (!empty($file)) {
+                    $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+                }
+
+                $queueForUsage
+                    ->addMetric(METRIC_NETWORK_REQUESTS, 1)
+                    ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
+                    ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
+            }
+
+            $queueForUsage
+                ->setProject($project)
+                ->trigger();
+        }
+
 
         if ($logger && $publish) {
             try {
@@ -814,12 +845,12 @@ App::error()
             'file' => $file,
             'line' => $line,
             'trace' => \json_encode($trace, JSON_UNESCAPED_UNICODE) === false ? [] : $trace, // check for failing encode
-            'version' => $version,
+            'version' => APP_VERSION_STABLE,
             'type' => $type,
         ] : [
             'message' => $message,
             'code' => $code,
-            'version' => $version,
+            'version' => APP_VERSION_STABLE,
             'type' => $type,
         ];
 
@@ -857,20 +888,50 @@ App::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('utopia')
+    ->inject('swooleRequest')
+    ->inject('request')
     ->inject('response')
-    ->action(function (Response $response) {
-        $template = new View(__DIR__ . '/../views/general/robots.phtml');
-        $response->text($template->render(false));
+    ->inject('dbForConsole')
+    ->inject('getProjectDB')
+    ->inject('queueForEvents')
+    ->inject('queueForUsage')
+    ->inject('geodb')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+        $host = $request->getHostname() ?? '';
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
+
+        if ($host === $mainDomain) {
+            $template = new View(__DIR__ . '/../views/general/robots.phtml');
+            $response->text($template->render(false));
+        } else {
+            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb);
+        }
     });
 
 App::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('utopia')
+    ->inject('swooleRequest')
+    ->inject('request')
     ->inject('response')
-    ->action(function (Response $response) {
-        $template = new View(__DIR__ . '/../views/general/humans.phtml');
-        $response->text($template->render(false));
+    ->inject('dbForConsole')
+    ->inject('getProjectDB')
+    ->inject('queueForEvents')
+    ->inject('queueForUsage')
+    ->inject('geodb')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+        $host = $request->getHostname() ?? '';
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
+
+        if ($host === $mainDomain) {
+            $template = new View(__DIR__ . '/../views/general/humans.phtml');
+            $response->text($template->render(false));
+        } else {
+            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb);
+        }
     });
 
 App::get('/.well-known/acme-challenge/*')

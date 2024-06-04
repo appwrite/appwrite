@@ -34,7 +34,6 @@ use Utopia\Queue\Connection;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
-use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 
 Authorization::disable();
@@ -273,13 +272,10 @@ Server::setResource('deviceForCache', function (Document $project) {
     return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 }, ['project']);
 
-Server::setResource('deviceForLocalFiles', function (Document $project) {
-    return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
 
 $pools = $register->get('pools');
 $platform = new Appwrite();
-$args = $_SERVER['argv'];
+$args = $platform->getEnv('argv');
 
 if (!isset($args[1])) {
     Console::error('Missing worker name');
@@ -336,10 +332,6 @@ $worker
     ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($queueName) {
         $pools->reclaim();
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-        if ($error instanceof PDOException) {
-            throw $error;
-        }
 
         if ($logger) {
             $log->setNamespace("appwrite-worker");
