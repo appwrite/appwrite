@@ -1,21 +1,50 @@
 <?php
 
-require_once __DIR__ . '/../worker.php';
+namespace Appwrite\Platform\Workers;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
-use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
+use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 
-$server->job()
-    ->inject('message')
-    ->inject('cache')
-    ->action(function (Message $message, Cache $cache) {
-        $payload = $message->getPayload();
+class SyncIn extends Action
+{
+    public static function getName(): string
+    {
+        return 'sync-in';
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function __construct()
+    {
+        $this
+            ->desc('Sync in worker')
+            ->inject('message')
+            ->inject('cache')
+            ->callback(fn (Message $message, Cache $cache) => $this->action($message, $cache));
+    }
+
+
+    /**
+     * @param Message $message
+     * @param Cache $cache
+     * @throws Exception
+     */
+    public function action(Message $message, Cache $cache): void
+    {
+        $payload = $message->getPayload() ?? [];
+
+        if (empty($payload)) {
+            throw new Exception('Missing payload');
+        }
+
         $type = $payload['type'];
-        $key  = $payload['key'];
+        $key = $payload['key'];
         $time = DateTime::now();
 
         switch ($type) {
@@ -45,7 +74,7 @@ $server->job()
                     mkdir($path, 0755, true);
                 }
 
-                $result = file_put_contents($path . '/' .  $filename, base64_decode($key['contents']));
+                $result = file_put_contents($path . '/' . $filename, base64_decode($key['contents']));
                 if (empty($result)) {
                     Console::error('Can not write ' . $key['filename']);
                     break;
@@ -61,12 +90,5 @@ $server->job()
             default:
                 break;
         }
-    });
-
-$server
-    ->workerStart()
-    ->action(function () {
-        Console::success("[" . App::getEnv('_APP_REGION', 'nyc1') . "] edge sync-in worker Started");
-    });
-
-$server->start();
+    }
+}

@@ -64,13 +64,15 @@ RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/config && \
     mkdir -p /storage/certificates && \
     mkdir -p /storage/functions && \
+    mkdir -p /storage/syncs && \
     mkdir -p /storage/debug && \
     chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
     chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
     chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \
     chown -Rf www-data.www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \
     chown -Rf www-data.www-data /storage/functions && chmod -Rf 0755 /storage/functions && \
-    chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug
+    chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug && \
+    chown -Rf www-data.www-data /storage/syncs && chmod -Rf 0755 /storage/syncs
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
@@ -103,7 +105,8 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-webhooks && \
     chmod +x /usr/local/bin/worker-usage && \
     chmod +x /usr/local/bin/worker-usage-dump && \
-    chmod +x /usr/local/bin/worker-sync-out && \
+    chmod +x /usr/local/bin/worker-sync-out-aggregation && \
+    chmod +x /usr/local/bin/worker-sync-out-delivery && \
     chmod +x /usr/local/bin/worker-sync-in
 
 # Letsencrypt Permissions

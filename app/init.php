@@ -44,7 +44,6 @@ use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
 use Utopia\App;
-use Utopia\Queue\Client;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -68,6 +67,7 @@ use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
+use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
@@ -130,6 +130,7 @@ const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
+const APP_STORAGE_SYNCS = '/storage/syncs';
 const APP_STORAGE_READ_BUFFER = 20 * (1000 * 1000); //20MB other names `APP_STORAGE_MEMORY_LIMIT`, `APP_STORAGE_MEMORY_BUFFER`, `APP_STORAGE_READ_LIMIT`, `APP_STORAGE_BUFFER_LIMIT`
 const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite';
 const APP_SOCIAL_TWITTER_HANDLE = 'appwrite';
@@ -1039,8 +1040,11 @@ App::setResource('localeCodes', function () {
 App::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
-App::setResource('queueForEdgeSyncOut', function (Connection $queue) {
-    return new Client('v1-sync-out', $queue);
+App::setResource('queueForSyncOutAggregation', function (Connection $queue) {
+    return new Client('v1-sync-out-aggregation', $queue);
+}, ['queue']);
+App::setResource('queueForSyncOutDelivery', function (Connection $queue) {
+    return new Client('v1-sync-out-delivery', $queue);
 }, ['queue']);
 App::setResource('queueForEdgeSyncIn', function (Connection $queue) {
     return new Client('v1-sync-in', $queue);
@@ -1377,7 +1381,60 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     return $database;
 }, ['pools', 'cache']);
 
-App::setResource('cache', function (Group $pools, Client $queueForEdgeSyncOut) {
+App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+
+    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return $dbForConsole;
+        }
+
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
+
+        $configure = (function (Database $database) use ($project, $dsn) {
+            $database
+                ->setMetadata('host', \gethostname())
+                ->setMetadata('project', $project->getId())
+                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+
+            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+                $database
+                    ->setSharedTables(true)
+                    ->setTenant($project->getInternalId())
+                    ->setNamespace($dsn->getParam('namespace'));
+            } else {
+                $database
+                    ->setSharedTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getInternalId());
+            }
+        });
+
+        if (isset($databases[$dsn->getHost()])) {
+            $database = $databases[$dsn->getHost()];
+            $configure($database);
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get($dsn->getHost())
+            ->pop()
+            ->getResource();
+
+        $database = new Database($dbAdapter, $cache);
+        $databases[$dsn->getHost()] = $database;
+        $configure($database);
+
+        return $database;
+    };
+}, ['pools', 'dbForConsole', 'cache']);
+
+App::setResource('cache', function (Group $pools, Client $queueForSyncOutAggregation) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -1390,16 +1447,16 @@ App::setResource('cache', function (Group $pools, Client $queueForEdgeSyncOut) {
     }
     $cache  = new Cache(new Sharding($adapters));
 
-    $cache->on(cache::EVENT_SAVE, function ($key) use ($queueForEdgeSyncOut) {
-        $queueForEdgeSyncOut
+    $cache->on(cache::EVENT_SAVE, function ($key) use ($queueForSyncOutAggregation) {
+        $queueForSyncOutAggregation
             ->enqueue([
                 'type' => 'cache',
                 'key' => $key
             ]);
     });
 
-    $cache->on(cache::EVENT_PURGE, function ($key) use ($queueForEdgeSyncOut) {
-        $queueForEdgeSyncOut
+    $cache->on(cache::EVENT_PURGE, function ($key) use ($queueForSyncOutAggregation) {
+        $queueForSyncOutAggregation
             ->enqueue([
                 'type' => 'cache',
                 'key' => $key
@@ -1407,7 +1464,7 @@ App::setResource('cache', function (Group $pools, Client $queueForEdgeSyncOut) {
     });
 
     return $cache;
-}, ['pools', 'queueForEdgeSyncOut']);
+}, ['pools', 'queueForSyncOutAggregation']);
 
 App::setResource('deviceForLocal', function () {
     return new Local();

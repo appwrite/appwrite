@@ -271,18 +271,18 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
-  appwrite-worker-sync-out:
-    entrypoint: worker-sync-out
+  appwrite-worker-sync-out-aggregation:
+    entrypoint: worker-sync-out-aggregation
     <<: *x-logging
-    container_name: appwrite-worker-sync-out
+    container_name: worker-sync-out-aggregation
     image: appwrite-dev
     networks:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - appwrite-certificates:/storage/certificates:rw
-      #- ./vendor/utopia-php/pools:/usr/src/code/vendor/utopia-php/pools
+      #- appwrite-certificates:/storage/certificates:rw
+      - appwrite-syncs:/storage/syncs:rw
     depends_on:
       - mariadb
       - redis
@@ -305,6 +305,42 @@ services:
         - _APP_CONNECTIONS_QUEUE
         - _APP_WORKER_PER_CORE
         - _APP_REGION
+
+  appwrite-worker-sync-out-delivery:
+    entrypoint: worker-sync-out-delivery
+    <<: *x-logging
+    container_name: worker-sync-out-delivery
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      #- appwrite-certificates:/storage/certificates:rw
+      - appwrite-syncs:/storage/syncs:rw
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      - _APP_OPENSSL_KEY_V1
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
+      - _APP_WORKER_PER_CORE
+      - _APP_REGION
 
   appwrite-worker-sync-in:
     entrypoint: worker-sync-in
@@ -757,39 +793,38 @@ services:
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_MAINTENANCE_DELAY
 
-appwrite-edge-sync:
-  entrypoint: edge-sync
-  <<: *x-logging
-  container_name: appwrite-edge-sync
-  image: appwrite-dev
-  networks:
-    - appwrite
-  volumes:
-    - ./app:/usr/src/code/app
-    - ./src:/usr/src/code/src
-  depends_on:
-    - mariadb
-    - redis
-  environment:
-    - _APP_CONNECTIONS_MAX
-    - _APP_CONNECTIONS_DB_PROJECT
-    - _APP_CONNECTIONS_DB_CONSOLE
-    - _APP_CONNECTIONS_CACHE
-    - _APP_CONNECTIONS_QUEUE
-    - _APP_POOL_CLIENTS
-    - _APP_ENV
-    - _APP_REDIS_HOST
-    - _APP_REDIS_PORT
-    - _APP_REDIS_USER
-    - _APP_REDIS_PASS
-    - _APP_DB_HOST
-    - _APP_DB_PORT
-    - _APP_DB_SCHEMA
-    - _APP_DB_USER
-    - _APP_DB_PASS
-    - _APP_SYNC_EDGE_INTERVAL
-    - _APP_REGION
-
+  appwrite-task-edge-sync:
+    entrypoint: edge-sync
+    <<: *x-logging
+    container_name: appwrite-task-edge-sync
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      - _APP_CONNECTIONS_MAX
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
+      - _APP_POOL_CLIENTS
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_SYNC_EDGE_INTERVAL
+      - _APP_REGION
 
   appwrite-worker-usage:
     entrypoint: worker-usage
@@ -1123,3 +1158,4 @@ volumes:
   appwrite-functions:
   appwrite-builds:
   appwrite-config:
+  appwrite-syncs:

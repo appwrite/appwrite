@@ -166,8 +166,11 @@ CLI::setResource('queueForDeletes', function (Connection $queue) {
 CLI::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
-CLI::setResource('queueForEdgeSyncOut', function (Connection $queue) {
-    return new Client('v1-sync-out', $queue);
+CLI::setResource('SyncOutAggregation', function (Connection $queue) {
+    return new Client('v1-sync-out-aggregation', $queue);
+}, ['queue']);
+CLI::setResource('SyncOut~Delivery', function (Connection $queue) {
+    return new Client('v1-sync-out-delivery', $queue);
 }, ['queue']);
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {

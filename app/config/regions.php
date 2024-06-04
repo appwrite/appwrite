@@ -7,6 +7,8 @@ return [
         'disabled' => false,
         'flag' => 'de',
         'default' => true,
+        'domain' => '172.29.0.1'
+
     ],
     'fra' => [
         '$id' => 'fra',
@@ -14,6 +16,7 @@ return [
         'disabled' => false,
         'flag' => 'de',
         'default' => true,
+        'domain' => '172.29.0.1'
     ],
     'nyc' => [
         '$id' => 'nyc',
@@ -21,6 +24,7 @@ return [
         'disabled' => true,
         'flag' => 'us',
         'default' => true,
+        'domain' => '172.29.0.1'
     ],
     'sfo' => [
         '$id' => 'sfo',
@@ -28,6 +32,7 @@ return [
         'disabled' => true,
         'flag' => 'us',
         'default' => true,
+        'domain' => '172.29.0.1'
     ],
     'blr' => [
         '$id' => 'blr',
@@ -35,6 +40,7 @@ return [
         'disabled' => true,
         'flag' => 'in',
         'default' => true,
+        'domain' => '172.29.0.1'
     ],
     'lon' => [
         '$id' => 'lon',
@@ -42,6 +48,7 @@ return [
         'disabled' => true,
         'flag' => 'gb',
         'default' => true,
+        'domain' => '172.29.0.1'
     ],
     'ams' => [
         '$id' => 'ams',
@@ -49,6 +56,7 @@ return [
         'disabled' => true,
         'flag' => 'nl',
         'default' => true,
+        'domain' => '172.29.0.1'
     ],
     'sgp' => [
         '$id' => 'sgp',
@@ -56,6 +64,7 @@ return [
         'disabled' => true,
         'flag' => 'sg',
         'default' => true,
+        'domain' => '172.29.0.1'
     ],
     'tor' => [
         '$id' => 'tor',
@@ -63,6 +72,7 @@ return [
         'disabled' => true,
         'flag' => 'ca',
         'default' => true,
+        'domain' => '172.29.0.1'
     ],
     'syd' => [
         '$id' => 'syd',
@@ -70,5 +80,6 @@ return [
         'disabled' => true,
         'flag' => 'au',
         'default' => true,
+        'domain' => '172.29.0.1'
     ],
 ];

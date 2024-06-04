@@ -48,9 +48,9 @@ class Certificates extends Action
             ->inject('queueForMails')
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
-            ->inject('queueForEdgeSyncOut')
+            ->inject('queueForSyncOutAggregation')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, Client $queueForEdgeSyncOut) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $queueForEdgeSyncOut));
+            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, Client $queueForSyncOutAggregation) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $queueForSyncOutAggregation));
     }
 
     /**
@@ -64,7 +64,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log Client $queueForEdgeSyncOut): void
+    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, Client $queueForSyncOutAggregation): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -78,7 +78,7 @@ class Certificates extends Action
 
         $log->addTag('domain', $domain->get());
 
-        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $skipRenewCheck, $queueForEdgeSyncOut);
+        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $queueForSyncOutAggregation, $skipRenewCheck);
     }
 
     /**
@@ -87,12 +87,17 @@ class Certificates extends Action
      * @param Mail $queueForMails
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
+     * @param Log $log
+     * @param Client $queueForSyncOutAggregation
      * @param bool $skipRenewCheck
      * @return void
+     * @throws Authorization
+     * @throws Conflict
+     * @throws Structure
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, bool $skipRenewCheck = false, Client $queueForEdgeSyncOut): void
+    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, Client $queueForSyncOutAggregation, bool $skipRenewCheck = false): void
     {
         /**
          * 1. Read arguments and validate domain
@@ -177,7 +182,7 @@ class Certificates extends Action
             // Enqueue certificate for regional sync
             $filename = APP_STORAGE_CERTIFICATES . '/' . $domain . '.tar.gz';
             if (file_exists($filename)) {
-                $queueForEdgeSyncOut->enqueue([
+                $queueForSyncOutAggregation->enqueue([
                     'type' => 'certificate',
                     'key' => [
                         'domain' => $domain,

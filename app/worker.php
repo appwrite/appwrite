@@ -18,13 +18,13 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
+use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
@@ -189,10 +189,12 @@ Server::setResource('cache', function (Registry $register) {
     return new Cache(new Sharding($adapters));
 }, ['register']);
 
-Server::setResource('queueForEdgeSyncOut', function (Connection $queue) {
-    return new Client('v1-sync-out', $queue);
+Server::setResource('queueForSyncOutAggregation', function (Connection $queue) {
+    return new Client('v1-sync-out-aggregation', $queue);
 }, ['queue']);
-
+Server::setResource('queueForSyncOutDelivery', function (Connection $queue) {
+    return new Client('v1-sync-out-delivery', $queue);
+}, ['queue']);
 Server::setResource('log', fn () => new Log());
 
 Server::setResource('queueForUsage', function (Connection $queue) {

@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Services;
 
 use Appwrite\Platform\Tasks\Doctor;
+use Appwrite\Platform\Tasks\EdgeSync;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
@@ -17,7 +18,6 @@ use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
 use Utopia\Platform\Service;
-use Appwrite\Platform\Tasks\EdgeSync;
 
 class Tasks extends Service
 {

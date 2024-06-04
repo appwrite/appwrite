@@ -47,7 +47,7 @@
         "utopia-php/abuse": "0.37.*",
         "utopia-php/analytics": "0.10.*",
         "utopia-php/audit": "0.39.*",
-        "utopia-php/cache": "dev-feat-redis-sync as 0.8.1",
+        "utopia-php/cache": "dev-feat-redis-sync as 0.9.1",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.49.*",

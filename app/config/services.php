@@ -263,8 +263,8 @@ return [
         'tests' => true,
         'optional' => true,
         'icon' => '/images/services/messaging.png',
-    ]
-     'syncs' => [
+    ],
+    'syncs' => [
         'key' => 'edge',
         'name' => 'edge',
         'subtitle' => 'Appwrite\'s cache edge sync Endpoint',

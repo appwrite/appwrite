@@ -28,7 +28,6 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
-use Utopia\Queue\Client;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -540,8 +539,8 @@ App::shutdown()
     ->inject('queueForFunctions')
     ->inject('mode')
     ->inject('dbForConsole')
-    ->inject('queueForEdgeSyncOut')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsoleClient $queueForEdgeSyncOut) use ($parseLabel) {
+    ->inject('queueForSyncOutAggregation')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsoleClient, $queueForSyncOutAggregation) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -597,31 +596,31 @@ App::shutdown()
                         'userId' => $queueForEvents->getParam('userId')
                     ]
                 );
-                 //Sync with other regions
-                $queueForEdgeSyncOut->enqueue([
-                        'type' => 'realtime',
-                        'key' => [
-                                'projectId' => $target['projectId'] ?? $project->getId(),
-                                'payload' => $events->getPayload(),
-                                'events' => $allEvents,
-                                'channels' => $target['channels'],
-                                'roles' => $target['roles'],
-                                'options' => [
-                                    'permissionsChanged' => $target['permissionsChanged'],
-                                    'userId' => $events->getParam('userId')
-                                ]
+                //Sync with other regions
+                $queueForSyncOutAggregation->enqueue([
+                    'type' => 'realtime',
+                    'key' => [
+                        'projectId' => $target['projectId'] ?? $project->getId(),
+                        'payload' => $queueForEvents->getPayload(),
+                        'events' => $allEvents,
+                        'channels' => $target['channels'],
+                        'roles' => $target['roles'],
+                        'options' => [
+                            'permissionsChanged' => $target['permissionsChanged'],
+                            'userId' => $queueForEvents->getParam('userId')
                         ]
+                    ]
                 ]);
             }
         }
 
-//        $queueForEdgeSyncOut->enqueue([
-//            'type' => 'certificate',
-//            'key' => [
-//                'domain' => 'appwrite.io',
-//                'contents' => base64_encode(file_get_contents(APP_STORAGE_CERTIFICATES . '/appwrite.io.tar.gz')),
-//            ]
-//        ]);
+        //        $queueForSyncOutAggregation->enqueue([
+        //            'type' => 'certificate',
+        //            'key' => [
+        //                'domain' => 'appwrite.io',
+        //                'contents' => base64_encode(file_get_contents(APP_STORAGE_CERTIFICATES . '/appwrite.io.tar.gz')),
+        //            ]
+        //        ]);
 
         $route = $utopia->getRoute();
         $requestParams = $route->getParamsValues();

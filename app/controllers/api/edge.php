@@ -9,6 +9,7 @@ use Utopia\App;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 
@@ -19,7 +20,7 @@ App::init()
 
         $token = $request->getHeader('authorization');
         $token = str_replace(["Bearer"," "], "", $token);
-        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 600, 10);
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 600, 10);
         try {
             $payload = $jwt->decode($token);
         } catch (JWTException $error) {
