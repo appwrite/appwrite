@@ -28,10 +28,17 @@ Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
  * @var Container $container
  */
 $auth = new Dependency();
+$register = new Dependency();
 $logError = new Dependency();
 $queueForDeletes = new Dependency();
 $queueForHamster = new Dependency();
 $queueForCertificates = new Dependency();
+
+$register
+    ->setName('register')
+    ->setCallback(function () use (&$global): Registry {
+        return $global;
+    });
 
 $queueForHamster
     ->setName('queueForHamster')
@@ -101,6 +108,7 @@ $auth
 
 $container->set($auth);
 $container->set($logError);
+$container->set($register);
 $container->set($queueForHamster);
 $container->set($queueForDeletes);
 $container->set($queueForCertificates);
