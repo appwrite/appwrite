@@ -37,8 +37,6 @@ class EdgeSync extends Action
         Console::loop(function () use ($interval, $dbForConsole, $queueForSyncOutDelivery) {
             $time = DateTime::now();
 
-            Console::success("[{$time}] New task every {$interval} seconds");
-
                 $chunk = 0;
                 $limit = 500;
                 $sum   = $limit;
