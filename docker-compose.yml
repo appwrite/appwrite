@@ -803,6 +803,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - appwrite-syncs:/storage/syncs:rw
     depends_on:
       - mariadb
       - redis
