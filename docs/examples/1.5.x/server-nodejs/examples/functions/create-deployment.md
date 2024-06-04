@@ -10,7 +10,7 @@ const functions = new sdk.Functions(client);
 
 const result = await functions.createDeployment(
     '<FUNCTION_ID>', // functionId
-    InputFile.fromPath('/path/to/file.png', 'file.png'), // code
+    InputFile.fromPath('/path/to/file', 'filename'), // code
     false, // activate
     '<ENTRYPOINT>', // entrypoint (optional)
     '<COMMANDS>' // commands (optional)
