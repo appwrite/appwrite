@@ -55,7 +55,7 @@ $getProjectDB = new Dependency();
 
 $auth
     ->setName('auth')
-    ->setCallback(fn () => new Authorization());
+    ->setCallback(fn() => new Authorization());
 
 $getProjectDB
     ->setName('getProjectDB')
@@ -167,7 +167,7 @@ $server->error($logError);
 $server->onStart(function () use ($stats, $container, $containerId, &$statsDocument, $logError) {
     sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started successfully');
-
+    $auth = $container->get('auth');
     /**
      * Create document for this worker to share stats across Containers.
      */
@@ -187,8 +187,8 @@ $server->onStart(function () use ($stats, $container, $containerId, &$statsDocum
                     'value' => '{}'
                 ]);
 
-                $auth = new Authorization();
-                $statsDocument = $auth->skip(fn () => $database->createDocument('realtime', $document));
+                $auth = $container->get('auth');
+                $statsDocument = $auth->skip(fn() => $database->createDocument('realtime', $document));
                 break;
             } catch (Throwable) {
                 Console::warning("Collection not ready. Retrying connection ({$attempts})...");
@@ -201,7 +201,7 @@ $server->onStart(function () use ($stats, $container, $containerId, &$statsDocum
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    Timer::tick(5000, function () use ($container, $stats, &$statsDocument, $logError) {
+    Timer::tick(5000, function () use ($container, $stats, &$statsDocument, $logError, $auth) {
         $payload = [];
         foreach ($stats as $projectId => $value) {
             $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
@@ -217,8 +217,7 @@ $server->onStart(function () use ($stats, $container, $containerId, &$statsDocum
                 ->setAttribute('timestamp', DateTime::now())
                 ->setAttribute('value', json_encode($payload));
 
-            $auth = new Authorization();
-            $auth->skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+            $auth->skip(fn() => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
         } catch (Throwable $th) {
             call_user_func($logError, $th, "updateWorkerDocument");
         } finally {
@@ -233,7 +232,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
     $attempts = 0;
     $start = time();
 
-    $auth = new Authorization();
+    $auth = $container->get('auth');
 
     Timer::tick(5000, function () use ($server, $container, $realtime, $stats, $logError, $auth) {
         /**
@@ -244,7 +243,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
 
             $payload = [];
 
-            $list = $auth->skip(fn () => $database->find('realtime', [
+            $list = $auth->skip(fn() => $database->find('realtime', [
                 Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
             ]));
 
@@ -348,8 +347,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
                         $consoleDatabase = $container->get('dbForConsole');
-                        $auth = new Authorization();
-                        $project = $auth->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
+
+                        $project = $auth->skip(fn() => $consoleDatabase->getDocument('projects', $projectId));
                         $database = $container->get('getProjectDB')($project);
 
                         $user = $database->getDocument('users', $userId);
@@ -398,7 +397,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
 });
 
 $server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $container, $stats, &$realtime, $logError) {
-    $auth = new Authorization();
+    $auth = $container->get('auth');
 
     $request = new Request(new UtopiaRequest($request));
     $response = new Response(new UtopiaResponse(new SwooleResponse()));
@@ -406,8 +405,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     $requestInjection = new Dependency();
     $responseInjection = new Dependency();
 
-    $requestInjection->setName('request')->setCallback(fn () => $request);
-    $responseInjection->setName('response')->setCallback(fn () => $response);
+    $requestInjection->setName('request')->setCallback(fn() => $request);
+    $responseInjection->setName('response')->setCallback(fn() => $response);
 
     $container->set($requestInjection);
     $container->set($responseInjection);
@@ -468,7 +467,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 
-        $auth = new Authorization();
+        $auth = $container->get('auth');
         $roles = Auth::getRoles($user, $auth);
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
@@ -529,8 +528,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $co
         $database = $container->get('dbForConsole');
 
         if ($projectId !== 'console') {
-            $auth = new Authorization();
-            $project = $auth->skip(fn () => $database->getDocument('projects', $projectId));
+            $auth = $container->get('auth');
+            $project = $auth->skip(fn() => $database->getDocument('projects', $projectId));
             $database = $container->get('getProjectDB')($project);
         } else {
             $project = null;
