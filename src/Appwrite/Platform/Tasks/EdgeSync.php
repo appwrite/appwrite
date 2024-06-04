@@ -57,6 +57,7 @@ class EdgeSync extends Action
                                 if ($sync->getAttribute('status') === 200) {
                                     $dbForConsole->deleteDocument('syncs', $sync->getId());
                                     unlink(APP_STORAGE_SYNCS . '/' . $sync->getAttribute('filename') . '.log');
+                                    Console::log("[{$time}] Deleting {$sync->getId()}");
                                 } else {
                                     Console::log("[{$time}] Enqueueing {$sync->getId()} to {$sync->getAttribute('destRegion')}");
 
