@@ -166,10 +166,10 @@ CLI::setResource('queueForDeletes', function (Connection $queue) {
 CLI::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
-CLI::setResource('SyncOutAggregation', function (Connection $queue) {
+CLI::setResource('queueForSyncOutAggregation', function (Connection $queue) {
     return new Client('v1-sync-out-aggregation', $queue);
 }, ['queue']);
-CLI::setResource('SyncOutDelivery', function (Connection $queue) {
+CLI::setResource('queueForSyncOutDelivery', function (Connection $queue) {
     return new Client('v1-sync-out-delivery', $queue);
 }, ['queue']);
 CLI::setResource('logError', function (Registry $register) {
