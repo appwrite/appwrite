@@ -4218,9 +4218,9 @@ $consoleCollections = array_merge([
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_sourceRegion_destRegion_logCreatedAt_status'),
+                '$id' => ID::custom('_key_sourceRegion'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['sourceRegion', 'destRegion','logCreatedAt', 'status'],
+                'attributes' => ['sourceRegion'],
                 'lengths' => [],
                 'orders' => [],
             ],
