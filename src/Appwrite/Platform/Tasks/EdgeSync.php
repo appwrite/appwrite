@@ -33,9 +33,11 @@ class EdgeSync extends Action
         Console::title('Edge-sync V1');
         Console::success(APP_NAME . ' Edge-sync v1 has started');
 
-        $interval = (int) App::getEnv('_APP_SYNC_EDGE_INTERVAL', '180');
+        $interval = (int) App::getEnv('_APP_SYNC_EDGE_INTERVAL', '60');
         Console::loop(function () use ($interval, $dbForConsole, $queueForSyncOutDelivery) {
             $time = DateTime::now();
+
+            Console::success("[{$time}] New task every {$interval} seconds");
 
                 $chunk = 0;
                 $limit = 500;
