@@ -33,20 +33,12 @@ class EdgeSync extends Action
         Console::title('Edge-sync V1');
         Console::success(APP_NAME . ' Edge-sync v1 has started');
 
-        $regions = array_filter(
-            Config::getParam('regions', []),
-            fn ($region) => System::getEnv('_APP_REGION', 'fra') !== $region
-                && $region !== 'default',
-            ARRAY_FILTER_USE_KEY
-        );
-
         $interval = (int) App::getEnv('_APP_SYNC_EDGE_INTERVAL', '180');
-        Console::loop(function () use ($interval, $dbForConsole, $queueForSyncOutDelivery, $regions) {
+        Console::loop(function () use ($interval, $dbForConsole, $queueForSyncOutDelivery) {
             $time = DateTime::now();
 
             Console::success("[{$time}] New task every {$interval} seconds");
 
-            foreach ($regions as $code => $region) {
                 $chunk = 0;
                 $limit = 500;
                 $sum   = $limit;
@@ -61,7 +53,6 @@ class EdgeSync extends Action
                     $sum = count($results);
                     if ($sum > 0) {
                         foreach ($results as $sync) {
-
                             try {
                                 if ($sync->getAttribute('status') === 200) {
                                     $dbForConsole->deleteDocument('syncs', $sync->getId());
@@ -87,7 +78,7 @@ class EdgeSync extends Action
                     }
 
                 }
-            }
+
         }, $interval);
     }
 }
