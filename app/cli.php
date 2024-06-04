@@ -169,7 +169,7 @@ CLI::setResource('queueForCertificates', function (Connection $queue) {
 CLI::setResource('SyncOutAggregation', function (Connection $queue) {
     return new Client('v1-sync-out-aggregation', $queue);
 }, ['queue']);
-CLI::setResource('SyncOut~Delivery', function (Connection $queue) {
+CLI::setResource('SyncOutDelivery', function (Connection $queue) {
     return new Client('v1-sync-out-delivery', $queue);
 }, ['queue']);
 CLI::setResource('logError', function (Registry $register) {
