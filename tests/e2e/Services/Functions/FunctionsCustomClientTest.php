@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\Services\Functions;
 
-use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -43,7 +42,6 @@ class FunctionsCustomClientTest extends Scope
         return [];
     }
 
-    #[Retry(count: 2)]
     public function testCreateExecution(): array
     {
         /**

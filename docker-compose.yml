@@ -189,7 +189,6 @@ services:
       - _APP_CONSOLE_COUNTRIES_DENYLIST
       - _APP_EXPERIMENT_LOGGING_PROVIDER
       - _APP_EXPERIMENT_LOGGING_CONFIG
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-realtime:
     entrypoint: realtime
@@ -239,7 +238,6 @@ services:
       - _APP_USAGE_STATS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-audits:
     entrypoint: worker-audits
@@ -269,7 +267,6 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
@@ -302,7 +299,6 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-deletes:
     entrypoint: worker-deletes
@@ -360,7 +356,6 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-databases:
     entrypoint: worker-databases
@@ -392,7 +387,6 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_WORKERS_NUM
       - _APP_QUEUE_NAME
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-builds:
     entrypoint: worker-builds
@@ -458,7 +452,6 @@ services:
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates
@@ -494,7 +487,6 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-functions:
     entrypoint: worker-functions
@@ -534,7 +526,6 @@ services:
       - _APP_DOCKER_HUB_PASSWORD
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_PROVIDER
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-mails:
     entrypoint: worker-mails
@@ -569,7 +560,6 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-messaging:
     entrypoint: worker-messaging
@@ -624,7 +614,6 @@ services:
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-migrations:
     entrypoint: worker-migrations
@@ -660,7 +649,6 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-task-maintenance:
     entrypoint: maintenance
@@ -698,7 +686,6 @@ services:
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_MAINTENANCE_DELAY
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-usage:
     entrypoint: worker-usage
@@ -730,7 +717,6 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-usage-dump:
     entrypoint: worker-usage-dump
@@ -762,7 +748,6 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-task-scheduler-functions:
     entrypoint: schedule-functions
@@ -790,7 +775,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
@@ -818,7 +802,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DATABASE_SHARED_TABLES
 
   appwrite-assistant:
     container_name: appwrite-assistant
@@ -917,7 +900,20 @@ services:
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
-    command: "mysqld --innodb-flush-method=fsync"
+    command: "mysqld --innodb-flush-method=fsync" # add ' --query_cache_size=0' for DB tests
+    # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
+
+  # smtp:
+  #   image: appwrite/smtp:1.2.0
+  #   container_name: appwrite-smtp
+  #   restart: unless-stopped
+  #   networks:
+  #     - appwrite
+  #   environment:
+  #     - LOCAL_DOMAINS=@
+  #     - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
+  #     - SMARTHOST_HOST=smtp
+  #     - SMARTHOST_PORT=587
 
   redis:
     image: redis:7.2.4-alpine
@@ -934,6 +930,14 @@ services:
       - appwrite
     volumes:
       - appwrite-redis:/data:rw
+
+  # clamav:
+  #   image: appwrite/clamav:1.2.0
+  #   container_name: appwrite-clamav
+  #   networks:
+  #     - appwrite
+  #   volumes:
+  #     - appwrite-uploads:/storage/uploads
 
   # Dev Tools Start ------------------------------------------------------------------------------------------
   #
