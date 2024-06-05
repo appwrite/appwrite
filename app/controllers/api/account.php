@@ -290,7 +290,9 @@ App::post('/v1/account')
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                if($existingTarget) {
+                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                }
             }
 
             $dbForProject->purgeCachedDocument('users', $user->getId());
