@@ -1076,7 +1076,7 @@ class FunctionsCustomServerTest extends Scope
             \sleep(1);
         }
 
-        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertFalse($deployment['body']['activate']);
 
         // Cleanup : Delete function
