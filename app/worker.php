@@ -93,7 +93,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+    if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
         $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
@@ -126,7 +126,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
         if (isset($databases[$dsn->getHost()])) {
             $database = $databases[$dsn->getHost()];
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
@@ -150,7 +150,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
         $databases[$dsn->getHost()] = $database;
 
-        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
