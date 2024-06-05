@@ -72,9 +72,6 @@ RUN mkdir -p /storage/uploads && \
     chown -Rf www-data.www-data /storage/functions && chmod -Rf 0755 /storage/functions && \
     chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug
 
-# Development Executables
-RUN chmod +x /usr/local/bin/dev-generate-translations
-
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/install && \
@@ -99,34 +96,12 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-databases && \
     chmod +x /usr/local/bin/worker-deletes && \
     chmod +x /usr/local/bin/worker-functions && \
-    chmod +x /usr/local/bin/worker-hamster && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-migrations && \
     chmod +x /usr/local/bin/worker-webhooks && \
-    chmod +x /usr/local/bin/worker-hamster && \
     chmod +x /usr/local/bin/worker-usage && \
     chmod +x /usr/local/bin/worker-usage-dump
-
-
-# Cloud Executabless
-RUN chmod +x /usr/local/bin/calc-tier-stats && \
-    chmod +x /usr/local/bin/calc-users-stats && \
-    chmod +x /usr/local/bin/clear-card-cache && \
-    chmod +x /usr/local/bin/delete-orphaned-projects && \
-    chmod +x /usr/local/bin/get-migration-stats && \
-    chmod +x /usr/local/bin/hamster && \
-    chmod +x /usr/local/bin/patch-delete-project-collections && \
-    chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
-    chmod +x /usr/local/bin/patch-recreate-repositories-documents && \
-    chmod +x /usr/local/bin/volume-sync && \
-    chmod +x /usr/local/bin/patch-delete-project-collections && \
-    chmod +x /usr/local/bin/delete-orphaned-projects && \
-    chmod +x /usr/local/bin/clear-card-cache && \
-    chmod +x /usr/local/bin/calc-users-stats && \
-    chmod +x /usr/local/bin/calc-tier-stats && \
-    chmod +x /usr/local/bin/get-migration-stats && \
-    chmod +x /usr/local/bin/create-inf-metric
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/

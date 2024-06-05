@@ -51,7 +51,7 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
-    ports:
+    ports: 
       - 9501:80
     networks:
       - appwrite

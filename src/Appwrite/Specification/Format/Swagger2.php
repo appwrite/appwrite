@@ -93,15 +93,15 @@ class Swagger2 extends Format
         ];
 
         if (isset($output['securityDefinitions']['Project'])) {
-            $output['securityDefinitions']['Project']['x-appwrite'] = ['demo' => '5df5acd0d48c2'];
+            $output['securityDefinitions']['Project']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
         }
 
         if (isset($output['securityDefinitions']['Key'])) {
-            $output['securityDefinitions']['Key']['x-appwrite'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
+            $output['securityDefinitions']['Key']['x-appwrite'] = ['demo' => '<YOUR_API_KEY>'];
         }
 
         if (isset($output['securityDefinitions']['JWT'])) {
-            $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'];
+            $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => '<YOUR_JWT>'];
         }
 
         if (isset($output['securityDefinitions']['Locale'])) {

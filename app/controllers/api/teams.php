@@ -455,7 +455,7 @@ Http::post('/v1/teams/:teamId/memberships')
         if (empty($invitee)) { // Create new user if no user with same email found
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
-            if ($limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
+            if (!$isPrivilegedUser && !$isAppUser && $limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
                 $total = $dbForProject->count('users', [], APP_LIMIT_USERS);
 
                 if ($total >= $limit) {

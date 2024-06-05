@@ -411,7 +411,7 @@ Http::init()
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
-            $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+            $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
             $cacheLog  = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
@@ -605,7 +605,7 @@ Http::shutdown()
 
                 Realtime::send(
                     projectId: $target['projectId'] ?? $project->getId(),
-                    payload: $queueForEvents->getPayload(),
+                    payload: $queueForEvents->getRealtimePayload(),
                     events: $allEvents,
                     channels: $target['channels'],
                     roles: $target['roles'],
@@ -684,7 +684,7 @@ Http::shutdown()
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
-                $key = md5($request->getURI() . '*' . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
+                $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
                 $signature = md5($data['payload']);
                 $cacheLog  =  $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');

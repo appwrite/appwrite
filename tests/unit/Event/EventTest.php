@@ -20,7 +20,7 @@ class EventTest extends TestCase
 
     public function setUp(): void
     {
-        $fallbackForRedis = URL::unparse([
+        $fallbackForRedis = 'redis_main=' . URL::unparse([
             'scheme' => 'redis',
             'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
             'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
@@ -30,7 +30,7 @@ class EventTest extends TestCase
 
         $dsn = System::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
         $dsn = explode('=', $dsn);
-        $dsn = $dsn[0] ?? '';
+        $dsn = $dsn[1] ?? '';
         $dsn = new DSN($dsn);
         $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
         $this->queue = 'v1-tests' . uniqid();

@@ -9,7 +9,6 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Hamster;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
@@ -19,6 +18,7 @@ use Appwrite\Platform\Appwrite;
 use Appwrite\Utopia\Queue\Connections;
 use Swoole\Runtime;
 use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
@@ -27,6 +27,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\DI\Dependency;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
@@ -110,22 +111,48 @@ $dbForProject
             return $dbForConsole;
         }
 
-        $pool = $pools['pools-database-'.$project->getAttribute('database')]['pool'];
-        $dsn = $pools['pools-database-'.$project->getAttribute('database')]['dsn'];
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
+
+        $pool = $pools['pools-database-' . $dsn->getHost()]['pool'];
+        $connectionDsn = $pools['pools-database-' . $dsn->getHost()]['dsn'];
 
         $connection = $pool->get();
         $connections->add($connection, $pool);
-        $adapter = match ($dsn->getScheme()) {
+        $adapter = match ($connectionDsn->getScheme()) {
             'mariadb' => new MariaDB($connection),
             'mysql' => new MySQL($connection),
             default => null
         };
 
-        $adapter->setDatabase($dsn->getPath());
+        $adapter->setDatabase($connectionDsn->getPath());
 
         $database = new Database($adapter, $cache);
+
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
+
+        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+            $database
+                ->setSharedTables(true)
+                ->setTenant($project->getInternalId())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getInternalId());
+        }
+
         $database->setAuthorization($auth);
-        $database->setNamespace('_' . $project->getInternalId());
         return $database;
     });
 $container->set($dbForProject);
@@ -156,28 +183,66 @@ $getProjectDB
     ->inject('auth')
     ->inject('connections')
     ->setCallback(function (array $pools, Database $dbForConsole, Cache $cache, Authorization $auth, Connections $connections) {
+        $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+
         return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $auth, $connections): Database {
             if ($project->isEmpty() || $project->getId() === 'console') {
                 return $dbForConsole;
             }
 
-            $databaseName = $project->getAttribute('database');
+            try {
+                $dsn = new DSN($project->getAttribute('database'));
+            } catch (\InvalidArgumentException) {
+                // TODO: Temporary until all projects are using shared tables
+                $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+            }
 
-            $pool = $pools['pools-database-'.$databaseName]['pool'];
-            $dsn = $pools['pools-database-'.$databaseName]['dsn'];
+            if (isset($databases[$dsn->getHost()])) {
+                $database = $databases[$dsn->getHost()];
+
+                if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+                    $database
+                        ->setSharedTables(true)
+                        ->setTenant($project->getInternalId())
+                        ->setNamespace($dsn->getParam('namespace'));
+                } else {
+                    $database
+                        ->setSharedTables(false)
+                        ->setTenant(null)
+                        ->setNamespace('_' . $project->getInternalId());
+                }
+
+                return $database;
+            }
+
+            $pool = $pools['pools-database-'.$dsn->getHost()]['pool'];
+            $connectionDsn = $pools['pools-database-'.$dsn->getHost()]['dsn'];
 
             $connection = $pool->get();
             $connections->add($connection, $pool);
-            $adapter = match ($dsn->getScheme()) {
+            $adapter = match ($connectionDsn->getScheme()) {
                 'mariadb' => new MariaDB($connection),
                 'mysql' => new MySQL($connection),
                 default => null
             };
-            $adapter->setDatabase($dsn->getPath());
+            $adapter->setDatabase($connectionDsn->getPath());
 
             $database = new Database($adapter, $cache);
             $database->setAuthorization($auth);
-            $database->setNamespace('_' . $project->getInternalId());
+
+            $databases[$dsn->getHost()] = $database;
+
+            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+                $database
+                    ->setSharedTables(true)
+                    ->setTenant($project->getInternalId())
+                    ->setNamespace($dsn->getParam('namespace'));
+            } else {
+                $database
+                    ->setSharedTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getInternalId());
+            }
 
             return $database;
         };
@@ -346,14 +411,7 @@ $queueForMigrations
     });
 $container->set($queueForMigrations);
 
-$queueForHamster = new Dependency();
-$queueForHamster
-    ->setName('queueForHamster')
-    ->inject('queue')
-    ->setCallback(function (Connection $queue) {
-        return new Hamster($queue);
-    });
-$container->set($queueForHamster);
+
 
 $logger = new Dependency();
 $logger
@@ -417,7 +475,7 @@ $auth
 $container->set($auth);
 
 $platform = new Appwrite();
-$args = $_SERVER['argv'];
+$args = $platform->getEnv('argv');
 
 if (!isset($args[1])) {
     Console::error('Missing worker name');
@@ -451,7 +509,7 @@ try {
      * Any worker can be configured with the following env vars:
      * - _APP_WORKERS_NUM           The total number of worker processes
      * - _APP_WORKER_PER_CORE       The number of worker processes per core (ignored if _APP_WORKERS_NUM is set)
-     * - _APP_QUEUE_NAME  The name of the queue to read for database events
+     * - _APP_QUEUE_NAME            The name of the queue to read for database events
      */
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => System::getEnv('_APP_WORKERS_NUM', 1),
@@ -485,10 +543,6 @@ Worker::error()
     ->action(function (Throwable $error, ?Logger $logger, Log $log, Connections $connections, Document $project, Authorization $auth) use ($queueName) {
         $connections->reclaim();
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-        if ($error instanceof PDOException) {
-            throw $error;
-        }
 
         if ($logger) {
             $log->setNamespace("appwrite-worker");

@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Event;
 use Utopia\CLI\Console;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\Http\Validator\Text;
 use Utopia\Platform\Action;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
@@ -21,20 +21,7 @@ class QueueCount extends Action
     {
         $this
             ->desc('Return the number of from a specific queue identified by the name parameter with a specific type')
-            ->param('name', '', new WhiteList([
-                Event::DATABASE_QUEUE_NAME,
-                Event::DELETE_QUEUE_NAME,
-                Event::AUDITS_QUEUE_NAME,
-                Event::MAILS_QUEUE_NAME,
-                Event::FUNCTIONS_QUEUE_NAME,
-                Event::USAGE_QUEUE_NAME,
-                Event::WEBHOOK_QUEUE_NAME,
-                Event::CERTIFICATES_QUEUE_NAME,
-                Event::BUILDS_QUEUE_NAME,
-                Event::MESSAGING_QUEUE_NAME,
-                Event::MIGRATIONS_QUEUE_NAME,
-                Event::HAMSTER_QUEUE_NAME
-            ]), 'Queue name')
+            ->param('name', '', new Text(100), 'Queue name')
             ->param('type', '', new WhiteList([
                 'success',
                 'failed',

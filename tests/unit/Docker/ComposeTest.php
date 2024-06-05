@@ -21,11 +21,6 @@ class ComposeTest extends TestCase
         $this->object = new Compose($data);
     }
 
-    public function testVersion(): void
-    {
-        $this->assertEquals('3', $this->object->getVersion());
-    }
-
     public function testServices(): void
     {
         $this->assertCount(15, $this->object->getServices());

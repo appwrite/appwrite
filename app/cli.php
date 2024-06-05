@@ -10,6 +10,7 @@ use Appwrite\Platform\Appwrite;
 use Utopia\CLI\Console;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Dependency;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;

@@ -254,7 +254,7 @@ class Builds extends Action
                     Console::execute('mkdir -p ' . $tmpDirectory . '/' . $rootDirectory, '', $output);
 
                     // Merge template into user repo
-                    Console::execute('cp -rfn ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/* ' . $tmpDirectory . '/' . $rootDirectory, '', $output);
+                    Console::execute('rsync -av --exclude \'.git\' ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/ ' . $tmpDirectory . '/' . $rootDirectory, '', $output);
 
                     // Commit and push
                     $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . \escapeshellcmd($function->getAttribute('name', '')) . '\' function" && git push origin ' . \escapeshellcmd($branchName), '', $output);
@@ -434,6 +434,8 @@ class Builds extends Action
                                     if ($build->isEmpty()) {
                                         throw new \Exception('Build not found', 404);
                                     }
+
+                                    $logs = \mb_substr($logs, 0, null, 'UTF-8'); // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
 
                                     $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
                                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
