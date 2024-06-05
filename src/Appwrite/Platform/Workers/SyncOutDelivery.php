@@ -6,7 +6,6 @@ use Ahc\Jwt\JWT;
 use Appwrite\Extend\Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Platform\Action;
