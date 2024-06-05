@@ -20,5 +20,6 @@ Message result = await messaging.UpdateEmail(
     html: false, // optional
     cc: new List<string>(), // optional
     bcc: new List<string>(), // optional
-    scheduledAt: "" // optional
+    scheduledAt: "", // optional
+    attachments: new List<string>() // optional
 );

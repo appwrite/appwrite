@@ -163,6 +163,7 @@
     "countries.nz": "न्यूजीलैंड",
     "countries.om": "ओमान",
     "countries.pk": "पाकिस्तान",
+    "countries.ps": "पैलिस्टाइन",
     "countries.pa": "पनामा",
     "countries.pe": "पेरू",
     "countries.ph": "फिलीपींस",
@@ -206,6 +207,7 @@
     "countries.tn": "ट्यूनीशिया",
     "countries.tr": "तुर्की",
     "countries.tv": "तुवालू",
+    "countries.tw": "ताइवान",
     "countries.tz": "तंजानिया",
     "countries.ug": "युगांडा",
     "countries.ua": "यूक्रेन",
@@ -247,5 +249,5 @@
     "emails.certificate.footer": "तोहार पिछलका प्रमाणपत्र पहिल असफलता से 30 दिन धरी मान्य होईत। हम बहुत जोर देके सलाह देतानी कि एह मामला के जांच करीं, नहीं त तोहार डोमेन बिना कोनो मान्य SSL संवाद के रहि जाईत।",
     "emails.certificate.thanks": "धन्यवाद",
     "emails.certificate.signature": "{{project}} टीम",
-    "sms.verification.body": "{{secret}} आपके {{project}} सत्यापन कोड हवे।"
+    "sms.verification.body": "{{secret}}"
 }

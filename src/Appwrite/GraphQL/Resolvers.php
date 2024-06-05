@@ -9,6 +9,7 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Route;
+use Utopia\System\System;
 
 class Resolvers
 {
@@ -302,7 +303,7 @@ class Resolvers
 
     private static function escapePayload(array $payload, int $depth)
     {
-        if ($depth > App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
+        if ($depth > System::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
             return;
         }
 

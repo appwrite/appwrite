@@ -3,7 +3,6 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -11,6 +10,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Query;
+use Utopia\System\System;
 
 class V19 extends Migration
 {
@@ -731,7 +731,7 @@ class V19 extends Migration
 
                 if (empty($document->getAttribute('scheduleId', null))) {
                     $schedule = $this->consoleDB->createDocument('schedules', new Document([
-                        'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                        'region' => System::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                         'resourceType' => 'function',
                         'resourceId' => $document->getId(),
                         'resourceInternalId' => $document->getInternalId(),

@@ -46,6 +46,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
@@ -122,7 +123,8 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     Authorization::skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
-    if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_MAGIC_URL) {
+    // Magic URL + Email OTP
+    if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_MAGIC_URL || $verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_EMAIL) {
         $user->setAttribute('emailVerification', true);
     }
 
@@ -214,6 +216,9 @@ App::post('/v1/account')
             $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
             if ($total >= $limit) {
+                if ('console' === $project->getId()) {
+                    throw new Exception(Exception::USER_CONSOLE_COUNT_EXCEEDED);
+                }
                 throw new Exception(Exception::USER_COUNT_EXCEEDED);
             }
         }
@@ -1012,7 +1017,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
@@ -1065,17 +1070,15 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
 
+        $params = $request->getParams();
+        $params['project'] = $projectId;
+        unset($params['projectId']);
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query([
-                    'project' => $projectId,
-                    'code' => $code,
-                    'state' => $state,
-                    'error' => $error,
-                    'error_description' => $error_description
-                ]));
+                . \http_build_query($params));
     });
 
 App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
@@ -1098,17 +1101,15 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
 
+        $params = $request->getParams();
+        $params['project'] = $projectId;
+        unset($params['projectId']);
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query([
-                    'project' => $projectId,
-                    'code' => $code,
-                    'state' => $state,
-                    'error' => $error,
-                    'error_description' => $error_description
-                ]));
+                . \http_build_query($params));
     });
 
 App::get('/v1/account/sessions/oauth2/:provider/redirect')
@@ -1210,7 +1211,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
@@ -1235,7 +1236,17 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failureRedirect(Exception::USER_MISSING_ID);
         }
 
-        $name = $oauth2->getUserName($accessToken);
+        $name = '';
+        $nameOAuth = $oauth2->getUserName($accessToken);
+        $userParam = \json_decode($request->getParam('user'), true);
+        if (!empty($nameOAuth)) {
+            $name = $nameOAuth;
+        } elseif (is_array($userParam)) {
+            $nameParam = $userParam['name'];
+            if (is_array($nameParam) && isset($nameParam['firstName']) && isset($nameParam['lastName'])) {
+                $name = $nameParam['firstName'] . ' ' . $nameParam['lastName'];
+            }
+        }
         $email = $oauth2->getUserEmail($accessToken);
 
         // Check if this identity is connected to a different user
@@ -1244,7 +1255,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
-                Query::notEqual('userId', $userId),
+                Query::notEqual('userInternalId', $user->getInternalId()),
             ]);
             if (!empty($identityWithMatchingEmail)) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -1395,7 +1406,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             $identitiesWithMatchingEmail = $dbForProject->find('identities', [
                 Query::equal('providerEmail', [$email]),
-                Query::notEqual('userId', $user->getId()),
+                Query::notEqual('userInternalId', $user->getInternalId()),
             ]);
             if (!empty($identitiesWithMatchingEmail)) {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
@@ -1539,7 +1550,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
                 $target
                     ->setAttribute('sessionId', $session->getId())
-                    ->setAttrubte('sessionInternalId', $session->getInternalId());
+                    ->setAttribute('sessionInternalId', $session->getInternalId());
 
                 $dbForProject->updateDocument('targets', $target->getId(), $target);
             }
@@ -1594,7 +1605,7 @@ App::get('/v1/account/tokens/oauth2/:provider')
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
@@ -1660,7 +1671,7 @@ App::post('/v1/account/tokens/magic-url')
     ->inject('queueForMails')
     ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
@@ -1788,8 +1799,8 @@ App::post('/v1/account/tokens/magic-url')
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
-        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -1852,15 +1863,16 @@ App::post('/v1/account/tokens/magic-url')
             ->setRecipient($email)
             ->trigger();
 
-        $queueForEvents->setPayload(
-            $response->output(
-                $token->setAttribute('secret', $tokenSecret),
-                Response::MODEL_TOKEN
-            )
-        );
+        // Set to unhashed secret for events and server responses
+        $token->setAttribute('secret', $tokenSecret);
+
+        $queueForEvents
+            ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
 
         // Hide secret for clients
-        $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $tokenSecret : '');
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $token->setAttribute('secret', '');
+        }
 
         if (!empty($phrase)) {
             $token->setAttribute('phrase', $phrase);
@@ -1868,8 +1880,7 @@ App::post('/v1/account/tokens/magic-url')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($token, Response::MODEL_TOKEN)
-        ;
+            ->dynamic($token, Response::MODEL_TOKEN);
     });
 
 App::post('/v1/account/tokens/email')
@@ -1901,7 +1912,7 @@ App::post('/v1/account/tokens/email')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
@@ -2017,8 +2028,8 @@ App::post('/v1/account/tokens/email')
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
-        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -2081,15 +2092,16 @@ App::post('/v1/account/tokens/email')
             ->setRecipient($email)
             ->trigger();
 
-        $queueForEvents->setPayload(
-            $response->output(
-                $token->setAttribute('secret', $tokenSecret),
-                Response::MODEL_TOKEN
-            )
-        );
+        // Set to unhashed secret for events and server responses
+        $token->setAttribute('secret', $tokenSecret);
+
+        $queueForEvents
+            ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
 
         // Hide secret for clients
-        $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $tokenSecret : '');
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $token->setAttribute('secret', '');
+        }
 
         if (!empty($phrase)) {
             $token->setAttribute('phrase', $phrase);
@@ -2097,8 +2109,7 @@ App::post('/v1/account/tokens/email')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($token, Response::MODEL_TOKEN)
-        ;
+            ->dynamic($token, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/sessions/magic-url')
@@ -2190,7 +2201,7 @@ App::post('/v1/account/tokens/phone')
     ->inject('queueForMessaging')
     ->inject('locale')
     ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale) {
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+        if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -2315,20 +2326,18 @@ App::post('/v1/account/tokens/phone')
             ->setRecipients([$phone])
             ->setProviderType(MESSAGE_TYPE_SMS);
 
-        $queueForEvents->setPayload(
-            $response->output(
-                $token->setAttribute('secret', $secret),
-                Response::MODEL_TOKEN
-            )
-        );
+        // Set to unhashed secret for events and server responses
+        $token->setAttribute('secret', $secret);
+
+        $queueForEvents
+            ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
 
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '');
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($token, Response::MODEL_TOKEN)
-        ;
+            ->dynamic($token, Response::MODEL_TOKEN);
     });
 
 App::post('/v1/account/jwt')
@@ -2364,7 +2373,7 @@ App::post('/v1/account/jwt')
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -2612,7 +2621,7 @@ App::patch('/v1/account/email')
         // Makes sure this email is not already used in another identity
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
-            Query::notEqual('userId', $user->getId()),
+            Query::notEqual('userInternalId', $user->getInternalId()),
         ]);
         if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
@@ -2845,7 +2854,7 @@ App::post('/v1/account/recovery')
     ->inject('queueForEvents')
     ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
@@ -2915,8 +2924,8 @@ App::post('/v1/account/recovery')
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
-        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -2976,18 +2985,19 @@ App::post('/v1/account/recovery')
             ->setSubject($subject)
             ->trigger();
 
+        // Set to unhashed secret for events and server responses
+        $recovery->setAttribute('secret', $secret);
+
         $queueForEvents
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recovery->getId())
             ->setUser($profile)
-            ->setPayload($response->output(
-                $recovery->setAttribute('secret', $secret),
-                Response::MODEL_TOKEN
-            ))
-        ;
+            ->setPayload($response->output($recovery, Response::MODEL_TOKEN), sensitive: ['secret']);
 
         // Hide secret for clients
-        $recovery->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $recovery->setAttribute('secret', '');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3106,7 +3116,7 @@ App::post('/v1/account/verification')
     ->inject('queueForMails')
     ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
@@ -3158,13 +3168,14 @@ App::post('/v1/account/verification')
             ->setParam('{{footer}}', $locale->getText("emails.verification.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.verification.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.verification.signature"));
+
         $body = $message->render();
 
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
-        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -3224,16 +3235,18 @@ App::post('/v1/account/verification')
             ->setName($user->getAttribute('name') ?? '')
             ->trigger();
 
+        // Set to unhashed secret for events and server responses
+        $verification->setAttribute('secret', $verificationSecret);
+
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
-            ->setPayload($response->output(
-                $verification->setAttribute('secret', $verificationSecret),
-                Response::MODEL_TOKEN
-            ));
+            ->setPayload($response->output($verification, Response::MODEL_TOKEN), sensitive: ['secret']);
 
         // Hide secret for clients
-        $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $verification->setAttribute('secret', '');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3283,7 +3296,7 @@ App::put('/v1/account/verification')
 
         $user->setAttributes($profile->getArrayCopy());
 
-        $verificationDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+        $verification = $dbForProject->getDocument('tokens', $verifiedToken->getId());
 
         /**
          * We act like we're updating and validating
@@ -3294,10 +3307,9 @@ App::put('/v1/account/verification')
 
         $queueForEvents
             ->setParam('userId', $userId)
-            ->setParam('tokenId', $verificationDocument->getId())
-        ;
+            ->setParam('tokenId', $verification->getId());
 
-        $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
+        $response->dynamic($verification, Response::MODEL_TOKEN);
     });
 
 App::post('/v1/account/verification/phone')
@@ -3326,7 +3338,7 @@ App::post('/v1/account/verification/phone')
     ->inject('project')
     ->inject('locale')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale) {
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+        if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -3395,17 +3407,18 @@ App::post('/v1/account/verification/phone')
             ->setRecipients([$user->getAttribute('phone')])
             ->setProviderType(MESSAGE_TYPE_SMS);
 
+        // Set to unhashed secret for events and server responses
+        $verification->setAttribute('secret', $secret);
+
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
-            ->setPayload($response->output(
-                $verification->setAttribute('secret', $secret),
-                Response::MODEL_TOKEN
-            ))
-        ;
+            ->setPayload($response->output($verification, Response::MODEL_TOKEN), sensitive: ['secret']);
 
         // Hide secret for clients
-        $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $verification->setAttribute('secret', '');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3491,13 +3504,32 @@ App::patch('/v1/account/mfa')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
+    ->inject('session')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (bool $mfa, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (bool $mfa, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $session, Database $dbForProject, Event $queueForEvents) {
 
         $user->setAttribute('mfa', $mfa);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+
+        if ($mfa) {
+            $factors = $session->getAttribute('factors', []);
+            $totp = TOTP::getAuthenticatorFromUser($user);
+            if ($totp !== null && $totp->getAttribute('verified', false)) {
+                $factors[] = Type::TOTP;
+            }
+            if ($user->getAttribute('email', false) && $user->getAttribute('emailVerification', false)) {
+                $factors[] = Type::EMAIL;
+            }
+            if ($user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)) {
+                $factors[] = Type::PHONE;
+            }
+            $factors = \array_unique($factors);
+
+            $session->setAttribute('factors', $factors);
+            $dbForProject->updateDocument('sessions', $session->getId(), $session);
+        }
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3521,12 +3553,16 @@ App::get('/v1/account/mfa/factors')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
 
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+        $recoveryCodeEnabled = \is_array($mfaRecoveryCodes) && \count($mfaRecoveryCodes) > 0;
+
         $totp = TOTP::getAuthenticatorFromUser($user);
 
         $factors = new Document([
             Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
             Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
-            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
+            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false),
+            Type::RECOVERY_CODE => $recoveryCodeEnabled
         ]);
 
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
@@ -3625,10 +3661,10 @@ App::put('/v1/account/mfa/authenticators/:type')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('response')
     ->inject('user')
-    ->inject('project')
+    ->inject('session')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $type, string $otp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, string $otp, Response $response, Document $user, Document $session, Database $dbForProject, Event $queueForEvents) {
 
         $authenticator = (match ($type) {
             Type::TOTP => TOTP::getAuthenticatorFromUser($user),
@@ -3657,10 +3693,12 @@ App::put('/v1/account/mfa/authenticators/:type')
         $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
-        $session = $dbForProject->getDocument('sessions', $sessionId);
-        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $type, Document::SET_TYPE_APPEND));
+        $factors = $session->getAttribute('factors', []);
+        $factors[] = $type;
+        $factors = \array_unique($factors);
+
+        $session->setAttribute('factors', $factors);
+        $dbForProject->updateDocument('sessions', $session->getId(), $session);
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3792,9 +3830,8 @@ App::delete('/v1/account/mfa/authenticators/:type')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteMfaAuthenticator')
     ->label('sdk.description', '/docs/references/account/delete-mfa-authenticator.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('response')
@@ -3821,6 +3858,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
             $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
             if (in_array($otp, $mfaRecoveryCodes)) {
                 $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
+                $mfaRecoveryCodes = array_values($mfaRecoveryCodes);
                 $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
                 $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -3889,7 +3927,7 @@ App::post('/v1/account/mfa/challenge')
 
         switch ($factor) {
             case Type::PHONE:
-                if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+                if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
                 if (empty($user->getAttribute('phone'))) {
@@ -3927,7 +3965,7 @@ App::post('/v1/account/mfa/challenge')
                     ->setProviderType(MESSAGE_TYPE_SMS);
                 break;
             case Type::EMAIL:
-                if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+                if (empty(System::getEnv('_APP_SMTP_HOST'))) {
                     throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
                 }
                 if (empty($user->getAttribute('email'))) {
@@ -3958,8 +3996,8 @@ App::post('/v1/account/mfa/challenge')
                 $smtp = $project->getAttribute('smtp', []);
                 $smtpEnabled = $smtp['enabled'] ?? false;
 
-                $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-                $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+                $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
                 $replyTo = "";
 
                 if ($smtpEnabled) {
@@ -4049,9 +4087,10 @@ App::put('/v1/account/mfa/challenge')
     ->inject('project')
     ->inject('response')
     ->inject('user')
+    ->inject('session')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $challengeId, string $otp, Document $project, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $challengeId, string $otp, Document $project, Response $response, Document $user, Document $session, Database $dbForProject, Event $queueForEvents) {
 
         $challenge = $dbForProject->getDocument('challenges', $challengeId);
 
@@ -4064,11 +4103,12 @@ App::put('/v1/account/mfa/challenge')
         $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {
             if (
                 $challenge->isSet('type') &&
-                $challenge->getAttribute('type') === Type::RECOVERY_CODE
+                $challenge->getAttribute('type') === \strtolower(Type::RECOVERY_CODE)
             ) {
                 $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
                 if (in_array($otp, $mfaRecoveryCodes)) {
                     $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
+                    $mfaRecoveryCodes = array_values($mfaRecoveryCodes);
                     $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
                     $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -4085,7 +4125,7 @@ App::put('/v1/account/mfa/challenge')
             Type::TOTP => Challenge\TOTP::challenge($challenge, $user, $otp),
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
-            Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
+            \strtolower(Type::RECOVERY_CODE) => $recoveryCodeChallenge($challenge, $user, $otp),
             default => false
         });
 
@@ -4096,15 +4136,15 @@ App::put('/v1/account/mfa/challenge')
         $dbForProject->deleteDocument('challenges', $challengeId);
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
-        $session = $dbForProject->getDocument('sessions', $sessionId);
+        $factors = $session->getAttribute('factors', []);
+        $factors[] = $type;
+        $factors = \array_unique($factors);
 
-        $session = $session
-            ->setAttribute('factors', $type, Document::SET_TYPE_APPEND)
+        $session
+            ->setAttribute('factors', $factors)
             ->setAttribute('mfaUpdatedAt', DateTime::now());
 
-        $dbForProject->updateDocument('sessions', $sessionId, $session);
+        $dbForProject->updateDocument('sessions', $session->getId(), $session);
 
         $queueForEvents
                     ->setParam('userId', $user->getId())

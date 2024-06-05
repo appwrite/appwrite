@@ -10,8 +10,6 @@ x-logging: &x-logging
       max-file: "5"
       max-size: "10m"
 
-version: "3"
-
 services:
   traefik:
     image: traefik:2.11
@@ -53,7 +51,7 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
-    ports:
+    ports: 
       - 9501:80
     networks:
       - appwrite
@@ -94,6 +92,7 @@ services:
       - app/http.php
     environment:
       - _APP_ENV
+      - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT
@@ -188,7 +187,9 @@ services:
       - _APP_MESSAGE_EMAIL_TEST_DSN
       - _APP_MESSAGE_PUSH_TEST_DSN
       - _APP_CONSOLE_COUNTRIES_DENYLIST
-      
+      - _APP_EXPERIMENT_LOGGING_PROVIDER
+      - _APP_EXPERIMENT_LOGGING_CONFIG
+
   appwrite-realtime:
     entrypoint: realtime
     <<: *x-logging
@@ -569,6 +570,7 @@ services:
     networks:
       - appwrite
     volumes:
+      - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -591,6 +593,27 @@ services:
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
       - _APP_SMS_PROJECTS_DENY_LIST
+      - _APP_STORAGE_DEVICE
+      - _APP_STORAGE_S3_ACCESS_KEY
+      - _APP_STORAGE_S3_SECRET
+      - _APP_STORAGE_S3_REGION
+      - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
+      - _APP_STORAGE_DO_SPACES_SECRET
+      - _APP_STORAGE_DO_SPACES_REGION
+      - _APP_STORAGE_DO_SPACES_BUCKET
+      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
+      - _APP_STORAGE_BACKBLAZE_SECRET
+      - _APP_STORAGE_BACKBLAZE_REGION
+      - _APP_STORAGE_BACKBLAZE_BUCKET
+      - _APP_STORAGE_LINODE_ACCESS_KEY
+      - _APP_STORAGE_LINODE_SECRET
+      - _APP_STORAGE_LINODE_REGION
+      - _APP_STORAGE_LINODE_BUCKET
+      - _APP_STORAGE_WASABI_ACCESS_KEY
+      - _APP_STORAGE_WASABI_SECRET
+      - _APP_STORAGE_WASABI_REGION
+      - _APP_STORAGE_WASABI_BUCKET
 
   appwrite-worker-migrations:
     entrypoint: worker-migrations
@@ -627,10 +650,10 @@ services:
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
 
-  appwrite-maintenance:
+  appwrite-task-maintenance:
     entrypoint: maintenance
     <<: *x-logging
-    container_name: appwrite-maintenance
+    container_name: appwrite-task-maintenance
     image: appwrite-dev
     networks:
       - appwrite
@@ -726,10 +749,10 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
 
-  appwrite-scheduler-functions:
+  appwrite-task-scheduler-functions:
     entrypoint: schedule-functions
     <<: *x-logging
-    container_name: appwrite-scheduler-functions
+    container_name: appwrite-task-scheduler-functions
     image: appwrite-dev
     networks:
       - appwrite
@@ -753,10 +776,10 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
 
-  appwrite-scheduler-messages:
+  appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
     <<: *x-logging
-    container_name: appwrite-scheduler-messages
+    container_name: appwrite-task-scheduler-messages
     image: appwrite-dev
     networks:
       - appwrite
@@ -788,69 +811,12 @@ services:
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
 
-  appwrite-worker-hamster:
-    entrypoint: worker-hamster
-    <<: *x-logging
-    container_name: appwrite-worker-hamster
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - mariadb
-    environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_MIXPANEL_TOKEN
-
-  appwrite-hamster-scheduler:
-    entrypoint: hamster
-    <<: *x-logging
-    container_name: appwrite-hamster-scheduler
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - mariadb
-    environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_HAMSTER_TIME
-      - _APP_HAMSTER_INTERVAL
-
   openruntimes-executor:
     container_name: openruntimes-executor
-    hostname: appwrite-executor
+    hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.9
+    image: openruntimes/executor:0.5.5
     restart: unless-stopped
     networks:
       - appwrite
@@ -913,7 +879,7 @@ services:
       - OPR_PROXY_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_PROXY_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_PROXY_ALGORITHM=random
-      - OPR_PROXY_EXECUTORS=appwrite-executor
+      - OPR_PROXY_EXECUTORS=exc1
       - OPR_PROXY_HEALTHCHECK_INTERVAL=10000
       - OPR_PROXY_MAX_TIMEOUT=600
       - OPR_PROXY_HEALTHCHECK=enabled
@@ -933,6 +899,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
+      - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync" # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
