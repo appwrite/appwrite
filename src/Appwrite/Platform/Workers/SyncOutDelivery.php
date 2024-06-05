@@ -29,7 +29,7 @@ class SyncOutDelivery extends Action
     {
 
         $this
-            ->desc('Sync out delivery worker')
+            ->desc('Region Syncs out worker')
             ->inject('message')
             ->inject('dbForConsole')
             ->callback(fn (Message $message, Database $dbForConsole) => $this->action($message, $dbForConsole));
@@ -58,8 +58,8 @@ class SyncOutDelivery extends Action
                 $chunk = file_get_contents(APP_STORAGE_SYNCS . '/' . $sync->getAttribute('filename') . '.log');
                 $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 600, 10);
                 $token = $jwt->encode([]);
-                //$status = $this->send($regions[$destRegion]['domain'] . '/v1/edge/sync', $token, json_decode($chunk));
-                $status = $this->send('http://appwrite/v1/edge/sync', $token, json_decode($chunk));
+                //$status = $this->send($regions[$destRegion]['domain'] . '/v1/region/sync', $token, json_decode($chunk));
+                $status = $this->send('http://appwrite/v1/region/sync', $token, json_decode($chunk));
                 Console::log('[' . DateTime::now() . ']  Request ' . $sync->getId() . ' to ' . $destRegion . ' returned status ' . $status);
 
                 $sync->setAttribute('logSentAt', DateTime::now());
@@ -97,7 +97,7 @@ class SyncOutDelivery extends Action
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Authorization: Bearer ' . $token,
-            'Origin-edge-url: ' . App::getEnv('_APP_REGION'),
+            'Origin-region-url: ' . App::getEnv('_APP_REGION'),
             'Content-type: multipart/form-data; boundary=' . $delimiter,
             'Content-Length: ' . strlen($payload)
         ]);

@@ -39,7 +39,6 @@ use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\Detection;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
-use Appwrite\Utopia\Response\Model\EdgeSync;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -80,6 +79,7 @@ use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\ProviderRepository;
+use Appwrite\Utopia\Response\Model\RegionSync;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Session;
@@ -276,7 +276,7 @@ class Response extends SwooleResponse
     public const MODEL_VCS = 'vcs';
     public const MODEL_SMS_TEMPLATE = 'smsTemplate';
     public const MODEL_EMAIL_TEMPLATE = 'emailTemplate';
-    public const MODEL_EDGE_SYNC = 'edgeSync';
+    public const MODEL_REGION_SYNC = 'regionSync';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
@@ -458,7 +458,7 @@ class Response extends SwooleResponse
             ->setModel(new Migration())
             ->setModel(new MigrationReport())
             ->setModel(new MigrationFirebaseProject())
-            ->setModel(new EdgeSync())
+            ->setModel(new RegionSync())
             // Tests (keep last)
             ->setModel(new Mock());
 

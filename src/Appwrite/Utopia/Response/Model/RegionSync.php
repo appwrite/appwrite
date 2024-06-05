@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class EdgeSync extends Model
+class RegionSync extends Model
 {
     public function __construct()
     {
@@ -13,7 +13,7 @@ class EdgeSync extends Model
         $this
             ->addRule('keys', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Cache keys array to be purged.',
+                'description' => 'Resources keys array to be purged.',
                 'default' => '',
                 'example' => '["cache-console:_metadata:users", "cache-console:_metadata:buckets"]',
             ])

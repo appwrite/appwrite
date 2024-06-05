@@ -793,10 +793,10 @@ services:
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_MAINTENANCE_DELAY
 
-  appwrite-task-edge-sync:
-    entrypoint: edge-sync
+  appwrite-task-region-sync:
+    entrypoint: region-sync
     <<: *x-logging
-    container_name: appwrite-task-edge-sync
+    container_name: appwrite-task-region-sync
     image: appwrite-dev
     networks:
       - appwrite

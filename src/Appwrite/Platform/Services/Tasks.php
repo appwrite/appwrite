@@ -3,12 +3,12 @@
 namespace Appwrite\Platform\Services;
 
 use Appwrite\Platform\Tasks\Doctor;
-use Appwrite\Platform\Tasks\EdgeSync;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
 use Appwrite\Platform\Tasks\QueueCount;
 use Appwrite\Platform\Tasks\QueueRetry;
+use Appwrite\Platform\Tasks\RegionSync;
 use Appwrite\Platform\Tasks\ScheduleFunctions;
 use Appwrite\Platform\Tasks\ScheduleMessages;
 use Appwrite\Platform\Tasks\SDKs;
@@ -39,7 +39,7 @@ class Tasks extends Service
             ->addAction(Upgrade::getName(), new Upgrade())
             ->addAction(Vars::getName(), new Vars())
             ->addAction(Version::getName(), new Version())
-            ->addAction(EdgeSync::getName(), new EdgeSync());
+            ->addAction(RegionSync::getName(), new RegionSync());
 
         ;
     }

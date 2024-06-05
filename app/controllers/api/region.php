@@ -14,7 +14,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 
 App::init()
-    ->groups(['edge'])
+    ->groups(['region'])
     ->inject('request')
     ->action(function (Request $request) {
 
@@ -28,9 +28,9 @@ App::init()
         }
     });
 
-App::post('/v1/edge/sync')
+App::post('/v1/region/sync')
     ->desc('Purge cache keys')
-    ->groups(['edge'])
+    ->groups(['region'])
     ->label('scope', 'public')
     ->param('keys', '', new ArrayList(new Text(9012), 600), 'Cache keys. an array containing alphanumerical cache keys')
     ->inject('request')
@@ -42,7 +42,7 @@ App::post('/v1/edge/sync')
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        $originEdgeUrl = $request->getHeader('origin-edge-url');
+        $originEdgeUrl = $request->getHeader('origin-region-url');
         $time = DateTime::now();
 
         var_dump('[' . $time . '] incoming request from:' . $originEdgeUrl);
@@ -59,5 +59,5 @@ App::post('/v1/edge/sync')
 
         $response->dynamic(new Document([
             'keys' => $keys
-        ]), Response::MODEL_EDGE_SYNC);
+        ]), Response::MODEL_REGION_SYNC);
     });

@@ -80,7 +80,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance &&  \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
-    chmod +x /usr/local/bin/edge-sync && \
+    chmod +x /usr/local/bin/region-sync && \
     chmod +x /usr/local/bin/schedule-functions && \
     chmod +x /usr/local/bin/schedule-messages && \
     chmod +x /usr/local/bin/sdks && \
