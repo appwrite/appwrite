@@ -186,8 +186,10 @@ class Usage extends Action
                     $builds = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS)));
                     $buildsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE)));
                     $buildsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE)));
+                    $buildsGBHours = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_GB_HOURS)));
                     $executions = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS)));
                     $executionsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE)));
+                    $executionsGBHours = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_GB_HOURS)));
 
                     if (!empty($deployments['value'])) {
                         $metrics[] = [
@@ -224,6 +226,13 @@ class Usage extends Action
                         ];
                     }
 
+                    if (!empty($buildsGBHours['value'])) {
+                        $metrics[] = [
+                            'key' => METRIC_BUILDS_GB_HOURS,
+                            'value' => ($buildsGBHours['value'] * -1),
+                        ];
+                    }
+
                     if (!empty($executions['value'])) {
                         $metrics[] = [
                             'key' => METRIC_EXECUTIONS,
@@ -235,6 +244,13 @@ class Usage extends Action
                         $metrics[] = [
                             'key' => METRIC_EXECUTIONS_COMPUTE,
                             'value' => ($executionsCompute['value'] * -1),
+                        ];
+                    }
+
+                    if (!empty($executionsGBHours['value'])) {
+                        $metrics[] = [
+                            'key' => METRIC_EXECUTIONS_GB_HOURS,
+                            'value' => ($executionsGBHours['value'] * -1),
                         ];
                     }
                     break;
