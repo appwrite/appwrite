@@ -713,7 +713,7 @@ Http::shutdown()
         }
 
         if ($project->getId() !== 'console') {
-            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+            if (!Auth::isPrivilegedUser($authorization->getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {

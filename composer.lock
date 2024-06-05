@@ -1462,12 +1462,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "c9b049160aff2eecea7dd1ff041165ae15f41f76"
+                "reference": "caea27c18a7d701a63e985a7aad1bfa7827ab469"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/c9b049160aff2eecea7dd1ff041165ae15f41f76",
-                "reference": "c9b049160aff2eecea7dd1ff041165ae15f41f76",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/caea27c18a7d701a63e985a7aad1bfa7827ab469",
+                "reference": "caea27c18a7d701a63e985a7aad1bfa7827ab469",
                 "shasum": ""
             },
             "require": {
@@ -1505,7 +1505,7 @@
                 "issues": "https://github.com/utopia-php/cli/issues",
                 "source": "https://github.com/utopia-php/cli/tree/dev-coroutines"
             },
-            "time": "2024-06-03T17:55:34+00:00"
+            "time": "2024-06-05T12:46:38+00:00"
         },
         {
             "name": "utopia-php/config",
