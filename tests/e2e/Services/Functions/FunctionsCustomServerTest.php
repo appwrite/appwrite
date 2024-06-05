@@ -1057,8 +1057,10 @@ class FunctionsCustomServerTest extends Scope
             'activate' => "abc" // marked as false as it is invalid for .
         ]);
 
+        $deploymentId = $deployment['body']['$id'] ?? '';
+
         while (true) {
-            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentTwoId, [
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
