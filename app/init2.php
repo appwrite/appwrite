@@ -383,6 +383,7 @@ $global->set('promiseAdapter', function () {
 $log = new Dependency();
 $mode = new Dependency();
 $user = new Dependency();
+$plan = new Dependency();
 $pools = new Dependency();
 $geodb = new Dependency();
 $cache = new Dependency();
@@ -399,9 +400,9 @@ $project = new Dependency();
 $clients = new Dependency();
 $servers = new Dependency();
 $registry = new Dependency();
-$getProjectDB = new Dependency();
-$localeCodes = new Dependency();
 $connections = new Dependency();
+$localeCodes = new Dependency();
+$getProjectDB = new Dependency();
 $dbForProject = new Dependency();
 $dbForConsole = new Dependency();
 $queueForUsage = new Dependency();
@@ -413,9 +414,9 @@ $deviceForFiles = new Dependency();
 $queueForEvents = new Dependency();
 $queueForAudits = new Dependency();
 $promiseAdapter = new Dependency();
-$requestTimestamp = new Dependency();
 $deviceForBuilds = new Dependency();
 $queueForDeletes = new Dependency();
+$requestTimestamp = new Dependency();
 $queueForDatabase = new Dependency();
 $queueForMessaging = new Dependency();
 $queueForFunctions = new Dependency();
@@ -424,6 +425,10 @@ $deviceForFunctions = new Dependency();
 $passwordsDictionary = new Dependency();
 $queueForCertificates = new Dependency();
 
+
+$plan
+    ->setName('plan')
+    ->setCallback(fn() => []);
 
 $mode
     ->setName('mode')
@@ -1188,6 +1193,7 @@ $schema
 $container->set($log);
 $container->set($mode);
 $container->set($user);
+$container->set($plan);
 $container->set($pools);
 $container->set($cache);
 $container->set($pools);
