@@ -988,7 +988,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['logs'], '');
         $this->assertStringContainsString('timed out', $executions['body']['executions'][0]['errors']);
 
-        sleep(70); //wait for scheduled execution to be created and time out
+        sleep(75); // Wait for scheduled execution to be created and time out
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
