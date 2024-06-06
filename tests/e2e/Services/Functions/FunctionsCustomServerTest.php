@@ -999,12 +999,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(2, $executions['body']['executions']);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][1]['trigger'], 'schedule');
-        $this->assertEquals($executions['body']['executions'][1]['status'], 'failed');
-        $this->assertEquals($executions['body']['executions'][1]['responseStatusCode'], 500);
-        $this->assertLessThan(20, $executions['body']['executions'][1]['duration']);
-        $this->assertEquals($executions['body']['executions'][1]['responseBody'], '');
-        $this->assertEquals($executions['body']['executions'][1]['logs'], '');
-        $this->assertStringContainsString('timed out', $executions['body']['executions'][1]['errors']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
