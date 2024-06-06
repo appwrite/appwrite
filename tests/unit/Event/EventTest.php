@@ -11,7 +11,7 @@ use Utopia\Queue;
 use Utopia\Queue\Client;
 use Utopia\System\System;
 
-//require_once __DIR__ . '/../../../app/init.php';
+require_once __DIR__ . '/../../../app/init2.php';
 
 class EventTest extends TestCase
 {
@@ -66,9 +66,13 @@ class EventTest extends TestCase
         $this->assertEquals('eventValue1', $this->object->getParam('eventKey1'));
         $this->assertEquals('eventValue2', $this->object->getParam('eventKey2'));
         $this->assertEquals(null, $this->object->getParam('eventKey3'));
-        global $register;
-        $pools = $register->get('pools');
-        $client = new Client($this->object->getQueue(), $pools->get('queue')->pop()->getResource());
+
+        global $global;
+        $pools = $global->get('pools');
+        $dsn = $pools['pools-queue-main']['dsn'];
+        $queue =  new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+
+        $client = new Client($this->object->getQueue(), $queue);
         $this->assertEquals($client->getQueueSize(), 1);
     }
 

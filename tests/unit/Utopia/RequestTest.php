@@ -5,6 +5,7 @@ namespace Tests\Unit\Utopia;
 use Appwrite\Utopia\Request;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Request as SwooleRequest;
+use Utopia\Http\Adapter\Swoole\Request as UtopiaSwooleRequest;
 use Tests\Unit\Utopia\Request\Filters\First;
 use Tests\Unit\Utopia\Request\Filters\Second;
 use Utopia\Http\Route;
@@ -15,7 +16,7 @@ class RequestTest extends TestCase
 
     public function setUp(): void
     {
-        $this->request = new Request(new SwooleRequest());
+        $this->request = new Request(new UtopiaSwooleRequest(new SwooleRequest()));
     }
 
     public function testFilters(): void

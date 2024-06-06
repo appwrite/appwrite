@@ -6,6 +6,7 @@ use Appwrite\GraphQL\Types\Mapper;
 use Appwrite\Utopia\Response;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as UtopiaSwooleResponse;
 
 class BuilderTest extends TestCase
 {
@@ -13,7 +14,7 @@ class BuilderTest extends TestCase
 
     public function setUp(): void
     {
-        $this->response = new Response(new SwooleResponse());
+        $this->response = new Response(new UtopiaSwooleResponse(new SwooleResponse()));
         Mapper::init($this->response->getModels());
     }
 
