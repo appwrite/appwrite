@@ -44,120 +44,20 @@ global $global, $container;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
+$project = new Dependency();
 $register = new Dependency();
+$dbForProject = new Dependency();
+$abuseRetention = new Dependency();
+$deviceForCache = new Dependency();
+$auditRetention = new Dependency();
+$queueForUsageDump = new Dependency();
+$executionRetention = new Dependency();
+$deviceForLocalFiles = new Dependency();
+
 $register
     ->setName('register')
-    ->setCallback(fn () => $global);
-$container->set($register);
+    ->setCallback(fn() => $global);
 
-$connections = new Dependency();
-$connections
-    ->setName('connections')
-    ->setCallback(function () {
-        return new Connections();
-    });
-$container->set($connections);
-
-$pools = new Dependency();
-$pools
-    ->setName('pools')
-    ->inject('register')
-    ->setCallback(function ($register) {
-        return $register->get('pools');
-    });
-$container->set($pools);
-
-$dbForConsole = new Dependency();
-$dbForConsole
-    ->setName('dbForConsole')
-    ->inject('cache')
-    ->inject('pools')
-    ->inject('auth')
-    ->inject('connections')
-    ->setCallback(function (Cache $cache, array $pools, Authorization $auth, Connections $connections) {
-        $pool = $pools['pools-console-main']['pool'];
-        $dsn = $pools['pools-console-main']['dsn'];
-        $connection = $pool->get();
-        $connections->add($connection, $pool);
-
-        $adapter = match ($dsn->getScheme()) {
-            'mariadb' => new MariaDB($connection),
-            'mysql' => new MySQL($connection),
-            default => null
-        };
-
-        $adapter->setDatabase($dsn->getPath());
-
-        $database = new Database($adapter, $cache);
-        $database->setAuthorization($auth);
-        $database->setNamespace('_console');
-
-        return $database;
-    });
-$container->set($dbForConsole);
-
-$dbForProject = new Dependency();
-$dbForProject
-    ->setName('dbForProject')
-    ->inject('cache')
-    ->inject('pools')
-    ->inject('message')
-    ->inject('project')
-    ->inject('dbForConsole')
-    ->inject('auth')
-    ->inject('connections')
-    ->setCallback(function (Cache $cache, array $pools, Message $message, Document $project, Database $dbForConsole, Authorization $auth, Connections $connections) {
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForConsole;
-        }
-
-        try {
-            $dsn = new DSN($project->getAttribute('database'));
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-        }
-
-        $pool = $pools['pools-database-' . $dsn->getHost()]['pool'];
-        $connectionDsn = $pools['pools-database-' . $dsn->getHost()]['dsn'];
-
-        $connection = $pool->get();
-        $connections->add($connection, $pool);
-        $adapter = match ($connectionDsn->getScheme()) {
-            'mariadb' => new MariaDB($connection),
-            'mysql' => new MySQL($connection),
-            default => null
-        };
-
-        $adapter->setDatabase($connectionDsn->getPath());
-
-        $database = new Database($adapter, $cache);
-
-        try {
-            $dsn = new DSN($project->getAttribute('database'));
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-        }
-
-        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
-            $database
-                ->setSharedTables(true)
-                ->setTenant($project->getInternalId())
-                ->setNamespace($dsn->getParam('namespace'));
-        } else {
-            $database
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getInternalId());
-        }
-
-        $database->setAuthorization($auth);
-        return $database;
-    });
-$container->set($dbForProject);
-
-$project = new Dependency();
 $project
     ->setName('project')
     ->inject('message')
@@ -172,218 +72,25 @@ $project
 
         return $dbForConsole->getDocument('projects', $project->getId());
     });
-$container->set($project);
 
-$getProjectDB = new Dependency();
-$getProjectDB
-    ->setName('getProjectDB')
-    ->inject('pools')
-    ->inject('dbForConsole')
-    ->inject('cache')
-    ->inject('auth')
-    ->inject('connections')
-    ->setCallback(function (array $pools, Database $dbForConsole, Cache $cache, Authorization $auth, Connections $connections) {
-        $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
-
-        return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $auth, $connections): Database {
-            if ($project->isEmpty() || $project->getId() === 'console') {
-                return $dbForConsole;
-            }
-
-            try {
-                $dsn = new DSN($project->getAttribute('database'));
-            } catch (\InvalidArgumentException) {
-                // TODO: Temporary until all projects are using shared tables
-                $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-            }
-
-            if (isset($databases[$dsn->getHost()])) {
-                $database = $databases[$dsn->getHost()];
-
-                if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
-                    $database
-                        ->setSharedTables(true)
-                        ->setTenant($project->getInternalId())
-                        ->setNamespace($dsn->getParam('namespace'));
-                } else {
-                    $database
-                        ->setSharedTables(false)
-                        ->setTenant(null)
-                        ->setNamespace('_' . $project->getInternalId());
-                }
-
-                return $database;
-            }
-
-            $pool = $pools['pools-database-'.$dsn->getHost()]['pool'];
-            $connectionDsn = $pools['pools-database-'.$dsn->getHost()]['dsn'];
-
-            $connection = $pool->get();
-            $connections->add($connection, $pool);
-            $adapter = match ($connectionDsn->getScheme()) {
-                'mariadb' => new MariaDB($connection),
-                'mysql' => new MySQL($connection),
-                default => null
-            };
-            $adapter->setDatabase($connectionDsn->getPath());
-
-            $database = new Database($adapter, $cache);
-            $database->setAuthorization($auth);
-
-            $databases[$dsn->getHost()] = $database;
-
-            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
-                $database
-                    ->setSharedTables(true)
-                    ->setTenant($project->getInternalId())
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $database
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
-            }
-
-            return $database;
-        };
-    });
-$container->set($getProjectDB);
-
-$abuseRetention = new Dependency();
 $abuseRetention
     ->setName('abuseRetention')
     ->setCallback(function () {
         return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
     });
-$container->set($abuseRetention);
 
-$auditRetention = new Dependency();
 $auditRetention
     ->setName('auditRetention')
     ->setCallback(function () {
         return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
     });
-$container->set($auditRetention);
 
-$executionRetention = new Dependency();
 $executionRetention
     ->setName('executionRetention')
     ->setCallback(function () {
         return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
     });
-$container->set($executionRetention);
 
-$cache = new Dependency();
-$cache
-    ->setName('cache')
-    ->setCallback(function () {
-        return new Cache(new None());
-    });
-$container->set($cache);
-
-$log = new Dependency();
-$log
-    ->setName('log')
-    ->setCallback(fn () => new Log());
-$container->set($log);
-
-$queue = new Dependency();
-$queue
-    ->setName('queue')
-    ->inject('pools')
-    ->inject('connections')
-    ->setCallback(function (array $pools, Connections $connections) {
-        $pool = $pools['pools-queue-main']['pool'];
-        $dsn = $pools['pools-queue-main']['dsn'];
-        $connection = $pool->get();
-        $connections->add($connection, $pool);
-
-        return new Redis($dsn->getHost(), $dsn->getPort());
-    });
-$container->set($queue);
-
-$queueForMessaging = new Dependency();
-$queueForMessaging
-    ->setName('queueForMessaging')
-    ->inject('queue')
-    ->setCallback(function (Connection $queue) {
-        return new Messaging($queue);
-    });
-$container->set($queueForMessaging);
-
-$queueForMails = new Dependency();
-$queueForMails
-    ->setName('queueForMails')
-    ->inject('queue')
-    ->setCallback(function (Connection $queue) {
-        return new Mail($queue);
-    });
-$container->set($queueForMails);
-
-$queueForBuilds = new Dependency();
-$queueForBuilds
-    ->setName('queueForBuilds')
-    ->inject('queue')
-    ->setCallback(function (Connection $queue) {
-        return new Build($queue);
-    });
-$container->set($queueForBuilds);
-
-$queueForDatabase = new Dependency();
-$queueForDatabase
-    ->setName('queueForDatabase')
-    ->inject('queue')
-    ->setCallback(function (Connection $queue) {
-        return new EventDatabase($queue);
-    });
-$container->set($queueForDatabase);
-
-$queueForDeletes = new Dependency();
-$queueForDeletes
-    ->setName('queueForDeletes')
-    ->inject('queue')
-    ->setCallback(function (Connection $queue) {
-        return new Delete($queue);
-    });
-$container->set($queueForDeletes);
-
-$queueForEvents = new Dependency();
-$queueForEvents
-    ->setName('queueForEvents')
-    ->inject('queue')
-    ->setCallback(function (Connection $queue) {
-        return new Event($queue);
-    });
-$container->set($queueForEvents);
-
-$queueForAudits = new Dependency();
-$queueForAudits
-    ->setName('queueForAudits')
-    ->inject('queue')
-    ->setCallback(function (Connection $queue) {
-        return new Audit($queue);
-    });
-$container->set($queueForAudits);
-
-$queueForFunctions = new Dependency();
-$queueForFunctions
-    ->setName('queueForFunctions')
-    ->inject('queue')
-    ->setCallback(function (Connection $queue) {
-        return new Func($queue);
-    });
-$container->set($queueForFunctions);
-
-$queueForUsage = new Dependency();
-$queueForUsage
-    ->setName('queueForUsage')
-    ->inject('queue')
-    ->setCallback(function (Connection $queue) {
-        return new Usage($queue);
-    });
-$container->set($queueForUsage);
-
-$queueForUsageDump = new Dependency();
 $queueForUsageDump
     ->setName('queueForUsageDump')
     ->inject('queue')
@@ -391,74 +98,13 @@ $queueForUsageDump
         return new UsageDump($queue);
     });
 
-$container->set($queueForUsageDump);
-
-$queueForCertificates = new Dependency();
-$queueForCertificates
-    ->setName('queueForCertificates')
-    ->inject('queue')
-    ->setCallback(function (Connection $queue) {
-        return new Certificate($queue);
-    });
-$container->set($queueForCertificates);
-
-$queueForMigrations = new Dependency();
-$queueForMigrations
-    ->setName('queueForMigrations')
-    ->inject('queue')
-    ->setCallback(function (Connection $queue) {
-        return new Migration($queue);
-    });
-$container->set($queueForMigrations);
-
-
-
-$logger = new Dependency();
-$logger
-    ->setName('logger')
-    ->inject('register')
-    ->setCallback(function (Registry $register) {
-        return $register->get('logger');
-    });
-$container->set($logger);
-
-$deviceForFunctions = new Dependency();
-$deviceForFunctions
-    ->setName('deviceForFunctions')
-    ->inject('project')
-    ->setCallback(function (Document $project) {
-        return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-    });
-$container->set($deviceForFunctions);
-
-$deviceForFiles = new Dependency();
-$deviceForFiles
-    ->setName('deviceForFiles')
-    ->inject('project')
-    ->setCallback(function (Document $project) {
-        return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-    });
-$container->set($deviceForFiles);
-
-$deviceForBuilds = new Dependency();
-$deviceForBuilds
-    ->setName('deviceForBuilds')
-    ->inject('project')
-    ->setCallback(function (Document $project) {
-        return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-    });
-$container->set($deviceForBuilds);
-
-$deviceForCache = new Dependency();
 $deviceForCache
     ->setName('deviceForCache')
     ->inject('project')
     ->setCallback(function (Document $project) {
         return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
     });
-$container->set($deviceForCache);
 
-$deviceForLocalFiles = new Dependency();
 $deviceForLocalFiles
     ->setName('deviceForLocalFiles')
     ->inject('project')
@@ -466,16 +112,18 @@ $deviceForLocalFiles
         return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
     });
 
+$container->set($project);
+$container->set($register);
+$container->set($dbForProject);
+$container->set($abuseRetention);
+$container->set($auditRetention);
+$container->set($deviceForCache);
+$container->set($queueForUsageDump);
+$container->set($executionRetention);
 $container->set($deviceForLocalFiles);
 
-$auth = new Dependency();
-$auth
-    ->setName('auth')
-    ->setCallback(fn () => new Authorization());
-$container->set($auth);
-
 $platform = new Appwrite();
-$args = $platform->getEnv('argv');
+$args = $_SERVER['argv'];
 
 if (!isset($args[1])) {
     Console::error('Missing worker name');
@@ -497,7 +145,6 @@ if (\str_starts_with($workerName, 'databases')) {
 }
 
 try {
-
     $connection = new Connection\Redis(
         System::getEnv('_APP_REDIS_HOST', 'redis'),
         System::getEnv('_APP_REDIS_PORT', '6379'),
@@ -518,13 +165,13 @@ try {
         'queueName' => $queueName
     ]);
 } catch (\Throwable $e) {
-    Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
+    Console::error($e->getMessage() . ', File: ' . $e->getFile() . ', Line: ' . $e->getLine());
 }
 
 Worker::init()
-    ->inject('auth')
-    ->action(function (Authorization $auth) {
-        $auth->disable();
+    ->inject('authorization')
+    ->action(function (Authorization $authorization) {
+        $authorization->disable();
     });
 
 Worker::shutdown()
@@ -539,8 +186,8 @@ Worker::error()
     ->inject('log')
     ->inject('connections')
     ->inject('project')
-    ->inject('auth')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Connections $connections, Document $project, Authorization $auth) use ($queueName) {
+    ->inject('authorization')
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Connections $connections, Document $project, Authorization $authorization) use ($queueName) {
         $connections->reclaim();
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
@@ -558,7 +205,7 @@ Worker::error()
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
             $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', $auth->getRoles());
+            $log->addExtra('roles', $authorization->getRoles());
 
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);

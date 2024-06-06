@@ -29,8 +29,8 @@ class Audits extends Action
             ->desc('Audits worker')
             ->inject('message')
             ->inject('dbForProject')
-            ->inject('auth')
-            ->callback(fn ($message, $dbForProject, ValidatorAuthorization $auth) => $this->action($message, $dbForProject, $auth));
+            ->inject('authorization')
+            ->callback(fn ($message, $dbForProject, ValidatorAuthorization $authorization) => $this->action($message, $dbForProject, $authorization));
     }
 
 

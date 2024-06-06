@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\CLI\Console;
+use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
 use Utopia\Http\Validator\Wildcard;
 use Utopia\Platform\Action;

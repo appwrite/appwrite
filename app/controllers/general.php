@@ -45,7 +45,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
     $host = $request->getHostname() ?? '';
 
     $rule = $auth->skip(
-        fn () => $dbForConsole->find('rules', [
+        fn() => $dbForConsole->find('rules', [
             Query::equal('domain', [$host]),
             Query::limit(1)
         ])
@@ -73,7 +73,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
 
     $projectId = $rule->getAttribute('projectId');
     $project = $auth->skip(
-        fn () => $dbForConsole->getDocument('projects', $projectId)
+        fn() => $dbForConsole->getDocument('projects', $projectId)
     );
     if (array_key_exists('proxy', $project->getAttribute('services', []))) {
         $status = $project->getAttribute('services', [])['proxy'];
@@ -115,11 +115,11 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
 
         $requestHeaders = $request->getHeaders();
 
-        $project = $auth->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+        $project = $auth->skip(fn() => $dbForConsole->getDocument('projects', $projectId));
 
         $dbForProject = $getProjectDB($project);
 
-        $function = $auth->skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        $function = $auth->skip(fn() => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty() || !$function->getAttribute('enabled')) {
             throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
@@ -134,7 +134,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
             throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $deployment = $auth->skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
+        $deployment = $auth->skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
@@ -145,7 +145,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
         }
 
         /** Check if build has completed */
-        $build = $auth->skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        $build = $auth->skip(fn() => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
         if ($build->isEmpty()) {
             throw new AppwriteException(AppwriteException::BUILD_NOT_FOUND);
         }
@@ -198,7 +198,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
             'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
-            'status' =>  'processing', // waiting / processing / completed / failed
+            'status' => 'processing', // waiting / processing / completed / failed
             'responseStatusCode' => 0,
             'responseHeaders' => [],
             'requestPath' => $path,
@@ -287,7 +287,6 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
-
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 
@@ -311,7 +310,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
 
             if ($function->getAttribute('logging')) {
                 /** @var Document $execution */
-            $execution = $auth->skip(fn () => $dbForProject->createDocument('executions', $execution));
+                $execution = $auth->skip(fn() => $dbForProject->createDocument('executions', $execution));
             }
         }
 
@@ -509,7 +508,7 @@ Http::init()
             Config::setParam('domains', $domains);
         }
 
-        $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+        $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
         if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }
@@ -537,7 +536,7 @@ Http::init()
         Config::setParam(
             'domainVerification',
             ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
-                $endDomain->getRegisterable() !== ''
+            $endDomain->getRegisterable() !== ''
         );
 
         $isLocalHost = $request->getHostname() === 'localhost' || $request->getHostname() === 'localhost:' . $request->getPort();
@@ -551,10 +550,10 @@ Http::init()
             $isLocalHost || $isIpAddress
                 ? null
                 : (
-                    $isConsoleProject && $isConsoleRootSession
-                    ? '.' . $selfDomain->getRegisterable()
-                    : '.' . $request->getHostname()
-                )
+            $isConsoleProject && $isConsoleRootSession
+                ? '.' . $selfDomain->getRegisterable()
+                : '.' . $request->getHostname()
+            )
         );
 
         /*
@@ -569,7 +568,7 @@ Http::init()
                 $response->addFilter(new ResponseV17());
             }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
-                $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is ". APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
+                $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
             }
         }
 
@@ -671,7 +670,7 @@ Http::error()
     ->action(function (Throwable $error, Document $user, ?Route $route, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Authorization $authorization, Connections $connections) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
-        if(is_null($route)) {
+        if (is_null($route)) {
             $route = new Route($request->getMethod(), $request->getURI());
         }
 
@@ -891,8 +890,6 @@ Http::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->inject('utopia')
-    ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
@@ -900,7 +897,9 @@ Http::get('/robots.txt')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('geodb')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+    ->inject('route')
+    ->inject('authorization')
+    ->action(function (Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, ?Route $route, Authorization $authorization) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -908,7 +907,10 @@ Http::get('/robots.txt')
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
-            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb);
+            if (is_null($route)) {
+                $route = new Route($request->getMethod(), $request->getURI());
+            }
+            router($dbForConsole, $getProjectDB, $request, $response, $route, $queueForEvents, $queueForUsage, $geodb, $authorization);
         }
     });
 
@@ -916,8 +918,6 @@ Http::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->inject('utopia')
-    ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
@@ -925,7 +925,9 @@ Http::get('/humans.txt')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('geodb')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+    ->inject('route')
+    ->inject('authorization')
+    ->action(function (Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, ?Route $route, Authorization $authorization) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -933,7 +935,10 @@ Http::get('/humans.txt')
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
-            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb);
+            if (is_null($route)) {
+                $route = new Route($request->getMethod(), $request->getURI());
+            }
+            router($dbForConsole, $getProjectDB, $request, $response, $route, $queueForEvents, $queueForUsage, $geodb, $authorization);
         }
     });
 

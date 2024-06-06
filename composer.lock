@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7778579de897a3e077914bd37686a62b",
+    "content-hash": "cea93b7a5d3b401c01b535df70df0b35",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -478,6 +478,89 @@
                 }
             ],
             "time": "2022-09-10T18:51:20+00:00"
+        },
+        {
+            "name": "giggsey/libphonenumber-for-php-lite",
+            "version": "8.13.36",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/giggsey/libphonenumber-for-php-lite.git",
+                "reference": "144bbe70d67664b5245910a475c7190ff140ab4b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/giggsey/libphonenumber-for-php-lite/zipball/144bbe70d67664b5245910a475c7190ff140ab4b",
+                "reference": "144bbe70d67664b5245910a475c7190ff140ab4b",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1",
+                "symfony/polyfill-mbstring": "^1.17"
+            },
+            "conflict": {
+                "giggsey/libphonenumber-for-php": "*"
+            },
+            "require-dev": {
+                "ext-dom": "*",
+                "friendsofphp/php-cs-fixer": "^3.12",
+                "infection/infection": "^0.28",
+                "pear/pear-core-minimal": "^1.10.11",
+                "pear/pear_exception": "^1.0.2",
+                "pear/versioncontrol_git": "^0.7",
+                "phing/phing": "^2.17.4",
+                "phpstan/extension-installer": "^1.2",
+                "phpstan/phpstan": "^1.8",
+                "phpstan/phpstan-phpunit": "^1.2",
+                "phpunit/phpunit": "^10.5",
+                "symfony/console": "^6.0",
+                "symfony/var-exporter": "^6.0"
+            },
+            "suggest": {
+                "giggsey/libphonenumber-for-php": "Use libphonenumber-for-php for geocoding, carriers, timezones and matching"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "8.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "libphonenumber\\": "src/"
+                },
+                "exclude-from-classmap": [
+                    "/src/data/",
+                    "/src/carrier/data/",
+                    "/src/geocoding/data/",
+                    "/src/timezone/data/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Joshua Gigg",
+                    "email": "giggsey@gmail.com",
+                    "homepage": "https://giggsey.com/"
+                }
+            ],
+            "description": "A lite version of giggsey/libphonenumber-for-php, which is a PHP Port of Google's libphonenumber",
+            "homepage": "https://github.com/giggsey/libphonenumber-for-php-lite",
+            "keywords": [
+                "geocoding",
+                "geolocation",
+                "libphonenumber",
+                "mobile",
+                "phonenumber",
+                "validation"
+            ],
+            "support": {
+                "issues": "https://github.com/giggsey/libphonenumber-for-php-lite/issues",
+                "source": "https://github.com/giggsey/libphonenumber-for-php-lite"
+            },
+            "time": "2024-05-03T06:31:11+00:00"
         },
         {
             "name": "jean85/pretty-package-versions",
@@ -1045,6 +1128,87 @@
             "time": "2022-03-17T08:00:35+00:00"
         },
         {
+            "name": "symfony/polyfill-mbstring",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-mbstring.git",
+                "reference": "098e36a5b73de12beeb5ac17e80abf3696f7ad5f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/098e36a5b73de12beeb5ac17e80abf3696f7ad5f",
+                "reference": "098e36a5b73de12beeb5ac17e80abf3696f7ad5f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "provide": {
+                "ext-mbstring": "*"
+            },
+            "suggest": {
+                "ext-mbstring": "For best performance"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "thanks": {
+                    "name": "symfony/polyfill",
+                    "url": "https://github.com/symfony/polyfill"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ],
+                "psr-4": {
+                    "Symfony\\Polyfill\\Mbstring\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nicolas Grekas",
+                    "email": "p@tchwork.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony polyfill for the Mbstring extension",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "compatibility",
+                "mbstring",
+                "polyfill",
+                "portable",
+                "shim"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/1.x"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2024-05-31T15:07:36+00:00"
+        },
+        {
             "name": "symfony/polyfill-php80",
             "version": "1.x-dev",
             "source": {
@@ -1408,16 +1572,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.9.1",
+            "version": "0.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "552b4c554bb14d0c529631ce304cdf4a2b9d06a6"
+                "reference": "313bcdfbb166f75c2c205a59d1467cead63a9626"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/552b4c554bb14d0c529631ce304cdf4a2b9d06a6",
-                "reference": "552b4c554bb14d0c529631ce304cdf4a2b9d06a6",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/313bcdfbb166f75c2c205a59d1467cead63a9626",
+                "reference": "313bcdfbb166f75c2c205a59d1467cead63a9626",
                 "shasum": ""
             },
             "require": {
@@ -1452,9 +1616,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.9.1"
+                "source": "https://github.com/utopia-php/cache/tree/0.10.0"
             },
-            "time": "2024-03-19T17:07:20+00:00"
+            "time": "2024-06-05T16:40:43+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -1564,19 +1728,19 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "f53d63bc5903ea6d6ff8f61293a20235e912b242"
+                "reference": "5b0d6ba40141dd9d4983d3aac018782f8ecdfc8a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/f53d63bc5903ea6d6ff8f61293a20235e912b242",
-                "reference": "f53d63bc5903ea6d6ff8f61293a20235e912b242",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/5b0d6ba40141dd9d4983d3aac018782f8ecdfc8a",
+                "reference": "5b0d6ba40141dd9d4983d3aac018782f8ecdfc8a",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/cache": "0.9.*",
+                "utopia-php/cache": "0.10.*",
                 "utopia-php/framework": "0.34.*",
                 "utopia-php/mongo": "0.3.*"
             },
@@ -1610,9 +1774,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-framework-v2-1"
+                "source": "https://github.com/utopia-php/database/tree/feat-framework-v2"
             },
-            "time": "2024-05-09T18:33:47+00:00"
+            "time": "2024-06-06T00:07:47+00:00"
         },
         {
             "name": "utopia-php/di",
@@ -1784,6 +1948,45 @@
             "time": "2024-05-07T02:01:25+00:00"
         },
         {
+            "name": "utopia-php/fetch",
+            "version": "0.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/fetch.git",
+                "reference": "1423c0ee3eef944d816ca6e31706895b585aea82"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/1423c0ee3eef944d816ca6e31706895b585aea82",
+                "reference": "1423c0ee3eef944d816ca6e31706895b585aea82",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.5.0",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Fetch\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library that provides an interface for making HTTP Requests.",
+            "support": {
+                "issues": "https://github.com/utopia-php/fetch/issues",
+                "source": "https://github.com/utopia-php/fetch/tree/0.2.1"
+            },
+            "time": "2024-03-18T11:50:59+00:00"
+        },
+        {
             "name": "utopia-php/framework",
             "version": "dev-feat-di-upgrade",
             "source": {
@@ -1934,22 +2137,23 @@
         },
         {
             "name": "utopia-php/logger",
-            "version": "0.3.x-dev",
+            "version": "0.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/logger.git",
-                "reference": "ba763c10688fe2ed715ad2bed3f13d18dfec6253"
+                "reference": "c6dfdb672e41364c309b0c30dc03bc6d45446dba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/logger/zipball/ba763c10688fe2ed715ad2bed3f13d18dfec6253",
-                "reference": "ba763c10688fe2ed715ad2bed3f13d18dfec6253",
+                "url": "https://api.github.com/repos/utopia-php/logger/zipball/c6dfdb672e41364c309b0c30dc03bc6d45446dba",
+                "reference": "c6dfdb672e41364c309b0c30dc03bc6d45446dba",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0"
             },
             "require-dev": {
+                "laravel/pint": "1.2.*",
                 "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
@@ -1981,27 +2185,28 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/logger/issues",
-                "source": "https://github.com/utopia-php/logger/tree/0.3.x"
+                "source": "https://github.com/utopia-php/logger/tree/0.5.2"
             },
-            "time": "2023-11-22T14:45:43+00:00"
+            "time": "2024-05-17T09:32:59+00:00"
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.10.0",
+            "version": "0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "71dce00ad43eb278a877cb2c329f7b8d677adfeb"
+                "reference": "b499c3ad11af711c28252c62d83f24e6106a2154"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/71dce00ad43eb278a877cb2c329f7b8d677adfeb",
-                "reference": "71dce00ad43eb278a877cb2c329f7b8d677adfeb",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/b499c3ad11af711c28252c62d83f24e6106a2154",
+                "reference": "b499c3ad11af711c28252c62d83f24e6106a2154",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-openssl": "*",
+                "giggsey/libphonenumber-for-php-lite": "8.13.36",
                 "php": ">=8.0.0",
                 "phpmailer/phpmailer": "6.9.1"
             },
@@ -2031,9 +2236,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.10.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.11.0"
             },
-            "time": "2024-02-20T07:30:15+00:00"
+            "time": "2024-05-08T17:10:02+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -2241,6 +2446,110 @@
                 "source": "https://github.com/utopia-php/platform/tree/feat-framework-v2"
             },
             "time": "2024-06-03T18:01:18+00:00"
+        },
+        {
+            "name": "utopia-php/pools",
+            "version": "0.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/pools.git",
+                "reference": "6f716a213a08db95eda1b5dddfa90983c1834817"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/6f716a213a08db95eda1b5dddfa90983c1834817",
+                "reference": "6f716a213a08db95eda1b5dddfa90983c1834817",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.8.*",
+                "phpunit/phpunit": "^9.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Pools\\": "src/Pools"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Team Appwrite",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "A simple library to manage connection pools",
+            "keywords": [
+                "framework",
+                "php",
+                "pools",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/pools/issues",
+                "source": "https://github.com/utopia-php/pools/tree/0.5.0"
+            },
+            "time": "2024-04-19T11:11:54+00:00"
+        },
+        {
+            "name": "utopia-php/preloader",
+            "version": "0.2.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/preloader.git",
+                "reference": "65ef48392e72172f584b0baa2e224f9a1cebcce0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/preloader/zipball/65ef48392e72172f584b0baa2e224f9a1cebcce0",
+                "reference": "65ef48392e72172f584b0baa2e224f9a1cebcce0",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Preloader\\": "src/Preloader"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "Utopia Preloader library is simple and lite library for managing PHP preloading configuration",
+            "keywords": [
+                "framework",
+                "php",
+                "preload",
+                "preloader",
+                "preloading",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/preloader/issues",
+                "source": "https://github.com/utopia-php/preloader/tree/0.2.4"
+            },
+            "time": "2020-10-24T07:04:59+00:00"
         },
         {
             "name": "utopia-php/queue",
@@ -2541,22 +2850,22 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.6.6",
+            "version": "0.6.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "e538264cfee5e3efdfe1771efba04750cf20b2c4"
+                "reference": "8d8ff1ac68e991b95adb6f91fcde8f9bb8f24974"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/e538264cfee5e3efdfe1771efba04750cf20b2c4",
-                "reference": "e538264cfee5e3efdfe1771efba04750cf20b2c4",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/8d8ff1ac68e991b95adb6f91fcde8f9bb8f24974",
+                "reference": "8d8ff1ac68e991b95adb6f91fcde8f9bb8f24974",
                 "shasum": ""
             },
             "require": {
                 "adhocore/jwt": "^1.1",
                 "php": ">=8.0",
-                "utopia-php/cache": "^0.9.0",
+                "utopia-php/cache": "^0.10.0",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
@@ -2584,9 +2893,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.6.6"
+                "source": "https://github.com/utopia-php/vcs/tree/0.6.7"
             },
-            "time": "2024-05-17T09:36:30+00:00"
+            "time": "2024-06-05T17:38:29+00:00"
         },
         {
             "name": "utopia-php/view",
@@ -5204,16 +5513,16 @@
         },
         {
             "name": "swoole/ide-helper",
-            "version": "5.0.2",
+            "version": "5.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swoole/ide-helper.git",
-                "reference": "16cfee44a6ec92254228c39bcab2fb8ae74cc2ea"
+                "reference": "33ec7af9111b76d06a70dd31191cc74793551112"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/16cfee44a6ec92254228c39bcab2fb8ae74cc2ea",
-                "reference": "16cfee44a6ec92254228c39bcab2fb8ae74cc2ea",
+                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/33ec7af9111b76d06a70dd31191cc74793551112",
+                "reference": "33ec7af9111b76d06a70dd31191cc74793551112",
                 "shasum": ""
             },
             "type": "library",
@@ -5230,9 +5539,9 @@
             "description": "IDE help files for Swoole.",
             "support": {
                 "issues": "https://github.com/swoole/ide-helper/issues",
-                "source": "https://github.com/swoole/ide-helper/tree/5.0.2"
+                "source": "https://github.com/swoole/ide-helper/tree/5.1.2"
             },
-            "time": "2023-03-20T06:05:55+00:00"
+            "time": "2024-02-01T22:28:11+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -5297,87 +5606,6 @@
             ],
             "support": {
                 "source": "https://github.com/symfony/polyfill-ctype/tree/1.x"
-            },
-            "funding": [
-                {
-                    "url": "https://symfony.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/fabpot",
-                    "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
-                    "type": "tidelift"
-                }
-            ],
-            "time": "2024-05-31T15:07:36+00:00"
-        },
-        {
-            "name": "symfony/polyfill-mbstring",
-            "version": "1.x-dev",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "098e36a5b73de12beeb5ac17e80abf3696f7ad5f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/098e36a5b73de12beeb5ac17e80abf3696f7ad5f",
-                "reference": "098e36a5b73de12beeb5ac17e80abf3696f7ad5f",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.1"
-            },
-            "provide": {
-                "ext-mbstring": "*"
-            },
-            "suggest": {
-                "ext-mbstring": "For best performance"
-            },
-            "default-branch": true,
-            "type": "library",
-            "extra": {
-                "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "bootstrap.php"
-                ],
-                "psr-4": {
-                    "Symfony\\Polyfill\\Mbstring\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Nicolas Grekas",
-                    "email": "p@tchwork.com"
-                },
-                {
-                    "name": "Symfony Community",
-                    "homepage": "https://symfony.com/contributors"
-                }
-            ],
-            "description": "Symfony polyfill for the Mbstring extension",
-            "homepage": "https://symfony.com",
-            "keywords": [
-                "compatibility",
-                "mbstring",
-                "polyfill",
-                "portable",
-                "shim"
-            ],
-            "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/1.x"
             },
             "funding": [
                 {
@@ -5565,45 +5793,6 @@
                 }
             ],
             "time": "2023-11-21T18:54:41+00:00"
-        },
-        {
-            "name": "utopia-php/fetch",
-            "version": "0.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/fetch.git",
-                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/2fa214b9262acd1a3583515a364da4f35929d5c5",
-                "reference": "2fa214b9262acd1a3583515a364da4f35929d5c5",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.5.0",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^9.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Fetch\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple library that provides an interface for making HTTP Requests.",
-            "support": {
-                "issues": "https://github.com/utopia-php/fetch/issues",
-                "source": "https://github.com/utopia-php/fetch/tree/0.1.0"
-            },
-            "time": "2023-10-10T11:58:32+00:00"
         }
     ],
     "aliases": [

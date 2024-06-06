@@ -40,6 +40,7 @@ services:
     networks:
       - gateway
       - appwrite
+      - runtimes
 
   appwrite:
     container_name: appwrite
@@ -48,10 +49,10 @@ services:
     build:
       context: .
       args:
-        DEBUG: false
+        DEBUG: true
         TESTING: true
         VERSION: dev
-    ports: 
+    ports:
       - 9501:80
     networks:
       - appwrite
@@ -75,9 +76,11 @@ services:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-functions:/storage/functions:rw
+      - appwrite-builds:/storage/builds:rw
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
@@ -91,8 +94,8 @@ services:
       - -e
       - app/http.php
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
-      - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT
@@ -216,11 +219,13 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - mariadb
       - redis
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
@@ -248,11 +253,13 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -277,12 +284,14 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
       - request-catcher
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -317,8 +326,10 @@ services:
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -366,11 +377,13 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -399,11 +412,13 @@ services:
       - appwrite-functions:/storage/functions:rw
       - appwrite-builds:/storage/builds:rw
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -467,8 +482,10 @@ services:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -497,12 +514,14 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
       - openruntimes-executor
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -536,12 +555,14 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
       - maildev
       # - smtp
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -570,12 +591,13 @@ services:
     networks:
       - appwrite
     volumes:
-      - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -625,11 +647,13 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
     depends_on:
       - mariadb
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -659,10 +683,12 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_DOMAIN
@@ -696,11 +722,13 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -727,11 +755,13 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -758,11 +788,13 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - mariadb
       - redis
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -785,11 +817,13 @@ services:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
       - ./src:/usr/src/code/src
     depends_on:
       - mariadb
       - redis
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -809,6 +843,7 @@ services:
     networks:
       - appwrite
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - _APP_ASSISTANT_OPENAI_API_KEY
 
   openruntimes-executor:
@@ -829,6 +864,7 @@ services:
       # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_FUNCTIONS_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_FUNCTIONS_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_FUNCTIONS_RUNTIMES_NETWORK
@@ -872,6 +908,7 @@ services:
       - appwrite
       - runtimes
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - OPR_PROXY_WORKER_PER_CORE=$_APP_WORKER_PER_CORE
       - OPR_PROXY_ENV=$_APP_ENV
       - OPR_PROXY_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
@@ -985,6 +1022,7 @@ services:
     networks:
       - appwrite
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - REDIS_HOSTS=redis
     ports:
       - "8081:5540"
@@ -998,6 +1036,7 @@ services:
     ports:
       - "9509:3000"
     environment:
+      - PHP_IDE_CONFIG=serverName=Appwrite
       - SERVER_URL=http://localhost/v1/graphql
 
   # Dev Tools End   ------------------------------------------------------------------------------------------
