@@ -16,7 +16,6 @@ use Utopia\Http\Validator\Integer;
 use Utopia\Http\Validator\Multiple;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
-use Utopia\Pools\Group;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
@@ -85,6 +84,8 @@ Http::get('/v1/health/db')
 
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
+                $checkStart = \microtime(true);
+
                 try {
 
                     $pool = $pools['pools-'.$key.'-'.$database]['pool'];
@@ -99,7 +100,6 @@ Http::get('/v1/health/db')
                     };
                     $adapter->setDatabase($dsn->getPath());
 
-                    $checkStart = \microtime(true);
 
                     if ($adapter->ping()) {
                         $output[] = new Document([
@@ -140,7 +140,7 @@ Http::get('/v1/health/cache')
     ->inject('response')
     ->inject('pools')
     ->inject('connections')
-    ->action(function (Response $response, Group $pools, Connections $connections) {
+    ->action(function (Response $response, array $pools, Connections $connections) {
 
         $output = [];
 
@@ -150,12 +150,15 @@ Http::get('/v1/health/cache')
 
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
+                $checkStart = \microtime(true);
                 try {
-                    $connection = $pools->get($database)->pop();
-                    $connections->add($connection);
-                    $adapter = $connection->getResource();
+                    $pool = $pools['pools-cache-' . $database]['pool'];
+                    $dsn = $pools['pools-cache-' . $database]['dsn'];
+                    $connection = $pool->get();
+                    $connections->add($connection, $pool);
 
-                    $checkStart = \microtime(true);
+                    $adapter =  new Connection\Redis($dsn->getHost(), $dsn->getPort());
+
 
                     if ($adapter->ping()) {
                         $output[] = new Document([
@@ -200,7 +203,7 @@ Http::get('/v1/health/queue')
     ->inject('response')
     ->inject('pools')
     ->inject('connections')
-    ->action(function (Response $response, Group $pools, Connections $connections) {
+    ->action(function (Response $response, array $pools, Connections $connections) {
 
         $output = [];
 
@@ -209,14 +212,16 @@ Http::get('/v1/health/queue')
         ];
 
         foreach ($configs as $key => $config) {
+            $checkStart = \microtime(true);
+
             foreach ($config as $database) {
                 try {
-                    $connection = $pools->get($database)->pop();
-                    $connections->add($connection);
-                    $adapter = $connection->getResource();
+                    $pool = $pools['pools-queue-' . $database]['pool'];
+                    $dsn = $pools['pools-queue-' . $database]['dsn'];
+                    $connection = $pool->get();
+                    $connections->add($connection, $pool);
 
-                    $checkStart = \microtime(true);
-
+                    $adapter =  new Connection\Redis($dsn->getHost(), $dsn->getPort());
                     if ($adapter->ping()) {
                         $output[] = new Document([
                             'name' => $key . " ($database)",
@@ -260,7 +265,7 @@ Http::get('/v1/health/pubsub')
     ->inject('response')
     ->inject('pools')
     ->inject('connections')
-    ->action(function (Response $response, Group $pools, Connections $connections) {
+    ->action(function (Response $response, array $pools, Connections $connections) {
 
         $output = [];
 
@@ -271,9 +276,12 @@ Http::get('/v1/health/pubsub')
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
                 try {
-                    $connection = $pools->get($database)->pop();
-                    $connections->add($connection);
-                    $adapter = $connection->getResource();
+                    $pool = $pools['pools-pubsub-' . $database]['pool'];
+                    $dsn = $pools['pools-pubsub-' . $database]['dsn'];
+                    $connection = $pool->get();
+                    $connections->add($connection, $pool);
+
+                    $adapter =  new Connection\Redis($dsn->getHost(), $dsn->getPort());
 
                     $checkStart = \microtime(true);
 
