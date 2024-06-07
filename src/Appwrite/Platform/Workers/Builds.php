@@ -540,11 +540,11 @@ class Builds extends Action
                 ->addMetric(METRIC_BUILDS, 1) // per project
                 ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
                 ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
-                ->addMetric(METRIC_BUILDS_GB_HOURS, 0.5 * ((int)$build->getAttribute('duration', 0) / 3600)) //TODO @bradley: Adjust memory when we allow for custom memory.
+                ->addMetric(METRIC_BUILDS_MB_SECONDS, 512 * $build->getAttribute('duration', 0)) //TODO @bradley: Adjust memory when we allow for custom memory.
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_GB_HOURS), 0.5 * ((int)$build->getAttribute('duration', 0) / 3600)) //TODO @bradley: Adjust memory when we allow for custom memory.
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), 512 * $build->getAttribute('duration', 0)) //TODO @bradley: Adjust memory when we allow for custom memory.
                 ->setProject($project)
                 ->trigger();
         }
