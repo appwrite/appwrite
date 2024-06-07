@@ -2672,12 +2672,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/servers.git",
-                "reference": "4ce97c42158c20c7dcf0cdcdcf79080b879a1ee7"
+                "reference": "02bb5cfff6d7a39b1da2271d25eab51b34420bd0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/servers/zipball/4ce97c42158c20c7dcf0cdcdcf79080b879a1ee7",
-                "reference": "4ce97c42158c20c7dcf0cdcdcf79080b879a1ee7",
+                "url": "https://api.github.com/repos/utopia-php/servers/zipball/02bb5cfff6d7a39b1da2271d25eab51b34420bd0",
+                "reference": "02bb5cfff6d7a39b1da2271d25eab51b34420bd0",
                 "shasum": ""
             },
             "require": {
@@ -2735,7 +2735,7 @@
                 "source": "https://github.com/utopia-php/servers/tree/dev",
                 "issues": "https://github.com/utopia-php/servers/issues"
             },
-            "time": "2024-06-06T14:41:32+00:00"
+            "time": "2024-06-07T16:48:33+00:00"
         },
         {
             "name": "utopia-php/storage",
