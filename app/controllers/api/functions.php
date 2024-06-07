@@ -1772,7 +1772,7 @@ Http::post('/v1/functions/:functionId/executions')
 
             if ($function->getAttribute('logging')) {
                 /** @var Document $execution */
-            $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
             }
         }
 

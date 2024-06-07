@@ -11,10 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
-use Utopia\Pools\Group;
 use Utopia\System\System;
-
-use function Swoole\Coroutine\run;
 
 abstract class ScheduleBase extends Action
 {
@@ -188,7 +185,7 @@ abstract class ScheduleBase extends Action
 
         Timer::tick(
             static::ENQUEUE_TIMER * 1000,
-            fn() => $this->enqueueResources($pools, $dbForConsole)
+            fn () => $this->enqueueResources($pools, $dbForConsole)
         );
 
         $this->enqueueResources($pools, $dbForConsole);

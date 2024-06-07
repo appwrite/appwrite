@@ -2,41 +2,22 @@
 
 require_once __DIR__ . '/init2.php';
 
-use Appwrite\Event\Audit;
-use Appwrite\Event\Build;
-use Appwrite\Event\Certificate;
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Delete;
-use Appwrite\Event\Event;
-use Appwrite\Event\Func;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Messaging;
-use Appwrite\Event\Migration;
-use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Utopia\Queue\Connections;
 use Swoole\Runtime;
-use Utopia\Cache\Adapter\None;
-use Utopia\Cache\Adapter\Sharding;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\DSN\DSN;
 use Utopia\DI\Dependency;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\Queue\Connection;
-use Utopia\Queue\Connection\Redis;
 use Utopia\Queue\Message;
 use Utopia\Queue\Worker;
-use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 
@@ -56,7 +37,7 @@ $deviceForLocalFiles = new Dependency();
 
 $register
     ->setName('register')
-    ->setCallback(fn() => $global);
+    ->setCallback(fn () => $global);
 
 $project
     ->setName('project')

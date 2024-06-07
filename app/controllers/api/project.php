@@ -71,7 +71,8 @@ Http::get('/v1/project/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        $authorization->skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {            foreach ($metrics['total'] as $metric) {
+        $authorization->skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
+            foreach ($metrics['total'] as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])

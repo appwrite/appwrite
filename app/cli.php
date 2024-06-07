@@ -7,18 +7,16 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Hamster;
 use Appwrite\Platform\Appwrite;
+use Swoole\Runtime;
+use Utopia\CLI\Adapters\Swoole as SwooleCLI;
 use Utopia\CLI\Console;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Dependency;
-use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
-use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
-use Swoole\Runtime;
-use Utopia\CLI\Adapters\Swoole as SwooleCLI;
 
 global $global, $container;
 
@@ -105,7 +103,7 @@ $logError
 
 $auth
     ->setName('auth')
-    ->setCallback(fn() => new Authorization());
+    ->setCallback(fn () => new Authorization());
 
 $container->set($auth);
 $container->set($logError);

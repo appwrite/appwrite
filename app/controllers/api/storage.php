@@ -631,10 +631,10 @@ Http::post('/v1/storage/buckets/:bucketId/files')
                  * However as with chunk upload even if we are updating, we are essentially creating a file
                  * adding it's new chunk so we validate create permission instead of update
                  */
-                    if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
+                if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
-                    $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+                $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
             }
         } else {
             if ($file->isEmpty()) {
@@ -669,10 +669,10 @@ Http::post('/v1/storage/buckets/:bucketId/files')
                  * However as with chunk upload even if we are updating, we are essentially creating a file
                  * adding it's new chunk so we validate create permission instead of update
                  */
-                    if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
+                if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
-                    $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+                $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
             }
         }
 

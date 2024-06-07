@@ -34,7 +34,7 @@ $server = new Server('0.0.0.0', '80', [
     'http_compression_level' => 6,
     'package_max_length' => $payloadSize,
     'buffer_output_size' => $payloadSize,
-        'buffer_output_size' => $payloadSize,
+    'buffer_output_size' => $payloadSize,
 
     // Server
     // 'log_level' => 0,

@@ -45,7 +45,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
     $host = $request->getHostname() ?? '';
 
     $rule = $auth->skip(
-        fn() => $dbForConsole->find('rules', [
+        fn () => $dbForConsole->find('rules', [
             Query::equal('domain', [$host]),
             Query::limit(1)
         ])
@@ -73,7 +73,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
 
     $projectId = $rule->getAttribute('projectId');
     $project = $auth->skip(
-        fn() => $dbForConsole->getDocument('projects', $projectId)
+        fn () => $dbForConsole->getDocument('projects', $projectId)
     );
     if (array_key_exists('proxy', $project->getAttribute('services', []))) {
         $status = $project->getAttribute('services', [])['proxy'];
@@ -115,11 +115,11 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
 
         $requestHeaders = $request->getHeaders();
 
-        $project = $auth->skip(fn() => $dbForConsole->getDocument('projects', $projectId));
+        $project = $auth->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
         $dbForProject = $getProjectDB($project);
 
-        $function = $auth->skip(fn() => $dbForProject->getDocument('functions', $functionId));
+        $function = $auth->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty() || !$function->getAttribute('enabled')) {
             throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
@@ -134,7 +134,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
             throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $deployment = $auth->skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
+        $deployment = $auth->skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
@@ -145,7 +145,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
         }
 
         /** Check if build has completed */
-        $build = $auth->skip(fn() => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        $build = $auth->skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
         if ($build->isEmpty()) {
             throw new AppwriteException(AppwriteException::BUILD_NOT_FOUND);
         }
@@ -310,7 +310,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
 
             if ($function->getAttribute('logging')) {
                 /** @var Document $execution */
-                $execution = $auth->skip(fn() => $dbForProject->createDocument('executions', $execution));
+                $execution = $auth->skip(fn () => $dbForProject->createDocument('executions', $execution));
             }
         }
 
@@ -550,10 +550,10 @@ Http::init()
             $isLocalHost || $isIpAddress
                 ? null
                 : (
-            $isConsoleProject && $isConsoleRootSession
+                    $isConsoleProject && $isConsoleRootSession
                 ? '.' . $selfDomain->getRegisterable()
                 : '.' . $request->getHostname()
-            )
+                )
         );
 
         /*

@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Messaging;
 use Utopia\Database\Database;
-use Utopia\Pools\Group;
 use Utopia\Queue\Connection\Redis;
 
 class ScheduleMessages extends ScheduleBase
