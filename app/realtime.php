@@ -5,10 +5,10 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Request as SwooleRequest;
+use Swoole\Http\Response as SwooleHttpResponse;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Runtime;
 use Swoole\Table;
@@ -16,7 +16,6 @@ use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -25,6 +24,7 @@ use Utopia\Database\Query;
 use Utopia\DI\Container;
 use Utopia\DI\Dependency;
 use Utopia\Http\Adapter\Swoole\Request as UtopiaRequest;
+use Utopia\Http\Adapter\Swoole\Response as HttpResponse;
 use Utopia\Http\Adapter\Swoole\Response as UtopiaResponse;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
@@ -362,8 +362,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     Console::info("Connection open (user: {$connection})");
 
     try {
+        $dbForConsole = $container->get('dbForConsole');
+
         /** @var Document $project */
-        $project = $container->get('project');
+        $project = $container->refresh('project')->get('project');
+
+        $container->refresh('dbForProject');
 
         /*
          * Project Check
@@ -371,7 +375,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         if (empty($project->getId())) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing or unknown project ID');
         }
-
 
         if (
             array_key_exists('realtime', $project->getAttribute('apis', []))
@@ -382,11 +385,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         }
 
         $dbForProject = $container->get('getProjectDB')($project);
-        $console = $container->get('console');
         /** @var Document $console */
-        $user = $container->get('user');
+        $console = $container->get('console');
         /** @var Document $user */
-
+        $user = $container->refresh('user')->get('user');
         /*
          * Abuse Check
          *
@@ -477,12 +479,13 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
 $server->onMessage(function (int $connection, string $message) use ($server, $container, $realtime, $containerId) {
     try {
-        $response = new Response(new SwooleResponse());
+        $response = new Response(new HttpResponse(new SwooleHttpResponse()));
         $projectId = $realtime->connections[$connection]['projectId'];
         $database = $container->get('dbForConsole');
+        $authorization = $container->get('authorization');
 
         if ($projectId !== 'console') {
-            $authorization = $container->get('authorization');
+
             $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
             $database = $container->get('getProjectDB')($project);
         } else {
