@@ -6,10 +6,13 @@ use Appwrite\ClamAV\Network;
 use Appwrite\Utopia\Queue\Connections;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Domains\Domain;
 use Utopia\Http\Http;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
+use Utopia\Queue\Connection\Redis;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
@@ -119,24 +122,41 @@ class Doctor extends Action
             //throw $th;
         }
 
-        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        /** @var array $pools */
+        $pools = $register->get('pools');
 
         $configs = [
-            'Console.DB' => Config::getParam('pools-console'),
-            'Projects.DB' => Config::getParam('pools-database'),
+            'Console.DB' => [
+                'prefix' => 'console',
+                'databases' => Config::getParam('pools-console')
+            ],
+            'Database.DB' => [
+                'prefix' => 'database',
+                'databases' => Config::getParam('pools-database')
+            ],
         ];
 
+
         foreach ($configs as $key => $config) {
-            foreach ($config as $database) {
+            foreach ($config['databases'] as $database) {
                 try {
-                    $connection = $pools->get($database)->pop();
-                    $connections->add($connection);
-                    $adapter = $connection->getResource();
+                    $pool = $pools['pools-' . $config['prefix'] . '-' . $database]['pool'];
+                    $dsn = $pools['pools-' . $config['prefix'] . '-' . $database]['dsn'];
+
+                    $connection = $pool->get();
+                    $connections->add($connection, $pool);
+                    $adapter = match ($dsn->getScheme()) {
+                        'mariadb' => new MariaDB($connection),
+                        'mysql' => new MySQL($connection),
+                        default => null
+                    };
+                    $adapter->setDatabase($dsn->getPath());
+
 
                     if ($adapter->ping()) {
-                        Console::success('🟢 ' . str_pad("{$key}({$database})", 50, '.') . 'connected');
+                        Console::success('🟢 ' . str_pad("$key({$database})", 50, '.') . 'connected');
                     } else {
-                        Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
+                        Console::error('🔴 ' . str_pad("$key({$database})", 47, '.') . 'disconnected');
                     }
                 } catch (\Throwable $th) {
                     Console::error('🔴 ' . str_pad("{$key}.({$database})", 47, '.') . 'disconnected');
@@ -144,27 +164,39 @@ class Doctor extends Action
             }
         }
 
-        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        /** @var array $pools */
+        $pools = $register->get('pools');
         $configs = [
-            'Cache' => Config::getParam('pools-cache'),
-            'Queue' => Config::getParam('pools-queue'),
-            'PubSub' => Config::getParam('pools-pubsub'),
+            'Cache' => [
+                'prefix' => 'cache',
+                'databases' => Config::getParam('pools-cache')
+            ],
+            'Queue' => [
+                'prefix' => 'queue',
+                'databases' => Config::getParam('pools-queue')
+            ],
+            'PubSub' => [
+                'prefix' => 'pubsub',
+                'databases' => Config::getParam('pools-pubsub')
+            ],
         ];
-
         foreach ($configs as $key => $config) {
-            foreach ($config as $pool) {
+            foreach ($config['databases'] as $database) {
                 try {
-                    $connection = $pools->get($pool)->pop();
-                    $connections->add($connection);
-                    $adapter = $connection->getResource();
+                    $pool = $pools['pools-' . $config['prefix'] . '-' . $database]['pool'];
+                    $dsn = $pools['pools-' . $config['prefix'] . '-' . $database]['dsn'];
+                    $connection = $pool->get();
+                    $connections->add($connection, $pool);
+
+                    $adapter =  new Redis($dsn->getHost(), $dsn->getPort());
 
                     if ($adapter->ping()) {
-                        Console::success('🟢 ' . str_pad("{$key}({$pool})", 50, '.') . 'connected');
+                        Console::success('🟢 ' . str_pad("{$key}({$database})", 50, '.') . 'connected');
                     } else {
-                        Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
+                        Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
                     }
                 } catch (\Throwable $th) {
-                    Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
+                    Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
                 }
             }
         }
