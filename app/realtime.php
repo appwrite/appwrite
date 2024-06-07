@@ -15,24 +15,18 @@ use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Cache\Adapter\None;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DI\Dependency;
 use Utopia\Http\Adapter\Swoole\Request as UtopiaRequest;
 use Utopia\Http\Adapter\Swoole\Response as UtopiaResponse;
 use Utopia\Http\Http;
-use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
@@ -49,75 +43,6 @@ global $global, $container;
 require_once __DIR__ . '/init2.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
-
-$cache = new Dependency();
-$getProjectDB = new Dependency();
-
-
-$getProjectDB
-    ->setName('getProjectDB')
-    ->inject('pools')
-    ->inject('dbForConsole')
-    ->inject('cache')
-    ->inject('authorization')
-    ->inject('connections')
-    ->setCallback(function (array $pools, Database $dbForConsole, Cache $cache, Authorization $authorization, Connections $connections) {
-        return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $authorization, $connections): Database {
-            if ($project->isEmpty() || $project->getId() === 'console') {
-                return $dbForConsole;
-            }
-
-            try {
-                $dsn = new DSN($project->getAttribute('database'));
-            } catch (\InvalidArgumentException) {
-                // TODO: Temporary until all projects are using shared tables
-                $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-            }
-
-
-            $pool = $pools['pools-database-' . $dsn->getHost()]['pool'];
-            $connectionDsn = $pools['pools-database-' . $dsn->getHost()]['dsn'];
-
-            $connection = $pool->get();
-            $connections->add($connection, $pool);
-            $adapter = match ($connectionDsn->getScheme()) {
-                'mariadb' => new MariaDB($connection),
-                'mysql' => new MySQL($connection),
-                default => null
-            };
-            $adapter->setDatabase($connectionDsn->getPath());
-
-            $database = new Database($adapter, $cache);
-
-            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
-                $database
-                    ->setSharedTables(true)
-                    ->setTenant($project->getInternalId())
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $database
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
-            }
-
-            $database
-                ->setMetadata('host', \gethostname())
-                ->setMetadata('project', $project->getId())
-                ->setAuthorization($authorization);
-
-            return $database;
-        };
-    });
-
-$cache
-    ->setName('cache')
-    ->setCallback(function () {
-        return new Cache(new None());
-    });
-
-$container->set($cache);
-$container->set($getProjectDB);
 
 $realtime = new Realtime();
 
@@ -220,7 +145,7 @@ $server->onStart(function () use ($stats, $container, $containerId, &$statsDocum
      */
     // TODO: Remove this if check once it doesn't cause issues for cloud
     if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-    Timer::tick(5000, function () use ($container, $stats, &$statsDocument, $logError, $authorization) {
+        Timer::tick(5000, function () use ($container, $stats, &$statsDocument, $logError, $authorization) {
             $payload = [];
             foreach ($stats as $projectId => $value) {
                 $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
@@ -230,17 +155,17 @@ $server->onStart(function () use ($stats, $container, $containerId, &$statsDocum
             }
 
             try {
-            $database = $container->get('dbForConsole');
+                $database = $container->get('dbForConsole');
 
                 $statsDocument
                     ->setAttribute('timestamp', DateTime::now())
                     ->setAttribute('value', json_encode($payload));
 
-            $authorization->skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+                $authorization->skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
             } catch (Throwable $th) {
                 call_user_func($logError, $th, "updateWorkerDocument");
             } finally {
-            // TODO NOW  $global->get('pools')->reclaim();
+                // TODO NOW  $global->get('pools')->reclaim();
             }
         });
     }
@@ -261,11 +186,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
         // TODO: Remove this if check once it doesn't cause issues for cloud
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             if ($realtime->hasSubscriber('console', Role::users()->toString(), 'project')) {
-            $database = $container->get('dbForConsole');
+                $database = $container->get('dbForConsole');
 
                 $payload = [];
 
-            $list = $authorization->skip(fn () => $database->find('realtime', [
+                $list = $authorization->skip(fn () => $database->find('realtime', [
                     Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
                 ]));
 
@@ -305,7 +230,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
                         'data' => $event['data']
                     ]));
                 }
-            // TODO NOW $global->get('pools')->reclaim();
+                // TODO NOW $global->get('pools')->reclaim();
             }
         }
         /**
