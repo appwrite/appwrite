@@ -184,6 +184,8 @@ class Builds extends Action
         } elseif ($build->getAttribute('status') === 'cancelled') {
             Console::info('Build has been cancelled');
             return;
+        } else {
+            $build = $dbForProject->getDocument('builds', $buildId);
         }
 
         $source = $deployment->getAttribute('path', '');
@@ -224,8 +226,7 @@ class Builds extends Action
                 $stderr = '';
                 Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
 
-                $build = $dbForProject->getDocument('builds', $buildId);
-                if ($build->getAttribute('status') === 'cancelled') {
+                if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'cancelled') {
                     Console::info('Build has been cancelled');
                     return;
                 }
@@ -406,8 +407,7 @@ class Builds extends Action
             $response = null;
             $err = null;
 
-            $build = $dbForProject->getDocument('builds', $buildId);
-            if ($build->getAttribute('status') === 'cancelled') {
+            if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'cancelled') {
                 Console::info('Build has been cancelled');
                 return;
             }
@@ -478,8 +478,7 @@ class Builds extends Action
             ]);
 
             if ($err) {
-                $build = $dbForProject->getDocument('builds', $buildId);
-                if ($build->getAttribute('status') === 'cancelled') {
+                if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'cancelled') {
                     Console::info('Build has been cancelled');
                     return;
                 }
@@ -512,8 +511,7 @@ class Builds extends Action
                 $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
             }
 
-            $build = $dbForProject->getDocument('builds', $buildId);
-            if ($build->getAttribute('status') === 'cancelled') {
+            if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'cancelled') {
                 Console::info('Build has been cancelled');
                 return;
             }
@@ -528,8 +526,7 @@ class Builds extends Action
                 ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
             Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
-            $build = $dbForProject->getDocument('builds', $buildId);
-            if ($build->getAttribute('status') === 'cancelled') {
+            if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'cancelled') {
                 Console::info('Build has been cancelled');
                 return;
             }
