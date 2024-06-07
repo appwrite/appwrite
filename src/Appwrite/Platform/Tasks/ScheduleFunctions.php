@@ -41,7 +41,7 @@ class ScheduleFunctions extends ScheduleBase
         $delayedExecutions = []; // Group executions with same delay to share one coroutine
 
         foreach ($this->schedules as $key => $schedule) {
-            $cron = new CronExpression($schedule['schedule']);
+            $cron = new CronExpression($schedule['schedule']); // TODO: Allow schedule to be DateTime, like ScheduleMessaging.php
             $nextDate = $cron->getNextRunDate();
             $next = DateTime::format($nextDate);
 
