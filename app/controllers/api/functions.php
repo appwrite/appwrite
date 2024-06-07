@@ -1550,7 +1550,29 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
             if (\in_array($build->getAttribute('status'), ['ready', 'failed'])) {
                 throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
             }
-            $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('status', 'cancelled'));
+            $startTime = new \DateTime($build->getAttribute('startTime'));
+            $endTime = new \DateTime();
+            $interval = $startTime->diff($endTime);
+
+            $minuteInSeconds = 60;
+            $hourInSeconds = $minuteInSeconds * 60;
+            $dayInSeconds = $hourInSeconds * 24;
+            $monthInSeconds = $dayInSeconds * 30;
+            $yearsInSeconds = $monthInSeconds * 12;
+
+            $duration = 0;
+            $duration += $interval->s;
+            $duration += $interval->i * $minuteInSeconds;
+            $duration += $interval->h * $hourInSeconds;
+            $duration += $interval->d * $dayInSeconds;
+            $duration += $interval->m * $monthInSeconds;
+            $duration += $interval->y * $yearsInSeconds;
+
+            $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttributes([
+                'endTime' => DateTime::now(),
+                'duration' => $duration,
+                'status' => 'cancelled'
+            ]));
         }
 
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
