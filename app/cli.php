@@ -25,7 +25,6 @@ Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
  * @var Registry $global
  * @var Container $container
  */
-$auth = new Dependency();
 $register = new Dependency();
 $logError = new Dependency();
 $queueForDeletes = new Dependency();
@@ -93,11 +92,6 @@ $logError
     });
 
 
-$auth
-    ->setName('auth')
-    ->setCallback(fn () => new Authorization());
-
-$container->set($auth);
 $container->set($logError);
 $container->set($register);
 $container->set($queueForDeletes);
@@ -110,9 +104,9 @@ $cli = $platform->getCli();
 
 $cli
     ->init()
-    ->inject('auth')
-    ->action(function (Authorization $auth) {
-        $auth->disable();
+    ->inject('authorization')
+    ->action(function (Authorization $authorization) {
+        $authorization->disable();
     });
 
 $cli

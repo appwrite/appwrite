@@ -3,7 +3,6 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
-use Redis;
 use Utopia\Cache\Adapter\Redis as CacheRedis;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\VCS\Adapter\Git\GitHub;

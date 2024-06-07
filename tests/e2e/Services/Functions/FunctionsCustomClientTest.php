@@ -164,7 +164,8 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(202, $execution['headers']['status-code']);
 
         // Wait for the first scheduled execution to be created
-        sleep(65);
+        // Longer waiting time to cover all use-cases
+        sleep(119);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions', [
             'content-type' => 'application/json',

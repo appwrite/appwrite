@@ -32,8 +32,8 @@ class Migrate extends Action
             ->inject('dbForConsole')
             ->inject('getProjectDB')
             ->inject('register')
-            ->inject('auth')
-            ->callback(fn ($version, $cache, $dbForConsole, $getProjectDB, Registry $register, Authorization $auth) => $this->action($version, $cache, $dbForConsole, $getProjectDB, $register, $auth));
+            ->inject('authorization')
+            ->callback(fn ($version, $cache, $dbForConsole, $getProjectDB, Registry $register, Authorization $authorization) => $this->action($version, $cache, $dbForConsole, $getProjectDB, $register, $authorization));
     }
 
     private function clearProjectsCache(Cache $cache, Document $project)
