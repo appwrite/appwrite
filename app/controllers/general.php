@@ -761,13 +761,6 @@ Http::error()
         }
 
         if ($logger && ($publish || $error->getCode() === 0)) {
-            try {
-                /** @var Utopia\Database\Document $user */
-                $user = $utopia->getResource('user');
-            } catch (\Throwable) {
-                // All good, user is optional information for logger
-            }
-
             if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
             }

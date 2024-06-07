@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Init
  *
@@ -1021,65 +1020,85 @@ foreach ($locales as $locale) {
 ]);
 
 // Runtime Execution
+// @phpstan-ignore
 Http::setResource('log', fn () => new Log());
+// @phpstan-ignore
 Http::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
 
+// @phpstan-ignore
 Http::setResource('hooks', function ($register) {
     return $register->get('hooks');
 }, ['register']);
 
+// @phpstan-ignore
 Http::setResource('register', fn () => $register);
+// @phpstan-ignore
 Http::setResource('locale', fn () => new Locale(System::getEnv('_APP_LOCALE', 'en')));
 
+// @phpstan-ignore
 Http::setResource('localeCodes', function () {
     return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
 });
 
+// @phpstan-ignore
 Http::setResource('connections', function () {
     return new Connections();
 });
 
 // Queues
+// @phpstan-ignore
 Http::setResource('queue', function (Group $pools, Connections $connections) {
     $connection = $pools->get('queue')->pop();
     $connections->add($connection);
     return $connection->getResource();
 }, ['pools', 'connections']);
+// @phpstan-ignore
 Http::setResource('queueForMessaging', function (Connection $queue) {
     return new Messaging($queue);
 }, ['queue']);
+// @phpstan-ignore
 Http::setResource('queueForMails', function (Connection $queue) {
     return new Mail($queue);
 }, ['queue']);
+// @phpstan-ignore
 Http::setResource('queueForBuilds', function (Connection $queue) {
     return new Build($queue);
 }, ['queue']);
+// @phpstan-ignore
 Http::setResource('queueForDatabase', function (Connection $queue) {
     return new EventDatabase($queue);
 }, ['queue']);
+// @phpstan-ignore
 Http::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
+// @phpstan-ignore
 Http::setResource('queueForEvents', function (Connection $queue) {
     return new Event($queue);
 }, ['queue']);
+// @phpstan-ignore
 Http::setResource('queueForAudits', function (Connection $queue) {
     return new Audit($queue);
 }, ['queue']);
+// @phpstan-ignore
 Http::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
+// @phpstan-ignore
 Http::setResource('queueForUsage', function (Connection $queue) {
     return new Usage($queue);
 }, ['queue']);
+// @phpstan-ignore
 Http::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
+// @phpstan-ignore
 Http::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
+// @phpstan-ignore
 Http::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
@@ -1132,6 +1151,7 @@ Http::setResource('clients', function ($request, $console, $project) {
     return \array_unique($clients);
 }, ['request', 'console', 'project']);
 
+// @phpstan-ignore
 Http::setResource('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $auth) {
 
     $auth->setDefaultStatus(true);
@@ -1233,6 +1253,7 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole', 'auth']);
 
+// @phpstan-ignore
 Http::setResource('project', function (Database $dbForConsole, Request $request, Document $console, Authorization $auth) {
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
@@ -1246,6 +1267,7 @@ Http::setResource('project', function (Database $dbForConsole, Request $request,
     return $project;
 }, ['dbForConsole', 'request', 'console', 'auth']);
 
+// @phpstan-ignore
 Http::setResource('session', function (Document $user) {
     if ($user->isEmpty()) {
         return;
@@ -1267,6 +1289,7 @@ Http::setResource('session', function (Document $user) {
     return;
 }, ['user']);
 
+// @phpstan-ignore
 Http::setResource('console', function () {
     return new Document([
         '$id' => ID::custom('console'),
@@ -1307,6 +1330,7 @@ Http::setResource('console', function () {
     ]);
 }, []);
 
+// @phpstan-ignore
 Http::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project, Authorization $auth, Connections $connections) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
@@ -1353,6 +1377,7 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForConsole
     return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project', 'auth', 'connections']);
 
+// @phpstan-ignore
 Http::setResource('dbForConsole', function (Group $pools, Cache $cache, Authorization $auth, Connections $connections) {
     $connection = $pools->get('console')->pop();
     $connections->add($connection);
@@ -1370,6 +1395,7 @@ Http::setResource('dbForConsole', function (Group $pools, Cache $cache, Authoriz
     return $database;
 }, ['pools', 'cache', 'auth', 'connections']);
 
+// @phpstan-ignore
 Http::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache, Authorization $auth, Connections $connections) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
@@ -1425,6 +1451,7 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForConsole
     return $getProjectDB;
 }, ['pools', 'dbForConsole', 'cache', 'auth', 'connections']);
 
+// @phpstan-ignore
 Http::setResource('cache', function (Group $pools, Connections $connections) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
@@ -1438,18 +1465,22 @@ Http::setResource('cache', function (Group $pools, Connections $connections) {
     return new Cache(new Sharding($adapters));
 }, ['pools', 'connections']);
 
+// @phpstan-ignore
 Http::setResource('deviceForLocal', function () {
     return new Local();
 });
 
+// @phpstan-ignore
 Http::setResource('deviceForFiles', function ($project) {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
+// @phpstan-ignore
 Http::setResource('deviceForFunctions', function ($project) {
     return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
 }, ['project']);
 
+// @phpstan-ignore
 Http::setResource('deviceForBuilds', function ($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
@@ -1540,6 +1571,7 @@ function getDevice($root): Device
     }
 }
 
+// @phpstan-ignore
 Http::setResource('mode', function ($request) {
     /** @var Appwrite\Utopia\Request $request */
 
@@ -1551,17 +1583,20 @@ Http::setResource('mode', function ($request) {
     return $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
 }, ['request']);
 
+// @phpstan-ignore
 Http::setResource('geodb', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
 }, ['register']);
 
+// @phpstan-ignore
 Http::setResource('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('passwordsDictionary');
 }, ['register']);
 
 
+// @phpstan-ignore
 Http::setResource('servers', function () {
     $platforms = Config::getParam('platforms');
     $server = $platforms[APP_PLATFORM_SERVER];
@@ -1573,10 +1608,12 @@ Http::setResource('servers', function () {
     return $languages;
 });
 
+// @phpstan-ignore
 Http::setResource('promiseAdapter', function ($register) {
     return $register->get('promiseAdapter');
 }, ['register']);
 
+// @phpstan-ignore
 Http::setResource('schema', function (Http $utopia, Database $dbForProject, Authorization $auth) {
 
     $complexity = function (int $complexity, array $args) {
@@ -1663,28 +1700,33 @@ Http::setResource('schema', function (Http $utopia, Database $dbForProject, Auth
     );
 }, ['utopia', 'dbForProject', 'auth']);
 
+// @phpstan-ignore
 Http::setResource('contributors', function () {
     $path = 'app/config/contributors.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     return $list;
 });
 
+// @phpstan-ignore
 Http::setResource('employees', function () {
     $path = 'app/config/employees.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     return $list;
 });
 
+// @phpstan-ignore
 Http::setResource('heroes', function () {
     $path = 'app/config/heroes.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     return $list;
 });
 
+// @phpstan-ignore
 Http::setResource('gitHub', function (Cache $cache) {
     return new VcsGitHub($cache);
 }, ['cache']);
 
+// @phpstan-ignore
 Http::setResource('requestTimestamp', function ($request) {
     //TODO: Move this to the Request class itself
     $timestampHeader = $request->getHeader('x-appwrite-timestamp');
@@ -1699,12 +1741,15 @@ Http::setResource('requestTimestamp', function ($request) {
     return $requestTimestamp;
 }, ['request']);
 
+// @phpstan-ignore
 Http::setResource('plan', function (array $plan = []) {
     return [];
 });
 
+// @phpstan-ignore
 Http::setResource('auth', fn () => new Authorization());
 
+// @phpstan-ignore
 Http::setResource('pools', function ($register) {
     return $register->get('pools');
 }, ['pools']);

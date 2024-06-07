@@ -5,7 +5,6 @@ require_once __DIR__ . '/controllers/general.php';
 
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
-use Appwrite\Event\Hamster;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
 use Utopia\CLI\Adapters\Swoole as SwooleCLI;
@@ -30,7 +29,6 @@ $auth = new Dependency();
 $register = new Dependency();
 $logError = new Dependency();
 $queueForDeletes = new Dependency();
-$queueForHamster = new Dependency();
 $queueForCertificates = new Dependency();
 
 $register
@@ -39,12 +37,6 @@ $register
         return $global;
     });
 
-$queueForHamster
-    ->setName('queueForHamster')
-    ->inject('queue')
-    ->setCallback(function (Connection $queue) {
-        return new Hamster($queue);
-    });
 
 $queueForDeletes
     ->setName('queueForDeletes')
@@ -108,7 +100,6 @@ $auth
 $container->set($auth);
 $container->set($logError);
 $container->set($register);
-$container->set($queueForHamster);
 $container->set($queueForDeletes);
 $container->set($queueForCertificates);
 
