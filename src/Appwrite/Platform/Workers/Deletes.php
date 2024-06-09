@@ -93,7 +93,7 @@ class Deletes extends Action
                         $this->deleteDeployment($getProjectDB, $deviceForFunctions, $deviceForBuilds, $document, $project);
                         break;
                     case DELETE_TYPE_USERS:
-                        $this->deleteUser($getProjectDB, $document, $project, $dbForConsole = null);
+                        $this->deleteUser($getProjectDB, $document, $project, $dbForConsole);
                         break;
                     case DELETE_TYPE_TEAMS:
                         $this->deleteMemberships($getProjectDB, $document, $project);
@@ -574,9 +574,9 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected  function deleteUser(callable $getProjectDB, Document $document, Document $project): void
+    protected  function deleteUser(callable $getProjectDB, Document $document, Document $project, Database $dbForConsole): void
     {
-        var_dump("in appwrite");
+
         $userId = $document->getId();
         $userInternalId = $document->getInternalId();
         $dbForProject = $getProjectDB($project);
