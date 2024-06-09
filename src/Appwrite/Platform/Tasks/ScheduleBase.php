@@ -108,6 +108,7 @@ abstract class ScheduleBase extends Action
                     var_dump('=== ScheduleBase start');
                     var_dump($getSchedule($document)['resource']);
                     var_dump('=== ScheduleBase end');
+                    //todo: use a unique key as InternalId or add projectId
                     $this->schedules[$document['resourceId']] = $getSchedule($document);
                 } catch (\Throwable $th) {
                     $collectionId = static::getCollectionId();
