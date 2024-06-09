@@ -93,7 +93,7 @@ class Deletes extends Action
                         $this->deleteDeployment($getProjectDB, $deviceForFunctions, $deviceForBuilds, $document, $project);
                         break;
                     case DELETE_TYPE_USERS:
-                        $this->deleteUser($getProjectDB, $document, $project);
+                        $this->deleteUser($getProjectDB, $document, $project, $dbForConsole = null);
                         break;
                     case DELETE_TYPE_TEAMS:
                         $this->deleteMemberships($getProjectDB, $document, $project);
