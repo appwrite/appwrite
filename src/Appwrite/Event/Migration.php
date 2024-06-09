@@ -10,7 +10,8 @@ class Migration extends Event
 {
     protected string $type = '';
     protected ?Document $migration = null;
-    protected ?Document $backup;
+    protected ?Document $archive = null;
+    protected ?Document $backup = null;
 
     public function __construct(protected Connection $connection)
     {
@@ -35,14 +36,14 @@ class Migration extends Event
     }
 
     /**
-     * Sets backup.
+     * Sets archive
      *
-     * @param Document $backup
+     * @param Document $archive
      * @return self
      */
-    public function setBackup(Document $backup): self
+    public function setArchive(Document $archive): self
     {
-        $this->backup = $backup;
+        $this->archive = $archive;
 
         return $this;
     }
@@ -96,7 +97,7 @@ class Migration extends Event
             'project' => $this->project,
             'user' => $this->user,
             'migration' => $this->migration,
-            'backup' => $this->backup
+            'archive' => $this->archive
         ]);
     }
 }
