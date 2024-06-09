@@ -576,6 +576,7 @@ class Deletes extends Action
      */
     protected  function deleteUser(callable $getProjectDB, Document $document, Document $project): void
     {
+        var_dump("in appwrite");
         $userId = $document->getId();
         $userInternalId = $document->getInternalId();
         $dbForProject = $getProjectDB($project);
