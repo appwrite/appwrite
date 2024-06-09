@@ -11,7 +11,6 @@ class Migration extends Event
     protected string $type = '';
     protected ?Document $migration = null;
     protected ?Document $archive = null;
-    protected ?Document $backup = null;
 
     public function __construct(protected Connection $connection)
     {
