@@ -3,17 +3,17 @@
 namespace Appwrite\GraphQL;
 
 use Appwrite\GraphQL\Types\Mapper;
+use Appwrite\Utopia\Response;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema as GQLSchema;
-use Appwrite\Utopia\Response;
 use Utopia\DI\Container;
-use Utopia\Http\Response as UtopiaHttpResponse;
-use Utopia\Http\Adapter\Swoole\Response as UtopiaSwooleResponse;
 use Utopia\Exception;
+use Utopia\Http\Adapter\Swoole\Response as UtopiaSwooleResponse;
 use Utopia\Http\Http;
-use Utopia\Http\Route;
 use Utopia\Http\Request;
+use Utopia\Http\Response as UtopiaHttpResponse;
+use Utopia\Http\Route;
 
 class Schema
 {
@@ -51,23 +51,23 @@ class Schema
             $container,
             $complexity
         );
-//        $collections = $this->collections(
-//            $http,
-//            $complexity,
-//            $request,
-//            $response,
-//            $attributes,
-//            $urls,
-//            $params,
-//        );
+        //        $collections = $this->collections(
+        //            $http,
+        //            $complexity,
+        //            $request,
+        //            $response,
+        //            $attributes,
+        //            $urls,
+        //            $params,
+        //        );
 
         $queries = \array_merge_recursive(
             $api['query'],
-        //$collections['query']
+            //$collections['query']
         );
         $mutations = \array_merge_recursive(
             $api['mutation'],
-        //$collections['mutation']
+            //$collections['mutation']
         );
 
         \ksort($queries);
@@ -241,7 +241,7 @@ class Schema
                     'args' => \array_merge(
                         Mapper::args('id'),
                         \array_map(
-                            fn($attr) => $attr['type'] = Type::getNullableType($attr['type']),
+                            fn ($attr) => $attr['type'] = Type::getNullableType($attr['type']),
                             $attributes
                         )
                     ),

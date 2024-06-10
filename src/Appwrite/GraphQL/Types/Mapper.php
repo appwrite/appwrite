@@ -225,7 +225,7 @@ class Mapper
         array $injections
     ): Type {
         $validator = \is_callable($validator)
-            ? \call_user_func_array($validator, array_map(fn($injection) => $container->get($injection), $injections))
+            ? \call_user_func_array($validator, array_map(fn ($injection) => $container->get($injection), $injections))
             : $validator;
 
         $isNullable = $validator instanceof Nullable;

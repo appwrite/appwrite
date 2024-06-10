@@ -8,9 +8,9 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\DI\Container;
 use Utopia\Exception;
-use Utopia\Http\Response as UtopiaHttpResponse;
-use Utopia\Http\Request as UtopiaHttpRequest;
 use Utopia\Http\Http;
+use Utopia\Http\Request as UtopiaHttpRequest;
+use Utopia\Http\Response as UtopiaHttpResponse;
 use Utopia\Http\Route;
 use Utopia\System\System;
 
@@ -31,7 +31,7 @@ class Resolvers
         Container $container,
     ): callable {
         $resolver = $this;
-        return fn($type, $args, $context, $info) => new Swoole(
+        return fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($http, $route, $args, $context, $container, $info, $request, $response, $resolver) {
                 $path = $route->getPath();
                 foreach ($args as $key => $value) {
@@ -97,8 +97,8 @@ class Resolvers
         UtopiaHttpResponse $response,
         Container $container,
     ): callable {
-         $resolver = $this;
-        return fn($type, $args, $context, $info) => new Swoole(
+        $resolver = $this;
+        return fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('GET');
                 $request->setURI($url($databaseId, $collectionId, $args));
@@ -128,8 +128,8 @@ class Resolvers
         UtopiaHttpResponse $response,
         Container $container,
     ): callable {
-         $resolver = $this;
-        return fn($type, $args, $context, $info) => new Swoole(
+        $resolver = $this;
+        return fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('GET');
                 $request->setURI($url($databaseId, $collectionId, $args));
@@ -164,8 +164,8 @@ class Resolvers
         UtopiaHttpResponse $response,
         Container $container,
     ): callable {
-         $resolver = $this;
-        return fn($type, $args, $context, $info) => new Swoole(
+        $resolver = $this;
+        return fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('POST');
                 $request->setURI($url($databaseId, $collectionId, $args));
@@ -196,8 +196,8 @@ class Resolvers
         UtopiaHttpResponse $response,
         Container $container,
     ): callable {
-         $resolver = $this;
-        return fn($type, $args, $context, $info) => new Swoole(
+        $resolver = $this;
+        return fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('PATCH');
                 $request->setURI($url($databaseId, $collectionId, $args));
@@ -226,8 +226,8 @@ class Resolvers
         UtopiaHttpResponse $response,
         Container $container,
     ): callable {
-         $resolver = $this;
-        return fn($type, $args, $context, $info) => new Swoole(
+        $resolver = $this;
+        return fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('DELETE');
                 $request->setURI($url($databaseId, $collectionId, $args));

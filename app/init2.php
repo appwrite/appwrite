@@ -2,10 +2,6 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\Cache\Adapter\Redis as CacheRedis;
-use Utopia\Cache\Adapter\Sharding;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
@@ -28,10 +24,13 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\URL\URL;
 use Appwrite\Utopia\Queue\Connections;
 use MaxMind\Db\Reader;
+use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
+use Utopia\Cache\Adapter\Redis as CacheRedis;
+use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -65,6 +64,7 @@ use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 require_once __DIR__ . '/init/constants.php';
 require_once __DIR__ . '/init/config.php';
@@ -206,20 +206,20 @@ $global->set(
     'pools',
     (function () {
         $fallbackForDB = 'db_main=' . URL::unparse([
-                'scheme' => 'mariadb',
-                'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
-                'port' => System::getEnv('_APP_DB_PORT', '3306'),
-                'user' => System::getEnv('_APP_DB_USER', ''),
-                'pass' => System::getEnv('_APP_DB_PASS', ''),
-                'path' => System::getEnv('_APP_DB_SCHEMA', ''),
-            ]);
+            'scheme' => 'mariadb',
+            'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
+            'port' => System::getEnv('_APP_DB_PORT', '3306'),
+            'user' => System::getEnv('_APP_DB_USER', ''),
+            'pass' => System::getEnv('_APP_DB_PASS', ''),
+            'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+        ]);
         $fallbackForRedis = 'redis_main=' . URL::unparse([
-                'scheme' => 'redis',
-                'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
-                'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
-                'user' => System::getEnv('_APP_REDIS_USER', ''),
-                'pass' => System::getEnv('_APP_REDIS_PASS', ''),
-            ]);
+            'scheme' => 'redis',
+            'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
+            'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
+            'user' => System::getEnv('_APP_REDIS_USER', ''),
+            'pass' => System::getEnv('_APP_REDIS_PASS', ''),
+        ]);
 
         $connections = [
             'console' => [
@@ -430,7 +430,7 @@ $queueForCertificates = new Dependency();
 
 $plan
     ->setName('plan')
-    ->setCallback(fn() => []);
+    ->setCallback(fn () => []);
 
 $mode
     ->setName('mode')
@@ -639,7 +639,7 @@ $project
             return $console;
         }
 
-        $project = $authorization->skip(fn() => $dbForConsole->getDocument('projects', $projectId));
+        $project = $authorization->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
         return $project;
     });
@@ -802,11 +802,11 @@ $connections
 
 $locale
     ->setName('locale')
-    ->setCallback(fn() => new Locale(System::getEnv('_APP_LOCALE', 'en')));
+    ->setCallback(fn () => new Locale(System::getEnv('_APP_LOCALE', 'en')));
 
 $localeCodes
     ->setName('localeCodes')
-    ->setCallback(fn() => array_map(fn($locale) => $locale['code'], Config::getParam('locale-codes', [])));
+    ->setCallback(fn () => array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));
 
 $queue
     ->setName('queue')
@@ -958,10 +958,10 @@ $clients
          * + Filter for duplicated entries
          */
         $clientsConsole = \array_map(
-            fn($node) => $node['hostname'],
+            fn ($node) => $node['hostname'],
             \array_filter(
                 $console->getAttribute('platforms', []),
-                fn($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && isset($node['hostname']) && !empty($node['hostname']))
+                fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && isset($node['hostname']) && !empty($node['hostname']))
             )
         );
 
@@ -969,10 +969,10 @@ $clients
             \array_merge(
                 $clientsConsole,
                 \array_map(
-                    fn($node) => $node['hostname'],
+                    fn ($node) => $node['hostname'],
                     \array_filter(
                         $project->getAttribute('platforms', []),
-                        fn($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB || $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) && isset($node['hostname']) && !empty($node['hostname']))
+                        fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB || $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) && isset($node['hostname']) && !empty($node['hostname']))
                     )
                 )
             )
@@ -1121,7 +1121,7 @@ $promiseAdapter
 
 $schemaVariable
     ->setName('schemaVariable')
-    ->setCallback(fn()=> new Schema());
+    ->setCallback(fn () => new Schema());
 
 $schema
     ->setName('schema')
@@ -1142,7 +1142,7 @@ $schema
         };
 
         $attributes = function (int $limit, int $offset) use ($dbForProject, $authorization) {
-            $attrs = $authorization->skip(fn() => $dbForProject->find('attributes', [
+            $attrs = $authorization->skip(fn () => $dbForProject->find('attributes', [
                 Query::limit($limit),
                 Query::offset($offset),
             ]));
