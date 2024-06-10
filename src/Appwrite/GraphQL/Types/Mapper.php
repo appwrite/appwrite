@@ -8,7 +8,10 @@ use Exception;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
+use Utopia\DI\Container;
+use Utopia\Http\Adapter\Swoole\Response as UtopiaSwooleResponse;
 use Utopia\Http\Http;
+use Utopia\Http\Request;
 use Utopia\Http\Route;
 use Utopia\Http\Validator;
 use Utopia\Http\Validator\Nullable;
@@ -74,12 +77,15 @@ class Mapper
         return self::$args[$key] ?? [];
     }
 
-    public static function route(
-        Http $utopia,
+    public function route(
+        Http $http,
         Route $route,
+        Request $request,
+        UtopiaSwooleResponse $response,
+        Container $container,
         callable $complexity
     ): iterable {
-        foreach (self::$blacklist as $blacklist) {
+        foreach (static::$blacklist as $blacklist) {
             if (\str_starts_with($route->getPath(), $blacklist)) {
                 return;
             }
@@ -101,7 +107,7 @@ class Mapper
                     $list = true;
                 }
                 $parameterType = Mapper::param(
-                    $utopia,
+                    $container,
                     $parameter['validator'],
                     !$parameter['optional'],
                     $parameter['injections']
@@ -116,7 +122,7 @@ class Mapper
                 'type' => $type,
                 'description' => $description,
                 'args' => $params,
-                'resolve' => Resolvers::api($utopia, $route)
+                'resolve' => Resolvers::api($http, $route, $request, $response, $container)
             ];
 
             if ($list) {
@@ -205,7 +211,7 @@ class Mapper
     /**
      * Map a {@see Route} parameter to a GraphQL Type
      *
-     * @param Http $utopia
+     * @param Container $container
      * @param Validator|callable $validator
      * @param bool $required
      * @param array $injections
@@ -213,13 +219,13 @@ class Mapper
      * @throws Exception
      */
     public static function param(
-        Http $utopia,
+        Container $container,
         Validator|callable $validator,
         bool $required,
         array $injections
     ): Type {
         $validator = \is_callable($validator)
-            ? \call_user_func_array($validator, $utopia->getResources($injections))
+            ? \call_user_func_array($validator, array_map(fn($injection) => $container->get($injection), $injections))
             : $validator;
 
         $isNullable = $validator instanceof Nullable;
@@ -278,7 +284,7 @@ class Mapper
                 break;
             case 'Utopia\Http\Validator\ArrayList':
                 $type = Type::listOf(self::param(
-                    $utopia,
+                    $container,
                     $validator->getValidator(),
                     $required,
                     $injections

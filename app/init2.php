@@ -206,20 +206,20 @@ $global->set(
     'pools',
     (function () {
         $fallbackForDB = 'db_main=' . URL::unparse([
-            'scheme' => 'mariadb',
-            'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
-            'port' => System::getEnv('_APP_DB_PORT', '3306'),
-            'user' => System::getEnv('_APP_DB_USER', ''),
-            'pass' => System::getEnv('_APP_DB_PASS', ''),
-            'path' => System::getEnv('_APP_DB_SCHEMA', ''),
-        ]);
+                'scheme' => 'mariadb',
+                'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
+                'port' => System::getEnv('_APP_DB_PORT', '3306'),
+                'user' => System::getEnv('_APP_DB_USER', ''),
+                'pass' => System::getEnv('_APP_DB_PASS', ''),
+                'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+            ]);
         $fallbackForRedis = 'redis_main=' . URL::unparse([
-            'scheme' => 'redis',
-            'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
-            'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
-            'user' => System::getEnv('_APP_REDIS_USER', ''),
-            'pass' => System::getEnv('_APP_REDIS_PASS', ''),
-        ]);
+                'scheme' => 'redis',
+                'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
+                'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
+                'user' => System::getEnv('_APP_REDIS_USER', ''),
+                'pass' => System::getEnv('_APP_REDIS_PASS', ''),
+            ]);
 
         $connections = [
             'console' => [
@@ -415,6 +415,7 @@ $deviceForFiles = new Dependency();
 $queueForEvents = new Dependency();
 $queueForAudits = new Dependency();
 $promiseAdapter = new Dependency();
+$schemaVariable = new Dependency();
 $deviceForBuilds = new Dependency();
 $queueForDeletes = new Dependency();
 $requestTimestamp = new Dependency();
@@ -429,7 +430,7 @@ $queueForCertificates = new Dependency();
 
 $plan
     ->setName('plan')
-    ->setCallback(fn () => []);
+    ->setCallback(fn() => []);
 
 $mode
     ->setName('mode')
@@ -638,7 +639,7 @@ $project
             return $console;
         }
 
-        $project = $authorization->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+        $project = $authorization->skip(fn() => $dbForConsole->getDocument('projects', $projectId));
 
         return $project;
     });
@@ -804,11 +805,11 @@ $connections
 
 $locale
     ->setName('locale')
-    ->setCallback(fn () => new Locale(System::getEnv('_APP_LOCALE', 'en')));
+    ->setCallback(fn() => new Locale(System::getEnv('_APP_LOCALE', 'en')));
 
 $localeCodes
     ->setName('localeCodes')
-    ->setCallback(fn () => array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));
+    ->setCallback(fn() => array_map(fn($locale) => $locale['code'], Config::getParam('locale-codes', [])));
 
 $queue
     ->setName('queue')
@@ -960,10 +961,10 @@ $clients
          * + Filter for duplicated entries
          */
         $clientsConsole = \array_map(
-            fn ($node) => $node['hostname'],
+            fn($node) => $node['hostname'],
             \array_filter(
                 $console->getAttribute('platforms', []),
-                fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && isset($node['hostname']) && !empty($node['hostname']))
+                fn($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && isset($node['hostname']) && !empty($node['hostname']))
             )
         );
 
@@ -971,10 +972,10 @@ $clients
             \array_merge(
                 $clientsConsole,
                 \array_map(
-                    fn ($node) => $node['hostname'],
+                    fn($node) => $node['hostname'],
                     \array_filter(
                         $project->getAttribute('platforms', []),
-                        fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB || $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) && isset($node['hostname']) && !empty($node['hostname']))
+                        fn($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB || $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) && isset($node['hostname']) && !empty($node['hostname']))
                     )
                 )
             )
@@ -1117,17 +1118,24 @@ $getProjectDB
 
 $promiseAdapter
     ->setName('promiseAdapter')
-    ->inject('register')
-    ->setCallback(function ($register) {
-        return $register->get('promiseAdapter');
+    ->setCallback(function () use ($global) {
+        return $global->get('promiseAdapter');
     });
+
+$schemaVariable
+    ->setName('schemaVariable')
+    ->setCallback(fn()=> new Schema());
 
 $schema
     ->setName('schema')
-    ->inject('utopia')
+    ->inject('http')
+    ->inject('context')
+    ->inject('request')
+    ->inject('response')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->setCallback(function (Http $utopia, Database $dbForProject, Authorization $authorization) {
+    ->inject('schemaVariable')
+    ->setCallback(function (Http $http, Container $context, Request $request, Response $response, Database $dbForProject, Authorization $authorization, $schemaVariable) {
         $complexity = function (int $complexity, array $args) {
             $queries = Query::parseQueries($args['queries'] ?? []);
             $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
@@ -1137,7 +1145,7 @@ $schema
         };
 
         $attributes = function (int $limit, int $offset) use ($dbForProject, $authorization) {
-            $attrs = $authorization->skip(fn () => $dbForProject->find('attributes', [
+            $attrs = $authorization->skip(fn() => $dbForProject->find('attributes', [
                 Query::limit($limit),
                 Query::offset($offset),
             ]));
@@ -1201,14 +1209,18 @@ $schema
             },
         ];
 
-        return Schema::build(
-            $utopia,
+        return $schemaVariable->build(
+            $http,
+            $request,
+            $response,
+            $context,
             $complexity,
             $attributes,
             $urls,
             $params,
         );
     });
+
 $container->set($log);
 $container->set($mode);
 $container->set($user);
@@ -1237,6 +1249,7 @@ $container->set($getProjectDB);
 $container->set($authorization);
 $container->set($queueForUsage);
 $container->set($queueForMails);
+$container->set($schemaVariable);
 $container->set($queueForBuilds);
 $container->set($queueForEvents);
 $container->set($queueForAudits);

@@ -310,6 +310,7 @@ function processResult($result, $debugFlags): array
 Http::shutdown()
     ->groups(['schema'])
     ->inject('project')
-    ->action(function (Document $project) {
-        Schema::setDirty($project->getId());
+    ->inject('schemaVariable')
+    ->action(function (Document $project, Schema $schemaVariable) {
+        $schemaVariable->setDirty($project->getId());
     });
