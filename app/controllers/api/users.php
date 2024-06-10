@@ -1097,7 +1097,7 @@ App::patch('/v1/users/:userId/name')
 
 App::patch('/v1/users/:userId/password')
     ->desc('Update password')
-    ->groups(['api', 'users'])
+    ->groups(['api', 'users', 'credentials'])
     ->label('event', 'users.[userId].update.password')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
