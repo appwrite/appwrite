@@ -4019,6 +4019,17 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('stage'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('source'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -4102,6 +4113,13 @@ $projectCollections = array_merge([
                 'orders' => [Database::ORDER_ASC],
             ],
             [
+                '$id' => '_key_stage',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['stage'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
                 '$id' => '_key_source',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['source'],
@@ -4117,10 +4135,10 @@ $projectCollections = array_merge([
             ]
         ],
     ],
-    'groupMigrations' => [
+    'migrationsGroup' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('groupMigrations'),
-        'name' => 'groupMigrations',
+        '$id' => ID::custom('migrationsGroup'),
+        'name' => 'migrationsGroup',
         'attributes' => [
             [
                 '$id' => ID::custom('migrationId'),

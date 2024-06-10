@@ -157,7 +157,7 @@ class Migrations extends Action
             roles: $target['roles'],
         );
 
-        return $this->dbForProject->updateDocument($migration->getCollection(), $migration->getId(), $migration);
+        return $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration);
     }
 
     /**
@@ -249,16 +249,15 @@ class Migrations extends Action
         $tempAPIKey = $this->generateAPIKey($projectDocument);
 
         try {
-            $group = $this->dbForProject->getDocument('groupMigrations', $group->getId());
+            $group = $this->dbForProject->getDocument('migrationsGroup', $group->getId());
 
             $migration = $this->dbForProject->getDocument('migrations', $group->getAttribute('migrationId', ''));
             $migration->setAttribute('status', 'processing');
 
             $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'processing'", \microtime(true)));
+            $log->addTag('type', $migration->getAttribute('source'));
 
             $this->updateMigrationDocument($migration, $projectDocument);
-
-            $log->addTag('type', $migration->getAttribute('source'));
 
             $source = $this->processSource($migration->getAttribute('source'), $migration->getAttribute('credentials'));
 
@@ -275,25 +274,7 @@ class Migrations extends Action
                 $destination
             );
 
-            // Calculate group resources
             $resources = $group->getAttribute('resources');
-
-            switch ($group->getAttribute('group')) {
-                case Transfer::GROUP_AUTH:
-                    $resources = array_intersect(Transfer::GROUP_AUTH_RESOURCES, $resources);
-                    break;
-                case Transfer::GROUP_STORAGE:
-                    $resources = array_intersect(Transfer::GROUP_STORAGE_RESOURCES, $resources);
-                    break;
-                case Transfer::GROUP_DATABASES:
-                    $resources = array_intersect(Transfer::GROUP_DATABASES_RESOURCES, $resources);
-                    break;
-                case Transfer::GROUP_FUNCTIONS:
-                    $resources = array_intersect(Transfer::GROUP_FUNCTIONS_RESOURCES, $resources);
-                    break;
-                default:
-                    throw new Exception('Migration worker was initialized with unknown group');
-            }
 
             $log->addTag('migrationGroup', $group->getAttribute('group'));
             $log->addExtra('migrationResources', json_encode($resources));
@@ -310,7 +291,6 @@ class Migrations extends Action
             $destinationErrors = $destination->getErrors();
 
             if (!empty($sourceErrors) || !empty($destinationErrors)) {
-                $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and failed", \microtime(true)));
                 $migration->setAttribute('status', 'failed');
 
                 $errorMessages = [];
@@ -326,6 +306,7 @@ class Migrations extends Action
                 $group->setAttribute('errors', $errorMessages);
                 $this->updateMigrationDocument($group, $projectDocument);
                 $this->updateMigrationDocument($migration, $projectDocument);
+                $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and failed", \microtime(true)));
                 $log->addExtra('migrationErrors', json_encode($errorMessages));
 
                 return;
@@ -336,7 +317,7 @@ class Migrations extends Action
             $this->updateMigrationDocument($group, $project);
 
             // Check if all other groups are finished, if so set parent document to completed aswell.
-            $groupDocuments = $this->dbForProject->find('groupMigrations', [Query::equal('migrationId', [$migration->getId()])]);
+            $groupDocuments = $this->dbForProject->find('migrationsGroup', [Query::equal('migrationId', [$migration->getId()])]);
 
             $result = 'completed';
             foreach ($groupDocuments as $document) {
@@ -346,15 +327,16 @@ class Migrations extends Action
 
                 $status = $document->getAttribute('status', 'processing');
 
-                if ($status == 'processing' || $status == 'pending') {
+                if ($status === 'processing' || $status === 'pending') {
                     $result = 'processing';
                     break;
                 }
 
                 // Only fail parent if all have stopped processing.
-                if ($status == 'failed') {
+                if ($status === 'failed') {
+                    $result = 'failed';
                     break;
-                }
+                 }
             }
 
             $migration->setAttribute('status', $result);

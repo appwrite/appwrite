@@ -690,7 +690,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        $groups = $database->find('groupMigrations', [
+        $groups = $database->find('migrationsGroup', [
             Query::equal('migrationId', [$document->getId()]),
         ]);
 
@@ -712,7 +712,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        $groups = $database->find('groupMigrations', [
+        $groups = $database->find('migrationsGroup', [
             Query::equal('migrationId', [$document->getId()]),
         ]);
 
@@ -734,7 +734,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        $groups = $database->find('groupMigrations', [
+        $groups = $database->find('migrationsGroup', [
             Query::equal('migrationId', [$document->getId()]),
         ]);
 

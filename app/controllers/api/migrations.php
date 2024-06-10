@@ -41,25 +41,24 @@ $triggerMigration = function (string $migrationId, array $resources, Migration $
     ];
 
     foreach ($groups as $group => $groupResources) {
-        if (!empty(array_intersect(
+        $filteredResources = array_intersect(
             $groupResources,
             $resources
-        ))) {
+        );
+
+        if (!empty($filteredResources)) {
             $groupDocument = new Document([
                 '$id' => ID::unique(),
                 'status' => 'pending',
                 'migrationId' => $migrationId,
                 'group' => $group,
-                'resources' => array_intersect(
-                    $groupResources,
-                    $resources
-                ),
+                'resources' => $filteredResources,
                 'statusCounters' => '',
                 'resourceData' => '',
                 'errors' => []
             ]);
 
-            $dbForProject->createDocument('groupMigrations', $groupDocument);
+            $dbForProject->createDocument('migrationsGroup', $groupDocument);
 
             $queueForMigrations
                 ->setType($group)
@@ -96,6 +95,7 @@ App::post('/v1/migrations/appwrite')
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
+            'stage' => 'init',
             'source' => Appwrite::getName(),
             'credentials' => [
                 'endpoint' => $endpoint,
@@ -197,6 +197,7 @@ App::post('/v1/migrations/firebase/oauth')
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
+            'stage' => 'init',
             'source' => Firebase::getName(),
             'credentials' => [
                 'serviceAccount' => json_encode($serviceAccount),
@@ -256,6 +257,7 @@ App::post('/v1/migrations/firebase')
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
+            'stage' => 'init',
             'source' => Firebase::getName(),
             'credentials' => [
                 'serviceAccount' => $serviceAccount,
@@ -310,6 +312,7 @@ App::post('/v1/migrations/supabase')
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
+            'stage' => 'init',
             'source' => Supabase::getName(),
             'credentials' => [
                 'endpoint' => $endpoint,
@@ -370,6 +373,7 @@ App::post('/v1/migrations/nhost')
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
+            'stage' => 'init',
             'source' => NHost::getName(),
             'credentials' => [
                 'subdomain' => $subdomain,
