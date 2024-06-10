@@ -23,15 +23,16 @@ class Resolvers
      * @param ?Route $route
      * @return callable
      */
-    public static function api(
+    public function api(
         Http $http,
         ?Route $route,
         UtopiaHttpRequest $request,
         UtopiaHttpResponse $response,
         Container $container,
     ): callable {
+        $resolver = $this;
         return fn($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $route, $args, $context, $container, $info, $request, $response) {
+            function (callable $resolve, callable $reject) use ($http, $route, $args, $context, $container, $info, $request, $response, $resolver) {
                 $path = $route->getPath();
                 foreach ($args as $key => $value) {
                     if (\str_contains($path, '/:' . $key)) {
@@ -51,7 +52,7 @@ class Resolvers
                         break;
                 }
 
-                self::resolve($http, $request, $response, $container, $resolve, $reject);
+                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -65,7 +66,7 @@ class Resolvers
      * @param string $methodType
      * @return callable
      */
-    public static function document(
+    public function document(
         Http $http,
         string $databaseId,
         string $collectionId,
@@ -87,7 +88,7 @@ class Resolvers
      * @param callable $url
      * @return callable
      */
-    public static function documentGet(
+    public function documentGet(
         Http $http,
         string $databaseId,
         string $collectionId,
@@ -96,12 +97,13 @@ class Resolvers
         UtopiaHttpResponse $response,
         Container $container,
     ): callable {
-        return static fn($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $type, $args, $container, $request, $response) {
+         $resolver = $this;
+        return fn($type, $args, $context, $info) => new Swoole(
+            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('GET');
                 $request->setURI($url($databaseId, $collectionId, $args));
 
-                self::resolve($http, $request, $response, $container, $resolve, $reject);
+                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -116,7 +118,7 @@ class Resolvers
      * @param callable $params
      * @return callable
      */
-    public static function documentList(
+    public function documentList(
         Http $http,
         string $databaseId,
         string $collectionId,
@@ -126,8 +128,9 @@ class Resolvers
         UtopiaHttpResponse $response,
         Container $container,
     ): callable {
-        return static fn($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container, $request, $response) {
+         $resolver = $this;
+        return fn($type, $args, $context, $info) => new Swoole(
+            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('GET');
                 $request->setURI($url($databaseId, $collectionId, $args));
                 $request->setQuery($params($databaseId, $collectionId, $args));
@@ -136,7 +139,7 @@ class Resolvers
                     return $payload['documents'];
                 };
 
-                self::resolve($http, $request, $response, $container,$resolve, $reject, $beforeResolve);
+                $resolver->resolve($http, $request, $response, $container, $resolve, $reject, $beforeResolve);
             }
         );
     }
@@ -151,7 +154,7 @@ class Resolvers
      * @param callable $params
      * @return callable
      */
-    public static function documentCreate(
+    public function documentCreate(
         Http $http,
         string $databaseId,
         string $collectionId,
@@ -161,13 +164,14 @@ class Resolvers
         UtopiaHttpResponse $response,
         Container $container,
     ): callable {
-        return static fn($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container,$request, $response) {
+         $resolver = $this;
+        return fn($type, $args, $context, $info) => new Swoole(
+            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('POST');
                 $request->setURI($url($databaseId, $collectionId, $args));
                 $request->setPayload($params($databaseId, $collectionId, $args));
 
-                self::resolve($http, $request, $response, $container, $resolve, $reject);
+                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -182,7 +186,7 @@ class Resolvers
      * @param callable $params
      * @return callable
      */
-    public static function documentUpdate(
+    public function documentUpdate(
         Http $http,
         string $databaseId,
         string $collectionId,
@@ -192,13 +196,14 @@ class Resolvers
         UtopiaHttpResponse $response,
         Container $container,
     ): callable {
-        return static fn($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container,$request, $response) {
+         $resolver = $this;
+        return fn($type, $args, $context, $info) => new Swoole(
+            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('PATCH');
                 $request->setURI($url($databaseId, $collectionId, $args));
                 $request->setPayload($params($databaseId, $collectionId, $args));
 
-                self::resolve($http, $request, $response, $container, $resolve, $reject);
+                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -212,7 +217,7 @@ class Resolvers
      * @param callable $url
      * @return callable
      */
-    public static function documentDelete(
+    public function documentDelete(
         Http $http,
         string $databaseId,
         string $collectionId,
@@ -221,12 +226,13 @@ class Resolvers
         UtopiaHttpResponse $response,
         Container $container,
     ): callable {
-        return static fn($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $type, $args, $container,$request, $response) {
+         $resolver = $this;
+        return fn($type, $args, $context, $info) => new Swoole(
+            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('DELETE');
                 $request->setURI($url($databaseId, $collectionId, $args));
 
-                self::resolve($http, $request, $response, $container, $resolve, $reject);
+                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -242,7 +248,7 @@ class Resolvers
      * @return void
      * @throws Exception
      */
-    private static function resolve(
+    private function resolve(
         Http $http,
         Request $request,
         Response $response,
@@ -252,6 +258,7 @@ class Resolvers
         ?callable $beforeResolve = null,
         ?callable $beforeReject = null,
     ): void {
+        var_dump('HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE');
         // Drop json content type so post args are used directly
         if (\str_starts_with($request->getHeader('content-type'), 'application/json')) {
             $request->removeHeader('content-type');

@@ -756,10 +756,7 @@ $cache
             $connection = $pool->get();
             $connections->add($connection, $pool);
 
-            $redis = new Redis();
-            $redis->connect($dsn->getHost(), $dsn->getPort());
-
-            $adapters[] = new CacheRedis($redis);
+            $adapters[] = new CacheRedis($connection);
         }
 
         return new Cache(new Sharding($adapters));

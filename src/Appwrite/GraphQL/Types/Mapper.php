@@ -122,7 +122,7 @@ class Mapper
                 'type' => $type,
                 'description' => $description,
                 'args' => $params,
-                'resolve' => Resolvers::api($http, $route, $request, $response, $container)
+                'resolve' => (new Resolvers())->api($http, $route, $request, $response, $container)
             ];
 
             if ($list) {
