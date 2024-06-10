@@ -65,6 +65,8 @@ class Executor
         string $source,
         string $image,
         string $version,
+        int $cpus = 1,
+        int $memory = 512,
         bool $remove = false,
         string $entrypoint = '',
         string $destination = '',
@@ -83,8 +85,8 @@ class Executor
             'variables' => $variables,
             'remove' => $remove,
             'command' => $command,
-            'cpus' => $this->cpus,
-            'memory' => $this->memory,
+            'cpus' => $cpus,
+            'memory' => $memory,
             'version' => $version,
             'timeout' => $timeout,
         ];
@@ -177,6 +179,8 @@ class Executor
         string $path,
         string $method,
         array $headers,
+        int $cpus,
+        int $memory,
         string $runtimeEntrypoint = null,
         int $requestTimeout = null
     ) {
@@ -197,8 +201,8 @@ class Executor
             'image' => $image,
             'source' => $source,
             'entrypoint' => $entrypoint,
-            'cpus' => $this->cpus,
-            'memory' => $this->memory,
+            'cpus' => $cpus,
+            'memory' => $memory,
             'version' => $version,
             'runtimeEntrypoint' => $runtimeEntrypoint,
         ];

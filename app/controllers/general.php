@@ -270,6 +270,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 path: $path,
                 method: $method,
                 headers: $headers,
+                cpus: $function->getAttribute('cpus', 1),
+                memory: $function->getAttribute('memory', 512),
                 runtimeEntrypoint: $command,
                 requestTimeout: 30
             );

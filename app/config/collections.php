@@ -3054,6 +3054,28 @@ $projectCollections = array_merge([
                 'required' => false,
                 'default' => null,
                 'filters' => [],
+            ],
+            [
+                'array' => false,
+                '$id' => ID::custom('memory'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 512,
+                'signed' => false,
+                'required' => true,
+                'default' => null,
+                'filters' => [],
+            ],
+            [
+                'array' => false,
+                '$id' => ID::custom('cpus'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 1,
+                'signed' => false,
+                'required' => true,
+                'default' => null,
+                'filters' => [],
             ]
         ],
         'indexes' => [

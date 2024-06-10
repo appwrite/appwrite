@@ -410,6 +410,8 @@ class Builds extends Action
                             source: $source,
                             image: $runtime['image'],
                             version: $version,
+                            cpus: $function->getAttribute('cpus', 1),
+                            memory: $function->getAttribute('memory', 128),
                             remove: true,
                             entrypoint: $deployment->getAttribute('entrypoint'),
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
