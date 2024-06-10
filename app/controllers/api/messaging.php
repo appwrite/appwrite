@@ -2246,10 +2246,8 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        $validator = new Authorization();
-
-        if (!$validator->isValid(new Input('subscribe', $topic->getAttribute('subscribe')))) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
+        if (!$authorization->isValid(new Input('subscribe', $topic->getAttribute('subscribe')))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
