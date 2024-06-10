@@ -226,13 +226,6 @@ class Usage extends Action
                         ];
                     }
 
-                    if (!empty($buildsGBHours['value'])) {
-                        $metrics[] = [
-                            'key' => METRIC_BUILDS_MB_SECONDS,
-                            'value' => ($buildsGBHours['value'] * -1),
-                        ];
-                    }
-
                     if (!empty($executions['value'])) {
                         $metrics[] = [
                             'key' => METRIC_EXECUTIONS,
@@ -244,13 +237,6 @@ class Usage extends Action
                         $metrics[] = [
                             'key' => METRIC_EXECUTIONS_COMPUTE,
                             'value' => ($executionsCompute['value'] * -1),
-                        ];
-                    }
-
-                    if (!empty($executionsGBHours['value'])) {
-                        $metrics[] = [
-                            'key' => METRIC_EXECUTIONS_MB_SECONDS,
-                            'value' => ($executionsGBHours['value'] * -1),
                         ];
                     }
                     break;
