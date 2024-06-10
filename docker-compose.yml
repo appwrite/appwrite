@@ -654,6 +654,7 @@ services:
     entrypoint: maintenance
     <<: *x-logging
     container_name: appwrite-task-maintenance
+    restart: unless-stopped
     image: appwrite-dev
     networks:
       - appwrite
@@ -753,6 +754,7 @@ services:
     entrypoint: schedule-functions
     <<: *x-logging
     container_name: appwrite-task-scheduler-functions
+    restart: unless-stopped
     image: appwrite-dev
     networks:
       - appwrite
@@ -780,6 +782,7 @@ services:
     entrypoint: schedule-messages
     <<: *x-logging
     container_name: appwrite-task-scheduler-messages
+    restart: unless-stopped
     image: appwrite-dev
     networks:
       - appwrite
