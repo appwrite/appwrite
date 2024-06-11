@@ -291,7 +291,7 @@ App::post('/v1/account')
                     Query::equal('identifier', [$email]),
                 ]);
                 if($existingTarget) {
-                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
 

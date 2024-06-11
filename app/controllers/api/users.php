@@ -139,7 +139,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                     Query::equal('identifier', [$email]),
                 ]);
                 if($existingTarget) {
-                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
         }
@@ -163,7 +163,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                     Query::equal('identifier', [$phone]),
                 ]);
                 if($existingTarget) {
-                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
         }
