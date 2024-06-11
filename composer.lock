@@ -1784,12 +1784,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/di.git",
-                "reference": "8edd2c86df5db8383b197b6c5b8e35774ff8e4a8"
+                "reference": "1fb7da5ead16de5d795ef10c1e22e39726eb6943"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/di/zipball/8edd2c86df5db8383b197b6c5b8e35774ff8e4a8",
-                "reference": "8edd2c86df5db8383b197b6c5b8e35774ff8e4a8",
+                "url": "https://api.github.com/repos/utopia-php/di/zipball/1fb7da5ead16de5d795ef10c1e22e39726eb6943",
+                "reference": "1fb7da5ead16de5d795ef10c1e22e39726eb6943",
                 "shasum": ""
             },
             "require": {
@@ -1837,7 +1837,7 @@
                 "source": "https://github.com/utopia-php/di/tree/feat-framework-v2",
                 "issues": "https://github.com/utopia-php/di/issues"
             },
-            "time": "2024-06-07T18:49:13+00:00"
+            "time": "2024-06-11T16:03:00+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -1991,12 +1991,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "d64cfc3868057d539c7fa27c672ac938eedc3656"
+                "reference": "f54000a0f47b6eea34a373212711729b336a56bc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/d64cfc3868057d539c7fa27c672ac938eedc3656",
-                "reference": "d64cfc3868057d539c7fa27c672ac938eedc3656",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/f54000a0f47b6eea34a373212711729b336a56bc",
+                "reference": "f54000a0f47b6eea34a373212711729b336a56bc",
                 "shasum": ""
             },
             "require": {
@@ -2033,7 +2033,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/feat-di-upgrade"
             },
-            "time": "2024-06-10T12:37:51+00:00"
+            "time": "2024-06-11T16:03:46+00:00"
         },
         {
             "name": "utopia-php/image",
