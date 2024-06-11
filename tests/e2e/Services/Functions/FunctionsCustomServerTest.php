@@ -435,7 +435,7 @@ class FunctionsCustomServerTest extends Scope
     }
 
     /**
-     * @depends testCreateDeployment
+     * @depends testUpdate
      */
     public function testCancelDeploymentBuild($data): void
     {
@@ -590,7 +590,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals($function['body']['total'], 2);
+        $this->assertEquals($function['body']['total'], 3);
         $this->assertIsArray($function['body']['deployments']);
         $this->assertCount(2, $function['body']['deployments']);
 
