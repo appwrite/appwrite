@@ -145,7 +145,7 @@ App::get('/v1/project/usage')
             ];
         }, $dbForProject->find('buckets'));
 
-        $deploymentsBreakdown = array_map(function ($function) use ($dbForProject) {
+        $deploymentsStorageBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
             $metric = str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE);
@@ -196,7 +196,7 @@ App::get('/v1/project/usage')
             'deploymentsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE],
             'executionsBreakdown' => $executionsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown,
-            'deploymentsStorageBreakdown' => $deploymentsBreakdown,
+            'deploymentsStorageBreakdown' => $deploymentsStorageBreakdown,
         ]), Response::MODEL_USAGE_PROJECT);
     });
 
