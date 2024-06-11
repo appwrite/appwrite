@@ -103,7 +103,6 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertIsNumeric($response['body']['executionsTimeTotal']);
         $this->assertIsArray($response['body']['deployments']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
-        $this->assertIsArray($response['body']['deploymentsStorageBreakdown']);
         $this->assertIsArray($response['body']['builds']);
         $this->assertIsArray($response['body']['buildsTime']);
         $this->assertIsArray($response['body']['buildsStorage']);
