@@ -30,9 +30,8 @@ class Resolvers
         UtopiaHttpResponse $response,
         Container $container,
     ): callable {
-        $resolver = $this;
-        return fn ($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $route, $args, $context, $container, $info, $request, $response, $resolver) {
+        return fn($type, $args, $context, $info) => new Swoole(
+            function (callable $resolve, callable $reject) use ($http, $route, $args, $context, $container, $info, $request, $response) {
                 $path = $route->getPath();
                 foreach ($args as $key => $value) {
                     if (\str_contains($path, '/:' . $key)) {
@@ -51,8 +50,7 @@ class Resolvers
                         $request->setPayload($args);
                         break;
                 }
-
-                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
+                Resolvers::resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -98,12 +96,12 @@ class Resolvers
         Container $container,
     ): callable {
         $resolver = $this;
-        return fn ($type, $args, $context, $info) => new Swoole(
+        return fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('GET');
                 $request->setURI($url($databaseId, $collectionId, $args));
 
-                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
+                Resolvers::resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -129,7 +127,7 @@ class Resolvers
         Container $container,
     ): callable {
         $resolver = $this;
-        return fn ($type, $args, $context, $info) => new Swoole(
+        return fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('GET');
                 $request->setURI($url($databaseId, $collectionId, $args));
@@ -139,7 +137,7 @@ class Resolvers
                     return $payload['documents'];
                 };
 
-                $resolver->resolve($http, $request, $response, $container, $resolve, $reject, $beforeResolve);
+                Resolvers::resolve($http, $request, $response, $container, $resolve, $reject, $beforeResolve);
             }
         );
     }
@@ -165,13 +163,13 @@ class Resolvers
         Container $container,
     ): callable {
         $resolver = $this;
-        return fn ($type, $args, $context, $info) => new Swoole(
+        return fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('POST');
                 $request->setURI($url($databaseId, $collectionId, $args));
                 $request->setPayload($params($databaseId, $collectionId, $args));
 
-                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
+                Resolvers::resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -197,13 +195,13 @@ class Resolvers
         Container $container,
     ): callable {
         $resolver = $this;
-        return fn ($type, $args, $context, $info) => new Swoole(
+        return fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('PATCH');
                 $request->setURI($url($databaseId, $collectionId, $args));
                 $request->setPayload($params($databaseId, $collectionId, $args));
 
-                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
+                Resolvers::resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -227,12 +225,12 @@ class Resolvers
         Container $container,
     ): callable {
         $resolver = $this;
-        return fn ($type, $args, $context, $info) => new Swoole(
+        return fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $type, $args, $container, $request, $response, $resolver) {
                 $request->setMethod('DELETE');
                 $request->setURI($url($databaseId, $collectionId, $args));
 
-                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
+                Resolvers::resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -248,7 +246,7 @@ class Resolvers
      * @return void
      * @throws Exception
      */
-    private function resolve(
+    private static function resolve(
         Http $http,
         Request $request,
         Response $response,
@@ -258,7 +256,6 @@ class Resolvers
         ?callable $beforeResolve = null,
         ?callable $beforeReject = null,
     ): void {
-        var_dump('HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE');
         // Drop json content type so post args are used directly
         if (\str_starts_with($request->getHeader('content-type'), 'application/json')) {
             $request->removeHeader('content-type');
@@ -268,8 +265,13 @@ class Resolvers
 
         try {
             $route = $http->match($request);
+            $context
+                ->refresh('cache')
+                ->refresh('dbForProject')
+                ->refresh('dbForConsole')
+                ->refresh('getProjectDb');
 
-            $http->execute($route, $request, $context);
+            $http->execute($route, $request, clone $context);
         } catch (\Throwable $e) {
             if ($beforeReject) {
                 $e = $beforeReject($e);
