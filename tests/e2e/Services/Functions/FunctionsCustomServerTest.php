@@ -435,6 +435,73 @@ class FunctionsCustomServerTest extends Scope
     }
 
     /**
+     * @depends testCreateDeployment
+     */
+    public function testCancelDeploymentBuild($data): void
+    {
+        // Create a new deployment to cancel
+        $folder = 'php';
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
+        $this->packageCode($folder);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
+        $this->assertEquals('index.php', $deployment['body']['entrypoint']);
+
+        // Poll until deployment is in progress
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || $deployment['body']['status'] === 'building'
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals('building', $deployment['body']['status']);
+
+        // Cancel the deployment build
+        $cancel = $this->client->call(Client::METHOD_PATCH, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentId . '/build', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $cancel['headers']['status-code']);
+        $this->assertEquals('cancelled', $cancel['body']['status']);
+
+        // Confirm the deployment is cancelled
+        $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals('cancelled', $deployment['body']['status']);
+    }
+
+    /**
      * @depends testUpdate
      */
     public function testCreateDeploymentLarge($data): array

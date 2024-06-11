@@ -1532,7 +1532,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
                 'startTime' => DateTime::now(),
                 'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
-                'status' => 'cancelled', //mark status as cancelled
+                'status' => 'cancelled',
                 'path' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
