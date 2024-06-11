@@ -592,7 +592,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($function['headers']['status-code'], 200);
         $this->assertEquals($function['body']['total'], 3);
         $this->assertIsArray($function['body']['deployments']);
-        $this->assertCount(2, $function['body']['deployments']);
+        $this->assertCount(3, $function['body']['deployments']);
 
         /**
          * Test search queries
@@ -605,9 +605,9 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals(2, $function['body']['total']);
+        $this->assertEquals(3, $function['body']['total']);
         $this->assertIsArray($function['body']['deployments']);
-        $this->assertCount(2, $function['body']['deployments']);
+        $this->assertCount(3, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
 
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
@@ -632,7 +632,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertCount(1, $function['body']['deployments']);
+        $this->assertCount(2, $function['body']['deployments']);
 
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
             'content-type' => 'application/json',
@@ -644,7 +644,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertCount(2, $function['body']['deployments']);
+        $this->assertCount(3, $function['body']['deployments']);
 
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
             'content-type' => 'application/json',
@@ -666,9 +666,9 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals(2, $function['body']['total']);
+        $this->assertEquals(3, $function['body']['total']);
         $this->assertIsArray($function['body']['deployments']);
-        $this->assertCount(2, $function['body']['deployments']);
+        $this->assertCount(3, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
 
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
@@ -679,9 +679,9 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals(2, $function['body']['total']);
+        $this->assertEquals(3, $function['body']['total']);
         $this->assertIsArray($function['body']['deployments']);
-        $this->assertCount(2, $function['body']['deployments']);
+        $this->assertCount(3, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
 
         return $data;
