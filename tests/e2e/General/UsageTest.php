@@ -778,6 +778,8 @@ class UsageTest extends Scope
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['deployments']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
+        $this->assertIsNumeric($response['body']['deploymentsStorageTotal']);
+        $this->assertIsArray($response['body']['deploymentsStorageBreakdown']);
         $this->assertIsArray($response['body']['builds']);
         $this->assertIsArray($response['body']['buildsTime']);
         $this->assertIsArray($response['body']['executions']);
