@@ -1550,11 +1550,10 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
             if (\in_array($build->getAttribute('status'), ['ready', 'failed'])) {
                 throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
             }
-            $startTime = $build->getAttribute('startTime');
-            $endTime = DateTime::now();
-            $startTime = strtotime($startTime);
-            $endTime = strtotime($endTime);
-            $duration = $endTime - $startTime;
+            
+            $startTime = new \DateTime($build->getAttribute('startTime'));
+            $endTime = new \DateTime('now');
+            $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 
             $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttributes([
                 'endTime' => DateTime::now(),
