@@ -51,7 +51,7 @@ class ScheduleFunctions extends ScheduleBase
                 } catch (\Exception) {
                     Console::error('Failed to parse schedule: ' . $schedule['schedule']);
                     continue;
-                } 
+                }
             }
 
             $next = DateTime::format($nextDate);
