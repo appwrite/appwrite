@@ -157,7 +157,6 @@ Http::post('/v1/graphql')
         if (\str_starts_with($type, 'multipart/form-data')) {
             $query = parseMultipart($query, $request);
         }
-
         $output = execute($schema, $promiseAdapter, $query);
 
         $response
