@@ -131,7 +131,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
 
 $filterBelowThreshold = function (array $inputArray, int $threshold): array {
     return \array_filter($inputArray, function ($value) use ($threshold) {
-        return $value < $threshold;
+        return $value <= $threshold;
     });
 };
 
