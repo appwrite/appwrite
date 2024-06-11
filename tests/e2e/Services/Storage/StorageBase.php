@@ -5,10 +5,10 @@ namespace Tests\E2E\Services\Storage;
 use Appwrite\Extend\Exception;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StorageBase
@@ -27,7 +27,7 @@ trait StorageBase
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
-            'allowedFileExtensions' => ["jpg", "png"],
+            'allowedFileExtensions' => ['jpg', 'png', 'jfif'],
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -74,10 +74,7 @@ trait StorageBase
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
             'permissions' => [
-                Permission::read(Role::any()),
                 Permission::create(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
             ],
         ]);
         $this->assertEquals(201, $bucket2['headers']['status-code']);
@@ -110,9 +107,7 @@ trait StorageBase
                 'fileId' => $fileId,
                 'file' => $curlFile,
                 'permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
+                    Permission::read(Role::any())
                 ],
             ]);
             $counter++;
@@ -130,11 +125,11 @@ trait StorageBase
 
         /**
          * Failure
-         * Test for Chunk above 5MB
+         * Test for Chunk above 10MB
          */
         $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
         $totalSize = \filesize($source);
-        $chunkSize = 6 * 1024 * 1024;
+        $chunkSize = 12 * 1024 * 1024;
         $handle = @fopen($source, "rb");
         $fileId = 'unique()';
         $mimeType = mime_content_type($source);
@@ -385,7 +380,9 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ]
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
         $this->assertEquals(1, count($files['body']['files']));
@@ -394,7 +391,9 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ]
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
         $this->assertEquals(0, count($files['body']['files']));
@@ -403,7 +402,9 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("mimeType", "image/png")' ]
+            'queries' => [
+                Query::equal('mimeType', ['image/png'])->toString(),
+            ],
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
         $this->assertEquals(1, count($files['body']['files']));
@@ -412,7 +413,9 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("mimeType", "image/jpeg")' ]
+            'queries' => [
+                Query::equal('mimeType', ['image/jpeg'])->toString(),
+            ],
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
         $this->assertEquals(0, count($files['body']['files']));
@@ -461,6 +464,32 @@ trait StorageBase
         $this->assertEquals(200, $file2['headers']['status-code']);
         $this->assertEquals('image/png', $file2['headers']['content-type']);
         $this->assertNotEmpty($file2['body']);
+
+        // upload JXL file for preview
+        $fileJfif = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/preview-test.jfif'), 'image/jxl', 'preview-test.jfif'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $fileJfif['headers']['status-code']);
+        $this->assertNotEmpty($fileJfif['body']['$id']);
+
+        // TEST preview JXL
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileJfif['body']['$id'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertEquals('image/jpeg', $preview['headers']['content-type']);
+        $this->assertNotEmpty($preview['body']);
 
         //new image preview features
         $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([

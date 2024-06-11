@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * ISO 3166 standard country codes
+ * https://www.iso.org/iso-3166-country-codes.html
+ *
+ * Source:
+ * https://www.iso.org/obp/ui/#search/code/
+ */
+
 return [
     'AF',
     'AO',
@@ -73,6 +81,7 @@ return [
     'GD',
     'GT',
     'GY',
+    'HK',
     'HN',
     'HR',
     'HT',
@@ -136,6 +145,7 @@ return [
     'NZ',
     'OM',
     'PK',
+    'PS',
     'PA',
     'PE',
     'PH',
@@ -180,6 +190,7 @@ return [
     'TR',
     'TV',
     'TZ',
+    'TW',
     'UG',
     'UA',
     'UY',

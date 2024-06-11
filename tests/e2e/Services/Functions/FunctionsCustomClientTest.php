@@ -7,8 +7,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
 class FunctionsCustomClientTest extends Scope
 {
@@ -59,7 +61,7 @@ class FunctionsCustomClientTest extends Scope
                 'users.*.create',
                 'users.*.delete',
             ],
-            'schedule' => '0 0 1 1 *',
+            'schedule' => '* * * * *', // execute every minute
             'timeout' => 10,
         ]);
 
@@ -133,7 +135,7 @@ class FunctionsCustomClientTest extends Scope
             \sleep(1);
         }
 
-        $this->assertEquals('ready', $deployment['body']['status']);
+        $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
@@ -160,6 +162,24 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(202, $execution['headers']['status-code']);
+
+        // Wait for the first scheduled execution to be created
+        sleep(65);
+
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertCount(2, $executions['body']['executions']);
+        $this->assertIsArray($executions['body']['executions']);
+        $this->assertEquals($executions['body']['executions'][1]['trigger'], 'schedule');
+        $this->assertEquals($executions['body']['executions'][1]['status'], 'completed');
+        $this->assertEquals($executions['body']['executions'][1]['responseStatusCode'], 200);
+        $this->assertEquals($executions['body']['executions'][1]['responseBody'], '');
+        $this->assertEquals($executions['body']['executions'][1]['logs'], '');
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $function['body']['$id'], [
@@ -264,7 +284,7 @@ class FunctionsCustomClientTest extends Scope
             \sleep(1);
         }
 
-        $this->assertEquals('ready', $deployment['body']['status']);
+        $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
@@ -474,7 +494,9 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'queries' => [ 'limit(1)' ]
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $executions['headers']['status-code']);
@@ -485,7 +507,9 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'queries' => [ 'offset(1)' ]
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $executions['headers']['status-code']);
@@ -496,7 +520,9 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'queries' => [ 'equal("status", ["completed"])' ]
+            'queries' => [
+                Query::equal('status', ['completed'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $executions['headers']['status-code']);
@@ -507,7 +533,9 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'queries' => [ 'equal("status", ["failed"])' ]
+            'queries' => [
+                Query::equal('status', ['failed'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $executions['headers']['status-code']);
@@ -518,7 +546,9 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'queries' => [ 'cursorAfter("' . $base['body']['executions'][0]['$id'] . '")' ],
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => $base['body']['executions'][0]['$id']]))->toString(),
+            ],
         ]);
 
         $this->assertCount(2, $executions['body']['executions']);
@@ -529,7 +559,9 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'queries' => [ 'cursorBefore("' . $base['body']['executions'][1]['$id'] . '")' ],
+            'queries' => [
+                Query::cursorBefore(new Document(['$id' => $base['body']['executions'][1]['$id']]))->toString(),
+            ],
         ]);
 
         // Cleanup : Delete function

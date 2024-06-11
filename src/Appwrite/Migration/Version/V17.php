@@ -48,7 +48,7 @@ class V17 extends Migration
 
             try {
                 $this->projectDB->updateAttribute($id, 'mimeType', Database::VAR_STRING, 255, true, false);
-                $this->projectDB->deleteCachedCollection($id);
+                $this->projectDB->purgeCachedCollection($id);
             } catch (\Throwable $th) {
                 Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
             }
@@ -76,7 +76,7 @@ class V17 extends Migration
                          * Create 'size' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'size');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'size' from {$id}: {$th->getMessage()}");
                     }
@@ -88,7 +88,7 @@ class V17 extends Migration
                          * Update 'mimeType' attribute size (127->255)
                          */
                         $this->projectDB->updateAttribute($id, 'mimeType', Database::VAR_STRING, 255, true, false);
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
                     }
@@ -98,7 +98,7 @@ class V17 extends Migration
                          * Create 'bucketInternalId' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'bucketInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -110,7 +110,7 @@ class V17 extends Migration
                          * Delete 'endTime' attribute (use startTime+duration if needed)
                          */
                         $this->projectDB->deleteAttribute($id, 'endTime');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'endTime' from {$id}: {$th->getMessage()}");
                     }
@@ -120,7 +120,7 @@ class V17 extends Migration
                          * Rename 'outputPath' to 'path'
                          */
                         $this->projectDB->renameAttribute($id, 'outputPath', 'path');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'path' from {$id}: {$th->getMessage()}");
                     }
@@ -130,7 +130,7 @@ class V17 extends Migration
                          * Create 'deploymentInternalId' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -142,7 +142,7 @@ class V17 extends Migration
                          * Delete 'type' attribute
                          */
                         $this->projectDB->deleteAttribute($id, 'type');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
                     }
@@ -154,7 +154,7 @@ class V17 extends Migration
                          * Create 'resourceInternalId' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'resourceInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'resourceInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -166,7 +166,7 @@ class V17 extends Migration
                          * Create 'deploymentInternalId' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -176,7 +176,7 @@ class V17 extends Migration
                          * Create 'scheduleInternalId' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'scheduleInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -186,7 +186,7 @@ class V17 extends Migration
                          * Delete 'scheduleUpdatedAt' attribute
                          */
                         $this->projectDB->deleteAttribute($id, 'scheduleUpdatedAt');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'scheduleUpdatedAt' from {$id}: {$th->getMessage()}");
                     }
@@ -198,7 +198,7 @@ class V17 extends Migration
                          * Create 'resourceInternalId' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'resourceInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'resourceInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -208,7 +208,7 @@ class V17 extends Migration
                          * Create 'buildInternalId' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'buildInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'buildInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -220,7 +220,7 @@ class V17 extends Migration
                          * Create 'functionInternalId' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'functionInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'functionInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -230,7 +230,7 @@ class V17 extends Migration
                          * Create 'deploymentInternalId' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -266,9 +266,9 @@ class V17 extends Migration
                 ]));
                 break;
             case 'users':
-                 /**
-                 * Set hashOptions type
-                 */
+                /**
+                * Set hashOptions type
+                */
                 $document->setAttribute('hashOptions', array_merge($document->getAttribute('hashOptions', []), [
                     'type' => $document->getAttribute('hash', Auth::DEFAULT_ALGO)
                 ]));

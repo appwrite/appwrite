@@ -26,7 +26,9 @@ val users = Users(client)
 val user = users.create(
     user = ID.unique(),
     email = "email@example.com",
+    phone = "+123456789",
     password = "password",
+    name = "Walter O'Brien"
 )
 ```
 
@@ -48,7 +50,9 @@ suspend fun main() {
     val user = users.create(
         user = ID.unique(),
         email = "email@example.com",
+        phone = "+123456789",
         password = "password",
+        name = "Walter O'Brien"
     )
 }
 ```
@@ -68,7 +72,9 @@ suspend fun main() {
         val user = users.create(
             user = ID.unique(),
             email = "email@example.com",
+            phone = "+123456789",
             password = "password",
+            name = "Walter O'Brien"
         )
     } catch (e: AppwriteException) {
         e.printStackTrace()

@@ -3,28 +3,29 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
-use Appwrite\Event\Delete;
 use Appwrite\Event\Certificate;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
-use Utopia\CLI\CLI;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Service;
-use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\CLI\CLI;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
+use Utopia\Platform\Service;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
+use Utopia\System\System;
 
 Authorization::disable();
 
-CLI::setResource('register', fn()=>$register);
+CLI::setResource('register', fn () => $register);
 
 CLI::setResource('cache', function ($pools) {
     $list = Config::getParam('pools-cache', []);
@@ -71,12 +72,12 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             $collections = Config::getParam('collections', [])['console'];
             $last = \array_key_last($collections);
 
-            if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) { /** TODO cache ready variable using registry */
+            if (!($dbForConsole->exists($dbForConsole->getDatabase(), $last))) { /** TODO cache ready variable using registry */
                 throw new Exception('Tables not ready yet.');
             }
 
             $ready = true;
-        } catch (\Exception $err) {
+        } catch (\Throwable $err) {
             Console::warning($err->getMessage());
             $pools->get('console')->reclaim();
             sleep($sleep);
@@ -98,55 +99,59 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             return $dbForConsole;
         }
 
-        $databaseName = $project->getAttribute('database');
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
 
-        if (isset($databases[$databaseName])) {
-            $database = $databases[$databaseName];
-            $database->setNamespace('_' . $project->getInternalId());
+        if (isset($databases[$dsn->getHost()])) {
+            $database = $databases[$dsn->getHost()];
+
+            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+                $database
+                    ->setSharedTables(true)
+                    ->setTenant($project->getInternalId())
+                    ->setNamespace($dsn->getParam('namespace'));
+            } else {
+                $database
+                    ->setSharedTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getInternalId());
+            }
+
             return $database;
         }
 
         $dbAdapter = $pools
-            ->get($databaseName)
+            ->get($dsn->getHost())
             ->pop()
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
 
-        $databases[$databaseName] = $database;
+        $databases[$dsn->getHost()] = $database;
+
+        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+            $database
+                ->setSharedTables(true)
+                ->setTenant($project->getInternalId())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getInternalId());
+        }
 
         $database
-            ->setNamespace('_' . $project->getInternalId())
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 
         return $database;
     };
 }, ['pools', 'dbForConsole', 'cache']);
-
-CLI::setResource('influxdb', function (Registry $register) {
-    $client = $register->get('influxdb'); /** @var InfluxDB\Client $client */
-    $attempts = 0;
-    $max = 10;
-    $sleep = 1;
-
-    do { // check if telegraf database is ready
-        try {
-            $attempts++;
-            $database = $client->selectDB('telegraf');
-            if (in_array('telegraf', $client->listDatabases())) {
-                break; // leave the do-while if successful
-            }
-        } catch (\Throwable $th) {
-            Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
-            if ($attempts >= $max) {
-                throw new \Exception('InfluxDB database not ready yet');
-            }
-            sleep($sleep);
-        }
-    } while ($attempts < $max);
-    return $database;
-}, ['register']);
 
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
@@ -165,7 +170,7 @@ CLI::setResource('logError', function (Registry $register) {
         $logger = $register->get('logger');
 
         if ($logger) {
-            $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
             $log = new Log();
             $log->setNamespace($namespace);
@@ -184,7 +189,7 @@ CLI::setResource('logError', function (Registry $register) {
 
             $log->setAction($action);
 
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);

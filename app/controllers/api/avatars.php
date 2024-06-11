@@ -3,8 +3,9 @@
 use Appwrite\Extend\Exception;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -12,17 +13,16 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
+use Utopia\Fetch\Client;
 use Utopia\Image\Image;
-use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
 
@@ -76,7 +76,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
         }
 
         if (empty($gitHubSession)) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'GitHub session not found.');
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND, 'GitHub session not found.');
         }
 
         $provider = $gitHubSession->getAttribute('provider', '');
@@ -84,8 +84,8 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
         $accessTokenExpiry = $gitHubSession->getAttribute('providerAccessTokenExpiry');
         $refreshToken = $gitHubSession->getAttribute('providerRefreshToken');
 
-        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
@@ -116,7 +116,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
 
                 Authorization::skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
 
-                $dbForProject->deleteCachedDocument('users', $user->getId());
+                $dbForProject->purgeCachedDocument('users', $user->getId());
             } catch (Throwable $err) {
                 $index = 0;
                 do {
@@ -154,40 +154,8 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
             'id' => $githubId
         ];
     } catch (Exception $error) {
-        if ($logger) {
-            $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-
-            $log = new Log();
-            $log->setNamespace('console');
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-
-            $log->addTag('code', $error->getCode());
-            $log->addTag('verboseType', get_class($error));
-
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
-
-            $log->setAction('avatarsGetGitHub');
-
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            $responseCode = $logger->addLog($log);
-            Console::info('GitHub error log pushed with status code: ' . $responseCode);
-        }
-
-        Console::warning("Failed: {$error->getMessage()}");
-        Console::warning($error->getTraceAsString());
-
         return [];
     }
-
-    return [];
 };
 
 App::get('/v1/avatars/credit-cards/:code')
@@ -283,15 +251,22 @@ App::get('/v1/avatars/image')
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
-        $fetch = @\file_get_contents($url);
+        $client = new Client();
+        try {
+            $res = $client
+                ->setAllowRedirects(false)
+                ->fetch($url);
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
 
-        if (!$fetch) {
+        if ($res->getStatusCode() !== 200) {
             throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
         }
 
         try {
-            $image = new Image($fetch);
-        } catch (\Exception $exception) {
+            $image = new Image($res->getBody());
+        } catch (\Throwable $exception) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to parse image');
         }
 
@@ -339,31 +314,27 @@ App::get('/v1/avatars/favicon')
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
-        $curl = \curl_init();
+        $client = new Client();
+        try {
+            $res = $client
+                ->setAllowRedirects(false)
+                ->setUserAgent(\sprintf(
+                    APP_USERAGENT,
+                    System::getEnv('_APP_VERSION', 'UNKNOWN'),
+                    System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+                ))
+                ->fetch($url);
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
 
-        \curl_setopt_array($curl, [
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS => 3,
-            CURLOPT_URL => $url,
-            CURLOPT_USERAGENT => \sprintf(
-                APP_USERAGENT,
-                App::getEnv('_APP_VERSION', 'UNKNOWN'),
-                App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
-            ),
-        ]);
-
-        $html = \curl_exec($curl);
-
-        \curl_close($curl);
-
-        if (!$html) {
+        if ($res->getStatusCode() !== 200) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
         $doc = new DOMDocument();
         $doc->strictErrorChecking = false;
-        @$doc->loadHTML($html);
+        @$doc->loadHTML($res->getBody());
 
         $links = $doc->getElementsByTagName('link');
         $outputHref = '';
@@ -418,9 +389,22 @@ App::get('/v1/avatars/favicon')
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
-        if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
-            $data = @\file_get_contents($outputHref, false);
+        $client = new Client();
+        try {
+            $res = $client
+                ->setAllowRedirects(false)
+                ->fetch($outputHref);
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
 
+        if ($res->getStatusCode() !== 200) {
+            throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
+        }
+
+        $data = $res->getBody();
+
+        if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
             if (empty($data) || (\mb_substr($data, 0, 5) === '<html') || \mb_substr($data, 0, 5) === '<!doc') {
                 throw new Exception(Exception::AVATAR_ICON_NOT_FOUND, 'Favicon not found');
             }
@@ -430,13 +414,7 @@ App::get('/v1/avatars/favicon')
                 ->file($data);
         }
 
-        $fetch = @\file_get_contents($outputHref, false);
-
-        if (!$fetch) {
-            throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
-        }
-
-        $image = new Image($fetch);
+        $image = new Image($data);
         $image->crop((int) $width, (int) $height);
         $output = (empty($output)) ? $type : $output;
         $data = $image->output($output, $quality);
@@ -521,7 +499,7 @@ App::get('/v1/avatars/initials')
         // if there is no space, try to split by `_` underscore
         $words = (count($words) == 1) ? \explode('_', \strtoupper($name)) : $words;
 
-        $initials = null;
+        $initials = '';
         $code = 0;
 
         foreach ($words as $key => $w) {
