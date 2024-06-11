@@ -1550,7 +1550,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
             if (\in_array($build->getAttribute('status'), ['ready', 'failed'])) {
                 throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
             }
-            
+
             $startTime = new \DateTime($build->getAttribute('startTime'));
             $endTime = new \DateTime('now');
             $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
