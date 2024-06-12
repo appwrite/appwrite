@@ -1538,7 +1538,6 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
                 'source' => $deployment->getAttribute('path', ''),
                 'sourceType' => '',
                 'logs' => '',
-                'endTime' => DateTime::now(),
                 'duration' => 0,
                 'size' => 0
             ]));
