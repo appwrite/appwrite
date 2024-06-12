@@ -457,13 +457,16 @@ App::init()
                 }
 
                 $response
-                    ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'))
                     ->send($data);
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
             }
+            $response
+                ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->addHeader('Pragma', 'no-cache')
+                ->addHeader('Expires', 0);
         }
     });
 
