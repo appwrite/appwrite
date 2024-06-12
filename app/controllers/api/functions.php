@@ -1799,9 +1799,11 @@ App::post('/v1/functions/:functionId/executions')
         } finally {
             $queueForUsage
                 ->addMetric(METRIC_EXECUTIONS, 1)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, 512 * $execution->getAttribute('duration', 0)) //TODO @bradley: Adjust memory when we allow for custom memory.
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), 512 * $execution->getAttribute('duration', 0)) //TODO @bradley: Adjust memory when we allow for custom memory.
             ;
 
             if ($function->getAttribute('logging')) {
