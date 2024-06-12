@@ -488,9 +488,9 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $cancel['headers']['status-code']);
-        $this->assertEquals('cancelled', $cancel['body']['status']);
+        $this->assertEquals('canceled', $cancel['body']['status']);
 
-        // Confirm the deployment is cancelled
+        // Confirm the deployment is canceled
         $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -498,7 +498,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $deployment['headers']['status-code']);
-        $this->assertEquals('cancelled', $deployment['body']['status']);
+        $this->assertEquals('canceled', $deployment['body']['status']);
     }
 
     /**

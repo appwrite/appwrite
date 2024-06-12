@@ -543,7 +543,7 @@ return [
     ],
     Exception::BUILD_ALREADY_COMPLETED => [
         'name' => Exception::BUILD_ALREADY_COMPLETED,
-        'description' => 'Build with the requested ID is already completed and cannot be cancelled.',
+        'description' => 'Build with the requested ID is already completed and cannot be canceled.',
         'code' => 400,
     ],
 

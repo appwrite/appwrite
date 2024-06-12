@@ -1532,7 +1532,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
                 'startTime' => DateTime::now(),
                 'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
-                'status' => 'cancelled',
+                'status' => 'canceled',
                 'path' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
@@ -1558,7 +1558,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
             $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttributes([
                 'endTime' => DateTime::now(),
                 'duration' => $duration,
-                'status' => 'cancelled'
+                'status' => 'canceled'
             ]));
         }
 
