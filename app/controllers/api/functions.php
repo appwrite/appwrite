@@ -455,6 +455,26 @@ App::get('/v1/functions/runtimes')
         ]), Response::MODEL_RUNTIME_LIST);
     });
 
+App::get('/v1/functions/specs')
+    ->groups(['api', 'functions'])
+    ->desc('Get available function specs')
+    ->label('scope', 'functions.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'getSpecs')
+    ->label('sdk.description', '/docs/references/functions/get-specs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SPECS)
+    ->inject('response')
+    ->inject('plan')
+    ->action(function (Response $response, array $plan) use ($filterBelowThreshold) {
+        $response->dynamic(new Document([
+            'memory' => empty($plan['memoryLimit']) ? $filterBelowThreshold(MEMORY_VALUES, System::getEnv('_APP_FUNCTIONS_MEMORY')) : $filterBelowThreshold(MEMORY_VALUES, $plan['memoryLimit']),
+            'cpus' => empty($plan['cpuLimit']) ? $filterBelowThreshold(CPU_VALUES, System::getEnv('_APP_FUNCTIONS_CPUS')) : $filterBelowThreshold(CPU_VALUES, $plan['cpuLimit']),
+        ]), Response::MODEL_SPECS);
+    });
+
 App::get('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Get function')
@@ -712,8 +732,6 @@ App::put('/v1/functions/:functionId')
     ->inject('gitHub')
     ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, int $memory, int $cpus, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
-        var_dump($memory);
-        var_dump($cpus);
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
