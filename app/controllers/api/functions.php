@@ -1525,7 +1525,7 @@ App::post('/v1/functions/:functionId/executions')
     ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, ?string $scheduledAt, Response $response, Document $project, Database $dbForProject, Database $dbForConsole, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
 
         if(!$async && !is_null($scheduledAt)) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, 'Scheduled executions must run asynchronously. Don\'t set scheduledAt to execute immediately, or set async to true.');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Scheduled executions must run asynchronously. Set scheduledAt to a future date, or set async to true.');
         }
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
