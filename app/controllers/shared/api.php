@@ -466,7 +466,7 @@ App::init()
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Pragma', 'no-cache')
                     ->addHeader('Expires', 0)
-                    ->ddHeader('X-Appwrite-Cache', 'miss')
+                    ->addHeader('X-Appwrite-Cache', 'miss')
                 ;
             }
         }
