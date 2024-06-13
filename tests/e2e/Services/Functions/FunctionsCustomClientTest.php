@@ -246,7 +246,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(200, $function['headers']['status-code']);
 
         // Schedule execution for the future
-        $futureTime = (new \DateTime())->add(new \DateInterval('PT1M'))->format('Y-m-d H:i:s');
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT10S'))->format('Y-m-d H:i:s');
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -258,6 +258,17 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertEquals('scheduled', $execution['body']['status'], \json_encode($execution['body']));
 
+        $executionId = $execution['body']['$id'];
+
+        \sleep(12);
+
+        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions/' . $executionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals('completed', $execution['body']['status'], \json_encode($execution['body']));
+
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $function['body']['$id'], [
             'content-type' => 'application/json',
@@ -267,6 +278,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(204, $response['headers']['status-code']);
     }
+
 
 
     public function testCreateCustomExecution(): array
