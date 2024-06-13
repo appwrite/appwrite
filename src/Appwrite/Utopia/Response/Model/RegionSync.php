@@ -38,6 +38,6 @@ class RegionSync extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_EDGE_SYNC;
+        return Response::MODEL_REGION_SYNC;
     }
 }
