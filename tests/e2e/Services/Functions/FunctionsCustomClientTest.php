@@ -260,13 +260,24 @@ class FunctionsCustomClientTest extends Scope
 
         $executionId = $execution['body']['$id'];
 
-        \sleep(20);
+        while (true) {
 
-        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions/' . $executionId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
+            $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions/' . $executionId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $execution['headers']['status-code'] >= 400
+                || \in_array($execution['body']['status'], ['completed', 'failed'])
+            ) {
+                break;
+            }
+            
+            \sleep(1);
+        }
+
         $this->assertEquals('completed', $execution['body']['status'], \json_encode($execution['body']));
 
         // Cleanup : Delete function
