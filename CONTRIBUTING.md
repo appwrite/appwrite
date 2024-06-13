@@ -321,8 +321,10 @@ These are the current metrics we collect usage stats for:
 | databases | Total number of databases per project             | 
 | collections | Total number of collections per project | 
 | {databaseInternalId}.collections | Total number of collections per database| 
+| {databaseInternalId}.storage | Sum of database storage (in bytes) |
 | documents | Total number of documents per project             | 
 | {databaseInternalId}.{collectionInternalId}.documents | Total number of documents per collection | 
+| {databaseInternalId}.{collectionInternalId}.storage | Sum of database storage used by the collection (in bytes) |
 | buckets | Total number of buckets per project               | 
 | files | Total number of files per project                 |
 | {bucketInternalId}.files.storage | Sum of files.storage per bucket (in bytes)                  |

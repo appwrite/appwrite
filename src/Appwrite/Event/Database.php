@@ -120,6 +120,15 @@ class Database extends Event
         $client = new Client($this->queue, $this->connection);
 
         try {
+            if ($this->type === DATABASE_TYPE_CALCULATE_STORAGE_USAGE) {
+                $result = $client->enqueue(array_merge([
+                    'project' => $this->project,
+                    'type' => $this->type,
+                    'user' => $this->user
+                ], $this->payload));
+                return $result;
+            }
+
             $result = $client->enqueue([
                 'project' => $this->project,
                 'user' => $this->user,

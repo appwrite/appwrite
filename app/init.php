@@ -157,6 +157,7 @@ const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
 const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
 const DATABASE_TYPE_DELETE_COLLECTION = 'deleteCollection';
 const DATABASE_TYPE_DELETE_DATABASE = 'deleteDatabase';
+const DATABASE_TYPE_CALCULATE_STORAGE_USAGE = 'calculateStorageUsage';
 
 // Build Worker Types
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
@@ -220,9 +221,11 @@ const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
 const METRIC_DATABASE_ID_COLLECTIONS = '{databaseInternalId}.collections';
+const METRIC_DATABASE_ID_STORAGE = '{databaseInternalId}.storage';
 const METRIC_DOCUMENTS = 'documents';
 const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE = '{databaseInternalId}.{collectionInternalId}.storage';
 const METRIC_BUCKETS = 'buckets';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';

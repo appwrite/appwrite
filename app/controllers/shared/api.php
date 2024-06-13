@@ -55,7 +55,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$databaseListener = function (string $event, Document $document, Document $project, Usage $queueForUsage, Database $dbForProject) {
+$databaseListener = function (string $event, Document $document, Document $project, Usage $queueForUsage, EventDatabase $queueForDatabase, Database $dbForProject) {
 
     $value = 1;
     if ($event === Database::EVENT_DOCUMENT_DELETE) {
@@ -109,6 +109,15 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 ->addMetric(METRIC_DOCUMENTS, $value)  // per project
                 ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
                 ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
+
+            $queueForDatabase
+                ->setType(DATABASE_TYPE_CALCULATE_STORAGE_USAGE)
+                ->setPayload([
+                    'collectionInternalId' => $collectionInternalId,
+                    'databaseInternalId' => $databaseInternalId,
+                ]);
+            
+            $queueForDatabase->trigger();
             break;
         case $document->getCollection() === 'buckets': //buckets
             $queueForUsage
@@ -406,8 +415,8 @@ App::init()
         $queueForMessaging->setProject($project);
 
         $dbForProject
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject));
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $queueForDatabase, $dbForProject))
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $queueForDatabase, $dbForProject));
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
