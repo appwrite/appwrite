@@ -11,8 +11,8 @@ use Utopia\Pools\Group;
 
 class ScheduleFunctions extends ScheduleBase
 {
-    public const UPDATE_TIMER = 10; // seconds
-    public const ENQUEUE_TIMER = 60; // seconds
+    public const UPDATE_TIMER = 3; // seconds
+    public const ENQUEUE_TIMER = 4; // seconds
 
     private ?float $lastEnqueueUpdate = null;
 
