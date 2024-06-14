@@ -541,6 +541,11 @@ return [
         'description' => 'Build with the requested ID is already in progress. Please wait before you can retry.',
         'code' => 400,
     ],
+    Exception::BUILD_ALREADY_COMPLETED => [
+        'name' => Exception::BUILD_ALREADY_COMPLETED,
+        'description' => 'Build with the requested ID is already completed and cannot be canceled.',
+        'code' => 400,
+    ],
 
     /** Deployments */
     Exception::DEPLOYMENT_NOT_FOUND => [
