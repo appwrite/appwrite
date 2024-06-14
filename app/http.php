@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Appwrite\Utopia\Database\Database;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
@@ -14,7 +15,6 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -78,7 +78,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             try {
                 $attempts++;
                 $dbForConsole = $app->getResource('dbForConsole');
-                /** @var Utopia\Database\Database $dbForConsole */
+                /** @var Appwrite\Utopia\Database\Database $dbForConsole */
                 break; // leave the do-while if successful
             } catch (\Throwable $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");

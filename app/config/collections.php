@@ -1,8 +1,8 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 
 $providers = Config::getParam('oAuthProviders', []);

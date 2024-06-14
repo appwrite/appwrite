@@ -3,8 +3,8 @@
 namespace Tests\E2E\Services\Databases;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Database;
 use Tests\E2E\Client;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;

@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Utopia\Database\Database;
 use Swoole\Timer;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;

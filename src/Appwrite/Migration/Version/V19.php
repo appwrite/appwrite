@@ -3,9 +3,9 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
+use Appwrite\Utopia\Database\Database;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;

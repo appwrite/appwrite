@@ -3,9 +3,9 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
+use Appwrite\Utopia\Database\Database;
 use Cron\CronExpression;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Pools\Group;
 

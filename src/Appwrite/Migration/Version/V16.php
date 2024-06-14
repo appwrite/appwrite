@@ -4,9 +4,9 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
+use Appwrite\Utopia\Database\Database;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 
 class V16 extends Migration

@@ -2,11 +2,11 @@
 
 namespace Appwrite\Migration;
 
+use Appwrite\Utopia\Database\Database;
 use Exception;
 use Swoole\Runtime;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -293,7 +293,7 @@ abstract class Migration
     /**
      * Creates attribute from collections.php
      *
-     * @param \Utopia\Database\Database $database
+     * @param \Appwrite\Utopia\Database\Database $database
      * @param string $collectionId
      * @param string $attributeId
      * @return void
@@ -350,7 +350,7 @@ abstract class Migration
     /**
      * Creates index from collections.php
      *
-     * @param \Utopia\Database\Database $database
+     * @param \Appwrite\Utopia\Database\Database $database
      * @param string $collectionId
      * @param string $indexId
      * @param string|null $from

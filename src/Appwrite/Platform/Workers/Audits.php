@@ -2,10 +2,10 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Utopia\Database\Database;
 use Exception;
 use Throwable;
 use Utopia\Audit\Audit;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;

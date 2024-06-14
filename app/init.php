@@ -40,6 +40,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Utopia\Database\Database;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
@@ -52,7 +53,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\SQL;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -1124,8 +1124,8 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Database\Database $dbForProject */
-    /** @var Utopia\Database\Database $dbForConsole */
+    /** @var Appwrite\Utopia\Database\Database $dbForProject */
+    /** @var Appwrite\Utopia\Database\Database $dbForConsole */
     /** @var string $mode */
 
     Authorization::setDefaultStatus(true);
@@ -1229,7 +1229,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
 App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Appwrite\Utopia\Request $request */
-    /** @var Utopia\Database\Database $dbForConsole */
+    /** @var Appwrite\Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));

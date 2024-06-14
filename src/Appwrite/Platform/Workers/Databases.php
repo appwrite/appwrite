@@ -4,10 +4,10 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Utopia\Database\Database;
 use Exception;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization;
