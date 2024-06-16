@@ -1302,12 +1302,12 @@ App::post('/v1/account/sessions/phone')
         }
 
         $secret = null;
-        $triggerSMS = true;
+        $sendSMS = true;
         $mockNumbers = $project->getAttribute('auths', [])['mockNumbers'] ?? [];
         foreach ($mockNumbers as $mockNumber) {
             if ($mockNumber['phone'] === $phone) {
                 $secret = $mockNumber['otp'];
-                $triggerSMS = false;
+                $sendSMS = false;
                 break;
             }
         }
@@ -1337,7 +1337,7 @@ App::post('/v1/account/sessions/phone')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        if ($triggerSMS) {
+        if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
             $customTemplate = $project->getAttribute('templates', [])['sms.login-' . $locale->default] ?? [];
@@ -2917,12 +2917,12 @@ App::post('/v1/account/verification/phone')
         $isAppUser = Auth::isAppUser($roles);
 
         $secret = null;
-        $triggerSMS = true;
+        $sendSMS = true;
         $mockNumbers = $project->getAttribute('auths', [])['mockNumbers'] ?? [];
         foreach ($mockNumbers as $mockNumber) {
             if ($mockNumber['phone'] === $phone) {
                 $secret = $mockNumber['otp'];
-                $triggerSMS = false;
+                $sendSMS = false;
                 break;
             }
         }
@@ -2952,7 +2952,7 @@ App::post('/v1/account/verification/phone')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        if ($triggerSMS) {
+        if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
             $customTemplate = $project->getAttribute('templates', [])['sms.verification-' . $locale->default] ?? [];
