@@ -597,14 +597,11 @@ class Deletes extends Action
                 $team = $dbForProject->getDocument('teams', $teamId);
                 if (!$team->isEmpty()) {
                     $total = $document->getAttribute('total');
-                    var_dump('$total='.$total);
                     // Delete the team if the user is the last membership
                     if ($total === 1) {
-                        var_dump('Deleting team');
                         $this->deleteById($team, $dbForProject);
                         return;
                     }
-                    var_dump('decrease total');
                     $dbForProject->decreaseDocumentAttribute('teams', $teamId, 'total', 1, 0);
                 }
             }
