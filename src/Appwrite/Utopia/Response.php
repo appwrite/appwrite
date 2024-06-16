@@ -101,7 +101,6 @@ use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\Webhook;
-use Appwrite\Utopia\Response\Model\Mock;
 use Appwrite\Utopia\Response\Model\MockNumber;
 use Exception;
 use Swoole\Http\Response as SwooleHTTPResponse;
@@ -268,8 +267,6 @@ class Response extends SwooleResponse
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
-    public const MODEL_PROVIDER = 'provider';
-    public const MODEL_PROVIDER_LIST = 'providerList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
     public const MODEL_AUTH_PROVIDER = 'authProvider';

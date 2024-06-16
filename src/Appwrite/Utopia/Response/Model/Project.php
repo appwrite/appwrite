@@ -141,7 +141,7 @@ class Project extends Model
             ->addRule('authMockNumbers', [
                 'type' => Response::MODEL_MOCK_NUMBER_LIST,
                 'description' => 'Whether or not to check the user password for similarity with their personal data.',
-                'default' => false,
+                'default' => [],
                 'example' => true,
             ])
             ->addRule('oAuthProviders', [
@@ -327,7 +327,7 @@ class Project extends Model
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
-        $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? false);
+        $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];
