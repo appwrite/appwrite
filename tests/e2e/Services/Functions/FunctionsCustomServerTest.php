@@ -8,8 +8,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class FunctionsCustomServerTest extends Scope
@@ -121,7 +122,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ]
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -131,7 +134,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ]
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -141,7 +146,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("enabled", true)' ]
+            'queries' => [
+                Query::equal('enabled', [true])->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -151,7 +158,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("enabled", false)' ]
+            'queries' => [
+                Query::equal('enabled', [false])->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -244,7 +253,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("' . $functions['body']['functions'][0]['$id'] . '")' ],
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => $functions['body']['functions'][0]['$id']]))->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -255,7 +266,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorBefore("' . $functions['body']['functions'][1]['$id'] . '")' ],
+            'queries' => [
+                Query::cursorBefore(new Document(['$id' => $functions['body']['functions'][1]['$id']]))->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -269,7 +282,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("unknown")' ],
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => 'unknown']))->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -354,10 +369,10 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-mode' => 'admin',
         ];
 
-         $variable = $this->client->call(Client::METHOD_POST, '/project/variables', $headers, [
+        $variable = $this->client->call(Client::METHOD_POST, '/project/variables', $headers, [
             'key' => 'GLOBAL_VARIABLE',
             'value' => 'Global Variable Value',
-         ]);
+        ]);
 
         $this->assertEquals(201, $variable['headers']['status-code']);
 
@@ -532,7 +547,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ]
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($function['headers']['status-code'], 200);
@@ -542,7 +559,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ]
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($function['headers']['status-code'], 200);
@@ -552,7 +571,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("entrypoint", "index.php")' ]
+            'queries' => [
+                Query::equal('entrypoint', ['index.php'])->toString(),
+            ],
         ]);
 
         $this->assertEquals($function['headers']['status-code'], 200);
@@ -562,7 +583,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("entrypoint", "index.js")' ]
+            'queries' => [
+                Query::equal('entrypoint', ['index.js'])->toString(),
+            ],
         ]);
 
         $this->assertEquals($function['headers']['status-code'], 200);
@@ -690,7 +713,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ]
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -700,7 +725,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ]
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -710,7 +737,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("trigger", "http")' ]
+            'queries' => [
+                Query::equal('trigger', ['http'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -885,12 +914,14 @@ class FunctionsCustomServerTest extends Scope
             'runtime' => $name,
             'entrypoint' => $entrypoint,
             'events' => [],
+            'schedule' => '* * * * *', // execute every minute
             'timeout' => $timeout,
         ]);
 
         $functionId = $function['body']['$id'] ?? '';
 
         $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertEquals('* * * * *', $function['body']['schedule']);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
@@ -956,6 +987,24 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['responseBody'], '');
         $this->assertEquals($executions['body']['executions'][0]['logs'], '');
         $this->assertStringContainsString('timed out', $executions['body']['executions'][0]['errors']);
+
+        sleep(70); //wait for scheduled execution to be created and time out
+
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertCount(2, $executions['body']['executions']);
+        $this->assertIsArray($executions['body']['executions']);
+        $this->assertEquals($executions['body']['executions'][1]['trigger'], 'schedule');
+        $this->assertEquals($executions['body']['executions'][1]['status'], 'failed');
+        $this->assertEquals($executions['body']['executions'][1]['responseStatusCode'], 500);
+        $this->assertLessThan(20, $executions['body']['executions'][1]['duration']);
+        $this->assertEquals($executions['body']['executions'][1]['responseBody'], '');
+        $this->assertEquals($executions['body']['executions'][1]['logs'], '');
+        $this->assertStringContainsString('timed out', $executions['body']['executions'][1]['errors']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
@@ -1459,7 +1508,10 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("resourceId", "' . $functionId . '")', 'equal("resourceType", "function")' ]
+            'queries' => [
+                Query::equal('resourceId', [$functionId])->toString(),
+                Query::equal('resourceType', ['function'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $rules['headers']['status-code']);

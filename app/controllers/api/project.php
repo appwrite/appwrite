@@ -3,22 +3,21 @@
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 App::get('/v1/project/usage')
-    ->desc('Get usage stats for a project')
+    ->desc('Get project usage stats')
     ->groups(['api', 'usage'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -39,21 +38,21 @@ App::get('/v1/project/usage')
         $lastDay = (new DateTime($endDate))->format($format);
 
         $metrics = [
-           'total' => [
+            'total' => [
                 METRIC_EXECUTIONS,
                 METRIC_DOCUMENTS,
                 METRIC_DATABASES,
                 METRIC_USERS,
                 METRIC_BUCKETS,
                 METRIC_FILES_STORAGE
-           ],
-           'period' => [
+            ],
+            'period' => [
                 METRIC_NETWORK_REQUESTS,
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
                 METRIC_USERS,
                 METRIC_EXECUTIONS
-             ]
+            ]
         ];
 
         $factor = match ($period) {
@@ -71,7 +70,7 @@ App::get('/v1/project/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        Authorization::skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, &$total, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
             foreach ($metrics['total'] as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -86,6 +85,7 @@ App::get('/v1/project/usage')
                     Query::equal('period', [$period]),
                     Query::greaterThanEqual('time', $firstDay),
                     Query::lessThan('time', $lastDay),
+                    Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);
 

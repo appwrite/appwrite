@@ -18,8 +18,9 @@ var users = new Users(client);
 var user = await users.Create(
     userId: ID.Unique(),
     email: "email@example.com",
+    phone: "+123456789",
     password: "password",
-    name: "name");
+    name: "Walter O'Brien");
 
 Console.WriteLine(user.ToMap());
 ```
@@ -35,8 +36,9 @@ try
     var user = await users.Create(
         userId: ID.Unique(),
         email: "email@example.com",
+        phone: "+123456789",
         password: "password",
-        name: "name");
+        name: "Walter O'Brien");
 } 
 catch (AppwriteException e)
 {
