@@ -734,6 +734,26 @@ $register->set('logger', function () {
     $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
     $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
+    try {
+        $loggingProvider = new DSN($providerConfig ?? '');
+
+        $providerName = $loggingProvider->getScheme();
+        $providerConfig = match ($providerName) {
+            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
+            'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
+            default => ['key' => $loggingProvider->getHost()],
+        };
+    } catch (Throwable) {
+        // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
+        $configChunks = \explode(";", $providerConfig);
+
+        $providerConfig = match ($providerName) {
+            'sentry' => [ 'key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
+            'logowl' => ['ticket' => $configChunks[0] ?? '', 'host' => ''],
+            default => ['key' => $providerConfig],
+        };
+    }
+
     if (empty($providerName) || empty($providerConfig)) {
         return;
     }
@@ -742,8 +762,14 @@ $register->set('logger', function () {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
-    $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
-    $adapter = new $classname($providerConfig);
+    $adapter = match ($providerName) {
+        'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
+        'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
+        'raygun' => new Raygun($providerConfig['key']),
+        'appsignal' => new AppSignal($providerConfig['key']),
+        default => throw new Exception('Provider "' . $providerName . '" not supported.')
+    };
+
     return new Logger($adapter);
 });
 $register->set('pools', function () {
@@ -1207,7 +1233,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 
         try {
             $payload = $jwt->decode($authJWT);
