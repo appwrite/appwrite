@@ -100,6 +100,7 @@ use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
+use Appwrite\Utopia\Response\Model\WebauthnChallenge;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 use Swoole\Http\Response as SwooleHTTPResponse;
@@ -169,6 +170,7 @@ class Response extends SwooleResponse
     public const MODEL_TOKEN = 'token';
     public const MODEL_JWT = 'jwt';
     public const MODEL_PREFERENCES = 'preferences';
+    public const MODEL_WEBAUTHN_CHALLENGE = 'webauthnChallenge';
 
     // MFA
     public const MODEL_MFA_TYPE = 'mfaType';
@@ -417,6 +419,7 @@ class Response extends SwooleResponse
             ->setModel(new AuthProvider())
             ->setModel(new Platform())
             ->setModel(new Variable())
+            ->setModel(new WebauthnChallenge())
             ->setModel(new Country())
             ->setModel(new Continent())
             ->setModel(new Language())
