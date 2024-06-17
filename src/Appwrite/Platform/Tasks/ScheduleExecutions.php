@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
-use Cron\CronExpression;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
 
@@ -24,8 +23,12 @@ class ScheduleExecutions extends ScheduleBase
 
     protected function enqueueResources(Group $pools, Database $dbForConsole): void
     {
+        $queue = $pools->get('queue')->pop();
+        $connection = $queue->getResource();
+        $queueForFunctions = new Func($connection);
+
         foreach ($this->schedules as $schedule) {
-            if (!$schedule['active'] || CronExpression::isValidExpression($schedule['schedule'])) {
+            if (!$schedule['active']) {
                 unset($this->schedules[$schedule['resourceId']]);
                 continue;
             }
@@ -37,30 +40,21 @@ class ScheduleExecutions extends ScheduleBase
                 continue;
             }
 
-            \go(function () use ($schedule, $pools, $dbForConsole) {
-                $queue = $pools->get('queue')->pop();
-                $connection = $queue->getResource();
+            $queueForFunctions
+                ->setType('schedule')
+                ->setFunctionId($schedule['resource']['functionId'])
+                ->setExecution($schedule['resource'])
+                ->setProject($schedule['project'])
+                ->trigger();
 
-                $queueForFunctions = new Func($connection);
+            $dbForConsole->deleteDocument(
+                'schedules',
+                $schedule['$id'],
+            );
 
-                $queueForFunctions
-                    ->setType('schedule')
-                    ->setFunctionId($schedule['resource']['functionId'])
-                    ->setExecution($schedule['resource'])
-                    ->setMethod('POST')
-                    ->setPath('/')
-                    ->setProject($schedule['project'])
-                    ->trigger();
-
-                $dbForConsole->deleteDocument(
-                    'schedules',
-                    $schedule['$id'],
-                );
-
-                $queue->reclaim();
-
-                unset($this->schedules[$schedule['resourceId']]);
-            });
+            unset($this->schedules[$schedule['resourceId']]);
         }
+
+        $queue->reclaim();
     }
 }

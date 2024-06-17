@@ -41,11 +41,6 @@ class ScheduleFunctions extends ScheduleBase
         $delayedExecutions = []; // Group executions with same delay to share one coroutine
 
         foreach ($this->schedules as $key => $schedule) {
-            if (!$schedule['active'] || !CronExpression::isValidExpression($schedule['schedule'])) {
-                unset($this->schedules[$schedule['resourceId']]);
-                continue;
-            }
-
             $cron = new CronExpression($schedule['schedule']);
             $nextDate = $cron->getNextRunDate();
             $next = DateTime::format($nextDate);
@@ -89,8 +84,6 @@ class ScheduleFunctions extends ScheduleBase
                     $queueForFunctions
                         ->setType('schedule')
                         ->setFunction($schedule['resource'])
-                        ->setMethod('POST')
-                        ->setPath('/')
                         ->setProject($schedule['project'])
                         ->trigger();
                 }
