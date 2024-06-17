@@ -23,7 +23,7 @@ class Workers extends Service
 {
     public function __construct()
     {
-        $this->type = self::TYPE_WORKER;
+        $this->type = Service::TYPE_WORKER;
         $this
             ->addAction(Audits::getName(), new Audits())
             ->addAction(Builds::getName(), new Builds())

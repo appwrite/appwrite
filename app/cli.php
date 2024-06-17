@@ -110,7 +110,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         if (isset($databases[$dsn->getHost()])) {
             $database = $databases[$dsn->getHost()];
 
-            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
@@ -134,7 +134,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $databases[$dsn->getHost()] = $database;
 
-        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
@@ -209,7 +209,7 @@ CLI::setResource('logError', function (Registry $register) {
 }, ['register']);
 
 $platform = new Appwrite();
-$platform->init(Service::TYPE_CLI);
+$platform->init(Service::TYPE_TASK);
 
 $cli = $platform->getCli();
 

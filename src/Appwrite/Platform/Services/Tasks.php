@@ -23,7 +23,7 @@ class Tasks extends Service
 {
     public function __construct()
     {
-        $this->type = self::TYPE_CLI;
+        $this->type = Service::TYPE_TASK;
         $this
             ->addAction(Doctor::getName(), new Doctor())
             ->addAction(Install::getName(), new Install())
