@@ -986,7 +986,7 @@ trait UsersBase
             'password' => 'password'
         ]);
 
-        $this->assertEquals($session['headers']['status-code'], 401);
+        $this->assertEquals(401, $session['headers']['status-code']);
 
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
             'content-type' => 'application/json',
