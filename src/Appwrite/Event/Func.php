@@ -11,8 +11,8 @@ class Func extends Event
     protected string $jwt = '';
     protected string $type = '';
     protected string $body = '';
-    protected string $path = '';
-    protected string $method = '';
+    protected ?string $path = null;
+    protected ?string $method = null;
     protected array $headers = [];
     protected ?string $functionId = null;
     protected ?Document $function = null;
