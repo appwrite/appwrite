@@ -1722,7 +1722,7 @@ App::post('/v1/functions/:functionId/executions')
             'functionId' => $function->getId(),
             'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
-            'trigger' => 'http', // http / schedule / event
+            'trigger' => (!is_null($scheduledAt)) ? 'schedule' : 'http',
             'status' => $status, // waiting / processing / completed / failed
             'responseStatusCode' => 0,
             'responseHeaders' => [],
@@ -1764,9 +1764,9 @@ App::post('/v1/functions/:functionId/executions')
             } else {
                 $dbForConsole->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
-                    'resourceType' => 'function',
-                    'resourceId' => $function->getId(),
-                    'resourceInternalId' => $function->getInternalId(),
+                    'resourceType' => 'execution',
+                    'resourceId' => $execution->getId(),
+                    'resourceInternalId' => $execution->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule' => $scheduledAt,

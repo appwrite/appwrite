@@ -2,29 +2,32 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Messaging;
+use Appwrite\Event\Func;
+use Cron\CronExpression;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
 
-class ScheduleMessages extends ScheduleBase
+class ScheduleExecutions extends ScheduleBase
 {
     public const UPDATE_TIMER = 3; // seconds
     public const ENQUEUE_TIMER = 4; // seconds
 
     public static function getName(): string
     {
-        return 'schedule-messages';
+        return 'schedule-executions';
     }
 
     public static function getSupportedResource(): string
     {
-        return 'message';
+        return 'execution';
     }
 
     protected function enqueueResources(Group $pools, Database $dbForConsole): void
     {
         foreach ($this->schedules as $schedule) {
-            if (!$schedule['active']) {
+            if (!$schedule['active'] || CronExpression::isValidExpression($schedule['schedule'])) {
+                unset($this->schedules[$schedule['resourceId']]);
                 continue;
             }
 
@@ -38,11 +41,15 @@ class ScheduleMessages extends ScheduleBase
             \go(function () use ($schedule, $pools, $dbForConsole) {
                 $queue = $pools->get('queue')->pop();
                 $connection = $queue->getResource();
-                $queueForMessaging = new Messaging($connection);
-
-                $queueForMessaging
-                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
-                    ->setMessageId($schedule['resourceId'])
+                
+                $queueForFunctions = new Func($connection);
+                
+                $queueForFunctions
+                    ->setType('schedule')
+                    ->setFunctionId($schedule['resource']['functionId'])
+                    ->setExecution($schedule['resource'])
+                    ->setMethod('POST')
+                    ->setPath('/')
                     ->setProject($schedule['project'])
                     ->trigger();
 

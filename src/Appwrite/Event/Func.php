@@ -14,6 +14,7 @@ class Func extends Event
     protected string $path = '';
     protected string $method = '';
     protected array $headers = [];
+    protected ?string $functionId = null;
     protected ?Document $function = null;
     protected ?Document $execution = null;
 
@@ -47,6 +48,28 @@ class Func extends Event
     public function getFunction(): ?Document
     {
         return $this->function;
+    }
+
+    /**
+     * Sets function id for the function event.
+     * 
+     * @param string $functionId
+     */
+    public function setFunctionId(string $functionId): self
+    {
+        $this->functionId = $functionId;
+
+        return $this;
+    }
+
+    /**
+     * Returns set function id for the function event.
+     * 
+     * @return string|null
+     */
+    public function getFunctionId(): ?string
+    {
+        return $this->functionId;
     }
 
     /**
@@ -200,6 +223,7 @@ class Func extends Event
             'project' => $this->project,
             'user' => $this->user,
             'function' => $this->function,
+            'functionId' => $this->functionId,
             'execution' => $this->execution,
             'type' => $this->type,
             'jwt' => $this->jwt,

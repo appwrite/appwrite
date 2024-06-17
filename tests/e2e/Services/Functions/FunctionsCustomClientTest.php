@@ -57,6 +57,7 @@ class FunctionsCustomClientTest extends Scope
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
+            'logging' => true,
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -246,6 +247,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(200, $function['headers']['status-code']);
 
         // Schedule execution for the future
+        \date_default_timezone_set('UTC');
         $futureTime = (new \DateTime())->add(new \DateInterval('PT10S'))->format('Y-m-d H:i:s');
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -260,7 +262,7 @@ class FunctionsCustomClientTest extends Scope
 
         $executionId = $execution['body']['$id'];
 
-        sleep(12);
+        sleep(20);
 
         $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions/' . $executionId, [
             'content-type' => 'application/json',
@@ -280,8 +282,6 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(204, $response['headers']['status-code']);
     }
-
-
 
     public function testCreateCustomExecution(): array
     {
