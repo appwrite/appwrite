@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
 use Cron\CronExpression;
-use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
 
@@ -41,9 +40,9 @@ class ScheduleExecutions extends ScheduleBase
             \go(function () use ($schedule, $pools, $dbForConsole) {
                 $queue = $pools->get('queue')->pop();
                 $connection = $queue->getResource();
-                
+
                 $queueForFunctions = new Func($connection);
-                
+
                 $queueForFunctions
                     ->setType('schedule')
                     ->setFunctionId($schedule['resource']['functionId'])

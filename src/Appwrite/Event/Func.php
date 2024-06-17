@@ -52,7 +52,7 @@ class Func extends Event
 
     /**
      * Sets function id for the function event.
-     * 
+     *
      * @param string $functionId
      */
     public function setFunctionId(string $functionId): self
@@ -64,7 +64,7 @@ class Func extends Event
 
     /**
      * Returns set function id for the function event.
-     * 
+     *
      * @return string|null
      */
     public function getFunctionId(): ?string
