@@ -1411,11 +1411,11 @@ App::put('/v1/account/sessions/webauthn')
     ->inject('queueForEvents')
     ->action(function (string $challengeId, string $challengeResponse, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Locale $locale, Reader $geodb, Event $queueForEvents) use ($publicKeyCredentialLoader, $authenticationAssertionResponseValdiator, $createSession) {
         $protocol = $request->getProtocol();
-        
+
         // Get challenge
         $challengeDoc = Authorization::skip(fn () => $dbForProject->getDocument('webauthnChallenges', $challengeId));
 
-        if (empty($challengeDoc)){
+        if (empty($challengeDoc)) {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Challenge not found');
         }
 
@@ -1428,10 +1428,10 @@ App::put('/v1/account/sessions/webauthn')
         try {
             $publicKeyCredential = $publicKeyCredentialLoader->load($challengeResponse);
             if (!$publicKeyCredential->response instanceof AuthenticatorAssertionResponse) {
-                //e.g. process here with a redirection to the public key login/MFA page. 
-            }    
+                //e.g. process here with a redirection to the public key login/MFA page.
+            }
         } catch  (\Throwable $e) {
-           throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid Challenge Response');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid Challenge Response');
         }
 
         $credentialId = Base64UrlSafe::encodeUnpadded($publicKeyCredential->rawId);
