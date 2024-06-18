@@ -691,7 +691,14 @@ $commonCollections = [
                     'attributes' => ['userInternalId'],
                     'lengths' => [Database::LENGTH_KEY],
                     'orders' => [Database::ORDER_ASC],
-                ]
+                ],
+                [
+                    '$id' => ID::custom('_key_publicKeyCredentialId'),
+                    'type' => Database::INDEX_UNIQUE,
+                    'attributes' => ['publicKeyCredentialId'],
+                    'lengths' => [Database::LENGTH_KEY],
+                    'orders' => [Database::ORDER_ASC],
+                ],
         ],
     ],
 
