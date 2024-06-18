@@ -57,11 +57,14 @@ use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 use Webauthn\AttestationStatement\AttestationObjectLoader;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
+use Webauthn\AuthenticatorAssertionResponse;
+use Webauthn\AuthenticatorAssertionResponseValidator;
 use Webauthn\AuthenticatorAttestationResponseValidator;
 use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\PublicKeyCredentialLoader;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
+use Webauthn\PublicKeyCredentialSource;
 use Webauthn\PublicKeyCredentialUserEntity;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
@@ -184,6 +187,8 @@ $publicKeyCredentialLoader = PublicKeyCredentialLoader::create($attestationObjec
 $authenticatorAttestationResponseValidator = AuthenticatorAttestationResponseValidator::create(
     $attestationSupportManager
 );
+
+$authenticationAssertionResponseValdiator = AuthenticatorAssertionResponseValidator::create();
 
 App::post('/v1/account')
     ->desc('Create account')
@@ -399,7 +404,7 @@ App::delete('/v1/account')
         $response->noContent();
     });
 App::post('/v1/account/webauthn')
-    ->desc('Create Webauthn Challenge')
+    ->desc('Create Webauthn User')
     ->groups(['api', 'account', 'auth'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'sessions.write')
@@ -416,7 +421,7 @@ App::post('/v1/account/webauthn')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->label('abuse-limit', 10)
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->param('email', '', new Email(), 'User email.', true)
     ->inject('request')
     ->inject('response')
@@ -463,22 +468,45 @@ App::post('/v1/account/webauthn')
                 Query::equal('providerEmail', [$email]),
             ]);
             if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                /** Return a generic bad request to prevent exposing existing accounts */
+                throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
             }
         }
 
         // TODO: Check there isn't an existing challenge for this userId & email
         // TODO: Add a challenge expiry time
+        $platforms = $project->getAttribute('platforms', []);
+        $platformName = '';
+        $platformId = '';
+
+        //TODO: Use SDK headers to determine the platform
+
+
+        // Fallback to any web platform that matches the domain
+        foreach ($platforms as $platform) {
+            if ($platform['type'] === 'web' && $platform['hostname'] == $request->getHostname()) {
+                $platformName = $platform['name'];
+                $platformId = $platform['hostname'];
+                break;
+            }
+        }
+
+        // Console
+        if ($project->getId() === 'console') {
+            $platformName = 'Appwrite';
+            $platformId = 'localhost'; // TODO: Replace with hostname from _APP_DOMAIN
+        }
+
+        // If still no platform, throw.
+        if (empty($platformName)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'No platform found for this domain.');
+        }
 
         // Generate rpEntity from current platform
         $rpEntity = PublicKeyCredentialRpEntity::create(
-            'My Super Secured Application', //Name
-            'localhost',              //ID
-            null                            //Icon
+            $platformName, //Name
+            $platformId, //ID
+            null //Icon
         );
-
-        // If we wanted to perform attestation, we would define certificates here.
 
         // Generate userEntity
         $userId = $userId == 'unique()' ? ID::unique() : $userId;
@@ -517,11 +545,11 @@ App::post('/v1/account/webauthn')
 
         $dbForProject->createDocument('webauthnChallenges', $webauthnDocument);
 
-        $response->dynamic($webauthnDocument, Response::MODEL_WEBAUTHN_CHALLENGE);
+        $response->dynamic($webauthnDocument, Response::MODEL_WEBAUTHN_REGISTER_CHALLENGE);
     });
 
 App::put('/v1/account/webauthn')
-    ->desc('Create WebAuthn User')
+    ->desc('Create WebAuthn User (confirmation)')
     ->groups(['api', 'account', 'auth'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'sessions.write')
@@ -608,12 +636,28 @@ App::put('/v1/account/webauthn')
                 'tokens' => null,
                 'memberships' => null,
                 'authenticators' => null,
-                'webauthnCredentials' => [
-                    json_encode($publicKeyCredentialSource)
-                ],
+                'credentialSources' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
             ]);
+            $user->removeAttribute('$internalId');
+            $createdUser = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+
+            // Create Authenticator
+            $dbForProject->createDocument('credentialSources', new Document([
+                'userInternalId' => $createdUser->getInternalId(),
+                'publicKeyCredentialId' => Base64UrlSafe::encodeUnpadded($publicKeyCredentialSource->publicKeyCredentialId),
+                'type' => $publicKeyCredentialSource->type,
+                'transports' => $publicKeyCredentialSource->transports,
+                'attestationType' => $publicKeyCredentialSource->attestationType,
+                'aaguid' => $publicKeyCredentialSource->aaguid->__toString(),
+                'trustPath' => json_encode($publicKeyCredentialSource->trustPath),
+                'credentialPublicKey' => Base64UrlSafe::encodeUnpadded($publicKeyCredentialSource->credentialPublicKey),
+                'userHandle' => Base64UrlSafe::encodeUnpadded($publicKeyCredentialSource->userHandle),
+                'counter' => $publicKeyCredentialSource->counter,
+            ]));
+
+            Authorization::skip(fn () => $dbForProject->deleteDocument('webauthnChallenges', $challengeId));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
@@ -1234,28 +1278,32 @@ App::post('/v1/account/sessions/webauthn')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'createSession')
+    ->label('sdk.method', 'createWebauthnSession')
     ->label('sdk.description', '/docs/references/account/create-webauthn-session.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('sdk.response.model', Response::MODEL_WEBAUTHN_LOGIN_CHALLENGE)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'ip:{ip},name:{param-name}')
     ->param('name', '', new Text(256), 'Username.')
     ->inject('request')
     ->inject('response')
-    ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('locale')
-    ->inject('geodb')
-    ->inject('queueForEvents')
-    ->action(function (string $name, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Reader $geodb, Event $queueForEvents, Hooks $hooks) {
+    ->action(function (string $name, Request $request, Response $response, Database $dbForProject, Document $project) {
         $profile = $dbForProject->findOne('users', [
             Query::equal('name', [$name]),
         ]);
 
-        if (!$profile || empty($profile->getAttribute('webauthnCredentials'))) {
+        if (!$profile) {
+            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+        }
+
+        $authenticators = Authorization::skip(fn () => $dbForProject->find('credentialSources', [
+            Query::equal('userInternalId', [$profile->getInternalId()]),
+        ]));
+
+        if (empty($authenticators)) {
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
@@ -1263,30 +1311,251 @@ App::post('/v1/account/sessions/webauthn')
             throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
         }
 
-        // Generate rpEntity from current platform
+        $allowedCredentials = [];
+
+        foreach ($authenticators as $authenticator) {
+            $credentialSource = PublicKeyCredentialSource::createFromArray(
+                $authenticator->getArrayCopy()
+            );
+
+            $allowedCredentials[] = ($credentialSource->getPublicKeyCredentialDescriptor())->jsonSerialize();
+        }
+
+        $platforms = $project->getAttribute('platforms', []);
+        $platformName = '';
+        $platformId = '';
+
+        //TODO: Use SDK headers to determine the platform
+
+
+        // Fallback to any web platform that matches the domain
+        foreach ($platforms as $platform) {
+            if ($platform['type'] === 'web' && $platform['hostname'] == $request->getHostname()) {
+                $platformName = $platform['name'];
+                $platformId = $platform['hostname'];
+                break;
+            }
+        }
+
+        // Console
+        if ($project->getId() === 'console') {
+            $platformName = 'Appwrite';
+            $platformId = 'localhost'; // TODO: Replace with hostname from _APP_DOMAIN
+        }
+
         $rpEntity = PublicKeyCredentialRpEntity::create(
-            'My Super Secured Application',
-            'localhost',
-            null
+            $platformName,
+            $platformId,
         );
+
+        $timeout = 60 * 5 * 1000; // 5 minutes in milliseconds
 
         $publicKeyCredentialRequestOptions =
             PublicKeyCredentialRequestOptions::create(
                 random_bytes(32), // Challenge
-                userVerification: PublicKeyCredentialRequestOptions::USER_VERIFICATION_REQUIREMENT_REQUIRED
+                userVerification: PublicKeyCredentialRequestOptions::USER_VERIFICATION_REQUIREMENT_REQUIRED,
+                timeout: $timeout,
+                allowCredentials: $allowedCredentials,
+                rpId: $platformId,
             );
 
         // Store challenge
+        $expire = DateTime::addSeconds(new \DateTime(), $timeout / 1000);
+        $id = ID::unique();
         $dbForProject->createDocument('webauthnChallenges', new Document([
+            '$id' => $id,
             'userId' => $profile->getId(),
             'type' => 'session_create',
-            'rp' => json_encode($rpEntity)
+            'rp' => json_encode($rpEntity),
+            'challenge' => Base64UrlSafe::encodeUnpadded($publicKeyCredentialRequestOptions->challenge),
+            'expire' => $expire,
         ]));
 
         // Send challenge
-        $response->dynamic($publicKeyCredentialRequestOptions, Response::MODEL_WEBAUTHN_CHALLENGE);
+        $response->dynamic(new Document(
+            array_merge(
+                [
+                    '$id' => $id,
+                ],
+                $publicKeyCredentialRequestOptions->jsonSerialize()
+            )
+        ), Response::MODEL_WEBAUTHN_LOGIN_CHALLENGE);
     });
 
+App::put('/v1/account/sessions/webauthn')
+    ->desc('Create WebAuthn session (validation)')
+    ->label('event', 'users.[userId].sessions.[sessionId].create')
+    ->groups(['api', 'account', 'session'])
+    ->label('scope', 'sessions.write')
+    ->label('audits.event', 'session.create')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk.auth', [])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createWebauthnSession')
+    ->label('sdk.description', '/docs/references/account/create-webauthn-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'ip:{ip},name:{param-name}')
+    ->param('challengeId', '', new UID(), 'Challenge ID.')
+    ->param('challengeResponse', '', new Text(8196), 'Challenge response.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('user')
+    ->inject('locale')
+    ->inject('geodb')
+    ->inject('queueForEvents')
+    ->action(function (string $challengeId, string $challengeResponse, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Locale $locale, Reader $geodb, Event $queueForEvents) use ($publicKeyCredentialLoader, $authenticationAssertionResponseValdiator, $createSession) {
+        $protocol = $request->getProtocol();
+        
+        // Get challenge
+        $challengeDoc = Authorization::skip(fn () => $dbForProject->getDocument('webauthnChallenges', $challengeId));
+
+        if (empty($challengeDoc)){
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Challenge not found');
+        }
+
+        if ($challengeDoc->getAttribute('expire') < DateTime::now()) {
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Challenge expired');
+        }
+
+        $profile = $dbForProject->getDocument('users', $challengeDoc->getAttribute('userId'));
+
+        try {
+            $publicKeyCredential = $publicKeyCredentialLoader->load($challengeResponse);
+            if (!$publicKeyCredential->response instanceof AuthenticatorAssertionResponse) {
+                //e.g. process here with a redirection to the public key login/MFA page. 
+            }    
+        } catch  (\Throwable $e) {
+           throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid Challenge Response');
+        }
+
+        $credentialId = Base64UrlSafe::encodeUnpadded($publicKeyCredential->rawId);
+
+        $sourceCredentialSource = Authorization::skip(fn () => $dbForProject->findOne('credentialSources', [
+            Query::equal('publicKeyCredentialId', [$credentialId]),
+            Query::equal('userInternalId', [$profile->getInternalId()]),
+        ]));
+
+        if (empty($sourceCredentialSource)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Authenticator not found');
+        }
+
+        $authenticators = Authorization::skip(fn () => $dbForProject->find('credentialSources', [
+            Query::equal('userInternalId', [$profile->getInternalId()]),
+        ]));
+
+        $allowedCredentials = [];
+        $credentialRecieved = false;
+
+        foreach ($authenticators as $authenticator) {
+            $credentialSource = PublicKeyCredentialSource::createFromArray(
+                $authenticator->getArrayCopy()
+            );
+
+            if (Base64UrlSafe::encodeUnpadded($credentialSource->publicKeyCredentialId) === $credentialId) {
+                $credentialRecieved = $credentialSource;
+            }
+
+            $allowedCredentials[] = $credentialSource->getPublicKeyCredentialDescriptor();
+        }
+
+        $rpId = $challengeDoc->getAttribute('rp')['id'] ?? '';
+
+        $requestOptions = PublicKeyCredentialRequestOptions::create(
+            Base64UrlSafe::decodeNoPadding($challengeDoc->getAttribute('challenge')),
+            rpId: $rpId,
+            allowCredentials: $allowedCredentials,
+            timeout: 60000,
+        );
+
+        try {
+            $publicKeyCredentialSource = $authenticationAssertionResponseValdiator->check(
+                credentialId: $credentialRecieved,
+                authenticatorAssertionResponse: $publicKeyCredential->response,
+                publicKeyCredentialRequestOptions: $requestOptions,
+                request: $request->getHostname(), // Replace with platform ID
+                userHandle: $credentialRecieved->userHandle,
+                securedRelyingPartyId: ['localhost'] // Replace with platform hostname
+            );
+
+            $sourceCredentialSource->setAttribute('counter', $publicKeyCredentialSource->counter);
+
+            // Store new public key credential source (counter has been updated)
+            Authorization::skip(fn () => $dbForProject->updateDocument('credentialSources', $sourceCredentialSource->getId(), $sourceCredentialSource));
+        } catch (\Throwable $e) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid Challenge Response');
+        }
+
+        // Create session
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+
+        $user->setAttributes($profile->getArrayCopy());
+        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $record = $geodb->get($request->getIP());
+        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
+        $session = new Document(array_merge(
+            [
+                '$id' => ID::unique(),
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'provider' => Auth::SESSION_PROVIDER_WEBAUTHN,
+                'providerUid' => $sourceCredentialSource->getAttribute('credentialId'),
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'factors' => ['webauthn'],
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+            ],
+            $detector->getOS(),
+            $detector->getClient(),
+            $detector->getDevice()
+        ));
+
+        Authorization::setRole(Role::user($user->getId())->toString());
+        $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]));
+
+        if (!Config::getParam('domainVerification')) {
+            $response
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
+            ;
+        }
+
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+
+        $response
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ;
+
+        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+
+        $session
+            ->setAttribute('current', true)
+            ->setAttribute('countryName', $countryName)
+            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '')
+        ;
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId())
+        ;
+
+        $response->dynamic($session, Response::MODEL_SESSION);
+    });
 
 App::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create OAuth2 session')

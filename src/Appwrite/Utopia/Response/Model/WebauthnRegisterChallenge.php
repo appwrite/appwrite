@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class WebauthnChallenge extends Model
+class WebauthnRegisterChallenge extends Model
 {
     public function __construct()
     {
@@ -58,11 +58,11 @@ class WebauthnChallenge extends Model
                     ]
                 ]
             ])
-            ->addRule('expire', [
-                'type' => self::TYPE_DATETIME,
+            ->addRule('timeout', [
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Challenge expiration date in seconds.',
                 'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE
+                'example' => 60000,
             ])
         ;
     }
@@ -74,7 +74,7 @@ class WebauthnChallenge extends Model
      */
     public function getName(): string
     {
-        return 'WebauthnChallenge';
+        return 'WebauthnRegisterChallenge';
     }
 
     /**
@@ -84,6 +84,6 @@ class WebauthnChallenge extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_WEBAUTHN_CHALLENGE;
+        return Response::MODEL_WEBAUTHN_REGISTER_CHALLENGE;
     }
 }
