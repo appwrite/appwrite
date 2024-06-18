@@ -587,19 +587,22 @@ class Deletes extends Action
         ], $dbForProject);
 
         $dbForProject->purgeCachedDocument('users', $userId);
-
+        var_dump('in delete worker');
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
             Query::equal('userInternalId', [$userInternalId])
         ], $dbForProject, function (Document $document) use ($dbForProject) {
+            var_dump($document->getAttribute('confirm'));
             if ($document->getAttribute('confirm')) { // Count only confirmed members
                 $teamId = $document->getAttribute('teamId');
                 $team = $dbForProject->getDocument('teams', $teamId);
                 if (!$team->isEmpty()) {
                     $total = $document->getAttribute('total');
+                    var_dump('$total='.$total);
                     // Delete the team if the user is the last membership
                     if ($total === 1) {
                         $this->deleteById($team, $dbForProject);
+                        var_dump('delete team');
                         return;
                     }
                     $dbForProject->decreaseDocumentAttribute('teams', $teamId, 'total', 1, 0);
