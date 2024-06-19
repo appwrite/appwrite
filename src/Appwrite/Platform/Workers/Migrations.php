@@ -34,6 +34,7 @@ class Migrations extends Action
     protected Database $dbForProject;
     protected Database $dbForConsole;
     protected Document $project;
+    protected Document $migration;
 
     public static function getName(): string
     {
@@ -81,6 +82,7 @@ class Migrations extends Action
         $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
         $this->project = $project;
+        $this->migration = $migration;
 
         /**
          * Handle Event execution.
