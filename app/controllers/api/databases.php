@@ -2310,7 +2310,14 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
         }
 
+
+        var_dump("purgeCachedDocument");
+        var_dump('database_' . $db->getInternalId());
+        var_dump($collectionId);
         $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
+
+        var_dump("purgeCachedCollection");
+        var_dump('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
         $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 
         if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
