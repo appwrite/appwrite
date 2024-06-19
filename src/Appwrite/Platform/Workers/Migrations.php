@@ -98,13 +98,15 @@ class Migrations extends Action
     }
 
     /**
-     * @param string $source
-     * @param array $credentials
+     * @param Document $migration
      * @return Source
      * @throws Exception
      */
-    protected function processSource(string $source, array $credentials): Source
+    protected function processSource(Document $migration): Source
     {
+        $source = $migration->getAttribute('source');
+        $credentials = $migration->getAttribute('credentials');
+
         return match ($source) {
             Firebase::getName() => new Firebase(
                 json_decode($credentials['serviceAccount'], true),
@@ -137,13 +139,15 @@ class Migrations extends Action
     }
 
     /**
-     * @param string $destination
+     * @param Document $migration
      * @param array $credentials
      * @return Destination
      * @throws Exception
      */
-    protected function processDestination(string $destination, array $credentials): Destination
+    protected function processDestination(Document $migration, array $credentials): Destination
     {
+        $destination = $migration->getAttribute('destination');
+
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $credentials['projectId'],
@@ -284,19 +288,30 @@ class Migrations extends Action
 
             $log->addTag('type', $migrationDocument->getAttribute('source'));
 
-            $source = $this->processSource(
-                $migrationDocument->getAttribute('source'),
-                $migrationDocument->getAttribute('credentials')
-            );
+            $source = $this->processSource($migrationDocument);
 
             $destination = $this->processDestination(
-                $migrationDocument->getAttribute('destination'),
+                $migrationDocument,
                 [
                     'projectId' => $projectDocument->getId(),
                     'endpoint'  => 'http://appwrite/v1',
                     'apiKey'    => $tempAPIKey['secret']
                 ]
             );
+//
+//            $source = $this->processSource(
+//                $migrationDocument->getAttribute('source'),
+//                $migrationDocument->getAttribute('credentials')
+//            );
+//
+//            $destination = $this->processDestination(
+//                $migrationDocument->getAttribute('destination'),
+//                [
+//                    'projectId' => $projectDocument->getId(),
+//                    'endpoint'  => 'http://appwrite/v1',
+//                    'apiKey'    => $tempAPIKey['secret']
+//                ]
+//            );
 
             $source->report();
 
