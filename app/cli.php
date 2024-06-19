@@ -202,7 +202,7 @@ CLI::setResource('logError', function (Registry $register) {
 }, ['register']);
 
 $platform = new Appwrite();
-$platform->init(Service::TYPE_CLI);
+$platform->init(Service::TYPE_TASK);
 
 $cli = $platform->getCli();
 
