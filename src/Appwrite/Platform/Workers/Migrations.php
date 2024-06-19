@@ -272,26 +272,28 @@ class Migrations extends Action
      * @throws Restricted
      * @throws Structure
      * @throws \Utopia\Database\Exception
+     * @throws Exception
      */
     protected function processMigration(Document $migration, Log $log): void
     {
         $project = $this->project;
         $projectDocument = $this->dbForConsole->getDocument('projects', $project->getId());
         $tempAPIKey = $this->generateAPIKey($projectDocument);
+        $transfer = $source = $destination = null;
 
         try {
-            $migrationDocument = $this->dbForProject->getDocument('migrations', $migration->getId());
-            $migrationDocument->setAttribute('stage', 'processing');
-            $migrationDocument->setAttribute('status', 'processing');
+            $migration = $this->dbForProject->getDocument('migrations', $migration->getId());
+            $migration->setAttribute('stage', 'processing');
+            $migration->setAttribute('status', 'processing');
             $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'processing'", \microtime(true)));
-            $this->updateMigrationDocument($migrationDocument, $projectDocument);
+            $this->updateMigrationDocument($migration, $projectDocument);
 
-            $log->addTag('type', $migrationDocument->getAttribute('source'));
+            $log->addTag('type', $migration->getAttribute('source'));
 
-            $source = $this->processSource($migrationDocument);
+            $source = $this->processSource($migration);
 
             $destination = $this->processDestination(
-                $migrationDocument,
+                $migration,
                 [
                     'projectId' => $projectDocument->getId(),
                     'endpoint'  => 'http://appwrite/v1',
@@ -300,12 +302,12 @@ class Migrations extends Action
             );
 //
 //            $source = $this->processSource(
-//                $migrationDocument->getAttribute('source'),
-//                $migrationDocument->getAttribute('credentials')
+//                $migration->getAttribute('source'),
+//                $migration->getAttribute('credentials')
 //            );
 //
 //            $destination = $this->processDestination(
-//                $migrationDocument->getAttribute('destination'),
+//                $migration->getAttribute('destination'),
 //                [
 //                    'projectId' => $projectDocument->getId(),
 //                    'endpoint'  => 'http://appwrite/v1',
@@ -321,17 +323,17 @@ class Migrations extends Action
             );
 
             /** Start Transfer */
-            $migrationDocument->setAttribute('stage', 'migrating');
+            $migration->setAttribute('stage', 'migrating');
             $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'migrating'", \microtime(true)));
-            $this->updateMigrationDocument($migrationDocument, $projectDocument);
+            $this->updateMigrationDocument($migration, $projectDocument);
 
             $destination->init();
 
-            $transfer->run($migrationDocument->getAttribute('resources'), function () use ($migrationDocument, $transfer, $projectDocument) {
-                $migrationDocument->setAttribute('resourceData', json_encode($transfer->getCache()));
-                $migrationDocument->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
+            $transfer->run($migration->getAttribute('resources'), function () use ($migration, $transfer, $projectDocument) {
+                $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
+                $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
 
-                $this->updateMigrationDocument($migrationDocument, $projectDocument);
+                $this->updateMigrationDocument($migration, $projectDocument);
             });
 
             $destination->shutDown();
@@ -340,8 +342,8 @@ class Migrations extends Action
             $destinationErrors = $destination->getErrors();
 
             if (!empty($sourceErrors) || !empty($destinationErrors)) {
-                $migrationDocument->setAttribute('status', 'failed');
-                $migrationDocument->setAttribute('stage', 'finished');
+                $migration->setAttribute('status', 'failed');
+                $migration->setAttribute('stage', 'finished');
                 $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and failed", \microtime(true)));
 
                 $errorMessages = [];
@@ -354,25 +356,26 @@ class Migrations extends Action
                     $errorMessages[] = "Error occurred while pushing '{$error->getResourceType()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
                 }
 
-                $migrationDocument->setAttribute('errors', $errorMessages);
+                $migration->setAttribute('errors', $errorMessages);
                 $log->addExtra('migrationErrors', json_encode($errorMessages));
-                $this->updateMigrationDocument($migrationDocument, $projectDocument);
+                $this->updateMigrationDocument($migration, $projectDocument);
 
                 return;
             }
 
-            $migrationDocument->setAttribute('status', 'completed');
-            $migrationDocument->setAttribute('stage', 'finished');
+            $migration->setAttribute('status', 'completed');
+            $migration->setAttribute('stage', 'finished');
             $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and succeeded", \microtime(true)));
         } catch (\Throwable $th) {
-            Console::error($th->getMessage());
 
-            if ($migrationDocument) {
-                Console::error($th->getMessage());
-                Console::error($th->getTraceAsString());
-                $migrationDocument->setAttribute('status', 'failed');
-                $migrationDocument->setAttribute('stage', 'finished');
-                $migrationDocument->setAttribute('errors', [$th->getMessage()]);
+            Console::error($th->getMessage());
+            Console::error($th->getMessage());
+            Console::error($th->getTraceAsString());
+
+            if (!$migration->isEmpty()) {
+                $migration->setAttribute('status', 'failed');
+                $migration->setAttribute('stage', 'finished');
+                $migration->setAttribute('errors', [$th->getMessage()]);
 
                 return;
             }
@@ -391,19 +394,18 @@ class Migrations extends Action
                     $errorMessages[] = "Error occurred while pushing '{$error->getResourceType()}:{$error->getResourceId()}' to destination with message '{$error->getMessage()}'";
                 }
 
-                $migrationDocument->setAttribute('errors', $errorMessages);
+                $migration->setAttribute('errors', $errorMessages);
                 $log->addTag('migrationErrors', json_encode($errorMessages));
             }
         } finally {
-            if ($tempAPIKey) {
+            if (!$tempAPIKey->isEmpty()) {
                 $this->removeAPIKey($tempAPIKey);
             }
-            if ($migrationDocument) {
-                $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
-                if ($migrationDocument->getAttribute('status', '') == 'failed') {
-                    throw new Exception("Migration failed");
-                }
+            $this->updateMigrationDocument($migration, $projectDocument);
+
+            if ($migration->getAttribute('status', '') == 'failed') {
+                throw new Exception("Migration failed");
             }
         }
     }
