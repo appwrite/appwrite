@@ -300,20 +300,6 @@ class Migrations extends Action
                     'apiKey'    => $tempAPIKey['secret']
                 ]
             );
-//
-//            $source = $this->processSource(
-//                $migration->getAttribute('source'),
-//                $migration->getAttribute('credentials')
-//            );
-//
-//            $destination = $this->processDestination(
-//                $migration->getAttribute('destination'),
-//                [
-//                    'projectId' => $projectDocument->getId(),
-//                    'endpoint'  => 'http://appwrite/v1',
-//                    'apiKey'    => $tempAPIKey['secret']
-//                ]
-//            );
 
             $source->report();
 
