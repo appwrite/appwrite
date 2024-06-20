@@ -332,6 +332,11 @@ return [
         'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
     ],
+    Exception::API_KEY_EXPIRED => [
+        'name' => Exception::API_KEY_EXPIRED,
+        'description' => 'The dynamic API key has expired. Please don\'t use dynamic API keys for more than duration of the execution.',
+        'code' => 401,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [
@@ -539,6 +544,11 @@ return [
     Exception::BUILD_IN_PROGRESS => [
         'name' => Exception::BUILD_IN_PROGRESS,
         'description' => 'Build with the requested ID is already in progress. Please wait before you can retry.',
+        'code' => 400,
+    ],
+    Exception::BUILD_ALREADY_COMPLETED => [
+        'name' => Exception::BUILD_ALREADY_COMPLETED,
+        'description' => 'Build with the requested ID is already completed and cannot be canceled.',
         'code' => 400,
     ],
 

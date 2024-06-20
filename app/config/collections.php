@@ -3054,7 +3054,18 @@ $projectCollections = array_merge([
                 'required' => false,
                 'default' => null,
                 'filters' => [],
-            ]
+            ],
+            [
+                '$id' => ID::custom('scopes'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -3865,6 +3876,27 @@ $projectCollections = array_merge([
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['status'],
                 'lengths' => [32],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_requestMethod'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['requestMethod'],
+                'lengths' => [128],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_requestPath'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['requestPath'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_deployment'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['deploymentId'],
+                'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
