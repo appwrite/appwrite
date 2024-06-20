@@ -15,6 +15,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
@@ -98,25 +99,53 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             return $dbForConsole;
         }
 
-        $databaseName = $project->getAttribute('database');
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
 
-        if (isset($databases[$databaseName])) {
-            $database = $databases[$databaseName];
-            $database->setNamespace('_' . $project->getInternalId());
+        if (isset($databases[$dsn->getHost()])) {
+            $database = $databases[$dsn->getHost()];
+
+            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+                $database
+                    ->setSharedTables(true)
+                    ->setTenant($project->getInternalId())
+                    ->setNamespace($dsn->getParam('namespace'));
+            } else {
+                $database
+                    ->setSharedTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getInternalId());
+            }
+
             return $database;
         }
 
         $dbAdapter = $pools
-            ->get($databaseName)
+            ->get($dsn->getHost())
             ->pop()
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
 
-        $databases[$databaseName] = $database;
+        $databases[$dsn->getHost()] = $database;
+
+        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+            $database
+                ->setSharedTables(true)
+                ->setTenant($project->getInternalId())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getInternalId());
+        }
 
         $database
-            ->setNamespace('_' . $project->getInternalId())
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 
@@ -173,7 +202,7 @@ CLI::setResource('logError', function (Registry $register) {
 }, ['register']);
 
 $platform = new Appwrite();
-$platform->init(Service::TYPE_CLI);
+$platform->init(Service::TYPE_TASK);
 
 $cli = $platform->getCli();
 

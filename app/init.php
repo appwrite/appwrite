@@ -12,11 +12,11 @@ if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
     require_once __DIR__ . '/../vendor/autoload.php';
 }
 
-ini_set('memory_limit', '512M');
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-ini_set('default_socket_timeout', -1);
-error_reporting(E_ALL);
+\ini_set('memory_limit', '512M');
+\ini_set('display_errors', 1);
+\ini_set('display_startup_errors', 1);
+\ini_set('default_socket_timeout', -1);
+\error_reporting(E_ALL);
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
@@ -112,8 +112,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 406;
-const APP_VERSION_STABLE = '1.5.5';
+const APP_CACHE_BUSTER = 443;
+const APP_VERSION_STABLE = '1.5.7';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -142,6 +142,9 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 const APP_HOSTNAME_INTERNAL = 'appwrite';
+
+// Databases
+const DATABASE_SHARED_TABLES = 'database_db_fra1_self_hosted_16_0';
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
@@ -200,7 +203,7 @@ const APP_AUTH_TYPE_JWT = 'JWT';
 const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
-const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_OUTPUT_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
 // Function headers
 const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
 const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
@@ -215,6 +218,7 @@ const API_KEY_DYNAMIC = 'dynamic';
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
 const METRIC_MESSAGES  = 'messages';
+const METRIC_MESSAGES_COUNTRY_CODE  = '{countryCode}.messages';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
@@ -762,14 +766,18 @@ $register->set('logger', function () {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
-    $adapter = match ($providerName) {
-        'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
-        'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
-        'raygun' => new Raygun($providerConfig['key']),
-        'appsignal' => new AppSignal($providerConfig['key']),
-        default => throw new Exception('Provider "' . $providerName . '" not supported.')
-    };
+    // Old Sentry Format conversion. Fallback until the old syntax is completely deprecated.
+    if (str_contains($providerConfig, ';') && strtolower($providerName) == 'sentry') {
+        $configChunks = \explode(";", $providerConfig);
 
+        $sentryKey = $configChunks[0];
+        $projectId = $configChunks[1];
+
+        $providerConfig = 'https://' . $sentryKey . '@sentry.io/' . $projectId;
+    }
+
+    $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
+    $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
 $register->set('pools', function () {
@@ -843,14 +851,13 @@ $register->set('pools', function () {
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
-        $dsns = $connection['dsns'] ?? '';
-        $multipe = $connection['multiple'] ?? false;
+        $multiple = $connection['multiple'] ?? false;
         $schemes = $connection['schemes'] ?? [];
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
-            $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
+            $name = ($multiple) ? $key . '_' . $dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
             if (empty($dsn)) {
@@ -877,38 +884,31 @@ $register->set('pools', function () {
              *
              * Resource assignment to an adapter will happen below.
              */
-            switch ($dsnScheme) {
-                case 'mysql':
-                case 'mariadb':
-                    $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
-                                // No need to set PDO::ATTR_ERRMODE it is overwritten in PDOProxy
-                                PDO::ATTR_TIMEOUT => 3, // Seconds
-                                PDO::ATTR_PERSISTENT => true,
-                                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                                PDO::ATTR_EMULATE_PREPARES => true,
-                                PDO::ATTR_STRINGIFY_FETCHES => true
-                            ));
-                        });
-                    };
-                    break;
-                case 'redis':
-                    $resource = function () use ($dsnHost, $dsnPort, $dsnPass) {
-                        $redis = new Redis();
-                        @$redis->pconnect($dsnHost, (int)$dsnPort);
-                        if ($dsnPass) {
-                            $redis->auth($dsnPass);
-                        }
-                        $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+            $resource = match ($dsnScheme) {
+                'mysql',
+                'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                    return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                        return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                            PDO::ATTR_TIMEOUT => 3, // Seconds
+                            PDO::ATTR_PERSISTENT => true,
+                            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                            PDO::ATTR_EMULATE_PREPARES => true,
+                            PDO::ATTR_STRINGIFY_FETCHES => true
+                        ));
+                    });
+                },
+                'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
+                    $redis = new Redis();
+                    @$redis->pconnect($dsnHost, (int)$dsnPort);
+                    if ($dsnPass) {
+                        $redis->auth($dsnPass);
+                    }
+                    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
-                        return $redis;
-                    };
-                    break;
-
-                default:
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid scheme");
-            }
+                    return $redis;
+                },
+                default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
+            };
 
             $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
@@ -1041,7 +1041,7 @@ foreach ($locales as $locale) {
         'user_agent' => \sprintf(
             APP_USERAGENT,
             System::getEnv('_APP_VERSION', 'UNKNOWN'),
-            System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+            System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
         ),
         'timeout' => 2,
     ],
@@ -1132,24 +1132,25 @@ App::setResource('clients', function ($request, $console, $project) {
         fn ($node) => $node['hostname'],
         \array_filter(
             $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && isset($node['hostname']) && !empty($node['hostname']))
+            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && !empty($node['hostname']))
         )
     );
 
-    $clients = \array_unique(
-        \array_merge(
-            $clientsConsole,
-            \array_map(
-                fn ($node) => $node['hostname'],
-                \array_filter(
-                    $project->getAttribute('platforms', []),
-                    fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB || $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) && isset($node['hostname']) && !empty($node['hostname']))
-                )
-            )
-        )
-    );
+    $clients = $clientsConsole;
+    $platforms = $project->getAttribute('platforms', []);
 
-    return $clients;
+    foreach ($platforms as $node) {
+        if (
+            isset($node['type']) &&
+            ($node['type'] === Origin::CLIENT_TYPE_WEB ||
+            $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
+            !empty($node['hostname'])
+        ) {
+            $clients[] = $node['hostname'];
+        }
+    }
+
+    return \array_unique($clients);
 }, ['request', 'console', 'project']);
 
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForConsole) {
@@ -1223,7 +1224,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     }
 
     if (APP_MODE_ADMIN === $mode) {
-        if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
+        if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
             $user = new Document([]);
@@ -1275,14 +1276,13 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     return $project;
 }, ['dbForConsole', 'request', 'console']);
 
-App::setResource('session', function (Document $user, Document $project) {
+App::setResource('session', function (Document $user) {
     if ($user->isEmpty()) {
         return;
     }
 
     $sessions = $user->getAttribute('sessions', []);
-    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration);
+    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
 
     if (!$sessionId) {
         return;
@@ -1295,7 +1295,7 @@ App::setResource('session', function (Document $user, Document $project) {
     }
 
     return;
-}, ['user', 'project']);
+}, ['user']);
 
 App::setResource('console', function () {
     return new Document([
@@ -1342,18 +1342,43 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         return $dbForConsole;
     }
 
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        // TODO: Temporary until all projects are using shared tables
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
+
     $dbAdapter = $pools
-        ->get($project->getAttribute('database'))
+        ->get($dsn->getHost())
         ->pop()
         ->getResource();
 
     $database = new Database($dbAdapter, $cache);
 
     $database
-        ->setNamespace('_' . $project->getInternalId())
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        // TODO: Temporary until all projects are using shared tables
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
+
+    if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+        $database
+            ->setSharedTables(true)
+            ->setTenant($project->getInternalId())
+            ->setNamespace($dsn->getParam('namespace'));
+    } else {
+        $database
+            ->setSharedTables(false)
+            ->setTenant(null)
+            ->setNamespace('_' . $project->getInternalId());
+    }
 
     return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
@@ -1362,8 +1387,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     $dbAdapter = $pools
         ->get('console')
         ->pop()
-        ->getResource()
-    ;
+        ->getResource();
 
     $database = new Database($dbAdapter, $cache);
 
@@ -1379,44 +1403,54 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
 
-        $databaseName = $project->getAttribute('database');
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
 
-        if (isset($databases[$databaseName])) {
-            $database = $databases[$databaseName];
-
+        $configure = (function (Database $database) use ($project, $dsn) {
             $database
-                ->setNamespace('_' . $project->getInternalId())
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
+            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+                $database
+                    ->setSharedTables(true)
+                    ->setTenant($project->getInternalId())
+                    ->setNamespace($dsn->getParam('namespace'));
+            } else {
+                $database
+                    ->setSharedTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getInternalId());
+            }
+        });
+
+        if (isset($databases[$dsn->getHost()])) {
+            $database = $databases[$dsn->getHost()];
+            $configure($database);
             return $database;
         }
 
         $dbAdapter = $pools
-            ->get($databaseName)
+            ->get($dsn->getHost())
             ->pop()
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
-
-        $databases[$databaseName] = $database;
-
-        $database
-            ->setNamespace('_' . $project->getInternalId())
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', $project->getId())
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+        $databases[$dsn->getHost()] = $database;
+        $configure($database);
 
         return $database;
     };
-
-    return $getProjectDB;
 }, ['pools', 'dbForConsole', 'cache']);
 
 App::setResource('cache', function (Group $pools) {
@@ -1477,7 +1511,9 @@ function getDevice($root): Device
             case Storage::DEVICE_S3:
                 return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
             case STORAGE::DEVICE_DO_SPACES:
-                return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                $device = new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                $device->setHttpVersion(S3::HTTP_VERSION_1_1);
+                return $device;
             case Storage::DEVICE_BACKBLAZE:
                 return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
             case Storage::DEVICE_LINODE:
@@ -1506,7 +1542,9 @@ function getDevice($root): Device
                 $doSpacesRegion = System::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
                 $doSpacesBucket = System::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
                 $doSpacesAcl = 'private';
-                return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+                $device = new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+                $device->setHttpVersion(S3::HTTP_VERSION_1_1);
+                return $device;
             case Storage::DEVICE_BACKBLAZE:
                 $backblazeAccessKey = System::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
                 $backblazeSecretKey = System::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
@@ -1690,3 +1728,6 @@ App::setResource('requestTimestamp', function ($request) {
     }
     return $requestTimestamp;
 }, ['request']);
+App::setResource('plan', function (array $plan = []) {
+    return [];
+});
