@@ -72,6 +72,7 @@ use Appwrite\Utopia\Response\Model\Migration;
 use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
 use Appwrite\Utopia\Response\Model\MigrationReport;
 use Appwrite\Utopia\Response\Model\Mock;
+use Appwrite\Utopia\Response\Model\MockNumber;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
@@ -101,7 +102,6 @@ use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\Webhook;
-use Appwrite\Utopia\Response\Model\MockNumber;
 use Exception;
 use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last

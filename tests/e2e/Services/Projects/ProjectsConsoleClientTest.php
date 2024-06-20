@@ -1689,8 +1689,8 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-                'userId' => 'unique()',
-                'phone' => '+1655513432',
+            'userId' => 'unique()',
+            'phone' => '+1655513432',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -1700,8 +1700,8 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-                'userId' => $userId,
-                'secret' => '123456',
+            'userId' => $userId,
+            'secret' => '123456',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
