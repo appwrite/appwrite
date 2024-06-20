@@ -611,7 +611,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'emails' => [ 'testuser@appwrite.io', 'testusertwo@appwrite.io' ],
+            'emails' => ['testuser@appwrite.io', 'testusertwo@appwrite.io'],
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
@@ -648,7 +648,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'emails' => [ 'u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io' ],
+            'emails' => ['u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io'],
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
@@ -664,7 +664,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'emails' => [ 'u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io', 'u11@appwrite.io' ],
+            'emails' => ['u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io', 'u11@appwrite.io'],
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
@@ -1530,8 +1530,8 @@ class ProjectsConsoleClientTest extends Scope
 
 
         /**
-        * Reset
-        */
+         * Reset
+         */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1560,8 +1560,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-        ]);
+        ], $this->getHeaders()), []);
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('Param "numbers" is not optional.', $response['body']['message']);
@@ -1577,7 +1576,7 @@ class ProjectsConsoleClientTest extends Scope
             ]
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `numbers` param: Value must a valid array and Invalid payload structure. Please check the "phone" and "otp" fields', $response['body']['message']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Invalid payload structure. Please check the "phone" and "otp" fields', $response['body']['message']);
 
         /** Trying to pass an OTP longer than 6 characters*/
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
@@ -1592,7 +1591,7 @@ class ProjectsConsoleClientTest extends Scope
             ]
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `numbers` param: Value must a valid array and OTP must be a valid string and exactly 6 characters.', $response['body']['message']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and OTP must be a valid string and exactly 6 characters.', $response['body']['message']);
 
         /** Trying to pass an OTP shorter than 6 characters*/
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
@@ -1607,7 +1606,7 @@ class ProjectsConsoleClientTest extends Scope
             ]
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `numbers` param: Value must a valid array and OTP must be a valid string and exactly 6 characters.', $response['body']['message']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and OTP must be a valid string and exactly 6 characters.', $response['body']['message']);
 
         /** Trying to pass an invalid phone number  */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
@@ -1622,7 +1621,7 @@ class ProjectsConsoleClientTest extends Scope
             ]
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `numbers` param: Value must a valid array and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
 
         /** Trying to pass a number longer than 15 digits  */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
@@ -1637,7 +1636,7 @@ class ProjectsConsoleClientTest extends Scope
             ]
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `numbers` param: Value must a valid array and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
 
         $numbers = [];
         for ($i = 0; $i < 11; $i++) {
@@ -1646,8 +1645,6 @@ class ProjectsConsoleClientTest extends Scope
                 'otp' => '123456'
             ];
         }
-
-        var_dump($numbers);
 
         /** Trying to pass more than 10 values */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
@@ -1658,7 +1655,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        var_dump($response['body']['message']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
 
         /**
          * Test for success
@@ -1810,8 +1807,8 @@ class ProjectsConsoleClientTest extends Scope
 
 
         /**
-        * Reset
-        */
+         * Reset
+         */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

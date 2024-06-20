@@ -2284,7 +2284,7 @@ App::post('/v1/account/tokens/phone')
         }
 
         $secret ??= Auth::codeGenerator();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_PHONE));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_OTP));
 
         $token = new Document([
             '$id' => ID::unique(),
