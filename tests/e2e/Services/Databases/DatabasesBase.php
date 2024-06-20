@@ -4754,6 +4754,8 @@ trait DatabasesBase
 
         $this->assertEquals($longtext['headers']['status-code'], 202);
 
+        $text = file_get_contents(__DIR__ . '/../../../resources/longtext.txt');
+
         for ($i = 0; $i < 1; $i++) {
             $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
                 'content-type' => 'application/json',
@@ -4761,7 +4763,7 @@ trait DatabasesBase
             ], $this->getHeaders()), [
                 'documentId' => ID::unique(),
                 'data' => [
-                    'longtext' => file_get_contents(__DIR__ . '/../../../resources/longtext.txt'),
+                    'longtext' => $text . $text,
                 ],
                 'permissions' => [
                     Permission::read(Role::user($this->getUser()['$id'])),
@@ -4780,7 +4782,6 @@ trait DatabasesBase
                 Query::notEqual('longtext', 'appwrite')->toString(),
             ],
         ]);
-
         $this->assertEquals(408, $response['headers']['status-code']);
     }
 }
