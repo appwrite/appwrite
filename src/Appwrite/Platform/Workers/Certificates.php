@@ -450,8 +450,10 @@ class Certificates extends Action
             'direction' => $locale->getText('settings.direction'),
         ];
 
+        $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
+
         $queueForMails
-            ->setSubject('Certificate failed to generate')
+            ->setSubject($subject)
             ->setBody($body)
             ->setName('Appwrite Administrator')
             ->setbodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
