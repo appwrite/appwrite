@@ -387,6 +387,7 @@ App::init()
     ->action(function (Request $request, Database $dbForProject) {
         $timeout = \intval($request->getHeader('x-appwrite-timeout'));
 
+        // isDevelopment
         if (!empty($timeout) && App::isDevelopment()) {
             $dbForProject->setTimeout($timeout);
         }
