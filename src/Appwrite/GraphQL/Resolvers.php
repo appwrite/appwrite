@@ -264,14 +264,13 @@ class Resolvers
         $response->setContentType(Response::CONTENT_TYPE_NULL);
 
         try {
-            $route = $http->match($request);
             $context
                 ->refresh('cache')
                 ->refresh('dbForProject')
                 ->refresh('dbForConsole')
                 ->refresh('getProjectDb');
 
-            $http->execute($route, $request, clone $context);
+            $http->run(clone $context);
         } catch (\Throwable $e) {
             if ($beforeReject) {
                 $e = $beforeReject($e);
