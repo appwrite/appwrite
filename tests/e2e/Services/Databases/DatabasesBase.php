@@ -4782,6 +4782,7 @@ trait DatabasesBase
                 Query::notEqual('longtext', 'appwrite')->toString(),
             ],
         ]);
+
         $this->assertEquals(408, $response['headers']['status-code']);
     }
 }
