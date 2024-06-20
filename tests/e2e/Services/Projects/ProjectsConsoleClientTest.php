@@ -1545,9 +1545,9 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group testing
-     * @depends testCreateProject
-     */
+     * @group smtpAndTemplates
+     * @group projectsCRUD 
+     * */
     public function testUpdateMockNumbers($data)
     {
         $id = $data['projectId'] ?? '';
@@ -1692,6 +1692,16 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $userId = $response['body']['userId'];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => $userId,
+            'secret' => '654321', // Try a random code
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
             'content-type' => 'application/json',

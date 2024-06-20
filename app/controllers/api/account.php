@@ -2316,36 +2316,28 @@ App::post('/v1/account/tokens/phone')
                 $message = $customTemplate['message'] ?? $message;
             }
 
-            $message = $message->setParam('{{token}}', $secret);
+            $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+            $messageContent
+                ->setParam('{{project}}', $project->getAttribute('name'))
+                ->setParam('{{secret}}', $secret);
+            $messageContent = \strip_tags($messageContent->render());
+            $message = $message->setParam('{{token}}', $messageContent);
+
             $message = $message->render();
 
+            $messageDoc = new Document([
+                '$id' => $token->getId(),
+                'data' => [
+                    'content' => $message,
+                ],
+            ]);
+
             $queueForMessaging
-                ->setRecipient($phone)
-                ->setMessage($message)
-                ->trigger();
+                ->setType(MESSAGE_SEND_TYPE_INTERNAL)
+                ->setMessage($messageDoc)
+                ->setRecipients([$phone])
+                ->setProviderType(MESSAGE_TYPE_SMS);
         }
-
-        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
-        $messageContent
-            ->setParam('{{project}}', $project->getAttribute('name'))
-            ->setParam('{{secret}}', $secret);
-        $messageContent = \strip_tags($messageContent->render());
-        $message = $message->setParam('{{token}}', $messageContent);
-
-        $message = $message->render();
-
-        $messageDoc = new Document([
-            '$id' => $token->getId(),
-            'data' => [
-                'content' => $message,
-            ],
-        ]);
-
-        $queueForMessaging
-            ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-            ->setMessage($messageDoc)
-            ->setRecipients([$phone])
-            ->setProviderType(MESSAGE_TYPE_SMS);
 
         // Set to unhashed secret for events and server responses
         $token->setAttribute('secret', $secret);
@@ -3420,37 +3412,28 @@ App::post('/v1/account/verification/phone')
                 $message = $customTemplate['message'] ?? $message;
             }
 
-            $message = $message->setParam('{{token}}', $secret);
+            $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+            $messageContent
+                ->setParam('{{project}}', $project->getAttribute('name'))
+                ->setParam('{{secret}}', $secret);
+            $messageContent = \strip_tags($messageContent->render());
+            $message = $message->setParam('{{token}}', $messageContent);
+
             $message = $message->render();
 
+            $messageDoc = new Document([
+                '$id' => $verification->getId(),
+                'data' => [
+                    'content' => $message,
+                ],
+            ]);
+
             $queueForMessaging
-                ->setRecipient($phone)
-                ->setMessage($message)
-                ->trigger()
-            ;
+                ->setType(MESSAGE_SEND_TYPE_INTERNAL)
+                ->setMessage($messageDoc)
+                ->setRecipients([$user->getAttribute('phone')])
+                ->setProviderType(MESSAGE_TYPE_SMS);
         }
-
-        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
-        $messageContent
-            ->setParam('{{project}}', $project->getAttribute('name'))
-            ->setParam('{{secret}}', $secret);
-        $messageContent = \strip_tags($messageContent->render());
-        $message = $message->setParam('{{token}}', $messageContent);
-
-        $message = $message->render();
-
-        $messageDoc = new Document([
-            '$id' => $verification->getId(),
-            'data' => [
-                'content' => $message,
-            ],
-        ]);
-
-        $queueForMessaging
-            ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-            ->setMessage($messageDoc)
-            ->setRecipients([$user->getAttribute('phone')])
-            ->setProviderType(MESSAGE_TYPE_SMS);
 
         // Set to unhashed secret for events and server responses
         $verification->setAttribute('secret', $secret);
