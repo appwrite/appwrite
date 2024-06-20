@@ -1546,7 +1546,9 @@ class ProjectsConsoleClientTest extends Scope
 
     /**
      * @group smtpAndTemplates
-     * @group projectsCRUD 
+     * @group projectsCRUD
+     *
+     * @depends testCreateProject
      * */
     public function testUpdateMockNumbers($data)
     {
