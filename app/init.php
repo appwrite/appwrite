@@ -607,9 +607,9 @@ Database::addFilter(
             ])
         ));
         if (\count($targetIds) > 0) {
-            return $database->find('targets', [
+            return $database->skipValidation(fn () => $database->find('targets', [
                 Query::equal('$internalId', $targetIds)
-            ]);
+            ]));
         }
         return [];
     }
