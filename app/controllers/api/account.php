@@ -404,9 +404,8 @@ App::delete('/v1/account')
         $response->noContent();
     });
 App::post('/v1/account/webauthn')
-    ->desc('Create Webauthn User')
+    ->desc('Create Webauthn Account')
     ->groups(['api', 'account', 'auth'])
-    ->label('event', 'users.[userId].create')
     ->label('scope', 'sessions.write')
     ->label('auth.type', 'webauthn')
     ->label('audits.event', 'user.create')
@@ -479,7 +478,6 @@ App::post('/v1/account/webauthn')
         $platformId = '';
 
         //TODO: Use SDK headers to determine the platform
-
 
         // Fallback to any web platform that matches the domain
         foreach ($platforms as $platform) {
@@ -661,6 +659,10 @@ App::put('/v1/account/webauthn')
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+        ;
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1270,12 +1272,8 @@ App::post('/v1/account/sessions/token')
 
 App::post('/v1/account/sessions/webauthn')
     ->desc('Create WebAuthn session')
-    ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->groups(['api', 'account', 'session'])
     ->label('scope', 'sessions.write')
-    ->label('audits.event', 'session.create')
-    ->label('audits.resource', 'user/{response.userId}')
-    ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createWebauthnSession')
@@ -1325,16 +1323,55 @@ App::post('/v1/account/sessions/webauthn')
         $platformName = '';
         $platformId = '';
 
-        //TODO: Use SDK headers to determine the platform
+        // Detect platform and set platform name and id for Relying Party.
+        switch ($request->getHeader('x-sdk-name', '')) {
+            case 'Flutter':
+                $packageName = explode('/', $request->getHeader('user-agent', ''))[0] ?? '';
 
-
-        // Fallback to any web platform that matches the domain
-        foreach ($platforms as $platform) {
-            if ($platform['type'] === 'web' && $platform['hostname'] == $request->getHostname()) {
-                $platformName = $platform['name'];
-                $platformId = $platform['hostname'];
+                foreach ($platforms as $platform) {
+                    if (str_starts_with($platform['type'], 'flutter') && $platform['key'] === $packageName) {
+                        $platformName = $platform['name'];
+                        $platformId = $platform['hostname'];
+                        break;
+                    }
+                }
                 break;
-            }
+            
+            case 'Apple':
+                $packageName = explode('/', $request->getHeader('user-agent', ''))[0] ?? '';
+
+                foreach ($platforms as $platform) {
+                    if (str_starts_with($platform['type'], 'apple') && $platform['key'] === $packageName) {
+                        $platformName = $platform['name'];
+                        $platformId = $platform['hostname'];
+                        break;
+                    }
+                }
+                break;
+
+            case 'Android':
+                $packageName = explode('/', $request->getHeader('user-agent', ''))[0] ?? '';
+    
+                foreach ($platforms as $platform) {
+                    if ($platform['type'] === 'android' && $platform['key'] === $packageName) {
+                        $platformName = $platform['name'];
+                        $platformId = $platform['hostname'];
+                        break;
+                    }
+                }
+                break;
+                
+            case 'Web':
+            default:
+                // Fallback to any web platform that matches the domain
+                foreach ($platforms as $platform) {
+                    if ($platform['type'] === 'web' && $platform['hostname'] == $request->getHostname()) {
+                        $platformName = $platform['name'];
+                        $platformId = $platform['hostname'];
+                        break;
+                    }
+                }
+                break;
         }
 
         // Console
@@ -1521,6 +1558,9 @@ App::put('/v1/account/sessions/webauthn')
         ));
 
         Authorization::setRole(Role::user($user->getId())->toString());
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
         $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
             Permission::read(Role::user($user->getId())),
             Permission::update(Role::user($user->getId())),
