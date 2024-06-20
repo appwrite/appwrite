@@ -27,7 +27,7 @@ class MockNumber extends Model
 
     /**
      * Get Name
-     *oj
+     *
      * @return string
      */
     public function getName(): string
