@@ -138,7 +138,9 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                if($existingTarget) {
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                }
             }
         }
 
@@ -160,7 +162,9 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$phone]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                if($existingTarget) {
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                }
             }
         }
 
@@ -1206,7 +1210,7 @@ App::patch('/v1/users/:userId/email')
             // Makes sure this email is not already used in another identity
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
-                Query::notEqual('userId', $user->getId()),
+                Query::notEqual('userInternalId', $user->getInternalId()),
             ]);
             if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
