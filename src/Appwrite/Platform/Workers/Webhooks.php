@@ -104,7 +104,7 @@ class Webhooks extends Action
         \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
             APP_USERAGENT,
             System::getEnv('_APP_VERSION', 'UNKNOWN'),
-            System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+            System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
         ));
         \curl_setopt(
             $ch,

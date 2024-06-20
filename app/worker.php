@@ -113,11 +113,6 @@ if (!isset($args[1])) {
 
 \array_shift($args);
 $workerName = $args[0];
-$workerIndex = $args[1] ?? '';
-
-if (!empty($workerIndex)) {
-    $workerName .= '_' . $workerIndex;
-}
 
 if (\str_starts_with($workerName, 'databases')) {
     $queueName = System::getEnv('_APP_QUEUE_NAME', 'db_main');
