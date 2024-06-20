@@ -70,7 +70,6 @@
         "utopia-php/queue": "dev-feat-coroutine-and-di as 0.7.99",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "dev-feat-framework-v2-v2 as 0.18.99",
-        "utopia-php/swoole": "0.8.*",
         "utopia-php/system": "0.8.*",
         "utopia-php/vcs": "0.6.*",
         "utopia-php/websocket": "0.1.*",
