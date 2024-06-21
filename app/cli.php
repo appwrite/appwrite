@@ -98,7 +98,7 @@ $container->set($queueForDeletes);
 $container->set($queueForCertificates);
 
 $platform = new Appwrite();
-$platform->init(Service::TYPE_CLI, ['adapter' => new SwooleCLI(1)]);
+$platform->init(Service::TYPE_TASK, ['adapter' => new SwooleCLI(1)]);
 
 $cli = $platform->getCli();
 

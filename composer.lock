@@ -2402,12 +2402,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "3b54dad46e7cbd767ea5bf84af0e03c92ff0fada"
+                "reference": "f40b23bf84f8fd95bc954ef9297663c01fed5c4c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/3b54dad46e7cbd767ea5bf84af0e03c92ff0fada",
-                "reference": "3b54dad46e7cbd767ea5bf84af0e03c92ff0fada",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/f40b23bf84f8fd95bc954ef9297663c01fed5c4c",
+                "reference": "f40b23bf84f8fd95bc954ef9297663c01fed5c4c",
                 "shasum": ""
             },
             "require": {
@@ -2444,7 +2444,7 @@
                 "issues": "https://github.com/utopia-php/platform/issues",
                 "source": "https://github.com/utopia-php/platform/tree/feat-framework-v2"
             },
-            "time": "2024-06-21T19:21:45+00:00"
+            "time": "2024-06-21T19:25:15+00:00"
         },
         {
             "name": "utopia-php/pools",
