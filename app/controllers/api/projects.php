@@ -93,7 +93,15 @@ App::post('/v1/projects')
         }
 
         $auth = Config::getParam('auth', []);
-        $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordDictionary' => false, 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, 'personalDataCheck' => false];
+        $auths = [
+            'limit' => 0,
+            'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
+            'passwordHistory' => 0, 'passwordDictionary' => false,
+            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+            'personalDataCheck' => false,
+            'sessionEmails' => false,
+        ];
+
         foreach ($auth as $index => $method) {
             $auths[$method['key'] ?? ''] = true;
         }
@@ -355,7 +363,7 @@ App::patch('/v1/projects/:projectId')
     });
 
 App::patch('/v1/projects/:projectId/team')
-    ->desc('Update Project Team')
+    ->desc('Update project team')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -592,6 +600,37 @@ App::patch('/v1/projects/:projectId/oauth2')
         }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('oAuthProviders', $providers));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/auth/session-emails')
+    ->desc('Update project sessions emails')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateSessionEmails')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('sessionEmails', false, new Boolean(true), 'Set to true to enable session emails.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, bool $sessionEmails, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['sessionEmails'] = $sessionEmails;
+
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });

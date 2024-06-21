@@ -166,6 +166,93 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $response->dynamic($session, Response::MODEL_SESSION);
 };
 
+$sendSessionEmail = function (Request $request, Locale $locale, Document $user, Document $project, Reader $geodb, Event $queueForMails) {
+    $subject = $locale->getText("emails.sessionAlert.subject");
+    $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
+
+    $detector = new Detector($request->getUserAgent('UNKNOWN'));
+    $agentDevice = $detector->getDevice();
+
+    $record = $geodb->get($request->getIP());
+    $countryCode = $record['country']['iso_code'] ?? '';
+
+    $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-session-alert.tpl');
+    $message
+        ->setParam('{{hello}}', $locale->getText("emails.sessionAlert.hello"))
+        ->setParam('{{body}}', $locale->getText("emails.sessionAlert.body"))
+        ->setParam('{{device}}', $locale->getText("emails.sessionAlert.device"))
+        ->setParam('{{ipAddress}}', $locale->getText("emails.sessionAlert.ipAddress"))
+        ->setParam('{{country}}', $locale->getText("emails.sessionAlert.country"))
+        ->setParam('{{footer}}', $locale->getText("emails.sessionAlert.footer"))
+        ->setParam('{{signature}}', $locale->getText("emails.sessionAlert.signature"));
+
+    $body = $message->render();
+
+    $smtp = $project->getAttribute('smtp', []);
+    $smtpEnabled = $smtp['enabled'] ?? false;
+
+    $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+    $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+    $replyTo = "";
+
+    if ($smtpEnabled) {
+        if (!empty($smtp['senderEmail'])) {
+            $senderEmail = $smtp['senderEmail'];
+        }
+        if (!empty($smtp['senderName'])) {
+            $senderName = $smtp['senderName'];
+        }
+        if (!empty($smtp['replyTo'])) {
+            $replyTo = $smtp['replyTo'];
+        }
+
+        $queueForMails
+            ->setSmtpHost($smtp['host'] ?? '')
+            ->setSmtpPort($smtp['port'] ?? '')
+            ->setSmtpUsername($smtp['username'] ?? '')
+            ->setSmtpPassword($smtp['password'] ?? '')
+            ->setSmtpSecure($smtp['secure'] ?? '');
+
+        if (!empty($customTemplate)) {
+            if (!empty($customTemplate['senderEmail'])) {
+                $senderEmail = $customTemplate['senderEmail'];
+            }
+            if (!empty($customTemplate['senderName'])) {
+                $senderName = $customTemplate['senderName'];
+            }
+            if (!empty($customTemplate['replyTo'])) {
+                $replyTo = $customTemplate['replyTo'];
+            }
+
+            $body = $customTemplate['message'] ?? '';
+            $subject = $customTemplate['subject'] ?? $subject;
+        }
+
+        $queueForMails
+            ->setSmtpReplyTo($replyTo)
+            ->setSmtpSenderEmail($senderEmail)
+            ->setSmtpSenderName($senderName);
+    }
+
+    $emailVariables = [
+        'direction' => $locale->getText('settings.direction'),
+        // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
+        'user' => $user->getAttribute('name'),
+        'project' => $project->getAttribute('name'),
+        'redirect' => $url,
+        'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+        'ipAddress' => $request->getIP(),
+        'country' => $locale->getText('countries.' . strtolower($countryCode), $locale->getText('locale.country.unknown')),
+    ];
+
+    $queueForMails
+        ->setSubject($subject)
+        ->setBody($body)
+        ->setVariables($emailVariables)
+        ->setRecipient($email)
+        ->trigger();
+}
+
 App::post('/v1/account')
     ->desc('Create account')
     ->groups(['api', 'account', 'auth'])
