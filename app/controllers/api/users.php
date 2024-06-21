@@ -1784,7 +1784,7 @@ App::post('/v1/users/:userId/sessions')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret = Auth::codeGenerator();
+        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
 
