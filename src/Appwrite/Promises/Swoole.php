@@ -11,13 +11,11 @@ class Swoole extends Promise
         callable $resolve,
         callable $reject
     ): void {
-        \go(function () use ($executor, $resolve, $reject) {
-            try {
-                $executor($resolve, $reject);
-            } catch (\Throwable $exception) {
-                $reject($exception);
-            }
-        });
+        try {
+            $executor($resolve, $reject);
+        } catch (\Throwable $exception) {
+            $reject($exception);
+        }
     }
 
     /**

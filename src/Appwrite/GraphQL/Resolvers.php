@@ -30,8 +30,10 @@ class Resolvers
         UtopiaHttpResponse $response,
         Container $container,
     ): callable {
+        $resolver = $this;
+
         return fn ($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $route, $args, $context, $container, $info, $request, $response) {
+            function (callable $resolve, callable $reject) use ($http, $route, $args, $context, $container, $info, $request, $response, $resolver) {
                 $path = $route->getPath();
                 foreach ($args as $key => $value) {
                     if (\str_contains($path, '/:' . $key)) {
@@ -50,7 +52,7 @@ class Resolvers
                         $request->setPayload($args);
                         break;
                 }
-                Resolvers::resolve($http, $request, $response, $container, $resolve, $reject);
+                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -101,7 +103,7 @@ class Resolvers
                 $request->setMethod('GET');
                 $request->setURI($url($databaseId, $collectionId, $args));
 
-                Resolvers::resolve($http, $request, $response, $container, $resolve, $reject);
+                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -137,7 +139,7 @@ class Resolvers
                     return $payload['documents'];
                 };
 
-                Resolvers::resolve($http, $request, $response, $container, $resolve, $reject, $beforeResolve);
+                $resolver->resolve($http, $request, $response, $container, $resolve, $reject, $beforeResolve);
             }
         );
     }
@@ -169,7 +171,7 @@ class Resolvers
                 $request->setURI($url($databaseId, $collectionId, $args));
                 $request->setPayload($params($databaseId, $collectionId, $args));
 
-                Resolvers::resolve($http, $request, $response, $container, $resolve, $reject);
+                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -201,7 +203,7 @@ class Resolvers
                 $request->setURI($url($databaseId, $collectionId, $args));
                 $request->setPayload($params($databaseId, $collectionId, $args));
 
-                Resolvers::resolve($http, $request, $response, $container, $resolve, $reject);
+                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -230,7 +232,7 @@ class Resolvers
                 $request->setMethod('DELETE');
                 $request->setURI($url($databaseId, $collectionId, $args));
 
-                Resolvers::resolve($http, $request, $response, $container, $resolve, $reject);
+                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
             }
         );
     }
@@ -246,7 +248,7 @@ class Resolvers
      * @return void
      * @throws Exception
      */
-    private static function resolve(
+    private function resolve(
         Http $http,
         Request $request,
         Response $response,
