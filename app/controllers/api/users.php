@@ -1801,6 +1801,7 @@ App::post('/v1/users/:userId/sessions')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => $expire,
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1812,7 +1813,6 @@ App::post('/v1/users/:userId/sessions')
         $session = $dbForProject->createDocument('sessions', $session);
         $session
             ->setAttribute('secret', $secret)
-            ->setAttribute('expire', $expire)
             ->setAttribute('countryName', $countryName);
 
         $queueForEvents
