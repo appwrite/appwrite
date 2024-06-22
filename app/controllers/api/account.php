@@ -4910,11 +4910,12 @@ App::put('/v1/account/mfa/webauthn/challenge')
     ->param('challengeResponse', '', new Text(8192), 'Valid verification token.')
     ->inject('project')
     ->inject('response')
+    ->inject('request')
     ->inject('user')
     ->inject('session')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $challengeId, string $challengeResponse, Document $project, Response $response, Document $user, Document $session, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $challengeId, string $challengeResponse, Document $project, Response $response, Request $request, Document $user, Document $session, Database $dbForProject, Event $queueForEvents) {
         $challenge = $dbForProject->getDocument('challenges', $challengeId);
 
         if ($challenge->isEmpty()) {
@@ -4945,15 +4946,41 @@ App::put('/v1/account/mfa/webauthn/challenge')
         // Check challenge
         $publicKeyCredential = null;
         try {
-            $publicKeyCredential = $webauthn->verifyLoginChallenge($challenge->getArrayCopy(), $challengeResponse, $authenticators);
+            $publicKeyCredential = $webauthn->verifyLoginChallenge(
+                $challenge->getArrayCopy(), 
+                $challengeResponse, 
+                $request->gethostname(),
+                $webauthn->deserializePublicKeyCredentialSource($authenticator['data'])
+            );
         } catch (\Exception $e) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         // Update authenticator as counter has changed
+        $dbForProject->updateDocument('authenticators', $authenticator['id'], new Document([
+            'data' => $publicKeyCredential->jsonSerialize()
+        ]));
         
 
         // Update Session
+        $dbForProject->deleteDocument('challenges', $challengeId);
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        $factors = $session->getAttribute('factors', []);
+        $factors[] = TYPE::WEBAUTHN;
+        $factors = \array_unique($factors);
+
+        $session
+            ->setAttribute('factors', $factors)
+            ->setAttribute('mfaUpdatedAt', DateTime::now());
+
+        $dbForProject->updateDocument('sessions', $session->getId(), $session);
+
+        $queueForEvents
+                    ->setParam('userId', $user->getId())
+                    ->setParam('sessionId', $session->getId());
+
+        $response->dynamic($session, Response::MODEL_SESSION);
     });
 
 App::post('/v1/account/targets/push')

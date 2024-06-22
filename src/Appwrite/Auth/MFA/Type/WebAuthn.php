@@ -16,6 +16,7 @@ use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AuthenticatorAssertionResponse;
 use Webauthn\AuthenticatorAssertionResponseValidator;
 use Webauthn\AuthenticatorAttestationResponseValidator;
+use Webauthn\PublicKeyCredential;
 use Webauthn\PublicKeyCredentialLoader;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialSource;
@@ -142,6 +143,11 @@ class WebAuthn extends Type
             timeout: $timeout,
             allowCredentials: $allowedCredentials
         );
+    }
+
+    public static function deserializePublicKeyCredentialSource(array $publicKeyCredentialSource): PublicKeyCredentialSource
+    {
+        return PublicKeyCredentialSource::createFromArray($publicKeyCredentialSource);
     }
 
     /**
