@@ -24,11 +24,8 @@ abstract class ScheduleBase extends Action
 
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
-
-    abstract protected function enqueueResources(
-        Group $pools,
-        Database $dbForConsole
-    );
+    abstract public static function getCollectionId(): string;
+    abstract protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void;
 
     public function __construct()
     {
@@ -62,13 +59,12 @@ abstract class ScheduleBase extends Action
         $getSchedule = function (Document $schedule) use ($dbForConsole, $getProjectDB): array {
             $project = $dbForConsole->getDocument('projects', $schedule->getAttribute('projectId'));
 
-            $collectionId = match ($schedule->getAttribute('resourceType')) {
-                'function' => 'functions',
-                'message' => 'messages'
-            };
+            var_dump('===== $getSchedule getCollectionId = ');
+            var_dump(static::getCollectionId());
+            var_dump('===== $getSchedule getCollectionId = ');
 
             $resource = $getProjectDB($project)->getDocument(
-                $collectionId,
+                static::getCollectionId(),
                 $schedule->getAttribute('resourceId')
             );
 
@@ -109,13 +105,13 @@ abstract class ScheduleBase extends Action
 
             foreach ($results as $document) {
                 try {
+                    var_dump('=== ScheduleBase start');
+                    var_dump($getSchedule($document)['resource']);
+                    var_dump('=== ScheduleBase end');
+                    //todo: use a unique key as InternalId or add projectId
                     $this->schedules[$document['resourceId']] = $getSchedule($document);
                 } catch (\Throwable $th) {
-                    $collectionId = match ($document->getAttribute('resourceType')) {
-                        'function' => 'functions',
-                        'message' => 'messages'
-                    };
-
+                    $collectionId = static::getCollectionId();
                     Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");
                     Console::error($th->getMessage());
                 }
@@ -130,7 +126,7 @@ abstract class ScheduleBase extends Action
 
         Console::success("Starting timers at " . DateTime::now());
 
-        run(function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $pools) {
+        run(function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $pools, $getProjectDB) {
             /**
              * The timer synchronize $schedules copy with database collection.
              */
@@ -162,7 +158,8 @@ abstract class ScheduleBase extends Action
                     $total = $total + $sum;
 
                     foreach ($results as $document) {
-                        $localDocument = $schedules[$document['resourceId']] ?? null;
+                        // todo: change resourceId to Internal id or add projectId as second nested key
+                        $localDocument = $this->schedules[$document['resourceId']] ?? null;
 
                         // Check if resource has been updated since last sync
                         $org = $localDocument !== null ? \strtotime($localDocument['resourceUpdatedAt']) : null;
@@ -190,10 +187,10 @@ abstract class ScheduleBase extends Action
 
             Timer::tick(
                 static::ENQUEUE_TIMER * 1000,
-                fn () => $this->enqueueResources($pools, $dbForConsole)
+                fn () => $this->enqueueResources($pools, $dbForConsole, $getProjectDB)
             );
 
-            $this->enqueueResources($pools, $dbForConsole);
+            $this->enqueueResources($pools, $dbForConsole, $getProjectDB);
         });
     }
 }
