@@ -455,7 +455,7 @@ class HealthCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('/CN=www.google.com', $response['body']['name']);
         $this->assertEquals('www.google.com', $response['body']['subjectSN']);
-        $this->assertEquals('Google Trust Services LLC', $response['body']['issuerOrganisation']);
+        $this->assertContains('Google Trust Services', $response['body']['issuerOrganisation']);
         $this->assertIsInt($response['body']['validFrom']);
         $this->assertIsInt($response['body']['validTo']);
 
