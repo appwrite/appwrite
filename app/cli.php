@@ -25,10 +25,15 @@ Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
  * @var Registry $global
  * @var Container $container
  */
+$context = new Dependency();
 $register = new Dependency();
 $logError = new Dependency();
 $queueForDeletes = new Dependency();
 $queueForCertificates = new Dependency();
+
+$context
+    ->setName('context')
+    ->setCallback(fn() => $container);
 
 $register
     ->setName('register')
@@ -91,7 +96,7 @@ $logError
         };
     });
 
-
+$container->set($context);
 $container->set($logError);
 $container->set($register);
 $container->set($queueForDeletes);

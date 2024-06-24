@@ -36,6 +36,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
+use Utopia\Database\Adapter\SQL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -380,6 +381,21 @@ $global->set('promiseAdapter', function () {
     return new Swoole();
 });
 
+$global->set('db', function () {
+    // This is usually for our workers or CLI commands scope
+    $dbHost = System::getEnv('_APP_DB_HOST', '');
+    $dbPort = System::getEnv('_APP_DB_PORT', '');
+    $dbUser = System::getEnv('_APP_DB_USER', '');
+    $dbPass = System::getEnv('_APP_DB_PASS', '');
+    $dbScheme = System::getEnv('_APP_DB_SCHEMA', '');
+
+    return new PDO(
+        "mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4",
+        $dbUser,
+        $dbPass,
+        SQL::getPDOAttributes()
+    );
+});
 
 $log = new Dependency();
 $mode = new Dependency();
