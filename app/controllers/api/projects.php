@@ -99,7 +99,7 @@ App::post('/v1/projects')
             'passwordHistory' => 0, 'passwordDictionary' => false,
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
-            'sessionEmails' => false,
+            'sessionAlerts' => false,
         ];
 
         foreach ($auth as $index => $method) {
@@ -604,21 +604,21 @@ App::patch('/v1/projects/:projectId/oauth2')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/session-emails')
+App::patch('/v1/projects/:projectId/auth/session-alerts')
     ->desc('Update project sessions emails')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateSessionEmails')
+    ->label('sdk.method', 'updateSessionAlerts')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('sessionEmails', false, new Boolean(true), 'Set to true to enable session emails.')
+    ->param('sessionAlerts', false, new Boolean(true), 'Set to true to enable session emails.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, bool $sessionEmails, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, bool $sessionAlerts, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -627,7 +627,7 @@ App::patch('/v1/projects/:projectId/auth/session-emails')
         }
 
         $auths = $project->getAttribute('auths', []);
-        $auths['sessionEmails'] = $sessionEmails;
+        $auths['sessionAlerts'] = $sessionAlerts;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));

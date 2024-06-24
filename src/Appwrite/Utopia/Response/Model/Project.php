@@ -138,9 +138,9 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('authSessionEmails', [
+            ->addRule('authSessionAlerts', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether or not to send session emails to users.',
+                'description' => 'Whether or not to send session alert emails to users.',
                 'default' => false,
                 'example' => true,
             ])
@@ -324,7 +324,7 @@ class Project extends Model
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
-        $document->setAttribute('authSessionEmails', $authValues['sessionEmails'] ?? false);
+        $document->setAttribute('authSessionAlerts', $authValues['sessionAlerts'] ?? false);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

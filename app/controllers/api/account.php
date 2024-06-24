@@ -58,114 +58,8 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
-    $roles = Authorization::getRoles();
-    $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-    $isAppUser = Auth::isAppUser($roles);
-
-    /** @var Utopia\Database\Document $user */
-    $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
-
-    if ($userFromRequest->isEmpty()) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
-
-    $verifiedToken = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), null, $secret);
-
-    if (!$verifiedToken) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
-
-    $user->setAttributes($userFromRequest->getArrayCopy());
-
-    $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-    $detector = new Detector($request->getUserAgent('UNKNOWN'));
-    $record = $geodb->get($request->getIP());
-    $sessionSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
-
-    $factor = (match ($verifiedToken->getAttribute('type')) {
-        Auth::TOKEN_TYPE_MAGIC_URL,
-        Auth::TOKEN_TYPE_OAUTH2,
-        Auth::TOKEN_TYPE_EMAIL => 'email',
-        Auth::TOKEN_TYPE_PHONE => 'phone',
-        Auth::TOKEN_TYPE_GENERIC => 'token',
-        default => throw new Exception(Exception::USER_INVALID_TOKEN)
-    });
-
-    $session = new Document(array_merge(
-        [
-            '$id' => ID::unique(),
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
-            'provider' => Auth::getSessionProviderByTokenType($verifiedToken->getAttribute('type')),
-            'secret' => Auth::hash($sessionSecret), // One way hash encryption to protect DB leak
-            'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
-            'factors' => [$factor],
-            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-            'expire' => DateTime::addSeconds(new \DateTime(), $duration)
-        ],
-        $detector->getOS(),
-        $detector->getClient(),
-        $detector->getDevice()
-    ));
-
-    Authorization::setRole(Role::user($user->getId())->toString());
-
-    $session = $dbForProject->createDocument('sessions', $session
-        ->setAttribute('$permissions', [
-            Permission::read(Role::user($user->getId())),
-            Permission::update(Role::user($user->getId())),
-            Permission::delete(Role::user($user->getId())),
-        ]));
-
-    $dbForProject->purgeCachedDocument('users', $user->getId());
-    Authorization::skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
-    $dbForProject->purgeCachedDocument('users', $user->getId());
-
-    // Magic URL + Email OTP
-    if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_MAGIC_URL || $verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_EMAIL) {
-        $user->setAttribute('emailVerification', true);
-    }
-
-    if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_PHONE) {
-        $user->setAttribute('phoneVerification', true);
-    }
-
-    try {
-        $dbForProject->updateDocument('users', $user->getId(), $user);
-    } catch (\Throwable $th) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
-    }
-
-    $queueForEvents
-        ->setParam('userId', $user->getId())
-        ->setParam('sessionId', $session->getId());
-
-    if (!Config::getParam('domainVerification')) {
-        $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $sessionSecret)]));
-    }
-
-    $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-    $protocol = $request->getProtocol();
-
-    $response
-        ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-        ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-        ->setStatusCode(Response::STATUS_CODE_CREATED);
-
-    $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
-
-    $session
-        ->setAttribute('current', true)
-        ->setAttribute('countryName', $countryName)
-        ->setAttribute('expire', $expire)
-        ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $sessionSecret) : '');
-
-    $response->dynamic($session, Response::MODEL_SESSION);
-};
-
-$sendSessionEmail = function (Request $request, Locale $locale, Document $user, Document $project, Reader $geodb, Mail $queueForMails) {
+function sendSessionAlert(Request $request, Locale $locale, Document $user, Document $project, Reader $geodb, Mail $queueForMails)
+{
     $subject = $locale->getText("emails.sessionAlert.subject");
     $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
 
@@ -250,6 +144,122 @@ $sendSessionEmail = function (Request $request, Locale $locale, Document $user, 
         ->setVariables($emailVariables)
         ->setRecipient($email)
         ->trigger();
+};
+
+
+$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
+    $roles = Authorization::getRoles();
+    $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+    $isAppUser = Auth::isAppUser($roles);
+
+    /** @var Utopia\Database\Document $user */
+    $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+
+    if ($userFromRequest->isEmpty()) {
+        throw new Exception(Exception::USER_INVALID_TOKEN);
+    }
+
+    $verifiedToken = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), null, $secret);
+
+    if (!$verifiedToken) {
+        throw new Exception(Exception::USER_INVALID_TOKEN);
+    }
+
+    $user->setAttributes($userFromRequest->getArrayCopy());
+
+    $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+    $detector = new Detector($request->getUserAgent('UNKNOWN'));
+    $record = $geodb->get($request->getIP());
+    $sessionSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
+
+    $factor = (match ($verifiedToken->getAttribute('type')) {
+        Auth::TOKEN_TYPE_MAGIC_URL,
+        Auth::TOKEN_TYPE_OAUTH2,
+        Auth::TOKEN_TYPE_EMAIL => 'email',
+        Auth::TOKEN_TYPE_PHONE => 'phone',
+        Auth::TOKEN_TYPE_GENERIC => 'token',
+        default => throw new Exception(Exception::USER_INVALID_TOKEN)
+    });
+
+    $session = new Document(array_merge(
+        [
+            '$id' => ID::unique(),
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
+            'provider' => Auth::getSessionProviderByTokenType($verifiedToken->getAttribute('type')),
+            'secret' => Auth::hash($sessionSecret), // One way hash encryption to protect DB leak
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'ip' => $request->getIP(),
+            'factors' => [$factor],
+            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+        ],
+        $detector->getOS(),
+        $detector->getClient(),
+        $detector->getDevice()
+    ));
+
+    Authorization::setRole(Role::user($user->getId())->toString());
+
+    $session = $dbForProject->createDocument('sessions', $session
+        ->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]));
+
+    $dbForProject->purgeCachedDocument('users', $user->getId());
+    Authorization::skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
+    $dbForProject->purgeCachedDocument('users', $user->getId());
+
+    // Magic URL + Email OTP
+    if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_MAGIC_URL || $verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_EMAIL) {
+        $user->setAttribute('emailVerification', true);
+    }
+
+    if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_PHONE) {
+        $user->setAttribute('phoneVerification', true);
+    }
+
+    try {
+        $dbForProject->updateDocument('users', $user->getId(), $user);
+    } catch (\Throwable $th) {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
+    }
+
+    if (
+        in_array($verifiedToken->getAttribute('type'), [Auth::TOKEN_TYPE_MAGIC_URL, Auth::TOKEN_TYPE_EMAIL]) &&
+        $project->getAttribute('auths', [])['sessionAlerts'] ?? false &&
+        $user->getAttribute('emailVerification')
+    ) {
+        sendSessionAlert($request, $locale, $user, $project, $geodb, $queueForMails);
+    }
+
+    $queueForEvents
+        ->setParam('userId', $user->getId())
+        ->setParam('sessionId', $session->getId());
+
+    if (!Config::getParam('domainVerification')) {
+        $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $sessionSecret)]));
+    }
+
+    $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+    $protocol = $request->getProtocol();
+
+    $response
+        ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+        ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+        ->setStatusCode(Response::STATUS_CODE_CREATED);
+
+    $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+
+    $session
+        ->setAttribute('current', true)
+        ->setAttribute('countryName', $countryName)
+        ->setAttribute('expire', $expire)
+        ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $sessionSecret) : '');
+
+    $response->dynamic($session, Response::MODEL_SESSION);
 };
 
 App::post('/v1/account')
@@ -805,8 +815,9 @@ App::post('/v1/account/sessions/email')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('queueForMails')
     ->inject('hooks')
-    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Hooks $hooks) {
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -894,6 +905,10 @@ App::post('/v1/account/sessions/email')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId());
+
+        if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false && $user->getAttribute('emailVerification')) {
+            sendSessionAlert($request, $locale, $user, $project, $geodb, $queueForMails);
+        }
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1060,6 +1075,7 @@ App::post('/v1/account/sessions/token')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('queueForMails')
     ->action($createSession);
 
 App::get('/v1/account/sessions/oauth2/:provider')
@@ -2213,6 +2229,7 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('queueForMails')
     ->action($createSession);
 
 App::put('/v1/account/sessions/phone')
@@ -2243,6 +2260,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('queueForMails')
     ->action($createSession);
 
 App::post('/v1/account/tokens/phone')
