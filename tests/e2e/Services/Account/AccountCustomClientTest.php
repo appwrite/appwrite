@@ -1194,6 +1194,49 @@ class AccountCustomClientTest extends Scope
     /**
      * @depends testCreateAccountSession
      */
+    public function testSessionAlert($data): void
+    {
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
+
+        // Enable sessionAlerts for the project
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/session-alerts', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'sessionAlerts' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Create a new session
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Check if an email alert was sent
+        $lastEmail = $this->getLastEmail();
+
+        $this->assertEquals($email, $lastEmail['to'][0]['address']);
+        $this->assertStringContainsString('New session alert', $lastEmail['subject']);
+        $this->assertStringContainsString($response['body']['$id'], $lastEmail['text']); // Session ID
+        $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']); // IP Address
+        $this->assertStringContainsString($response['body']['osName'], $lastEmail['text']); // OS Name
+        $this->assertStringContainsString($response['body']['clientType'], $lastEmail['text']); // Client Type
+    }
+
+    /**
+     * @depends testCreateAccountSession
+     */
     public function testCreateOAuth2AccountSession(): array
     {
         $provider = 'mock';
