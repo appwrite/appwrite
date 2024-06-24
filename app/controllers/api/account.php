@@ -4959,7 +4959,7 @@ App::put('/v1/account/mfa/webauthn/challenge')
 
         // Update authenticator as counter has changed
         $dbForProject->updateDocument('authenticators', $authenticator['id'], new Document([
-            'data' => $publicKeyCredential->jsonSerialize()
+            'data' => json_encode($publicKeyCredential)
         ]));
         
 
