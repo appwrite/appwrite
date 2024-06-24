@@ -4279,8 +4279,9 @@ App::post('/v1/account/mfa/authenticators/webauthn')
         $authenticators = array_filter($user->getAttribute('authenticators', []), fn ($authenticator) => $authenticator['type'] === Type::WEBAUTHN);
 
         foreach ($authenticators as $authenticator) {
-            if (empty($authenticator['verified'])) {
-                $dbForProject->deleteDocument('authenticators', $authenticator['id']);
+            /** @var Document $authenticator */
+            if (empty($authenticator->getAttribute('verified', false))) {
+                $dbForProject->deleteDocument('authenticators', $authenticator->getId());
             }
         }
 
@@ -4295,7 +4296,7 @@ App::post('/v1/account/mfa/authenticators/webauthn')
             'userInternalId' => $user->getInternalId(),
             'type' => Type::WEBAUTHN,
             'verified' => false,
-            'data' => $challenge->jsonSerialize(),
+            'data' => json_encode($challenge),
             '$permissions' => [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),
@@ -4360,7 +4361,7 @@ App::put('/v1/account/mfa/authenticators/webauthn')
         }
 
         $authenticator->setAttribute('verified', true);
-        $authenticator->setAttribute('data', $publicKeyCredentials->jsonSerialize());
+        $authenticator->setAttribute('data', json_encode($publicKeyCredentials));
         $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
 
         $factors = $session->getAttribute('factors', []);

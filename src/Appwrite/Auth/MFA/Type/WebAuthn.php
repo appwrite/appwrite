@@ -43,6 +43,13 @@ class WebAuthn extends Type
         $this->authenticatiorAssertionResponseValdiator = AuthenticatorAssertionResponseValidator::create();
     }
 
+    /**
+     * Create a new relying party entity, uses the platform if possible
+     * 
+     * @param Document $project
+     * @param Request $request
+     * @return PublicKeyCredentialRpEntity
+     */
     public static function createRelyingParty(Document $project, Request $request): PublicKeyCredentialRpEntity
     {
         // Calculate Relying Party ID and Name
@@ -113,6 +120,12 @@ class WebAuthn extends Type
         );
     }
 
+    /**
+     * Create a new user entity from an Appwrite user document
+     * 
+     * @param Document $user
+     * @return PublicKeyCredentialUserEntity
+     */
     public static function createUserEntity(Document $user): PublicKeyCredentialUserEntity
     {
         $name = $user->getAttribute('name') ?? $user->getAttribute('email');
@@ -124,23 +137,39 @@ class WebAuthn extends Type
         );
     }
 
+    /**
+     * Create a new register challenge
+     * 
+     * @param PublicKeyCredentialRpEntity $rpEntity
+     * @param PublicKeyCredentialUserEntity $userEntity
+     * @param int $timeout Timeout in seconds
+     * @return PublicKeyCredentialCreationOptions
+     */
     public static function createRegisterChallenge(PublicKeyCredentialRpEntity $rpEntity, PublicKeyCredentialUserEntity $userEntity, int $timeout): PublicKeyCredentialCreationOptions
     {
         return PublicKeyCredentialCreationOptions::create(
             rp: $rpEntity,
             user: $userEntity,
             challenge: random_bytes(32),
-            timeout: $timeout
+            timeout: $timeout * 1000, // Convert seconds to milliseconds
         );
     }
 
+    /**
+     * Create a new login challenge
+     * 
+     * @param PublicKeyCredentialRpEntity $rpEntity
+     * @param PublicKeyCredentialSource[] $allowedCredentials
+     * @param int $timeout Timeout in seconds
+     * @return PublicKeyCredentialRequestOptions
+     */
     public static function createLoginChallenge(PublicKeyCredentialRpEntity $rpEntity, array $allowedCredentials, int $timeout): PublicKeyCredentialRequestOptions
     {
         return PublicKeyCredentialRequestOptions::create(
             rpId: $rpEntity->id,
             userVerification: PublicKeyCredentialRequestOptions::USER_VERIFICATION_REQUIREMENT_DEFAULT,
             challenge: random_bytes(32),
-            timeout: $timeout,
+            timeout: $timeout * 1000,
             allowCredentials: $allowedCredentials
         );
     }
@@ -160,6 +189,10 @@ class WebAuthn extends Type
     {
         $authenticators = self::getAuthenticatorsFromUser($user);
 
+        if (empty($authenticators)) {
+            throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
+        }
+
         $authenticators = array_filter($authenticators, function ($authenticator) {
             /** @var Document $authenticator */
             return $authenticator->getAttribute('verified') === true;
@@ -176,6 +209,12 @@ class WebAuthn extends Type
     }
 
     /**
+     * Verify a register challenge
+     * 
+     * @param array $challenge The challenge data deserialized from the database
+     * @param string $challengeResponse The challenge response from the client
+     * 
+     * @return PublicKeyCredentialSource
      * @throws \Throwable
      */
     public function verifyRegisterChallenge(array $challenge, string $challengeResponse): PublicKeyCredentialSource
@@ -208,6 +247,13 @@ class WebAuthn extends Type
     }
 
     /**
+     * Verify a login challenge
+     * 
+     * @param array $challenge The challenge data deserialized from the database
+     * @param string $challengeResponse The challenge response from the client
+     * @param string $hostname The hostname of the request
+     * @param PublicKeyCredentialSource $authenticatorPublicKey The public key of the authenticator
+     * 
      * @throws \Throwable
      */
     public function verifyLoginChallenge(array $challenge, string $challengeResponse, string $hostname, PublicKeyCredentialSource $authenticatorPublicKey): PublicKeyCredentialSource
@@ -235,6 +281,13 @@ class WebAuthn extends Type
         );
     }
 
+    /**
+     * Get all authenticators from a user
+     * 
+     * @param Document $user
+     * @return Document[]|null
+     * @throws Exception
+     */
     public static function getAuthenticatorsFromUser(Document $user): ?array
     {
         $authenticators = array_filter($user->getAttribute('authenticators', []), function ($authenticator) {
