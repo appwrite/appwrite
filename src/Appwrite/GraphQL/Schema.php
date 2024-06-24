@@ -205,36 +205,36 @@ class Schema
                 $queryFields[$collectionId . 'Get'] = [
                     'type' => $objectType,
                     'args' => Mapper::args('id'),
-                    'resolve' => Resolvers::documentGet(
+                    /*'resolve' => Resolvers::documentGet(
                         $http,
                         $databaseId,
                         $collectionId,
                         $urls['get'],
-                    )
+                    )*/
                 ];
                 $queryFields[$collectionId . 'List'] = [
                     'type' => Type::listOf($objectType),
                     'args' => Mapper::args('list'),
-                    'resolve' => Resolvers::documentList(
+                    /*'resolve' => Resolvers::documentList(
                         $http,
                         $databaseId,
                         $collectionId,
                         $urls['list'],
                         $params['list'],
-                    ),
+                    ),*/
                     'complexity' => $complexity,
                 ];
 
                 $mutationFields[$collectionId . 'Create'] = [
                     'type' => $objectType,
                     'args' => $attributes,
-                    'resolve' => Resolvers::documentCreate(
+                    /*'resolve' => Resolvers::documentCreate(
                         $http,
                         $databaseId,
                         $collectionId,
                         $urls['create'],
                         $params['create'],
-                    )
+                    )*/
                 ];
                 $mutationFields[$collectionId . 'Update'] = [
                     'type' => $objectType,
@@ -245,23 +245,23 @@ class Schema
                             $attributes
                         )
                     ),
-                    'resolve' => Resolvers::documentUpdate(
+                    /*'resolve' => Resolvers::documentUpdate(
                         $http,
                         $databaseId,
                         $collectionId,
                         $urls['update'],
                         $params['update'],
-                    )
+                    )*/
                 ];
                 $mutationFields[$collectionId . 'Delete'] = [
                     'type' => Mapper::model('none'),
                     'args' => Mapper::args('id'),
-                    'resolve' => Resolvers::documentDelete(
+                    /*'resolve' => Resolvers::documentDelete(
                         $http,
                         $databaseId,
                         $collectionId,
                         $urls['delete'],
-                    )
+                    )*/
                 ];
             }
             $offset += $limit;
