@@ -9,8 +9,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Http\Adapter\FPM\Server;
-use Utopia\Http\Http;
 use Utopia\Http\Validator\Text;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
@@ -33,7 +31,8 @@ class Migrate extends Action
             ->inject('getProjectDB')
             ->inject('register')
             ->inject('authorization')
-            ->callback(fn ($version, $cache, $dbForConsole, $getProjectDB, Registry $register, Authorization $authorization) => $this->action($version, $cache, $dbForConsole, $getProjectDB, $register, $authorization));
+            ->inject('console')
+            ->callback(fn ($version, $cache, $dbForConsole, $getProjectDB, Registry $register, Authorization $authorization, Document $console) => $this->action($version, $cache, $dbForConsole, $getProjectDB, $register, $authorization, $console));
     }
 
     private function clearProjectsCache(Cache $cache, Document $project)
@@ -45,7 +44,7 @@ class Migrate extends Action
         }
     }
 
-    public function action(string $version, Cache $cache, Database $dbForConsole, callable $getProjectDB, Registry $register, Authorization $auth)
+    public function action(string $version, Cache $cache, Database $dbForConsole, callable $getProjectDB, Registry $register, Authorization $auth, Document $console)
     {
         $auth->disable();
         if (!array_key_exists($version, Migration::$versions)) {
@@ -54,11 +53,8 @@ class Migrate extends Action
             return;
         }
 
-        $http = new Http(new Server(), 'UTC');
 
         Console::success('Starting Data Migration to version ' . $version);
-
-        $console = $http->getResource('console');
 
         $limit = 30;
         $sum = 30;
@@ -78,7 +74,7 @@ class Migrate extends Action
 
         $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
         /** @var Migration $migration */
-        $migration = new $class();
+        $migration = new $class($auth, );
 
         while (!empty($projects)) {
             foreach ($projects as $project) {

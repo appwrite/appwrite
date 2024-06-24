@@ -78,14 +78,14 @@ abstract class Migration
         '1.4.11' => 'V19',
         '1.4.12' => 'V19',
         '1.4.13' => 'V19',
-        '1.5.0'  => 'V20',
-        '1.5.1'  => 'V20',
-        '1.5.2'  => 'V20',
-        '1.5.3'  => 'V20',
-        '1.5.4'  => 'V20',
-        '1.5.5'  => 'V20',
-        '1.5.6'  => 'V20',
-        '1.5.7'  => 'V20',
+        '1.5.0' => 'V20',
+        '1.5.1' => 'V20',
+        '1.5.2' => 'V20',
+        '1.5.3' => 'V20',
+        '1.5.4' => 'V20',
+        '1.5.5' => 'V20',
+        '1.5.6' => 'V20',
+        '1.5.7' => 'V20',
     ];
 
     /**
@@ -170,29 +170,25 @@ abstract class Migration
 
             Console::log('Migrating Collection ' . $collection['$id'] . ':');
 
-            \Co\run(function (array $collection, callable $callback) {
-                foreach ($this->documentsIterator($collection['$id']) as $document) {
-                    go(function (Document $document, callable $callback) {
-                        if (empty($document->getId()) || empty($document->getCollection())) {
-                            return;
-                        }
-
-                        $old = $document->getArrayCopy();
-                        $new = call_user_func($callback, $document);
-
-                        if (is_null($new) || $new->getArrayCopy() == $old) {
-                            return;
-                        }
-
-                        try {
-                            $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
-                        } catch (\Throwable $th) {
-                            Console::error('Failed to update document: ' . $th->getMessage());
-                            return;
-                        }
-                    }, $document, $callback);
+            foreach ($this->documentsIterator($collection['$id']) as $document) {
+                if (empty($document->getId()) || empty($document->getCollection())) {
+                    return;
                 }
-            }, $collection, $callback);
+
+                $old = $document->getArrayCopy();
+                $new = call_user_func($callback, $document);
+
+                if (is_null($new) || $new->getArrayCopy() == $old) {
+                    return;
+                }
+
+                try {
+                    $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
+                } catch (\Throwable $th) {
+                    Console::error('Failed to update document: ' . $th->getMessage());
+                    return;
+                }
+            }
         }
     }
 
