@@ -2487,6 +2487,100 @@ Http::get('/v1/account/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
+Http::patch('/v1/account/email')
+    ->desc('Update email')
+    ->groups(['api', 'account'])
+    ->label('event', 'users.[userId].update.email')
+    ->label('scope', 'account')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updateEmail')
+    ->label('sdk.description', '/docs/references/account/update-email.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->inject('project')
+    ->inject('hooks')
+    ->inject('authorization')
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, Authorization $authorization) {
+        // passwordUpdate will be empty if the user has never set a password
+        $passwordUpdate = $user->getAttribute('passwordUpdate');
+
+        if (
+            !empty($passwordUpdate) &&
+            !Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
+        ) { // Double check user password
+            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+        }
+
+        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
+
+        $oldEmail = $user->getAttribute('email');
+
+        $email = \strtolower($email);
+
+        // Makes sure this email is not already used in another identity
+        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$email]),
+            Query::notEqual('userInternalId', $user->getInternalId()),
+        ]);
+        if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+        }
+
+        $user
+            ->setAttribute('email', $email)
+            ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
+        ;
+
+        if (empty($passwordUpdate)) {
+            $user
+                ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+                ->setAttribute('hash', Auth::DEFAULT_ALGO)
+                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
+                ->setAttribute('passwordUpdate', DateTime::now());
+        }
+
+        $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$email]),
+        ]));
+
+        if ($target instanceof Document && !$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        try {
+            $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+            /**
+             * @var Document $oldTarget
+             */
+            $oldTarget = $user->find('identifier', $oldEmail, 'targets');
+
+            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
+            }
+            $dbForProject->purgeCachedDocument('users', $user->getId());
+        } catch (Duplicate) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+        }
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
+    });
+
+
 Http::patch('/v1/account/name')
     ->desc('Update name')
     ->groups(['api', 'account'])
@@ -2583,99 +2677,6 @@ Http::patch('/v1/account/password')
             ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
-
-        $queueForEvents->setParam('userId', $user->getId());
-
-        $response->dynamic($user, Response::MODEL_ACCOUNT);
-    });
-
-Http::patch('/v1/account/email')
-    ->desc('Update email')
-    ->groups(['api', 'account'])
-    ->label('event', 'users.[userId].update.email')
-    ->label('scope', 'account')
-    ->label('audits.event', 'user.update')
-    ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'updateEmail')
-    ->label('sdk.description', '/docs/references/account/update-email.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
-    ->label('sdk.offline.model', '/account')
-    ->label('sdk.offline.key', 'current')
-    ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
-    ->inject('requestTimestamp')
-    ->inject('response')
-    ->inject('user')
-    ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->inject('project')
-    ->inject('hooks')
-    ->inject('authorization')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, Authorization $authorization) {
-        // passwordUpdate will be empty if the user has never set a password
-        $passwordUpdate = $user->getAttribute('passwordUpdate');
-
-        if (
-            !empty($passwordUpdate) &&
-            !Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
-        ) { // Double check user password
-            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
-        }
-
-        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
-
-        $oldEmail = $user->getAttribute('email');
-
-        $email = \strtolower($email);
-
-        // Makes sure this email is not already used in another identity
-        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-            Query::equal('providerEmail', [$email]),
-            Query::notEqual('userInternalId', $user->getInternalId()),
-        ]);
-        if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
-        }
-
-        $user
-            ->setAttribute('email', $email)
-            ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
-        ;
-
-        if (empty($passwordUpdate)) {
-            $user
-                ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
-                ->setAttribute('hash', Auth::DEFAULT_ALGO)
-                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
-                ->setAttribute('passwordUpdate', DateTime::now());
-        }
-
-        $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
-            Query::equal('identifier', [$email]),
-        ]));
-
-        if ($target instanceof Document && !$target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
-        }
-
-        try {
-            $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
-            /**
-             * @var Document $oldTarget
-             */
-            $oldTarget = $user->find('identifier', $oldEmail, 'targets');
-
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
-            }
-            $dbForProject->purgeCachedDocument('users', $user->getId());
-        } catch (Duplicate) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
-        }
 
         $queueForEvents->setParam('userId', $user->getId());
 

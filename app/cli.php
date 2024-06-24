@@ -33,7 +33,7 @@ $queueForCertificates = new Dependency();
 
 $context
     ->setName('context')
-    ->setCallback(fn() => $container);
+    ->setCallback(fn () => $container);
 
 $register
     ->setName('register')
