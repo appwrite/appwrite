@@ -15,6 +15,8 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
+use Utopia\DI\Container;
+use Utopia\DI\Dependency;
 use Utopia\Http\Adapter\FPM\Server;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response as HttpResponse;
@@ -39,20 +41,32 @@ class Specs extends Action
             ->param('version', 'latest', new Text(16), 'Spec version', true)
             ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
             ->inject('register')
-            ->callback(fn (string $version, string $mode, Registry $register) => $this->action($version, $mode, $register));
+            ->inject('context')
+            ->callback(fn (string $version, string $mode, Registry $register, Container $context) => $this->action($version, $mode, $register, $context));
     }
 
-    public function action(string $version, string $mode, Registry $register): void
+    public function action(string $version, string $mode, Registry $register, Container $container): void
     {
         $appRoutes = Http::getRoutes();
         $response = new Response(new HttpResponse(new SwooleHttpResponse()));
         $mocks = ($mode === 'mocks');
 
+        $requestDependency = new Dependency();
+        $responseDependency = new Dependency();
+        $dbForConsole = new Dependency();
+        $dbForProject = new Dependency();
+
         // Mock dependencies
-        Http::setResource('request', fn () => new Request(new SwooleHttpRequest()));
-        Http::setResource('response', fn () => $response);
-        Http::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
-        Http::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        $requestDependency->setName('request')->setCallback(fn () => new Request(new SwooleHttpRequest()));
+        $responseDependency->setName('response')->setCallback(fn () => $response);
+        $dbForConsole->setName('dbForConsole')->setCallback(fn () => new Database(new MySQL(''), new Cache(new None())));
+        $dbForProject->setName('dbForProject')->setCallback(fn () => new Database(new MySQL(''), new Cache(new None())));
+
+        $container
+            ->set($requestDependency)
+            ->set($responseDependency)
+            ->set($dbForProject)
+            ->set($dbForConsole);
 
         $platforms = [
             'client' => APP_PLATFORM_CLIENT,
@@ -252,7 +266,7 @@ class Specs extends Action
                 }
             }
 
-            $arguments = [new Http(new Server(), 'UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
+            $arguments = [new Http(new Server(), $container, 'UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = match ($format) {
                     'swagger2' => new Swagger2(...$arguments),

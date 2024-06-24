@@ -272,10 +272,14 @@ class OpenAPI3 extends Format
             $bodyRequired = [];
 
             foreach ($route->getParams() as $name => $param) { // Set params
-                /**
-                 * @var \Utopia\Http\Validator $validator
-                 */
-                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->http->getResources($param['injections'])) : $param['validator'];
+                $injections = [];
+
+                if(isset($param['injections'])) {
+                    $injections = array_map(fn ($injection) => $this->http->getContainer()->get($injection), $param['injections']);
+                }
+
+                /** @var Validator $validator */
+                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $injections) : $param['validator'];
 
                 $node = [
                     'name' => $name,

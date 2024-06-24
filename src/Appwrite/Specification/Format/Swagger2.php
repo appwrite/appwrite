@@ -270,8 +270,14 @@ class Swagger2 extends Format
             );
 
             foreach ($parameters as $name => $param) { // Set params
+                $injections = [];
+
+                if(isset($param['injections'])) {
+                    $injections = array_map(fn ($injection) => $this->http->getContainer()->get($injection), $param['injections']);
+                }
+
                 /** @var Validator $validator */
-                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->http->getResources($param['injections'])) : $param['validator'];
+                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $injections) : $param['validator'];
 
                 $node = [
                     'name' => $name,
