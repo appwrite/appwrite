@@ -902,7 +902,7 @@ services:
       - OPR_PROXY_HEALTHCHECK=enabled
 
   mariadb:
-    image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mysql:8.0.30 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
     networks:
