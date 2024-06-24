@@ -1214,6 +1214,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
         $jwtUserId = $payload['userId'] ?? '';
         $jwtSessionId = $payload['sessionId'] ?? '';
+        $jwtSession = json_decode($payload['session'] ?? '', true);
 
         if ($jwtUserId && $jwtSessionId) {
             $user = $dbForProject->getDocument('users', $jwtUserId);
@@ -1221,6 +1222,9 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
         if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
             $user = new Document([]);
+        } else {
+            Auth::$unique = $jwtSession['id'] ?? '';
+            Auth::$secret = $jwtSession['secret'] ?? '';
         }
     }
 
@@ -1245,6 +1249,38 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
 
     return $project;
 }, ['dbForConsole', 'request', 'console']);
+
+App::setResource('clientSession', function (string $mode, Document $project, Document $console, Appwrite\Utopia\Request $request) {
+    Auth::setCookieName('a_session_' . $project->getId());
+
+    if (APP_MODE_ADMIN === $mode) {
+        Auth::setCookieName('a_session_' . $console->getId());
+    }
+
+    $session = Auth::decodeSession(
+        $request->getCookie(
+            Auth::$cookieName, // Get sessions
+            $request->getCookie(Auth::$cookieName . '_legacy', '')
+        )
+    );
+
+    // Get session from header for SSR clients
+    if (empty($session['id']) && empty($session['secret'])) {
+        $sessionHeader = $request->getHeader('x-appwrite-session', '');
+
+        if (!empty($sessionHeader)) {
+            $session = Auth::decodeSession($sessionHeader);
+        }
+    }
+
+    if (empty($session['id']) && empty($session['secret'])) {
+        $fallback = $request->getHeader('x-fallback-cookies', '');
+        $fallback = \json_decode($fallback, true);
+        $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
+    }
+
+    return $session;
+}, ['mode', 'project', 'console', 'request']);
 
 App::setResource('session', function (Document $user) {
     if ($user->isEmpty()) {
