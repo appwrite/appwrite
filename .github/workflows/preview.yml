@@ -1,0 +1,99 @@
+name: Build Images and Handle Uffizzi Previews.
+
+on:
+  pull_request:
+    types: [opened,reopened,synchronize,closed]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-image:
+    name: Build and Push image
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      # You'll need this output later to render the Compose file.
+      tags: ${{ steps.meta.outputs.tags }}
+    steps:
+      - name: Login to Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Checkout git repo
+        uses: actions/checkout@v3
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      
+      - name: Build and Push Image to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  render-compose-file:
+    name: Render Docker Compose File
+    runs-on: ubuntu-22.04
+    needs:
+      - build-image
+    outputs:
+      compose-file-cache-key: ${{ steps.hash.outputs.hash }}
+      compose-file-cache-path: docker-compose.rendered.yml
+    steps:
+      - name: Checkout git repo
+        uses: actions/checkout@v3
+      - name: Render Compose File
+        run: |
+          IMAGE=$(echo ${{ needs.build-image.outputs.tags }})
+          export IMAGE
+          # Render simple template from environment variables.
+          envsubst < docker-compose.template.yml > docker-compose.rendered.yml
+          cat docker-compose.rendered.yml
+      - name: Hash Rendered Compose File
+        id: hash
+        run: echo "::set-output name=hash::$(md5sum docker-compose.rendered.yml | awk '{ print $1 }')"
+      - name: Cache Rendered Compose File
+        uses: actions/cache@v3
+        with:
+          path: docker-compose.rendered.yml
+          key: ${{ steps.hash.outputs.hash }}
+
+  deploy-uffizzi-preview:
+    name: Use Remote Workflow to Preview on Uffizzi
+    needs: render-compose-file
+    uses: UffizziCloud/preview-action/.github/workflows/reusable.yaml@v2
+    if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+    with:
+      compose-file-cache-key: ${{ needs.render-compose-file.outputs.compose-file-cache-key }}
+      compose-file-cache-path: ${{ needs.render-compose-file.outputs.compose-file-cache-path }}
+      server: https://app.uffizzi.com/
+    secrets:
+      access-token: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
+  delete-uffizzi-preview:
+    name: Use Remote Workflow to Delete an Existing Preview
+    uses: UffizziCloud/preview-action/.github/workflows/reusable.yaml@v2
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
+    with:
+      compose-file-cache-key: ''
+      compose-file-cache-path: docker-compose.rendered.yml
+      server: https://app.uffizzi.com/
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
