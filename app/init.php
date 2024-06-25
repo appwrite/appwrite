@@ -1186,9 +1186,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
 
+    Auth::$sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret);
+
     if (
         $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
+        || !Auth::$sessionId
     ) { // Validate user has valid login token
         $user = new Document([]);
     }
@@ -1214,17 +1216,15 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
         $jwtUserId = $payload['userId'] ?? '';
         $jwtSessionId = $payload['sessionId'] ?? '';
-        $jwtSession = json_decode($payload['session'] ?? '', true);
 
         if ($jwtUserId && $jwtSessionId) {
             $user = $dbForProject->getDocument('users', $jwtUserId);
         }
 
-        if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+        if (empty($session)) { // Match JWT to active token
             $user = new Document([]);
         } else {
-            Auth::$unique = $jwtSession['id'] ?? '';
-            Auth::$secret = $jwtSession['secret'] ?? '';
+            Auth::$sessionId = $jwtSessionId;
         }
     }
 
@@ -1250,52 +1250,15 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     return $project;
 }, ['dbForConsole', 'request', 'console']);
 
-App::setResource('clientSession', function (string $mode, Document $project, Document $console, Appwrite\Utopia\Request $request) {
-    Auth::setCookieName('a_session_' . $project->getId());
-
-    if (APP_MODE_ADMIN === $mode) {
-        Auth::setCookieName('a_session_' . $console->getId());
-    }
-
-    $session = Auth::decodeSession(
-        $request->getCookie(
-            Auth::$cookieName, // Get sessions
-            $request->getCookie(Auth::$cookieName . '_legacy', '')
-        )
-    );
-
-    // Get session from header for SSR clients
-    if (empty($session['id']) && empty($session['secret'])) {
-        $sessionHeader = $request->getHeader('x-appwrite-session', '');
-
-        if (!empty($sessionHeader)) {
-            $session = Auth::decodeSession($sessionHeader);
-        }
-    }
-
-    if (empty($session['id']) && empty($session['secret'])) {
-        $fallback = $request->getHeader('x-fallback-cookies', '');
-        $fallback = \json_decode($fallback, true);
-        $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
-    }
-
-    return $session;
-}, ['mode', 'project', 'console', 'request']);
-
 App::setResource('session', function (Document $user) {
-    if ($user->isEmpty()) {
+    if ($user->isEmpty() || empty(Auth::$sessionId)) {
         return;
     }
 
     $sessions = $user->getAttribute('sessions', []);
-    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
-
-    if (!$sessionId) {
-        return;
-    }
 
     foreach ($sessions as $session) {/** @var Document $session */
-        if ($sessionId === $session->getId()) {
+        if (Auth::$sessionId === $session->getId()) {
             return $session;
         }
     }

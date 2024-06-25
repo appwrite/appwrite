@@ -111,6 +111,13 @@ class Auth
     public static $secret = '';
 
     /**
+     * User session ID.
+     *
+     * @var string
+     */
+    public static $sessionId = '';
+
+    /**
      * Set Cookie Name.
      *
      * @param $string

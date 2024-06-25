@@ -514,7 +514,7 @@ App::get('/v1/account/sessions/:sessionId')
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            ? Auth::$sessionId
             : $sessionId;
 
         foreach ($sessions as $session) {/** @var Document $session */
@@ -2358,9 +2358,8 @@ App::post('/v1/account/jwt')
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
     ->inject('user')
-    ->inject('clientSession')
     ->inject('dbForProject')
-    ->action(function (Response $response, Document $user, array $clientSession, Database $dbForProject) {
+    ->action(function (Response $response, Document $user, Database $dbForProject) {
 
 
         $sessions = $user->getAttribute('sessions', []);
@@ -2387,7 +2386,6 @@ App::post('/v1/account/jwt')
                 // 'iss'    => 'http://api.mysite.com',
                 'userId' => $user->getId(),
                 'sessionId' => $current->getId(),
-                'session' => json_encode($clientSession),
             ])]), Response::MODEL_JWT);
     });
 
