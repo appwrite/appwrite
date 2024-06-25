@@ -1,0 +1,26 @@
+name: Trivy
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Build the Docker image
+      run: docker build . -t appwrite_image:latest
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'appwrite_image:latest'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: 'false'
+        severity: 'CRITICAL,HIGH'
