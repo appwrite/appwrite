@@ -484,6 +484,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertIsNumeric($response['body']['bucketsTotal']);
         $this->assertIsNumeric($response['body']['usersTotal']);
         $this->assertIsNumeric($response['body']['filesStorageTotal']);
+        $this->assertIsNumeric($response['body']['deploymentStorageTotal']);
 
 
         /**
