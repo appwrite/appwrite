@@ -511,6 +511,55 @@ trait MessagingBase
         ];
     }
 
+    public function testSubscriberTargetSubQuery()
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => 'sub-query-test',
+            'name' => 'sub-query-test',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $topic = $response['body'];
+
+        $prefix = uniqid();
+
+        for ($i = 1; $i <= 101; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'userId' => "$prefix-$i",
+                'email' => "$prefix-$i@example.com",
+                'password' => 'password',
+                'name' => "User $prefix $i",
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $user = $response['body'];
+            $targets = $user['targets'] ?? [];
+
+            $this->assertGreaterThan(0, count($targets));
+
+            $target = $targets[0];
+
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['$id'] . '/subscribers', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'subscriberId' => $user['$id'],
+                'targetId' => $target['$id'],
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+        }
+    }
+
     /**
      * @depends testCreateSubscriber
      */
