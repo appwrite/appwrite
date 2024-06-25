@@ -44,7 +44,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -120,7 +120,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -174,7 +174,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -263,7 +263,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -349,7 +349,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -440,7 +440,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
 
@@ -494,7 +494,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -549,7 +549,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -605,7 +605,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -661,7 +661,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -719,7 +719,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -774,7 +774,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -833,7 +833,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -891,7 +891,7 @@ class WebhooksCustomClientTest extends Scope
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
+        $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');

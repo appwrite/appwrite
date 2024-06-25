@@ -297,6 +297,7 @@ class TeamsServerTest extends Scope
         $this->assertEquals(204, $team['headers']['status-code']);
     }
 
+    /** @group cl-ignore */
     public function testDeleteTeam()
     {
         $team = $this->testCreateTeam();

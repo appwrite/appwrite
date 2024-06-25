@@ -9,7 +9,6 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Execution;
 use Exception;
 use Executor\Executor;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -24,6 +23,7 @@ use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Functions extends Action
 {
@@ -199,6 +199,70 @@ class Functions extends Action
     }
 
     /**
+     * @param string $message
+     * @param Document $function
+     * @param string $trigger
+     * @param string $path
+     * @param string $method
+     * @param Document $user
+     * @param string|null $jwt
+     * @param string|null $event
+     * @throws Exception
+     */
+    private function fail(
+        string $message,
+        Database $dbForProject,
+        Document $function,
+        string $trigger,
+        string $path,
+        string $method,
+        Document $user,
+        string $jwt = null,
+        string $event = null,
+    ): void {
+        $headers['x-appwrite-trigger'] = $trigger;
+        $headers['x-appwrite-event'] = $event ?? '';
+        $headers['x-appwrite-user-id'] = $user->getId() ?? '';
+        $headers['x-appwrite-user-jwt'] = $jwt ?? '';
+
+        $headersFiltered = [];
+        foreach ($headers as $key => $value) {
+            if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
+                $headersFiltered[] = ['name' => $key, 'value' => $value];
+            }
+        }
+
+        $executionId = ID::unique();
+        $execution = new Document([
+            '$id' => $executionId,
+            '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
+            'functionInternalId' => $function->getInternalId(),
+            'functionId' => $function->getId(),
+            'deploymentInternalId' => '',
+            'deploymentId' => '',
+            'trigger' => $trigger,
+            'status' => 'failed',
+            'responseStatusCode' => 0,
+            'responseHeaders' => [],
+            'requestPath' => $path,
+            'requestMethod' => $method,
+            'requestHeaders' => $headersFiltered,
+            'errors' => $message,
+            'logs' => '',
+            'duration' => 0.0,
+            'search' => implode(' ', [$function->getId(), $executionId]),
+        ]);
+
+        if ($function->getAttribute('logging')) {
+            $execution = $dbForProject->createDocument('executions', $execution);
+        }
+
+        if ($execution->isEmpty()) {
+            throw new Exception('Failed to create execution');
+        }
+    }
+
+    /**
      * @param Log $log
      * @param Database $dbForProject
      * @param Func $queueForFunctions
@@ -251,11 +315,15 @@ class Functions extends Action
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
-            throw new Exception('Deployment not found. Create deployment before trying to execute a function');
+            $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
+            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            return;
         }
 
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found. Create deployment before trying to execute a function');
+            $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
+            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            return;
         }
 
         $buildId = $deployment->getAttribute('buildId', '');
@@ -265,11 +333,15 @@ class Functions extends Action
         /** Check if build has exists */
         $build = $dbForProject->getDocument('builds', $buildId);
         if ($build->isEmpty()) {
-            throw new Exception('Build not found');
+            $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
+            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            return;
         }
 
         if ($build->getAttribute('status') !== 'ready') {
-            throw new Exception('Build not ready');
+            $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
+            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            return;
         }
 
         /** Check if  runtime is supported */
@@ -287,7 +359,6 @@ class Functions extends Action
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';
 
-        /** Create execution or update execution status */
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
@@ -383,7 +454,7 @@ class Functions extends Action
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
             $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),

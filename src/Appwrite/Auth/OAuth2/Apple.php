@@ -160,15 +160,6 @@ class Apple extends OAuth2
      */
     public function getUserName(string $accessToken): string
     {
-        if (
-            isset($this->claims['email']) &&
-            !empty($this->claims['email']) &&
-            isset($this->claims['email_verified']) &&
-            $this->claims['email_verified'] === 'true'
-        ) {
-            return $this->claims['email'];
-        }
-
         return '';
     }
 
