@@ -1730,8 +1730,7 @@ Http::post('/v1/functions/:functionId/executions')
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: $command,
-                requestTimeout: 30
+                runtimeEntrypoint: $command
             );
 
             $headersFiltered = [];

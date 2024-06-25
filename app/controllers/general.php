@@ -268,8 +268,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: $command,
-                requestTimeout: 30
+                runtimeEntrypoint: $command
             );
 
             $headersFiltered = [];
