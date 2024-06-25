@@ -1134,7 +1134,7 @@ class Deletes extends Action
      * @throws Exception
      * @throws Throwable
      */
-    public function deleteTeams($dbForConsole, $getProjectDB, $team, $project): void
+    public function deleteTeams(Database $dbForConsole, callable $getProjectDB, Document $team, Document $project): void
     {
         $this->deleteMemberships($getProjectDB, $team, $project);
         if ($project->getId() === 'console') {
