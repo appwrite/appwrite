@@ -82,6 +82,7 @@ use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Session;
+use Appwrite\Utopia\Response\Model\Specs;
 use Appwrite\Utopia\Response\Model\Subscriber;
 use Appwrite\Utopia\Response\Model\Target;
 use Appwrite\Utopia\Response\Model\Team;
@@ -247,6 +248,7 @@ class Response extends SwooleResponse
     public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     public const MODEL_HEADERS = 'headers';
+    public const MODEL_SPECS = 'specs';
 
     // Proxy
     public const MODEL_PROXY_RULE = 'proxyRule';
@@ -411,6 +413,7 @@ class Response extends SwooleResponse
             ->setModel(new Deployment())
             ->setModel(new Execution())
             ->setModel(new Build())
+            ->setModel(new Specs())
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())

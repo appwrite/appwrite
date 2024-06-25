@@ -469,6 +469,8 @@ class Functions extends Action
                 path: $path,
                 method: $method,
                 headers: $headers,
+                cpus: $function->getAttribute('cpus', 1),
+                memory: $function->getAttribute('memory', 512),
                 runtimeEntrypoint: $command
             );
 

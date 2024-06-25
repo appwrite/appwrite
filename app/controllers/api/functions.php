@@ -53,6 +53,9 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 include_once __DIR__ . '/../shared/api.php';
 
+const MEMORY_VALUES = [512, 1024, 2048, 4096, 8192, 16384];
+const CPU_VALUES = [1, 2, 4, 8, 16];
+
 $redeployVcs = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github) {
     $deploymentId = ID::unique();
     $entrypoint = $function->getAttribute('entrypoint', '');
@@ -126,6 +129,12 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         ->setTemplate($template);
 };
 
+$filterBelowThreshold = function (array $inputArray, int $threshold): array {
+    return \array_filter($inputArray, function ($value) use ($threshold) {
+        return $value <= $threshold;
+    });
+};
+
 App::post('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('Create function')
@@ -160,6 +169,8 @@ App::post('/v1/functions')
     ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true)
     ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true)
     ->param('templateBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function template.', true)
+    ->param('memory', 512, fn (array $plan) => empty($plan['memoryLimit']) ? new WhiteList($filterBelowThreshold(MEMORY_VALUES, System::getEnv('_APP_FUNCTIONS_MEMORY')), false, WhiteList::TYPE_INTEGER) : new WhiteList($filterBelowThreshold(MEMORY_VALUES, $plan['memoryLimit']), false, WhiteList::TYPE_INTEGER), 'Memory in MB allocated for the function.', true, ['plan'])
+    ->param('cpus', 1, fn (array $plan) => empty($plan['cpuLimit']) ? new WhiteList($filterBelowThreshold(CPU_VALUES, System::getEnv('_APP_FUNCTIONS_CPUS')), false, WhiteList::TYPE_INTEGER) : new WhiteList($filterBelowThreshold(CPU_VALUES, $plan['cpuLimit']), false, WhiteList::TYPE_INTEGER), 'CPU units allocated for the function.', true, ['plan'])
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -169,7 +180,7 @@ App::post('/v1/functions')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, int $memory, int $cpus, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
@@ -229,6 +240,8 @@ App::post('/v1/functions')
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
+            'memory' => $memory,
+            'cpus' => $cpus
         ]));
 
         $schedule = Authorization::skip(
@@ -440,6 +453,26 @@ App::get('/v1/functions/runtimes')
             'total' => count($allowed),
             'runtimes' => $allowed
         ]), Response::MODEL_RUNTIME_LIST);
+    });
+
+App::get('/v1/functions/specs')
+    ->groups(['api', 'functions'])
+    ->desc('Get available function specs')
+    ->label('scope', 'functions.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'getSpecs')
+    ->label('sdk.description', '/docs/references/functions/get-specs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SPECS)
+    ->inject('response')
+    ->inject('plan')
+    ->action(function (Response $response, array $plan) use ($filterBelowThreshold) {
+        $response->dynamic(new Document([
+            'memory' => empty($plan['memoryLimit']) ? $filterBelowThreshold(MEMORY_VALUES, System::getEnv('_APP_FUNCTIONS_MEMORY')) : $filterBelowThreshold(MEMORY_VALUES, $plan['memoryLimit']),
+            'cpus' => empty($plan['cpuLimit']) ? $filterBelowThreshold(CPU_VALUES, System::getEnv('_APP_FUNCTIONS_CPUS')) : $filterBelowThreshold(CPU_VALUES, $plan['cpuLimit']),
+        ]), Response::MODEL_SPECS);
     });
 
 App::get('/v1/functions/:functionId')
@@ -687,6 +720,8 @@ App::put('/v1/functions/:functionId')
     ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
     ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
     ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
+    ->param('memory', 512, fn (array $plan) => empty($plan['memoryLimit']) ? new WhiteList($filterBelowThreshold(MEMORY_VALUES, System::getEnv('_APP_FUNCTIONS_MEMORY')), false, WhiteList::TYPE_INTEGER) : new WhiteList($filterBelowThreshold(MEMORY_VALUES, $plan['memoryLimit']), false, WhiteList::TYPE_INTEGER), 'Memory in MB allocated for the function.', true, ['plan'])
+    ->param('cpus', 1, fn (array $plan) => empty($plan['cpuLimit']) ? new WhiteList($filterBelowThreshold(CPU_VALUES, System::getEnv('_APP_FUNCTIONS_CPUS')), false, WhiteList::TYPE_INTEGER) : new WhiteList($filterBelowThreshold(CPU_VALUES, $plan['cpuLimit']), false, WhiteList::TYPE_INTEGER), 'CPU units allocated for the function.', true, ['plan'])
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -695,7 +730,7 @@ App::put('/v1/functions/:functionId')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, int $memory, int $cpus, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -790,7 +825,9 @@ App::put('/v1/functions/:functionId')
             $function->getAttribute('entrypoint') !== $entrypoint ||
             $function->getAttribute('commands') !== $commands ||
             $function->getAttribute('providerRootDirectory') !== $providerRootDirectory ||
-            $function->getAttribute('runtime') !== $runtime
+            $function->getAttribute('runtime') !== $runtime ||
+            $function->getAttribute('memory') !== $memory ||
+            $function->getAttribute('cpus') !== $cpus
         ) {
             $live = false;
         }
@@ -816,6 +853,8 @@ App::put('/v1/functions/:functionId')
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
             'search' => implode(' ', [$functionId, $name, $runtime]),
+            'memory' => $memory,
+            'cpus' => $cpus,
         ])));
 
         // Redeploy logic
@@ -1723,6 +1762,8 @@ App::post('/v1/functions/:functionId/executions')
                 path: $path,
                 method: $method,
                 headers: $headers,
+                cpus: $function->getAttribute('cpus', 1),
+                memory: $function->getAttribute('memory', 512),
                 runtimeEntrypoint: $command,
                 requestTimeout: 30
             );
