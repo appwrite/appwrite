@@ -3029,7 +3029,7 @@ $projectCollections = array_merge([
                 'size' => 8,
                 'signed' => true,
                 'required' => false,
-                'default' => 'v3',
+                'default' => 'v4',
                 'array' => false,
                 'filters' => [],
             ],

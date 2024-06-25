@@ -177,6 +177,7 @@ class Executor
         string $method,
         array $headers,
         string $runtimeEntrypoint = null,
+        bool $logging,
         int $requestTimeout = null
     ) {
         if (empty($headers['host'])) {
@@ -201,6 +202,7 @@ class Executor
             'memory' => $this->memory,
             'version' => $version,
             'runtimeEntrypoint' => $runtimeEntrypoint,
+            'logging' => $logging,
         ];
 
         // Safety timeout. Executor has timeout, and open runtime has soft timeout.

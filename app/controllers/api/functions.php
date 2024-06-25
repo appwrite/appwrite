@@ -221,7 +221,7 @@ App::post('/v1/functions')
             'commands' => $commands,
             'scopes' => $scopes,
             'search' => implode(' ', [$functionId, $name, $runtime]),
-            'version' => 'v3',
+            'version' => 'v4',
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),
             'providerRepositoryId' => $providerRepositoryId,
@@ -1813,6 +1813,7 @@ App::post('/v1/functions/:functionId/executions')
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
+                logging: $function->getAttribute('logging', true),
                 requestTimeout: 30
             );
 

@@ -270,6 +270,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
+                logging: $function->getAttribute('logging', true),
                 requestTimeout: 30
             );
 

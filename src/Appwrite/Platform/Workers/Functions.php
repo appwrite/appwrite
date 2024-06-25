@@ -412,7 +412,8 @@ class Functions extends Action
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: $command
+                runtimeEntrypoint: $command,
+                logging: $function->getAttribute('logging', true),
             );
 
             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
