@@ -1164,6 +1164,7 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
+        $type = $request->getHeader('x-sdk-language') === 'cli' ? 'cli' : 'manual';
 
         if ($chunksUploaded === $chunks) {
             if ($activate) {
@@ -1201,7 +1202,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => $activate,
                     'metadata' => $metadata,
-                    'type' => 'manual'
+                    'type' => $type
                 ]));
             } else {
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
@@ -1234,7 +1235,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => $activate,
                     'metadata' => $metadata,
-                    'type' => 'manual'
+                    'type' => $type
                 ]));
             } else {
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('chunksUploaded', $chunksUploaded)->setAttribute('metadata', $metadata));
