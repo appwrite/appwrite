@@ -1131,8 +1131,16 @@ class Deletes extends Action
     }
 
     /**
+     * @param Database $dbForConsole
+     * @param callable $getProjectDB
+     * @param Document $team
+     * @param Document $project
+     * @throws Authorization
+     * @throws Conflict
+     * @throws DatabaseException
      * @throws Exception
-     * @throws Throwable
+     * @throws Restricted
+     * @throws Structure
      */
     public function deleteTeams(Database $dbForConsole, callable $getProjectDB, Document $team, Document $project): void
     {
