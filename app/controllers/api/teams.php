@@ -356,7 +356,7 @@ App::delete('/v1/teams/:teamId')
         }
 
         $deletes = new Deletes();
-        $deletes->deleteTeams($dbForConsole, $getProjectDB, $team, $project);
+        $deletes->deleteTeam($dbForConsole, $getProjectDB, $team, $project);
 
         $queueForEvents
             ->setParam('teamId', $team->getId())

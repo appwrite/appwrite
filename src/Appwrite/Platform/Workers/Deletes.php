@@ -94,7 +94,7 @@ class Deletes extends Action
                         $this->deleteUser($getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_TEAMS:
-                        $this->deleteTeams($dbForConsole, $getProjectDB, $document, $project);
+                        $this->deleteTeam($dbForConsole, $getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
@@ -1142,7 +1142,7 @@ class Deletes extends Action
      * @throws Restricted
      * @throws Structure
      */
-    public function deleteTeams(Database $dbForConsole, callable $getProjectDB, Document $team, Document $project): void
+    public function deleteTeam(Database $dbForConsole, callable $getProjectDB, Document $team, Document $project): void
     {
         $this->deleteMemberships($getProjectDB, $team, $project);
         if ($project->getId() === 'console') {
