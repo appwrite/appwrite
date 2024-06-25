@@ -462,6 +462,7 @@ App::init()
                     ->setContentType($cacheLog->getAttribute('mimeType'))
                     ->send($data);
             } else {
+
                 $response
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Pragma', 'no-cache')
