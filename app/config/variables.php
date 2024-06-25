@@ -468,7 +468,7 @@ return [
             ],
             [
                 'name' => '_APP_SMS_FROM',
-                'description' => 'Phone number used for sending out messages. Must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789).',
+                'description' => 'Phone number used for sending out messages. If using Twilio, this may be a Messaging Service SID, starting with MG. Otherwise, the number must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789). ',
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
