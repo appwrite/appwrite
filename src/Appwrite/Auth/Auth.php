@@ -397,13 +397,25 @@ class Auth
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&
                 $session->getAttribute('secret') === self::hash($secret) &&
-                DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now())
+                !self::isSessionExpired($session)
             ) {
                 return $session->getId();
             }
         }
 
         return false;
+    }
+
+    /**
+     * Verify is session is expired or not.
+     *
+     * @param Document $session
+     *
+     * @return bool
+     */
+    public static function isSessionExpired(Document $session)
+    {
+        return DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) < DateTime::formatTz(DateTime::now());
     }
 
     /**
