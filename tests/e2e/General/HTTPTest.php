@@ -108,6 +108,7 @@ class HTTPTest extends Scope
             '0.14.x',
         ];
 
+        // var_dump($files);
         foreach ($files as $file) {
             if (in_array($file, ['.', '..'])) {
                 continue;
