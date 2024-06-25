@@ -4754,7 +4754,7 @@ trait DatabasesBase
 
         $this->assertEquals($longtext['headers']['status-code'], 202);
 
-        for ($i = 0; $i < 1; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
