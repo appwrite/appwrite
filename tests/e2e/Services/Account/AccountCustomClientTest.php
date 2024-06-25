@@ -1199,7 +1199,6 @@ class AccountCustomClientTest extends Scope
         $email = $data['email'] ?? '';
         $password = $data['password'] ?? '';
 
-        // Enable sessionAlerts for the project
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/session-alerts', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -1211,7 +1210,6 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Create a new session
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',

@@ -227,11 +227,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
-    if (
-        in_array($verifiedToken->getAttribute('type'), [Auth::TOKEN_TYPE_MAGIC_URL, Auth::TOKEN_TYPE_EMAIL]) &&
-        $project->getAttribute('auths', [])['sessionAlerts'] ?? false &&
-        $user->getAttribute('emailVerification')
-    ) {
+    if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
         sendSessionAlert($request, $locale, $user, $project, $geodb, $queueForMails);
     }
 
@@ -257,7 +253,8 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         ->setAttribute('current', true)
         ->setAttribute('countryName', $countryName)
         ->setAttribute('expire', $expire)
-        ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $sessionSecret) : '');
+        ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $sessionSecret) : '')
+    ;
 
     $response->dynamic($session, Response::MODEL_SESSION);
 };
@@ -324,8 +321,7 @@ App::post('/v1/account')
             Query::equal('providerEmail', [$email]),
         ]);
         if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST);
-            /** Return a generic bad request to prevent exposing existing accounts */
+            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
@@ -502,8 +498,7 @@ App::get('/v1/account/sessions')
         $sessions = $user->getAttribute('sessions', []);
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
-        foreach ($sessions as $key => $session) {
-            /** @var Document $session */
+        foreach ($sessions as $key => $session) {/** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
@@ -545,8 +540,7 @@ App::delete('/v1/account/sessions')
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $session) {
-            /** @var Document $session */
+        foreach ($sessions as $session) {/** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
 
             if (!Config::getParam('domainVerification')) {
@@ -614,15 +608,15 @@ App::get('/v1/account/sessions/:sessionId')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
             : $sessionId;
 
-        foreach ($sessions as $session) {
-            /** @var Document $session */
+        foreach ($sessions as $session) {/** @var Document $session */
             if ($sessionId === $session->getId()) {
                 $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
-                    ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $session->getAttribute('secret', '') : '');
+                    ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $session->getAttribute('secret', '') : '')
+                ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
             }
@@ -781,7 +775,8 @@ App::patch('/v1/account/sessions/:sessionId')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION));
+            ->setPayload($response->output($session, Response::MODEL_SESSION))
+        ;
 
         return $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -885,7 +880,8 @@ App::post('/v1/account/sessions/email')
 
         if (!Config::getParam('domainVerification')) {
             $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
+            ;
         }
 
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
@@ -893,20 +889,23 @@ App::post('/v1/account/sessions/email')
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED);
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ;
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '');
+            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '')
+        ;
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId());
+            ->setParam('sessionId', $session->getId())
+        ;
 
-        if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false && $user->getAttribute('emailVerification')) {
+        if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
             sendSessionAlert($request, $locale, $user, $project, $geodb, $queueForMails);
         }
 
@@ -1015,7 +1014,7 @@ App::post('/v1/account/sessions/anonymous')
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
-        $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
+        $session = $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
             Permission::read(Role::user($user->getId())),
             Permission::update(Role::user($user->getId())),
             Permission::delete(Role::user($user->getId())),
@@ -1025,7 +1024,8 @@ App::post('/v1/account/sessions/anonymous')
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId());
+            ->setParam('sessionId', $session->getId())
+        ;
 
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
@@ -1036,14 +1036,16 @@ App::post('/v1/account/sessions/anonymous')
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED);
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ;
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '');
+            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '')
+        ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1429,8 +1431,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Query::equal('providerEmail', [$email]),
                 ]);
                 if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-                    throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                    /** Return a generic bad request to prevent exposing existing accounts */
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
                 }
 
                 try {
@@ -1501,8 +1502,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::notEqual('userInternalId', $user->getInternalId()),
             ]);
             if (!empty($identitiesWithMatchingEmail)) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                /** Return a generic bad request to prevent exposing existing accounts */
+                throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $dbForProject->createDocument('identities', new Document([
@@ -1575,7 +1575,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $queueForEvents
                 ->setEvent('users.[userId].tokens.[tokenId].create')
                 ->setParam('userId', $user->getId())
-                ->setParam('tokenId', $token->getId());
+                ->setParam('tokenId', $token->getId())
+            ;
 
             $query['secret'] = $secret;
             $query['userId'] = $user->getId();
@@ -1618,7 +1619,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $session->getId())
-                ->setPayload($response->output($session, Response::MODEL_SESSION));
+                ->setPayload($response->output($session, Response::MODEL_SESSION))
+            ;
 
             // TODO: Remove this deprecated workaround - support only token
             if ($state['success']['path'] == $oauthDefaultSuccess) {
@@ -1657,7 +1659,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($state['success']);
+            ->redirect($state['success'])
+        ;
     });
 
 App::get('/v1/account/tokens/oauth2/:provider')
@@ -1969,7 +1972,8 @@ App::post('/v1/account/tokens/magic-url')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($token, Response::MODEL_TOKEN);
+            ->dynamic($token, Response::MODEL_TOKEN)
+        ;
     });
 
 App::post('/v1/account/tokens/email')
@@ -2032,8 +2036,7 @@ App::post('/v1/account/tokens/email')
                 Query::equal('providerEmail', [$email]),
             ]);
             if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                /** Return a generic bad request to prevent exposing existing accounts */
+                throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
@@ -2198,7 +2201,8 @@ App::post('/v1/account/tokens/email')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($token, Response::MODEL_TOKEN);
+            ->dynamic($token, Response::MODEL_TOKEN)
+        ;
     });
 
 App::put('/v1/account/sessions/magic-url')
@@ -2429,7 +2433,8 @@ App::post('/v1/account/tokens/phone')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($token, Response::MODEL_TOKEN);
+            ->dynamic($token, Response::MODEL_TOKEN)
+        ;
     });
 
 App::post('/v1/account/jwts')
@@ -2456,8 +2461,7 @@ App::post('/v1/account/jwts')
         $sessions = $user->getAttribute('sessions', []);
         $current = new Document();
 
-        foreach ($sessions as $session) {
-            /** @var Utopia\Database\Document $session */
+        foreach ($sessions as $session) { /** @var Utopia\Database\Document $session */
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                 $current = $session;
             }
@@ -2714,8 +2718,7 @@ App::patch('/v1/account/email')
             Query::notEqual('userId', $user->getId()),
         ]);
         if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST);
-            /** Return a generic bad request to prevent exposing existing accounts */
+            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $user
@@ -2751,8 +2754,7 @@ App::patch('/v1/account/email')
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST);
-            /** Return a generic bad request to prevent exposing existing accounts */
+            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $queueForEvents->setParam('userId', $user->getId());
@@ -2911,7 +2913,8 @@ App::patch('/v1/account/status')
         $protocol = $request->getProtocol();
         $response
             ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+        ;
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
@@ -3083,7 +3086,8 @@ App::post('/v1/account/recovery')
             ->setPayload($response->output(
                 $recovery->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
-            ));
+            ))
+        ;
 
         // Hide secret for clients
         $recovery->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
@@ -3152,12 +3156,12 @@ App::put('/v1/account/recovery')
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
-            ->setAttribute('password', $newPassword)
-            ->setAttribute('passwordHistory', $history)
-            ->setAttribute('passwordUpdate', DateTime::now())
-            ->setAttribute('hash', Auth::DEFAULT_ALGO)
-            ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
-            ->setAttribute('emailVerification', true));
+                ->setAttribute('password', $newPassword)
+                ->setAttribute('passwordHistory', $history)
+                ->setAttribute('passwordUpdate', DateTime::now())
+                ->setAttribute('hash', Auth::DEFAULT_ALGO)
+                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
+                ->setAttribute('emailVerification', true));
 
         $user->setAttributes($profile->getArrayCopy());
 
@@ -3172,7 +3176,8 @@ App::put('/v1/account/recovery')
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
-            ->setParam('tokenId', $recoveryDocument->getId());
+            ->setParam('tokenId', $recoveryDocument->getId())
+        ;
 
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
@@ -3392,7 +3397,8 @@ App::put('/v1/account/verification')
 
         $queueForEvents
             ->setParam('userId', $userId)
-            ->setParam('tokenId', $verificationDocument->getId());
+            ->setParam('tokenId', $verificationDocument->getId())
+        ;
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
@@ -3498,7 +3504,8 @@ App::post('/v1/account/verification/phone')
             ->setPayload($response->output(
                 $verification->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
-            ));
+            ))
+        ;
 
         // Hide secret for clients
         $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
@@ -3560,7 +3567,8 @@ App::put('/v1/account/verification/phone')
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('tokenId', $verificationDocument->getId());
+            ->setParam('tokenId', $verificationDocument->getId())
+        ;
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
@@ -4207,8 +4215,8 @@ App::put('/v1/account/mfa/challenge')
         $dbForProject->updateDocument('sessions', $sessionId, $session);
 
         $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId());
+                    ->setParam('userId', $user->getId())
+                    ->setParam('sessionId', $session->getId());
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -4414,8 +4422,8 @@ App::get('/v1/account/identities')
         $queries[] = Query::equal('userInternalId', [$user->getInternalId()]);
 
         /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
+            * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+            */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });

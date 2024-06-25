@@ -226,7 +226,8 @@ class Project extends Model
                 'description' => 'SMTP server secure protocol',
                 'default' => '',
                 'example' => 'tls',
-            ]);
+            ])
+        ;
 
         $services = Config::getParam('services', []);
         $auth = Config::getParam('auth', []);
@@ -241,7 +242,8 @@ class Project extends Model
                     'description' => $name . ' auth method status',
                     'example' => true,
                     'default' => true,
-                ]);
+                ])
+            ;
         }
 
         foreach ($services as $service) {
@@ -258,7 +260,8 @@ class Project extends Model
                     'description' => $name . ' service status',
                     'example' => true,
                     'default' => true,
-                ]);
+                ])
+            ;
         }
     }
 
