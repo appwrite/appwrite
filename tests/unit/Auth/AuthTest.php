@@ -249,6 +249,34 @@ class AuthTest extends TestCase
         $this->assertEquals(Auth::sessionVerify($tokens2, 'false-secret'), false);
     }
 
+    public function testIsSessionExpired(): void
+    {
+        $expireTime1 = 60 * 60 * 24;
+
+        $secret = 'secret1';
+        $hash = Auth::hash($secret);
+        $session1 = new Document([
+            '$id' => ID::custom('token1'),
+            'secret' => $hash,
+            'provider' => Auth::SESSION_PROVIDER_EMAIL,
+            'providerUid' => 'test@example.com',
+            'expire' => DateTime::addSeconds(new \DateTime(), $expireTime1),
+        ]);
+
+        $expireTime2 = -60 * 60 * 24;
+
+        $session2 = new Document([
+            '$id' => ID::custom('token1'),
+            'secret' => $hash,
+            'provider' => Auth::SESSION_PROVIDER_EMAIL,
+            'providerUid' => 'test@example.com',
+            'expire' => DateTime::addSeconds(new \DateTime(), $expireTime2),
+        ]);
+
+        $this->assertFalse(Auth::isSessionExpired($session1));
+        $this->assertTrue(Auth::isSessionExpired($session2));
+    }
+
     public function testTokenVerify(): void
     {
         $secret = 'secret1';
