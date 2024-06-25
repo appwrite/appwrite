@@ -1221,7 +1221,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
             $user = $dbForProject->getDocument('users', $jwtUserId);
         }
 
-        if (empty($session)) { // Match JWT to active token
+        if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
             $user = new Document([]);
         } else {
             Auth::$sessionId = $jwtSessionId;
