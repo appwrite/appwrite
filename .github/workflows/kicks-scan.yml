@@ -1,0 +1,19 @@
+name: Scan for misconfigurations
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Scan for misconfigurations
+        uses: Checkmarx/kics-github-action@v1.7.0
+        with:
+          path: ./Dockerfile
+          verbose: true
+
