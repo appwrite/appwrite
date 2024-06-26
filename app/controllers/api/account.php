@@ -58,16 +58,10 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
-function sendSessionAlert(Request $request, Locale $locale, Document $user, Document $project, Reader $geodb, Mail $queueForMails)
+function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
 {
     $subject = $locale->getText("emails.sessionAlert.subject");
     $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
-
-    $detector = new Detector($request->getUserAgent('UNKNOWN'));
-    $agentDevice = $detector->getDevice();
-
-    $record = $geodb->get($request->getIP());
-    $countryCode = $record['country']['iso_code'] ?? '';
 
     $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-session-alert.tpl');
     $message
@@ -77,6 +71,7 @@ function sendSessionAlert(Request $request, Locale $locale, Document $user, Docu
         ->setParam('{{listIpAddress}}', $locale->getText("emails.sessionAlert.listIpAddress"))
         ->setParam('{{listCountry}}', $locale->getText("emails.sessionAlert.listCountry"))
         ->setParam('{{footer}}', $locale->getText("emails.sessionAlert.footer"))
+        ->setParam('{{thanks}}', $locale->getText("emails.sessionAlert.thanks"))
         ->setParam('{{signature}}', $locale->getText("emails.sessionAlert.signature"));
 
     $body = $message->render();
@@ -132,9 +127,9 @@ function sendSessionAlert(Request $request, Locale $locale, Document $user, Docu
         'dateTime' => DateTime::format(new \DateTime(), 'Y-m-d H:i:s'),
         'user' => $user->getAttribute('name'),
         'project' => $project->getAttribute('name'),
-        'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
-        'ipAddress' => $request->getIP(),
-        'country' => $locale->getText('countries.' . strtolower($countryCode), $locale->getText('locale.country.unknown')),
+        'device' => $session->getAttribute('clientName'),
+        'ipAddress' => $session->getAttribute('ip'),
+        'country' => $locale->getText('countries.' . $session->getAttribute('countryCode'), $locale->getText('locale.country.unknown')),
     ];
 
     $email = $user->getAttribute('email');
@@ -229,7 +224,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     }
 
     if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
-        sendSessionAlert($request, $locale, $user, $project, $geodb, $queueForMails);
+        sendSessionAlert($locale, $user, $project, $session, $queueForMails);
     }
 
     $queueForEvents
@@ -909,7 +904,7 @@ App::post('/v1/account/sessions/email')
         ;
 
         if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
-            sendSessionAlert($request, $locale, $user, $project, $geodb, $queueForMails);
+            sendSessionAlert($locale, $user, $project, $session, $queueForMails);
         }
 
         $response->dynamic($session, Response::MODEL_SESSION);
