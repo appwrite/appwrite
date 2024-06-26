@@ -284,11 +284,7 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(202, $execution['headers']['status-code']);
-        $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals('scheduled', $execution['body']['status']);
-        $this->assertEquals('/custom', $execution['requestPath']);
-        $this->assertEquals('GET', $execution['requestMethod']);
-        $this->assertEquals(['content-type' => 'application/plain'], $execution['requestHeaders']);
 
         $executionId = $execution['body']['$id'];
 
@@ -301,7 +297,11 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals('/custom', $execution['requestPath']);
+        $this->assertEquals('GET', $execution['requestMethod']);
+        $this->assertEquals(['content-type' => 'application/plain'], $execution['requestHeaders']);
 
         /* Test for FAILURE */
 
