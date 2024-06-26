@@ -47,7 +47,7 @@ class TeamsCustomServerTest extends Scope
         // Create a user account before we create a invite so we can check if the user has permissions when it shouldn't
         $user = $this->client->call(Client::METHOD_POST, '/account', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => 'console'
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'userId' => $userId,
             'email' => $email,
@@ -62,12 +62,10 @@ class TeamsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'email' => $email,
-            'name' => $name,
+            'userId' => $userId,
             'roles' => ['admin', 'editor'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);
-
         $this->assertEquals(201, $response['headers']['status-code']);
 
         /* 4. Ensure user is a member. */
