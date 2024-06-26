@@ -55,7 +55,7 @@ class TeamsCustomServerTest extends Scope
         ], false);
 
         $this->assertEquals(201, $user['headers']['status-code']);
-        $userId = json_decode($user['body'],true )['$id'];
+        $userId = json_decode($user['body'], true)['$id'];
 
         /* 3. Add membership to user. */
         $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
