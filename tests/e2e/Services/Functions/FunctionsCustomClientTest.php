@@ -268,16 +268,27 @@ class FunctionsCustomClientTest extends Scope
         // Schedule execution for the future
         \date_default_timezone_set('UTC');
         $futureTime = (new \DateTime())->add(new \DateInterval('PT10S'))->format('Y-m-d H:i:s');
+
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'async' => true,
             'scheduledAt' => $futureTime,
+            'path' => '/custom',
+            'method' => 'GET',
+            'body' => 'hello',
+            'headers' => [
+                'content-type' => 'application/plain',
+            ],
         ]);
 
         $this->assertEquals(202, $execution['headers']['status-code']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals('scheduled', $execution['body']['status']);
+        $this->assertEquals('/custom', $execution['requestPath']);
+        $this->assertEquals('GET', $execution['requestMethod']);
+        $this->assertEquals(['content-type' => 'application/plain'], $execution['requestHeaders']);
 
         $executionId = $execution['body']['$id'];
 

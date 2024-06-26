@@ -84,6 +84,8 @@ class ScheduleFunctions extends ScheduleBase
                     $queueForFunctions
                         ->setType('schedule')
                         ->setFunction($schedule['resource'])
+                        ->setMethod('POST')
+                        ->setPath('/')
                         ->setProject($schedule['project'])
                         ->trigger();
                 }

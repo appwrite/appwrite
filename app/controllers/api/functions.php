@@ -1764,6 +1764,13 @@ App::post('/v1/functions/:functionId/executions')
                     ->setParam('executionId', $execution->getId())
                     ->trigger();
             } else {
+                $metadata = [
+                    'headers' => $headers,
+                    'path' => $path,
+                    'method' => $method,
+                    'body' => $body,
+                ];
+
                 $dbForConsole->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'execution',
@@ -1772,6 +1779,7 @@ App::post('/v1/functions/:functionId/executions')
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule' => $scheduledAt,
+                    'metadata' => $metadata,
                     'active' => true,
                 ]));
             }
