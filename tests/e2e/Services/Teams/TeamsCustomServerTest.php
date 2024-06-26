@@ -55,7 +55,7 @@ class TeamsCustomServerTest extends Scope
         ], false);
 
         $this->assertEquals(201, $user['headers']['status-code']);
-        $userId = json_decode($user['body'], true)['$id'];
+        $userId = $user['body']['$id'];
 
         /* 3. Add membership to user. */
         $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
@@ -76,6 +76,7 @@ class TeamsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()));
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($teamUid, $response['body']['memberships'][0]['teamId']);
 
