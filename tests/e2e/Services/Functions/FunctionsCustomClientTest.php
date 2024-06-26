@@ -59,7 +59,6 @@ class FunctionsCustomClientTest extends Scope
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
-            'logging' => true,
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -256,7 +255,7 @@ class FunctionsCustomClientTest extends Scope
             \sleep(1);
         }
 
-        $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
+        $this->assertEquals('ready', $deployment['body']['status']);
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
@@ -278,7 +277,7 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(202, $execution['headers']['status-code']);
-        $this->assertEquals('scheduled', $execution['body']['status'], \json_encode($execution['body']));
+        $this->assertEquals('scheduled', $execution['body']['status']);
 
         $executionId = $execution['body']['$id'];
 
@@ -291,7 +290,21 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status'], \json_encode($execution['body']));
+        $this->assertEquals('completed', $execution['body']['status']);
+
+        /* Test for FAILURE */
+
+        // Schedule synchronous execution
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => false,
+            'scheduledAt' => $futureTime,
+        ]);
+
+        $this->assertEquals(400, $execution['headers']['status-code']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $function['body']['$id'], [

@@ -42,6 +42,8 @@ class ScheduleExecutions extends ScheduleBase
 
             $queueForFunctions
                 ->setType('schedule')
+                // Set functionId rather than function as we don't have access to $dbForProject
+                // TODO: Refactor to use function instead of functionId
                 ->setFunctionId($schedule['resource']['functionId'])
                 ->setExecution($schedule['resource'])
                 ->setProject($schedule['project'])
