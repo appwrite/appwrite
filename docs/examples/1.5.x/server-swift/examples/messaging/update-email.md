@@ -18,6 +18,7 @@ let message = try await messaging.updateEmail(
     html: false, // optional
     cc: [], // optional
     bcc: [], // optional
-    scheduledAt: "" // optional
+    scheduledAt: "", // optional
+    attachments: [] // optional
 )
 

@@ -155,6 +155,7 @@ class Exception extends \Exception
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
     public const FUNCTION_RUNTIME_UNSUPPORTED      = 'function_runtime_unsupported';
     public const FUNCTION_ENTRYPOINT_MISSING       = 'function_entrypoint_missing';
+    public const FUNCTION_SYNCHRONOUS_TIMEOUT      = 'function_synchronous_timeout';
 
     /** Deployments */
     public const DEPLOYMENT_NOT_FOUND              = 'deployment_not_found';
@@ -163,6 +164,7 @@ class Exception extends \Exception
     public const BUILD_NOT_FOUND                   = 'build_not_found';
     public const BUILD_NOT_READY                   = 'build_not_ready';
     public const BUILD_IN_PROGRESS                 = 'build_in_progress';
+    public const BUILD_ALREADY_COMPLETED           = 'build_already_completed';
 
     /** Execution */
     public const EXECUTION_NOT_FOUND               = 'execution_not_found';
@@ -196,6 +198,9 @@ class Exception extends \Exception
     public const ATTRIBUTE_LIMIT_EXCEEDED          = 'attribute_limit_exceeded';
     public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
     public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
+
+    /** Relationship */
+    public const RELATIONSHIP_VALUE_INVALID        = 'relationship_value_invalid';
 
     /** Indexes */
     public const INDEX_NOT_FOUND                   = 'index_not_found';
@@ -299,11 +304,21 @@ class Exception extends \Exception
     protected array $errors = [];
     protected bool $publish;
 
-    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
+    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int|string $code = null, \Throwable $previous = null)
     {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
         $this->code = $code ?? $this->errors[$type]['code'];
+
+        // Mark string errors like HY001 from PDO as 500 errors
+        if(\is_string($this->code)) {
+            if (\is_numeric($this->code)) {
+                $this->code = (int) $this->code;
+            } else {
+                $this->code = 500;
+            }
+        }
+
         $this->message = $message ?? $this->errors[$type]['description'];
 
         $this->publish = $this->errors[$type]['publish'] ?? ($this->code >= 500);

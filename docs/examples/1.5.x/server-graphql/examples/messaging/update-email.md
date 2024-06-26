@@ -10,7 +10,8 @@ mutation {
         html: false,
         cc: [],
         bcc: [],
-        scheduledAt: ""
+        scheduledAt: "",
+        attachments: []
     ) {
         _id
         _createdAt
