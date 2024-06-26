@@ -12,7 +12,7 @@ class VcsContent extends Model
         $this
             ->addRule('size', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Content size in bytes. Only files have size, and for directiroeis, 0 is returned.',
+                'description' => 'Content size in bytes. Only files have size, and for directories, 0 is returned.',
                 'default' => 0,
                 'required' => false,
                 'example' => 1523,
