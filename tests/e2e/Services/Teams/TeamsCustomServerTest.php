@@ -42,20 +42,20 @@ class TeamsCustomServerTest extends Scope
         $email = uniqid() . 'friend@localhost.test';
         $name = 'Friend User';
         $password = 'password';
+        $userId = ID::unique();
 
         // Create a user account before we create a invite so we can check if the user has permissions when it shouldn't
         $user = $this->client->call(Client::METHOD_POST, '/account', [
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console'
         ], [
-            'userId' => 'unique()',
+            'userId' => $userId,
             'email' => $email,
             'password' => $password,
             'name' => $name,
         ], false);
 
         $this->assertEquals(201, $user['headers']['status-code']);
-        $userId = $user['body']['$id'];
 
         /* 3. Add membership to user. */
         $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
