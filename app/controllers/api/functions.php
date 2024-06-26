@@ -9,6 +9,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -1163,6 +1164,7 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
+        $type = $request->getHeader('x-sdk-language') === 'cli' ? 'cli' : 'manual';
 
         if ($chunksUploaded === $chunks) {
             if ($activate) {
@@ -1200,7 +1202,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => $activate,
                     'metadata' => $metadata,
-                    'type' => 'manual'
+                    'type' => $type
                 ]));
             } else {
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
@@ -1233,7 +1235,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => $activate,
                     'metadata' => $metadata,
-                    'type' => 'manual'
+                    'type' => $type
                 ]));
             } else {
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('chunksUploaded', $chunksUploaded)->setAttribute('metadata', $metadata));
@@ -1840,6 +1842,10 @@ App::post('/v1/functions/:functionId/executions')
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
             Console::error($th->getMessage());
+
+            if ($th instanceof AppwriteException) {
+                throw $th;
+            }
         } finally {
             $queueForUsage
                 ->addMetric(METRIC_EXECUTIONS, 1)
@@ -1847,11 +1853,11 @@ App::post('/v1/functions/:functionId/executions')
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
             ;
-        }
 
-        if ($function->getAttribute('logging')) {
-            /** @var Document $execution */
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            if ($function->getAttribute('logging')) {
+                /** @var Document $execution */
+                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            }
         }
 
         $roles = Authorization::getRoles();
