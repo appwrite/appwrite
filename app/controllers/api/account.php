@@ -73,9 +73,9 @@ function sendSessionAlert(Request $request, Locale $locale, Document $user, Docu
     $message
         ->setParam('{{hello}}', $locale->getText("emails.sessionAlert.hello"))
         ->setParam('{{body}}', $locale->getText("emails.sessionAlert.body"))
-        ->setParam('{{device}}', $locale->getText("emails.sessionAlert.device"))
-        ->setParam('{{ipAddress}}', $locale->getText("emails.sessionAlert.ipAddress"))
-        ->setParam('{{country}}', $locale->getText("emails.sessionAlert.country"))
+        ->setParam('{{listDevice}}', $locale->getText("emails.sessionAlert.listDevice"))
+        ->setParam('{{listIpAddress}}', $locale->getText("emails.sessionAlert.listIpAddress"))
+        ->setParam('{{listCountry}}', $locale->getText("emails.sessionAlert.listCountry"))
         ->setParam('{{footer}}', $locale->getText("emails.sessionAlert.footer"))
         ->setParam('{{signature}}', $locale->getText("emails.sessionAlert.signature"));
 
@@ -129,6 +129,7 @@ function sendSessionAlert(Request $request, Locale $locale, Document $user, Docu
 
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
+        'dateTime' => DateTime::format(new \DateTime(), 'Y-m-d H:i:s'),
         'user' => $user->getAttribute('name'),
         'project' => $project->getAttribute('name'),
         'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',

@@ -3,9 +3,9 @@
 <p>{{body}}</p>
 
 <ol>
-    <li>{{device}}</li>
-    <li>{{ipAddress}}</li>
-    <li>{{country}}</li>
+    <li>{{listDevice}}</li>
+    <li>{{listIpAddress}}</li>
+    <li>{{listCountry}}</li>
 </ol>
 
 <p>{{footer}}</p>
