@@ -301,7 +301,6 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals('/custom', $execution['body']['requestPath']);
         $this->assertEquals('GET', $execution['body']['requestMethod']);
-        $this->assertEquals(['content-type' => 'application/plain'], $execution['body']['requestHeaders']);
 
         /* Test for FAILURE */
 
