@@ -1008,6 +1008,57 @@ class FunctionsCustomServerTest extends Scope
     }
 
     /**
+     * @depends testGetExecution
+     */
+    public function testDeleteExecution($data): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $data['executionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $execution['headers']['status-code']);
+        $this->assertEmpty($execution['body']);
+
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $data['executionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $execution['headers']['status-code']);
+        $this->assertStringContainsString('Execution with the requested ID could not be found', $execution['body']['message']);
+
+
+        /**
+         * Test for FAILURE
+         */
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true,
+        ]);
+
+        $executionId = $execution['body']['$id'] ?? '';
+
+        $this->assertEquals(202, $execution['headers']['status-code']);
+
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(400, $execution['headers']['status-code']);
+        $this->assertStringContainsString('execution_in_progress', $execution['body']['type']);
+        $this->assertStringContainsString('Can\'t delete ongoing execution.', $execution['body']['message']);
+
+        return $data;
+    }
+
+    /**
      * @depends testCreateDeployment
      */
     public function testDelete($data): array

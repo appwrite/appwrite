@@ -2010,6 +2010,55 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $response->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
+App::delete('/v1/functions/:functionId/executions/:executionId')
+    ->groups(['api', 'functions'])
+    ->desc('Delete execution')
+    ->label('scope', 'execution.write')
+    ->label('event', 'functions.[functionId].executions.[executionId].delete')
+    ->label('audits.event', 'executions.delete')
+    ->label('audits.resource', 'function/{request.functionId}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'deleteExecution')
+    ->label('sdk.description', '/docs/references/functions/delete-execution.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('executionId', '', new UID(), 'Execution ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $execution = $dbForProject->getDocument('executions', $executionId);
+        if ($execution->isEmpty()) {
+            throw new Exception(Exception::EXECUTION_NOT_FOUND);
+        }
+
+        if ($execution->getAttribute('functionId') !== $function->getId()) {
+            throw new Exception(Exception::EXECUTION_NOT_FOUND);
+        }
+
+        if (!in_array($execution->getAttribute('status'), ['completed', 'failed'])) {
+            throw new Exception(Exception::EXECUTION_IN_PROGRESS);
+        }
+
+        if (!$dbForProject->deleteDocument('executions', $execution->getId())) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove execution from DB');
+        }
+
+        $queueForEvents
+            ->setParam('functionId', $function->getId())
+            ->setParam('executionId', $execution->getId());
+
+        $response->noContent();
+    });
+
 // Variables
 
 App::post('/v1/functions/:functionId/variables')
