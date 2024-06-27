@@ -1265,6 +1265,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals($runtimeName, $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
         $this->assertEquals($runtimeVersion, $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
+        $this->assertEquals(APP_VERSION_STABLE, $output['APPWRITE_VERSION']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
         $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
         $this->assertEquals('variable', $output['CUSTOM_VARIABLE']);
