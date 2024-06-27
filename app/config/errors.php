@@ -568,7 +568,7 @@ return [
 
     Exception::EXECUTION_IN_PROGRESS => [
         'name' => Exception::EXECUTION_IN_PROGRESS,
-        'description' => 'Can\'t delete ongoing execution. Please wait for execution to finish before you can retry.',
+        'description' => 'Can\'t delete ongoing execution. Please wait for execution to finish before deleting it.',
         'code' => 400,
     ],
 

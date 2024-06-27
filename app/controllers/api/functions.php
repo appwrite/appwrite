@@ -2044,7 +2044,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
-        if (!in_array($execution->getAttribute('status'), ['completed', 'failed'])) {
+        if (!in_array($execution->getAttribute('status'), ['completed', 'failed', 'scheduled'])) {
             throw new Exception(Exception::EXECUTION_IN_PROGRESS);
         }
 
