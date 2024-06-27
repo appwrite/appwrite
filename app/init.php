@@ -1186,9 +1186,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
 
+    Auth::$sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret);
+
     if (
         $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
+        || !Auth::$sessionId
     ) { // Validate user has valid login token
         $user = new Document([]);
     }
@@ -1219,8 +1221,12 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
             $user = $dbForProject->getDocument('users', $jwtUserId);
         }
 
-        if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+        $session = $user->find('$id', $jwtSessionId, 'sessions');
+
+        if (empty($session) || Auth::isSessionExpired($session)) { // Match JWT to active token
             $user = new Document([]);
+        } else {
+            Auth::$sessionId = $jwtSessionId;
         }
     }
 
@@ -1247,19 +1253,14 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
 }, ['dbForConsole', 'request', 'console']);
 
 App::setResource('session', function (Document $user) {
-    if ($user->isEmpty()) {
+    if ($user->isEmpty() || empty(Auth::$sessionId)) {
         return;
     }
 
     $sessions = $user->getAttribute('sessions', []);
-    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
-
-    if (!$sessionId) {
-        return;
-    }
 
     foreach ($sessions as $session) {/** @var Document $session */
-        if ($sessionId === $session->getId()) {
+        if (Auth::$sessionId === $session->getId()) {
             return $session;
         }
     }
