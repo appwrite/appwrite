@@ -901,7 +901,7 @@ App::get('/robots.txt')
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
-        if ($host === $mainDomain) {
+        if ($host === $mainDomain || $host === 'localhost') {
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
@@ -926,7 +926,7 @@ App::get('/humans.txt')
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
-        if ($host === $mainDomain) {
+        if ($host === $mainDomain || $host === 'localhost') {
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
