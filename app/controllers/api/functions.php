@@ -11,6 +11,7 @@ use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
@@ -1725,7 +1726,7 @@ App::post('/v1/functions/:functionId/executions')
             'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => (!is_null($scheduledAt)) ? 'schedule' : 'http',
-            'status' => $status, // waiting / processing / completed / failed
+            'status' => $status, // waiting / processing / completed / failed / scheduled
             'responseStatusCode' => 0,
             'responseHeaders' => [],
             'requestPath' => $path,
@@ -1774,7 +1775,7 @@ App::post('/v1/functions/:functionId/executions')
 
                 $dbForConsole->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
-                    'resourceType' => 'execution',
+                    'resourceType' => ScheduleExecutions::getSupportedResource(),
                     'resourceId' => $execution->getId(),
                     'resourceInternalId' => $execution->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -2061,8 +2062,9 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
     ->param('executionId', '', new UID(), 'Execution ID.')
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('queueForEvents')
-    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, Database $dbForConsole, Event $queueForEvents) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -2077,13 +2079,32 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
         if ($execution->getAttribute('functionId') !== $function->getId()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
+        $status = $execution->getAttribute('status');
 
-        if (!in_array($execution->getAttribute('status'), ['completed', 'failed', 'scheduled'])) {
+        if (!in_array($status, ['completed', 'failed', 'scheduled'])) {
             throw new Exception(Exception::EXECUTION_IN_PROGRESS);
         }
 
         if (!$dbForProject->deleteDocument('executions', $execution->getId())) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove execution from DB');
+        }
+
+        if ($status === 'scheduled') {
+            $results = $dbForConsole->find('schedules', [
+                Query::equal('resourceId', [$execution->getId()]),
+                Query::equal('resourceType', [ScheduleExecutions::getSupportedResource()]),
+                Query::equal('active', [true]),
+            ]);
+
+            if (count($results) === 1) {
+                $schedule = $results[0];
+
+                $schedule
+                    ->setAttribute('resourceUpdatedAt', DateTime::now())
+                    ->setAttribute('active', false);
+
+                Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+            }
         }
 
         $queueForEvents
