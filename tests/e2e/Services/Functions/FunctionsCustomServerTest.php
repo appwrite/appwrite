@@ -1063,7 +1063,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(204, $execution['headers']['status-code']);
         $this->assertEmpty($execution['body']);
-        var_dump('===========================================');
+
         return $data;
     }
 
