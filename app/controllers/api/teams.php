@@ -4,6 +4,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
@@ -341,9 +342,10 @@ App::delete('/v1/teams/:teamId')
     ->inject('getProjectDB')
     ->inject('dbForProject')
     ->inject('dbForConsole')
+    ->inject('queueForDeletes')
     ->inject('queueForEvents')
     ->inject('project')
-    ->action(function (string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, Database $dbForConsole, Event $queueForEvents, Document $project) {
+    ->action(function (string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, Database $dbForConsole, Delete $queueForDeletes, Event $queueForEvents, Document $project) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -356,7 +358,13 @@ App::delete('/v1/teams/:teamId')
         }
 
         $deletes = new Deletes();
-        $deletes->deleteTeam($dbForConsole, $getProjectDB, $team, $project);
+        $deletes->deleteMemberships($getProjectDB, $team, $project);
+
+        if ($project->getId() === 'console') {
+            $queueForDeletes
+                ->setType(DELETE_TYPE_TEAM_PROJECTS)
+                ->setDocument($team);
+        }
 
         $queueForEvents
             ->setParam('teamId', $team->getId())

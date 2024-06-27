@@ -95,9 +95,6 @@ class Deletes extends Action
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
                         break;
-                    case DELETE_TYPE_TEAMS:
-                        $this->deleteTeam($dbForConsole, $getProjectDB, $document, $project);
-                        break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
                         break;
@@ -111,6 +108,9 @@ class Deletes extends Action
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
                         break;
                 }
+                break;
+            case DELETE_TYPE_TEAM_PROJECTS:
+                $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $document);
                 break;
             case DELETE_TYPE_EXECUTIONS:
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
@@ -416,7 +416,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteMemberships(callable $getProjectDB, Document $document, Document $project): void
+    public function deleteMemberships(callable $getProjectDB, Document $document, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
         $teamInternalId = $document->getInternalId();
@@ -1160,26 +1160,6 @@ class Deletes extends Action
                     $deleteByFunction($function);
                 }
             );
-        }
-    }
-
-    /**
-     * @param Database $dbForConsole
-     * @param callable $getProjectDB
-     * @param Document $team
-     * @param Document $project
-     * @throws Authorization
-     * @throws Conflict
-     * @throws DatabaseException
-     * @throws Exception
-     * @throws Restricted
-     * @throws Structure
-     */
-    public function deleteTeam(Database $dbForConsole, callable $getProjectDB, Document $team, Document $project): void
-    {
-        $this->deleteMemberships($getProjectDB, $team, $project);
-        if ($project->getId() === 'console') {
-            $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $team);
         }
     }
 }
