@@ -1764,7 +1764,7 @@ App::post('/v1/functions/:functionId/executions')
                     ->setParam('executionId', $execution->getId())
                     ->trigger();
             } else {
-                $metadata = [
+                $data = [
                     'headers' => $headers,
                     'path' => $path,
                     'method' => $method,
@@ -1780,7 +1780,7 @@ App::post('/v1/functions/:functionId/executions')
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule' => $scheduledAt,
-                    'metadata' => $metadata,
+                    'data' => $data,
                     'active' => true,
                 ]));
             }

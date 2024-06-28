@@ -46,10 +46,10 @@ class ScheduleExecutions extends ScheduleBase
                 // TODO: Refactor to use function instead of functionId
                 ->setFunctionId($schedule['resource']['functionId'])
                 ->setExecution($schedule['resource'])
-                ->setMethod($schedule['metadata']['method'] ?? 'POST')
-                ->setPath($schedule['metadata']['path'] ?? '/')
-                ->setHeaders($schedule['metadata']['headers'] ?? [])
-                ->setBody($schedule['metadata']['body'] ?? '')
+                ->setMethod($schedule['data']['method'] ?? 'POST')
+                ->setPath($schedule['data']['path'] ?? '/')
+                ->setHeaders($schedule['data']['headers'] ?? [])
+                ->setBody($schedule['data']['body'] ?? '')
                 ->setProject($schedule['project'])
                 ->trigger();
 

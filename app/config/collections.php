@@ -4551,7 +4551,7 @@ $consoleCollections = array_merge([
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('metadata'),
+                '$id' => ID::custom('data'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 65535,
@@ -4559,7 +4559,7 @@ $consoleCollections = array_merge([
                 'required' => false,
                 'default' => new \stdClass(),
                 'array' => false,
-                'filters' => ['json'],
+                'filters' => ['json', 'encrypt'],
             ],
             [
                 '$id' => ID::custom('active'),
