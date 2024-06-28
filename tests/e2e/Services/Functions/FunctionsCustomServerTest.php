@@ -1264,7 +1264,7 @@ class FunctionsCustomServerTest extends Scope
      * @param string $entrypoint
      *
      * @dataProvider provideCustomExecutions
-     * @depends      testTimeout
+     * @depends testTimeout
      */
     public function testCreateCustomExecution(string $folder, string $name, string $entrypoint, string $runtimeName, string $runtimeVersion)
     {
