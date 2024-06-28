@@ -1702,6 +1702,7 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $executionId = ID::unique();
+        var_dump("creating execution document");
 
         $execution = new Document([
             '$id' => $executionId,
@@ -1729,10 +1730,7 @@ App::post('/v1/functions/:functionId/executions')
             ->setContext('function', $function);
 
         if ($async) {
-            if ($function->getAttribute('logging')) {
-                /** @var Document $execution */
-                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-            }
+            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
 
             $queueForFunctions
                 ->setType('http')
@@ -1850,10 +1848,7 @@ App::post('/v1/functions/:functionId/executions')
             ;
         }
 
-        if ($function->getAttribute('logging')) {
-            /** @var Document $execution */
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-        }
+        $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
