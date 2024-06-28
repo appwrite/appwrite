@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Authentication;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -1532,7 +1533,8 @@ Http::post('/v1/functions/:functionId/executions')
     ->inject('queueForFunctions')
     ->inject('geodb')
     ->inject('authorization')
-    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, string $mode, Func $queueForFunctions, Reader $geodb, Authorization $authorization) {
+    ->inject('authentication')
+    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, string $mode, Func $queueForFunctions, Reader $geodb, Authorization $authorization, Authentication $authentication) {
 
         $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1583,7 +1585,7 @@ Http::post('/v1/functions/:functionId/executions')
 
             foreach ($sessions as $session) {
                 /** @var Utopia\Database\Document $session */
-                if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                if ($session->getAttribute('secret') == Auth::hash($authentication->getSecret())) { // If current session delete the cookies too
                     $current = $session;
                 }
             }

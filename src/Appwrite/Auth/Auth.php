@@ -97,20 +97,6 @@ class Auth
     public static $cookieName = 'a_session';
 
     /**
-     * User Unique ID.
-     *
-     * @var string
-     */
-    public static $unique = '';
-
-    /**
-     * User Secret Key.
-     *
-     * @var string
-     */
-    public static $secret = '';
-
-    /**
      * Set Cookie Name.
      *
      * @param $string

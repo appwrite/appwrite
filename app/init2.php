@@ -5,6 +5,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Authentication;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
@@ -423,8 +424,9 @@ $getProjectDB = new Dependency();
 $dbForProject = new Dependency();
 $dbForConsole = new Dependency();
 $queueForUsage = new Dependency();
-$authorization = new Dependency();
 $queueForMails = new Dependency();
+$authorization = new Dependency();
+$authentication = new Dependency();
 $queueForBuilds = new Dependency();
 $deviceForLocal = new Dependency();
 $deviceForFiles = new Dependency();
@@ -470,7 +472,8 @@ $user
     ->inject('dbForProject')
     ->inject('dbForConsole')
     ->inject('authorization')
-    ->setCallback(function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $authorization) {
+    ->inject('authentication')
+    ->setCallback(function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $authorization, Authentication $authentication) {
         $authorization->setDefaultStatus(true);
 
         Auth::setCookieName('a_session_' . $project->getId());
@@ -509,26 +512,26 @@ $user
             $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
         }
 
-        Auth::$unique = $session['id'] ?? '';
-        Auth::$secret = $session['secret'] ?? '';
+        $authentication->setUnique($session['id'] ?? '');
+        $authentication->setSecret($session['secret'] ?? '');
 
         if (APP_MODE_ADMIN !== $mode) {
             if ($project->isEmpty()) {
                 $user = new Document([]);
             } else {
                 if ($project->getId() === 'console') {
-                    $user = $dbForConsole->getDocument('users', Auth::$unique);
+                    $user = $dbForConsole->getDocument('users', $authentication->getUnique());
                 } else {
-                    $user = $dbForProject->getDocument('users', Auth::$unique);
+                    $user = $dbForProject->getDocument('users', $authentication->getUnique());
                 }
             }
         } else {
-            $user = $dbForConsole->getDocument('users', Auth::$unique);
+            $user = $dbForConsole->getDocument('users', $authentication->getUnique());
         }
 
         if (
             $user->isEmpty() // Check a document has been found in the DB
-            || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
+            || !Auth::sessionVerify($user->getAttribute('sessions', []), $authentication->getSecret())
         ) { // Validate user has valid login token
             $user = new Document([]);
         }
@@ -577,14 +580,16 @@ $session
     ->setName('session')
     ->inject('user')
     ->inject('project')
-    ->setCallback(function (Document $user, Document $project) {
+    ->inject('authorization')
+    ->inject('authentication')
+    ->setCallback(function (Document $user, Document $project, Authorization $authorization, Authentication $authentication) {
         if ($user->isEmpty()) {
             return;
         }
 
         $sessions = $user->getAttribute('sessions', []);
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration);
+        $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), $authentication->getSecret(), $authDuration);
 
         if (!$sessionId) {
             return;
@@ -782,6 +787,12 @@ $authorization
     ->setName('authorization')
     ->setCallback(function (): Authorization {
         return new Authorization();
+    });
+
+$authentication
+    ->setName('authentication')
+    ->setCallback(function (): Authentication {
+        return new Authentication();
     });
 
 $registry
@@ -1259,9 +1270,10 @@ $container->set($localeCodes);
 $container->set($dbForProject);
 $container->set($dbForConsole);
 $container->set($getProjectDB);
-$container->set($authorization);
 $container->set($queueForUsage);
 $container->set($queueForMails);
+$container->set($authorization);
+$container->set($authentication);
 $container->set($schemaVariable);
 $container->set($queueForBuilds);
 $container->set($queueForEvents);

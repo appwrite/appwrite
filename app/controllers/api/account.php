@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Authentication;
 use Appwrite\Auth\MFA\Challenge;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
@@ -399,14 +400,15 @@ Http::get('/v1/account/sessions')
     ->inject('user')
     ->inject('locale')
     ->inject('authorization')
-    ->action(function (Response $response, Document $user, Locale $locale, Authorization $authorization) {
+    ->inject('authentication')
+    ->action(function (Response $response, Document $user, Locale $locale, Authorization $authorization, Authentication $authentication) {
 
         $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
         $sessions = $user->getAttribute('sessions', []);
-        $current = Auth::sessionVerify($sessions, Auth::$secret);
+        $current = Auth::sessionVerify($sessions, $authentication->getSecret());
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
@@ -445,7 +447,8 @@ Http::delete('/v1/account/sessions')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes) {
+    ->inject('authentication')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Authentication $authentication) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -461,7 +464,7 @@ Http::delete('/v1/account/sessions')
                 ->setAttribute('current', false)
                 ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
-            if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) {
+            if ($session->getAttribute('secret') == Auth::hash($authentication->getSecret())) {
                 $session->setAttribute('current', true);
 
                 // If current session delete the cookies too
@@ -507,7 +510,8 @@ Http::get('/v1/account/sessions/:sessionId')
     ->inject('user')
     ->inject('locale')
     ->inject('authorization')
-    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Authorization $authorization) {
+    ->inject('authentication')
+    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Authorization $authorization, Authentication $authentication) {
 
         $roles = $authorization->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -515,7 +519,7 @@ Http::get('/v1/account/sessions/:sessionId')
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            ? Auth::sessionVerify($user->getAttribute('sessions'), $authentication->getSecret())
             : $sessionId;
 
         foreach ($sessions as $session) {/** @var Document $session */
@@ -523,7 +527,7 @@ Http::get('/v1/account/sessions/:sessionId')
                 $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
-                    ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
+                    ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash($authentication->getSecret())))
                     ->setAttribute('countryName', $countryName)
                     ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $session->getAttribute('secret', '') : '')
                 ;
@@ -558,11 +562,12 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes) {
+    ->inject('authentication')
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Authentication $authentication) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            ? Auth::sessionVerify($user->getAttribute('sessions'), $authentication->getSecret())
             : $sessionId;
 
         $sessions = $user->getAttribute('sessions', []);
@@ -581,7 +586,7 @@ Http::delete('/v1/account/sessions/:sessionId')
 
             $session->setAttribute('current', false);
 
-            if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+            if ($session->getAttribute('secret') == Auth::hash($authentication->getSecret())) { // If current session delete the cookies too
                 $session
                     ->setAttribute('current', true)
                     ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
@@ -636,10 +641,11 @@ Http::patch('/v1/account/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForEvents')
-    ->action(function (?string $sessionId, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
+    ->inject('authentication')
+    ->action(function (?string $sessionId, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Authentication $authentication) {
 
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            ? Auth::sessionVerify($user->getAttribute('sessions'), $authentication->getSecret())
             : $sessionId;
         $sessions = $user->getAttribute('sessions', []);
 
@@ -1142,7 +1148,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Authorization $authorization) use ($oauthDefaultSuccess) {
+    ->inject('authentication')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Authorization $authorization, Authentication $authentication) use ($oauthDefaultSuccess) {
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
@@ -1279,7 +1286,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $sessions = $user->getAttribute('sessions', []);
-        $current = Auth::sessionVerify($sessions, Auth::$secret);
+        $current = Auth::sessionVerify($sessions, $authentication->getSecret());
 
         if ($current) { // Delete current session of new one.
             $currentDocument = $dbForProject->getDocument('sessions', $current);
@@ -2369,14 +2376,15 @@ Http::post('/v1/account/jwt')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->action(function (Response $response, Document $user, Database $dbForProject) {
+    ->inject('authentication')
+    ->action(function (Response $response, Document $user, Database $dbForProject, Authentication $authentication) {
 
 
         $sessions = $user->getAttribute('sessions', []);
         $current = new Document();
 
         foreach ($sessions as $session) { /** @var Utopia\Database\Document $session */
-            if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+            if ($session->getAttribute('secret') == Auth::hash($authentication->getSecret())) { // If current session delete the cookies too
                 $current = $session;
             }
         }
@@ -4197,7 +4205,8 @@ Http::post('/v1/account/targets/push')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
+    ->inject('authentication')
+    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization, Authentication $authentication) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
         $provider = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
@@ -4213,7 +4222,7 @@ Http::post('/v1/account/targets/push')
 
         $device = $detector->getDevice();
 
-        $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
+        $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), $authentication->getSecret());
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
         try {

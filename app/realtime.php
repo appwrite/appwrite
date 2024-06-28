@@ -483,6 +483,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $co
         $projectId = $realtime->connections[$connection]['projectId'];
         $database = $container->get('dbForConsole');
         $authorization = $container->get('authorization');
+        $authentication = $container->get('authentication');
 
         if ($projectId !== 'console') {
 
@@ -525,14 +526,15 @@ $server->onMessage(function (int $connection, string $message) use ($server, $co
                 }
 
                 $session = Auth::decodeSession($message['data']['session']);
-                Auth::$unique = $session['id'] ?? '';
-                Auth::$secret = $session['secret'] ?? '';
 
-                $user = $database->getDocument('users', Auth::$unique);
+                $authentication->setUnique($session['id'] ?? '');
+                $authentication->setSecret($session['secret'] ?? '');
+
+                $user = $database->getDocument('users', $authorization->getUnique());
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
-                    || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret) // Validate user has valid login token
+                    || !Auth::sessionVerify($user->getAttribute('sessions', []), $authentication->getSecret()) // Validate user has valid login token
                 ) {
                     // cookie not valid
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
