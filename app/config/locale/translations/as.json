@@ -100,6 +100,7 @@
     "countries.gd": "গ্ৰেনাডা",
     "countries.gt": "গুয়াতেমালা",
     "countries.gy": "গায়ানা",
+    "countries.hk": "হং কং",
     "countries.hn": "হণ্ডুৰাছ",
     "countries.hr": "ক্ৰোৱেছিয়া",
     "countries.ht": "হাইতি",
@@ -163,6 +164,7 @@
     "countries.nz": "নিউজিলেণ্ড",
     "countries.om": "ওমান",
     "countries.pk": "পাকিস্তান",
+    "countries.ps": "প্যালেস্টাইন",
     "countries.pa": "পানামা",
     "countries.pe": "পেৰু",
     "countries.ph": "ফিলিপাইনচ",
@@ -248,5 +250,5 @@
     "emails.certificate.footer": "আপোনাৰ পূৰ্বৰ প্ৰমাণপত্ৰটো প্ৰথম ব্ৰিফল হোৱাৰ দিনৰ পৰা ৩০ দিনলৈ বৈধ থাকিব। আমি এই ঘটনাটোৰ তদন্ত কৰিবলৈ উচ্চ পৰামৰ্শ দিয়ে, অন্যথা আপোনাৰ ডোমেইনটো অবৈধ SSL যোগাযোগ অবিহনে থাকিব।",
     "emails.certificate.thanks": "ধন্যবাদ",
     "emails.certificate.signature": "{{project}} দল",
-    "sms.verification.body": "{{secret}} আপোনাৰ {{project}} যাচাইকৰণ কোড।"
+    "sms.verification.body": "{{secret}}"
 }

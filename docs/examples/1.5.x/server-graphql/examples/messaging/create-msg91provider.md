@@ -2,7 +2,7 @@ mutation {
     messagingCreateMsg91Provider(
         providerId: "<PROVIDER_ID>",
         name: "<NAME>",
-        from: "+12065550100",
+        templateId: "<TEMPLATE_ID>",
         senderId: "<SENDER_ID>",
         authKey: "<AUTH_KEY>",
         enabled: false

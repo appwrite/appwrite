@@ -1,3 +1,15 @@
+## 12.0.4
+
+* Fixed concurrent modification error when closing realtime socket
+
+## 12.0.3
+
+* Upgrade dependencies
+
+## 12.0.2
+
+* Fixed realtime multiple subscription issues
+
 ## 12.0.1
 
 * Fixed parameters using enum types

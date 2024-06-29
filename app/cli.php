@@ -6,7 +6,6 @@ require_once __DIR__ . '/controllers/general.php';
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
-use Appwrite\Event\Hamster;
 use Appwrite\Platform\Appwrite;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -16,6 +15,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
@@ -99,25 +99,53 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             return $dbForConsole;
         }
 
-        $databaseName = $project->getAttribute('database');
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
 
-        if (isset($databases[$databaseName])) {
-            $database = $databases[$databaseName];
-            $database->setNamespace('_' . $project->getInternalId());
+        if (isset($databases[$dsn->getHost()])) {
+            $database = $databases[$dsn->getHost()];
+
+            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+                $database
+                    ->setSharedTables(true)
+                    ->setTenant($project->getInternalId())
+                    ->setNamespace($dsn->getParam('namespace'));
+            } else {
+                $database
+                    ->setSharedTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getInternalId());
+            }
+
             return $database;
         }
 
         $dbAdapter = $pools
-            ->get($databaseName)
+            ->get($dsn->getHost())
             ->pop()
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
 
-        $databases[$databaseName] = $database;
+        $databases[$dsn->getHost()] = $database;
+
+        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+            $database
+                ->setSharedTables(true)
+                ->setTenant($project->getInternalId())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getInternalId());
+        }
 
         $database
-            ->setNamespace('_' . $project->getInternalId())
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 
@@ -130,9 +158,6 @@ CLI::setResource('queue', function (Group $pools) {
 }, ['pools']);
 CLI::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
-}, ['queue']);
-CLI::setResource('queueForHamster', function (Connection $queue) {
-    return new Hamster($queue);
 }, ['queue']);
 CLI::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
@@ -177,7 +202,7 @@ CLI::setResource('logError', function (Registry $register) {
 }, ['register']);
 
 $platform = new Appwrite();
-$platform->init(Service::TYPE_CLI);
+$platform->init(Service::TYPE_TASK);
 
 $cli = $platform->getCli();
 
