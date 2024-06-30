@@ -1141,7 +1141,7 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
             return new Document([]);
         }
 
-        $token = Authorization::skip(fn () => $dbForProject->getDocument('resource_tokens', $tokenId));
+        $token = Authorization::skip(fn () => $dbForProject->getDocument('resourceTokens', $tokenId));
 
         if ($token->isEmpty() || $token->getAttribute('secret') != $secret) {
             return new Document([]);

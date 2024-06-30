@@ -789,10 +789,10 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'expiry' => $expiry,
+            'expire' => $expiry,
         ]);
 
-        $this->assertEquals($expiry, $res['body']['expiry']);
+        $this->assertEquals($expiry, $res['body']['expire']);
         return $data;
     }
 

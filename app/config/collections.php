@@ -4139,9 +4139,9 @@ $projectCollections = array_merge([
         ],
     ],
 
-    'resource_tokens' => [
+    'resourceTokens' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('resource_tokens'),
+        '$id' => ID::custom('resourceTokens'),
         'name' => 'Resource Tokens',
         'attributes' => [
             [

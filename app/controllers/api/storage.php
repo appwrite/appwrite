@@ -1706,7 +1706,7 @@ App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $token = $dbForProject->createDocument('resource_tokens', new Document([
+        $token = $dbForProject->createDocument('resourceTokens', new Document([
             '$id' => ID::unique(),
             'secret' => Auth::tokenGenerator(128),
             'resourceId' => $bucketId . ':' . $fileId,
@@ -1782,7 +1782,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
         if ($cursor) {
             /** @var Query $cursor */
             $tokenId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getDocument('resource_tokens', $tokenId);
+            $cursorDocument = $dbForProject->getDocument('resourceTokens', $tokenId);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "File token '{$tokenId}' for the 'cursor' value not found.");
@@ -1795,8 +1795,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $response->dynamic(new Document([
-            'tokens' => $dbForProject->find('resource_tokens', $queries),
-            'total' => $dbForProject->count('resource_tokens', $filterQueries, APP_LIMIT_COUNT),
+            'tokens' => $dbForProject->find('resourceTokens', $queries),
+            'total' => $dbForProject->count('resourceTokens', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_RESOURCE_TOKEN_LIST);
     });
 
@@ -1845,7 +1845,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $token = $dbForProject->getDocument('resource_tokens', $tokenId);
+        $token = $dbForProject->getDocument('resourceTokens', $tokenId);
 
         if ($token->isEmpty() || $token->getAttribute('resourceInternalId') != $bucket->getInternalId() . ':' . $file->getInternalId()) {
             throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
@@ -1900,7 +1900,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId/jwt')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $token = $dbForProject->getDocument('resource_tokens', $tokenId);
+        $token = $dbForProject->getDocument('resourceTokens', $tokenId);
 
         if ($token->isEmpty() || $token->getAttribute('resourceInternalId') != $bucket->getInternalId() . ':' . $file->getInternalId()) {
             throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
@@ -1986,7 +1986,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $token = $dbForProject->getDocument('resource_tokens', $tokenId);
+        $token = $dbForProject->getDocument('resourceTokens', $tokenId);
 
         if ($token->isEmpty() || $token->getAttribute('resourceInternalId') != $bucket->getInternalId() . ':' . $file->getInternalId()) {
             throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
@@ -2028,7 +2028,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
             ->setAttribute('expire', $expire)
             ->setAttribute('$permissions', $permissions);
 
-        $token = $dbForProject->updateDocument('resource_tokens', $tokenId, $token);
+        $token = $dbForProject->updateDocument('resourceTokens', $tokenId, $token);
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId())
@@ -2091,12 +2091,12 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $token = $dbForProject->getDocument('resource_tokens', $tokenId);
+        $token = $dbForProject->getDocument('resourceTokens', $tokenId);
         if ($token->isEmpty() || $token->getAttribute('resourceInternalId') != $bucket->getInternalId() . ':' . $file->getInternalId()) {
             throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
         }
 
-        $dbForProject->deleteDocument('resource_tokens', $tokenId);
+        $dbForProject->deleteDocument('resourceTokens', $tokenId);
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId())
