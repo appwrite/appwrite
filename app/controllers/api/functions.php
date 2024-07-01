@@ -2090,15 +2090,13 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
         }
 
         if ($status === 'scheduled') {
-            $results = $dbForConsole->find('schedules', [
+            $schedule = $dbForConsole->findOne('schedules', [
                 Query::equal('resourceId', [$execution->getId()]),
                 Query::equal('resourceType', [ScheduleExecutions::getSupportedResource()]),
                 Query::equal('active', [true]),
             ]);
 
-            if (count($results) === 1) {
-                $schedule = $results[0];
-
+            if ($schedule && !$schedule->isEmpty()) {
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('active', false);
