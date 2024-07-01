@@ -274,8 +274,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 requestTimeout: 30
             );
 
-            \var_dump($executionResponse);
-
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {

@@ -212,13 +212,18 @@ class Executor
             $requestTimeout = $timeout + 15;
         }
 
-        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $requestTimeout);
+        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data' ], $params, true, $requestTimeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
             $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
             throw new \Exception($message, $status);
         }
+
+        $response['body']['headers'] = \json_decode($response['body']['headers'] ?? '{}', true);
+        $response['body']['statusCode'] = \intval($response['body']['statusCode'] ?? 500);
+        $response['body']['duration'] = \intval($response['body']['duration'] ?? 0);
+        $response['body']['startTime'] = \intval($response['body']['startTime'] ?? \microtime(true));
 
         return $response['body'];
     }

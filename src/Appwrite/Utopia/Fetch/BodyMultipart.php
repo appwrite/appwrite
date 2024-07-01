@@ -133,11 +133,6 @@ class BodyMultipart
             if (\is_array($value)) {
                 $query .= $eol . 'Content-Type: application/json';
                 $value = \json_encode($value);
-            } else {
-                $isBinary = ! mb_check_encoding($value, 'UTF-8');
-                if ($isBinary) {
-                    $query .= $eol . 'Content-Transfer-Encoding: binary';
-                }
             }
 
             $query .= $eol . $eol;
