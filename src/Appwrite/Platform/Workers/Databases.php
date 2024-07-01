@@ -83,7 +83,7 @@ class Databases extends Action
             DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject),
             DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
-            DATABASE_TYPE_CALCULATE_STORAGE_USAGE => $this->calculateStorageUsage($payload, $dbForProject, $queueForUsage),
+            DATABASE_TYPE_CALCULATE_STORAGE_USAGE => $this->calculateStorageUsage($payload, $project, $dbForProject, $queueForUsage),
             default => throw new \Exception('No database operation for type: ' . \strval($type)),
         };
     }
@@ -494,7 +494,7 @@ class Databases extends Action
      * @throws Authorization
      * @throws DatabaseException
      */
-    private function calculateStorageUsage(array $payload, Database $dbForProject, Usage $queueForUsage): void
+    private function calculateStorageUsage(array $payload, Document $project, Database $dbForProject, Usage $queueForUsage): void
     {
         if (!isset($payload['databaseInternalId'])) {
             throw new Exception('Missing Database');
@@ -528,6 +528,10 @@ class Databases extends Action
                 $databaseInternalId,
                 $collectionInternalId
             ], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), $collectionStorageUsage);
+        
+        Console::info('Calculated storage usage for database: ' . $databaseInternalId . ' and collection: ' . $collectionInternalId);
+        $queueForUsage->setProject($project);
+        $queueForUsage->trigger();
     }
 
     /**
