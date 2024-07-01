@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Exception;
 use Utopia\Audit\Audit;
@@ -36,19 +37,21 @@ class Databases extends Action
             ->inject('message')
             ->inject('dbForConsole')
             ->inject('dbForProject')
+            ->inject('queueForUsage')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForConsole, Database $dbForProject, Log $log) => $this->action($message, $dbForConsole, $dbForProject, $log));
+            ->callback(fn (Message $message, Database $dbForConsole, Database $dbForProject, Usage $queueForUsage, Log $log) => $this->action($message, $dbForConsole, $dbForProject, $queueForUsage, $log));
     }
 
     /**
      * @param Message $message
      * @param Database $dbForConsole
      * @param Database $dbForProject
+     * @param Usage $queueForUsage
      * @param Log $log
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Database $dbForConsole, Database $dbForProject, Log $log): void
+    public function action(Message $message, Database $dbForConsole, Database $dbForProject, Usage $queueForUsage, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -65,11 +68,13 @@ class Databases extends Action
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() && $type !== DATABASE_TYPE_CALCULATE_STORAGE_USAGE) {
             throw new Exception('Missing database');
         }
 
-        $log->addTag('databaseId', $database->getId());
+        if (!$database->isEmpty()) {
+            $log->addTag('databaseId', $database->getId());
+        }
 
         match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $project, $dbForProject),
@@ -78,6 +83,8 @@ class Databases extends Action
             DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject),
             DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
+            DATABASE_TYPE_CALCULATE_STORAGE_USAGE => $this->calculateStorageUsage($payload, $project, $dbForProject, $queueForUsage),
+            
             default => throw new \Exception('No database operation for type: ' . \strval($type)),
         };
     }
@@ -610,6 +617,56 @@ class Databases extends Action
         $executionEnd = \microtime(true);
 
         Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+    }
+
+   /**
+     * @param Document $database
+     * @param Document $collection
+     * @param Database $dbForConsole
+     * @param Usage $queueForUsage
+     * @return void
+     * @throws Exception
+     * @throws Authorization
+     * @throws DatabaseException
+     */
+    private function calculateStorageUsage(array $payload, Document $project, Database $dbForProject, Usage $queueForUsage): void
+    {
+        if (!isset($payload['databaseInternalId'])) {
+            throw new Exception('Missing Database');
+        }
+
+        if (!isset($payload['collectionInternalId'])) {
+            throw new Exception('Missing Collection');
+        }
+
+        $databaseInternalId = $payload['databaseInternalId'];
+        $collectionInternalId = $payload['collectionInternalId'];
+
+        // Calculate storage usage for collection
+        $collectionStorageUsage = $dbForProject->getSizeOfCollection('database_'. $databaseInternalId . '_collection_' . $collectionInternalId);
+
+        //TODO: Optimize using reduce
+        // Calculate storage usage for database
+        $databsaeStorageUsage = 0;
+
+        $collections = $dbForProject->find('database_' . $databaseInternalId);
+        foreach ($collections as $collection) {
+            $databsaeStorageUsage += $dbForProject->getSizeOfCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
+        }
+
+        $queueForUsage
+            ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_STORAGE), $databsaeStorageUsage)
+            ->addMetric(str_replace([
+                '{databaseInternalId}',
+                '{collectionInternalId}'
+            ], [
+                $databaseInternalId,
+                $collectionInternalId
+            ], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), $collectionStorageUsage);
+
+        Console::info('Calculated storage usage for database: ' . $databaseInternalId . ' and collection: ' . $collectionInternalId);
+        $queueForUsage->setProject($project);
+        $queueForUsage->trigger();
     }
 
     protected function trigger(
