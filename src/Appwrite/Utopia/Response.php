@@ -101,6 +101,7 @@ use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
+use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 use Swoole\Http\Response as SwooleHTTPResponse;
@@ -234,6 +235,8 @@ class Response extends SwooleResponse
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
     public const MODEL_DETECTION = 'detection';
+    public const MODEL_VCS_CONTENT = 'vcsContent';
+    public const MODEL_VCS_CONTENT_LIST = 'vcsContentList';
 
     // Functions
     public const MODEL_FUNCTION = 'function';
@@ -369,6 +372,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Target list', self::MODEL_TARGET_LIST, 'targets', self::MODEL_TARGET))
             ->setModel(new BaseList('Migrations List', self::MODEL_MIGRATION_LIST, 'migrations', self::MODEL_MIGRATION))
             ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', self::MODEL_MIGRATION_FIREBASE_PROJECT))
+            ->setModel(new BaseList('VCS Content List', self::MODEL_VCS_CONTENT_LIST, 'contents', self::MODEL_VCS_CONTENT))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -411,6 +415,7 @@ class Response extends SwooleResponse
             ->setModel(new Installation())
             ->setModel(new ProviderRepository())
             ->setModel(new Detection())
+            ->setModel(new VcsContent())
             ->setModel(new Branch())
             ->setModel(new Runtime())
             ->setModel(new Deployment())
