@@ -29,6 +29,11 @@ class ScheduleExecutions extends ScheduleBase
 
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
+                $dbForConsole->deleteDocument(
+                    'schedules',
+                    $schedule['$id'],
+                );
+
                 unset($this->schedules[$schedule['resourceId']]);
                 continue;
             }
