@@ -274,6 +274,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 requestTimeout: 30
             );
 
+            \var_dump($executionResponse);
+
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
@@ -324,13 +326,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         $execution->setAttribute('responseHeaders', $headers);
 
         $body = $execution['responseBody'] ?? '';
-
-        $encodingKey = \array_search('x-open-runtimes-encoding', \array_column($execution['responseHeaders'], 'name'));
-        if ($encodingKey !== false) {
-            if (($execution['responseHeaders'][$encodingKey]['value'] ?? '') === 'base64') {
-                $body = \base64_decode($body);
-            }
-        }
 
         $contentType = 'text/plain';
         foreach ($execution['responseHeaders'] as $header) {

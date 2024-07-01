@@ -2,6 +2,7 @@
 
 namespace Executor;
 
+use Appwrite\Utopia\Fetch\BodyMultipart;
 use Exception;
 use Utopia\System\System;
 
@@ -250,7 +251,13 @@ class Executor
                 break;
 
             case 'multipart/form-data':
-                $query = $this->flatten($params);
+                $multipart = new BodyMultipart();
+                foreach ($params as $key => $value) {
+                    $multipart->setPart($key, $value);
+                }
+
+                $headers['content-type'] = $multipart->exportHeader();
+                $query = $multipart->exportBody();
                 break;
 
             default:
@@ -315,7 +322,16 @@ class Executor
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if ($decode) {
-            switch (substr($responseType, 0, strpos($responseType, ';'))) {
+            $strpos = strpos($responseType, ';');
+            $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
+            switch (substr($responseType, 0, $strpos)) {
+                case 'multipart/form-data':
+                    $boundary = \explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '';
+                    $multipartResponse = new BodyMultipart($boundary);
+                    $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
+
+                    $responseBody = $multipartResponse->getParts();
+                    break;
                 case 'application/json':
                     $json = json_decode($responseBody, true);
 
