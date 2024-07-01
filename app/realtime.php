@@ -530,7 +530,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $co
                 $authentication->setUnique($session['id'] ?? '');
                 $authentication->setSecret($session['secret'] ?? '');
 
-                $user = $database->getDocument('users', $authorization->getUnique());
+                $user = $database->getDocument('users', $authentication->getUnique());
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
