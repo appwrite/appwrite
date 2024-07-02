@@ -1,4 +1,4 @@
-> .Our Appwrite Init event has concluded. You can check out all the new and upcoming features [on our Init website](https://appwrite.io/init) 🚀
+> Our Appwrite Init event has concluded. You can check out all the new and upcoming features [on our Init website](https://appwrite.io/init) 🚀
 
 <br />
 <p align="center">
