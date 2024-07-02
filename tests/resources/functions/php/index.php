@@ -8,7 +8,6 @@ return function ($context) {
         'APPWRITE_FUNCTION_TRIGGER' => $context->req->headers['x-appwrite-trigger'] ?? '',
         'APPWRITE_FUNCTION_RUNTIME_NAME' => \getenv('APPWRITE_FUNCTION_RUNTIME_NAME') ?: '',
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => \getenv('APPWRITE_FUNCTION_RUNTIME_VERSION') ?: '',
-        'APPWRITE_VERSION' => APP_VERSION_STABLE,
         'UNICODE_TEST' => "êä",
         'GLOBAL_VARIABLE' => \getenv('GLOBAL_VARIABLE') ?: ''
     ]);
