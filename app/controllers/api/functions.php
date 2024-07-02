@@ -222,7 +222,7 @@ App::post('/v1/functions')
             'commands' => $commands,
             'scopes' => $scopes,
             'search' => implode(' ', [$functionId, $name, $runtime]),
-            'version' => 'v3',
+            'version' => 'v4',
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),
             'providerRepositoryId' => $providerRepositoryId,
@@ -1704,6 +1704,7 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $executionId = ID::unique();
+        var_dump("creating execution document");
 
         $execution = new Document([
             '$id' => $executionId,
@@ -1731,10 +1732,7 @@ App::post('/v1/functions/:functionId/executions')
             ->setContext('function', $function);
 
         if ($async) {
-            if ($function->getAttribute('logging')) {
-                /** @var Document $execution */
-                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-            }
+            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
 
             $queueForFunctions
                 ->setType('http')
@@ -1816,6 +1814,7 @@ App::post('/v1/functions/:functionId/executions')
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
+                logging: $function->getAttribute('logging', true),
                 requestTimeout: 30
             );
 
@@ -1855,10 +1854,7 @@ App::post('/v1/functions/:functionId/executions')
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
             ;
 
-            if ($function->getAttribute('logging')) {
-                /** @var Document $execution */
-                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-            }
+            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
         $roles = Authorization::getRoles();

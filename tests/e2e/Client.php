@@ -163,7 +163,7 @@ class Client
      * @return array
      * @throws Exception
      */
-    public function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true): array
+    public function call(string $method, string $path = '', array $headers = [], mixed $params = [], bool $decode = true): array
     {
         $headers            = array_merge($this->headers, $headers);
         $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
@@ -174,6 +174,7 @@ class Client
             'application/json' => json_encode($params),
             'multipart/form-data' => $this->flatten($params),
             'application/graphql' => $params[0],
+            'text/plain' => $params,
             default => http_build_query($params),
         };
 

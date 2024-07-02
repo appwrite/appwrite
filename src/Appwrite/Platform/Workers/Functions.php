@@ -399,9 +399,7 @@ class Functions extends Action
                 'search' => implode(' ', [$functionId, $executionId]),
             ]);
 
-            if ($function->getAttribute('logging')) {
-                $execution = $dbForProject->createDocument('executions', $execution);
-            }
+            $execution = $dbForProject->createDocument('executions', $execution);
 
             // TODO: @Meldiron Trigger executions.create event here
 
@@ -413,9 +411,7 @@ class Functions extends Action
         if ($execution->getAttribute('status') !== 'processing') {
             $execution->setAttribute('status', 'processing');
 
-            if ($function->getAttribute('logging')) {
-                $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-            }
+            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
         }
 
         $durationStart = \microtime(true);
@@ -484,7 +480,8 @@ class Functions extends Action
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: $command
+                runtimeEntrypoint: $command,
+                logging: $function->getAttribute('logging', true),
             );
 
             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
@@ -526,9 +523,9 @@ class Functions extends Action
             ;
         }
 
-        if ($function->getAttribute('logging')) {
-            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-        }
+
+        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+
         /** Trigger Webhook */
         $executionModel = new Execution();
         $queueForEvents
