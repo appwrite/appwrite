@@ -1765,7 +1765,7 @@ App::post('/v1/functions/:functionId/executions')
                     ->setParam('executionId', $execution->getId())
                     ->trigger();
             } else {
-                $metadata = [
+                $data = [
                     'headers' => $headers,
                     'path' => $path,
                     'method' => $method,
@@ -1781,7 +1781,7 @@ App::post('/v1/functions/:functionId/executions')
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule' => $scheduledAt,
-                    'metadata' => $metadata,
+                    'data' => $data,
                     'active' => true,
                 ]));
             }
@@ -1828,6 +1828,7 @@ App::post('/v1/functions/:functionId/executions')
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_VERSION' => APP_VERSION_STABLE
         ]);
 
         /** Execute function */
