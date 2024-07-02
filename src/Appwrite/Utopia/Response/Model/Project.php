@@ -138,6 +138,12 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('authMockNumbers', [
+                'type' => Response::MODEL_MOCK_NUMBER_LIST,
+                'description' => 'Whether or not to check the user password for similarity with their personal data.',
+                'default' => [],
+                'example' => true,
+            ])
             ->addRule('oAuthProviders', [
                 'type' => Response::MODEL_AUTH_PROVIDER,
                 'description' => 'List of Auth Providers.',
@@ -321,6 +327,7 @@ class Project extends Model
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
+        $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];
