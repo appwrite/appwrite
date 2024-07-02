@@ -1854,7 +1854,8 @@ App::post('/v1/functions/:functionId/executions')
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
             ;
 
-        $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+        }
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
