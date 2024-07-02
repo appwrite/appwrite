@@ -24,7 +24,6 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
-use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
@@ -666,16 +665,10 @@ App::put('/v1/databases/:databaseId')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        try {
-            $database = $dbForProject->updateDocument('databases', $databaseId, $database
-                ->setAttribute('name', $name)
-                ->setAttribute('enabled', $enabled)
-                ->setAttribute('search', implode(' ', [$databaseId, $name])));
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (StructureException $exception) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Bad structure. ' . $exception->getMessage());
-        }
+        $database = $dbForProject->updateDocument('databases', $databaseId, $database
+            ->setAttribute('name', $name)
+            ->setAttribute('enabled', $enabled)
+            ->setAttribute('search', implode(' ', [$databaseId, $name])));
 
         $queueForEvents->setParam('databaseId', $database->getId());
 
@@ -1036,19 +1029,14 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
         $enabled ??= $collection->getAttribute('enabled', true);
 
-        try {
-            $collection = $dbForProject->updateDocument('database_' . $database->getInternalId(), $collectionId, $collection
-                ->setAttribute('name', $name)
-                ->setAttribute('$permissions', $permissions)
-                ->setAttribute('documentSecurity', $documentSecurity)
-                ->setAttribute('enabled', $enabled)
-                ->setAttribute('search', implode(' ', [$collectionId, $name])));
-            $dbForProject->updateCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $permissions, $documentSecurity);
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (StructureException $exception) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Bad structure. ' . $exception->getMessage());
-        }
+        $collection = $dbForProject->updateDocument('database_' . $database->getInternalId(), $collectionId, $collection
+            ->setAttribute('name', $name)
+            ->setAttribute('$permissions', $permissions)
+            ->setAttribute('documentSecurity', $documentSecurity)
+            ->setAttribute('enabled', $enabled)
+            ->setAttribute('search', implode(' ', [$collectionId, $name])));
+
+        $dbForProject->updateCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $permissions, $documentSecurity);
 
         $queueForEvents
             ->setContext('database', $database)
@@ -3599,16 +3587,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         }
 
         $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
-            try {
-                $dbForProject->deleteDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $documentId
-                );
-            } catch (AuthorizationException) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            } catch (RestrictedException) {
-                throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
-            }
+            $dbForProject->deleteDocument(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $documentId
+            );
         });
 
         // Add $collectionId and $databaseId for all documents

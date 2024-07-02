@@ -2,6 +2,7 @@
 
 namespace Executor;
 
+use Appwrite\Extend\Exception as AppwriteException;
 use Exception;
 use Utopia\System\System;
 
@@ -194,7 +195,6 @@ class Executor
             'path' => $path,
             'method' => $method,
             'headers' => $headers,
-
             'image' => $image,
             'source' => $source,
             'entrypoint' => $entrypoint,
@@ -313,6 +313,8 @@ class Executor
 
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_errno($ch);
+        $curlErrorMessage = curl_error($ch);
 
         if ($decode) {
             switch (substr($responseType, 0, strpos($responseType, ';'))) {
@@ -329,8 +331,11 @@ class Executor
             }
         }
 
-        if ((curl_errno($ch)/* || 200 != $responseStatus*/)) {
-            throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
+        if ($curlError) {
+            if ($curlError == CURLE_OPERATION_TIMEDOUT) {
+                throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT);
+            }
+            throw new Exception($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
         }
 
         curl_close($ch);

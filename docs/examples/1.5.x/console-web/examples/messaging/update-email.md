@@ -17,7 +17,8 @@ const result = await messaging.updateEmail(
     false, // html (optional)
     [], // cc (optional)
     [], // bcc (optional)
-    '' // scheduledAt (optional)
+    '', // scheduledAt (optional)
+    [] // attachments (optional)
 );
 
 console.log(response);
