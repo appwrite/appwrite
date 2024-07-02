@@ -97,20 +97,6 @@ class Auth
     public static $cookieName = 'a_session';
 
     /**
-     * User Unique ID.
-     *
-     * @var string
-     */
-    public static $unique = '';
-
-    /**
-     * User Secret Key.
-     *
-     * @var string
-     */
-    public static $secret = '';
-
-    /**
      * Set Cookie Name.
      *
      * @param $string
@@ -439,13 +425,14 @@ class Auth
      * Returns all roles for a user.
      *
      * @param Document $user
+     * @param Authorization $auth
      * @return array<string>
      */
-    public static function getRoles(Document $user): array
+    public static function getRoles(Document $user, Authorization $auth): array
     {
         $roles = [];
 
-        if (!self::isPrivilegedUser(Authorization::getRoles()) && !self::isAppUser(Authorization::getRoles())) {
+        if (!self::isPrivilegedUser($auth->getRoles()) && !self::isAppUser($auth->getRoles())) {
             if ($user->getId()) {
                 $roles[] = Role::user($user->getId())->toString();
                 $roles[] = Role::users()->toString();

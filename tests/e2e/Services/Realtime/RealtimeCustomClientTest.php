@@ -1272,11 +1272,10 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($function['body']['$id']);
 
         $folder = 'timeout';
-        $stderr = '';
-        $stdout = '';
+        $output = '';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
 
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $output);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',

@@ -3,7 +3,7 @@
 namespace Appwrite\Task\Validator;
 
 use Cron\CronExpression;
-use Utopia\Validator;
+use Utopia\Http\Validator;
 
 class Cron extends Validator
 {

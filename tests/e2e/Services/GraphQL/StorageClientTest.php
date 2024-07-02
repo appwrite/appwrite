@@ -183,7 +183,6 @@ class StorageClientTest extends Scope
     /**
      * @depends testCreateFile
      * @param $file
-     * @return array
      * @throws \Exception
      */
     public function testGetFileDownload($file)

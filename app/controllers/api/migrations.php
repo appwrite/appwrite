@@ -9,7 +9,6 @@ use Appwrite\Role;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -17,21 +16,22 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Host;
+use Utopia\Http\Validator\Integer;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\URL;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\System\System;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Host;
-use Utopia\Validator\Integer;
-use Utopia\Validator\Text;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
 
 include_once __DIR__ . '/../shared/api.php';
 
-App::post('/v1/migrations/appwrite')
+Http::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Appwrite Data')
     ->label('scope', 'migrations.write')
@@ -85,7 +85,7 @@ App::post('/v1/migrations/appwrite')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/firebase/oauth')
+Http::post('/v1/migrations/firebase/oauth')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Firebase Data (OAuth)')
     ->label('scope', 'migrations.write')
@@ -187,7 +187,7 @@ App::post('/v1/migrations/firebase/oauth')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/firebase')
+Http::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Firebase Data (Service Account)')
     ->label('scope', 'migrations.write')
@@ -247,7 +247,7 @@ App::post('/v1/migrations/firebase')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/supabase')
+Http::post('/v1/migrations/supabase')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Supabase Data')
     ->label('scope', 'migrations.write')
@@ -307,7 +307,7 @@ App::post('/v1/migrations/supabase')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/nhost')
+Http::post('/v1/migrations/nhost')
     ->groups(['api', 'migrations'])
     ->desc('Migrate NHost Data')
     ->label('scope', 'migrations.write')
@@ -369,7 +369,7 @@ App::post('/v1/migrations/nhost')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::get('/v1/migrations')
+Http::get('/v1/migrations')
     ->groups(['api', 'migrations'])
     ->desc('List Migrations')
     ->label('scope', 'migrations.read')
@@ -422,7 +422,7 @@ App::get('/v1/migrations')
         ]), Response::MODEL_MIGRATION_LIST);
     });
 
-App::get('/v1/migrations/:migrationId')
+Http::get('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
     ->desc('Get Migration')
     ->label('scope', 'migrations.read')
@@ -446,7 +446,7 @@ App::get('/v1/migrations/:migrationId')
         $response->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::get('/v1/migrations/appwrite/report')
+Http::get('/v1/migrations/appwrite/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on Appwrite Data')
     ->label('scope', 'migrations.write')
@@ -488,7 +488,7 @@ App::get('/v1/migrations/appwrite/report')
             ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
-App::get('/v1/migrations/firebase/report')
+Http::get('/v1/migrations/firebase/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on Firebase Data')
     ->label('scope', 'migrations.write')
@@ -535,7 +535,7 @@ App::get('/v1/migrations/firebase/report')
             ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
-App::get('/v1/migrations/firebase/report/oauth')
+Http::get('/v1/migrations/firebase/report/oauth')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on Firebase Data using OAuth')
     ->label('scope', 'migrations.write')
@@ -626,7 +626,7 @@ App::get('/v1/migrations/firebase/report/oauth')
             ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
-App::get('/v1/migrations/firebase/connect')
+Http::get('/v1/migrations/firebase/connect')
     ->desc('Authorize with firebase')
     ->groups(['api', 'migrations'])
     ->label('scope', 'migrations.write')
@@ -668,7 +668,7 @@ App::get('/v1/migrations/firebase/connect')
             ->redirect($url);
     });
 
-App::get('/v1/migrations/firebase/redirect')
+Http::get('/v1/migrations/firebase/redirect')
     ->desc('Capture and receive data on Firebase authorization')
     ->groups(['api', 'migrations'])
     ->label('scope', 'public')
@@ -780,7 +780,7 @@ App::get('/v1/migrations/firebase/redirect')
             ->redirect($redirect);
     });
 
-App::get('/v1/migrations/firebase/projects')
+Http::get('/v1/migrations/firebase/projects')
     ->desc('List Firebase Projects')
     ->groups(['api', 'migrations'])
     ->label('scope', 'migrations.read')
@@ -869,7 +869,7 @@ App::get('/v1/migrations/firebase/projects')
         ]), Response::MODEL_MIGRATION_FIREBASE_PROJECT_LIST);
     });
 
-App::get('/v1/migrations/firebase/deauthorize')
+Http::get('/v1/migrations/firebase/deauthorize')
     ->desc('Revoke Appwrite\'s authorization to access Firebase Projects')
     ->groups(['api', 'migrations'])
     ->label('scope', 'migrations.write')
@@ -897,7 +897,7 @@ App::get('/v1/migrations/firebase/deauthorize')
         $response->noContent();
     });
 
-App::get('/v1/migrations/supabase/report')
+Http::get('/v1/migrations/supabase/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on Supabase Data')
     ->label('scope', 'migrations.write')
@@ -940,7 +940,7 @@ App::get('/v1/migrations/supabase/report')
             ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
-App::get('/v1/migrations/nhost/report')
+Http::get('/v1/migrations/nhost/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on NHost Data')
     ->label('scope', 'migrations.write')
@@ -983,7 +983,7 @@ App::get('/v1/migrations/nhost/report')
             ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
-App::patch('/v1/migrations/:migrationId')
+Http::patch('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
     ->desc('Retry Migration')
     ->label('scope', 'migrations.write')
@@ -1028,7 +1028,7 @@ App::patch('/v1/migrations/:migrationId')
         $response->noContent();
     });
 
-App::delete('/v1/migrations/:migrationId')
+Http::delete('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
     ->desc('Delete Migration')
     ->label('scope', 'migrations.write')

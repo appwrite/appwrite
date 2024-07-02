@@ -5,7 +5,7 @@ use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
-use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -14,15 +14,17 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Fetch\Client;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\HexColor;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\URL;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Image\Image;
+use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\System\System;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\HexColor;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
 
@@ -61,9 +63,9 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     unset($image);
 };
 
-$getUserGitHub = function (string $userId, Document $project, Database $dbForProject, Database $dbForConsole, ?Logger $logger) {
+$getUserGitHub = function (string $userId, Document $project, Database $dbForProject, Database $dbForConsole, ?Logger $logger, Authorization $auth) {
     try {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+        $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         $sessions = $user->getAttribute('sessions', []);
 
@@ -114,7 +116,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
                     ->setAttribute('providerRefreshToken', $refreshToken)
                     ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
-                Authorization::skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
+                $auth->skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
 
                 $dbForProject->purgeCachedDocument('users', $user->getId());
             } catch (Throwable $err) {
@@ -122,7 +124,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
                 do {
                     $previousAccessToken = $gitHubSession->getAttribute('providerAccessToken');
 
-                    $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+                    $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
                     $sessions = $user->getAttribute('sessions', []);
 
                     $gitHubSession = new Document();
@@ -154,11 +156,42 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
             'id' => $githubId
         ];
     } catch (Exception $error) {
+        if ($logger) {
+            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
+
+            $log = new Log();
+            $log->setNamespace('console');
+            $log->setServer(\gethostname());
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($error->getMessage());
+
+            $log->addTag('code', $error->getCode());
+            $log->addTag('verboseType', get_class($error));
+
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
+
+            $log->setAction('avatarsGetGitHub');
+
+            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            $responseCode = $logger->addLog($log);
+            Console::info('GitHub error log pushed with status code: ' . $responseCode);
+        }
+
+        Console::warning("Failed: {$error->getMessage()}");
+        Console::warning($error->getTraceAsString());
+
         return [];
     }
 };
 
-App::get('/v1/avatars/credit-cards/:code')
+Http::get('/v1/avatars/credit-cards/:code')
     ->desc('Get credit card icon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -178,7 +211,7 @@ App::get('/v1/avatars/credit-cards/:code')
     ->inject('response')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) =>  $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
 
-App::get('/v1/avatars/browsers/:code')
+Http::get('/v1/avatars/browsers/:code')
     ->desc('Get browser icon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -198,7 +231,7 @@ App::get('/v1/avatars/browsers/:code')
     ->inject('response')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('browsers', $code, $width, $height, $quality, $response));
 
-App::get('/v1/avatars/flags/:code')
+Http::get('/v1/avatars/flags/:code')
     ->desc('Get country flag')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -218,7 +251,7 @@ App::get('/v1/avatars/flags/:code')
     ->inject('response')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('flags', $code, $width, $height, $quality, $response));
 
-App::get('/v1/avatars/image')
+Http::get('/v1/avatars/image')
     ->desc('Get image from URL')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -281,7 +314,7 @@ App::get('/v1/avatars/image')
         unset($image);
     });
 
-App::get('/v1/avatars/favicon')
+Http::get('/v1/avatars/favicon')
     ->desc('Get favicon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -426,7 +459,7 @@ App::get('/v1/avatars/favicon')
         unset($image);
     });
 
-App::get('/v1/avatars/qr')
+Http::get('/v1/avatars/qr')
     ->desc('Get QR code')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -466,7 +499,7 @@ App::get('/v1/avatars/qr')
             ->send($image->output('png', 9));
     });
 
-App::get('/v1/avatars/initials')
+Http::get('/v1/avatars/initials')
     ->desc('Get user initials')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -549,7 +582,7 @@ App::get('/v1/avatars/initials')
             ->file($image->getImageBlob());
     });
 
-App::get('/v1/cards/cloud')
+Http::get('/v1/cards/cloud')
     ->desc('Get Front Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -571,8 +604,9 @@ App::get('/v1/cards/cloud')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+    ->inject('auth')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $auth) use ($getUserGitHub) {
+        $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -583,7 +617,7 @@ App::get('/v1/cards/cloud')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger, $auth);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
@@ -756,7 +790,7 @@ App::get('/v1/cards/cloud')
             ->file($baseImage->getImageBlob());
     });
 
-App::get('/v1/cards/cloud-back')
+Http::get('/v1/cards/cloud-back')
     ->desc('Get Back Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -778,8 +812,9 @@ App::get('/v1/cards/cloud-back')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+    ->inject('auth')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $auth) use ($getUserGitHub) {
+        $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -789,7 +824,7 @@ App::get('/v1/cards/cloud-back')
             $userId = $user->getId();
             $email = $user->getAttribute('email', '');
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger, $auth);
             $githubId = $gitHub['id'] ?? '';
 
             $isHero = \array_key_exists($email, $heroes);
@@ -834,7 +869,7 @@ App::get('/v1/cards/cloud-back')
             ->file($baseImage->getImageBlob());
     });
 
-App::get('/v1/cards/cloud-og')
+Http::get('/v1/cards/cloud-og')
     ->desc('Get OG Image From Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -856,8 +891,9 @@ App::get('/v1/cards/cloud-og')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+    ->inject('auth')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $auth) use ($getUserGitHub) {
+        $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -872,7 +908,7 @@ App::get('/v1/cards/cloud-og')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger, $auth);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
