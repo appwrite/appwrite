@@ -135,7 +135,6 @@ class Databases extends Action
         $options = $attribute->getAttribute('options', []);
         $project = $dbForConsole->getDocument('projects', $projectId);
 
-
         try {
             switch ($type) {
                 case Database::VAR_RELATIONSHIP:
