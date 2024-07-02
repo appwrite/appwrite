@@ -2,8 +2,8 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-use Appwrite\Utopia\Database\Database;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;

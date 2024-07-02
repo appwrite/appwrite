@@ -2,12 +2,12 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\URL\URL as URLParse;
-use Appwrite\Utopia\Database\Database;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Utopia\App;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;

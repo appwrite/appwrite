@@ -4,9 +4,9 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
 use Appwrite\OpenSSL\OpenSSL;
-use Appwrite\Utopia\Database\Database;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;

@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Database\Database;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Abuse;
@@ -14,6 +13,7 @@ use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;

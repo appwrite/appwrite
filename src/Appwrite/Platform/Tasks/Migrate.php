@@ -3,10 +3,10 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Migration\Migration;
-use Appwrite\Utopia\Database\Database;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;

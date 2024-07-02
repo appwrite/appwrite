@@ -4,10 +4,10 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Usage;
 use Appwrite\Messaging\Status as MessageStatus;
-use Appwrite\Utopia\Database\Database;
 use Swoole\Runtime;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;

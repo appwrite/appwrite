@@ -4,11 +4,11 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
-use Appwrite\Utopia\Database\Database;
 use Exception;
 use PDOException;
 use Throwable;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;

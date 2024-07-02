@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Messaging;
-use Appwrite\Utopia\Database\Database;
+use Utopia\Database\Database;
 use Utopia\Pools\Group;
 
 class ScheduleMessages extends ScheduleBase

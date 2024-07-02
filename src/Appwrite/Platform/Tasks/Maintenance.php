@@ -4,8 +4,8 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
-use Appwrite\Utopia\Database\Database;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;

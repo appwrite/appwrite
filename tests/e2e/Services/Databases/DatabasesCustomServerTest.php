@@ -3,11 +3,11 @@
 namespace Tests\E2E\Services\Databases;
 
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Utopia\Database\Database;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Helpers\ID;

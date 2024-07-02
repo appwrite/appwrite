@@ -4,8 +4,8 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Mail;
 use Appwrite\Template\Template;
-use Appwrite\Utopia\Database\Database;
 use Exception;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Logger\Log;
