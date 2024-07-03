@@ -191,7 +191,6 @@ class Executor
         $params = [
             'runtimeId' => $runtimeId,
             'variables' => $variables,
-            'body' => $body,
             'timeout' => $timeout,
             'path' => $path,
             'method' => $method,
@@ -205,6 +204,10 @@ class Executor
             'runtimeEntrypoint' => $runtimeEntrypoint,
             'logging' => $logging,
         ];
+
+        if(!empty($body)) {
+            $params['body'] = $body;
+        }
 
         // Safety timeout. Executor has timeout, and open runtime has soft timeout.
         // This one shouldn't really happen, but prevents from unexpected networking behaviours.

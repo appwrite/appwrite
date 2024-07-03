@@ -1704,7 +1704,6 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $executionId = ID::unique();
-        var_dump("creating execution document");
 
         $execution = new Document([
             '$id' => $executionId,
