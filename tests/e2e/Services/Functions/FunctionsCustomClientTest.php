@@ -182,6 +182,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals($executions['body']['executions'][1]['responseStatusCode'], 200);
         $this->assertEquals($executions['body']['executions'][1]['responseBody'], '');
         $this->assertEquals($executions['body']['executions'][1]['logs'], '');
+        $this->assertGreaterThan(0, $executions['body']['executions'][1]['duration']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $function['body']['$id'], [
@@ -301,6 +302,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals('/custom', $execution['body']['requestPath']);
         $this->assertEquals('GET', $execution['body']['requestMethod']);
+        $this->assertGreaterThan(0, $execution['body']['duration']);
 
         /* Test for FAILURE */
 
@@ -438,6 +440,7 @@ class FunctionsCustomClientTest extends Scope
         $output = json_decode($execution['body']['responseBody'], true);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
+        $this->assertGreaterThan(0, $execution['body']['duration']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
         $this->assertEquals('Test', $output['APPWRITE_FUNCTION_NAME']);
