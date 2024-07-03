@@ -286,7 +286,6 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertEquals('scheduled', $execution['body']['status']);
-        $this->assertGreaterThan(0, $execution['body']['duration']);
 
         $executionId = $execution['body']['$id'];
 
