@@ -76,6 +76,6 @@ class MockNumber extends Validator
      */
     public function getType(): string
     {
-        return self::TYPE_STRING;
+        return self::TYPE_OBJECT;
     }
 }
