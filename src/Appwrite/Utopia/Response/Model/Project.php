@@ -144,6 +144,12 @@ class Project extends Model
                 'default' => [],
                 'example' => true,
             ])
+            ->addRule('authSessionAlerts', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to send session alert emails to users.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('oAuthProviders', [
                 'type' => Response::MODEL_AUTH_PROVIDER,
                 'description' => 'List of Auth Providers.',
@@ -328,6 +334,7 @@ class Project extends Model
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
         $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
+        $document->setAttribute('authSessionAlerts', $authValues['sessionAlerts'] ?? false);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

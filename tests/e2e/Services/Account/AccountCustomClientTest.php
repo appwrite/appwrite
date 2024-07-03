@@ -1193,6 +1193,64 @@ class AccountCustomClientTest extends Scope
     /**
      * @depends testCreateAccountSession
      */
+    public function testSessionAlert($data): void
+    {
+        $email = uniqid() . 'session-alert@appwrite.io';
+        $password = 'password123';
+        $name = 'Session Alert Tester';
+
+        // Enable session alerts
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/session-alerts', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'alerts' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Create a new account
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Create a session for the new account
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'user-agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Check the alert email
+        $lastEmail = $this->getLastEmail();
+
+        $this->assertEquals($email, $lastEmail['to'][0]['address']);
+        $this->assertStringContainsString('New session alert', $lastEmail['subject']);
+        $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']); // IP Address
+        $this->assertStringContainsString('Unknown', $lastEmail['text']); // Country
+        $this->assertStringContainsString($response['body']['clientName'], $lastEmail['text']); // Client name
+    }
+
+    /**
+     * @depends testCreateAccountSession
+     */
     public function testCreateOAuth2AccountSession(): array
     {
         $provider = 'mock';

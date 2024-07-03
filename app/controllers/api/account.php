@@ -58,7 +58,92 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
+function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
+{
+    $subject = $locale->getText("emails.sessionAlert.subject");
+    $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
+
+    $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-session-alert.tpl');
+    $message
+        ->setParam('{{hello}}', $locale->getText("emails.sessionAlert.hello"))
+        ->setParam('{{body}}', $locale->getText("emails.sessionAlert.body"))
+        ->setParam('{{listDevice}}', $locale->getText("emails.sessionAlert.listDevice"))
+        ->setParam('{{listIpAddress}}', $locale->getText("emails.sessionAlert.listIpAddress"))
+        ->setParam('{{listCountry}}', $locale->getText("emails.sessionAlert.listCountry"))
+        ->setParam('{{footer}}', $locale->getText("emails.sessionAlert.footer"))
+        ->setParam('{{thanks}}', $locale->getText("emails.sessionAlert.thanks"))
+        ->setParam('{{signature}}', $locale->getText("emails.sessionAlert.signature"));
+
+    $body = $message->render();
+
+    $smtp = $project->getAttribute('smtp', []);
+    $smtpEnabled = $smtp['enabled'] ?? false;
+
+    $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+    $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+    $replyTo = "";
+
+    if ($smtpEnabled) {
+        if (!empty($smtp['senderEmail'])) {
+            $senderEmail = $smtp['senderEmail'];
+        }
+        if (!empty($smtp['senderName'])) {
+            $senderName = $smtp['senderName'];
+        }
+        if (!empty($smtp['replyTo'])) {
+            $replyTo = $smtp['replyTo'];
+        }
+
+        $queueForMails
+            ->setSmtpHost($smtp['host'] ?? '')
+            ->setSmtpPort($smtp['port'] ?? '')
+            ->setSmtpUsername($smtp['username'] ?? '')
+            ->setSmtpPassword($smtp['password'] ?? '')
+            ->setSmtpSecure($smtp['secure'] ?? '');
+
+        if (!empty($customTemplate)) {
+            if (!empty($customTemplate['senderEmail'])) {
+                $senderEmail = $customTemplate['senderEmail'];
+            }
+            if (!empty($customTemplate['senderName'])) {
+                $senderName = $customTemplate['senderName'];
+            }
+            if (!empty($customTemplate['replyTo'])) {
+                $replyTo = $customTemplate['replyTo'];
+            }
+
+            $body = $customTemplate['message'] ?? '';
+            $subject = $customTemplate['subject'] ?? $subject;
+        }
+
+        $queueForMails
+            ->setSmtpReplyTo($replyTo)
+            ->setSmtpSenderEmail($senderEmail)
+            ->setSmtpSenderName($senderName);
+    }
+
+    $emailVariables = [
+        'direction' => $locale->getText('settings.direction'),
+        'dateTime' => DateTime::format(new \DateTime(), 'Y-m-d H:i:s'),
+        'user' => $user->getAttribute('name'),
+        'project' => $project->getAttribute('name'),
+        'device' => $session->getAttribute('clientName'),
+        'ipAddress' => $session->getAttribute('ip'),
+        'country' => $locale->getText('countries.' . $session->getAttribute('countryCode'), $locale->getText('locale.country.unknown')),
+    ];
+
+    $email = $user->getAttribute('email');
+
+    $queueForMails
+        ->setSubject($subject)
+        ->setBody($body)
+        ->setVariables($emailVariables)
+        ->setRecipient($email)
+        ->trigger();
+};
+
+
+$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
     $roles = Authorization::getRoles();
     $isPrivilegedUser = Auth::isPrivilegedUser($roles);
     $isAppUser = Auth::isAppUser($roles);
@@ -136,6 +221,10 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         $dbForProject->updateDocument('users', $user->getId(), $user);
     } catch (\Throwable $th) {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
+    }
+
+    if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
+        sendSessionAlert($locale, $user, $project, $session, $queueForMails);
     }
 
     $queueForEvents
@@ -719,8 +808,9 @@ App::post('/v1/account/sessions/email')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('queueForMails')
     ->inject('hooks')
-    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Hooks $hooks) {
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -812,6 +902,10 @@ App::post('/v1/account/sessions/email')
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
         ;
+
+        if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
+            sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+        }
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -981,6 +1075,7 @@ App::post('/v1/account/sessions/token')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('queueForMails')
     ->action($createSession);
 
 App::get('/v1/account/sessions/oauth2/:provider')
@@ -2142,6 +2237,7 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('queueForMails')
     ->action($createSession);
 
 App::put('/v1/account/sessions/phone')
@@ -2172,6 +2268,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('queueForMails')
     ->action($createSession);
 
 App::post('/v1/account/tokens/phone')
