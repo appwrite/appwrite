@@ -1693,6 +1693,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertNotEmpty($execution['body']['responseBody']);
+        $this->assertGreaterThan(0, $execution['body']['duration']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
@@ -1781,6 +1782,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals($cookie, $execution['body']['responseBody']);
+        $this->assertGreaterThan(0, $execution['body']['duration']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [

@@ -225,8 +225,8 @@ class Executor
 
         $response['body']['headers'] = \json_decode($response['body']['headers'] ?? '{}', true);
         $response['body']['statusCode'] = \intval($response['body']['statusCode'] ?? 500);
-        $response['body']['duration'] = \intval($response['body']['duration'] ?? 0);
-        $response['body']['startTime'] = \intval($response['body']['startTime'] ?? \microtime(true));
+        $response['body']['duration'] = \floatval($response['body']['duration'] ?? 0);
+        $response['body']['startTime'] = \floatval($response['body']['startTime'] ?? \microtime(true));
 
         return $response['body'];
     }
