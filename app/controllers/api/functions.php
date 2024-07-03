@@ -2108,7 +2108,8 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
 
         $queueForEvents
             ->setParam('functionId', $function->getId())
-            ->setParam('executionId', $execution->getId());
+            ->setParam('executionId', $execution->getId())
+            ->setPayload($response->output($execution, Response::MODEL_EXECUTION));
 
         $response->noContent();
     });
