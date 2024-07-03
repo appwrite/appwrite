@@ -7,6 +7,7 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;

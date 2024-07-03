@@ -62,6 +62,10 @@ use Utopia\Database\Validator\Structure;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
+use Utopia\Logger\Adapter\AppSignal;
+use Utopia\Logger\Adapter\LogOwl;
+use Utopia\Logger\Adapter\Raygun;
+use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
@@ -763,18 +767,14 @@ $register->set('logger', function () {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
-    // Old Sentry Format conversion. Fallback until the old syntax is completely deprecated.
-    if (str_contains($providerConfig, ';') && strtolower($providerName) == 'sentry') {
-        $configChunks = \explode(";", $providerConfig);
+    $adapter = match ($providerName) {
+        'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
+        'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
+        'raygun' => new Raygun($providerConfig['key']),
+        'appsignal' => new AppSignal($providerConfig['key']),
+        default => throw new Exception('Provider "' . $providerName . '" not supported.')
+    };
 
-        $sentryKey = $configChunks[0];
-        $projectId = $configChunks[1];
-
-        $providerConfig = 'https://' . $sentryKey . '@sentry.io/' . $projectId;
-    }
-
-    $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
-    $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
 

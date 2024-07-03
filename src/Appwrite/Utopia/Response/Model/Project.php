@@ -139,10 +139,11 @@ class Project extends Model
                 'example' => true,
             ])
             ->addRule('authMockNumbers', [
-                'type' => Response::MODEL_MOCK_NUMBER_LIST,
+                'type' => Response::MODEL_MOCK_NUMBER,
                 'description' => 'An array of mock numbers and their corresponding verification codes (OTPs).',
                 'default' => [],
-                'example' => true,
+                'array' => true,
+                'example' => [new \stdClass()],
             ])
             ->addRule('authSessionAlerts', [
                 'type' => self::TYPE_BOOLEAN,
