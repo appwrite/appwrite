@@ -3453,7 +3453,7 @@ App::post('/v1/account/verification/phone')
         }
 
         $phone = $user->getAttribute('phone');
-        if (!$phone) {
+        if (empty($phone)) {
             throw new Exception(Exception::USER_PHONE_NOT_FOUND);
         }
 
