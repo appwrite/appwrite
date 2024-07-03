@@ -616,10 +616,10 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('sessionAlerts', false, new Boolean(true), 'Set to true to enable session emails.')
+    ->param('alerts', false, new Boolean(true), 'Set to true to enable session emails.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, bool $sessionAlerts, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, bool $alerts, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -628,7 +628,7 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
         }
 
         $auths = $project->getAttribute('auths', []);
-        $auths['sessionAlerts'] = $sessionAlerts;
+        $auths['sessionAlerts'] = $alerts;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));
