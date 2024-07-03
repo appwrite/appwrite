@@ -454,7 +454,6 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $functionDetails['headers']['status-code']);
         $this->assertEquals('cli', $functionDetails['body']['type']);
-
     }
 
     /**
@@ -671,12 +670,16 @@ class FunctionsCustomServerTest extends Scope
         /**
          * Test search queries
          */
-        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders(), [
-            'search' => $data['functionId']
-        ]));
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders(), [
+                'search' => $data['functionId']
+            ])
+        );
 
         $this->assertEquals($function['headers']['status-code'], 200);
         $this->assertEquals(3, $function['body']['total']);
@@ -732,12 +735,16 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($function['headers']['status-code'], 200);
         $this->assertCount(0, $function['body']['deployments']);
 
-        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders(), [
-            'search' => 'Test'
-        ]));
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders(), [
+                'search' => 'Test'
+            ])
+        );
 
         $this->assertEquals($function['headers']['status-code'], 200);
         $this->assertEquals(3, $function['body']['total']);
@@ -745,12 +752,16 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(3, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
 
-        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders(), [
-            'search' => 'php-8.0'
-        ]));
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders(), [
+                'search' => 'php-8.0'
+            ])
+        );
 
         $this->assertEquals($function['headers']['status-code'], 200);
         $this->assertEquals(3, $function['body']['total']);
@@ -977,6 +988,85 @@ class FunctionsCustomServerTest extends Scope
         return $data;
     }
 
+
+    /**
+     * @depends testGetExecution
+     */
+    public function testDeleteExecution($data): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $data['executionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $execution['headers']['status-code']);
+        $this->assertEmpty($execution['body']);
+
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $data['executionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $execution['headers']['status-code']);
+        $this->assertStringContainsString('Execution with the requested ID could not be found', $execution['body']['message']);
+
+        /**
+         * Test for FAILURE
+         */
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true,
+        ]);
+
+        $executionId = $execution['body']['$id'] ?? '';
+        $this->assertEquals(202, $execution['headers']['status-code']);
+
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(400, $execution['headers']['status-code']);
+        $this->assertStringContainsString('execution_in_progress', $execution['body']['type']);
+        $this->assertStringContainsString('Can\'t delete ongoing execution.', $execution['body']['message']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetExecution
+     */
+    public function testDeleteScheduledExecution($data): array
+    {
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT10H'))->format('Y-m-d H:i:s');
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true,
+            'scheduledAt' => $futureTime,
+        ]);
+
+        $executionId = $execution['body']['$id'] ?? '';
+        $this->assertEquals(202, $execution['headers']['status-code']);
+        sleep(5);
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $execution['headers']['status-code']);
+        $this->assertEmpty($execution['body']);
+
+        return $data;
+    }
+
     /**
      * @depends testGetExecution
      */
@@ -1158,10 +1248,10 @@ class FunctionsCustomServerTest extends Scope
     public function provideCustomExecutions(): array
     {
         return [
-            [ 'folder' => 'php-fn', 'name' => 'php-8.0', 'entrypoint' => 'index.php', 'runtimeName' => 'PHP', 'runtimeVersion' => '8.0' ],
-            [ 'folder' => 'node', 'name' => 'node-18.0', 'entrypoint' => 'index.js', 'runtimeName' => 'Node.js', 'runtimeVersion' => '18.0' ],
-            [ 'folder' => 'python', 'name' => 'python-3.9', 'entrypoint' => 'main.py', 'runtimeName' => 'Python', 'runtimeVersion' => '3.9' ],
-            [ 'folder' => 'ruby', 'name' => 'ruby-3.1', 'entrypoint' => 'main.rb', 'runtimeName' => 'Ruby', 'runtimeVersion' => '3.1' ],
+            ['folder' => 'php-fn', 'name' => 'php-8.0', 'entrypoint' => 'index.php', 'runtimeName' => 'PHP', 'runtimeVersion' => '8.0'],
+            ['folder' => 'node', 'name' => 'node-18.0', 'entrypoint' => 'index.js', 'runtimeName' => 'Node.js', 'runtimeVersion' => '18.0'],
+            ['folder' => 'python', 'name' => 'python-3.9', 'entrypoint' => 'main.py', 'runtimeName' => 'Python', 'runtimeVersion' => '3.9'],
+            ['folder' => 'ruby', 'name' => 'ruby-3.1', 'entrypoint' => 'main.rb', 'runtimeName' => 'Ruby', 'runtimeVersion' => '3.1'],
             // Swift and Dart disabled as it's very slow.
             // [ 'folder' => 'dart', 'name' => 'dart-2.15', 'entrypoint' => 'main.dart', 'runtimeName' => 'Dart', 'runtimeVersion' => '2.15' ],
             // [ 'folder' => 'swift', 'name' => 'swift-5.5', 'entrypoint' => 'index.swift', 'runtimeName' => 'Swift', 'runtimeVersion' => '5.5' ],
