@@ -92,7 +92,7 @@ if (!function_exists("getProjectDB")) {
 
         $database = new Database($adapter, getCache());
 
-        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
