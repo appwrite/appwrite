@@ -49,6 +49,7 @@ class Maintenance extends Action
             $this->foreachProject($dbForConsole, function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
                 $queueForDeletes->setProject($project);
 
+                $this->notifyDeleteTargets($queueForDeletes);
                 $this->notifyDeleteExecutionLogs($queueForDeletes);
                 $this->notifyDeleteAbuseLogs($queueForDeletes);
                 $this->notifyDeleteAuditLogs($queueForDeletes);
@@ -60,7 +61,6 @@ class Maintenance extends Action
             $this->renewCertificates($dbForConsole, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
-            $this->notifyDeleteTargets($queueForDeletes);
         }, $interval, $delay);
     }
 

@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -42,6 +43,7 @@ class FunctionsCustomClientTest extends Scope
         return [];
     }
 
+    #[Retry(count: 2)]
     public function testCreateExecution(): array
     {
         /**
@@ -164,7 +166,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(202, $execution['headers']['status-code']);
 
         // Wait for the first scheduled execution to be created
-        sleep(65);
+        sleep(90);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions', [
             'content-type' => 'application/json',
@@ -704,6 +706,96 @@ class FunctionsCustomClientTest extends Scope
         // Client should never see logs and errors
         $this->assertEmpty($execution['body']['logs']);
         $this->assertEmpty($execution['body']['errors']);
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        return [];
+    }
+
+    public function testNonOverrideOfHeaders(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $projectId = $this->getProject()['$id'];
+        $apikey = $this->getProject()['apiKey'];
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
+        ], [
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-18.0',
+            'entrypoint' => 'index.js'
+        ]);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $folder = 'node';
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
+        $this->packageCode($folder);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
+        ], [
+            'entrypoint' => 'index.js',
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)), //different tarball names intentional
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $this->assertEquals('ready', $deployment['body']['status']);
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'x-appwrite-event' => "OVERRIDDEN",
+            'x-appwrite-trigger' => "OVERRIDDEN",
+            'x-appwrite-user-id' => "OVERRIDDEN",
+            'x-appwrite-user-jwt' => "OVERRIDDEN",
+        ]);
+
+        $output = json_decode($execution['body']['responseBody'], true);
+        $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_JWT']);
+        $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_EVENT']);
+        $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_TRIGGER']);
+        $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_USER_ID']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [

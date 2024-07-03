@@ -290,7 +290,9 @@ App::post('/v1/account')
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                if($existingTarget) {
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                }
             }
 
             $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -2524,6 +2526,7 @@ App::patch('/v1/account/password')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
+    ->label('abuse-limit', 10)
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
     ->inject('requestTimestamp')

@@ -1,3 +1,37 @@
+# Version 1.5.8
+
+## What's Changed
+
+### Notable changes
+
+* Support Twilio messaging service SID in [8222](https://github.com/appwrite/appwrite/pull/8222)
+* Improve cache performance in [8230](https://github.com/appwrite/appwrite/pull/8230)
+* Add hk in translations in [8179](https://github.com/appwrite/appwrite/pull/8179)
+* Bump console to version 4.3.14 in [8321](https://github.com/appwrite/appwrite/pull/8321)
+* Update pwd abuse in [8255](https://github.com/appwrite/appwrite/pull/8255)
+
+### Fixes
+
+* Ensure usage is counted for errors in [8120](https://github.com/appwrite/appwrite/pull/8120)
+* Fix MFA for OAuth2 only accounts in [8245](https://github.com/appwrite/appwrite/pull/8245)
+* Delete Expired Targets Per Project in [8239](https://github.com/appwrite/appwrite/pull/8239)
+* Don't set the target field if the existing target document is false in [8236](https://github.com/appwrite/appwrite/pull/8236)
+* Disable validation for project DBs during migration in [8298](https://github.com/appwrite/appwrite/pull/8298)
+* Add `default` to Collection Attributes in Migration in [8271](https://github.com/appwrite/appwrite/pull/8271)
+* Fix Create bucket endpoint validator for maximum file size in [8275](https://github.com/appwrite/appwrite/pull/8275)
+* Disable validation for subquery to prevent error in [8297](https://github.com/appwrite/appwrite/pull/8297)
+* Fix 'Missing required attribute "expire"' on `users.createSession()` in [8308](https://github.com/appwrite/appwrite/pull/8308)
+
+### Miscellaneous
+
+* Bump base image from 0.9.0 to 0.9.1 in [8238](https://github.com/appwrite/appwrite/pull/8238)
+* Use latest Platform and add Core module in [7936](https://github.com/appwrite/appwrite/pull/7936)
+* Add Test to Validate Headers aren't Overridden in [8228](https://github.com/appwrite/appwrite/pull/8228)
+* Fix hyperlink in storage docs in [8269](https://github.com/appwrite/appwrite/pull/8269)
+* Update cache & database in [8285](https://github.com/appwrite/appwrite/pull/8285)
+* Fix flaky certificate test in [8316](https://github.com/appwrite/appwrite/pull/8316)
+* Fix flaky function test in [8317](https://github.com/appwrite/appwrite/pull/8317)
+
 # Version 1.5.7
 ## What's Changed
 
