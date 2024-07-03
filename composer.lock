@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "90c87617f6a2639e3c6c3a1920e7d7de",
+    "content-hash": "06f391b62842a79736fe3fe77ec82adf",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -156,16 +156,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.13.5",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "ba24c3a163f1a1da6cd355db92def508d05e59f7"
+                "reference": "9bae5bebe7c7cb3e4bf3a05a1d36c9d6ce3a2d3e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/ba24c3a163f1a1da6cd355db92def508d05e59f7",
-                "reference": "ba24c3a163f1a1da6cd355db92def508d05e59f7",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/9bae5bebe7c7cb3e4bf3a05a1d36c9d6ce3a2d3e",
+                "reference": "9bae5bebe7c7cb3e4bf3a05a1d36c9d6ce3a2d3e",
                 "shasum": ""
             },
             "require": {
@@ -173,8 +173,9 @@
                 "utopia-php/system": "0.8.*"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "laravel/pint": "^1.15",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -204,9 +205,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.13.5"
+                "source": "https://github.com/appwrite/runtimes/tree/0.14.0"
             },
-            "time": "2024-04-01T10:35:02+00:00"
+            "time": "2024-07-03T10:18:32+00:00"
         },
         {
             "name": "beberlei/assert",
@@ -5615,5 +5616,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
