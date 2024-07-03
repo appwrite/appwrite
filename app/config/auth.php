@@ -51,5 +51,5 @@ return [
         'icon' => '/images/users/phone.png',
         'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreatePhoneToken',
         'enabled' => true,
-    ]
+    ],
 ];

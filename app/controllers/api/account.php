@@ -505,7 +505,7 @@ App::put('/v1/account/webauthn')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $challengeId, string $challengeResponse, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) use ($publicKeyCredentialLoader, $authenticatorAttestationResponseValidator) {
+    ->action(function (string $challengeId, string $challengeResponse, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
         // Get the challenge from the database
         $challengeDocument = Authorization::skip(fn () => $dbForProject->getDocument('webauthnChallenges', $challengeId));
 
