@@ -83,6 +83,7 @@ class Functions extends Action
         $eventData = $payload['payload'] ?? '';
         $project = new Document($payload['project'] ?? []);
         $function = new Document($payload['function'] ?? []);
+        $functionId = $payload['functionId'] ?? '';
         $user = new Document($payload['user'] ?? []);
         $method = $payload['method'] ?? 'POST';
         $headers = $payload['headers'] ?? [];
@@ -90,6 +91,10 @@ class Functions extends Action
 
         if ($project->getId() === 'console') {
             return;
+        }
+
+        if ($function->isEmpty() && !empty($functionId)) {
+            $function = $dbForProject->getDocument('functions', $functionId);
         }
 
         $log->addTag('functionId', $function->getId());
@@ -176,6 +181,7 @@ class Functions extends Action
                 );
                 break;
             case 'schedule':
+                $execution = new Document($payload['execution'] ?? []);
                 $this->execute(
                     log: $log,
                     dbForProject: $dbForProject,
@@ -193,7 +199,7 @@ class Functions extends Action
                     jwt: null,
                     event: null,
                     eventData: null,
-                    executionId: null,
+                    executionId: $execution->getId() ?? null
                 );
                 break;
         }
