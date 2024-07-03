@@ -884,7 +884,7 @@ Http::get('/v1/health/queue/failed/:name')
         Event::FUNCTIONS_QUEUE_NAME,
         Event::USAGE_QUEUE_NAME,
         Event::USAGE_DUMP_QUEUE_NAME,
-        Event::WEBHOOK_CLASS_NAME,
+        Event::WEBHOOK_QUEUE_NAME,
         Event::CERTIFICATES_QUEUE_NAME,
         Event::BUILDS_QUEUE_NAME,
         Event::MESSAGING_QUEUE_NAME,

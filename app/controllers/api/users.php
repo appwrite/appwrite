@@ -1785,7 +1785,7 @@ Http::post('/v1/users/:userId/sessions')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret = Auth::codeGenerator();
+        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
 
@@ -1802,6 +1802,7 @@ Http::post('/v1/users/:userId/sessions')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => $expire,
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1813,7 +1814,6 @@ Http::post('/v1/users/:userId/sessions')
         $session = $dbForProject->createDocument('sessions', $session);
         $session
             ->setAttribute('secret', $secret)
-            ->setAttribute('expire', $expire)
             ->setAttribute('countryName', $countryName);
 
         $queueForEvents

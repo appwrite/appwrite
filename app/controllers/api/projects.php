@@ -115,34 +115,7 @@ Http::post('/v1/projects')
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
-        $backups['database_db_fra1_v14x_02'] = ['from' => '03:00', 'to' => '05:00'];
-        $backups['database_db_fra1_v14x_03'] = ['from' => '00:00', 'to' => '02:00'];
-        $backups['database_db_fra1_v14x_04'] = ['from' => '00:00', 'to' => '02:00'];
-        $backups['database_db_fra1_v14x_05'] = ['from' => '00:00', 'to' => '02:00'];
-        $backups['database_db_fra1_v14x_06'] = ['from' => '00:00', 'to' => '02:00'];
-        $backups['database_db_fra1_v14x_07'] = ['from' => '00:00', 'to' => '02:00'];
-
         $databases = Config::getParam('pools-database', []);
-
-        /**
-         * Remove databases from the list that are currently undergoing an backup
-         */
-        if (count($databases) > 1) {
-            $now = new \DateTime();
-
-            foreach ($databases as $index => $database) {
-                if (empty($backups[$database])) {
-                    continue;
-                }
-                $backup = $backups[$database];
-                $from = \DateTime::createFromFormat('H:i', $backup['from']);
-                $to = \DateTime::createFromFormat('H:i', $backup['to']);
-                if ($now >= $from && $now <= $to) {
-                    unset($databases[$index]);
-                    break;
-                }
-            }
-        }
 
         $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
         $index = \array_search($databaseOverride, $databases);
@@ -156,39 +129,60 @@ Http::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        // TODO: 1 in 5 projects use shared tables. Temporary until all projects are using shared tables.
-        if (
-            (
-                !\mt_rand(0, 4)
-                && System::getEnv('_APP_DATABASE_SHARED_TABLES', 'enabled') === 'enabled'
-                && System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
-            ) ||
-            ($dsn === DATABASE_SHARED_TABLES)
-        ) {
+        // TODO: Temporary until all projects are using shared tables.
+        if ($dsn === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
             $schema = 'appwrite';
             $database = 'appwrite';
             $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-            $dsn = $schema . '://' . DATABASE_SHARED_TABLES . '?database=' . $database;
+            $dsn = $schema . '://' . System::getEnv('_APP_DATABASE_SHARED_TABLES', '') . '?database=' . $database;
 
             if (!empty($namespace)) {
                 $dsn .= '&namespace=' . $namespace;
             }
         }
 
-        // TODO: Allow overriding in development mode. Temporary until all projects are using shared tables.
-        if (
-            Http::isDevelopment()
-            && System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
-            && $request->getHeader('x-appwrited-share-tables', false)
-        ) {
-            $schema = 'appwrite';
-            $database = 'appwrite';
-            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-            $dsn = $schema . '://' . DATABASE_SHARED_TABLES . '?database=' . $database;
+        try {
+            $project = $dbForConsole->createDocument('projects', new Document([
+                '$id' => $projectId,
+                '$permissions' => [
+                    Permission::read(Role::team(ID::custom($teamId))),
+                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                ],
+                'name' => $name,
+                'teamInternalId' => $team->getInternalId(),
+                'teamId' => $team->getId(),
+                'region' => $region,
+                'description' => $description,
+                'logo' => $logo,
+                'url' => $url,
+                'version' => APP_VERSION_STABLE,
+                'legalName' => $legalName,
+                'legalCountry' => $legalCountry,
+                'legalState' => $legalState,
+                'legalCity' => $legalCity,
+                'legalAddress' => $legalAddress,
+                'legalTaxId' => ID::custom($legalTaxId),
+                'services' => new stdClass(),
+                'platforms' => null,
+                'oAuthProviders' => [],
+                'webhooks' => null,
+                'keys' => null,
+                'auths' => $auths,
+                'search' => implode(' ', [$projectId, $name]),
+                'database' => $dsn,
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
+        }
 
-            if (!empty($namespace)) {
-                $dsn .= '&namespace=' . $namespace;
-            }
+        try {
+            $dsn = new DSN($dsn);
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $dsn);
         }
 
         try {
@@ -251,7 +245,7 @@ Http::post('/v1/projects')
         $dbForProject = new Database($adapter, $cache);
         $dbForProject->setAuthorization($authorization);
 
-        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
             $dbForProject
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())

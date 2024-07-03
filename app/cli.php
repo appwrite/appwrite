@@ -29,6 +29,7 @@ $context = new Dependency();
 $register = new Dependency();
 $logError = new Dependency();
 $queueForDeletes = new Dependency();
+$queueForFunctions = new Dependency();
 $queueForCertificates = new Dependency();
 
 $context
@@ -39,6 +40,13 @@ $register
     ->setName('register')
     ->setCallback(function () use (&$global): Registry {
         return $global;
+    });
+
+$queueForFunctions
+    ->setName('queueForFunctions')
+    ->inject('queue')
+    ->setCallback(function (Connection $queue) {
+        return new Func($queue);
     });
 
 
@@ -100,6 +108,7 @@ $container->set($context);
 $container->set($logError);
 $container->set($register);
 $container->set($queueForDeletes);
+$container->set($queueForFunctions);
 $container->set($queueForCertificates);
 
 $platform = new Appwrite();

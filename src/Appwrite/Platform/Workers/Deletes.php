@@ -500,14 +500,14 @@ class Deletes extends Action
             $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
-                if ($dsn->getHost() !== DATABASE_SHARED_TABLES || !\in_array($collection->getId(), $projectCollectionIds)) {
+                if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
                     $dbForProject->deleteCollection($collection->getId());
                 } else {
                     $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                 }
             }
 
-            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
                 $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
 
                 if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
@@ -556,7 +556,7 @@ class Deletes extends Action
         ], $dbForConsole);
 
         // Delete metadata table
-        if ($dsn->getHost() !== DATABASE_SHARED_TABLES) {
+        if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
             $dbForProject->deleteCollection('_metadata');
         } else {
             $this->deleteByGroup('_metadata', [], $dbForProject);

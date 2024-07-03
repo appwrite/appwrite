@@ -235,7 +235,7 @@ abstract class Migration
     }
 
     /**
-     * Creates colletion from the config collection.
+     * Creates collection from the config collection.
      *
      * @param string $id
      * @param string|null $name
@@ -262,6 +262,7 @@ abstract class Migration
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
                     'required' => $attribute['required'],
+                    'default' => $attribute['default'] ?? null,
                     'signed' => $attribute['signed'],
                     'array' => $attribute['array'],
                     'filters' => $attribute['filters'],

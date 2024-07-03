@@ -91,6 +91,7 @@ class Migrate extends Action
                     // TODO: Iterate through all project DBs
                     /** @var Database $projectDB */
                     $projectDB = $getProjectDB($project);
+                    $projectDB->disableValidation();
                     $migration
                         ->setProject($project, $projectDB, $dbForConsole)
                         ->setPDO($register->get('db', true))
