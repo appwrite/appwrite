@@ -744,7 +744,7 @@ $register->set('logger', function () {
 
         $providerName = $loggingProvider->getScheme();
         $providerConfig = match ($providerName) {
-            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
+            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
             'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
             default => ['key' => $loggingProvider->getHost()],
         };
