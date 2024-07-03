@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Validator\MockNumber;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
@@ -105,6 +106,7 @@ App::post('/v1/projects')
             'passwordDictionary' => false,
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
+            'mockNumbers' => [],
             'sessionAlerts' => false,
         ];
 
@@ -852,6 +854,37 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/auth/mock-numbers')
+    ->desc('Update the mock numbers for the project')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateMockNumbers')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('numbers', '', new ArrayList(new MockNumber(), 10), 'An array of mock numbers and their corresponding verification codes (OTPs). Each number should be a valid E.164 formatted phone number. Maximum of 10 numbers are allowed.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, array $numbers, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+
+        $auths['mockNumbers'] = $numbers;
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });

@@ -777,6 +777,7 @@ $register->set('logger', function () {
     $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
+
 $register->set('pools', function () {
     $group = new Group();
 
@@ -1320,6 +1321,7 @@ App::setResource('console', function () {
         'legalAddress' => '',
         'legalTaxId' => '',
         'auths' => [
+            'mockNumbers' => [],
             'invites' => System::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
             'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds

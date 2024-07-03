@@ -2371,7 +2371,18 @@ App::post('/v1/account/tokens/phone')
             $dbForProject->purgeCachedDocument('users', $user->getId());
         }
 
-        $secret = Auth::codeGenerator();
+        $secret = null;
+        $sendSMS = true;
+        $mockNumbers = $project->getAttribute('auths', [])['mockNumbers'] ?? [];
+        foreach ($mockNumbers as $mockNumber) {
+            if ($mockNumber['phone'] === $phone) {
+                $secret = $mockNumber['otp'];
+                $sendSMS = false;
+                break;
+            }
+        }
+
+        $secret ??= Auth::codeGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_OTP));
 
         $token = new Document([
@@ -2396,34 +2407,36 @@ App::post('/v1/account/tokens/phone')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+        if ($sendSMS) {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
-        $customTemplate = $project->getAttribute('templates', [])['sms.login-' . $locale->default] ?? [];
-        if (!empty($customTemplate)) {
-            $message = $customTemplate['message'] ?? $message;
+            $customTemplate = $project->getAttribute('templates', [])['sms.login-' . $locale->default] ?? [];
+            if (!empty($customTemplate)) {
+                $message = $customTemplate['message'] ?? $message;
+            }
+
+            $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+            $messageContent
+                ->setParam('{{project}}', $project->getAttribute('name'))
+                ->setParam('{{secret}}', $secret);
+            $messageContent = \strip_tags($messageContent->render());
+            $message = $message->setParam('{{token}}', $messageContent);
+
+            $message = $message->render();
+
+            $messageDoc = new Document([
+                '$id' => $token->getId(),
+                'data' => [
+                    'content' => $message,
+                ],
+            ]);
+
+            $queueForMessaging
+                ->setType(MESSAGE_SEND_TYPE_INTERNAL)
+                ->setMessage($messageDoc)
+                ->setRecipients([$phone])
+                ->setProviderType(MESSAGE_TYPE_SMS);
         }
-
-        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
-        $messageContent
-            ->setParam('{{project}}', $project->getAttribute('name'))
-            ->setParam('{{secret}}', $secret);
-        $messageContent = \strip_tags($messageContent->render());
-        $message = $message->setParam('{{token}}', $messageContent);
-
-        $message = $message->render();
-
-        $messageDoc = new Document([
-            '$id' => $token->getId(),
-            'data' => [
-                'content' => $message,
-            ],
-        ]);
-
-        $queueForMessaging
-            ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-            ->setMessage($messageDoc)
-            ->setRecipients([$phone])
-            ->setProviderType(MESSAGE_TYPE_SMS);
 
         // Set to unhashed secret for events and server responses
         $token->setAttribute('secret', $secret);
@@ -3439,7 +3452,8 @@ App::post('/v1/account/verification/phone')
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
-        if (empty($user->getAttribute('phone'))) {
+        $phone = $user->getAttribute('phone');
+        if (empty($phone)) {
             throw new Exception(Exception::USER_PHONE_NOT_FOUND);
         }
 
@@ -3450,7 +3464,19 @@ App::post('/v1/account/verification/phone')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        $secret = Auth::codeGenerator();
+
+        $secret = null;
+        $sendSMS = true;
+        $mockNumbers = $project->getAttribute('auths', [])['mockNumbers'] ?? [];
+        foreach ($mockNumbers as $mockNumber) {
+            if ($mockNumber['phone'] === $phone) {
+                $secret = $mockNumber['otp'];
+                $sendSMS = false;
+                break;
+            }
+        }
+
+        $secret ??= Auth::codeGenerator();
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
@@ -3475,34 +3501,36 @@ App::post('/v1/account/verification/phone')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+        if ($sendSMS) {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
-        $customTemplate = $project->getAttribute('templates', [])['sms.verification-' . $locale->default] ?? [];
-        if (!empty($customTemplate)) {
-            $message = $customTemplate['message'] ?? $message;
+            $customTemplate = $project->getAttribute('templates', [])['sms.verification-' . $locale->default] ?? [];
+            if (!empty($customTemplate)) {
+                $message = $customTemplate['message'] ?? $message;
+            }
+
+            $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+            $messageContent
+                ->setParam('{{project}}', $project->getAttribute('name'))
+                ->setParam('{{secret}}', $secret);
+            $messageContent = \strip_tags($messageContent->render());
+            $message = $message->setParam('{{token}}', $messageContent);
+
+            $message = $message->render();
+
+            $messageDoc = new Document([
+                '$id' => $verification->getId(),
+                'data' => [
+                    'content' => $message,
+                ],
+            ]);
+
+            $queueForMessaging
+                ->setType(MESSAGE_SEND_TYPE_INTERNAL)
+                ->setMessage($messageDoc)
+                ->setRecipients([$user->getAttribute('phone')])
+                ->setProviderType(MESSAGE_TYPE_SMS);
         }
-
-        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
-        $messageContent
-            ->setParam('{{project}}', $project->getAttribute('name'))
-            ->setParam('{{secret}}', $secret);
-        $messageContent = \strip_tags($messageContent->render());
-        $message = $message->setParam('{{token}}', $messageContent);
-
-        $message = $message->render();
-
-        $messageDoc = new Document([
-            '$id' => $verification->getId(),
-            'data' => [
-                'content' => $message,
-            ],
-        ]);
-
-        $queueForMessaging
-            ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-            ->setMessage($messageDoc)
-            ->setRecipients([$user->getAttribute('phone')])
-            ->setProviderType(MESSAGE_TYPE_SMS);
 
         // Set to unhashed secret for events and server responses
         $verification->setAttribute('secret', $secret);
