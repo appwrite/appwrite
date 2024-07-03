@@ -566,6 +566,12 @@ return [
         'code' => 404,
     ],
 
+    Exception::EXECUTION_IN_PROGRESS => [
+        'name' => Exception::EXECUTION_IN_PROGRESS,
+        'description' => 'Can\'t delete ongoing execution. Please wait for execution to finish before deleting it.',
+        'code' => 400,
+    ],
+
     /** Databases */
     Exception::DATABASE_NOT_FOUND => [
         'name' => Exception::DATABASE_NOT_FOUND,

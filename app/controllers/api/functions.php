@@ -11,6 +11,7 @@ use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
@@ -1725,7 +1726,7 @@ App::post('/v1/functions/:functionId/executions')
             'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => (!is_null($scheduledAt)) ? 'schedule' : 'http',
-            'status' => $status, // waiting / processing / completed / failed
+            'status' => $status, // waiting / processing / completed / failed / scheduled
             'responseStatusCode' => 0,
             'responseHeaders' => [],
             'requestPath' => $path,
@@ -1771,7 +1772,7 @@ App::post('/v1/functions/:functionId/executions')
 
                 $dbForConsole->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
-                    'resourceType' => 'execution',
+                    'resourceType' => ScheduleExecutions::getSupportedResource(),
                     'resourceId' => $execution->getId(),
                     'resourceInternalId' => $execution->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -2038,6 +2039,74 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);
+    });
+
+App::delete('/v1/functions/:functionId/executions/:executionId')
+    ->groups(['api', 'functions'])
+    ->desc('Delete execution')
+    ->label('scope', 'execution.write')
+    ->label('event', 'functions.[functionId].executions.[executionId].delete')
+    ->label('audits.event', 'executions.delete')
+    ->label('audits.resource', 'function/{request.functionId}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'deleteExecution')
+    ->label('sdk.description', '/docs/references/functions/delete-execution.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('executionId', '', new UID(), 'Execution ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('dbForConsole')
+    ->inject('queueForEvents')
+    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, Database $dbForConsole, Event $queueForEvents) {
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $execution = $dbForProject->getDocument('executions', $executionId);
+        if ($execution->isEmpty()) {
+            throw new Exception(Exception::EXECUTION_NOT_FOUND);
+        }
+
+        if ($execution->getAttribute('functionId') !== $function->getId()) {
+            throw new Exception(Exception::EXECUTION_NOT_FOUND);
+        }
+        $status = $execution->getAttribute('status');
+
+        if (!in_array($status, ['completed', 'failed', 'scheduled'])) {
+            throw new Exception(Exception::EXECUTION_IN_PROGRESS);
+        }
+
+        if (!$dbForProject->deleteDocument('executions', $execution->getId())) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove execution from DB');
+        }
+
+        if ($status === 'scheduled') {
+            $schedule = $dbForConsole->findOne('schedules', [
+                Query::equal('resourceId', [$execution->getId()]),
+                Query::equal('resourceType', [ScheduleExecutions::getSupportedResource()]),
+                Query::equal('active', [true]),
+            ]);
+
+            if ($schedule && !$schedule->isEmpty()) {
+                $schedule
+                    ->setAttribute('resourceUpdatedAt', DateTime::now())
+                    ->setAttribute('active', false);
+
+                Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+            }
+        }
+
+        $queueForEvents
+            ->setParam('functionId', $function->getId())
+            ->setParam('executionId', $execution->getId())
+            ->setPayload($response->output($execution, Response::MODEL_EXECUTION));
+
+        $response->noContent();
     });
 
 // Variables
