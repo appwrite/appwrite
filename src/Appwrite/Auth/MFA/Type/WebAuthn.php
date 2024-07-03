@@ -16,7 +16,6 @@ use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AuthenticatorAssertionResponse;
 use Webauthn\AuthenticatorAssertionResponseValidator;
 use Webauthn\AuthenticatorAttestationResponseValidator;
-use Webauthn\PublicKeyCredential;
 use Webauthn\PublicKeyCredentialLoader;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialSource;
@@ -143,16 +142,19 @@ class WebAuthn extends Type
      * @param PublicKeyCredentialRpEntity $rpEntity
      * @param PublicKeyCredentialUserEntity $userEntity
      * @param int $timeout Timeout in seconds
-     * @return PublicKeyCredentialCreationOptions
+     * @return array
      */
-    public static function createRegisterChallenge(PublicKeyCredentialRpEntity $rpEntity, PublicKeyCredentialUserEntity $userEntity, int $timeout): PublicKeyCredentialCreationOptions
+    public static function createRegisterChallenge(PublicKeyCredentialRpEntity $rpEntity, PublicKeyCredentialUserEntity $userEntity, int $timeout): array
     {
-        return PublicKeyCredentialCreationOptions::create(
-            rp: $rpEntity,
-            user: $userEntity,
-            challenge: random_bytes(32),
-            timeout: $timeout * 1000, // Convert seconds to milliseconds
-        );
+        $nonce = random_bytes(32);
+
+        return [
+            'rp' => $rpEntity->jsonSerialize(),
+            'user' => $userEntity->jsonSerialize(),
+            'challenge' => Base64UrlSafe::encode($nonce),
+            'pubKeyCredParams' => [],
+            'timeout' => $timeout * 1000, // Convert seconds to milliseconds
+        ];
     }
 
     /**
@@ -163,15 +165,19 @@ class WebAuthn extends Type
      * @param int $timeout Timeout in seconds
      * @return PublicKeyCredentialRequestOptions
      */
-    public static function createLoginChallenge(PublicKeyCredentialRpEntity $rpEntity, array $allowedCredentials, int $timeout): PublicKeyCredentialRequestOptions
+    public static function createLoginChallenge(PublicKeyCredentialRpEntity $rpEntity, array $allowedCredentials, int $timeout): array
     {
-        return PublicKeyCredentialRequestOptions::create(
-            rpId: $rpEntity->id,
-            userVerification: PublicKeyCredentialRequestOptions::USER_VERIFICATION_REQUIREMENT_DEFAULT,
-            challenge: random_bytes(32),
-            timeout: $timeout * 1000,
-            allowCredentials: $allowedCredentials
-        );
+        $nonce = random_bytes(32);
+        return [
+            'rpId' => $rpEntity->id,
+            'challenge' => Base64UrlSafe::encode($nonce),
+            'userVerification' => PublicKeyCredentialRequestOptions::USER_VERIFICATION_REQUIREMENT_DEFAULT,
+            'timeout' => $timeout * 1000,
+            'allowCredentials' => array_map(function ($credential) {
+                /** @var PublicKeyCredentialSource $credential */
+                return $credential->jsonSerialize();
+            }, $allowedCredentials),
+        ];
     }
 
     public static function deserializePublicKeyCredentialSource(array $publicKeyCredentialSource): PublicKeyCredentialSource
@@ -204,7 +210,7 @@ class WebAuthn extends Type
 
         return array_map(function ($authenticator) {
             /** @var Document $authenticator */
-            return PublicKeyCredentialSource::createFromArray($authenticator->getArrayCopy());
+            return PublicKeyCredentialSource::createFromArray($authenticator->getAttribute('data', ''))->getPublicKeyCredentialDescriptor();
         }, $authenticators);
     }
 
@@ -252,11 +258,13 @@ class WebAuthn extends Type
      * @param array $challenge The challenge data deserialized from the database
      * @param string $challengeResponse The challenge response from the client
      * @param string $hostname The hostname of the request
+     * @param int $timeout The timeout of the challenge, MUST be the same as the challenge
+     * @param array $allowCredentials The allowed credentials for the challenge, MUST be the same as the challenge
      * @param PublicKeyCredentialSource $authenticatorPublicKey The public key of the authenticator
      * 
      * @throws \Throwable
      */
-    public function verifyLoginChallenge(array $challenge, string $challengeResponse, string $hostname, PublicKeyCredentialSource $authenticatorPublicKey): PublicKeyCredentialSource
+    public function verifyLoginChallenge(array $challenge, string $challengeResponse, string $hostname, int $timeout, array $allowCredentials, PublicKeyCredentialRpEntity $rpEntity, PublicKeyCredentialSource $authenticatorPublicKey): PublicKeyCredentialSource
     {
         $publicKeyCredential = $this->publicKeyCredentialLoader->load($challengeResponse);
 
@@ -265,11 +273,11 @@ class WebAuthn extends Type
         }
 
         $requestOptions = PublicKeyCredentialRequestOptions::create(
-            rpId: $challenge['rp']['id'],
+            rpId: $rpEntity->id,
             userVerification: PublicKeyCredentialRequestOptions::USER_VERIFICATION_REQUIREMENT_DEFAULT,
-            challenge: Base64UrlSafe::decode($challenge['challenge']),
-            timeout: $challenge['timeout'],
-            allowCredentials: $challenge['allowCredentials']
+            challenge: Base64UrlSafe::decode($challenge['code']),
+            timeout: $timeout * 1000,
+            allowCredentials: $allowCredentials
         );
 
         return $this->authenticatiorAssertionResponseValdiator->check(
@@ -277,7 +285,8 @@ class WebAuthn extends Type
             authenticatorAssertionResponse: $publicKeyCredential->response,
             publicKeyCredentialRequestOptions: $requestOptions,
             request: $hostname,
-            userHandle: $authenticatorPublicKey->userHandle
+            userHandle: $authenticatorPublicKey->userHandle,
+            securedRelyingPartyId: App::isDevelopment() ? ['localhost'] : [],
         );
     }
 

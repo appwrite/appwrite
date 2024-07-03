@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Type\TOTP;
+use Appwrite\Auth\MFA\Type\WebAuthn;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Database as EventDatabase;
@@ -285,7 +286,16 @@ App::init()
         $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
         $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
         $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
-        $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
+        $webauthnAuthenticators = WebAuthn::getAuthenticatorsFromUser($user) ?? [];
+        $hasVerifiedWebAuthn = false;
+
+        foreach ($webauthnAuthenticators as $authenticator) {
+            if ($authenticator->getAttribute('verified')) {
+                $hasVerifiedWebAuthn = true;
+                break;
+            }
+        }
+        $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator || $hasVerifiedWebAuthn;
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
         if (!in_array('mfa', $route->getGroups())) {

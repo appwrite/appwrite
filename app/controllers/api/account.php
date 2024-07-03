@@ -490,7 +490,7 @@ App::post('/v1/account/webauthn')
                 '$id' => ID::unique(),
                 'type' => 'user_creation',
                 'expire' => $expire,
-            ], $challenge->jsonSerialize())
+            ], $challenge)
         );
 
         if (!empty($email)) {
@@ -4103,12 +4103,22 @@ App::get('/v1/account/mfa/factors')
         $recoveryCodeEnabled = \is_array($mfaRecoveryCodes) && \count($mfaRecoveryCodes) > 0;
 
         $totp = TOTP::getAuthenticatorFromUser($user);
+        $webauthnAuths = WebAuthn::getAuthenticatorsFromUser($user) ?? [];
+
+        $webauthnVerified = false;
+        foreach ($webauthnAuths as $authenticator) {
+            if ($authenticator->getAttribute('verified', false)) {
+                $webauthnVerified = true;
+                break;
+            }
+        }
 
         $factors = new Document([
             Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
             Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
             Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false),
-            Type::RECOVERY_CODE => $recoveryCodeEnabled
+            Type::RECOVERY_CODE => $recoveryCodeEnabled,
+            Type::WEBAUTHN => $webauthnVerified,
         ]);
 
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
@@ -4309,7 +4319,7 @@ App::post('/v1/account/mfa/authenticators/webauthn')
 
         $queueForEvents->setParam('userId', $user->getId());
 
-        $model = new Document($challenge->jsonSerialize());
+        $model = new Document($challenge);
         $response->dynamic($model, Response::MODEL_WEBAUTHN_REGISTER_CHALLENGE);
     });
 
@@ -4363,6 +4373,8 @@ App::put('/v1/account/mfa/authenticators/webauthn')
         $authenticator->setAttribute('verified', true);
         $authenticator->setAttribute('data', json_encode($publicKeyCredentials));
         $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
+        $dbForProject->purgeCachedDocument('authenticators', $authenticator->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $factors = $session->getAttribute('factors', []);
         $factors[] = Type::WEBAUTHN;
@@ -4852,7 +4864,6 @@ App::post('/v1/account/mfa/challenge/webauthn')
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_WEBAUTHN);
 
         $webauthn = new WebAuthn();
-
         $allowedCredentials = $webauthn->getAllowedCredentials($user);
 
         if (empty($allowedCredentials)) {
@@ -4867,7 +4878,7 @@ App::post('/v1/account/mfa/challenge/webauthn')
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => Type::WEBAUTHN,
-            'code' => Base64UrlSafe::encodeUnpadded($webAuthnChallenge->challenge),
+            'code' => $webAuthnChallenge['challenge'],
             'expire' => $expire,
             '$permissions' => [
                 Permission::read(Role::user($user->getId())),
@@ -4887,11 +4898,11 @@ App::post('/v1/account/mfa/challenge/webauthn')
             [
                 '$id' => $challenge->getId(),
             ],
-            $webAuthnChallenge->jsonSerialize()
+            $webAuthnChallenge
         )), Response::MODEL_WEBAUTHN_LOGIN_CHALLENGE);
     });
 
-App::put('/v1/account/mfa/webauthn/challenge')
+App::put('/v1/account/mfa/challenge/webauthn')
     ->desc('Create WebAuthn MFA Challenge (confirmation)')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
@@ -4923,18 +4934,20 @@ App::put('/v1/account/mfa/webauthn/challenge')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $authenticators = array_filter($user->getAttribute('authenticators', []), function ($auth) {
-            return $auth['type'] === Type::WEBAUTHN && !empty($auth['verified']);
+        $authenticators = array_filter(Webauthn::getAuthenticatorsFromUser($user), function ($auth) {
+            return !empty($auth['verified']);
         });
 
-
         $webauthn = new WebAuthn();
+        $relyingParty = $webauthn->createRelyingParty($project, $request);
+
+        $responseJson = json_decode($challengeResponse, true);
 
         // Find authenticator used
         $authenticator = null;
         foreach ($authenticators as $auth) {
             $data = $auth['data'];
-            if ($data['credentialId'] === $challengeResponse['id']) {
+            if ($data['publicKeyCredentialId'] == $responseJson['id']) {
                 $authenticator = $auth;
                 break;
             }
@@ -4944,24 +4957,28 @@ App::put('/v1/account/mfa/webauthn/challenge')
             throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
         }
 
+        /** @var Document $authenticator */
+
         // Check challenge
         $publicKeyCredential = null;
         try {
             $publicKeyCredential = $webauthn->verifyLoginChallenge(
-                $challenge->getArrayCopy(), 
-                $challengeResponse, 
-                $request->gethostname(),
-                $webauthn->deserializePublicKeyCredentialSource($authenticator['data'])
+                challenge: $challenge->getArrayCopy(), 
+                challengeResponse: $challengeResponse, 
+                hostname: $request->gethostname(),
+                timeout: Auth::TOKEN_EXPIRATION_WEBAUTHN,
+                allowCredentials: $webauthn->getAllowedCredentials($user),
+                rpEntity: $relyingParty,
+                authenticatorPublicKey: $webauthn->deserializePublicKeyCredentialSource($authenticator->getAttribute('data', []))
             );
         } catch (\Exception $e) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         // Update authenticator as counter has changed
-        $dbForProject->updateDocument('authenticators', $authenticator['id'], new Document([
+        $dbForProject->updateDocument('authenticators', $authenticator->getId(), new Document([
             'data' => json_encode($publicKeyCredential)
-        ]));
-        
+        ])); 
 
         // Update Session
         $dbForProject->deleteDocument('challenges', $challengeId);

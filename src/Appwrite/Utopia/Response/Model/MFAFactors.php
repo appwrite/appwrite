@@ -35,6 +35,12 @@ class MFAFactors extends Model
                 'default' => false,
                 'example' => true
             ])
+            ->addRule(Type::WEBAUTHN, [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Can WebAuthn be used for MFA challenge for this account.',
+                'default' => false,
+                'example' => true
+            ])
         ;
     }
 
