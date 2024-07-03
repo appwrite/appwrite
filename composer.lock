@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "06f391b62842a79736fe3fe77ec82adf",
+    "content-hash": "2800ffba77534baae328905e6ae05cc0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2066,16 +2066,16 @@
         },
         {
             "name": "utopia-php/logger",
-            "version": "0.5.2",
+            "version": "0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/logger.git",
-                "reference": "c6dfdb672e41364c309b0c30dc03bc6d45446dba"
+                "reference": "a2d1daeeb8f61fdec6d851950d9a021a3d05c9f9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/logger/zipball/c6dfdb672e41364c309b0c30dc03bc6d45446dba",
-                "reference": "c6dfdb672e41364c309b0c30dc03bc6d45446dba",
+                "url": "https://api.github.com/repos/utopia-php/logger/zipball/a2d1daeeb8f61fdec6d851950d9a021a3d05c9f9",
+                "reference": "a2d1daeeb8f61fdec6d851950d9a021a3d05c9f9",
                 "shasum": ""
             },
             "require": {
@@ -2114,9 +2114,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/logger/issues",
-                "source": "https://github.com/utopia-php/logger/tree/0.5.2"
+                "source": "https://github.com/utopia-php/logger/tree/0.6.0"
             },
-            "time": "2024-05-17T09:32:59+00:00"
+            "time": "2024-05-23T13:37:54+00:00"
         },
         {
             "name": "utopia-php/messaging",
