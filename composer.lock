@@ -1572,16 +1572,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.10.1",
+            "version": "0.10.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "87ee4fc91e50d4ddfef650aa999ea12be3a99583"
+                "reference": "b22c6eb6d308de246b023efd0fc9758aee8b8247"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/87ee4fc91e50d4ddfef650aa999ea12be3a99583",
-                "reference": "87ee4fc91e50d4ddfef650aa999ea12be3a99583",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/b22c6eb6d308de246b023efd0fc9758aee8b8247",
+                "reference": "b22c6eb6d308de246b023efd0fc9758aee8b8247",
                 "shasum": ""
             },
             "require": {
@@ -1616,9 +1616,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.10.1"
+                "source": "https://github.com/utopia-php/cache/tree/0.10.2"
             },
-            "time": "2024-06-18T13:20:25+00:00"
+            "time": "2024-06-25T20:36:35+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -1783,7 +1783,7 @@
             "version": "dev-feat-framework-v2",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/di.git",
+                "url": "git@github.com:utopia-php/di.git",
                 "reference": "1fb7da5ead16de5d795ef10c1e22e39726eb6943"
             },
             "dist": {
@@ -1833,10 +1833,6 @@
                 "php",
                 "upf"
             ],
-            "support": {
-                "source": "https://github.com/utopia-php/di/tree/feat-framework-v2",
-                "issues": "https://github.com/utopia-php/di/issues"
-            },
             "time": "2024-06-11T16:03:00+00:00"
         },
         {
@@ -1991,12 +1987,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "bf2474554f78d870c74aaaa1dfb4f54795ae9497"
+                "reference": "f4ce8a42a5613f40992e6fe84ff2e23584465adb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/bf2474554f78d870c74aaaa1dfb4f54795ae9497",
-                "reference": "bf2474554f78d870c74aaaa1dfb4f54795ae9497",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/f4ce8a42a5613f40992e6fe84ff2e23584465adb",
+                "reference": "f4ce8a42a5613f40992e6fe84ff2e23584465adb",
                 "shasum": ""
             },
             "require": {
@@ -2033,7 +2029,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/feat-di-upgrade"
             },
-            "time": "2024-06-11T16:38:45+00:00"
+            "time": "2024-07-03T20:21:21+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2670,7 +2666,7 @@
             "version": "dev-dev",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/servers.git",
+                "url": "git@github.com:utopia-php/servers.git",
                 "reference": "4565c1c111f6da6b18bc0f00f350377a1e691e48"
             },
             "dist": {
@@ -2730,10 +2726,6 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "source": "https://github.com/utopia-php/servers/tree/dev",
-                "issues": "https://github.com/utopia-php/servers/issues"
-            },
             "time": "2024-06-07T18:49:59+00:00"
         },
         {
@@ -3124,16 +3116,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.38.7",
+            "version": "0.38.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "0a66c1149ef05ed9f45ce1c897c4a0ce9ee5e95a"
+                "reference": "6367c57ddbcf7b88cacb900c4fe7ef3f28bf38ef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/0a66c1149ef05ed9f45ce1c897c4a0ce9ee5e95a",
-                "reference": "0a66c1149ef05ed9f45ce1c897c4a0ce9ee5e95a",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6367c57ddbcf7b88cacb900c4fe7ef3f28bf38ef",
+                "reference": "6367c57ddbcf7b88cacb900c4fe7ef3f28bf38ef",
                 "shasum": ""
             },
             "require": {
@@ -3169,9 +3161,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.38.7"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.38.8"
             },
-            "time": "2024-06-10T00:23:02+00:00"
+            "time": "2024-06-17T00:42:27+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -3544,16 +3536,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "dev-master",
+            "version": "v5.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "3ef0811e45ba7e91fb0f066af5af7d52c3b24469"
+                "reference": "683130c2ff8c2739f4822ff7ac5c873ec529abd1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/3ef0811e45ba7e91fb0f066af5af7d52c3b24469",
-                "reference": "3ef0811e45ba7e91fb0f066af5af7d52c3b24469",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/683130c2ff8c2739f4822ff7ac5c873ec529abd1",
+                "reference": "683130c2ff8c2739f4822ff7ac5c873ec529abd1",
                 "shasum": ""
             },
             "require": {
@@ -3566,7 +3558,6 @@
                 "ircmaxell/php-yacc": "^0.0.7",
                 "phpunit/phpunit": "^9.0"
             },
-            "default-branch": true,
             "bin": [
                 "bin/php-parse"
             ],
@@ -3597,9 +3588,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/master"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.1.0"
             },
-            "time": "2024-06-12T18:31:58+00:00"
+            "time": "2024-07-01T20:03:41+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -4079,12 +4070,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "3352293d9e91513d5508c415835014881b420218"
+                "reference": "39d628812d8d83344a6c1b07799e3700d830d355"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/3352293d9e91513d5508c415835014881b420218",
-                "reference": "3352293d9e91513d5508c415835014881b420218",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/39d628812d8d83344a6c1b07799e3700d830d355",
+                "reference": "39d628812d8d83344a6c1b07799e3700d830d355",
                 "shasum": ""
             },
             "require": {
@@ -4103,7 +4094,7 @@
                 "theseer/tokenizer": "^1.2.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.3"
+                "phpunit/phpunit": "^9.6"
             },
             "suggest": {
                 "ext-pcov": "PHP extension that provides line coverage",
@@ -4112,7 +4103,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "9.2-dev"
+                    "dev-main": "9.2-dev"
                 }
             },
             "autoload": {
@@ -4149,7 +4140,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-03-22T05:16:32+00:00"
+            "time": "2024-06-29T07:23:05+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",

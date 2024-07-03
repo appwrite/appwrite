@@ -41,8 +41,7 @@ class Specs extends Action
             ->param('version', 'latest', new Text(16), 'Spec version', true)
             ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
             ->inject('register')
-            ->inject('context')
-            ->callback(fn (string $version, string $mode, Registry $register, Container $context) => $this->action($version, $mode, $register, $context));
+            ->callback(fn (string $version, string $mode, Registry $register) => $this->action($version, $mode, $register));
     }
 
     public function action(string $version, string $mode, Registry $register, Container $container): void
