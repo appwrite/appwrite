@@ -140,7 +140,7 @@ class Project extends Model
             ])
             ->addRule('authMockNumbers', [
                 'type' => Response::MODEL_MOCK_NUMBER_LIST,
-                'description' => 'Whether or not to check the user password for similarity with their personal data.',
+                'description' => 'An array of mock numbers and their corresponding verification codes (OTPs).',
                 'default' => [],
                 'example' => true,
             ])

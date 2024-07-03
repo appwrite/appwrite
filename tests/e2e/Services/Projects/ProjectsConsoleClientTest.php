@@ -21,8 +21,8 @@ class ProjectsConsoleClientTest extends Scope
     use SideClient;
 
     /**
-     * @group testing
-     * */
+     * @group smtpAndTemplates
+     * @group projectsCRUD */
     public function testCreateProject(): array
     {
         /**

@@ -105,7 +105,8 @@ App::post('/v1/projects')
             'passwordHistory' => 0,
             'passwordDictionary' => false,
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
-            'personalDataCheck' => false
+            'personalDataCheck' => false,
+            'mockNumbers' => []
         ];
         foreach ($auth as $method) {
             $auths[$method['key'] ?? ''] = true;

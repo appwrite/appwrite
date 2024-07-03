@@ -10,7 +10,7 @@ class MockNumber extends Model
     public function __construct()
     {
         $this
-            ->addRule('number', [
+            ->addRule('phone', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Mock phone number for testing phone authentication. Useful for testing phone authentication without sending an SMS.',
                 'default' => '',
