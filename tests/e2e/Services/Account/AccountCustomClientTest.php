@@ -1206,7 +1206,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'sessionAlerts' => true,
+            'alerts' => true,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
