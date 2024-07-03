@@ -66,7 +66,6 @@ class Auth
     public const SESSION_PROVIDER_OAUTH2 = 'oauth2';
     public const SESSION_PROVIDER_TOKEN = 'token';
     public const SESSION_PROVIDER_SERVER = 'server';
-    public const SESSION_PROVIDER_WEBAUTHN = 'webauthn';
 
     /**
      * Token Expiration times.

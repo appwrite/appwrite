@@ -51,12 +51,5 @@ return [
         'icon' => '/images/users/phone.png',
         'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreatePhoneToken',
         'enabled' => true,
-    ],
-    'webauthn' => [
-        'name' => 'Webauthn',
-        'key' => 'webauthn',
-        'icon' => '/images/users/webauthn.png',
-        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateWebAuthnSession',
-        'enabled' => true,
     ]
 ];

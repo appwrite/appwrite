@@ -99,12 +99,6 @@ App::init()
                 }
                 break;
 
-            case 'webauthn':
-                if (($auths['webauthn'] ?? true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Webauthn authentication is disabled for this project');
-                }
-                break;
-
             default:
                 throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
         }

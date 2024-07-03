@@ -491,20 +491,6 @@ Database::addFilter(
 );
 
 Database::addFilter(
-    'subQueryCredentialSources',
-    function (mixed $value) {
-        return;
-    },
-    function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database
-            ->find('credentialSources', [
-                Query::equal('userInternalId', [$document->getInternalId()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
-            ]));
-    }
-);
-
-Database::addFilter(
     'subQueryMemberships',
     function (mixed $value) {
         return;
