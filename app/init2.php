@@ -1247,7 +1247,6 @@ $container->set($log);
 $container->set($mode);
 $container->set($user);
 $container->set($plan);
-$container->set($pools);
 $container->set($cache);
 $container->set($pools);
 $container->set($queue);
