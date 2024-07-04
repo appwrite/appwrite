@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6cd124cc3eeca5b62a56909ea4fab324",
+    "content-hash": "2d1ca49eab2982e8b3ceea8b388e249a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2556,12 +2556,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "cad5651b38f0f69e20e805424d0c29818c15c174"
+                "reference": "41b76eacae43bb3e46824ffc8e9aa14536771b88"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/cad5651b38f0f69e20e805424d0c29818c15c174",
-                "reference": "cad5651b38f0f69e20e805424d0c29818c15c174",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/41b76eacae43bb3e46824ffc8e9aa14536771b88",
+                "reference": "41b76eacae43bb3e46824ffc8e9aa14536771b88",
                 "shasum": ""
             },
             "require": {
@@ -2611,7 +2611,7 @@
                 "issues": "https://github.com/utopia-php/queue/issues",
                 "source": "https://github.com/utopia-php/queue/tree/feat-coroutine-and-di"
             },
-            "time": "2024-06-07T18:50:32+00:00"
+            "time": "2024-07-04T18:02:23+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -2941,26 +2941,27 @@
         },
         {
             "name": "utopia-php/websocket",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "51fcb86171400d8aa40d76c54593481fd273dab5"
+                "reference": "e9d0919b321744a61f12563f5791c47ba9f57810"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/51fcb86171400d8aa40d76c54593481fd273dab5",
-                "reference": "51fcb86171400d8aa40d76c54593481fd273dab5",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/e9d0919b321744a61f12563f5791c47ba9f57810",
+                "reference": "e9d0919b321744a61f12563f5791c47ba9f57810",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0"
             },
             "require-dev": {
+                "laravel/pint": "^1.15",
+                "phpstan/phpstan": "^1.8",
                 "phpunit/phpunit": "^9.5.5",
-                "swoole/ide-helper": "4.6.6",
+                "swoole/ide-helper": "5.1.2",
                 "textalk/websocket": "1.5.2",
-                "vimeo/psalm": "^4.8.1",
                 "workerman/workerman": "^4.0"
             },
             "type": "library",
@@ -2973,16 +2974,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Torsten Dittmann",
-                    "email": "torsten@appwrite.io"
-                }
-            ],
             "description": "A simple abstraction for WebSocket servers.",
             "keywords": [
                 "framework",
@@ -2993,9 +2984,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/websocket/issues",
-                "source": "https://github.com/utopia-php/websocket/tree/0.1.0"
+                "source": "https://github.com/utopia-php/websocket/tree/0.2.0"
             },
-            "time": "2021-12-20T10:50:09+00:00"
+            "time": "2024-04-09T08:28:11+00:00"
         },
         {
             "name": "webmozart/assert",

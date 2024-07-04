@@ -761,10 +761,3 @@ Http::shutdown()
     ->action(function (Connections $connections) {
         $connections->reclaim();
     });
-
-
-Http::error()
-    ->inject('connections')
-    ->action(function (Connections $connections) {
-        $connections->reclaim();
-    });

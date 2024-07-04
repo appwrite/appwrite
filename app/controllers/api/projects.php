@@ -185,50 +185,6 @@ Http::post('/v1/projects')
             $dsn = new DSN('mysql://' . $dsn);
         }
 
-        try {
-            $project = $dbForConsole->createDocument('projects', new Document([
-                '$id' => $projectId,
-                '$permissions' => [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                ],
-                'name' => $name,
-                'teamInternalId' => $team->getInternalId(),
-                'teamId' => $team->getId(),
-                'region' => $region,
-                'description' => $description,
-                'logo' => $logo,
-                'url' => $url,
-                'version' => APP_VERSION_STABLE,
-                'legalName' => $legalName,
-                'legalCountry' => $legalCountry,
-                'legalState' => $legalState,
-                'legalCity' => $legalCity,
-                'legalAddress' => $legalAddress,
-                'legalTaxId' => ID::custom($legalTaxId),
-                'services' => new stdClass(),
-                'platforms' => null,
-                'oAuthProviders' => [],
-                'webhooks' => null,
-                'keys' => null,
-                'auths' => $auths,
-                'search' => implode(' ', [$projectId, $name]),
-                'database' => $dsn,
-            ]));
-        } catch (Duplicate) {
-            throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
-        }
-
-        try {
-            $dsn = new DSN($dsn);
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $dsn);
-        }
-
         $pool = $pools['pools-database-' . $dsn->getHost()]['pool'];
         $connectionDsn = $pools['pools-database-' . $dsn->getHost()]['dsn'];
         $connection = $pool->get();
@@ -285,7 +241,7 @@ Http::post('/v1/projects')
                 // Collection already exists
             }
         }
-
+        $connections->reclaim();
         // Hook allowing instant project mirroring during migration
         // Outside of migration, hook is not registered and has no effect
         $hooks->trigger('afterProjectCreation', [$project, $pools, $cache]);

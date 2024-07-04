@@ -24,7 +24,6 @@ use Utopia\Http\Http;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
 use Utopia\Platform\Action;
-use Utopia\Registry\Registry;
 use Utopia\System\System;
 
 class Specs extends Action
@@ -40,11 +39,11 @@ class Specs extends Action
             ->desc('Generate Appwrite API specifications')
             ->param('version', 'latest', new Text(16), 'Spec version', true)
             ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
-            ->inject('register')
-            ->callback(fn (string $version, string $mode, Registry $register) => $this->action($version, $mode, $register));
+            ->inject('context')
+            ->callback(fn (string $version, string $mode, Container $context) => $this->action($version, $mode, $context));
     }
 
-    public function action(string $version, string $mode, Registry $register, Container $container): void
+    public function action(string $version, string $mode, Container $container): void
     {
         $appRoutes = Http::getRoutes();
         $response = new Response(new HttpResponse(new SwooleHttpResponse()));

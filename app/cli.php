@@ -5,6 +5,7 @@ require_once __DIR__ . '/controllers/general.php';
 
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
+use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
 use Utopia\CLI\Adapters\Swoole as SwooleCLI;

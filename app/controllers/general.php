@@ -668,7 +668,7 @@ Http::error()
     ->inject('authorization')
     ->inject('connections')
     ->inject('queueForUsage')
-    ->action(function (Throwable $error, Document $user, ?Route $route, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Authorization $authorization, Connections $connections,  Usage $queueForUsage) {
+    ->action(function (Throwable $error, Document $user, ?Route $route, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Authorization $authorization, Connections $connections, Usage $queueForUsage) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if (is_null($route)) {
@@ -762,7 +762,7 @@ Http::error()
         }
 
         if ($publish && $project->getId() !== 'console') {
-            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+            if (!Auth::isPrivilegedUser($authorization->getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {
