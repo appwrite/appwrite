@@ -40,18 +40,22 @@ App::get('/v1/project/usage')
         $metrics = [
             'total' => [
                 METRIC_EXECUTIONS,
+                METRIC_EXECUTIONS_MB_SECONDS,
+                METRIC_BUILDS_MB_SECONDS,
                 METRIC_DOCUMENTS,
                 METRIC_DATABASES,
                 METRIC_USERS,
                 METRIC_BUCKETS,
-                METRIC_FILES_STORAGE
+                METRIC_FILES_STORAGE,
             ],
             'period' => [
                 METRIC_NETWORK_REQUESTS,
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
                 METRIC_USERS,
-                METRIC_EXECUTIONS
+                METRIC_EXECUTIONS,
+                METRIC_EXECUTIONS_MB_SECONDS,
+                METRIC_BUILDS_MB_SECONDS,
             ]
         ];
 
@@ -128,6 +132,38 @@ App::get('/v1/project/usage')
             ];
         }, $dbForProject->find('functions'));
 
+        $executionsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
+            $id = $function->getId();
+            $name = $function->getAttribute('name');
+            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('functions'));
+
+        $buildsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
+            $id = $function->getId();
+            $name = $function->getAttribute('name');
+            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('functions'));
+
         $bucketsBreakdown = array_map(function ($bucket) use ($dbForProject) {
             $id = $bucket->getId();
             $name = $bucket->getAttribute('name');
@@ -171,12 +207,16 @@ App::get('/v1/project/usage')
             'users' => ($usage[METRIC_USERS]),
             'executions' => ($usage[METRIC_EXECUTIONS]),
             'executionsTotal' => $total[METRIC_EXECUTIONS],
+            'executionsMbSecondsTotal' => $total[METRIC_EXECUTIONS_MB_SECONDS],
+            'buildsMbSecondsTotal' => $total[METRIC_BUILDS_MB_SECONDS],
             'documentsTotal' => $total[METRIC_DOCUMENTS],
             'databasesTotal' => $total[METRIC_DATABASES],
             'usersTotal' => $total[METRIC_USERS],
             'bucketsTotal' => $total[METRIC_BUCKETS],
             'filesStorageTotal' => $total[METRIC_FILES_STORAGE],
             'executionsBreakdown' => $executionsBreakdown,
+            'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
+            'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown
         ]), Response::MODEL_USAGE_PROJECT);
     });

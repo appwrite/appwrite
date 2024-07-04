@@ -46,6 +46,18 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('executionsMbSecondsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of function executions mbSeconds.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('buildsMbSecondsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of function builds mbSeconds.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('requests', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated  number of requests per period.',
@@ -84,6 +96,20 @@ class UsageProject extends Model
             ->addRule('bucketsBreakdown', [
                 'type' => Response::MODEL_METRIC_BREAKDOWN,
                 'description' => 'Aggregated breakdown in totals of usage by buckets.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('executionsMbSecondsBreakdown', [
+                'type' => Response::MODEL_METRIC_BREAKDOWN,
+                'description' => 'Aggregated breakdown in totals of execution mbSeconds by functions.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('buildsMbSecondsBreakdown', [
+                'type' => Response::MODEL_METRIC_BREAKDOWN,
+                'description' => 'Aggregated breakdown in totals of build mbSeconds by functions.',
                 'default' => [],
                 'example' => [],
                 'array' => true
