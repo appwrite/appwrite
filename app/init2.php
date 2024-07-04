@@ -1153,12 +1153,13 @@ $schemaVariable
 $schema
     ->setName('schema')
     ->inject('http')
+    ->inject('context')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('schemaVariable')
-    ->setCallback(function (Http $http, Request $request, Response $response, Database $dbForProject, Authorization $authorization, $schemaVariable) {
+    ->setCallback(function (Http $http, Container $context, Request $request, Response $response, Database $dbForProject, Authorization $authorization, $schemaVariable) {
         $complexity = function (int $complexity, array $args) {
             $queries = Query::parseQueries($args['queries'] ?? []);
             $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
@@ -1236,7 +1237,7 @@ $schema
             $http,
             $request,
             $response,
-            $http->getContainer(),
+            $context,
             $complexity,
             $attributes,
             $urls,
