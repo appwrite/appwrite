@@ -11,14 +11,14 @@ class Specs extends Model
     {
         $this
             ->addRule('cpus', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Amount of CPU cores available.',
                 'default' => '',
                 'example' => [1, 2, 4, 8],
                 'array' => true,
             ])
             ->addRule('memory', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Amount of memory available in MB.',
                 'default' => '',
                 'example' => [512, 1024, 2048, 4096, 8192, 16384],
