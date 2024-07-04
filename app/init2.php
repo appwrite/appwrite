@@ -257,8 +257,7 @@ $global->set(
         ];
 
         $pools = [];
-        $poolSize = (int)System::getEnv('_APP_POOL_CLIENTS', 9000);
-        $poolSize = 9000;
+        $poolSize = (int)System::getEnv('_APP_POOL_CLIENTS', 64);
 
         foreach ($connections as $key => $connection) {
             $dsns = $connection['dsns'] ?? '';
@@ -841,11 +840,10 @@ $queue
     ->inject('connections')
     ->setCallback(function (array $pools, Connections $connections) {
         $pool = $pools['pools-queue-main']['pool'];
-        $dsn = $pools['pools-queue-main']['dsn'];
         $connection = $pool->get();
         $connections->add($connection, $pool);
 
-        return new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+        return new Queue\Connection\Redis($connection);
     });
 
 $queueForMessaging

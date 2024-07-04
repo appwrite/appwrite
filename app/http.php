@@ -58,13 +58,18 @@ function startCoroutineServer(float|int $payloadSize, float|int $workerNumber, R
     $http->setRequestClass(Request::class);
     $http->setResponseClass(Response::class);
 
+    Http::onEnd()
+        ->inject('connections')
+        ->action(function (Connections $connections) use ($workerId) {
+            $connections->reclaim();
+        });
     Http::onStart()
         ->inject('authorization')
         ->inject('cache')
         ->inject('pools')
         ->inject('connections')
         ->action(function (Authorization $authorization, Cache $cache, array $pools, Connections $connections) use ($workerId) {
-            if($workerId !== 0) {
+            if ($workerId !== 0) {
                 return;
             }
             try {

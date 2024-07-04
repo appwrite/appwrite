@@ -5,6 +5,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Request as SwooleRequest;
@@ -28,6 +29,7 @@ use Utopia\Http\Adapter\Swoole\Response as HttpResponse;
 use Utopia\Http\Adapter\Swoole\Response as UtopiaResponse;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
+use Utopia\Pools\Connection;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 use Utopia\WebSocket\Adapter;
@@ -270,10 +272,14 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
             $start = time();
 
             $pools = $container->get('pools');
+            /** @var Connections $connections */
+            $connections = $container->get('connections');
+
             $pool = $pools['pools-pubsub-main']['pool'];
-            $dsn = $pools['pools-pubsub-main']['dsn'];
-            $redis = new \Redis();
-            $redis->connect($dsn->getHost(), $dsn->getPort());
+            $connection = $pool->get();
+            $connections->add($connection, $pool);
+
+            $redis = $connection;
 
             /** @var Redis $redis */
             $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
@@ -477,6 +483,11 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
+$server->onWorkerStop(function (int $workerId) use ($container) {
+    $connections = $container->get('connections');
+    $connections->reclaim();
+});
+
 $server->onMessage(function (int $connection, string $message) use ($server, $container, $realtime, $containerId) {
     try {
         $response = new Response(new HttpResponse(new SwooleHttpResponse()));
@@ -486,7 +497,6 @@ $server->onMessage(function (int $connection, string $message) use ($server, $co
         $authentication = $container->get('authentication');
 
         if ($projectId !== 'console') {
-
             $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
             $database = $container->get('getProjectDB')($project);
         } else {

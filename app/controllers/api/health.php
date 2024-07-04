@@ -179,6 +179,8 @@ Http::get('/v1/health/cache')
                         'status' => 'fail',
                         'ping' => \round((\microtime(true) - $checkStart) / 1000)
                     ]);
+                } finally {
+                    $connections->reclaim();
                 }
             }
         }
@@ -241,6 +243,8 @@ Http::get('/v1/health/queue')
                         'status' => 'fail',
                         'ping' => \round((\microtime(true) - $checkStart) / 1000)
                     ]);
+                } finally {
+                    $connections->reclaim();
                 }
             }
         }
@@ -277,11 +281,11 @@ Http::get('/v1/health/pubsub')
             foreach ($config as $database) {
                 try {
                     $pool = $pools['pools-pubsub-' . $database]['pool'];
-                    $dsn = $pools['pools-pubsub-' . $database]['dsn'];
+
                     $connection = $pool->get();
                     $connections->add($connection, $pool);
 
-                    $adapter =  new Connection\Redis($dsn->getHost(), $dsn->getPort());
+                    $adapter =  new Connection\Redis($connection);
 
                     $checkStart = \microtime(true);
 
@@ -304,6 +308,8 @@ Http::get('/v1/health/pubsub')
                         'status' => 'fail',
                         'ping' => \round((\microtime(true) - $checkStart) / 1000)
                     ]);
+                } finally {
+                    $connections->reclaim();
                 }
             }
         }
