@@ -29,7 +29,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
-use ParagonIE\ConstantTime\Base64UrlSafe;
 use Utopia\App;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
@@ -555,15 +554,16 @@ App::put('/v1/account/webauthn')
             $createdUser = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
 
             // Create Authenticator
-            $dbForProject->createDocument('credentialSources', 
+            $dbForProject->createDocument(
+                'credentialSources',
                 new Document(
                     array_merge(
-                        ['userInternalId' => $createdUser->getInternalId()], 
+                        ['userInternalId' => $createdUser->getInternalId()],
                         $publicKeyCredentials->jsonSerialize()
                     )
                 )
             );
-        
+
             Authorization::skip(fn () => $dbForProject->deleteDocument('webauthnChallenges', $challengeId));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -4256,7 +4256,7 @@ App::delete('/v1/account/mfa/authenticator/webauthn')
                 $dbForProject->purgeCachedDocument('users', $user->getId());
 
                 $queueForEvents->setParam('userId', $user->getId());
-        
+
                 return $response->noContent();
             } else {
                 throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -4271,16 +4271,16 @@ App::delete('/v1/account/mfa/authenticator/webauthn')
             if ($challenge->isEmpty()) {
                 throw new Exception(Exception::USER_INVALID_TOKEN);
             }
-    
+
             $authenticators = array_filter(Webauthn::getAuthenticatorsFromUser($user), function ($auth) {
                 return !empty($auth['verified']);
             });
-    
+
             $webauthn = new WebAuthn();
             $relyingParty = $webauthn->createRelyingParty($project, $request);
-    
+
             $responseJson = json_decode($challengeResponse, true);
-    
+
             // Find authenticator used
             $authenticator = null;
             foreach ($authenticators as $auth) {
@@ -4290,18 +4290,18 @@ App::delete('/v1/account/mfa/authenticator/webauthn')
                     break;
                 }
             }
-    
+
             if ($authenticator === null) {
                 throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
             }
-    
+
             /** @var Document $authenticator */
-    
+
             // Check challenge
             try {
                 $webauthn->verifyLoginChallenge(
-                    challenge: $challenge->getArrayCopy(), 
-                    challengeResponse: $challengeResponse, 
+                    challenge: $challenge->getArrayCopy(),
+                    challengeResponse: $challengeResponse,
                     hostname: $request->gethostname(),
                     timeout: Auth::TOKEN_EXPIRATION_WEBAUTHN,
                     allowCredentials: $webauthn->getAllowedCredentials($user),
@@ -4723,8 +4723,8 @@ App::put('/v1/account/mfa/challenge/webauthn')
         $publicKeyCredential = null;
         try {
             $publicKeyCredential = $webauthn->verifyLoginChallenge(
-                challenge: $challenge->getArrayCopy(), 
-                challengeResponse: $challengeResponse, 
+                challenge: $challenge->getArrayCopy(),
+                challengeResponse: $challengeResponse,
                 hostname: $request->gethostname(),
                 timeout: Auth::TOKEN_EXPIRATION_WEBAUTHN,
                 allowCredentials: $webauthn->getAllowedCredentials($user),
@@ -4738,7 +4738,7 @@ App::put('/v1/account/mfa/challenge/webauthn')
         // Update authenticator as counter has changed
         $dbForProject->updateDocument('authenticators', $authenticator->getId(), new Document([
             'data' => json_encode($publicKeyCredential)
-        ])); 
+        ]));
 
         // Update Session
         $dbForProject->deleteDocument('challenges', $challengeId);

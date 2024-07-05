@@ -8,17 +8,17 @@ use Appwrite\Utopia\Request;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use Utopia\App;
 use Utopia\Database\Document;
-use Webauthn\PublicKeyCredentialCreationOptions;
-use Webauthn\PublicKeyCredentialRpEntity;
-use Webauthn\PublicKeyCredentialUserEntity;
 use Webauthn\AttestationStatement\AttestationObjectLoader;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AuthenticatorAssertionResponse;
 use Webauthn\AuthenticatorAssertionResponseValidator;
 use Webauthn\AuthenticatorAttestationResponseValidator;
+use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\PublicKeyCredentialLoader;
 use Webauthn\PublicKeyCredentialRequestOptions;
+use Webauthn\PublicKeyCredentialRpEntity;
 use Webauthn\PublicKeyCredentialSource;
+use Webauthn\PublicKeyCredentialUserEntity;
 
 class WebAuthn extends Type
 {
@@ -44,7 +44,7 @@ class WebAuthn extends Type
 
     /**
      * Create a new relying party entity, uses the platform if possible
-     * 
+     *
      * @param Document $project
      * @param Request $request
      * @return PublicKeyCredentialRpEntity
@@ -121,7 +121,7 @@ class WebAuthn extends Type
 
     /**
      * Create a new user entity from an Appwrite user document
-     * 
+     *
      * @param Document $user
      * @return PublicKeyCredentialUserEntity
      */
@@ -138,7 +138,7 @@ class WebAuthn extends Type
 
     /**
      * Create a new register challenge
-     * 
+     *
      * @param PublicKeyCredentialRpEntity $rpEntity
      * @param PublicKeyCredentialUserEntity $userEntity
      * @param int $timeout Timeout in seconds
@@ -159,7 +159,7 @@ class WebAuthn extends Type
 
     /**
      * Create a new login challenge
-     * 
+     *
      * @param PublicKeyCredentialRpEntity $rpEntity
      * @param PublicKeyCredentialSource[] $allowedCredentials
      * @param int $timeout Timeout in seconds
@@ -187,7 +187,7 @@ class WebAuthn extends Type
 
     /**
      * Get all allowed credentials for a user
-     * 
+     *
      * @param Document $user
      * @return PublicKeyCredentialSource[]
      */
@@ -216,10 +216,10 @@ class WebAuthn extends Type
 
     /**
      * Verify a register challenge
-     * 
+     *
      * @param array $challenge The challenge data deserialized from the database
      * @param string $challengeResponse The challenge response from the client
-     * 
+     *
      * @return PublicKeyCredentialSource
      * @throws \Throwable
      */
@@ -254,14 +254,14 @@ class WebAuthn extends Type
 
     /**
      * Verify a login challenge
-     * 
+     *
      * @param array $challenge The challenge data deserialized from the database
      * @param string $challengeResponse The challenge response from the client
      * @param string $hostname The hostname of the request
      * @param int $timeout The timeout of the challenge, MUST be the same as the challenge
      * @param array $allowCredentials The allowed credentials for the challenge, MUST be the same as the challenge
      * @param PublicKeyCredentialSource $authenticatorPublicKey The public key of the authenticator
-     * 
+     *
      * @throws \Throwable
      */
     public function verifyLoginChallenge(array $challenge, string $challengeResponse, string $hostname, int $timeout, array $allowCredentials, PublicKeyCredentialRpEntity $rpEntity, PublicKeyCredentialSource $authenticatorPublicKey): PublicKeyCredentialSource
@@ -292,7 +292,7 @@ class WebAuthn extends Type
 
     /**
      * Get all authenticators from a user
-     * 
+     *
      * @param Document $user
      * @return Document[]|null
      * @throws Exception
