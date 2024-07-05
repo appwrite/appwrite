@@ -4242,6 +4242,19 @@ App::delete('/v1/account/mfa/authenticator/webauthn')
                 $mfaRecoveryCodes = array_values($mfaRecoveryCodes);
                 $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
                 $dbForProject->updateDocument('users', $user->getId(), $user);
+
+                // If a recovery code is used, we wipe all WebAuthn authenticators.
+                $authenticators = Webauthn::getAuthenticatorsFromUser($user);
+
+                foreach ($authenticators as $auth) {
+                    $dbForProject->deleteDocument('authenticators', $auth->getId());
+                }
+
+                $dbForProject->purgeCachedDocument('users', $user->getId());
+
+                $queueForEvents->setParam('userId', $user->getId());
+        
+                return $response->noContent();
             } else {
                 throw new Exception(Exception::USER_INVALID_TOKEN);
             }
