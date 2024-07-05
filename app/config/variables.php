@@ -162,10 +162,28 @@ return [
             ],
             [
                 'name' => '_APP_SYSTEM_SECURITY_EMAIL_ADDRESS',
-                'description' => 'This is the email address used to issue SSL certificates for custom domains or the user agent in your webhooks payload.',
+                'description' => 'Deprecated since 1.5.1 use _APP_EMAIL_SECURITY and _APP_EMAIL_CERTIFICATES instead',
                 'introduction' => '0.7.0',
                 'default' => 'certs@appwrite.io',
                 'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EMAIL_SECURITY',
+                'description' => 'This is the email address used as the user agent in your webhooks payload.',
+                'introduction' => '1.5.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EMAIL_CERTIFICATES',
+                'description' => 'This is the email address used to issue SSL certificates for custom domains',
+                'introduction' => '1.5.1',
+                'default' => '',
+                'required' => true,
                 'question' => '',
                 'filter' => ''
             ],
@@ -450,7 +468,7 @@ return [
             ],
             [
                 'name' => '_APP_SMS_FROM',
-                'description' => 'Phone number used for sending out messages. Must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789).',
+                'description' => 'Phone number used for sending out messages. If using Twilio, this may be a Messaging Service SID, starting with MG. Otherwise, the number must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789). ',
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,

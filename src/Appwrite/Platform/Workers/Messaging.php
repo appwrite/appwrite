@@ -399,7 +399,10 @@ class Messaging extends Action
             'credentials' => match ($host) {
                 'twilio' => [
                     'accountSid' => $user,
-                    'authToken' => $password
+                    'authToken' => $password,
+                    // Twilio Messaging Service SIDs always start with MG
+                    // https://www.twilio.com/docs/messaging/services
+                    'messagingServiceSid' => \str_starts_with($from, 'MG') ? $from : null
                 ],
                 'textmagic' => [
                     'username' => $user,
@@ -420,9 +423,14 @@ class Messaging extends Action
                 ],
                 default => null
             },
-            'options' => [
-                'from' => $from
-            ]
+            'options' => match ($host) {
+                'twilio' => [
+                    'from' => \str_starts_with($from, 'MG') ? null : $from
+                ],
+                default => [
+                    'from' => $from
+                ]
+            }
         ]);
 
         $adapter = $this->getSmsAdapter($provider);
@@ -465,7 +473,7 @@ class Messaging extends Action
 
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
-            'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken']),
+            'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken'], null, isset($credentials['messagingServiceSid']) ? $credentials['messagingServiceSid'] : null),
             'textmagic' => new TextMagic($credentials['username'], $credentials['apiKey']),
             'telesign' => new Telesign($credentials['customerId'], $credentials['apiKey']),
             'msg91' => new Msg91($credentials['senderId'], $credentials['authKey'], $credentials['templateId']),

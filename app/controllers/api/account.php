@@ -88,8 +88,8 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $factor = (match ($verifiedToken->getAttribute('type')) {
         Auth::TOKEN_TYPE_MAGIC_URL,
         Auth::TOKEN_TYPE_OAUTH2,
-        Auth::TOKEN_TYPE_EMAIL => 'email',
-        Auth::TOKEN_TYPE_PHONE => 'phone',
+        Auth::TOKEN_TYPE_EMAIL => Type::EMAIL,
+        Auth::TOKEN_TYPE_PHONE => Type::PHONE,
         Auth::TOKEN_TYPE_GENERIC => 'token',
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
     });
@@ -292,7 +292,9 @@ App::post('/v1/account')
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                if($existingTarget) {
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                }
             }
 
             $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -1702,7 +1704,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
-                'factors' => ['email'],
+                'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
@@ -2720,6 +2722,7 @@ App::patch('/v1/account/password')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
+    ->label('abuse-limit', 10)
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
     ->inject('requestTimestamp')
