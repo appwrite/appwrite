@@ -20,6 +20,7 @@ use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Query as QueryException;
@@ -167,6 +168,7 @@ App::post('/v1/projects')
                 'webhooks' => null,
                 'keys' => null,
                 'auths' => $auths,
+                'accessedAt' => DatabaseDateTime::now(),
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
             ]));
