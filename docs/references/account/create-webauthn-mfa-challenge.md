@@ -1,0 +1,1 @@
+Begin the process of MFA verification after sign-in. Finish the flow with [updateWebauthnMfaChallenge](/docs/references/cloud/client-web/account#updateWebauthnMfaChallenge) method.

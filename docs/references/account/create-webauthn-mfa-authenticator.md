@@ -1,0 +1,1 @@
+Add an webauthn authenticator to be used as an MFA factor. Verify the authenticator using the [verify webauthn authenticator](/docs/references/cloud/client-web/account#updateWebauthnMfaChallenge) method.
