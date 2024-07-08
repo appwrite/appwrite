@@ -4104,7 +4104,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
 
         switch ($type) {
             case Type::TOTP:
-                $authenticators[] = TOTP::getAuthenticatorFromUser($user); 
+                $authenticators[] = TOTP::getAuthenticatorFromUser($user);
                 break;
             case Type::WEBAUTHN:
                 $authenticators = WebAuthn::getAuthenticatorsFromUser($user);
