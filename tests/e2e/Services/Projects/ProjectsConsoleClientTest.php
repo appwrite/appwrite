@@ -4,11 +4,11 @@ namespace Tests\E2E\Services\Projects;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
-use Tests\E2E\Scopes\Scope;
-use Tests\E2E\Scopes\ProjectConsole;
-use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Client;
 use Tests\E2E\General\UsageTest;
+use Tests\E2E\Scopes\ProjectConsole;
+use Tests\E2E\Scopes\Scope;
+use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -950,7 +950,7 @@ class ProjectsConsoleClientTest extends Scope
     public function testUpdateProjectOAuth($data): array
     {
         $id = $data['projectId'] ?? '';
-        $providers = require('app/config/oAuthProviders.php');
+        $providers = require(__DIR__ . '/../../../../app/config/oAuthProviders.php');
 
         /**
          * Test for SUCCESS
@@ -1061,7 +1061,7 @@ class ProjectsConsoleClientTest extends Scope
     public function testUpdateProjectAuthStatus($data): array
     {
         $id = $data['projectId'] ?? '';
-        $auth = require('app/config/auth.php');
+        $auth = require(__DIR__ . '/../../../../app/config/auth.php');
 
         $originalEmail = uniqid() . 'user@localhost.test';
         $originalPassword = 'password';
@@ -1238,6 +1238,36 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
+        // Creating A Team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Test Team 1',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        $teamId = $team['body']['$id'];
+        $email = uniqid() . 'user@localhost.test';
+
+        // Creating A User Using Team membership
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', array_merge($this->getHeaders(), [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ]), [
+            'email' => $email,
+            'roles' => [],
+            'url' => 'http://localhost',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
         $email = uniqid() . 'user@localhost.test';
 
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
@@ -1251,7 +1281,9 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(Exception::USER_COUNT_EXCEEDED, $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
 
         /**
          * Test for FAILURE
@@ -1496,9 +1528,9 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
 
-         /**
-         * Reset
-         */
+        /**
+        * Reset
+        */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1613,9 +1645,9 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
 
-         /**
-         * Reset
-         */
+        /**
+        * Reset
+        */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1897,7 +1929,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($project['body']['$id']);
 
         $id = $project['body']['$id'];
-        $services = require('app/config/services.php');
+        $services = require(__DIR__ . '/../../../../app/config/services.php');
 
         /**
          * Test for Disabled
@@ -1971,7 +2003,7 @@ class ProjectsConsoleClientTest extends Scope
     {
         $id = $data['projectId'];
 
-        $services = require('app/config/services.php');
+        $services = require(__DIR__ . '/../../../../app/config/services.php');
 
         /**
          * Test for Disabled
@@ -2015,7 +2047,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
         ], $this->getHeaders()));
 
-        $this->assertEquals(503, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -2025,7 +2057,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => 'Arsenal'
         ]);
 
-        $this->assertEquals(503, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
 
         // Cleanup
 
@@ -2045,7 +2077,7 @@ class ProjectsConsoleClientTest extends Scope
     {
         $id = $data['projectId'];
 
-        $services = require('app/config/services.php');
+        $services = require(__DIR__ . '/../../../../app/config/services.php');
 
         /**
          * Test for Disabled

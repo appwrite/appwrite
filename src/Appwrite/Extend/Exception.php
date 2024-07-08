@@ -40,6 +40,7 @@ class Exception extends \Exception
     public const GENERAL_MOCK                      = 'general_mock';
     public const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
     public const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
+    public const GENERAL_API_DISABLED              = 'general_api_disabled';
     public const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';
     public const GENERAL_UNAUTHORIZED_SCOPE        = 'general_unauthorized_scope';
     public const GENERAL_RATE_LIMIT_EXCEEDED       = 'general_rate_limit_exceeded';
@@ -58,9 +59,11 @@ class Exception extends \Exception
     public const GENERAL_INVALID_EMAIL             = 'general_invalid_email';
     public const GENERAL_INVALID_PHONE             = 'general_invalid_phone';
     public const GENERAL_REGION_ACCESS_DENIED      = 'general_region_access_denied';
+    public const GENERAL_BAD_REQUEST               = 'general_bad_request';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
+    public const USER_CONSOLE_COUNT_EXCEEDED       = 'user_console_count_exceeded';
     public const USER_JWT_INVALID                  = 'user_jwt_invalid';
     public const USER_ALREADY_EXISTS               = 'user_already_exists';
     public const USER_BLOCKED                      = 'user_blocked';
@@ -89,6 +92,11 @@ class Exception extends \Exception
     public const USER_MISSING_ID                   = 'user_missing_id';
     public const USER_MORE_FACTORS_REQUIRED        = 'user_more_factors_required';
     public const USER_INVALID_CHALLENGE            = 'user_invalid_challenge';
+    public const USER_AUTHENTICATOR_NOT_FOUND      = 'user_authenticator_not_found';
+    public const USER_AUTHENTICATOR_ALREADY_VERIFIED = 'user_authenticator_already_verified';
+    public const USER_RECOVERY_CODES_ALREADY_EXISTS = 'user_recovery_codes_already_exists';
+    public const USER_RECOVERY_CODES_NOT_FOUND     = 'user_recovery_codes_not_found';
+    public const USER_CHALLENGE_REQUIRED           = 'user_challenge_required';
     public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
     public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
@@ -145,6 +153,7 @@ class Exception extends \Exception
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
     public const FUNCTION_RUNTIME_UNSUPPORTED      = 'function_runtime_unsupported';
     public const FUNCTION_ENTRYPOINT_MISSING       = 'function_entrypoint_missing';
+    public const FUNCTION_SYNCHRONOUS_TIMEOUT      = 'function_synchronous_timeout';
 
     /** Deployments */
     public const DEPLOYMENT_NOT_FOUND              = 'deployment_not_found';
@@ -186,6 +195,9 @@ class Exception extends \Exception
     public const ATTRIBUTE_LIMIT_EXCEEDED          = 'attribute_limit_exceeded';
     public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
     public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
+
+    /** Relationship */
+    public const RELATIONSHIP_VALUE_INVALID        = 'relationship_value_invalid';
 
     /** Indexes */
     public const INDEX_NOT_FOUND                   = 'index_not_found';
@@ -289,11 +301,21 @@ class Exception extends \Exception
     protected array $errors = [];
     protected bool $publish;
 
-    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
+    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int|string $code = null, \Throwable $previous = null)
     {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
         $this->code = $code ?? $this->errors[$type]['code'];
+
+        // Mark string errors like HY001 from PDO as 500 errors
+        if(\is_string($this->code)) {
+            if (\is_numeric($this->code)) {
+                $this->code = (int) $this->code;
+            } else {
+                $this->code = 500;
+            }
+        }
+
         $this->message = $message ?? $this->errors[$type]['description'];
 
         $this->publish = $this->errors[$type]['publish'] ?? ($this->code >= 500);

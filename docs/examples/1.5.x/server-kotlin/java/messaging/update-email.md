@@ -21,6 +21,7 @@ messaging.updateEmail(
     listOf(), // cc (optional)
     listOf(), // bcc (optional)
     "", // scheduledAt (optional)
+    listOf(), // attachments (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

@@ -8,7 +8,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -370,10 +369,10 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-mode' => 'admin',
         ];
 
-         $variable = $this->client->call(Client::METHOD_POST, '/project/variables', $headers, [
+        $variable = $this->client->call(Client::METHOD_POST, '/project/variables', $headers, [
             'key' => 'GLOBAL_VARIABLE',
             'value' => 'Global Variable Value',
-         ]);
+        ]);
 
         $this->assertEquals(201, $variable['headers']['status-code']);
 
@@ -915,12 +914,14 @@ class FunctionsCustomServerTest extends Scope
             'runtime' => $name,
             'entrypoint' => $entrypoint,
             'events' => [],
+            'schedule' => '* * * * *', // execute every minute
             'timeout' => $timeout,
         ]);
 
         $functionId = $function['body']['$id'] ?? '';
 
         $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertEquals('* * * * *', $function['body']['schedule']);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
@@ -986,6 +987,18 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['responseBody'], '');
         $this->assertEquals($executions['body']['executions'][0]['logs'], '');
         $this->assertStringContainsString('timed out', $executions['body']['executions'][0]['errors']);
+
+        sleep(75); // Wait for scheduled execution to be created and time out
+
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertCount(2, $executions['body']['executions']);
+        $this->assertIsArray($executions['body']['executions']);
+        $this->assertEquals($executions['body']['executions'][1]['trigger'], 'schedule');
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [

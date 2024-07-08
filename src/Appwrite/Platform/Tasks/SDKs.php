@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Platform\Action;
 use Appwrite\SDK\Language\Android;
+use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\CLI;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Deno;
@@ -15,15 +15,16 @@ use Appwrite\SDK\Language\Kotlin;
 use Appwrite\SDK\Language\Node;
 use Appwrite\SDK\Language\PHP;
 use Appwrite\SDK\Language\Python;
+use Appwrite\SDK\Language\ReactNative;
 use Appwrite\SDK\Language\REST;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Swift;
-use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
 use Appwrite\Spec\Swagger2;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Platform\Action;
 
 class SDKs extends Action
 {
@@ -50,7 +51,7 @@ class SDKs extends Action
         $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
 
         if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', '1.2.x', '1.3.x', '1.4.x', '1.5.x', 'latest'])) {
-            throw new Exception('Unknown version given');
+            throw new \Exception('Unknown version given');
         }
 
         foreach ($platforms as $key => $platform) {
@@ -72,7 +73,7 @@ class SDKs extends Action
 
                 $spec = file_get_contents(__DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json');
 
-                $cover = 'https://appwrite.io/images/github.png';
+                $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';
                 $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
                 $resultExamples = \realpath(__DIR__ . '/../../../..') . '/docs/examples/' . $version . '/' . $key . '-' . $language['key'];
                 $target = \realpath(__DIR__ . '/../../../../app') . '/sdks/git/' . $language['key'] . '/';
@@ -115,20 +116,20 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config->setNPMPackage('appwrite-cli');
                         $config->setExecutableName('appwrite');
                         $config->setLogo(json_encode("
-    _                            _ _           ___   __   _____ 
+    _                            _ _           ___   __   _____
    /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
   //_\\\| '_ \| '_ \ \ /\ / / '__| | __/ _ \  / /   / /     / /\/
- /  _  \ |_) | |_) \ V  V /| |  | | ||  __/ / /___/ /___/\/ /_  
- \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/  
-       |_|   |_|                                                
+ /  _  \ |_) | |_) \ V  V /| |  | | ||  __/ / /___/ /___/\/ /_
+ \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/
+       |_|   |_|
 
 "));
                         $config->setLogoUnescaped("
-     _                            _ _           ___   __   _____ 
+     _                            _ _           ___   __   _____
     /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
    //_\\\| '_ \| '_ \ \ /\ / / '__| | __/ _ \  / /   / /     / /\/
-  /  _  \ |_) | |_) \ V  V /| |  | | ||  __/ / /___/ /___/\/ /_  
-  \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/  
+  /  _  \ |_) | |_) \ V  V /| |  | | ||  __/ / /___/ /___/\/ /_
+  \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/
         |_|   |_|                                                ");
                         break;
                     case 'php':
@@ -158,6 +159,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'flutter':
                         $config = new Flutter();
                         $config->setPackageName('appwrite');
+                        break;
+                    case 'react-native':
+                        $config = new ReactNative();
+                        $config->setNPMPackage('react-native-appwrite');
                         break;
                     case 'flutter-dev':
                         $config = new Flutter();
@@ -196,7 +201,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new REST();
                         break;
                     default:
-                        throw new Exception('Language "' . $language['key'] . '" not supported');
+                        throw new \Exception('Language "' . $language['key'] . '" not supported');
                 }
 
                 Console::info("Generating {$language['name']} SDK...");

@@ -15,6 +15,7 @@ use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
+use Utopia\System\System;
 use Utopia\Validator\Domain;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Multiple;
@@ -659,6 +660,60 @@ App::get('/v1/health/queue/functions')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
+App::get('/v1/health/queue/usage')
+    ->desc('Get usage queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueUsage')
+    ->label('sdk.description', '/docs/references/health/get-queue-usage.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->inject('queue')
+    ->inject('response')
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
+
+        $client = new Client(Event::USAGE_QUEUE_NAME, $queue);
+        $size = $client->getQueueSize();
+
+        if ($size >= $threshold) {
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+        }
+
+        $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
+    });
+
+App::get('/v1/health/queue/usage-dump')
+    ->desc('Get usage dump queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueUsageDump')
+    ->label('sdk.description', '/docs/references/health/get-queue-usage-dump.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->inject('queue')
+    ->inject('response')
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
+
+        $client = new Client(Event::USAGE_DUMP_QUEUE_NAME, $queue);
+        $size = $client->getQueueSize();
+
+        if ($size >= $threshold) {
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+        }
+
+        $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
+    });
+
 App::get('/v1/health/storage/local')
     ->desc('Get local storage')
     ->groups(['api', 'health'])
@@ -702,6 +757,47 @@ App::get('/v1/health/storage/local')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
+App::get('/v1/health/storage')
+    ->desc('Get storage')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getStorage')
+    ->label('sdk.description', '/docs/references/health/get-storage.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->inject('response')
+    ->inject('deviceForFiles')
+    ->inject('deviceForFunctions')
+    ->inject('deviceForBuilds')
+    ->action(function (Response $response, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds) {
+        $devices = [$deviceForFiles, $deviceForFunctions, $deviceForBuilds];
+        $checkStart = \microtime(true);
+
+        foreach ($devices as $device) {
+            if (!$device->write($device->getPath('health.txt'), 'test', 'text/plain')) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed writing test file to ' . $device->getRoot());
+            }
+
+            if ($device->read($device->getPath('health.txt')) !== 'test') {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed reading test file from ' . $device->getRoot());
+            }
+
+            if (!$device->delete($device->getPath('health.txt'))) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed deleting test file from ' . $device->getRoot());
+            }
+        }
+
+        $output = [
+            'status' => 'pass',
+            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+        ];
+
+        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
+    });
+
 App::get('/v1/health/anti-virus')
     ->desc('Get antivirus')
     ->groups(['api', 'health'])
@@ -721,13 +817,13 @@ App::get('/v1/health/anti-virus')
             'version' => ''
         ];
 
-        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
+        if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
             $output['status'] = 'disabled';
             $output['version'] = '';
         } else {
             $antivirus = new Network(
-                App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
+                System::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
             );
 
             try {
@@ -755,12 +851,12 @@ App::get('/v1/health/queue/failed/:name')
         Event::MAILS_QUEUE_NAME,
         Event::FUNCTIONS_QUEUE_NAME,
         Event::USAGE_QUEUE_NAME,
-        Event::WEBHOOK_CLASS_NAME,
+        Event::USAGE_DUMP_QUEUE_NAME,
+        Event::WEBHOOK_QUEUE_NAME,
         Event::CERTIFICATES_QUEUE_NAME,
         Event::BUILDS_QUEUE_NAME,
         Event::MESSAGING_QUEUE_NAME,
-        Event::MIGRATIONS_QUEUE_NAME,
-        Event::HAMSTER_CLASS_NAME
+        Event::MIGRATIONS_QUEUE_NAME
     ]), 'The name of the queue')
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->label('sdk.description', '/docs/references/health/get-failed-queue-jobs.md')

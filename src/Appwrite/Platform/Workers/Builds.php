@@ -8,9 +8,8 @@ use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
-use Swoole\Coroutine as Co;
 use Executor\Executor;
-use Utopia\App;
+use Swoole\Coroutine as Co;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -19,14 +18,15 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
+use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Builds extends Action
@@ -52,7 +52,7 @@ class Builds extends Action
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('log')
-            ->callback(fn($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
+            ->callback(fn ($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
     }
 
     /**
@@ -73,7 +73,7 @@ class Builds extends Action
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
-            throw new Exception('Missing payload');
+            throw new \Exception('Missing payload');
         }
 
         $type = $payload['type'] ?? '';
@@ -117,14 +117,14 @@ class Builds extends Action
      */
     protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Log $log): void
     {
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
         $functionId = $function->getId();
         $log->addTag('functionId', $function->getId());
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404);
+            throw new \Exception('Function not found', 404);
         }
 
         $deploymentId = $deployment->getId();
@@ -132,11 +132,11 @@ class Builds extends Action
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found', 404);
+            throw new \Exception('Deployment not found', 404);
         }
 
         if (empty($deployment->getAttribute('entrypoint', ''))) {
-            throw new Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".', 500);
+            throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".', 500);
         }
 
         $version = $function->getAttribute('version', 'v2');
@@ -144,7 +144,7 @@ class Builds extends Action
         $key = $function->getAttribute('runtime');
         $runtime = $runtimes[$key] ?? null;
         if (\is_null($runtime)) {
-            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+            throw new \Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
         // Realtime preparation
@@ -195,8 +195,8 @@ class Builds extends Action
         if ($isVcsEnabled) {
             $installation = $dbForConsole->getDocument('installations', $installationId);
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
-            $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
 
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
         }
@@ -252,7 +252,7 @@ class Builds extends Action
                     Console::execute('mkdir -p ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
 
                     // Merge template into user repo
-                    Console::execute('cp -rfn ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/* ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
+                    Console::execute('rsync -av --exclude \'.git\' ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/ ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
 
                     // Commit and push
                     $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . \escapeshellcmd($function->getAttribute('name', '')) . '\' function" && git push origin ' . \escapeshellcmd($branchName), '', $stdout, $stderr);
@@ -281,7 +281,7 @@ class Builds extends Action
                      * Send realtime Event
                      */
                     $target = Realtime::fromPayload(
-                    // Pass first, most verbose event pattern
+                        // Pass first, most verbose event pattern
                         event: $allEvents[0],
                         payload: $build,
                         project: $project
@@ -304,9 +304,9 @@ class Builds extends Action
                 }
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
-                $functionsSizeLimit = (int) App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
+                $functionsSizeLimit = (int) System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
                 if ($directorySize > $functionsSizeLimit) {
-                    throw new Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
+                    throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
                 }
 
                 Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
@@ -357,7 +357,7 @@ class Builds extends Action
 
             /** Trigger Realtime */
             $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $build,
                 project: $project
@@ -394,7 +394,6 @@ class Builds extends Action
             ]);
 
             $command = $deployment->getAttribute('commands', '');
-            $command = \str_replace('"', '\\"', $command);
 
             $response = null;
             $err = null;
@@ -403,7 +402,7 @@ class Builds extends Action
                 Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
                     try {
                         $version = $function->getAttribute('version', 'v2');
-                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"';
+                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
 
                         $response = $executor->createRuntime(
                             deploymentId: $deployment->getId(),
@@ -421,48 +420,50 @@ class Builds extends Action
                         $err = $error;
                     }
                 }),
-                    Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
-                        try {
-                            $executor->getLogs(
-                                deploymentId: $deployment->getId(),
-                                projectId: $project->getId(),
-                                callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
-                                    if ($response === null) {
-                                        $build = $dbForProject->getDocument('builds', $build->getId());
+                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
+                    try {
+                        $executor->getLogs(
+                            deploymentId: $deployment->getId(),
+                            projectId: $project->getId(),
+                            callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
+                                if ($response === null) {
+                                    $build = $dbForProject->getDocument('builds', $build->getId());
 
-                                        if ($build->isEmpty()) {
-                                            throw new Exception('Build not found', 404);
-                                        }
+                                    if ($build->isEmpty()) {
+                                        throw new \Exception('Build not found', 404);
+                                    }
 
-                                        $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
-                                        $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
+                                    $logs = \mb_substr($logs, 0, null, 'UTF-8'); // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
 
-                                        /**
+                                    $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
+                                    $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
+
+                                    /**
                                          * Send realtime Event
                                          */
-                                        $target = Realtime::fromPayload(
+                                    $target = Realtime::fromPayload(
                                         // Pass first, most verbose event pattern
-                                            event: $allEvents[0],
-                                            payload: $build,
-                                            project: $project
-                                        );
-                                        Realtime::send(
-                                            projectId: 'console',
-                                            payload: $build->getArrayCopy(),
-                                            events: $allEvents,
-                                            channels: $target['channels'],
-                                            roles: $target['roles']
-                                        );
-                                    }
+                                        event: $allEvents[0],
+                                        payload: $build,
+                                        project: $project
+                                    );
+                                    Realtime::send(
+                                        projectId: 'console',
+                                        payload: $build->getArrayCopy(),
+                                        events: $allEvents,
+                                        channels: $target['channels'],
+                                        roles: $target['roles']
+                                    );
                                 }
-                            );
-                        } catch (\Throwable $error) {
-                            if (empty($err)) {
-                                $err = $error;
                             }
+                        );
+                    } catch (\Throwable $error) {
+                        if (empty($err)) {
+                            $err = $error;
                         }
-                    }),
-                ]);
+                    }
+                }),
+            ]);
 
             if ($err) {
                 throw $err;
@@ -472,7 +473,7 @@ class Builds extends Action
             $durationEnd = \microtime(true);
 
             /** Update the build document */
-            $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
+            $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'ready');
@@ -502,7 +503,7 @@ class Builds extends Action
                 ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('schedule', $function->getAttribute('schedule'))
                 ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-            Authorization::skip(fn() => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
@@ -521,7 +522,7 @@ class Builds extends Action
              * Send realtime Event
              */
             $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $build,
                 project: $project
@@ -594,8 +595,8 @@ class Builds extends Action
 
             $name = "{$functionName} ({$projectName})";
 
-            $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = App::getEnv('_APP_DOMAIN');
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $hostname = System::getEnv('_APP_DOMAIN');
             $functionId = $function->getId();
             $projectId = $project->getId();
             $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$projectId/functions/function-$functionId";

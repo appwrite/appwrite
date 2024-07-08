@@ -5,7 +5,6 @@ namespace Tests\E2E\Services\Storage;
 use Appwrite\Extend\Exception;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -126,11 +125,11 @@ trait StorageBase
 
         /**
          * Failure
-         * Test for Chunk above 5MB
+         * Test for Chunk above 10MB
          */
         $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
         $totalSize = \filesize($source);
-        $chunkSize = 6 * 1024 * 1024;
+        $chunkSize = 12 * 1024 * 1024;
         $handle = @fopen($source, "rb");
         $fileId = 'unique()';
         $mimeType = mime_content_type($source);
@@ -226,7 +225,7 @@ trait StorageBase
             'bucketId' => ID::unique(),
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
-            'maximumFileSize' => 200000000, //200MB
+            'maximumFileSize' => 6000000000, //6GB
             'allowedFileExtensions' => ["jpg", "png"],
             'permissions' => [
                 Permission::read(Role::any()),

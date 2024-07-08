@@ -2,6 +2,7 @@ mutation {
     accountCreateAnonymousSession {
         _id
         _createdAt
+        _updatedAt
         userId
         expire
         provider
@@ -27,5 +28,6 @@ mutation {
         current
         factors
         secret
+        mfaUpdatedAt
     }
 }

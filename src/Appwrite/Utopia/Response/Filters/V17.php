@@ -12,26 +12,20 @@ class V17 extends Filter
     {
         $parsedResponse = $content;
 
-        switch ($model) {
-            case Response::MODEL_PROJECT:
-                $parsedResponse = $this->parseProject($parsedResponse);
-                break;
-            case Response::MODEL_USER:
-                $parsedResponse = $this->parseUser($parsedResponse);
-                break;
-            case Response::MODEL_TOKEN:
-                $parsedResponse = $this->parseToken($parsedResponse);
-                break;
-            case Response::MODEL_MEMBERSHIP:
-                $parsedResponse = $this->parseMembership($parsedResponse);
-                break;
-            case Response::MODEL_SESSION:
-                $parsedResponse = $this->parseSession($parsedResponse);
-                break;
-            case Response::MODEL_WEBHOOK:
-                $parsedResponse = $this->parseWebhook($parsedResponse);
-                break;
-        }
+        $parsedResponse = match($model) {
+            Response::MODEL_PROJECT => $this->parseProject($parsedResponse),
+            Response::MODEL_PROJECT_LIST => $this->handleList($content, 'projects', fn ($item) => $this->parseProject($item)),
+            Response::MODEL_USER => $this->parseUser($parsedResponse),
+            Response::MODEL_USER_LIST => $this->handleList($content, 'users', fn ($item) => $this->parseUser($item)),
+            Response::MODEL_MEMBERSHIP => $this->parseMembership($parsedResponse),
+            Response::MODEL_MEMBERSHIP_LIST => $this->handleList($content, 'memberships', fn ($item) => $this->parseMembership($item)),
+            Response::MODEL_SESSION => $this->parseSession($parsedResponse),
+            Response::MODEL_SESSION_LIST => $this->handleList($content, 'sessions', fn ($item) => $this->parseSession($item)),
+            Response::MODEL_WEBHOOK => $this->parseWebhook($parsedResponse),
+            Response::MODEL_WEBHOOK_LIST => $this->handleList($content, 'webhooks', fn ($item) => $this->parseWebhook($item)),
+            Response::MODEL_TOKEN => $this->parseToken($parsedResponse),
+            default => $parsedResponse,
+        };
 
         return $parsedResponse;
     }
@@ -40,7 +34,6 @@ class V17 extends Filter
     {
         unset($content['targets']);
         unset($content['mfa']);
-        unset($content['totp']);
         return $content;
     }
 

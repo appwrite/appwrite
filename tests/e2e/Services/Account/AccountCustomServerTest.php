@@ -6,8 +6,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class AccountCustomServerTest extends Scope
 {
@@ -112,7 +112,7 @@ class AccountCustomServerTest extends Scope
         ]);
     }
 
-        /**
+    /**
      * @depends testCreateAccountSession
      */
     public function testGetAccount($data): array

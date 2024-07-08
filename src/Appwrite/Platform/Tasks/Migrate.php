@@ -2,15 +2,15 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Platform\Action;
-use Utopia\CLI\Console;
 use Appwrite\Migration\Migration;
 use Utopia\App;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
 
@@ -93,6 +93,7 @@ class Migrate extends Action
                     // TODO: Iterate through all project DBs
                     /** @var Database $projectDB */
                     $projectDB = $getProjectDB($project);
+                    $projectDB->disableValidation();
                     $migration
                         ->setProject($project, $projectDB, $dbForConsole)
                         ->setPDO($register->get('db', true))

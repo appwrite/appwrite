@@ -14,7 +14,7 @@ databases.createRelationshipAttribute(
     "<DATABASE_ID>", // databaseId
     "<COLLECTION_ID>", // collectionId
     "<RELATED_COLLECTION_ID>", // relatedCollectionId
-    RelationshipType.ONE_TO_ONE, // type
+    RelationshipType.ONETOONE, // type
     false, // twoWay (optional)
     "", // key (optional)
     "", // twoWayKey (optional)

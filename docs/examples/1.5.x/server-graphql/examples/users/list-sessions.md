@@ -6,6 +6,7 @@ query {
         sessions {
             _id
             _createdAt
+            _updatedAt
             userId
             expire
             provider
@@ -31,6 +32,7 @@ query {
             current
             factors
             secret
+            mfaUpdatedAt
         }
     }
 }

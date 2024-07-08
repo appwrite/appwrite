@@ -85,8 +85,8 @@ class StorageCustomServerTest extends Scope
             '/storage/buckets',
             array_merge(
                 [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
                 ],
                 $this->getHeaders()
             )
@@ -176,8 +176,8 @@ class StorageCustomServerTest extends Scope
             '/storage/buckets/' . $id,
             array_merge(
                 [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
                 ],
                 $this->getHeaders()
             )
@@ -196,8 +196,8 @@ class StorageCustomServerTest extends Scope
             '/storage/buckets/empty',
             array_merge(
                 [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
                 ],
                 $this->getHeaders()
             )
@@ -209,8 +209,8 @@ class StorageCustomServerTest extends Scope
             '/storage/buckets/id-is-really-long-id-is-really-long-id-is-really-long-id-is-really-long',
             array_merge(
                 [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
                 ],
                 $this->getHeaders()
             )
@@ -277,8 +277,8 @@ class StorageCustomServerTest extends Scope
             '/storage/buckets/' . $id,
             array_merge(
                 [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
                 ],
                 $this->getHeaders()
             )
@@ -291,8 +291,8 @@ class StorageCustomServerTest extends Scope
             '/storage/buckets/' . $id,
             array_merge(
                 [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
                 ],
                 $this->getHeaders()
             )

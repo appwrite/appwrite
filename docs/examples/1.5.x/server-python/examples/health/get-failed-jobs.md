@@ -9,6 +9,6 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 health = Health(client)
 
 result = health.get_failed_jobs(
-    name = .V1-DATABASE,
+    name = .V1_DATABASE,
     threshold = None # optional
 )

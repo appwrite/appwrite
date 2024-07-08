@@ -3,14 +3,16 @@
 namespace Tests\E2E\Services\Messaging;
 
 use Appwrite\Messaging\Status as MessageStatus;
+use CURLFile;
 use Tests\E2E\Client;
-use Utopia\App;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
+use Utopia\System\System;
 
 trait MessagingBase
 {
@@ -69,7 +71,7 @@ trait MessagingBase
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
-                'from' => '+123456789'
+                'templateId' => '123456'
             ],
             'vonage' => [
                 'providerId' => ID::unique(),
@@ -509,6 +511,55 @@ trait MessagingBase
         ];
     }
 
+    public function testSubscriberTargetSubQuery()
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => 'sub-query-test',
+            'name' => 'sub-query-test',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $topic = $response['body'];
+
+        $prefix = uniqid();
+
+        for ($i = 1; $i <= 101; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'userId' => "$prefix-$i",
+                'email' => "$prefix-$i@example.com",
+                'password' => 'password',
+                'name' => "User $prefix $i",
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $user = $response['body'];
+            $targets = $user['targets'] ?? [];
+
+            $this->assertGreaterThan(0, count($targets));
+
+            $target = $targets[0];
+
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['$id'] . '/subscribers', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'subscriberId' => $user['$id'],
+                'targetId' => $target['$id'],
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+        }
+    }
+
     /**
      * @depends testCreateSubscriber
      */
@@ -879,6 +930,111 @@ trait MessagingBase
         return $message;
     }
 
+    public function testCreateDraftPushWithImage()
+    {
+        // Create User 1
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . "@example.com",
+            'password' => 'password',
+            'name' => 'Messaging User 1',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code'], "Error creating user: " . var_export($user['body'], true));
+        $this->assertEquals(1, \count($user['body']['targets']));
+
+        // Create push target
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'userId' => $user['body']['$id'],
+            'providerType' => 'push',
+            'identifier' => '123456',
+        ]);
+
+        $targetId = $target['body']['$id'];
+
+        // Create bucket
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'fileSecurity' => true,
+            'maximumFileSize' => 2000000, // 2MB
+            'allowedFileExtensions' => ['jpg', 'png'],
+            'permissions' => [
+                Permission::read(Role::user('x')),
+                Permission::create(Role::user('x')),
+                Permission::update(Role::user('x')),
+                Permission::delete(Role::user('x')),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        \sleep(1);
+
+        // Create file
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $fileId = $file['body']['$id'];
+
+        // Create Push
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'targets' => [$targetId],
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post at http://localhost',
+            'image' => "{$bucketId}:{$fileId}",
+            'draft' => true
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $message = $response['body'];
+
+        $this->assertEquals(MessageStatus::DRAFT, $message['status']);
+
+        $imageUrl = $message['data']['image']['url'];
+
+        $client = new Client();
+        $client->setEndpoint('');
+
+        $image = $client->call(Client::METHOD_GET, $imageUrl);
+
+        $this->assertEquals(200, $image['headers']['status-code']);
+
+        return $message;
+    }
+
     public function testScheduledMessage(): void
     {
         // Create user
@@ -1103,11 +1259,11 @@ trait MessagingBase
 
     public function testSendEmail()
     {
-        if (empty(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
+        if (empty(System::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
             $this->markTestSkipped('Email DSN not provided');
         }
 
-        $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
+        $emailDSN = new DSN(System::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
         $to = $emailDSN->getParam('to');
         $fromName = $emailDSN->getParam('fromName');
         $fromEmail = $emailDSN->getParam('fromEmail');
@@ -1263,15 +1419,15 @@ trait MessagingBase
 
     public function testSendSMS()
     {
-        if (empty(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
+        if (empty(System::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
             $this->markTestSkipped('SMS DSN not provided');
         }
 
-        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
+        $smsDSN = new DSN(System::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
         $to = $smsDSN->getParam('to');
-        $from = $smsDSN->getParam('from');
         $senderId = $smsDSN->getUser();
         $authKey = $smsDSN->getPassword();
+        $templateId = $smsDSN->getParam('templateId');
 
         if (empty($to) || empty($from) || empty($senderId) || empty($authKey)) {
             $this->markTestSkipped('SMS provider not configured');
@@ -1287,7 +1443,7 @@ trait MessagingBase
             'name' => 'Msg91Sender',
             'senderId' => $senderId,
             'authKey' => $authKey,
-            'from' => $from,
+            'templateId' => $templateId,
             'enabled' => true,
         ]);
 
@@ -1427,11 +1583,11 @@ trait MessagingBase
 
     public function testSendPushNotification()
     {
-        if (empty(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
+        if (empty(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
             $this->markTestSkipped('Push DSN empty');
         }
 
-        $dsn = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
+        $dsn = new DSN(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
         $to = $dsn->getParam('to');
         $serviceAccountJSON = $dsn->getParam('serviceAccountJSON');
 

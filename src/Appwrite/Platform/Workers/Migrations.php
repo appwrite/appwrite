@@ -2,30 +2,31 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Event\Event;
+use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Permission;
+use Appwrite\Role;
 use Exception;
+use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Platform\Action;
-use Utopia\Queue\Message;
-use Appwrite\Event\Event;
-use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Permission;
-use Appwrite\Role;
-use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Logger\Log;
+use Utopia\Logger\Log\Breadcrumb;
 use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
+use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
-use Utopia\Migration\Exception as MigrationException;
+use Utopia\Platform\Action;
+use Utopia\Queue\Message;
 
 class Migrations extends Action
 {
@@ -48,7 +49,7 @@ class Migrations extends Action
             ->inject('dbForProject')
             ->inject('dbForConsole')
             ->inject('log')
-            ->callback(fn(Message $message, Database $dbForProject, Database $dbForConsole, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $log));
+            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $log));
     }
 
     /**
@@ -85,6 +86,7 @@ class Migrations extends Action
             return;
         }
 
+        $log->addTag('migrationId', $migration->getId());
         $log->addTag('projectId', $project->getId());
 
         $this->processMigration($project, $migration, $log);
@@ -256,6 +258,7 @@ class Migrations extends Action
             $migrationDocument = $this->dbForProject->getDocument('migrations', $migration->getId());
             $migrationDocument->setAttribute('stage', 'processing');
             $migrationDocument->setAttribute('status', 'processing');
+            $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'processing'", \microtime(true)));
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
             $log->addTag('type', $migrationDocument->getAttribute('source'));
@@ -277,6 +280,7 @@ class Migrations extends Action
 
             /** Start Transfer */
             $migrationDocument->setAttribute('stage', 'migrating');
+            $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'migrating'", \microtime(true)));
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
             $transfer->run($migrationDocument->getAttribute('resources'), function () use ($migrationDocument, $transfer, $projectDocument) {
                 $migrationDocument->setAttribute('resourceData', json_encode($transfer->getCache()));
@@ -291,6 +295,7 @@ class Migrations extends Action
             if (!empty($sourceErrors) || !empty($destinationErrors)) {
                 $migrationDocument->setAttribute('status', 'failed');
                 $migrationDocument->setAttribute('stage', 'finished');
+                $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and failed", \microtime(true)));
 
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
@@ -303,6 +308,7 @@ class Migrations extends Action
                 }
 
                 $migrationDocument->setAttribute('errors', $errorMessages);
+                $log->addExtra('migrationErrors', json_encode($errorMessages));
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
                 return;
@@ -310,6 +316,7 @@ class Migrations extends Action
 
             $migrationDocument->setAttribute('status', 'completed');
             $migrationDocument->setAttribute('stage', 'finished');
+            $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and succeeded", \microtime(true)));
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
 
@@ -338,6 +345,7 @@ class Migrations extends Action
                 }
 
                 $migrationDocument->setAttribute('errors', $errorMessages);
+                $log->addTag('migrationErrors', json_encode($errorMessages));
             }
         } finally {
             if ($tempAPIKey) {
@@ -347,7 +355,7 @@ class Migrations extends Action
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
                 if ($migrationDocument->getAttribute('status', '') == 'failed') {
-                    throw new Exception(implode("\n", $migrationDocument->getAttribute('errors', [])));
+                    throw new Exception("Migration failed");
                 }
             }
         }

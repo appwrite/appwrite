@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Auth\MFA\Type;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
@@ -10,21 +11,27 @@ class MFAFactors extends Model
     public function __construct()
     {
         $this
-            ->addRule('totp', [
+            ->addRule(Type::TOTP, [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'TOTP',
+                'description' => 'Can TOTP be used for MFA challenge for this account.',
                 'default' => false,
                 'example' => true
             ])
-            ->addRule('phone', [
+            ->addRule(Type::PHONE, [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Phone',
+                'description' => 'Can phone (SMS) be used for MFA challenge for this account.',
                 'default' => false,
                 'example' => true
             ])
-            ->addRule('email', [
+            ->addRule(Type::EMAIL, [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Email',
+                'description' => 'Can email be used for MFA challenge for this account.',
+                'default' => false,
+                'example' => true
+            ])
+            ->addRule(Type::RECOVERY_CODE, [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Can recovery code be used for MFA challenge for this account.',
                 'default' => false,
                 'example' => true
             ])

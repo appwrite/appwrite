@@ -2,8 +2,6 @@
 
 namespace Appwrite\Event\Validator;
 
-use Utopia\Config\Config;
-
 class FunctionEvent extends Event
 {
     /**
@@ -15,7 +13,7 @@ class FunctionEvent extends Event
      */
     public function isValid($value): bool
     {
-        if (str_starts_with($value, 'functions.')) {
+        if (str_starts_with($value ?? false, 'functions.')) {
             $this->message = 'Triggering a function on a function event is not allowed.';
             return false;
         }

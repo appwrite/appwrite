@@ -11,7 +11,7 @@ return [
     /** General Errors */
     Exception::GENERAL_UNKNOWN => [
         'name' => Exception::GENERAL_UNKNOWN,
-        'description' => 'An unknown error has occured. Please check the logs for more information.',
+        'description' => 'An unknown error has occurred. Please check the logs for more information.',
         'code' => 500,
     ],
     Exception::GENERAL_MOCK => [
@@ -29,10 +29,15 @@ return [
         'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
         'code' => 403,
     ],
+    Exception::GENERAL_API_DISABLED => [
+        'name' => Exception::GENERAL_API_DISABLED,
+        'description' => 'The requested API is disabled. You can enable the API from the Appwrite console.',
+        'code' => 403,
+    ],
     Exception::GENERAL_SERVICE_DISABLED => [
         'name' => Exception::GENERAL_SERVICE_DISABLED,
         'description' => 'The requested service is disabled. You can enable the service from the Appwrite console.',
-        'code' => 503,
+        'code' => 403,
     ],
     Exception::GENERAL_UNAUTHORIZED_SCOPE => [
         'name' => Exception::GENERAL_UNAUTHORIZED_SCOPE,
@@ -119,11 +124,21 @@ return [
         'description' => 'Your location is not supported due to legal requirements.',
         'code' => 451,
     ],
+    Exception::GENERAL_BAD_REQUEST => [
+        'name' => Exception::GENERAL_BAD_REQUEST,
+        'description' => 'There was an error processing your request. Please check the inputs and try again.',
+        'code' => 400,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
         'name' => Exception::USER_COUNT_EXCEEDED,
         'description' => 'The current project has exceeded the maximum number of users. Please check your user limit in the Appwrite console.',
+        'code' => 400,
+    ],
+    Exception::USER_CONSOLE_COUNT_EXCEEDED => [
+        'name' => Exception::USER_CONSOLE_COUNT_EXCEEDED,
+        'description' => 'Sign up to the console is restricted. You can contact an administrator to update console sign up restrictions by setting _APP_CONSOLE_WHITELIST_ROOT to "disabled".',
         'code' => 501,
     ],
     Exception::USER_JWT_INVALID => [
@@ -232,6 +247,26 @@ return [
         'description' => 'A user with the same phone number already exists in the current project.',
         'code' => 409,
     ],
+    Exception::USER_RECOVERY_CODES_ALREADY_EXISTS => [
+        'name' => Exception::USER_RECOVERY_CODES_ALREADY_EXISTS,
+        'description' => 'The current user already generated recovery codes and they can only be read once for security reasons.',
+        'code' => 409,
+    ],
+    Exception::USER_AUTHENTICATOR_NOT_FOUND => [
+        'name' => Exception::USER_AUTHENTICATOR_NOT_FOUND,
+        'description' => 'Authenticator could not be found on the current user.',
+        'code' => 404,
+    ],
+    Exception::USER_RECOVERY_CODES_NOT_FOUND => [
+        'name' => Exception::USER_RECOVERY_CODES_NOT_FOUND,
+        'description' => 'Recovery codes could not be found on the current user.',
+        'code' => 404,
+    ],
+    Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED => [
+        'name' => Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED,
+        'description' => 'This authenticator is already verified on the current user.',
+        'code' => 409,
+    ],
     Exception::USER_PHONE_NOT_FOUND => [
         'name' => Exception::USER_PHONE_NOT_FOUND,
         'description' => 'The current user does not have a phone number associated with their account.',
@@ -245,6 +280,11 @@ return [
     Exception::USER_MORE_FACTORS_REQUIRED => [
         'name' => Exception::USER_MORE_FACTORS_REQUIRED,
         'description' => 'More factors are required to complete the sign in process.',
+        'code' => 401,
+    ],
+    Exception::USER_CHALLENGE_REQUIRED => [
+        'name' => Exception::USER_CHALLENGE_REQUIRED,
+        'description' => 'A recently successful challenge is required to complete this action. A challenge is considered recent for 5 minutes.',
         'code' => 401,
     ],
     Exception::USER_OAUTH2_BAD_REQUEST => [
@@ -449,7 +489,7 @@ return [
     ],
     Exception::REPOSITORY_NOT_FOUND => [
         'name' => Exception::REPOSITORY_NOT_FOUND,
-        'description' => 'Repository with the requested ID could not be found. Check to see if the ID is correct, or create the respository.',
+        'description' => 'Repository with the requested ID could not be found. Check to see if the ID is correct, or create the repository.',
         'code' => 404,
     ],
     Exception::PROVIDER_CONTRIBUTION_CONFLICT => [
@@ -459,7 +499,7 @@ return [
     ],
     Exception::GENERAL_PROVIDER_FAILURE => [
         'name' => Exception::GENERAL_PROVIDER_FAILURE,
-        'description' => 'VCS (Version Control System) provider failed to proccess the request. We believe this is an error with the VCS provider. Try again, or contact support for more information.',
+        'description' => 'VCS (Version Control System) provider failed to process the request. We believe this is an error with the VCS provider. Try again, or contact support for more information.',
         'code' => 400,
     ],
 
@@ -478,6 +518,11 @@ return [
         'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
         'description' => 'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".',
         'code' => 404,
+    ],
+    Exception::FUNCTION_SYNCHRONOUS_TIMEOUT => [
+        'name' => Exception::FUNCTION_SYNCHRONOUS_TIMEOUT,
+        'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
+        'code' => 408,
     ],
 
     /** Builds  */
@@ -628,6 +673,11 @@ return [
         'description' => 'The attribute type is invalid.',
         'code' => 400,
     ],
+    Exception::RELATIONSHIP_VALUE_INVALID => [
+        'name' => Exception::RELATIONSHIP_VALUE_INVALID,
+        'description' => 'The relationship value is invalid.',
+        'code' => 400,
+    ],
 
     /** Indexes */
     Exception::INDEX_NOT_FOUND => [
@@ -670,7 +720,7 @@ return [
     Exception::PROJECT_PROVIDER_UNSUPPORTED => [
         'name' => Exception::PROJECT_PROVIDER_UNSUPPORTED,
         'description' => 'The chosen OAuth provider is unsupported. Please check the <a href="/docs/client/account?sdk=web-default#accountCreateOAuth2Session">Create OAuth2 Session docs</a> for the complete list of supported OAuth providers.',
-        'code' => 501,
+        'code' => 400,
     ],
     Exception::PROJECT_INVALID_SUCCESS_URL => [
         'name' => Exception::PROJECT_INVALID_SUCCESS_URL,

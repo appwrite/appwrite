@@ -2,33 +2,30 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Usage;
-use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
-use Utopia\App;
+use Swoole\Runtime;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Validator\Authorization;
-use Utopia\DSN\DSN;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
-use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
-use Utopia\Messaging\Adapter\Push as PushAdapter;
+use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push\APNS;
+use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91;
 use Utopia\Messaging\Adapter\SMS\Telesign;
-use Utopia\Messaging\Adapter\SMS\Textmagic;
+use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
 use Utopia\Messaging\Adapter\SMS\Vonage;
 use Utopia\Messaging\Messages\Email;
@@ -38,12 +35,16 @@ use Utopia\Messaging\Messages\SMS;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
+use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
+use Utopia\System\System;
 
 use function Swoole\Coroutine\batch;
 
 class Messaging extends Action
 {
+    private ?Local $localDevice = null;
+
     public static function getName(): string
     {
         return 'messaging';
@@ -60,9 +61,8 @@ class Messaging extends Action
             ->inject('log')
             ->inject('dbForProject')
             ->inject('deviceForFiles')
-            ->inject('deviceForLocalFiles')
             ->inject('queueForUsage')
-            ->callback(fn(Message $message, Log $log, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocalFiles, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $deviceForFiles, $deviceForLocalFiles, $queueForUsage));
+            ->callback(fn (Message $message, Log $log, Database $dbForProject, Device $deviceForFiles, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $deviceForFiles, $queueForUsage));
     }
 
     /**
@@ -70,7 +70,6 @@ class Messaging extends Action
      * @param Log $log
      * @param Database $dbForProject
      * @param Device $deviceForFiles
-     * @param Device $deviceForLocalFiles
      * @param Usage $queueForUsage
      * @return void
      * @throws \Exception
@@ -80,9 +79,9 @@ class Messaging extends Action
         Log $log,
         Database $dbForProject,
         Device $deviceForFiles,
-        Device $deviceForLocalFiles,
         Usage $queueForUsage
     ): void {
+        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -102,7 +101,7 @@ class Messaging extends Action
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $deviceForLocalFiles,);
+                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project);
                 break;
             default:
                 throw new \Exception('Unknown message type: ' . $type);
@@ -113,7 +112,7 @@ class Messaging extends Action
         Database $dbForProject,
         Document $message,
         Device $deviceForFiles,
-        Device $deviceForLocalFiles,
+        Document $project,
     ): void {
         $topicIds = $message->getAttribute('topics', []);
         $targetIds = $message->getAttribute('targets', []);
@@ -219,8 +218,8 @@ class Messaging extends Action
         /**
          * @var array<array> $results
          */
-        $results = batch(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
-            return function () use ($providerId, $identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
+        $results = batch(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project) {
+            return function () use ($providerId, $identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project) {
                 if (\array_key_exists($providerId, $providers)) {
                     $provider = $providers[$providerId];
                 } else {
@@ -247,8 +246,8 @@ class Messaging extends Action
                     $adapter->getMaxMessagesPerRequest()
                 );
 
-                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
-                    return function () use ($batch, $message, $provider, $adapter, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
+                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $project) {
+                    return function () use ($batch, $message, $provider, $adapter, $dbForProject, $deviceForFiles, $project) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
                         $messageData = clone $message;
@@ -257,7 +256,7 @@ class Messaging extends Action
                         $data = match ($provider->getAttribute('type')) {
                             MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
                             MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
-                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $deviceForLocalFiles),
+                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $project),
                             default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                         };
 
@@ -355,8 +354,8 @@ class Messaging extends Action
 
                 $path = $file->getAttribute('path', '');
 
-                if ($deviceForLocalFiles->exists($path)) {
-                    $deviceForLocalFiles->delete($path);
+                if ($this->getLocalDevice($project)->exists($path)) {
+                    $this->getLocalDevice($project)->delete($path);
                 }
             }
         }
@@ -364,7 +363,7 @@ class Messaging extends Action
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Usage $queueForUsage, Log $log): void
     {
-        if (empty(App::getEnv('_APP_SMS_PROVIDER')) || empty(App::getEnv('_APP_SMS_FROM'))) {
+        if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
             throw new \Exception('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
         }
 
@@ -374,7 +373,7 @@ class Messaging extends Action
 
         Console::log('Project: ' . $project->getId());
 
-        $denyList = App::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
+        $denyList = System::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
         $denyList = explode(',', $denyList);
 
         if (\in_array($project->getId(), $denyList)) {
@@ -382,14 +381,14 @@ class Messaging extends Action
             return;
         }
 
-        $smsDSN = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
+        $smsDSN = new DSN(System::getEnv('_APP_SMS_PROVIDER'));
         $host = $smsDSN->getHost();
         $password = $smsDSN->getPassword();
         $user = $smsDSN->getUser();
 
         $log->addTag('type', $host);
 
-        $from = App::getEnv('_APP_SMS_FROM');
+        $from = System::getEnv('_APP_SMS_FROM');
 
         $provider = new Document([
             '$id' => ID::unique(),
@@ -400,7 +399,10 @@ class Messaging extends Action
             'credentials' => match ($host) {
                 'twilio' => [
                     'accountSid' => $user,
-                    'authToken' => $password
+                    'authToken' => $password,
+                    // Twilio Messaging Service SIDs always start with MG
+                    // https://www.twilio.com/docs/messaging/services
+                    'messagingServiceSid' => \str_starts_with($from, 'MG') ? $from : null
                 ],
                 'textmagic' => [
                     'username' => $user,
@@ -412,7 +414,8 @@ class Messaging extends Action
                 ],
                 'msg91' => [
                     'senderId' => $user,
-                    'authKey' => $password
+                    'authKey' => $password,
+                    'templateId' => $smsDSN->getParam('templateId', $from),
                 ],
                 'vonage' => [
                     'apiKey' => $user,
@@ -420,9 +423,14 @@ class Messaging extends Action
                 ],
                 default => null
             },
-            'options' => [
-                'from' => $from
-            ]
+            'options' => match ($host) {
+                'twilio' => [
+                    'from' => \str_starts_with($from, 'MG') ? null : $from
+                ],
+                default => [
+                    'from' => $from
+                ]
+            }
         ]);
 
         $adapter = $this->getSmsAdapter($provider);
@@ -441,16 +449,23 @@ class Messaging extends Action
                 try {
                     $adapter->send($data);
 
+                    $countryCode = $adapter->getCountryCode($message['to'][0] ?? '');
+                    if (!empty($countryCode)) {
+                        $queueForUsage
+                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_MESSAGES_COUNTRY_CODE), 1);
+                    }
                     $queueForUsage
-                        ->setProject($project)
                         ->addMetric(METRIC_MESSAGES, 1)
+                        ->setProject($project)
                         ->trigger();
-                } catch (\Throwable $e) {
-                    throw new \Exception('Failed sending to targets with error: ' . $e->getMessage());
+                } catch (\Throwable $th) {
+                    throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
                 }
             };
         }, $batches));
     }
+
+
 
     private function getSmsAdapter(Document $provider): ?SMSAdapter
     {
@@ -458,8 +473,8 @@ class Messaging extends Action
 
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
-            'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken']),
-            'textmagic' => new Textmagic($credentials['username'], $credentials['apiKey']),
+            'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken'], null, isset($credentials['messagingServiceSid']) ? $credentials['messagingServiceSid'] : null),
+            'textmagic' => new TextMagic($credentials['username'], $credentials['apiKey']),
             'telesign' => new Telesign($credentials['customerId'], $credentials['apiKey']),
             'msg91' => new Msg91($credentials['senderId'], $credentials['authKey'], $credentials['templateId']),
             'vonage' => new Vonage($credentials['apiKey'], $credentials['apiSecret']),
@@ -517,7 +532,7 @@ class Messaging extends Action
         Document $message,
         Document $provider,
         Device $deviceForFiles,
-        Device $deviceForLocalFiles,
+        Document $project,
     ): Email {
         $fromName = $provider['options']['fromName'] ?? null;
         $fromEmail = $provider['options']['fromEmail'] ?? null;
@@ -579,7 +594,7 @@ class Messaging extends Action
                 }
 
                 if ($deviceForFiles->getType() !== Storage::DEVICE_LOCAL) {
-                    $deviceForFiles->transfer($path, $path, $deviceForLocalFiles);
+                    $deviceForFiles->transfer($path, $path, $this->getLocalDevice($project));
                 }
 
                 $attachment = new Attachment(
@@ -630,7 +645,7 @@ class Messaging extends Action
         $body = $message['data']['body'];
         $data = $message['data']['data'] ?? null;
         $action = $message['data']['action'] ?? null;
-        $image = $message['data']['image'] ?? null;
+        $image = $message['data']['image']['url'] ?? null;
         $sound = $message['data']['sound'] ?? null;
         $icon = $message['data']['icon'] ?? null;
         $color = $message['data']['color'] ?? null;
@@ -650,5 +665,14 @@ class Messaging extends Action
             $tag,
             $badge
         );
+    }
+
+    private function getLocalDevice($project): Local
+    {
+        if($this->localDevice === null) {
+            $this->localDevice = new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+        }
+
+        return $this->localDevice;
     }
 }

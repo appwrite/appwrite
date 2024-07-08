@@ -19,7 +19,6 @@ mutation {
         emailVerification
         phoneVerification
         mfa
-        totp
         prefs {
             data
         }

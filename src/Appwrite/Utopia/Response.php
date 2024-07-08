@@ -2,10 +2,6 @@
 
 namespace Appwrite\Utopia;
 
-use Exception;
-use Utopia\Swoole\Response as SwooleResponse;
-use Swoole\Http\Response as SwooleHTTPResponse;
-use Utopia\Database\Document;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Account;
@@ -16,79 +12,83 @@ use Appwrite\Utopia\Response\Model\AlgoPhpass;
 use Appwrite\Utopia\Response\Model\AlgoScrypt;
 use Appwrite\Utopia\Response\Model\AlgoScryptModified;
 use Appwrite\Utopia\Response\Model\AlgoSha;
-use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
 use Appwrite\Utopia\Response\Model\Attribute;
-use Appwrite\Utopia\Response\Model\AttributeList;
-use Appwrite\Utopia\Response\Model\AttributeString;
-use Appwrite\Utopia\Response\Model\AttributeInteger;
-use Appwrite\Utopia\Response\Model\AttributeFloat;
 use Appwrite\Utopia\Response\Model\AttributeBoolean;
+use Appwrite\Utopia\Response\Model\AttributeDatetime;
 use Appwrite\Utopia\Response\Model\AttributeEmail;
 use Appwrite\Utopia\Response\Model\AttributeEnum;
+use Appwrite\Utopia\Response\Model\AttributeFloat;
+use Appwrite\Utopia\Response\Model\AttributeInteger;
 use Appwrite\Utopia\Response\Model\AttributeIP;
-use Appwrite\Utopia\Response\Model\AttributeURL;
-use Appwrite\Utopia\Response\Model\AttributeDatetime;
+use Appwrite\Utopia\Response\Model\AttributeList;
 use Appwrite\Utopia\Response\Model\AttributeRelationship;
+use Appwrite\Utopia\Response\Model\AttributeString;
+use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\AuthProvider;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
+use Appwrite\Utopia\Response\Model\Bucket;
+use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\Collection;
-use Appwrite\Utopia\Response\Model\Database;
+use Appwrite\Utopia\Response\Model\ConsoleVariables;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
+use Appwrite\Utopia\Response\Model\Database;
+use Appwrite\Utopia\Response\Model\Deployment;
+use Appwrite\Utopia\Response\Model\Detection;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
-use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\File;
-use Appwrite\Utopia\Response\Model\Bucket;
-use Appwrite\Utopia\Response\Model\ConsoleVariables;
 use Appwrite\Utopia\Response\Model\Func;
-use Appwrite\Utopia\Response\Model\Identity;
-use Appwrite\Utopia\Response\Model\Index;
-use Appwrite\Utopia\Response\Model\JWT;
-use Appwrite\Utopia\Response\Model\Key;
-use Appwrite\Utopia\Response\Model\Language;
-use Appwrite\Utopia\Response\Model\User;
-use Appwrite\Utopia\Response\Model\Session;
-use Appwrite\Utopia\Response\Model\Team;
-use Appwrite\Utopia\Response\Model\Locale;
-use Appwrite\Utopia\Response\Model\Log;
-use Appwrite\Utopia\Response\Model\Membership;
-use Appwrite\Utopia\Response\Model\Metric;
-use Appwrite\Utopia\Response\Model\Phone;
-use Appwrite\Utopia\Response\Model\Platform;
-use Appwrite\Utopia\Response\Model\Project;
-use Appwrite\Utopia\Response\Model\Deployment;
-use Appwrite\Utopia\Response\Model\Detection;
 use Appwrite\Utopia\Response\Model\Headers;
-use Appwrite\Utopia\Response\Model\TemplateEmail;
-use Appwrite\Utopia\Response\Model\Token;
-use Appwrite\Utopia\Response\Model\Webhook;
-use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\HealthAntivirus;
 use Appwrite\Utopia\Response\Model\HealthCertificate;
 use Appwrite\Utopia\Response\Model\HealthQueue;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\HealthTime;
 use Appwrite\Utopia\Response\Model\HealthVersion;
-use Appwrite\Utopia\Response\Model\MFAChallenge;
+use Appwrite\Utopia\Response\Model\Identity;
+use Appwrite\Utopia\Response\Model\Index;
 use Appwrite\Utopia\Response\Model\Installation;
+use Appwrite\Utopia\Response\Model\JWT;
+use Appwrite\Utopia\Response\Model\Key;
+use Appwrite\Utopia\Response\Model\Language;
+use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\LocaleCode;
-use Appwrite\Utopia\Response\Model\MetricBreakdown;
-use Appwrite\Utopia\Response\Model\Provider;
+use Appwrite\Utopia\Response\Model\Log;
+use Appwrite\Utopia\Response\Model\Membership;
 use Appwrite\Utopia\Response\Model\Message;
+use Appwrite\Utopia\Response\Model\Metric;
+use Appwrite\Utopia\Response\Model\MetricBreakdown;
+use Appwrite\Utopia\Response\Model\MFAChallenge;
 use Appwrite\Utopia\Response\Model\MFAFactors;
+use Appwrite\Utopia\Response\Model\MFARecoveryCodes;
 use Appwrite\Utopia\Response\Model\MFAType;
-use Appwrite\Utopia\Response\Model\Subscriber;
-use Appwrite\Utopia\Response\Model\Topic;
+use Appwrite\Utopia\Response\Model\Migration;
+use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
+use Appwrite\Utopia\Response\Model\MigrationReport;
+use Appwrite\Utopia\Response\Model\Mock;
+use Appwrite\Utopia\Response\Model\None;
+use Appwrite\Utopia\Response\Model\Phone;
+use Appwrite\Utopia\Response\Model\Platform;
+use Appwrite\Utopia\Response\Model\Preferences;
+use Appwrite\Utopia\Response\Model\Project;
+use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\ProviderRepository;
+use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
+use Appwrite\Utopia\Response\Model\Session;
+use Appwrite\Utopia\Response\Model\Subscriber;
 use Appwrite\Utopia\Response\Model\Target;
+use Appwrite\Utopia\Response\Model\Team;
+use Appwrite\Utopia\Response\Model\TemplateEmail;
 use Appwrite\Utopia\Response\Model\TemplateSMS;
+use Appwrite\Utopia\Response\Model\Token;
+use Appwrite\Utopia\Response\Model\Topic;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
@@ -98,13 +98,14 @@ use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
+use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
-use Appwrite\Utopia\Response\Model\Migration;
-use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
-use Appwrite\Utopia\Response\Model\MigrationReport;
+use Appwrite\Utopia\Response\Model\Webhook;
+use Exception;
+use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
-use Appwrite\Utopia\Response\Model\Mock;
-use Appwrite\Utopia\Response\Model\Rule;
+use Utopia\Database\Document;
+use Utopia\Swoole\Response as SwooleResponse;
 
 /**
  * @method int getStatusCode()
@@ -174,6 +175,7 @@ class Response extends SwooleResponse
     public const MODEL_MFA_FACTORS = 'mfaFactors';
     public const MODEL_MFA_OTP = 'mfaTotp';
     public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
+    public const MODEL_MFA_RECOVERY_CODES = 'mfaRecoveryCodes';
 
     // Users password algos
     public const MODEL_ALGO_MD5 = 'algoMd5';
@@ -297,9 +299,9 @@ class Response extends SwooleResponse
     public const MODEL_MOCK = 'mock';
 
     /**
-     * @var Filter
+     * @var array<Filter>
      */
-    private static $filter = null;
+    protected array $filters = [];
 
     /**
      * @var array
@@ -443,6 +445,7 @@ class Response extends SwooleResponse
             ->setModel(new TemplateEmail())
             ->setModel(new ConsoleVariables())
             ->setModel(new MFAChallenge())
+            ->setModel(new MFARecoveryCodes())
             ->setModel(new MFAType())
             ->setModel(new MFAFactors())
             ->setModel(new Provider())
@@ -508,6 +511,15 @@ class Response extends SwooleResponse
         return $this->models;
     }
 
+    public function applyFilters(array $data, string $model): array
+    {
+        foreach ($this->filters as $filter) {
+            $data = $filter->parse($data, $model);
+        }
+
+        return $data;
+    }
+
     /**
      * Validate response objects and outputs
      *  the response according to given format type
@@ -521,11 +533,7 @@ class Response extends SwooleResponse
     public function dynamic(Document $document, string $model): void
     {
         $output = $this->output(clone $document, $model);
-
-        // If filter is set, parse the output
-        if (self::hasFilter()) {
-            $output = self::getFilter()->parse($output, $model);
-        }
+        $output = $this->applyFilters($output, $model);
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
@@ -679,15 +687,15 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Function to set a response filter
+     * Function to add a response filter, the order of filters are first in - first out.
      *
      * @param $filter the response filter to set
      *
      * @return void
      */
-    public static function setFilter(?Filter $filter)
+    public function addFilter(Filter $filter): void
     {
-        self::$filter = $filter;
+        $this->filters[] = $filter;
     }
 
     /**
@@ -695,9 +703,19 @@ class Response extends SwooleResponse
      *
      * @return Filter
      */
-    public static function getFilter(): ?Filter
+    public function getFilters(): array
     {
-        return self::$filter;
+        return $this->filters;
+    }
+
+    /**
+     * Reset filters
+     *
+     * @return void
+     */
+    public function resetFilters(): void
+    {
+        $this->filters = [];
     }
 
     /**
@@ -705,9 +723,9 @@ class Response extends SwooleResponse
      *
      * @return bool
      */
-    public static function hasFilter(): bool
+    public function hasFilters(): bool
     {
-        return self::$filter != null;
+        return !empty($this->filters);
     }
 
     /**

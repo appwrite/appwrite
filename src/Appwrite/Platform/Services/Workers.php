@@ -2,26 +2,25 @@
 
 namespace Appwrite\Platform\Services;
 
-use Utopia\Platform\Service;
 use Appwrite\Platform\Workers\Audits;
-use Appwrite\Platform\Workers\Webhooks;
-use Appwrite\Platform\Workers\Mails;
-use Appwrite\Platform\Workers\Messaging;
+use Appwrite\Platform\Workers\Builds;
 use Appwrite\Platform\Workers\Certificates;
 use Appwrite\Platform\Workers\Databases;
-use Appwrite\Platform\Workers\Functions;
-use Appwrite\Platform\Workers\Builds;
 use Appwrite\Platform\Workers\Deletes;
-use Appwrite\Platform\Workers\Hamster;
+use Appwrite\Platform\Workers\Functions;
+use Appwrite\Platform\Workers\Mails;
+use Appwrite\Platform\Workers\Messaging;
+use Appwrite\Platform\Workers\Migrations;
 use Appwrite\Platform\Workers\Usage;
 use Appwrite\Platform\Workers\UsageDump;
-use Appwrite\Platform\Workers\Migrations;
+use Appwrite\Platform\Workers\Webhooks;
+use Utopia\Platform\Service;
 
 class Workers extends Service
 {
     public function __construct()
     {
-        $this->type = self::TYPE_WORKER;
+        $this->type = Service::TYPE_WORKER;
         $this
             ->addAction(Audits::getName(), new Audits())
             ->addAction(Builds::getName(), new Builds())
@@ -32,7 +31,6 @@ class Workers extends Service
             ->addAction(Mails::getName(), new Mails())
             ->addAction(Messaging::getName(), new Messaging())
             ->addAction(Webhooks::getName(), new Webhooks())
-            ->addAction(Hamster::getName(), new Hamster())
             ->addAction(UsageDump::getName(), new UsageDump())
             ->addAction(Usage::getName(), new Usage())
             ->addAction(Migrations::getName(), new Migrations())

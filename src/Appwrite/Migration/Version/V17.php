@@ -266,9 +266,9 @@ class V17 extends Migration
                 ]));
                 break;
             case 'users':
-                 /**
-                 * Set hashOptions type
-                 */
+                /**
+                * Set hashOptions type
+                */
                 $document->setAttribute('hashOptions', array_merge($document->getAttribute('hashOptions', []), [
                     'type' => $document->getAttribute('hash', Auth::DEFAULT_ALGO)
                 ]));
