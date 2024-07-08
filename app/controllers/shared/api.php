@@ -226,7 +226,7 @@ App::init()
                 Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
 
                 $accessedAt = $key->getAttribute('accessedAt', '');
-                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
+                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
                     $key->setAttribute('accessedAt', DateTime::now());
                     $dbForConsole->updateDocument('keys', $key->getId(), $key);
                     $dbForConsole->purgeCachedDocument('projects', $project->getId());
@@ -731,7 +731,7 @@ App::shutdown()
          */
         if (!$user->isEmpty()) {
             $accessedAt = $user->getAttribute('accessedAt', '');
-            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCCESS)) > $accessedAt) {
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if (APP_MODE_ADMIN !== $mode) {
