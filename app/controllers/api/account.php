@@ -4290,132 +4290,32 @@ App::delete('/v1/account/mfa/authenticators/:type')
     ->label('sdk.description', '/docs/references/account/delete-mfa-authenticator.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
+    ->param('type', null, new WhiteList([Type::TOTP, Type::WEBAUTHN]), 'Type of authenticator.')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->action(function (string $type, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+        $authenticators = [];
 
-        $authenticator = (match ($type) {
-            Type::TOTP => TOTP::getAuthenticatorFromUser($user),
-            default => null
-        });
+        switch ($type) {
+            case Type::TOTP:
+                $authenticators[] = TOTP::getAuthenticatorFromUser($user); 
+                break;
+            case Type::WEBAUTHN:
+                $authenticators = WebAuthn::getAuthenticatorsFromUser($user);
+                break;
+        }
 
-        if (!$authenticator) {
+        if (empty($authenticators)) {
             throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
         }
 
-        $dbForProject->deleteDocument('authenticators', $authenticator->getId());
-        $dbForProject->purgeCachedDocument('users', $user->getId());
-
-        $queueForEvents->setParam('userId', $user->getId());
-
-        $response->noContent();
-    });
-
-App::delete('/v1/account/mfa/authenticator/webauthn')
-    ->desc('Delete Webauthn Authenticator (confirmation)')
-    ->groups(['api', 'account'])
-    ->label('event', 'users.[userId].delete.mfa')
-    ->label('scope', 'account')
-    ->label('audits.event', 'user.update')
-    ->label('audits.resource', 'user/{response.$id}')
-    ->label('audits.userId', '{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'deleteMfaAuthenticator')
-    ->label('sdk.description', '/docs/references/account/delete-mfa-authenticator.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('challengeId', '', new Text(256), 'ID of the challenge.', true)
-    ->param('challengeResponse', '', new Text(8192), 'Valid verification token.', true)
-    ->param('recoveryKey', '', new Text(256), 'Recovery Key.', true)
-    ->inject('project')
-    ->inject('response')
-    ->inject('request')
-    ->inject('user')
-    ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $challengeId = '', string $challengeResponse = '', string $recoveryKey = '', Document $project, Response $response, Request $request, Document $user, Database $dbForProject, Event $queueForEvents) {
-        if (!empty($recoveryKey)) {
-            $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
-            if (in_array($recoveryKey, $mfaRecoveryCodes)) {
-                $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$recoveryKey]);
-                $mfaRecoveryCodes = array_values($mfaRecoveryCodes);
-                $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
-                $dbForProject->updateDocument('users', $user->getId(), $user);
-
-                // If a recovery code is used, we wipe all WebAuthn authenticators.
-                $authenticators = Webauthn::getAuthenticatorsFromUser($user);
-
-                foreach ($authenticators as $auth) {
-                    $dbForProject->deleteDocument('authenticators', $auth->getId());
-                }
-
-                $dbForProject->purgeCachedDocument('users', $user->getId());
-
-                $queueForEvents->setParam('userId', $user->getId());
-
-                return $response->noContent();
-            } else {
-                throw new Exception(Exception::USER_INVALID_TOKEN);
-            }
-        } else {
-            if (empty($challengeId) || empty($challengeResponse)) {
-                throw new Exception(Exception::USER_INVALID_TOKEN);
-            }
-
-            $challenge = $dbForProject->getDocument('challenges', $challengeId);
-
-            if ($challenge->isEmpty()) {
-                throw new Exception(Exception::USER_INVALID_TOKEN);
-            }
-
-            $authenticators = array_filter(Webauthn::getAuthenticatorsFromUser($user), function ($auth) {
-                return !empty($auth['verified']);
-            });
-
-            $webauthn = new WebAuthn();
-            $relyingParty = $webauthn->createRelyingParty($project, $request);
-
-            $responseJson = json_decode($challengeResponse, true);
-
-            // Find authenticator used
-            $authenticator = null;
-            foreach ($authenticators as $auth) {
-                $data = $auth['data'];
-                if ($data['publicKeyCredentialId'] == $responseJson['id']) {
-                    $authenticator = $auth;
-                    break;
-                }
-            }
-
-            if ($authenticator === null) {
-                throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
-            }
-
-            /** @var Document $authenticator */
-
-            // Check challenge
-            try {
-                $webauthn->verifyLoginChallenge(
-                    challenge: $challenge->getArrayCopy(),
-                    challengeResponse: $challengeResponse,
-                    hostname: $request->gethostname(),
-                    timeout: Auth::TOKEN_EXPIRATION_WEBAUTHN,
-                    allowCredentials: $webauthn->getAllowedCredentials($user),
-                    rpEntity: $relyingParty,
-                    authenticatorPublicKey: $webauthn->deserializePublicKeyCredentialSource($authenticator->getAttribute('data', []))
-                );
-            } catch (\Exception $e) {
-                throw new Exception(Exception::USER_INVALID_TOKEN);
-            }
+        foreach ($authenticators as $authenticator) {
+            $dbForProject->deleteDocument('authenticators', $authenticator->getId());
         }
 
-        $dbForProject->deleteDocument('authenticators', $authenticator->getId());
         $dbForProject->purgeCachedDocument('users', $user->getId());
-
         $queueForEvents->setParam('userId', $user->getId());
 
         $response->noContent();
