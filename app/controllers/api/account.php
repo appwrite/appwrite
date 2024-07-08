@@ -59,7 +59,92 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
+function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
+{
+    $subject = $locale->getText("emails.sessionAlert.subject");
+    $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
+
+    $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-session-alert.tpl');
+    $message
+        ->setParam('{{hello}}', $locale->getText("emails.sessionAlert.hello"))
+        ->setParam('{{body}}', $locale->getText("emails.sessionAlert.body"))
+        ->setParam('{{listDevice}}', $locale->getText("emails.sessionAlert.listDevice"))
+        ->setParam('{{listIpAddress}}', $locale->getText("emails.sessionAlert.listIpAddress"))
+        ->setParam('{{listCountry}}', $locale->getText("emails.sessionAlert.listCountry"))
+        ->setParam('{{footer}}', $locale->getText("emails.sessionAlert.footer"))
+        ->setParam('{{thanks}}', $locale->getText("emails.sessionAlert.thanks"))
+        ->setParam('{{signature}}', $locale->getText("emails.sessionAlert.signature"));
+
+    $body = $message->render();
+
+    $smtp = $project->getAttribute('smtp', []);
+    $smtpEnabled = $smtp['enabled'] ?? false;
+
+    $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+    $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+    $replyTo = "";
+
+    if ($smtpEnabled) {
+        if (!empty($smtp['senderEmail'])) {
+            $senderEmail = $smtp['senderEmail'];
+        }
+        if (!empty($smtp['senderName'])) {
+            $senderName = $smtp['senderName'];
+        }
+        if (!empty($smtp['replyTo'])) {
+            $replyTo = $smtp['replyTo'];
+        }
+
+        $queueForMails
+            ->setSmtpHost($smtp['host'] ?? '')
+            ->setSmtpPort($smtp['port'] ?? '')
+            ->setSmtpUsername($smtp['username'] ?? '')
+            ->setSmtpPassword($smtp['password'] ?? '')
+            ->setSmtpSecure($smtp['secure'] ?? '');
+
+        if (!empty($customTemplate)) {
+            if (!empty($customTemplate['senderEmail'])) {
+                $senderEmail = $customTemplate['senderEmail'];
+            }
+            if (!empty($customTemplate['senderName'])) {
+                $senderName = $customTemplate['senderName'];
+            }
+            if (!empty($customTemplate['replyTo'])) {
+                $replyTo = $customTemplate['replyTo'];
+            }
+
+            $body = $customTemplate['message'] ?? '';
+            $subject = $customTemplate['subject'] ?? $subject;
+        }
+
+        $queueForMails
+            ->setSmtpReplyTo($replyTo)
+            ->setSmtpSenderEmail($senderEmail)
+            ->setSmtpSenderName($senderName);
+    }
+
+    $emailVariables = [
+        'direction' => $locale->getText('settings.direction'),
+        'dateTime' => DateTime::format(new \DateTime(), 'Y-m-d H:i:s'),
+        'user' => $user->getAttribute('name'),
+        'project' => $project->getAttribute('name'),
+        'device' => $session->getAttribute('clientName'),
+        'ipAddress' => $session->getAttribute('ip'),
+        'country' => $locale->getText('countries.' . $session->getAttribute('countryCode'), $locale->getText('locale.country.unknown')),
+    ];
+
+    $email = $user->getAttribute('email');
+
+    $queueForMails
+        ->setSubject($subject)
+        ->setBody($body)
+        ->setVariables($emailVariables)
+        ->setRecipient($email)
+        ->trigger();
+};
+
+
+$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
     $roles = Authorization::getRoles();
     $isPrivilegedUser = Auth::isPrivilegedUser($roles);
     $isAppUser = Auth::isAppUser($roles);
@@ -137,6 +222,10 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         $dbForProject->updateDocument('users', $user->getId(), $user);
     } catch (\Throwable $th) {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
+    }
+
+    if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
+        sendSessionAlert($locale, $user, $project, $session, $queueForMails);
     }
 
     $queueForEvents
@@ -915,8 +1004,9 @@ App::post('/v1/account/sessions/email')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('queueForMails')
     ->inject('hooks')
-    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Hooks $hooks) {
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -1008,6 +1098,10 @@ App::post('/v1/account/sessions/email')
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
         ;
+
+        if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
+            sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+        }
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1177,6 +1271,7 @@ App::post('/v1/account/sessions/token')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('queueForMails')
     ->action($createSession);
 
 App::get('/v1/account/sessions/oauth2/:provider')
@@ -2338,6 +2433,7 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('queueForMails')
     ->action($createSession);
 
 App::put('/v1/account/sessions/phone')
@@ -2368,6 +2464,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('queueForMails')
     ->action($createSession);
 
 App::post('/v1/account/tokens/phone')
@@ -2470,7 +2567,18 @@ App::post('/v1/account/tokens/phone')
             $dbForProject->purgeCachedDocument('users', $user->getId());
         }
 
-        $secret = Auth::codeGenerator();
+        $secret = null;
+        $sendSMS = true;
+        $mockNumbers = $project->getAttribute('auths', [])['mockNumbers'] ?? [];
+        foreach ($mockNumbers as $mockNumber) {
+            if ($mockNumber['phone'] === $phone) {
+                $secret = $mockNumber['otp'];
+                $sendSMS = false;
+                break;
+            }
+        }
+
+        $secret ??= Auth::codeGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_OTP));
 
         $token = new Document([
@@ -2495,34 +2603,36 @@ App::post('/v1/account/tokens/phone')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+        if ($sendSMS) {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
-        $customTemplate = $project->getAttribute('templates', [])['sms.login-' . $locale->default] ?? [];
-        if (!empty($customTemplate)) {
-            $message = $customTemplate['message'] ?? $message;
+            $customTemplate = $project->getAttribute('templates', [])['sms.login-' . $locale->default] ?? [];
+            if (!empty($customTemplate)) {
+                $message = $customTemplate['message'] ?? $message;
+            }
+
+            $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+            $messageContent
+                ->setParam('{{project}}', $project->getAttribute('name'))
+                ->setParam('{{secret}}', $secret);
+            $messageContent = \strip_tags($messageContent->render());
+            $message = $message->setParam('{{token}}', $messageContent);
+
+            $message = $message->render();
+
+            $messageDoc = new Document([
+                '$id' => $token->getId(),
+                'data' => [
+                    'content' => $message,
+                ],
+            ]);
+
+            $queueForMessaging
+                ->setType(MESSAGE_SEND_TYPE_INTERNAL)
+                ->setMessage($messageDoc)
+                ->setRecipients([$phone])
+                ->setProviderType(MESSAGE_TYPE_SMS);
         }
-
-        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
-        $messageContent
-            ->setParam('{{project}}', $project->getAttribute('name'))
-            ->setParam('{{secret}}', $secret);
-        $messageContent = \strip_tags($messageContent->render());
-        $message = $message->setParam('{{token}}', $messageContent);
-
-        $message = $message->render();
-
-        $messageDoc = new Document([
-            '$id' => $token->getId(),
-            'data' => [
-                'content' => $message,
-            ],
-        ]);
-
-        $queueForMessaging
-            ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-            ->setMessage($messageDoc)
-            ->setRecipients([$phone])
-            ->setProviderType(MESSAGE_TYPE_SMS);
 
         // Set to unhashed secret for events and server responses
         $token->setAttribute('secret', $secret);
@@ -2538,7 +2648,8 @@ App::post('/v1/account/tokens/phone')
             ->dynamic($token, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/jwt')
+App::post('/v1/account/jwts')
+    ->alias('/v1/account/jwt')
     ->desc('Create JWT')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
@@ -2571,15 +2682,11 @@ App::post('/v1/account/jwt')
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
-                // 'uid'    => 1,
-                // 'aud'    => 'http://site.com',
-                // 'scopes' => ['user'],
-                // 'iss'    => 'http://api.mysite.com',
                 'userId' => $user->getId(),
                 'sessionId' => $current->getId(),
             ])]), Response::MODEL_JWT);
@@ -3541,7 +3648,8 @@ App::post('/v1/account/verification/phone')
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
-        if (empty($user->getAttribute('phone'))) {
+        $phone = $user->getAttribute('phone');
+        if (empty($phone)) {
             throw new Exception(Exception::USER_PHONE_NOT_FOUND);
         }
 
@@ -3552,7 +3660,19 @@ App::post('/v1/account/verification/phone')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        $secret = Auth::codeGenerator();
+
+        $secret = null;
+        $sendSMS = true;
+        $mockNumbers = $project->getAttribute('auths', [])['mockNumbers'] ?? [];
+        foreach ($mockNumbers as $mockNumber) {
+            if ($mockNumber['phone'] === $phone) {
+                $secret = $mockNumber['otp'];
+                $sendSMS = false;
+                break;
+            }
+        }
+
+        $secret ??= Auth::codeGenerator();
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
@@ -3577,34 +3697,36 @@ App::post('/v1/account/verification/phone')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+        if ($sendSMS) {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
-        $customTemplate = $project->getAttribute('templates', [])['sms.verification-' . $locale->default] ?? [];
-        if (!empty($customTemplate)) {
-            $message = $customTemplate['message'] ?? $message;
+            $customTemplate = $project->getAttribute('templates', [])['sms.verification-' . $locale->default] ?? [];
+            if (!empty($customTemplate)) {
+                $message = $customTemplate['message'] ?? $message;
+            }
+
+            $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+            $messageContent
+                ->setParam('{{project}}', $project->getAttribute('name'))
+                ->setParam('{{secret}}', $secret);
+            $messageContent = \strip_tags($messageContent->render());
+            $message = $message->setParam('{{token}}', $messageContent);
+
+            $message = $message->render();
+
+            $messageDoc = new Document([
+                '$id' => $verification->getId(),
+                'data' => [
+                    'content' => $message,
+                ],
+            ]);
+
+            $queueForMessaging
+                ->setType(MESSAGE_SEND_TYPE_INTERNAL)
+                ->setMessage($messageDoc)
+                ->setRecipients([$user->getAttribute('phone')])
+                ->setProviderType(MESSAGE_TYPE_SMS);
         }
-
-        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
-        $messageContent
-            ->setParam('{{project}}', $project->getAttribute('name'))
-            ->setParam('{{secret}}', $secret);
-        $messageContent = \strip_tags($messageContent->render());
-        $message = $message->setParam('{{token}}', $messageContent);
-
-        $message = $message->render();
-
-        $messageDoc = new Document([
-            '$id' => $verification->getId(),
-            'data' => [
-                'content' => $message,
-            ],
-        ]);
-
-        $queueForMessaging
-            ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-            ->setMessage($messageDoc)
-            ->setRecipients([$user->getAttribute('phone')])
-            ->setProviderType(MESSAGE_TYPE_SMS);
 
         // Set to unhashed secret for events and server responses
         $verification->setAttribute('secret', $secret);
@@ -4156,7 +4278,7 @@ App::get('/v1/account/mfa/recovery-codes')
 
 App::delete('/v1/account/mfa/authenticators/:type')
     ->desc('Delete Authenticator')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'mfaProtected'])
     ->label('event', 'users.[userId].delete.mfa')
     ->label('scope', 'account')
     ->label('audits.event', 'user.update')
@@ -4169,12 +4291,11 @@ App::delete('/v1/account/mfa/authenticators/:type')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
-    ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $type, string $otp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $authenticator = (match ($type) {
             Type::TOTP => TOTP::getAuthenticatorFromUser($user),
@@ -4183,27 +4304,6 @@ App::delete('/v1/account/mfa/authenticators/:type')
 
         if (!$authenticator) {
             throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
-        }
-
-        $success = (match ($type) {
-            Type::TOTP => Challenge\TOTP::verify($user, $otp),
-            default => false
-        });
-
-        if (!$success) {
-            $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
-            if (in_array($otp, $mfaRecoveryCodes)) {
-                $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
-                $mfaRecoveryCodes = array_values($mfaRecoveryCodes);
-                $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
-                $dbForProject->updateDocument('users', $user->getId(), $user);
-
-                $success = true;
-            }
-        }
-
-        if (!$success) {
-            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $dbForProject->deleteDocument('authenticators', $authenticator->getId());
