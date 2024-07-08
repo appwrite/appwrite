@@ -716,6 +716,17 @@ App::shutdown()
         }
 
         /**
+         * Update project last activity
+         */
+        if (!$project->isEmpty() && $project->getId() !== 'console') {
+            $accessedAt = $project->getAttribute('accessedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+                $project->setAttribute('accessedAt', DateTime::now());
+                Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
+            }
+        }
+
+        /**
          * Update user last activity
          */
         if (!$user->isEmpty()) {
