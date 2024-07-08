@@ -390,7 +390,7 @@ $commonCollections = [
                 '$id' => ID::custom('_key_email'),
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['email'],
-                'lengths' => [256],
+                'lengths' => [320],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -996,7 +996,7 @@ $commonCollections = [
                 '$id' => ID::custom('_key_provider_providerUid'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['provider', 'providerUid'],
-                'lengths' => [128, 128],
+                'lengths' => [100, 100],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
@@ -1120,14 +1120,14 @@ $commonCollections = [
                 '$id' => ID::custom('_key_userInternalId_provider_providerUid'),
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['userInternalId', 'provider', 'providerUid'],
-                'lengths' => [11, 128, 128],
+                'lengths' => [Database::LENGTH_KEY, 100, 385],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_provider_providerUid'),
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['provider', 'providerUid'],
-                'lengths' => [128, 128],
+                'lengths' => [100, 640],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
@@ -1148,7 +1148,7 @@ $commonCollections = [
                 '$id' => ID::custom('_key_provider'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['provider'],
-                'lengths' => [128],
+                'lengths' => [100],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -3068,7 +3068,7 @@ $projectCollections = array_merge([
                 '$id' => ID::custom('_key_name'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['name'],
-                'lengths' => [256],
+                'lengths' => [768],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -3117,7 +3117,7 @@ $projectCollections = array_merge([
                 '$id' => ID::custom('_key_runtime'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['runtime'],
-                'lengths' => [64],
+                'lengths' => [768],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -3857,14 +3857,14 @@ $projectCollections = array_merge([
                 '$id' => ID::custom('_key_trigger'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['trigger'],
-                'lengths' => [32],
+                'lengths' => [128],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_status'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['status'],
-                'lengths' => [32],
+                'lengths' => [128],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -4420,6 +4420,17 @@ $consoleCollections = array_merge([
                 'default' => null,
                 'array' => false,
                 'filters' => [],
+            ],
+            [
+                '$id' => 'accessedAt',
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
             ],
         ],
         'indexes' => [
@@ -5833,14 +5844,14 @@ $bucketCollections = [
                 '$id' => ID::custom('_key_name'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['name'],
-                'lengths' => [256],
+                'lengths' => [768],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_signature'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['signature'],
-                'lengths' => [256],
+                'lengths' => [768],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
