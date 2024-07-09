@@ -398,7 +398,7 @@ App::post('/v1/migrations/nhost')
             ->setProject($project)
             ->setUser($user);
 
-        $triggerMigration($migration->getId(), $resources, $queueForMigrations, $dbForProject);
+        $triggerMigration($migration, $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

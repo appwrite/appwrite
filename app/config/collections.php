@@ -4264,14 +4264,14 @@ $projectCollections = array_merge([
         'indexes' => [
             [
                 '$id' => '_key_migrationInternalId',
-                'type' => Database::INDEX_FULLTEXT,
+                'type' => Database::INDEX_KEY,
                 'attributes' => ['migrationInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => '_key_group',
-                'type' => Database::INDEX_FULLTEXT,
+                'type' => Database::INDEX_KEY,
                 'attributes' => ['group'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
