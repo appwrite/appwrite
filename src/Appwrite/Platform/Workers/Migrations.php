@@ -336,7 +336,7 @@ class Migrations extends Action
                 if ($status === 'failed') {
                     $result = 'failed';
                     break;
-                 }
+                }
             }
 
             $migration->setAttribute('status', $result);
