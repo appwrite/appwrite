@@ -4046,9 +4046,9 @@ $projectCollections = array_merge([
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
                 'required' => true,
-                'default' => null,
+                'default' => 'pending',
                 'array' => false,
-                'filters' => [],
+                'filters' => ['subQueryMigrationStatus'],
             ],
             [
                 '$id' => ID::custom('stage'),
@@ -4184,6 +4184,17 @@ $projectCollections = array_merge([
                 'filters' => []
             ],
             [
+                '$id' => ID::custom('migrationInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => []
+            ],
+            [
                 '$id' => ID::custom('status'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -4252,9 +4263,9 @@ $projectCollections = array_merge([
         ],
         'indexes' => [
             [
-                '$id' => '_key_migrationId',
+                '$id' => '_key_migrationInternalId',
                 'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['migrationId'],
+                'attributes' => ['migrationInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],

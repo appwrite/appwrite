@@ -243,21 +243,19 @@ class Migrations extends Action
          * @var Document $migration
          * @var Transfer $transfer
          */
-        $groupDocument = null;
+        $group = $this->dbForProject->getDocument('migrationsGroup', $group->getId());
+        $migration = $this->dbForProject->getDocument('migrations', $group->getAttribute('migrationId', ''));
         $transfer = null;
         $projectDocument = $this->dbForConsole->getDocument('projects', $project->getId());
         $tempAPIKey = $this->generateAPIKey($projectDocument);
 
         try {
-            $group = $this->dbForProject->getDocument('migrationsGroup', $group->getId());
-
-            $migration = $this->dbForProject->getDocument('migrations', $group->getAttribute('migrationId', ''));
-            $migration->setAttribute('status', 'processing');
+            $group->setAttribute('status', 'processing');
 
             $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'processing'", \microtime(true)));
             $log->addTag('type', $migration->getAttribute('source'));
 
-            $this->updateMigrationDocument($migration, $projectDocument);
+            $this->updateMigrationDocument($group, $projectDocument);
 
             $source = $this->processSource($migration->getAttribute('source'), $migration->getAttribute('credentials'));
 
@@ -291,7 +289,7 @@ class Migrations extends Action
             $destinationErrors = $destination->getErrors();
 
             if (!empty($sourceErrors) || !empty($destinationErrors)) {
-                $migration->setAttribute('status', 'failed');
+                $group->setAttribute('status', 'failed');
 
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
@@ -305,7 +303,6 @@ class Migrations extends Action
 
                 $group->setAttribute('errors', $errorMessages);
                 $this->updateMigrationDocument($group, $projectDocument);
-                $this->updateMigrationDocument($migration, $projectDocument);
                 $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and failed", \microtime(true)));
                 $log->addExtra('migrationErrors', json_encode($errorMessages));
 
@@ -315,43 +312,10 @@ class Migrations extends Action
             $group->setAttribute('status', 'completed');
             $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and succeeded", \microtime(true)));
             $this->updateMigrationDocument($group, $project);
-
-            // Check if all other groups are finished, if so set parent document to completed aswell.
-            $groupDocuments = $this->dbForProject->find('migrationsGroup', [Query::equal('migrationId', [$migration->getId()])]);
-
-            $result = 'completed';
-            foreach ($groupDocuments as $document) {
-                if ($document->getId() == $group->getId()) {
-                    continue;
-                }
-
-                $status = $document->getAttribute('status', 'processing');
-
-                if ($status === 'processing' || $status === 'pending') {
-                    $result = 'processing';
-                    break;
-                }
-
-                // Only fail parent if all have stopped processing.
-                if ($status === 'failed') {
-                    $result = 'failed';
-                    break;
-                }
-            }
-
-            $migration->setAttribute('status', $result);
-            $this->updateMigrationDocument($migration, $project);
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-
-            if ($migration && $groupDocument) {
-                Console::error($th->getMessage());
-                Console::error($th->getTraceAsString());
-                $migration->setAttribute('status', 'failed');
-                $groupDocument->setAttribute('errors', [$th->getMessage()]);
-
-                return;
-            }
+            Console::error($th->getTraceAsString());
+            $group->setAttribute('status', 'failed');
 
             if ($transfer) {
                 $sourceErrors = $source->getErrors();
@@ -374,8 +338,7 @@ class Migrations extends Action
             if ($tempAPIKey) {
                 $this->removeAPIKey($tempAPIKey);
             }
-            if ($migration) {
-                $this->updateMigrationDocument($migration, $projectDocument);
+            if (!$migration->isEmpty()) {
                 $this->updateMigrationDocument($group, $projectDocument);
 
                 if ($group->getAttribute('status', '') == 'failed') {

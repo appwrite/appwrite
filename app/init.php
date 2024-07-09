@@ -696,13 +696,45 @@ Database::addFilter(
 );
 
 Database::addFilter(
+    'subQueryMigrationStatus',
+    function (mixed $value) {
+        return $value;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        $groups = $database->find('migrationsGroup', [
+            Query::equal('migrationInternalId', [$document->getInternalId()]),
+        ]);
+
+        $status = 'pending';
+
+        foreach ($groups as $document) {
+            if ($document->getAttribute('status') === 'processing') {
+                $status = 'processing';
+                break;
+            }
+
+            if ($document->getAttribute('status') === 'failed') {
+                $status = 'failed';
+                break;
+            }
+
+            if ($document->getAttribute('status') === 'completed') {
+                $status = 'completed';
+            }
+        }
+
+        return $status;
+    }
+);
+
+Database::addFilter(
     'subQueryStatusCounters',
     function (mixed $value) {
         return;
     },
     function (mixed $value, Document $document, Database $database) {
         $groups = $database->find('migrationsGroup', [
-            Query::equal('migrationId', [$document->getId()]),
+            Query::equal('migrationInternalId', [$document->getInternalId()]),
         ]);
 
         $statusCounter = [];
@@ -724,7 +756,7 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         $groups = $database->find('migrationsGroup', [
-            Query::equal('migrationId', [$document->getId()]),
+            Query::equal('migrationInternalId', [$document->getInternalId()]),
         ]);
 
         $resourceData = [];
@@ -746,7 +778,7 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         $groups = $database->find('migrationsGroup', [
-            Query::equal('migrationId', [$document->getId()]),
+            Query::equal('migrationInternalId', [$document->getInternalId()]),
         ]);
 
         $errors = [];

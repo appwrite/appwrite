@@ -32,7 +32,7 @@ use Utopia\Validator\WhiteList;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$triggerMigration = function (string $migrationId, array $resources, Migration $queueForMigrations, Database $dbForProject) {
+$triggerMigration = function (Document $migration, array $resources, Migration $queueForMigrations, Database $dbForProject) {
     $groups = [
         Transfer::GROUP_AUTH => Transfer::GROUP_AUTH_RESOURCES,
         Transfer::GROUP_DATABASES => Transfer::GROUP_DATABASES_RESOURCES,
@@ -50,7 +50,8 @@ $triggerMigration = function (string $migrationId, array $resources, Migration $
             $groupDocument = new Document([
                 '$id' => ID::unique(),
                 'status' => 'pending',
-                'migrationId' => $migrationId,
+                'migrationId' => $migration->getId(),
+                'migrationInternalId' => $migration->getInternalId(),
                 'group' => $group,
                 'resources' => $filteredResources,
                 'statusCounters' => '',
@@ -102,6 +103,7 @@ App::post('/v1/migrations/appwrite')
                 'projectId' => $projectId,
                 'apiKey' => $apiKey,
             ],
+            'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],
@@ -113,7 +115,7 @@ App::post('/v1/migrations/appwrite')
             ->setProject($project)
             ->setUser($user);
 
-        $triggerMigration($migration->getId(), $resources, $queueForMigrations, $dbForProject);
+        $triggerMigration($migration, $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -215,7 +217,7 @@ App::post('/v1/migrations/firebase/oauth')
             ->setProject($project)
             ->setUser($user);
 
-        $triggerMigration($migration->getId(), $resources, $queueForMigrations, $dbForProject);
+        $triggerMigration($migration, $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -274,7 +276,7 @@ App::post('/v1/migrations/firebase')
             ->setProject($project)
             ->setUser($user);
 
-        $triggerMigration($migration->getId(), $resources, $queueForMigrations, $dbForProject);
+        $triggerMigration($migration, $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -334,7 +336,7 @@ App::post('/v1/migrations/supabase')
             ->setProject($project)
             ->setUser($user);
 
-        $triggerMigration($migration->getId(), $resources, $queueForMigrations, $dbForProject);
+        $triggerMigration($migration, $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
