@@ -75,11 +75,12 @@ $image = $this->getParam('image', '');
       - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
+      - _APP_CONSOLE_SESSION_ALERTS
       - _APP_CONSOLE_WHITELIST_IPS
       - _APP_CONSOLE_HOSTNAMES
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_EMAIL_SECURITY
       - _APP_SYSTEM_RESPONSE_FORMAT
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
@@ -138,7 +139,6 @@ $image = $this->getParam('image', '');
       - _APP_FUNCTIONS_RUNTIMES
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_DELAY
@@ -204,7 +204,6 @@ $image = $this->getParam('image', '');
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_USAGE_STATS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-audits:
@@ -231,7 +230,6 @@ $image = $this->getParam('image', '');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-webhooks:
@@ -249,6 +247,7 @@ $image = $this->getParam('image', '');
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_EMAIL_SECURITY
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -259,7 +258,6 @@ $image = $this->getParam('image', '');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-deletes:
@@ -313,7 +311,6 @@ $image = $this->getParam('image', '');
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -342,7 +339,6 @@ $image = $this->getParam('image', '');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-builds:
@@ -374,7 +370,6 @@ $image = $this->getParam('image', '');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
@@ -430,7 +425,7 @@ $image = $this->getParam('image', '');
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_DOMAIN_FUNCTIONS
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_EMAIL_CERTIFICATES
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -440,7 +435,6 @@ $image = $this->getParam('image', '');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-functions:
@@ -478,7 +472,6 @@ $image = $this->getParam('image', '');
       - _APP_DOCKER_HUB_USERNAME
       - _APP_DOCKER_HUB_PASSWORD
       - _APP_LOGGING_CONFIG
-      - _APP_LOGGING_PROVIDER
 
   appwrite-worker-mails:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -510,7 +503,6 @@ $image = $this->getParam('image', '');
       - _APP_SMTP_SECURE
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-messaging:
@@ -538,7 +530,6 @@ $image = $this->getParam('image', '');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
@@ -580,7 +571,7 @@ $image = $this->getParam('image', '');
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_EMAIL_SECURITY
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -590,7 +581,6 @@ $image = $this->getParam('image', '');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
@@ -654,7 +644,6 @@ $image = $this->getParam('image', '');
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_USAGE_STATS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
 
@@ -682,7 +671,6 @@ $image = $this->getParam('image', '');
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_USAGE_STATS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
 
@@ -690,6 +678,31 @@ $image = $this->getParam('image', '');
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: schedule-functions
     container_name: appwrite-task-scheduler-functions
+    <<: *x-logging
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-task-scheduler-executions:
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    entrypoint: schedule-executions
+    container_name: appwrite-task-scheduler-executions
     <<: *x-logging
     restart: unless-stopped
     networks:
@@ -772,7 +785,6 @@ $image = $this->getParam('image', '');
       - OPR_EXECUTOR_ENV=$_APP_ENV
       - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_EXECUTOR_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
       - OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY=$_APP_STORAGE_S3_ACCESS_KEY
