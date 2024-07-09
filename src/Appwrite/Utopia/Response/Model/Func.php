@@ -153,7 +153,7 @@ class Func extends Model
             ])
             ->addRule('cpus', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Function execution cores.',
+                'description' => 'Function execution CPU cores.',
                 'default' => 1,
                 'example' => 2,
             ])
