@@ -262,7 +262,6 @@ App::post('/v1/migrations/firebase')
             'credentials' => [
                 'serviceAccount' => $serviceAccount,
             ],
-            'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],

@@ -157,7 +157,7 @@ class Migrations extends Action
             roles: $target['roles'],
         );
 
-        return $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration);
+        return $this->dbForProject->updateDocument($migration->getCollection(), $migration->getId(), $migration);
     }
 
     /**
