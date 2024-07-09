@@ -4121,7 +4121,8 @@ $projectCollections = array_merge([
                 'size' => 65535,
                 'signed' => true,
                 'required' => false,
-                'array' => true,
+                'default' => '',
+                'array' => false,
                 'filters' => ['subQueryMigrationErrors'],
             ],
             [
@@ -4262,6 +4263,13 @@ $projectCollections = array_merge([
             ],
         ],
         'indexes' => [
+            [
+                '$id' => '_key_migrationId',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['migrationId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
             [
                 '$id' => '_key_migrationInternalId',
                 'type' => Database::INDEX_KEY,
