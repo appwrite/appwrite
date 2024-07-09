@@ -15,7 +15,6 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\Breadcrumb;
 use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
