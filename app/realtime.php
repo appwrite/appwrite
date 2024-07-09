@@ -178,7 +178,6 @@ $logError = function (Throwable $error, string $action) use ($register) {
         $log->addExtra('file', $error->getFile());
         $log->addExtra('line', $error->getLine());
         $log->addExtra('trace', $error->getTraceAsString());
-        $log->addExtra('detailedTrace', $error->getTrace());
 
         $log->setAction($action);
 
