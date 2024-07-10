@@ -4545,7 +4545,9 @@ App::put('/v1/account/mfa/challenge/webauthn')
         ]));
 
         // Update Session
-        $dbForProject->deleteDocument('challenges', $challengeId);
+        Authorization::skip(function () use ($dbForProject, $challengeId) {
+            $dbForProject->deleteDocument('challenges', $challengeId);
+        });
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $factors = $session->getAttribute('factors', []);
@@ -4557,9 +4559,6 @@ App::put('/v1/account/mfa/challenge/webauthn')
             ->setAttribute('mfaUpdatedAt', DateTime::now());
 
         $dbForProject->updateDocument('sessions', $session->getId(), $session);
-
-        // Delete challenge
-        $dbForProject->deleteDocument('challenges', $challengeId);
 
         $queueForEvents
                     ->setParam('userId', $user->getId())

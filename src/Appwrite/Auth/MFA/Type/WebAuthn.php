@@ -110,7 +110,12 @@ class WebAuthn extends Type
         // Console
         if ($project->getId() === 'console') {
             $platformName = 'Appwrite';
-            $platformId = App::getEnv('_APP_DOMAIN', '');
+
+            if (App::isDevelopment()) {
+                $platformId = 'localhost';
+            } else {
+                $platformId = App::getEnv('_APP_DOMAIN', '');
+            }
         }
 
         return new PublicKeyCredentialRpEntity(
