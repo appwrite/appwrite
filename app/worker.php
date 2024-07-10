@@ -341,7 +341,6 @@ $worker
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
             $log->addExtra('roles', Authorization::getRoles());
 
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
