@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -152,6 +153,55 @@ App::patch('/v1/mock/functions-v2')
         $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('version', 'v2'));
 
         $response->noContent();
+    });
+
+App::post('/v1/mock/api-key-unprefixed')
+    ->desc('Create API Key (without standard prefix)')
+    ->groups(['mock', 'api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('docs', false)
+    ->param('projectId', '', new UID(), 'Project ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $scopes = array_keys(Config::getParam('scopes'));
+
+        $key = new Document([
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'projectInternalId' => $project->getInternalId(),
+            'projectId' => $project->getId(),
+            'name' => 'Outdated key',
+            'scopes' => $scopes,
+            'expire' => null,
+            'sdks' => [],
+            'accessedAt' => null,
+            'secret' => \bin2hex(\random_bytes(128)),
+        ]);
+
+        $key = $dbForConsole->createDocument('keys', $key);
+
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($key, Response::MODEL_KEY);
     });
 
 App::get('/v1/mock/github/callback')

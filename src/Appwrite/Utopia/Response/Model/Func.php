@@ -71,6 +71,13 @@ class Func extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('scopes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Allowed permission scopes.',
+                'default' => [],
+                'example' => 'users.read',
+                'array' => true,
+            ])
             ->addRule('vars', [
                 'type' => Response::MODEL_VARIABLE,
                 'description' => 'Function variables.',
@@ -112,7 +119,7 @@ class Func extends Model
             ->addRule('version', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Version of Open Runtimes used for the function.',
-                'default' => 'v3',
+                'default' => 'v4',
                 'example' => 'v2',
             ])
             ->addRule('installationId', [
