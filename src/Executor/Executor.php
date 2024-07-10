@@ -24,10 +24,6 @@ class Executor
 
     protected array $headers;
 
-    protected int $cpus;
-
-    protected int $memory;
-
     public function __construct(string $endpoint)
     {
         if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
@@ -87,6 +83,8 @@ class Executor
             'command' => $command,
             'version' => $version,
             'timeout' => $timeout,
+            'cpus' => $cpus,
+            'memory' => $memory,
         ];
 
         $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
