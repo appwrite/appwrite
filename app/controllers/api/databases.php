@@ -2434,7 +2434,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             'required' => true,
             'array' => false,
             'default' => null,
-            'size' => 36
+            'size' => Database::LENGTH_KEY
         ];
 
         $oldAttributes[] = [
