@@ -1383,6 +1383,207 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
         $response->noContent();
     });
 
+
+// Development keys
+
+App::post('/v1/projects/:projectId/development-keys')
+    ->desc('Create key')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'createKey')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_KEY)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
+    ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $key = new Document([
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'projectInternalId' => $project->getInternalId(),
+            'projectId' => $project->getId(),
+            'name' => $name,
+            'scopes' => $scopes,
+            'expire' => $expire,
+            'sdks' => [],
+            'accessedAt' => null,
+            'secret' => API_KEY_STANDARD . '_' . \bin2hex(\random_bytes(128)),
+        ]);
+
+        $key = $dbForConsole->createDocument('keys', $key);
+
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($key, Response::MODEL_KEY);
+    });
+
+App::get('/v1/projects/:projectId/keys')
+    ->desc('List keys')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'listKeys')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_KEY_LIST)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $keys = $dbForConsole->find('keys', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
+
+        $response->dynamic(new Document([
+            'keys' => $keys,
+            'total' => count($keys),
+        ]), Response::MODEL_KEY_LIST);
+    });
+
+App::get('/v1/projects/:projectId/keys/:keyId')
+    ->desc('Get key')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'getKey')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_KEY)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('keyId', '', new UID(), 'Key unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $key = $dbForConsole->findOne('keys', [
+            Query::equal('$id', [$keyId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+
+        if ($key === false || $key->isEmpty()) {
+            throw new Exception(Exception::KEY_NOT_FOUND);
+        }
+
+        $response->dynamic($key, Response::MODEL_KEY);
+    });
+
+App::put('/v1/projects/:projectId/keys/:keyId')
+    ->desc('Update key')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateKey')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_KEY)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('keyId', '', new UID(), 'Key unique ID.')
+    ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
+    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
+    ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $keyId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $key = $dbForConsole->findOne('keys', [
+            Query::equal('$id', [$keyId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+
+        if ($key === false || $key->isEmpty()) {
+            throw new Exception(Exception::KEY_NOT_FOUND);
+        }
+
+        $key
+            ->setAttribute('name', $name)
+            ->setAttribute('scopes', $scopes)
+            ->setAttribute('expire', $expire);
+
+        $dbForConsole->updateDocument('keys', $key->getId(), $key);
+
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
+
+        $response->dynamic($key, Response::MODEL_KEY);
+    });
+
+App::delete('/v1/projects/:projectId/keys/:keyId')
+    ->desc('Delete key')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'deleteKey')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('keyId', '', new UID(), 'Key unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $key = $dbForConsole->findOne('keys', [
+            Query::equal('$id', [$keyId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+
+        if ($key === false || $key->isEmpty()) {
+            throw new Exception(Exception::KEY_NOT_FOUND);
+        }
+
+        $dbForConsole->deleteDocument('keys', $key->getId());
+
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
+
+        $response->noContent();
+    });
+
 // JWT Keys
 
 App::post('/v1/projects/:projectId/jwts')
