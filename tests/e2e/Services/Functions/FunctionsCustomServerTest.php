@@ -404,8 +404,8 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
-            'memory' => 4096,
-            'cpus' => 4
+            'memory' => 1024,
+            'cpus' => 2
         ]);
 
         $this->assertEquals(200, $response1['headers']['status-code']);
@@ -421,8 +421,8 @@ class FunctionsCustomServerTest extends Scope
         ], $response1['body']['events']);
         $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(15, $response1['body']['timeout']);
-        $this->assertEquals(4096, $response1['body']['memory']);
-        $this->assertEquals(4, $response1['body']['cpus']);
+        $this->assertEquals(1024, $response1['body']['memory']);
+        $this->assertEquals(2, $response1['body']['cpus']);
 
         /**
          * Test for FAILURE
