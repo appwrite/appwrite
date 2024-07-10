@@ -18,9 +18,9 @@ class Cpus extends Validator
 
     /**
      * Allowed Values.
-     * 
+     *
      * Get allowed values taking into account the limits set by the environment variables.
-     * 
+     *
      * @return array
      */
     public static function getAllowedValues(): array
