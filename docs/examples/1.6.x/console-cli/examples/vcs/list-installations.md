@@ -1,3 +1,0 @@
-appwrite vcs listInstallations \
-
-
