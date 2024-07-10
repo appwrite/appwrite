@@ -10,6 +10,8 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\Validator\Cpus;
+use Appwrite\Functions\Validator\Memory;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -52,9 +54,6 @@ use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 include_once __DIR__ . '/../shared/api.php';
-
-const MEMORY_VALUES = [512, 1024, 2048, 4096, 8192, 16384];
-const CPU_VALUES = [1, 2, 4, 8, 16];
 
 $redeployVcs = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github) {
     $deploymentId = ID::unique();
@@ -129,12 +128,6 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         ->setTemplate($template);
 };
 
-$filterBelowThreshold = function (array $inputArray, int $threshold): array {
-    return \array_filter($inputArray, function ($value) use ($threshold) {
-        return $value <= $threshold;
-    });
-};
-
 App::post('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('Create function')
@@ -169,8 +162,8 @@ App::post('/v1/functions')
     ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true)
     ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true)
     ->param('templateBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function template.', true)
-    ->param('memory', 512, fn (array $plan) => empty($plan['memoryLimit']) ? new WhiteList($filterBelowThreshold(MEMORY_VALUES, System::getEnv('_APP_FUNCTIONS_MEMORY')), false, WhiteList::TYPE_INTEGER) : new WhiteList($filterBelowThreshold(MEMORY_VALUES, $plan['memoryLimit']), false, WhiteList::TYPE_INTEGER), 'Memory in MB allocated for the function.', true, ['plan'])
-    ->param('cpus', 1, fn (array $plan) => empty($plan['cpuLimit']) ? new WhiteList($filterBelowThreshold(CPU_VALUES, System::getEnv('_APP_FUNCTIONS_CPUS')), false, WhiteList::TYPE_INTEGER) : new WhiteList($filterBelowThreshold(CPU_VALUES, $plan['cpuLimit']), false, WhiteList::TYPE_INTEGER), 'CPU units allocated for the function.', true, ['plan'])
+    ->param('memory', 512, new Memory(), 'Memory in MB allocated for the function.', true)
+    ->param('cpus', 1, new Cpus(), 'CPU cores allocated for the function.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -467,11 +460,10 @@ App::get('/v1/functions/specs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_SPECS)
     ->inject('response')
-    ->inject('plan')
-    ->action(function (Response $response, array $plan) use ($filterBelowThreshold) {
+    ->action(function (Response $response) {
         $response->dynamic(new Document([
-            'memory' => empty($plan['memoryLimit']) ? $filterBelowThreshold(MEMORY_VALUES, System::getEnv('_APP_FUNCTIONS_MEMORY')) : $filterBelowThreshold(MEMORY_VALUES, $plan['memoryLimit']),
-            'cpus' => empty($plan['cpuLimit']) ? $filterBelowThreshold(CPU_VALUES, System::getEnv('_APP_FUNCTIONS_CPUS')) : $filterBelowThreshold(CPU_VALUES, $plan['cpuLimit']),
+            'memory' => Memory::getAllowedValues(),
+            'cpus' => Cpus::getAllowedValues()
         ]), Response::MODEL_SPECS);
     });
 
@@ -720,8 +712,8 @@ App::put('/v1/functions/:functionId')
     ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
     ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
     ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-    ->param('memory', 512, fn (array $plan) => empty($plan['memoryLimit']) ? new WhiteList($filterBelowThreshold(MEMORY_VALUES, System::getEnv('_APP_FUNCTIONS_MEMORY')), false, WhiteList::TYPE_INTEGER) : new WhiteList($filterBelowThreshold(MEMORY_VALUES, $plan['memoryLimit']), false, WhiteList::TYPE_INTEGER), 'Memory in MB allocated for the function.', true, ['plan'])
-    ->param('cpus', 1, fn (array $plan) => empty($plan['cpuLimit']) ? new WhiteList($filterBelowThreshold(CPU_VALUES, System::getEnv('_APP_FUNCTIONS_CPUS')), false, WhiteList::TYPE_INTEGER) : new WhiteList($filterBelowThreshold(CPU_VALUES, $plan['cpuLimit']), false, WhiteList::TYPE_INTEGER), 'CPU units allocated for the function.', true, ['plan'])
+    ->param('memory', 512, new Memory(), 'Memory in MB allocated for the function.', true)
+    ->param('cpus', 1, new Cpus(), 'CPU cores allocated for the function.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')

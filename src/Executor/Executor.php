@@ -85,8 +85,6 @@ class Executor
             'variables' => $variables,
             'remove' => $remove,
             'command' => $command,
-            'cpus' => $cpus,
-            'memory' => $memory,
             'version' => $version,
             'timeout' => $timeout,
         ];

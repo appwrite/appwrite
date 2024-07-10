@@ -1,0 +1,1 @@
+Get allowed function and cpus values on this instance.
