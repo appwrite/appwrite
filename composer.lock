@@ -2989,16 +2989,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.39.0",
+            "version": "0.39.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "ad0518e6e1a9663084ecc07c627117c66e765161"
+                "reference": "550b56aa7ee3f98319b79a20d2478e68a1b5e9bd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ad0518e6e1a9663084ecc07c627117c66e765161",
-                "reference": "ad0518e6e1a9663084ecc07c627117c66e765161",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/550b56aa7ee3f98319b79a20d2478e68a1b5e9bd",
+                "reference": "550b56aa7ee3f98319b79a20d2478e68a1b5e9bd",
                 "shasum": ""
             },
             "require": {
@@ -3034,9 +3034,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.2"
             },
-            "time": "2024-07-03T14:34:46+00:00"
+            "time": "2024-07-10T11:23:54+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -3157,16 +3157,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.16.1",
+            "version": "v1.16.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "9266a47f1b9231b83e0cfd849009547329d871b1"
+                "reference": "51f1ba679a6afe0315621ad143d788bd7ded0eca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/9266a47f1b9231b83e0cfd849009547329d871b1",
-                "reference": "9266a47f1b9231b83e0cfd849009547329d871b1",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/51f1ba679a6afe0315621ad143d788bd7ded0eca",
+                "reference": "51f1ba679a6afe0315621ad143d788bd7ded0eca",
                 "shasum": ""
             },
             "require": {
@@ -3219,7 +3219,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2024-06-18T16:50:05+00:00"
+            "time": "2024-07-09T15:58:08+00:00"
         },
         {
             "name": "matthiasmullie/minify",
