@@ -2907,7 +2907,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
         } catch (DuplicateException $exception) {
-            var_dump($exception);
+            var_dump('DuplicateException found');
+            var_dump($exception->getMessage());
+            var_dump($exception->getFile());
+            var_dump($exception->getLine());
+            var_dump("-----------------");
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         }
 
