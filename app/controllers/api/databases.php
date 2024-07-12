@@ -3665,6 +3665,7 @@ App::get('/v1/databases/usage')
             METRIC_DATABASES,
             METRIC_COLLECTIONS,
             METRIC_DOCUMENTS,
+            METRIC_DATABASES_STORAGE,
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -3715,9 +3716,11 @@ App::get('/v1/databases/usage')
             'databasesTotal'   => $usage[$metrics[0]]['total'],
             'collectionsTotal' => $usage[$metrics[1]]['total'],
             'documentsTotal'   => $usage[$metrics[2]]['total'],
+            'databasesStorageTotal'   => $usage[$metrics[3]]['total'],
             'databases'   => $usage[$metrics[0]]['data'],
             'collections' => $usage[$metrics[1]]['data'],
             'documents'   => $usage[$metrics[2]]['data'],
+            'databasesStorage'   => $usage[$metrics[3]]['data'],
         ]), Response::MODEL_USAGE_DATABASES);
     });
 
@@ -3749,6 +3752,7 @@ App::get('/v1/databases/:databaseId/usage')
         $metrics = [
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS),
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS),
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE)
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -3799,8 +3803,10 @@ App::get('/v1/databases/:databaseId/usage')
             'range' => $range,
             'collectionsTotal'   => $usage[$metrics[0]]['total'],
             'documentsTotal'   => $usage[$metrics[1]]['total'],
+            'storageTotal'   => $usage[$metrics[2]]['total'],
             'collections'   => $usage[$metrics[0]]['data'],
             'documents'   => $usage[$metrics[1]]['data'],
+            'storage'   => $usage[$metrics[2]]['data'],
         ]), Response::MODEL_USAGE_DATABASE);
     });
 

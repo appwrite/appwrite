@@ -34,6 +34,12 @@ class UsageDatabases extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('databasesStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of databases storage size (in bytes)',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('databases', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of databases per period.',
@@ -51,6 +57,13 @@ class UsageDatabases extends Model
             ->addRule('documents', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of documents per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('databasesStorage', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated sum of databases storage size (in bytes) per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
