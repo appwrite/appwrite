@@ -66,7 +66,7 @@ class UsageFunction extends Model
             ])
             ->addRule('executionsMbSecondsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated sum of function  executions mbSeconds.',
+                'description' => 'Total aggregated sum of function executions mbSeconds.',
                 'default' => 0,
                 'example' => 0,
             ])
@@ -107,7 +107,7 @@ class UsageFunction extends Model
             ])
             ->addRule('buildsMbSeconds', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of function builds mbSeconds.',
+                'description' => 'Aggregated number of function builds mbSeconds per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
