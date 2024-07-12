@@ -386,6 +386,91 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testUpdate
      */
+    public function testUpdateSpecs($data): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response1 = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test1',
+            'events' => [
+                'users.*.update.name',
+                'users.*.update.email',
+            ],
+            'schedule' => '0 0 1 1 *',
+            'timeout' => 15,
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'memory' => 1024,
+            'cpus' => 2
+        ]);
+
+        $this->assertEquals(200, $response1['headers']['status-code']);
+        $this->assertNotEmpty($response1['body']['$id']);
+        $this->assertEquals('Test1', $response1['body']['name']);
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$updatedAt']));
+        $this->assertEquals('', $response1['body']['deployment']);
+        $this->assertEquals([
+            'users.*.update.name',
+            'users.*.update.email',
+        ], $response1['body']['events']);
+        $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
+        $this->assertEquals(15, $response1['body']['timeout']);
+        $this->assertEquals(1024, $response1['body']['memory']);
+        $this->assertEquals(2, $response1['body']['cpus']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response2 = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test1',
+            'events' => [
+                'users.*.update.name',
+                'users.*.update.email',
+            ],
+            'schedule' => '0 0 1 1 *',
+            'timeout' => 15,
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'memory' => 9999,
+            'cpus' => 4
+        ]);
+
+        $this->assertEquals(400, $response2['headers']['status-code']);
+
+        $response3 = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test1',
+            'events' => [
+                'users.*.update.name',
+                'users.*.update.email',
+            ],
+            'schedule' => '0 0 1 1 *',
+            'timeout' => 15,
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'memory' => 3212,
+            'cpus' => 5
+        ]);
+
+        $this->assertEquals(400, $response3['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateSpecs
+     */
     public function testCreateDeployment($data): array
     {
         /**

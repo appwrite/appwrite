@@ -428,7 +428,7 @@ class Swagger2 extends Format
                             }
                         }
 
-                        if ($allowed) {
+                        if ($allowed && $validator->getType() === 'string') {
                             $node['enum'] = $validator->getList();
                             $node['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $method, $name);
                             $node['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $method, $name);

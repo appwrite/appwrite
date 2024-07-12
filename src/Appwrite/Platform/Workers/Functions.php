@@ -469,7 +469,9 @@ class Functions extends Action
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: $command
+                runtimeEntrypoint: $command,
+                cpus: $function->getAttribute('cpus', 1),
+                memory: $function->getAttribute('memory', 512),
             );
 
             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
