@@ -61,7 +61,7 @@ $stats->create();
 
 $containerId = uniqid();
 $statsDocument = null;
-$workerNumber = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+$workerNumber = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 2));
 
 $adapter = new Adapter\Swoole(port: System::getEnv('PORT', 80));
 $adapter
