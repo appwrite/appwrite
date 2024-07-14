@@ -55,12 +55,31 @@ class ResponseTest extends TestCase
             'integer' => 123,
             'boolean' => true,
             'hidden' => 'secret',
+            'array' => [
+                'string 1',
+                'string 2'
+            ],
         ]), 'single');
 
         $this->assertArrayHasKey('string', $output);
         $this->assertArrayHasKey('integer', $output);
         $this->assertArrayHasKey('boolean', $output);
         $this->assertArrayNotHasKey('hidden', $output);
+        $this->assertIsArray($output['array']);
+
+        // test optional array
+        $output = $this->response->output(new Document([
+            'string' => 'lorem ipsum',
+            'integer' => 123,
+            'boolean' => true,
+            'hidden' => 'secret',
+        ]), 'single');
+        $this->assertArrayHasKey('string', $output);
+        $this->assertArrayHasKey('integer', $output);
+        $this->assertArrayHasKey('boolean', $output);
+        $this->assertArrayNotHasKey('hidden', $output);
+        $this->assertArrayNotHasKey('array', $output);
+
     }
 
     public function testResponseModelRequired(): void

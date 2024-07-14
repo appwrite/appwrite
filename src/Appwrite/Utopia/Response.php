@@ -593,7 +593,7 @@ class Response extends SwooleResponse
             if(!$data->isSet($key) && !$rule['required']) { // skip attribute in response if not required and values does not exist
                 continue;
             }
-            
+
             if ($rule['array']) {
                 if (!is_array($data[$key])) {
                     throw new Exception($key . ' must be an array of type ' . $rule['type']);
