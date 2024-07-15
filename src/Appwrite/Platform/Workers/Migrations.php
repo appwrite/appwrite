@@ -313,12 +313,15 @@ class Migrations extends Action
             $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'migrating'", \microtime(true)));
             $this->updateMigrationDocument($migration, $projectDocument);
 
-            $transfer->run($migration->getAttribute('resources'), function () use ($migration, $transfer, $projectDocument) {
-                $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
-                $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
-
-                $this->updateMigrationDocument($migration, $projectDocument);
-            });
+            $transfer->run(
+                $migration->getAttribute('resources'),
+                function () use ($migration, $transfer, $projectDocument) {
+                    $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
+                    $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
+                    $this->updateMigrationDocument($migration, $projectDocument);
+                },
+                $migration->getAttribute('resourceId', '')
+            );
 
             $destination->shutDown();
             $source->shutDown();
