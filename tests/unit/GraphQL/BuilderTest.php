@@ -14,6 +14,7 @@ class BuilderTest extends TestCase
 
     public function setUp(): void
     {
+        Response\Models::init();
         $this->response = new Response(new UtopiaSwooleResponse(new SwooleResponse()));
         Mapper::init(Response\Models::getModels());
     }
