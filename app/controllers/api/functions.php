@@ -1816,7 +1816,7 @@ App::post('/v1/functions/:functionId/executions')
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
                 ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, $function->getAttribute('memory') * $execution->getAttribute('duration', 0))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS),  $function->getAttribute('memory') * $execution->getAttribute('duration', 0))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), $function->getAttribute('memory') * $execution->getAttribute('duration', 0))
             ;
 
             if ($function->getAttribute('logging')) {
