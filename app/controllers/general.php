@@ -272,7 +272,9 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
-                requestTimeout: 30
+                requestTimeout: 30,
+                cpus: $function->getAttribute('cpus', 1),
+                memory: $function->getAttribute('memory', 512)
             );
 
             $headersFiltered = [];
