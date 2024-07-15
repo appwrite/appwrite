@@ -78,7 +78,8 @@ class ResponseTest extends TestCase
         $this->assertArrayHasKey('integer', $output);
         $this->assertArrayHasKey('boolean', $output);
         $this->assertArrayNotHasKey('hidden', $output);
-        $this->assertArrayNotHasKey('array', $output);
+        $this->assertArrayHasKey('array', $output);
+        $this->assertNull($output['array']);
 
     }
 
