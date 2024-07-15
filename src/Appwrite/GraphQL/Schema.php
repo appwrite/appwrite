@@ -98,7 +98,7 @@ class Schema
      */
     protected function api(Http $http, Request $request, UtopiaHttpResponse $response, Container $container, callable $complexity): array
     {
-        Mapper::init((new Response($response))->getModels());
+        Mapper::init(Response\Models::getModels());
 
         $mapper = new Mapper();
 

@@ -256,7 +256,7 @@ class Specs extends Action
                 ];
             }
 
-            $models = $response->getModels();
+            $models = Response\Models::getModels();
 
             foreach ($models as $key => $value) {
                 if ($platform !== APP_PLATFORM_CONSOLE && !$value->isPublic()) {

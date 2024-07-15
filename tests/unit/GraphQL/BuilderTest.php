@@ -15,7 +15,7 @@ class BuilderTest extends TestCase
     public function setUp(): void
     {
         $this->response = new Response(new UtopiaSwooleResponse(new SwooleResponse()));
-        Mapper::init($this->response->getModels());
+        Mapper::init(Response\Models::getModels());
     }
 
     /**
@@ -23,7 +23,7 @@ class BuilderTest extends TestCase
      */
     public function testCreateTypeMapping()
     {
-        $model = $this->response->getModel(Response::MODEL_COLLECTION);
+        $model = Response\Models::getModel(Response::MODEL_COLLECTION);
         $type = Mapper::model(\ucfirst($model->getType()));
         $this->assertEquals('Collection', $type->name);
     }

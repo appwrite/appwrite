@@ -18,9 +18,9 @@ class ResponseTest extends TestCase
     public function setUp(): void
     {
         $this->response = new Response(new UtopiaSwooleResponse(new SwooleResponse()));
-        $this->response->setModel(new Single());
-        $this->response->setModel(new Lists());
-        $this->response->setModel(new Nested());
+        Response\Models::setModel(new Single());
+        Response\Models::setModel(new Lists());
+        Response\Models::setModel(new Nested());
     }
 
     public function testFilters(): void
