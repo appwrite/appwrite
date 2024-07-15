@@ -290,7 +290,9 @@ App::post('/v1/account')
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                if($existingTarget) {
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                }
             }
 
             $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -2524,6 +2526,7 @@ App::patch('/v1/account/password')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
+    ->label('abuse-limit', 10)
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
     ->inject('requestTimestamp')
@@ -3426,7 +3429,7 @@ App::post('/v1/account/verification/phone')
     });
 
 App::put('/v1/account/verification/phone')
-    ->desc('Create phone verification (confirmation)')
+    ->desc('Update phone verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].verification.[tokenId].update')
@@ -3569,7 +3572,7 @@ App::get('/v1/account/mfa/factors')
     });
 
 App::post('/v1/account/mfa/authenticators/:type')
-    ->desc('Add Authenticator')
+    ->desc('Create Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'account')
@@ -3879,7 +3882,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
     });
 
 App::post('/v1/account/mfa/challenge')
-    ->desc('Create 2FA Challenge')
+    ->desc('Create MFA Challenge')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].challenges.[challengeId].create')

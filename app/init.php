@@ -112,8 +112,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 443;
-const APP_VERSION_STABLE = '1.5.7';
+const APP_CACHE_BUSTER = 4323;
+const APP_VERSION_STABLE = '1.5.8';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -607,9 +607,9 @@ Database::addFilter(
             ])
         ));
         if (\count($targetIds) > 0) {
-            return $database->find('targets', [
+            return $database->skipValidation(fn () => $database->find('targets', [
                 Query::equal('$internalId', $targetIds)
-            ]);
+            ]));
         }
         return [];
     }
@@ -1008,7 +1008,7 @@ foreach ($locales as $locale) {
         'user_agent' => \sprintf(
             APP_USERAGENT,
             System::getEnv('_APP_VERSION', 'UNKNOWN'),
-            System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+            System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
         ),
         'timeout' => 2,
     ],
