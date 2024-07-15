@@ -25,6 +25,7 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\URL\URL;
 use Appwrite\Utopia\Queue\Connections;
+use Appwrite\Utopia\Response\Models;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOConfig;
@@ -1330,3 +1331,5 @@ $container->set($queueForMigrations);
 $container->set($deviceForFunctions);
 $container->set($passwordsDictionary);
 $container->set($queueForCertificates);
+
+Models::init();
