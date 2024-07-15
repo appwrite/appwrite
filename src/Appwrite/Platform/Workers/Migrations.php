@@ -320,7 +320,7 @@ class Migrations extends Action
                     $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
                     $this->updateMigrationDocument($migration, $projectDocument);
                 },
-                $migration->getAttribute('resourceId', '')
+                $migration->getAttribute('resourceId')
             );
 
             $destination->shutDown();
