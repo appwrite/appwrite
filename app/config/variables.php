@@ -719,6 +719,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_FUNCTIONS_SIZE_LIMIT',
+                'description' => 'The maximum size deployment after build in bytes. The default value is 2GB.',
+                'introduction' => '1.6.0',
+                'default' => '2000000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_TIMEOUT',
                 'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the function\'s settings or in appwrite.json.',
                 'introduction' => '0.7.0',
