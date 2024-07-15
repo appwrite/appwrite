@@ -124,10 +124,14 @@ class Request extends HttpRequest
      */
     public function getHeaders(): array
     {
-        $headers = $this->generateHeaders();
+        if($this->headers !== null) {
+            return $this->headers;
+        }
+
+        $this->headers = $this->generateHeaders();
 
         if (empty($this->swoole->cookie)) {
-            return $headers;
+            return $this->headers;
         }
 
         $cookieHeaders = [];
@@ -136,10 +140,10 @@ class Request extends HttpRequest
         }
 
         if (!empty($cookieHeaders)) {
-            $headers['cookie'] = \implode('; ', $cookieHeaders);
+            $this->headers['cookie'] = \implode('; ', $cookieHeaders);
         }
 
-        return $headers;
+        return $this->headers;
     }
 
     /**
