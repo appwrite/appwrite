@@ -10,7 +10,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
-use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
 use Utopia\System\System;
