@@ -223,7 +223,12 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
-    if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
+    $sessionAlertsEnabled = $project->getAttribute('auths', [])['sessionAlerts'] ?? false;
+    $isFirstSession = $dbForProject->count('sessions', [
+        Query::equal('userId', [$user->getId()]),
+    ]) === 1;
+
+    if ($sessionAlertsEnabled && !$isFirstSession) {
         sendSessionAlert($locale, $user, $project, $session, $queueForMails);
     }
 
@@ -903,9 +908,15 @@ App::post('/v1/account/sessions/email')
             ->setParam('sessionId', $session->getId())
         ;
 
-        if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
+        $sessionAlertsEnabled = $project->getAttribute('auths', [])['sessionAlerts'] ?? false;
+        $isFirstSession = $dbForProject->count('sessions', [
+            Query::equal('userId', [$user->getId()]),
+        ]) === 1;
+
+        if ($sessionAlertsEnabled && !$isFirstSession) {
             sendSessionAlert($locale, $user, $project, $session, $queueForMails);
         }
+
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
