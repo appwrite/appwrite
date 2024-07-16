@@ -136,7 +136,7 @@ class BodyMultipart
             }
 
             $query .= $eol . $eol;
-            $query .= $value . $eol;
+            $query .= $value == false ? 0 . $eol : $value . $eol;
             $query .= '--' . $this->boundary;
         }
 
