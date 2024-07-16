@@ -719,7 +719,7 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_FUNCTIONS_SIZE_LIMIT',
+                'name' => '_APP_FUNCTIONS_BUILD_SIZE_LIMIT',
                 'description' => 'The maximum size deployment after build in bytes. The default value is 2GB.',
                 'introduction' => '1.6.0',
                 'default' => '2000000000',
