@@ -11,8 +11,8 @@ return [
         'memory' => 1024,
         'cpus' => 1
     ],
-    Sizes::S_2VCPU_1GB->value => [
-        'memory' => 1024,
+    Sizes::S_2VCPU_2GB->value => [
+        'memory' => 2048,
         'cpus' => 2
     ],
     Sizes::S_2VCPU_4GB->value => [

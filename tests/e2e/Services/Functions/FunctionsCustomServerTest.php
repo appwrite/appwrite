@@ -400,7 +400,6 @@ class FunctionsCustomServerTest extends Scope
                 'users.*.update.name',
                 'users.*.update.email',
             ],
-            'schedule' => '0 0 1 1 *',
             'timeout' => 15,
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
@@ -418,7 +417,6 @@ class FunctionsCustomServerTest extends Scope
             'users.*.update.name',
             'users.*.update.email',
         ], $response1['body']['events']);
-        $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(15, $response1['body']['timeout']);
         $this->assertEquals(1024, $response1['body']['memory']);
         $this->assertEquals(1, $response1['body']['cpus']);
@@ -436,7 +434,6 @@ class FunctionsCustomServerTest extends Scope
                 'users.*.update.name',
                 'users.*.update.email',
             ],
-            'schedule' => '0 0 1 1 *',
             'timeout' => 15,
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
@@ -444,6 +441,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $response2['headers']['status-code']);
+        $this->assertEquals('Invalid `size` param: String must be a valid size value of s-1vcpu-512mb, s-1vcpu-1gb', $response2['body']['message']);
 
         return $data;
     }
