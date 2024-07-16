@@ -223,7 +223,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
-    if ($$project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
+    if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
         if ($dbForProject->count('sessions', [
             Query::equal('userId', [$user->getId()]),
         ]) !== 1) {
@@ -907,7 +907,7 @@ App::post('/v1/account/sessions/email')
             ->setParam('sessionId', $session->getId())
         ;
 
-        if ($$project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
+        if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
             if ($dbForProject->count('sessions', [
                 Query::equal('userId', [$user->getId()]),
             ]) !== 1) {
