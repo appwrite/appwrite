@@ -15,7 +15,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '15.0.0',
+                'version' => '16.0.0-rc.1',
                 'url' => 'https://github.com/appwrite/sdk-for-web',
                 'package' => 'https://www.npmjs.com/package/appwrite',
                 'enabled' => true,
@@ -63,7 +63,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '12.0.4',
+                'version' => '13.0.0-rc.1',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -221,7 +221,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '5.0.5',
+                'version' => '6.0.0-rc.3',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -249,7 +249,7 @@ return [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
-                'version' => '13.0.0',
+                'version' => '14.0.0-rc.1',
                 'url' => 'https://github.com/appwrite/sdk-for-node',
                 'package' => 'https://www.npmjs.com/package/node-appwrite',
                 'enabled' => true,
@@ -341,8 +341,8 @@ return [
                 'name' => 'Go',
                 'version' => '4.0.1',
                 'url' => 'https://github.com/appwrite/sdk-for-go',
-                'package' => '',
-                'enabled' => false,
+                'package' => 'https://github.com/appwrite/sdk-for-go',
+                'enabled' => true,
                 'beta' => true,
                 'dev' => false,
                 'hidden' => false,
@@ -393,7 +393,7 @@ return [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '11.0.3',
+                'version' => '12.0.0-rc.1',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
