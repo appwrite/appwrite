@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "77a2eac158245fb198f23817b6c12aec",
+    "content-hash": "7bdf4f99c8d53d2690082c14ca8840d3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3873,6 +3873,7 @@
                     "type": "patreon"
                 }
             ],
+            "abandoned": "web-auth/webauthn-lib",
             "time": "2024-06-15T07:18:26+00:00"
         },
         {
@@ -4088,16 +4089,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.38.8",
+            "version": "0.39.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "6367c57ddbcf7b88cacb900c4fe7ef3f28bf38ef"
+                "reference": "16142d88270e368030d7956cadf2d7816413f8c4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6367c57ddbcf7b88cacb900c4fe7ef3f28bf38ef",
-                "reference": "6367c57ddbcf7b88cacb900c4fe7ef3f28bf38ef",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/16142d88270e368030d7956cadf2d7816413f8c4",
+                "reference": "16142d88270e368030d7956cadf2d7816413f8c4",
                 "shasum": ""
             },
             "require": {
@@ -4133,9 +4134,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.38.8"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.3"
             },
-            "time": "2024-06-17T00:42:27+00:00"
+            "time": "2024-07-12T15:29:48+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -4256,16 +4257,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.16.1",
+            "version": "v1.16.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "9266a47f1b9231b83e0cfd849009547329d871b1"
+                "reference": "51f1ba679a6afe0315621ad143d788bd7ded0eca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/9266a47f1b9231b83e0cfd849009547329d871b1",
-                "reference": "9266a47f1b9231b83e0cfd849009547329d871b1",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/51f1ba679a6afe0315621ad143d788bd7ded0eca",
+                "reference": "51f1ba679a6afe0315621ad143d788bd7ded0eca",
                 "shasum": ""
             },
             "require": {
@@ -4318,7 +4319,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2024-06-18T16:50:05+00:00"
+            "time": "2024-07-09T15:58:08+00:00"
         },
         {
             "name": "matthiasmullie/minify",
