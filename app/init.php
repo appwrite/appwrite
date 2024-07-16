@@ -291,7 +291,7 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
-Config::load('runtime-sizes', __DIR__ . '/config/sizes.php');
+Config::load('runtime-sizes', __DIR__ . '/config/runtimes/sizes.php');
 
 /**
  * New DB Filters

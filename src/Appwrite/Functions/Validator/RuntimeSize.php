@@ -52,7 +52,7 @@ class RuntimeSize extends Validator
     */
     public function getDescription(): string
     {
-        return 'String must be a valid size value of ';
+        return 'String must be a valid size value of ' . implode(', ', $this->getAllowedSizes());
     }
 
     /**
