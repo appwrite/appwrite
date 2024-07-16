@@ -79,7 +79,7 @@
         "spomky-labs/otphp": "^10.0",
         "webonyx/graphql-php": "14.11.*",
         "league/csv": "9.14.*",
-        "web-auth/webauthn-lib": "4.8.*"
+        "web-auth/webauthn-lib": "4.9.*"
     },
     "require-dev": {
         "ext-fileinfo": "*",
