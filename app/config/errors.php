@@ -525,6 +525,12 @@ return [
         'code' => 408,
     ],
 
+    Exception::FUNCTION_INVALID_RUNTIME_SIZE => [
+        'name' => Exception::FUNCTION_INVALID_RUNTIME_SIZE,
+        'description' => "The requested runtime size is either unsupported or isn't included in your plan. If your running self-hosted check the value of the _APP_FUNCTIONS_MEMORY and _APP_FUNCTIONS_CPUS environment variable.",
+        'code' => 400,
+    ],
+
     /** Builds  */
     Exception::BUILD_NOT_FOUND => [
         'name' => Exception::BUILD_NOT_FOUND,
