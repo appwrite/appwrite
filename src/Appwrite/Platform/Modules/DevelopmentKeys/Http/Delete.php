@@ -46,7 +46,7 @@ class Delete extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $key = $dbForConsole->findOne('development_keys', [
+        $key = $dbForConsole->findOne('developmentKeys', [
             Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);

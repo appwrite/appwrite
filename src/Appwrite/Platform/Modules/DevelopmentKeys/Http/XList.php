@@ -47,7 +47,7 @@ class XList extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $keys = $dbForConsole->find('development_keys', [
+        $keys = $dbForConsole->find('developmentKeys', [
             Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::limit(5000),
         ]);

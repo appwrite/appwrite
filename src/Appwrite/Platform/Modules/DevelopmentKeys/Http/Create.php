@@ -69,7 +69,7 @@ class Create extends Action
             'secret' => API_KEY_STANDARD . '_' . \bin2hex(\random_bytes(128)),
         ]);
 
-        $key = $dbForConsole->createDocument('development_keys', $key);
+        $key = $dbForConsole->createDocument('developmentKeys', $key);
 
         $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
