@@ -4,9 +4,11 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Extend\Exception;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\System\System;
@@ -70,6 +72,11 @@ class UsageDump extends Action
                         continue;
                     }
 
+                    if (str_ends_with($key, '.db_storage')) {
+                        $this->handleDBStorageCalculation($key, $dbForProject);
+                        return;
+                    }
+
                     foreach ($this->periods as $period => $format) {
                         $time = 'inf' === $period ? null : date($format, time());
                         $id = \md5("{$time}_{$period}_{$key}");
@@ -104,6 +111,55 @@ class UsageDump extends Action
                 }
             } catch (\Exception $e) {
                 console::error('[' . DateTime::now() . '] project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
+            }
+        }
+    }
+
+    private function handleDBStorageCalculation(string $key, Database $dbForProject): void
+    {
+        $data = explode('.', $key);
+
+        foreach ($this->periods as $period => $format) {
+            $time = 'inf' === $period ? null : date($format, time());
+            $id = \md5("{$time}_{$period}_{$key}");
+
+            $value = 0;
+            $previousValue = 0;
+            try {
+                $previousValue = ($dbForProject->getDocument('stats', $id))->getAttribute('value');
+            } catch (\Exception $e) {
+                // No previous value
+            }
+
+            switch (count($data)) {
+                // Collection Level
+                case 3:
+                    $databaseInternalId = $data[0];
+                    $collectionInternalId = $data[1];
+    
+                    $value = $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collectionInternalId);
+
+                    // Compare with previous value
+                    $value = $value - $previousValue;
+
+                    // Update Collection
+
+                    // Update Database
+
+                    // Update Project
+                    break;
+                // Database Level
+                case 2:
+                    $databaseInternalId = $data[0];
+                    $collections = $dbForProject->find('database_' . $databaseInternalId);
+
+                    foreach ($collections as $collection) {
+                        $value += $dbForProject->getSizeOfCollection($collection->getInternalId());
+                    }
+                    break;
+                // Project Level
+                case 1:
+                    break;
             }
         }
     }
