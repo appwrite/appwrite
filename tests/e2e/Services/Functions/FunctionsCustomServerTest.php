@@ -404,8 +404,7 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
-            'memory' => 1024,
-            'cpus' => 2
+            'size' => 's-1vcpu-1gb',
         ]);
 
         $this->assertEquals(200, $response1['headers']['status-code']);
@@ -422,7 +421,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(15, $response1['body']['timeout']);
         $this->assertEquals(1024, $response1['body']['memory']);
-        $this->assertEquals(2, $response1['body']['cpus']);
+        $this->assertEquals(1, $response1['body']['cpus']);
+        $this->assertEquals('s-1vcpu-1gb', $response1['body']['size']);
 
         /**
          * Test for FAILURE
@@ -440,30 +440,10 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
-            'memory' => 9999,
-            'cpus' => 4
+            'size' => 's-2vcpu-512mb', // Invalid size
         ]);
 
         $this->assertEquals(400, $response2['headers']['status-code']);
-
-        $response3 = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Test1',
-            'events' => [
-                'users.*.update.name',
-                'users.*.update.email',
-            ],
-            'schedule' => '0 0 1 1 *',
-            'timeout' => 15,
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
-            'memory' => 3212,
-            'cpus' => 5
-        ]);
-
-        $this->assertEquals(400, $response3['headers']['status-code']);
 
         return $data;
     }
