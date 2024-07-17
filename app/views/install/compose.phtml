@@ -166,7 +166,7 @@ $image = $this->getParam('image', '');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:latest //TODO: fix tomorrow
+    image: <?php echo $organization; ?>/console:appwrite/console:5.0.0-rc.3
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
