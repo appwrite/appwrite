@@ -92,23 +92,6 @@ class Auth
     public const MFA_RECENT_DURATION = 1800; // 30 mins
 
     /**
-     * @var string
-     */
-    public static $cookieName = 'a_session';
-
-    /**
-     * Set Cookie Name.
-     *
-     * @param $string
-     *
-     * @return string
-     */
-    public static function setCookieName($string)
-    {
-        return self::$cookieName = $string;
-    }
-
-    /**
      * Encode Session.
      *
      * @param string $id

@@ -18,6 +18,22 @@ class Authentication
      */
     private $secret = '';
 
+
+    /**
+     * @var string
+     */
+    private $cookieName = 'a_session';
+
+    public function setCookieName($string): string
+    {
+        return $this->cookieName = $string;
+    }
+
+    public function getCookieName(): string
+    {
+        return $this->cookieName;
+    }
+
     public function getUnique(): string
     {
         return $this->unique;

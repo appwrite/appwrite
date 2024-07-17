@@ -3,6 +3,7 @@
 namespace Tests\Unit\Auth;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Authentication;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -14,11 +15,13 @@ use Utopia\Database\Validator\Roles;
 class AuthTest extends TestCase
 {
     protected Authorization $auth;
+    protected Authentication $authentication;
 
     public function setUp(): void
     {
         parent::setUp();
         $this->auth = new Authorization();
+        $this->authentication = new Authentication();
     }
 
     /**
@@ -34,8 +37,8 @@ class AuthTest extends TestCase
     {
         $name = 'cookie-name';
 
-        $this->assertEquals(Auth::setCookieName($name), $name);
-        $this->assertEquals(Auth::$cookieName, $name);
+        $this->assertEquals($this->authentication->setCookieName($name), $name);
+        $this->assertEquals($this->authentication->getCookieName(), $name);
     }
 
     public function testEncodeDecodeSession(): void

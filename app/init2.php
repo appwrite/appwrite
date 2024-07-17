@@ -547,16 +547,16 @@ $user
     ->inject('authentication')
     ->setCallback(function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $authorization, Authentication $authentication) {
         $authorization->setDefaultStatus(true);
-        Auth::setCookieName('a_session_' . $project->getId());
+        $authentication->setCookieName('a_session_' . $project->getId());
 
         if (APP_MODE_ADMIN === $mode) {
-            Auth::setCookieName('a_session_' . $console->getId());
+            $authentication->setCookieName('a_session_' . $console->getId());
         }
 
         $session = Auth::decodeSession(
             $request->getCookie(
-                Auth::$cookieName, // Get sessions
-                $request->getCookie(Auth::$cookieName . '_legacy', '')
+                $authentication->getCookieName(), // Get sessions
+                $request->getCookie($authentication->getCookieName() . '_legacy', '')
             )
         );
 
@@ -580,7 +580,7 @@ $user
             }
             $fallback = $request->getHeader('x-fallback-cookies', '');
             $fallback = \json_decode($fallback, true);
-            $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
+            $session = Auth::decodeSession(((isset($fallback[$authentication->getCookieName()])) ? $fallback[$authentication->getCookieName()] : ''));
         }
 
         $authentication->setUnique($session['id'] ?? '');
