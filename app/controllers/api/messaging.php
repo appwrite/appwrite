@@ -2704,7 +2704,7 @@ Http::post('/v1/messaging/messages/email')
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
-                    'schedule'  => $scheduledAt,
+                    'schedule' => $scheduledAt,
                     'active' => true,
                 ]));
 
@@ -2820,7 +2820,7 @@ Http::post('/v1/messaging/messages/sms')
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
-                    'schedule'  => $scheduledAt,
+                    'schedule' => $scheduledAt,
                     'active' => true,
                 ]));
 
@@ -2946,11 +2946,9 @@ Http::post('/v1/messaging/messages/push')
                 $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'));
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
 
             $jwt = $encoder->encode([
-                'iat' => \time(),
-                'exp' => $expiry,
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
                 'projectId' => $project->getId(),
@@ -2998,7 +2996,7 @@ Http::post('/v1/messaging/messages/push')
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
-                    'schedule'  => $scheduledAt,
+                    'schedule' => $scheduledAt,
                     'active' => true,
                 ]));
 
@@ -3810,11 +3808,9 @@ Http::patch('/v1/messaging/messages/push/:messageId')
                 $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'));
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
 
             $jwt = $encoder->encode([
-                'iat' => \time(),
-                'exp' => $expiry,
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
                 'projectId' => $project->getId(),

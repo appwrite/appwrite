@@ -248,6 +248,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_VERSION' => APP_VERSION_STABLE
         ]);
 
         /** Execute function */
@@ -269,7 +270,8 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: $command
+                runtimeEntrypoint: $command,
+                logging: $function->getAttribute('logging', true),
             );
 
             $headersFiltered = [];
@@ -326,13 +328,6 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
         $execution->setAttribute('responseHeaders', $headers);
 
         $body = $execution['responseBody'] ?? '';
-
-        $encodingKey = \array_search('x-open-runtimes-encoding', \array_column($execution['responseHeaders'], 'name'));
-        if ($encodingKey !== false) {
-            if (($execution['responseHeaders'][$encodingKey]['value'] ?? '') === 'base64') {
-                $body = \base64_decode($body);
-            }
-        }
 
         $contentType = 'text/plain';
         foreach ($execution['responseHeaders'] as $header) {
@@ -917,7 +912,7 @@ Http::get('/robots.txt')
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
-        if ($host === $mainDomain) {
+        if ($host === $mainDomain || $host === 'localhost') {
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
@@ -945,7 +940,7 @@ Http::get('/humans.txt')
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
-        if ($host === $mainDomain) {
+        if ($host === $mainDomain || $host === 'localhost') {
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {

@@ -135,6 +135,8 @@ class Response extends HttpResponse
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
     public const MODEL_DETECTION = 'detection';
+    public const MODEL_VCS_CONTENT = 'vcsContent';
+    public const MODEL_VCS_CONTENT_LIST = 'vcsContentList';
 
     // Functions
     public const MODEL_FUNCTION = 'function';
@@ -168,6 +170,7 @@ class Response extends HttpResponse
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
+    public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM = 'platform';

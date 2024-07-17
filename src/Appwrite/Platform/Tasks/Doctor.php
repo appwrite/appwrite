@@ -10,6 +10,7 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Domains\Domain;
 use Utopia\Http\Http;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Queue\Connection\Redis;
@@ -105,13 +106,20 @@ class Doctor extends Action
             Console::log('🟢 HTTPS force option is enabled for function domains');
         }
 
-        $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
         $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
-        if (empty($providerName) || empty($providerConfig) || !Logger::hasProvider($providerName)) {
-            Console::log('🔴 Logging adapter is disabled');
-        } else {
-            Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');
+        try {
+            $loggingProvider = new DSN($providerConfig ?? '');
+
+            $providerName = $loggingProvider->getScheme();
+
+            if (empty($providerName) || !Logger::hasProvider($providerName)) {
+                Console::log('🔴 Logging adapter is disabled');
+            } else {
+                Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');
+            }
+        } catch (\Throwable $th) {
+            Console::log('🔴 Logging adapter is misconfigured');
         }
 
         \usleep(200 * 1000); // Sleep for 0.2 seconds
