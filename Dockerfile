@@ -30,6 +30,8 @@ RUN \
 
 WORKDIR /usr/src/code
 
+COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
+
 # Add Source Code
 COPY ./app /usr/src/code/app
 COPY ./public /usr/src/code/public
