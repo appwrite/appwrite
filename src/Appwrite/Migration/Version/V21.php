@@ -7,6 +7,7 @@ use Exception;
 use Throwable;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 
 class V21 extends Migration
@@ -133,7 +134,7 @@ class V21 extends Migration
                 /**
                  * Add scopes attribute.
                  */
-                if (!$document->getAttribute('scopes', false)) {
+                if (empty($document->getAttribute('scopes', []))) {
                     $document->setAttribute('scopes', []);
                 }
                 break;
