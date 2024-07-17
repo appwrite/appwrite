@@ -131,14 +131,6 @@ class V21 extends Migration
                 $document->setAttribute('version', '1.6.0');
                 $document->setAttribute('accessedAt', DateTime::now());
                 break;
-            case 'functions':
-                /**
-                 * Add scopes attribute.
-                 */
-                if (empty($document->getAttribute('scopes', []))) {
-                    $document->setAttribute('scopes', []);
-                }
-                break;
         }
         return $document;
     }
