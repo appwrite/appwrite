@@ -9,7 +9,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
-class V20 extends Migration
+class V21 extends Migration
 {
     /**
      * @throws Throwable
