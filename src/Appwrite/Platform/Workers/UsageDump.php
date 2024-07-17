@@ -119,6 +119,35 @@ class UsageDump extends Action
     {
         $data = explode('.', $key);
 
+        $updateMetric = function (Database $dbForProject, int $value, string $key, string $period, string $time, string $id) {
+            try {
+                $dbForProject->createDocument('stats', new Document([
+                    '$id' => $id,
+                    'period' => $period,
+                    'time' => $time,
+                    'metric' => $key,
+                    'value' => $value,
+                    'region' => System::getEnv('_APP_REGION', 'default'),
+                ]));
+            } catch (Duplicate $th) {
+                if ($value < 0) {
+                    $dbForProject->decreaseDocumentAttribute(
+                        'stats',
+                        $id,
+                        'value',
+                        abs($value)
+                    );
+                } else {
+                    $dbForProject->increaseDocumentAttribute(
+                        'stats',
+                        $id,
+                        'value',
+                        $value
+                    );
+                }
+            }
+        };
+
         foreach ($this->periods as $period => $format) {
             $time = 'inf' === $period ? null : date($format, time());
             $id = \md5("{$time}_{$period}_{$key}");
