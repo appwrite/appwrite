@@ -711,7 +711,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_FUNCTIONS_SIZE_LIMIT',
-                'description' => 'The maximum size deployment in bytes. The default value is 30MB.',
+                'description' => 'The maximum size of a function in bytes. The default value is 30MB.',
                 'introduction' => '0.13.0',
                 'default' => '30000000',
                 'required' => false,
@@ -720,7 +720,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_BUILD_SIZE_LIMIT',
-                'description' => 'The maximum size deployment after build in bytes. The default value is 2GB.',
+                'description' => 'The maximum size of a built deployment in bytes. The default value is 2GB.',
                 'introduction' => '1.6.0',
                 'default' => '2000000000',
                 'required' => false,
