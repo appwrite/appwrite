@@ -40,6 +40,12 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('deploymentsStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of deployments storage size (in bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('bucketsTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of buckets.',
@@ -110,6 +116,13 @@ class UsageProject extends Model
             ->addRule('buildsMbSecondsBreakdown', [
                 'type' => Response::MODEL_METRIC_BREAKDOWN,
                 'description' => 'Aggregated breakdown in totals of build mbSeconds by functions.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('deploymentsStorageBreakdown', [
+                'type' => Response::MODEL_METRIC_BREAKDOWN,
+                'description' => 'Aggregated breakdown in totals of deployments storage size (in bytes).',
                 'default' => [],
                 'example' => [],
                 'array' => true
