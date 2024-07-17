@@ -172,6 +172,17 @@ App::init()
             ? Role::guests()->toString()
             : Role::users()->toString();
 
+
+        var_dump('###########');
+        var_dump("Project ID : " . $project->getId());
+        var_dump($project->getAttribute('teamId'));
+        $memberships = $user->getAttribute('memberships', []); 
+        foreach($memberships as $membership) {
+            var_dump($membership['teamId']);
+            var_dump($membership['roles']);
+        }
+        var_dump('###########');
+
         // Add user roles
         $memberships = $user->find('teamId', $project->getAttribute('teamId'), 'memberships');
 
@@ -186,6 +197,15 @@ App::init()
                         break;
                     case 'developer':
                         $role = Auth::USER_ROLE_DEVELOPER;
+                        break;
+                    case 'editor':
+                        $role = Auth::USER_ROLE_EDITOR;
+                        break;
+                    case 'analyst':
+                        $role = Auth::USER_ROLE_ANALYST;
+                        break;
+                    case 'billing':
+                        $role = Auth::USER_ROLE_BILLING;
                         break;
                 }
             }
@@ -254,6 +274,11 @@ App::init()
         foreach (Auth::getRoles($user) as $authRole) {
             Authorization::setRole($authRole);
         }
+
+        var_dump('###########');
+        var_dump(Authorization::getRoles());
+        var_dump($scopes);
+        var_dump('###########');
 
         $service = $route->getLabel('sdk.namespace', '');
         if (!empty($service)) {

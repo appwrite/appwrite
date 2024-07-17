@@ -39,6 +39,9 @@ class Auth
     public const USER_ROLE_USERS = 'users';
     public const USER_ROLE_ADMIN = 'admin';
     public const USER_ROLE_DEVELOPER = 'developer';
+    public const USER_ROLE_EDITOR = 'editor';
+    public const USER_ROLE_ANALYST = 'analyst';
+    public const USER_ROLE_BILLING = 'billing';
     public const USER_ROLE_OWNER = 'owner';
     public const USER_ROLE_APPS = 'apps';
     public const USER_ROLE_SYSTEM = 'system';
