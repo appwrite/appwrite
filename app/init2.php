@@ -590,7 +590,7 @@ $user
             if ($project->isEmpty()) {
                 $user = new Document([]);
             } else {
-                if ($project->getId() === 'console') { //
+                if ($project->getId() === 'console') {
                     $user = $dbForConsole->getDocument('users', $authentication->getUnique());
                 } else {
                     $user = $dbForProject->getDocument('users', $authentication->getUnique());
