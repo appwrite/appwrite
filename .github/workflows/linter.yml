@@ -12,12 +12,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 2
-
-    - run: git checkout HEAD^2
-
+      uses: actions/checkout@v4
     - name: Validate composer.json and composer.lock
       run: |
         docker run --rm -v $PWD:/app composer sh -c \
