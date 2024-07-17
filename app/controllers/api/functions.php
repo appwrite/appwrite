@@ -1575,7 +1575,7 @@ Http::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
             ]));
         }
 
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
         $deleteBuild = $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
 
         $queueForEvents

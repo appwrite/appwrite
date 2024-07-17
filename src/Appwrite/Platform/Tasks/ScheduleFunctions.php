@@ -7,7 +7,6 @@ use Cron\CronExpression;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
-use Utopia\Pools\Group;
 use Utopia\Queue\Connection\Redis;
 
 class ScheduleFunctions extends ScheduleBase
@@ -70,11 +69,10 @@ class ScheduleFunctions extends ScheduleBase
                 \sleep($delay); // in seconds
 
                 $pool = $pools['pools-queue-main']['pool'];
-                $dsn = $pools['pools-queue-main']['dsn'];
                 $connection = $pool->get();
                 $this->connections->add($connection, $pool);
 
-                $queueConnection = new Redis($dsn->getHost(), $dsn->getPort());
+                $queueConnection = new Redis($connection);
 
                 foreach ($scheduleKeys as $scheduleKey) {
                     // Ensure schedule was not deleted

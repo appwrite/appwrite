@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
 use Utopia\Database\Database;
-use Utopia\Pools\Group;
 
 class ScheduleExecutions extends ScheduleBase
 {
@@ -21,10 +20,12 @@ class ScheduleExecutions extends ScheduleBase
         return 'execution';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole): void
+    protected function enqueueResources(array $pools, Database $dbForConsole): void
     {
-        $queue = $pools->get('queue')->pop();
-        $connection = $queue->getResource();
+        $pool = $pools['pools-queue-main']['pool'];
+        $connection = $pool->get();
+        $this->connections->add($connection, $pool);
+
         $queueForFunctions = new Func($connection);
 
         foreach ($this->schedules as $schedule) {
@@ -66,6 +67,6 @@ class ScheduleExecutions extends ScheduleBase
             unset($this->schedules[$schedule['resourceId']]);
         }
 
-        $queue->reclaim();
+        $this->connections->reclaim();
     }
 }

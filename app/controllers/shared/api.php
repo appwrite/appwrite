@@ -242,8 +242,8 @@ Http::init()
                     $role = Auth::USER_ROLE_APPS;
                     $scopes = \array_merge($roles[$role]['scopes'], $tokenScopes);
 
-                    Authorization::setRole(Auth::USER_ROLE_APPS);
-                    Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+                    $authorization->addRole(Auth::USER_ROLE_APPS);
+                    $authorization->setDefaultStatus(false);  // Cancel security segmentation for API keys.
                 }
             } elseif($keyType === API_KEY_STANDARD) {
                 // No underline means no prefix. Backwards compatibility.
