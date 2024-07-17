@@ -24,8 +24,9 @@ const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1_000_000;
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
-const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
-const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
+const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
+const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
+const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 331;
 const APP_VERSION_STABLE = '1.5.0';
@@ -123,6 +124,9 @@ const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 const MESSAGE_TYPE_EMAIL = 'email';
 const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
+// API key types
+const API_KEY_STANDARD = 'standard';
+const API_KEY_DYNAMIC = 'dynamic';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
@@ -143,9 +147,20 @@ const METRIC_FUNCTIONS  = 'functions';
 const METRIC_DEPLOYMENTS  = 'deployments';
 const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
 const METRIC_BUILDS  = 'builds';
+const METRIC_BUILDS_SUCCESS  = 'builds.success';
+const METRIC_BUILDS_FAILED  = 'builds.failed';
+
 const METRIC_BUILDS_STORAGE  = 'builds.storage';
 const METRIC_BUILDS_COMPUTE  = 'builds.compute';
+const METRIC_BUILDS_COMPUTE_SUCCESS  = 'builds.compute.success';
+const METRIC_BUILDS_COMPUTE_FAILED  = 'builds.compute.failed';
+
+const METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS  = '{functionInternalId}.builds.compute.success';
+const METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED  = '{functionInternalId}.builds.compute.failed';
 const METRIC_FUNCTION_ID_BUILDS  = '{functionInternalId}.builds';
+const METRIC_FUNCTION_ID_BUILDS_SUCCESS  = '{functionInternalId}.builds.success';
+const METRIC_FUNCTION_ID_BUILDS_FAILED  = '{functionInternalId}.builds.failed';
+
 const METRIC_FUNCTION_ID_BUILDS_STORAGE = '{functionInternalId}.builds.storage';
 const METRIC_FUNCTION_ID_BUILDS_COMPUTE  = '{functionInternalId}.builds.compute';
 const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';

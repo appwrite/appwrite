@@ -40,7 +40,6 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
 use Utopia\Http\Validator\ArrayList;
-use Utopia\System\System;
 use Utopia\Http\Validator\Assoc;
 use Utopia\Http\Validator\Boolean;
 use Utopia\Http\Validator\Integer;
@@ -48,6 +47,7 @@ use Utopia\Http\Validator\Range;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks): Document

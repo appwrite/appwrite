@@ -268,8 +268,8 @@ Http::init()
                         throw new Exception(Exception::PROJECT_KEY_EXPIRED);
                     }
 
-                $authorization->addRole(Auth::USER_ROLE_APPS);
-                $authorization->setDefaultStatus(false);  // Cancel security segmentation for API keys.
+                    $authorization->addRole(Auth::USER_ROLE_APPS);
+                    $authorization->setDefaultStatus(false);  // Cancel security segmentation for API keys.
 
                     $accessedAt = $key->getAttribute('accessedAt', '');
                     if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
@@ -783,7 +783,7 @@ Http::shutdown()
             $accessedAt = $project->getAttribute('accessedAt', '');
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $project->setAttribute('accessedAt', DateTime::now());
-                Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
+                $authorization->skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
             }
         }
 

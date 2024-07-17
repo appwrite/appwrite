@@ -57,6 +57,10 @@ use Utopia\Http\Request;
 use Utopia\Http\Response;
 use Utopia\Http\Validator\Hostname;
 use Utopia\Locale\Locale;
+use Utopia\Logger\Adapter\AppSignal;
+use Utopia\Logger\Adapter\LogOwl;
+use Utopia\Logger\Adapter\Raygun;
+use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Queue;
@@ -185,6 +189,26 @@ $global->set('logger', function () {
     $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
     $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
+    try {
+        $loggingProvider = new DSN($providerConfig ?? '');
+
+        $providerName = $loggingProvider->getScheme();
+        $providerConfig = match ($providerName) {
+            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
+            'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
+            default => ['key' => $loggingProvider->getHost()],
+        };
+    } catch (Throwable) {
+        // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
+        $configChunks = \explode(";", $providerConfig);
+
+        $providerConfig = match ($providerName) {
+            'sentry' => [ 'key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
+            'logowl' => ['ticket' => $configChunks[0] ?? '', 'host' => ''],
+            default => ['key' => $providerConfig],
+        };
+    }
+
     if (empty($providerName) || empty($providerConfig)) {
         return;
     }
@@ -193,8 +217,14 @@ $global->set('logger', function () {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
-    $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
-    $adapter = new $classname($providerConfig);
+    $adapter = match ($providerName) {
+        'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
+        'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
+        'raygun' => new Raygun($providerConfig['key']),
+        'appsignal' => new AppSignal($providerConfig['key']),
+        default => throw new Exception('Provider "' . $providerName . '" not supported.')
+    };
+
     return new Logger($adapter);
 });
 
@@ -517,7 +547,6 @@ $user
     ->inject('authentication')
     ->setCallback(function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $authorization, Authentication $authentication) {
         $authorization->setDefaultStatus(true);
-
         Auth::setCookieName('a_session_' . $project->getId());
 
         if (APP_MODE_ADMIN === $mode) {
@@ -589,7 +618,7 @@ $user
         $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
         if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 
             try {
                 $payload = $jwt->decode($authJWT);
@@ -674,9 +703,11 @@ $console
             'legalAddress' => '',
             'legalTaxId' => '',
             'auths' => [
+                'mockNumbers' => [],
                 'invites' => System::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
                 'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
                 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
+                'sessionAlerts' => System::getEnv('_APP_CONSOLE_SESSION_ALERTS', 'disabled') === 'enabled'
             ],
             'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
             'authWhitelistIPs' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],

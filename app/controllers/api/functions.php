@@ -1522,7 +1522,8 @@ Http::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForEvents')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $queueForEvents) {
+    ->inject('authorization')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Authorization $authorization) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1535,7 +1536,7 @@ Http::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        $build = $authorization->skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
 
         if ($build->isEmpty()) {
             $buildId = ID::unique();
@@ -1614,7 +1615,7 @@ Http::post('/v1/functions/:functionId/executions')
     ->inject('geodb')
     ->inject('authorization')
     ->inject('authentication')
-    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, ?string $scheduledAt, Response $response, Document $project, Database $dbForProject, Database $dbForConsole, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, , Authorization $authorization, Authentication $authentication) {
+    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, ?string $scheduledAt, Response $response, Document $project, Database $dbForProject, Database $dbForConsole, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, Authorization $authorization, Authentication $authentication) {
 
         if(!$async && !is_null($scheduledAt)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Scheduled executions must run asynchronously. Set scheduledAt to a future date, or set async to true.');
@@ -1753,7 +1754,7 @@ Http::post('/v1/functions/:functionId/executions')
             ->setContext('function', $function);
 
         if ($async) {
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
 
             if(is_null($scheduledAt)) {
                 $queueForFunctions
@@ -1896,7 +1897,7 @@ Http::post('/v1/functions/:functionId/executions')
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
             ;
 
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
         $roles = $authorization->getRoles();
@@ -2070,7 +2071,8 @@ Http::delete('/v1/functions/:functionId/executions/:executionId')
     ->inject('dbForProject')
     ->inject('dbForConsole')
     ->inject('queueForEvents')
-    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, Database $dbForConsole, Event $queueForEvents) {
+    ->inject('authorization')
+    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, Database $dbForConsole, Event $queueForEvents, Authorization $authorization) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -2107,7 +2109,7 @@ Http::delete('/v1/functions/:functionId/executions/:executionId')
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('active', false);
 
-                Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+                $authorization->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
             }
         }
 
