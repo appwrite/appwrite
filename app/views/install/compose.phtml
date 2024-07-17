@@ -49,7 +49,7 @@ $image = $this->getParam('image', '');
       - traefik.enable=true
       - traefik.constraint-label-stack=appwrite
       - traefik.docker.network=appwrite
-      - traefik.http.services.appwrite_api.loadbalancer.server.port=3000
+      - traefik.http.services.appwrite_api.loadbalancer.server.port=80
       #http
       - traefik.http.routers.appwrite_api_http.entrypoints=appwrite_web
       - traefik.http.routers.appwrite_api_http.rule=PathPrefix(`/`)
@@ -172,7 +172,7 @@ $image = $this->getParam('image', '');
       - "traefik.enable=true"
       - "traefik.constraint-label-stack=appwrite"
       - "traefik.docker.network=appwrite"
-      - "traefik.http.services.appwrite_console.loadbalancer.server.port=80"
+      - "traefik.http.services.appwrite_console.loadbalancer.server.port=3000"
       #ws
       - traefik.http.routers.appwrite_console_http.entrypoints=appwrite_web
       - traefik.http.routers.appwrite_console_http.rule=PathPrefix(`/console`)
