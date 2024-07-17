@@ -197,11 +197,13 @@ services:
     container_name: appwrite-console
     image: appwrite/console:5.0.0-rc.5
     restart: unless-stopped
+    networks:
+      - appwrite
     labels:
       - "traefik.enable=true"
       - "traefik.constraint-label-stack=appwrite"
       - "traefik.docker.network=appwrite"
-      - "traefik.http.services.appwrite_console.loadbalancer.server.port=3000"
+      - "traefik.http.services.appwrite_console.loadbalancer.server.port=80"
       #ws
       - traefik.http.routers.appwrite_console_http.entrypoints=appwrite_web
       - traefik.http.routers.appwrite_console_http.rule=PathPrefix(`/console`)
