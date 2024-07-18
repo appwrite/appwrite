@@ -1,4 +1,5 @@
 from appwrite.client import Client
+from appwrite.permission import Permission
 
 client = Client()
 client.set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
@@ -12,5 +13,5 @@ result = databases.update_document(
     collection_id = '<COLLECTION_ID>',
     document_id = '<DOCUMENT_ID>',
     data = {}, # optional
-    permissions = ["read("any")"] # optional
+    permissions = Permission.read('any') # optional
 )

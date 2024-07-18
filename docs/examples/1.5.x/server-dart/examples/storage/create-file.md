@@ -12,5 +12,5 @@ File result = await storage.createFile(
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     file: InputFile(path: './path-to-files/image.jpg', filename: 'image.jpg'),
-    permissions: ["read("any")"], // (optional)
+    permissions: [Permission.read('any')], // (optional)
 );

@@ -12,5 +12,5 @@ const result = await storage.createFile(
     '<BUCKET_ID>', // bucketId
     '<FILE_ID>', // fileId
     InputFile.fromPath('/path/to/file', 'filename'), // file
-    ["read("any")"] // permissions (optional)
+    sdk.Permission.read('any') // permissions (optional)
 );

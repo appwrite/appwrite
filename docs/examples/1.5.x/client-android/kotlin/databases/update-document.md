@@ -1,6 +1,7 @@
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Databases
+import io.appwrite.Permission
 
 val client = Client(context)
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -13,5 +14,5 @@ val result = databases.updateDocument(
     collectionId = "<COLLECTION_ID>", 
     documentId = "<DOCUMENT_ID>", 
     data = mapOf( "a" to "b" ), // (optional)
-    permissions = listOf("read("any")"), // (optional)
+    permissions = listOf(Permission.read("any")), // (optional)
 )

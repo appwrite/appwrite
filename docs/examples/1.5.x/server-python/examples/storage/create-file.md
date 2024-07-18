@@ -1,5 +1,6 @@
 from appwrite.client import Client
 from appwrite.input_file import InputFile
+from appwrite.permission import Permission
 
 client = Client()
 client.set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
@@ -12,5 +13,5 @@ result = storage.create_file(
     bucket_id = '<BUCKET_ID>',
     file_id = '<FILE_ID>',
     file = InputFile.from_path('file.png'),
-    permissions = ["read("any")"] # optional
+    permissions = Permission.read('any') # optional
 )

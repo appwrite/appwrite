@@ -1,6 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Databases;
+import io.appwrite.Permission;
 
 Client client = new Client()
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -14,7 +15,7 @@ databases.updateDocument(
     "<COLLECTION_ID>", // collectionId
     "<DOCUMENT_ID>", // documentId
     mapOf( "a" to "b" ), // data (optional)
-    listOf("read("any")"), // permissions (optional)
+    listOf(Permission.read("any")), // permissions (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

@@ -11,6 +11,6 @@ let document = try await databases.createDocument(
     collectionId: "<COLLECTION_ID>",
     documentId: "<DOCUMENT_ID>",
     data: [:],
-    permissions: ["read("any")"] // optional
+    permissions: [Permission.read("any")] // optional
 )
 

@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Client;
+use Appwrite\Permission;
 use Appwrite\Services\Databases;
 
 $client = (new Client())
@@ -15,5 +16,5 @@ $result = $databases->updateDocument(
     collectionId: '<COLLECTION_ID>',
     documentId: '<DOCUMENT_ID>',
     data: [], // optional
-    permissions: ["read("any")"] // optional
+    permissions: Permission.read('any') // optional
 );

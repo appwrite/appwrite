@@ -1,6 +1,7 @@
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Storage
+import io.appwrite.Permission
 
 val client = Client(context)
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -12,5 +13,5 @@ val result = storage.updateFile(
     bucketId = "<BUCKET_ID>", 
     fileId = "<FILE_ID>", 
     name = "<NAME>", // (optional)
-    permissions = listOf("read("any")"), // (optional)
+    permissions = listOf(Permission.read("any")), // (optional)
 )

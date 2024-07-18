@@ -1,6 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Storage;
+import io.appwrite.Permission;
 
 Client client = new Client(context)
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -12,7 +13,7 @@ storage.updateFile(
     "<BUCKET_ID>", // bucketId 
     "<FILE_ID>", // fileId 
     "<NAME>", // name (optional)
-    listOf("read("any")"), // permissions (optional)
+    listOf(Permission.read("any")), // permissions (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

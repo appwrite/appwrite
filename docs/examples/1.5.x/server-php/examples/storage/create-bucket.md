@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Client;
+use Appwrite\Permission;
 use Appwrite\Services\Storage;
 
 $client = (new Client())
@@ -13,7 +14,7 @@ $storage = new Storage($client);
 $result = $storage->createBucket(
     bucketId: '<BUCKET_ID>',
     name: '<NAME>',
-    permissions: ["read("any")"], // optional
+    permissions: Permission.read('any'), // optional
     fileSecurity: false, // optional
     enabled: false, // optional
     maximumFileSize: 1, // optional

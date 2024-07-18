@@ -14,5 +14,5 @@ result = databases.create_document(
     collection_id: '<COLLECTION_ID>',
     document_id: '<DOCUMENT_ID>',
     data: {},
-    permissions: ["read("any")"] # optional
+    permissions: Permissions.read(Role.any()) # optional
 )

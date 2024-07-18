@@ -11,7 +11,7 @@ const result = await databases.createCollection(
     '<DATABASE_ID>', // databaseId
     '<COLLECTION_ID>', // collectionId
     '<NAME>', // name
-    ["read("any")"], // permissions (optional)
+    sdk.Permission.read('any'), // permissions (optional)
     false, // documentSecurity (optional)
     false // enabled (optional)
 );

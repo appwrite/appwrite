@@ -12,5 +12,5 @@ const result = await databases.createDocument(
     '<COLLECTION_ID>', // collectionId
     '<DOCUMENT_ID>', // documentId
     {}, // data
-    ["read("any")"] // permissions (optional)
+    sdk.Permission.read('any') // permissions (optional)
 );

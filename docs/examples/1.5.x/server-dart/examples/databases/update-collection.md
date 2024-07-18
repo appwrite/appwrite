@@ -11,7 +11,7 @@ Collection result = await databases.updateCollection(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     name: '<NAME>',
-    permissions: ["read("any")"], // (optional)
+    permissions: [Permission.read('any')], // (optional)
     documentSecurity: false, // (optional)
     enabled: false, // (optional)
 );

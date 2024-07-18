@@ -1,4 +1,4 @@
-import { Client, Storage } from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Storage, Permission } from "https://deno.land/x/appwrite/mod.ts";
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
@@ -11,5 +11,5 @@ const response = await storage.updateFile(
     '<BUCKET_ID>', // bucketId
     '<FILE_ID>', // fileId
     '<NAME>', // name (optional)
-    ["read("any")"] // permissions (optional)
+    Permission.read('any') // permissions (optional)
 );

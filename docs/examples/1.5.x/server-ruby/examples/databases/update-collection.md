@@ -13,7 +13,7 @@ result = databases.update_collection(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     name: '<NAME>',
-    permissions: ["read("any")"], # optional
+    permissions: Permissions.read(Role.any()), # optional
     document_security: false, # optional
     enabled: false # optional
 )

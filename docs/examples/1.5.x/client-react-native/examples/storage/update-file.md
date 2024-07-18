@@ -1,4 +1,4 @@
-import { Client, Storage } from "react-native-appwrite";
+import { Client, Storage, Permission } from "react-native-appwrite";
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
@@ -10,7 +10,7 @@ const result = await storage.updateFile(
     '<BUCKET_ID>', // bucketId
     '<FILE_ID>', // fileId
     '<NAME>', // name (optional)
-    ["read("any")"] // permissions (optional)
+    Permission.read('any') // permissions (optional)
 );
 
 console.log(response);

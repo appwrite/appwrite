@@ -1,4 +1,4 @@
-import { Client, Databases } from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Databases, Permission } from "https://deno.land/x/appwrite/mod.ts";
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
@@ -12,5 +12,5 @@ const response = await databases.createDocument(
     '<COLLECTION_ID>', // collectionId
     '<DOCUMENT_ID>', // documentId
     {}, // data
-    ["read("any")"] // permissions (optional)
+    Permission.read('any') // permissions (optional)
 );
