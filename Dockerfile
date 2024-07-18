@@ -12,23 +12,6 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM --platform=$BUILDPLATFORM node:20.11.0-alpine3.19 as node
-
-COPY app/console /usr/local/src/console
-
-WORKDIR /usr/local/src/console
-
-ARG VITE_GA_PROJECT
-ARG VITE_CONSOLE_MODE
-ARG VITE_APPWRITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
-
-ENV VITE_GA_PROJECT=$VITE_GA_PROJECT
-ENV VITE_CONSOLE_MODE=$VITE_CONSOLE_MODE
-ENV VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
-
-RUN npm ci
-RUN npm run build
-
 FROM appwrite/base:0.9.1 as final
 
 LABEL maintainer="team@appwrite.io"
@@ -48,7 +31,6 @@ RUN \
 WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
-COPY --from=node /usr/local/src/console/build /usr/src/code/console
 
 # Add Source Code
 COPY ./app /usr/src/code/app

@@ -46,11 +46,19 @@ $server = new Server('0.0.0.0', '80', [
     'tcp_fastopen' => true,
 ]);
 
-$http = new Http($server, $container, 'UTC');
+$server->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
+    Console::success('Worker ' . ++$workerId . ' started successfully');
+});
 
-$http->loadFiles(__DIR__ . '/../console');
-$http->setRequestClass(Request::class);
-$http->setResponseClass(Response::class);
+$http->on(Constant::EVENT_BEFORE_RELOAD, function ($server, $workerId) {
+    Console::success('Starting reload...');
+});
+
+$http->on(Constant::EVENT_AFTER_RELOAD, function ($server, $workerId) {
+    Console::success('Reload completed...');
+});
+
+include __DIR__ . '/controllers/general.php';
 
 global $global, $container;
 
