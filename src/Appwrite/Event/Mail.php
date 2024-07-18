@@ -334,7 +334,7 @@ class Mail extends Event
      */
     public function setVariables(array $variables): self
     {
-        $this->variables = $variables;
+        $this->variables = array_map(fn ($var) => strip_tags($var), $variables);
         return $this;
     }
 
