@@ -811,6 +811,7 @@ services:
     entrypoint: schedule-executions
     <<: *x-logging
     container_name: appwrite-task-scheduler-executions
+    restart: unless-stopped
     image: appwrite-dev
     networks:
       - appwrite
