@@ -8,7 +8,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\System\System;
@@ -167,7 +166,7 @@ class UsageDump extends Action
                 case 3:
                     $databaseInternalId = $data[0];
                     $collectionInternalId = $data[1];
-    
+
                     $value = $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collectionInternalId);
 
                     // Compare with previous value
@@ -186,9 +185,9 @@ class UsageDump extends Action
 
                     // Update Project
                     $projectKey = 'db_storage';
-                    $updateMetric($dbForProject, $diff, $projectKey, $period, $time); 
+                    $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
                     break;
-                // Database Level
+                    // Database Level
                 case 2:
                     $databaseInternalId = $data[0];
                     $collections = $dbForProject->find('database_' . $databaseInternalId);
@@ -202,12 +201,12 @@ class UsageDump extends Action
                     // Update Database
                     $databaseKey = $data[0] . '.db_storage';
                     $updateMetric($dbForProject, $diff, $databaseKey, $period, $time);
-                    
+
                     // Update Project
                     $projectKey = 'db_storage';
-                    $updateMetric($dbForProject, $diff, $projectKey, $period, $time); 
+                    $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
                     break;
-                // Project Level
+                    // Project Level
                 case 1:
                     // Get all project databases
                     $databases = $dbForProject->find('database');
