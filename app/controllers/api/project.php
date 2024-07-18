@@ -44,14 +44,16 @@ App::get('/v1/project/usage')
                 METRIC_DATABASES,
                 METRIC_USERS,
                 METRIC_BUCKETS,
-                METRIC_FILES_STORAGE
+                METRIC_FILES_STORAGE,
+                METRIC_DATABASES_STORAGE
             ],
             'period' => [
                 METRIC_NETWORK_REQUESTS,
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
                 METRIC_USERS,
-                METRIC_EXECUTIONS
+                METRIC_EXECUTIONS,
+                METRIC_DATABASES_STORAGE
             ]
         ];
 
@@ -144,6 +146,22 @@ App::get('/v1/project/usage')
             ];
         }, $dbForProject->find('buckets'));
 
+        $databasesStorageBreakdown = array_map(function ($database) use ($dbForProject) {
+            $id = $database->getId();
+            $name = $database->getAttribute('name');
+            $metric = str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE);
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('databases'));
+
         // merge network inbound + outbound
         $projectBandwidth = [];
         foreach ($usage[METRIC_NETWORK_INBOUND] as $item) {
@@ -173,11 +191,13 @@ App::get('/v1/project/usage')
             'executionsTotal' => $total[METRIC_EXECUTIONS],
             'documentsTotal' => $total[METRIC_DOCUMENTS],
             'databasesTotal' => $total[METRIC_DATABASES],
+            'databasesStorageTotal' => $total[METRIC_DATABASES_STORAGE],
             'usersTotal' => $total[METRIC_USERS],
             'bucketsTotal' => $total[METRIC_BUCKETS],
             'filesStorageTotal' => $total[METRIC_FILES_STORAGE],
             'executionsBreakdown' => $executionsBreakdown,
-            'bucketsBreakdown' => $bucketsBreakdown
+            'bucketsBreakdown' => $bucketsBreakdown,
+            'databasesStorageBreakdown' => $databasesStorageBreakdown,
         ]), Response::MODEL_USAGE_PROJECT);
     });
 

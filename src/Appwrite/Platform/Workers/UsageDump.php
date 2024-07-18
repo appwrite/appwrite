@@ -119,7 +119,9 @@ class UsageDump extends Action
     {
         $data = explode('.', $key);
 
-        $updateMetric = function (Database $dbForProject, int $value, string $key, string $period, string $time, string $id) {
+        $updateMetric = function (Database $dbForProject, int $value, string $key, string $period, string|null $time) {
+            $id = \md5("{$time}_{$period}_{$key}");
+
             try {
                 $dbForProject->createDocument('stats', new Document([
                     '$id' => $id,
@@ -155,7 +157,7 @@ class UsageDump extends Action
             $value = 0;
             $previousValue = 0;
             try {
-                $previousValue = ($dbForProject->getDocument('stats', $id))->getAttribute('value');
+                $previousValue = ($dbForProject->getDocument('stats', $id))->getAttribute('value', 0);
             } catch (\Exception $e) {
                 // No previous value
             }
@@ -169,13 +171,22 @@ class UsageDump extends Action
                     $value = $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collectionInternalId);
 
                     // Compare with previous value
-                    $value = $value - $previousValue;
+                    $diff = $value - $previousValue;
+
+                    if ($diff === 0) {
+                        break;
+                    }
 
                     // Update Collection
+                    $updateMetric($dbForProject, $diff, $key, $period, $time);
 
                     // Update Database
+                    $databaseKey = $data[0] . '.db_storage';
+                    $updateMetric($dbForProject, $diff, $databaseKey, $period, $time);
 
                     // Update Project
+                    $projectKey = 'db_storage';
+                    $updateMetric($dbForProject, $diff, $projectKey, $period, $time); 
                     break;
                 // Database Level
                 case 2:
@@ -183,11 +194,38 @@ class UsageDump extends Action
                     $collections = $dbForProject->find('database_' . $databaseInternalId);
 
                     foreach ($collections as $collection) {
-                        $value += $dbForProject->getSizeOfCollection($collection->getInternalId());
+                        $value += $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collection->getInternalId());
                     }
+
+                    $diff = $value - $previousValue;
+
+                    // Update Database
+                    $databaseKey = $data[0] . '.db_storage';
+                    $updateMetric($dbForProject, $diff, $databaseKey, $period, $time);
+                    
+                    // Update Project
+                    $projectKey = 'db_storage';
+                    $updateMetric($dbForProject, $diff, $projectKey, $period, $time); 
                     break;
                 // Project Level
                 case 1:
+                    // Get all project databases
+                    $databases = $dbForProject->find('database');
+
+                    // Recalculate all databases
+                    foreach ($databases as $database) {
+                        $collections = $dbForProject->find('database_' . $database->getInternalId());
+
+                        foreach ($collections as $collection) {
+                            $value += $dbForProject->getSizeOfCollection('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId());
+                        }
+                    }
+
+                    $diff = $value - $previousValue;
+
+                    // Update Project
+                    $projectKey = 'db_storage';
+                    $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
                     break;
             }
         }
