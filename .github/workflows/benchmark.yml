@@ -4,32 +4,42 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-on: [pull_request]
+on: [ pull_request ]
 jobs:
   benchmarking:
     name: Benchmark
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-    - name: Install Oha
-      run: |
-        echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
-        sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg https://azlux.fr/repo.gpg
-        sudo apt update
-        sudo apt install oha
-    - name: Preparing environment
-      run: |
-        sed -i 's/traefik/localhost/g' .env 
-        docker compose up -d
-        sleep 10
-    - name: Benchmark
-      run: |
-        oha -z 180s  http://localhost:9501/v1/health/version -j > benchmark.json
-    - name: Save results
-      uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: benchmark.json
-        path: benchmark.json
-        retention-days: 7
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Install Oha
+        run: |
+          echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
+          sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg https://azlux.fr/repo.gpg
+          sudo apt update
+          sudo apt install oha
+      - name: Preparing environment
+        run: |
+          sed -i 's/traefik/localhost/g' .env 
+          docker compose up -d
+          sleep 10
+      - name: Benchmark
+        run: oha -z 180s  http://localhost:9501/v1/health/version -j > benchmark.json
+      - name: Prepare comment
+        run: |
+          echo '## :sparkles: Benchmark results' > benchmark.txt
+          echo ' ' >> >> benchmark.txt
+          echo "- Requests per second: $(jq -r '.summary.requestsPerSec' benchmark.json)" >> benchmark.txt
+          echo "- Total 200 requests: (jq -r '.statusCodeDistribution.200' benchmark.json)" >> benchmark.txt
+          echo "- 99 latency: $(jq -r '.latencyPercentiles.p99' benchmark.json )" >> benchmark.txt
+      - name: Save results
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: benchmark.json
+          path: benchmark.json
+          retention-days: 7
+      - name: Comment on PR
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: benchmark.txt
