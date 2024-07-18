@@ -6,24 +6,23 @@ concurrency:
 
 on: [pull_request]
 jobs:
-  lint:
+  benchmarking:
     name: Benchmark
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-    - name: Prepare env
-      run: |
-        sed -i 's/traefik/localhost/g' .env 
-        docker compose up -d
-        sleep 10
     - name: Install Oha
       run: |
         echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
         sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg https://azlux.fr/repo.gpg
-        apt update
-        apt install oha
+        sudo apt update
+        sudo apt install oha
+    - name: Preparing environment
+      run: |
+        sed -i 's/traefik/localhost/g' .env 
+        docker compose up -d
+        sleep 10
     - name: Benchmark
       run: |
         oha -z 180s  http://localhost:9501/v1/health/version -j > benchmark.json
