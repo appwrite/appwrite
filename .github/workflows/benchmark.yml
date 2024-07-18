@@ -24,7 +24,7 @@ jobs:
           docker compose up -d
           sleep 10
       - name: Benchmark PR
-        run: oha -z 10s  http://localhost/v1/health/version -j > benchmark.json
+        run: oha -z 180s  http://localhost/v1/health/version -j > benchmark.json
       - name: Cleaning
         run: docker compose down -v
       - name: Installing latest version
@@ -37,7 +37,7 @@ jobs:
           docker compose up -d
           sleep 10
       - name: Benchmark Latest
-        run: oha -z 10s  http://localhost/v1/health/version -j > benchmark-latest.json
+        run: oha -z 180s  http://localhost/v1/health/version -j > benchmark-latest.json
       - name: Prepare comment
         run: |
           echo '## :sparkles: Benchmark results' > benchmark.txt
