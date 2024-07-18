@@ -2,14 +2,13 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Usage\Stats;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Execution;
 use Exception;
 use Executor\Executor;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -24,6 +23,7 @@ use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Functions extends Action
 {
@@ -39,13 +39,14 @@ class Functions extends Action
     {
         $this
             ->desc('Functions worker')
+            ->groups(['functions'])
             ->inject('message')
             ->inject('dbForProject')
             ->inject('queueForFunctions')
             ->inject('queueForEvents')
-            ->inject('usage')
+            ->inject('queueForUsage')
             ->inject('log')
-            ->callback(fn(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Stats $usage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $usage, $log));
+            ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
     }
 
     /**
@@ -53,7 +54,7 @@ class Functions extends Action
      * @param Database $dbForProject
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
-     * @param Stats $usage
+     * @param Usage $queueForUsage
      * @param Log $log
      * @return void
      * @throws Authorization
@@ -61,7 +62,7 @@ class Functions extends Action
      * @throws \Utopia\Database\Exception
      * @throws Conflict
      */
-    public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Stats $usage, Log $log): void
+    public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -90,6 +91,10 @@ class Functions extends Action
             return;
         }
 
+        $log->addTag('functionId', $function->getId());
+        $log->addTag('projectId', $project->getId());
+        $log->addTag('type', $type);
+
         if (!empty($events)) {
             $limit = 30;
             $sum = 30;
@@ -117,7 +122,7 @@ class Functions extends Action
                         log: $log,
                         dbForProject: $dbForProject,
                         queueForFunctions: $queueForFunctions,
-                        usage: $usage,
+                        queueForUsage: $queueForUsage,
                         queueForEvents: $queueForEvents,
                         project: $project,
                         function: $function,
@@ -153,7 +158,7 @@ class Functions extends Action
                     log: $log,
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
-                    usage: $usage,
+                    queueForUsage: $queueForUsage,
                     queueForEvents: $queueForEvents,
                     project: $project,
                     function: $function,
@@ -174,7 +179,7 @@ class Functions extends Action
                     log: $log,
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
-                    usage: $usage,
+                    queueForUsage: $queueForUsage,
                     queueForEvents: $queueForEvents,
                     project: $project,
                     function: $function,
@@ -194,10 +199,74 @@ class Functions extends Action
     }
 
     /**
+     * @param string $message
+     * @param Document $function
+     * @param string $trigger
+     * @param string $path
+     * @param string $method
+     * @param Document $user
+     * @param string|null $jwt
+     * @param string|null $event
+     * @throws Exception
+     */
+    private function fail(
+        string $message,
+        Database $dbForProject,
+        Document $function,
+        string $trigger,
+        string $path,
+        string $method,
+        Document $user,
+        string $jwt = null,
+        string $event = null,
+    ): void {
+        $headers['x-appwrite-trigger'] = $trigger;
+        $headers['x-appwrite-event'] = $event ?? '';
+        $headers['x-appwrite-user-id'] = $user->getId() ?? '';
+        $headers['x-appwrite-user-jwt'] = $jwt ?? '';
+
+        $headersFiltered = [];
+        foreach ($headers as $key => $value) {
+            if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
+                $headersFiltered[] = ['name' => $key, 'value' => $value];
+            }
+        }
+
+        $executionId = ID::unique();
+        $execution = new Document([
+            '$id' => $executionId,
+            '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
+            'functionInternalId' => $function->getInternalId(),
+            'functionId' => $function->getId(),
+            'deploymentInternalId' => '',
+            'deploymentId' => '',
+            'trigger' => $trigger,
+            'status' => 'failed',
+            'responseStatusCode' => 0,
+            'responseHeaders' => [],
+            'requestPath' => $path,
+            'requestMethod' => $method,
+            'requestHeaders' => $headersFiltered,
+            'errors' => $message,
+            'logs' => '',
+            'duration' => 0.0,
+            'search' => implode(' ', [$function->getId(), $executionId]),
+        ]);
+
+        if ($function->getAttribute('logging')) {
+            $execution = $dbForProject->createDocument('executions', $execution);
+        }
+
+        if ($execution->isEmpty()) {
+            throw new Exception('Failed to create execution');
+        }
+    }
+
+    /**
      * @param Log $log
      * @param Database $dbForProject
      * @param Func $queueForFunctions
-     * @param Stats $usage
+     * @param Usage $queueForUsage
      * @param Event $queueForEvents
      * @param Document $project
      * @param Document $function
@@ -221,7 +290,7 @@ class Functions extends Action
         Log $log,
         Database $dbForProject,
         Func $queueForFunctions,
-        stats $usage,
+        Usage $queueForUsage,
         Event $queueForEvents,
         Document $project,
         Document $function,
@@ -236,35 +305,46 @@ class Functions extends Action
         string $eventData = null,
         string $executionId = null,
     ): void {
-            $user ??= new Document();
-            $functionId = $function->getId();
-            $deploymentId = $function->getAttribute('deployment', '');
+        $user ??= new Document();
+        $functionId = $function->getId();
+        $deploymentId = $function->getAttribute('deployment', '');
 
-            $log->addTag('functionId', $functionId);
-            $log->addTag('projectId', $project->getId());
+        $log->addTag('deploymentId', $deploymentId);
 
-            /** Check if deployment exists */
-            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        /** Check if deployment exists */
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
-            throw new Exception('Deployment not found. Create deployment before trying to execute a function');
+            $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
+            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            return;
         }
 
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found. Create deployment before trying to execute a function');
+            $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
+            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            return;
         }
 
-            /** Check if build has exists */
-            $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
+        $buildId = $deployment->getAttribute('buildId', '');
+
+        $log->addTag('buildId', $buildId);
+
+        /** Check if build has exists */
+        $build = $dbForProject->getDocument('builds', $buildId);
         if ($build->isEmpty()) {
-            throw new Exception('Build not found');
+            $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
+            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            return;
         }
 
         if ($build->getAttribute('status') !== 'ready') {
-            throw new Exception('Build not ready');
+            $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
+            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            return;
         }
 
-            /** Check if  runtime is supported */
+        /** Check if  runtime is supported */
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
 
@@ -279,7 +359,6 @@ class Functions extends Action
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';
 
-        /** Create execution or update execution status */
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
@@ -375,7 +454,7 @@ class Functions extends Action
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
             $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
@@ -420,6 +499,16 @@ class Functions extends Action
 
             $error = $th->getMessage();
             $errorCode = $th->getCode();
+        } finally {
+            /** Trigger usage queue */
+            $queueForUsage
+                ->setProject($project)
+                ->addMetric(METRIC_EXECUTIONS, 1)
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
+                ->trigger()
+            ;
         }
 
         if ($function->getAttribute('logging')) {
@@ -449,7 +538,7 @@ class Functions extends Action
             'executionId' => $execution->getId()
         ]);
         $target = Realtime::fromPayload(
-        // Pass first, most verbose event pattern
+            // Pass first, most verbose event pattern
             event: $allEvents[0],
             payload: $execution
         );
@@ -470,20 +559,6 @@ class Functions extends Action
 
         if (!empty($error)) {
             throw new Exception($error, $errorCode);
-        }
-
-        /** Update usage stats */
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-            $usage
-                ->setParam('projectId', $project->getId())
-                ->setParam('projectInternalId', $project->getInternalId())
-                ->setParam('functionId', $function->getId()) // TODO: We should use functionInternalId in usage stats
-                ->setParam('executions.{scope}.compute', 1)
-                ->setParam('executionStatus', $execution->getAttribute('status', ''))
-                ->setParam('executionTime', $execution->getAttribute('duration'))
-                ->setParam('networkRequestSize', 0)
-                ->setParam('networkResponseSize', 0)
-                ->submit();
         }
     }
 }

@@ -3,6 +3,7 @@
 namespace Appwrite\Event;
 
 use Utopia\Database\Document;
+use Utopia\DSN\DSN;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
@@ -107,18 +108,30 @@ class Database extends Event
      */
     public function trigger(): string|bool
     {
-        $this->setQueue($this->getProject()->getAttribute('database'));
+        try {
+            $dsn = new DSN($this->getProject()->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $this->getProject()->getAttribute('database'));
+        }
+
+        $this->setQueue($dsn->getHost());
 
         $client = new Client($this->queue, $this->connection);
 
-        return $client->enqueue([
-            'project' => $this->project,
-            'user' => $this->user,
-            'type' => $this->type,
-            'collection' => $this->collection,
-            'document' => $this->document,
-            'database' => $this->database,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
-        ]);
+        try {
+            $result = $client->enqueue([
+                'project' => $this->project,
+                'user' => $this->user,
+                'type' => $this->type,
+                'collection' => $this->collection,
+                'document' => $this->document,
+                'database' => $this->database,
+                'events' => Event::generateEvents($this->getEvent(), $this->getParams())
+            ]);
+            return $result;
+        } catch (\Throwable $th) {
+            return false;
+        }
     }
 }

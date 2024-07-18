@@ -4,8 +4,8 @@ namespace Tests\E2E\Services\Realtime;
 
 use CURLFile;
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
@@ -290,7 +290,6 @@ class RealtimeCustomClientTest extends Scope
 
         $this->assertEquals($name, $response['data']['payload']['name']);
 
-
         /**
          * Test Account Password Event
          */
@@ -376,6 +375,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertCount(2, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertArrayNotHasKey('secret', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
         $this->assertContains("users.{$userId}.verification.{$verificationId}.create", $response['data']['events']);
@@ -468,7 +468,7 @@ class RealtimeCustomClientTest extends Scope
                 'password' => 'new-password',
             ]);
 
-            $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $projectId];
+            $sessionNew = $response['cookies']['a_session_' . $projectId];
             $sessionNewId = $response['body']['$id'];
 
             return array("session" => $sessionNew, "sessionId" => $sessionNewId);
@@ -617,7 +617,6 @@ class RealtimeCustomClientTest extends Scope
             'userId' => $userId,
             'secret' => $recovery,
             'password' => 'test-recovery',
-            'passwordAgain' => 'test-recovery',
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -1318,7 +1317,7 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), []);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
@@ -1328,7 +1327,7 @@ class RealtimeCustomClientTest extends Scope
             'async' => true
         ]);
 
-        $this->assertEquals($execution['headers']['status-code'], 202);
+        $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
 
         $response = json_decode($client->receive(), true);

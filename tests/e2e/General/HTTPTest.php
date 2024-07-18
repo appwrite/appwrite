@@ -31,8 +31,8 @@ class HTTPTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEquals('Appwrite', $response['headers']['server']);
         $this->assertEquals('GET, POST, PUT, PATCH, DELETE', $response['headers']['access-control-allow-methods']);
-        $this->assertEquals('Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies', $response['headers']['access-control-allow-headers']);
-        $this->assertEquals('X-Fallback-Cookies', $response['headers']['access-control-expose-headers']);
+        $this->assertEquals('Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent', $response['headers']['access-control-allow-headers']);
+        $this->assertEquals('X-Appwrite-Session, X-Fallback-Cookies', $response['headers']['access-control-expose-headers']);
         $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
         $this->assertEquals('true', $response['headers']['access-control-allow-credentials']);
         $this->assertEmpty($response['body']);
@@ -170,5 +170,51 @@ class HTTPTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/failure', $this->getHeaders());
 
         $this->assertEquals(200, $response['headers']['status-code']);
+    }
+
+    public function testCors()
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        $endpoint = '/v1/projects'; // Can be any non-404 route
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint);
+
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'http://localhost',
+        ]);
+
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'http://appwrite.io',
+        ]);
+
+        $this->assertEquals('http://appwrite.io', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'https://appwrite.io',
+        ]);
+
+        $this->assertEquals('https://appwrite.io', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'http://cloud.appwrite.io',
+        ]);
+
+        $this->assertEquals('http://cloud.appwrite.io', $response['headers']['access-control-allow-origin']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'http://google.com',
+        ]);
+
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
     }
 }

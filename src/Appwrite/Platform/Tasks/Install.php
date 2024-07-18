@@ -8,8 +8,9 @@ use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Validator\Text;
 use Utopia\Platform\Action;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Text;
 
 class Install extends Action
 {
@@ -24,16 +25,17 @@ class Install extends Action
     {
         $this
             ->desc('Install Appwrite')
-            ->param('httpPort', '', new Text(4), 'Server HTTP port', true)
-            ->param('httpsPort', '', new Text(4), 'Server HTTPS port', true)
-            ->param('registry', 'ghcr.io', new Text(0), 'Docker Registry organization', true)
+            ->param('http-port', '', new Text(4), 'Server HTTP port', true)
+            ->param('https-port', '', new Text(4), 'Server HTTPS port', true)
+            ->param('registry', 'ghcr.io', new Text(0), 'Docker Registry url', true)
             ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
-            ->callback(fn ($httpPort, $httpsPort, $registry, $organization, $image, $interactive) => $this->action($httpPort, $httpsPort, $registry, $organization, $image, $interactive));
+            ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
+            ->callback(fn ($httpPort, $httpsPort, $registry, $organization, $image, $interactive, $noStart) => $this->action($httpPort, $httpsPort, $registry, $organization, $image, $interactive, $noStart));
     }
 
-    public function action(string $httpPort, string $httpsPort, string $registry, string $organization, string $image, string $interactive): void
+    public function action(string $httpPort, string $httpsPort, string $registry, string $organization, string $image, string $interactive, bool $noStart): void
     {
         $config = Config::getParam('variables');
         $defaultHTTPPort = '80';
@@ -200,13 +202,13 @@ class Install extends Action
 
         $templateForEnv->setParam('vars', $input);
 
-        if (!file_put_contents($this->path . '/docker-compose.yml', trim($templateForCompose->render(false)))) {
+        if (!file_put_contents($this->path . '/docker-compose.yml', $templateForCompose->render(false))) {
             $message = 'Failed to save Docker Compose file';
             Console::error($message);
             Console::exit(1);
         }
 
-        if (!file_put_contents($this->path . '/.env', trim($templateForEnv->render(false)))) {
+        if (!file_put_contents($this->path . '/.env', $templateForEnv->render(false))) {
             $message = 'Failed to save environment variables file';
             Console::error($message);
             Console::exit(1);
@@ -222,9 +224,11 @@ class Install extends Action
             }
         }
 
-        Console::log("Running \"docker compose up -d --remove-orphans --renew-anon-volumes\"");
-
-        $exit = Console::execute("$env docker compose --project-directory $this->path up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
+        $exit = 0;
+        if (!$noStart) {
+            Console::log("Running \"docker compose up -d --remove-orphans --renew-anon-volumes\"");
+            $exit = Console::execute("$env docker compose --project-directory $this->path up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
+        }
 
         if ($exit !== 0) {
             $message = 'Failed to install Appwrite dockers';

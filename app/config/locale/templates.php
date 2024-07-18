@@ -6,10 +6,12 @@ return [
         'magicSession',
         'recovery',
         'invitation',
+        'mfaChallenge'
     ],
     'sms' => [
         'verification',
         'login',
-        'invitation'
+        'invitation',
+        'mfaChallenge'
     ]
 ];

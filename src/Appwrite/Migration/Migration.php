@@ -2,16 +2,16 @@
 
 namespace Appwrite\Migration;
 
+use Exception;
 use Swoole\Runtime;
-use Utopia\Database\Document;
-use Utopia\Database\Database;
-use Utopia\Database\Query;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Exception;
-use Utopia\App;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
@@ -74,6 +74,18 @@ abstract class Migration
         '1.4.7' => 'V19',
         '1.4.8' => 'V19',
         '1.4.9' => 'V19',
+        '1.4.10' => 'V19',
+        '1.4.11' => 'V19',
+        '1.4.12' => 'V19',
+        '1.4.13' => 'V19',
+        '1.5.0'  => 'V20',
+        '1.5.1'  => 'V20',
+        '1.5.2'  => 'V20',
+        '1.5.3'  => 'V20',
+        '1.5.4'  => 'V20',
+        '1.5.5'  => 'V20',
+        '1.5.6'  => 'V20',
+        '1.5.7'  => 'V20',
     ];
 
     /**
@@ -191,17 +203,24 @@ abstract class Migration
      * @return iterable<Document>
      * @throws \Exception
      */
-    public function documentsIterator(string $collectionId): iterable
+    public function documentsIterator(string $collectionId, $queries = []): iterable
     {
         $sum = 0;
         $nextDocument = null;
         $collectionCount = $this->projectDB->count($collectionId);
+        $queries[] = Query::limit($this->limit);
 
         do {
-            $queries = [Query::limit($this->limit)];
             if ($nextDocument !== null) {
-                $queries[] = Query::cursorAfter($nextDocument);
+                $cursorQueryIndex = \array_search('cursorAfter', \array_map(fn (Query $query) => $query->getMethod(), $queries));
+
+                if ($cursorQueryIndex !== false) {
+                    $queries[$cursorQueryIndex] = Query::cursorAfter($nextDocument);
+                } else {
+                    $queries[] = Query::cursorAfter($nextDocument);
+                }
             }
+
             $documents = $this->projectDB->find($collectionId, $queries);
             $count = count($documents);
             $sum += $count;
@@ -220,7 +239,7 @@ abstract class Migration
     }
 
     /**
-     * Creates colletion from the config collection.
+     * Creates collection from the config collection.
      *
      * @param string $id
      * @param string|null $name
@@ -236,7 +255,7 @@ abstract class Migration
             default => 'projects',
         };
 
-        if (!$this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
+        if (!$this->projectDB->exists(System::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
             $attributes = [];
             $indexes = [];
             $collection = $this->collections[$collectionType][$id];
@@ -247,6 +266,7 @@ abstract class Migration
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
                     'required' => $attribute['required'],
+                    'default' => $attribute['default'] ?? null,
                     'signed' => $attribute['signed'],
                     'array' => $attribute['array'],
                     'filters' => $attribute['filters'],
@@ -385,11 +405,11 @@ abstract class Migration
      */
     protected function changeAttributeInternalType(string $collection, string $attribute, string $type): void
     {
-        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
+        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
 
         try {
             $stmt->execute();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::warning($e->getMessage());
         }
     }

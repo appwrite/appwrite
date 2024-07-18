@@ -2,15 +2,16 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Platform\Action;
-use Utopia\CLI\Console;
 use Appwrite\Migration\Migration;
 use Utopia\App;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Action;
+use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
 
 class Migrate extends Action
@@ -29,7 +30,8 @@ class Migrate extends Action
             ->inject('cache')
             ->inject('dbForConsole')
             ->inject('getProjectDB')
-            ->callback(fn ($version, $cache, $dbForConsole, $getProjectDB) => $this->action($version, $cache, $dbForConsole, $getProjectDB));
+            ->inject('register')
+            ->callback(fn ($version, $cache, $dbForConsole, $getProjectDB, Registry $register) => $this->action($version, $cache, $dbForConsole, $getProjectDB, $register));
     }
 
     private function clearProjectsCache(Cache $cache, Document $project)
@@ -41,7 +43,7 @@ class Migrate extends Action
         }
     }
 
-    public function action(string $version, Cache $cache, Database $dbForConsole, callable $getProjectDB)
+    public function action(string $version, Cache $cache, Database $dbForConsole, callable $getProjectDB, Registry $register)
     {
         Authorization::disable();
         if (!array_key_exists($version, Migration::$versions)) {
@@ -89,9 +91,12 @@ class Migrate extends Action
 
                 try {
                     // TODO: Iterate through all project DBs
+                    /** @var Database $projectDB */
                     $projectDB = $getProjectDB($project);
+                    $projectDB->disableValidation();
                     $migration
                         ->setProject($project, $projectDB, $dbForConsole)
+                        ->setPDO($register->get('db', true))
                         ->execute();
                 } catch (\Throwable $th) {
                     Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());

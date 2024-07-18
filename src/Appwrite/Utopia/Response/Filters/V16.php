@@ -14,27 +14,19 @@ class V16 extends Filter
     {
         $parsedResponse = $content;
 
-        switch ($model) {
-            case Response::MODEL_DEPLOYMENT:
-                $parsedResponse = $this->parseDeployment($parsedResponse);
-                break;
-            case Response::MODEL_PROXY_RULE:
-                // We won't be supporting the domain endpoints for older SDKs
-                // since these APIs are internal. As such, no filtering required
-                break;
-            case Response::MODEL_EXECUTION:
-                $parsedResponse = $this->parseExecution($parsedResponse);
-                break;
-            case Response::MODEL_FUNCTION:
-                $parsedResponse = $this->parseFunction($parsedResponse);
-                break;
-            case Response::MODEL_PROJECT:
-                $parsedResponse = $this->parseProject($parsedResponse);
-                break;
-            case Response::MODEL_VARIABLE:
-                $parsedResponse = $this->parseVariable($parsedResponse);
-                break;
-        }
+        $parsedResponse = match($model) {
+            Response::MODEL_DEPLOYMENT => $this->parseDeployment($parsedResponse),
+            Response::MODEL_DEPLOYMENT_LIST => $this->handleList($content, 'deployments', fn ($item) => $this->parseDeployment($item)),
+            Response::MODEL_EXECUTION => $this->parseExecution($parsedResponse),
+            Response::MODEL_EXECUTION_LIST => $this->handleList($content, 'executions', fn ($item) => $this->parseExecution($item)),
+            Response::MODEL_FUNCTION => $this->parseFunction($parsedResponse),
+            Response::MODEL_FUNCTION_LIST => $this->handleList($content, 'functions', fn ($item) => $this->parseFunction($item)),
+            Response::MODEL_PROJECT => $this->parseProject($parsedResponse),
+            Response::MODEL_PROJECT_LIST => $this->handleList($content, 'projects', fn ($item) => $this->parseProject($item)),
+            Response::MODEL_VARIABLE => $this->parseVariable($parsedResponse),
+            Response::MODEL_VARIABLE_LIST => $this->handleList($content, 'variables', fn ($item) => $this->parseVariable($item)),
+            default => $parsedResponse,
+        };
 
         return $parsedResponse;
     }
@@ -88,9 +80,9 @@ class V16 extends Filter
 
     protected function parseProject(array $content)
     {
-        foreach ($content['providers'] ?? [] as $i => $provider) {
-            $content['providers'][$i]['name'] = \ucfirst($provider['key']);
-            unset($content['providers'][$i]['key']);
+        foreach ($content['oAuthProviders'] ?? [] as $i => $provider) {
+            $content['oAuthProviders'][$i]['name'] = \ucfirst($provider['key']);
+            unset($content['oAuthProviders'][$i]['key']);
         }
 
         $content['domains'] = [];
