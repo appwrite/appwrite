@@ -1,0 +1,36 @@
+name: "Benchmarks"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on: [pull_request]
+jobs:
+  lint:
+    name: Benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Prepare env
+      run: |
+        sed -i 's/traefik/localhost/g' .env 
+        docker compose up -d
+        sleep 10
+    - name: Install Oha
+      run: |
+        echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
+        sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg https://azlux.fr/repo.gpg
+        apt update
+        apt install oha
+    - name: Benchmark
+      run: |
+        oha -z 180s  http://localhost:9501/v1/health/version -j > benchmark.json
+    - name: Save results
+      uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: benchmark.json
+        path: benchmark.json
+        retention-days: 7
