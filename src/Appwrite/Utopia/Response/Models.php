@@ -71,6 +71,7 @@ use Appwrite\Utopia\Response\Model\Migration;
 use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
 use Appwrite\Utopia\Response\Model\MigrationReport;
 use Appwrite\Utopia\Response\Model\Mock;
+use Appwrite\Utopia\Response\Model\MockNumber;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
@@ -99,6 +100,7 @@ use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
+use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 
@@ -154,6 +156,7 @@ class Models
         self::setModel(new BaseList('Target list', Response::MODEL_TARGET_LIST, 'targets', Response::MODEL_TARGET));
         self::setModel(new BaseList('Migrations List', Response::MODEL_MIGRATION_LIST, 'migrations', Response::MODEL_MIGRATION));
         self::setModel(new BaseList('Migrations Firebase Projects List', Response::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', Response::MODEL_MIGRATION_FIREBASE_PROJECT));
+        self::setModel(new BaseList('VCS Content List', Response::MODEL_VCS_CONTENT_LIST, 'contents', Response::MODEL_VCS_CONTENT));
         // Entities
         self::setModel(new Database());
         self::setModel(new Collection());
@@ -196,6 +199,7 @@ class Models
         self::setModel(new Installation());
         self::setModel(new ProviderRepository());
         self::setModel(new Detection());
+        self::setModel(new VcsContent());
         self::setModel(new Branch());
         self::setModel(new Runtime());
         self::setModel(new Deployment());
@@ -204,6 +208,7 @@ class Models
         self::setModel(new Project());
         self::setModel(new Webhook());
         self::setModel(new Key());
+        self::setModel(new MockNumber());
         self::setModel(new AuthProvider());
         self::setModel(new Platform());
         self::setModel(new Variable());
