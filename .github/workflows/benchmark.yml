@@ -47,7 +47,7 @@ jobs:
           echo "- 99 latency: $(jq -r '.latencyPercentiles.p99' benchmark.json )" >> benchmark.txt
           echo " " >> benchmark.txt
           echo " " >> benchmark.txt
-          echo "## :zap:  Benchmark results" >> benchmark.txt
+          echo "## :zap:  Benchmark Compering" >> benchmark.txt
           echo " " >> benchmark.txt
           echo "| Metric | PR | Latest version | "  >> benchmark.txt
           echo "| --- | --- | --- | "  >> benchmark.txt
