@@ -6,7 +6,6 @@ require_once __DIR__ . '/controllers/general.php';
 use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Swoole\Constant;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
