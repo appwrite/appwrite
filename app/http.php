@@ -6,6 +6,7 @@ require_once __DIR__ . '/controllers/general.php';
 use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Swoole\Constant;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
@@ -45,24 +46,11 @@ $server = new Server('0.0.0.0', '80', [
     'send_yield' => true,
     'tcp_fastopen' => true,
 ]);
+$http = new Http($server, $container, 'UTC');
+$http->setRequestClass(Request::class);
+$http->setResponseClass(Response::class);
 
-$server->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
-    Console::success('Worker ' . ++$workerId . ' started successfully');
-});
-
-$http->on(Constant::EVENT_BEFORE_RELOAD, function ($server, $workerId) {
-    Console::success('Starting reload...');
-});
-
-$http->on(Constant::EVENT_AFTER_RELOAD, function ($server, $workerId) {
-    Console::success('Reload completed...');
-});
-
-include __DIR__ . '/controllers/general.php';
-
-global $global, $container;
-
-http::onStart()
+Http::onStart()
     ->inject('authorization')
     ->inject('cache')
     ->inject('pools')
