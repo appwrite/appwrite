@@ -21,6 +21,8 @@ jobs:
       - name: Prepare environment
         run: |
           sed -i 's/traefik/localhost/g' .env 
+          sed -i 's/TESTING: true/TESTING: false/g' docker-compose.yml
+          sed -i 's/VERSION: dev/VERSION: production/g' docker-compose.yml
           docker compose up -d
           sleep 10
       - name: Benchmark PR
