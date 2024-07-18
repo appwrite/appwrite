@@ -22,6 +22,7 @@ abstract class ScheduleBase extends Action
     protected Connections $connections;
 
     abstract public static function getName(): string;
+
     abstract public static function getSupportedResource(): string;
 
     abstract protected function enqueueResources(
@@ -34,12 +35,14 @@ abstract class ScheduleBase extends Action
         $this->connections = new Connections();
         $type = static::getSupportedResource();
 
-        $this
-            ->desc("Execute {$type}s scheduled in Appwrite")
-            ->inject('pools')
-            ->inject('dbForConsole')
-            ->inject('getProjectDB')
-            ->callback(fn (array $pools, Database $dbForConsole, callable $getProjectDB) => $this->action($pools, $dbForConsole, $getProjectDB));
+        go(function () use ($type) {
+            $this
+                ->desc("Execute {$type}s scheduled in Appwrite")
+                ->inject('pools')
+                ->inject('dbForConsole')
+                ->inject('getProjectDB')
+                ->callback(fn (array $pools, Database $dbForConsole, callable $getProjectDB) => $this->action($pools, $dbForConsole, $getProjectDB));
+        });
     }
 
     /**
@@ -191,6 +194,5 @@ abstract class ScheduleBase extends Action
         );
 
         $this->enqueueResources($pools, $dbForConsole);
-
     }
 }

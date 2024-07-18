@@ -479,7 +479,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             Console::error('[Error] Message: ' . $response['data']['message']);
         }
     } finally {
-        //       TODO NOW $global->get('pools')->reclaim();
+        $connections = $container->get('connections');
+        $connections->reclaim();
     }
 });
 

@@ -619,7 +619,6 @@ $user
 
         if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
             $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-
             try {
                 $payload = $jwt->decode($authJWT);
             } catch (JWTException $error) {

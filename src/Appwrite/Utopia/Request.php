@@ -115,6 +115,16 @@ class Request extends HttpRequest
         return self::$route !== null;
     }
 
+
+    public function removeHeader(string $key): static
+    {
+        if (isset($this->headers[$key])) {
+            unset($this->headers[$key]);
+        }
+
+        return parent::removeHeader($key);
+    }
+
     /**
      * Get headers
      *

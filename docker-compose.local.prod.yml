@@ -804,6 +804,34 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
 
+  appwrite-task-scheduler-executions:
+    entrypoint: schedule-executions
+    <<: *x-logging
+    container_name: appwrite-task-scheduler-executions
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./vendor:/usr/src/code/vendor
+      - ./src:/usr/src/code/src
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
   appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
     <<: *x-logging
@@ -848,7 +876,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.5.6
+    image: openruntimes/executor:0.6.1
     restart: unless-stopped
     networks:
       - appwrite

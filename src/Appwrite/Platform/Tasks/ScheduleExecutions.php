@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
 use Utopia\Database\Database;
+use Utopia\Queue\Connection\Redis;
 
 class ScheduleExecutions extends ScheduleBase
 {
@@ -26,7 +27,7 @@ class ScheduleExecutions extends ScheduleBase
         $connection = $pool->get();
         $this->connections->add($connection, $pool);
 
-        $queueForFunctions = new Func($connection);
+        $queueForFunctions = new Func(new Redis($connection));
 
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
