@@ -23,15 +23,37 @@ jobs:
           sed -i 's/traefik/localhost/g' .env 
           docker compose up -d
           sleep 10
-      - name: Benchmark
-        run: oha -z 180s  http://localhost/v1/health/version -j > benchmark.json
+      - name: Benchmark PR
+        run: oha -z 10s  http://localhost/v1/health/version -j > benchmark.json
+      - name: cleaning
+        run: docker compose down -v
+      - name: Installing latest version
+        run: |
+          rm docker-compose.yml
+          rm .env
+          curl https://appwrite.io/install/compose -o docker-compose.yml
+          curl https://appwrite.io/install/env -o .env
+          sed -i 's/_APP_OPTIONS_ABUSE=enabled/_APP_OPTIONS_ABUSE=disabled/g' .env
+          docker compose up -d
+          sleep 10
+      - name: Benchmark Latest
+        run: oha -z 10s  http://localhost/v1/health/version -j > benchmark-latest.json
       - name: Prepare comment
         run: |
           echo '## :sparkles: Benchmark results' > benchmark.txt
           echo ' ' >> benchmark.txt
-          echo "- :zap: Requests per second: $(jq -r '.summary.requestsPerSec|tonumber|floor' benchmark.json)" >> benchmark.txt
-          echo "- :white_check_mark: Total 200 requests: $(jq -r '.statusCodeDistribution."200"' benchmark.json)" >> benchmark.txt
-          echo "- :top: 99 latency: $(jq -r '.latencyPercentiles.p99' benchmark.json )" >> benchmark.txt
+          echo "- Requests per second: $(jq -r '.summary.requestsPerSec|tonumber|floor' benchmark.json)" >> benchmark.txt
+          echo "- Total 200 requests: $(jq -r '.statusCodeDistribution."200"' benchmark.json)" >> benchmark.txt
+          echo "- 99 latency: $(jq -r '.latencyPercentiles.p99' benchmark.json )" >> benchmark.txt
+          echo ' ' >> benchmark.txt
+          echo ' ' >> benchmark.txt
+          echo '## :zap:  Benchmark results' >> benchmark.txt
+          echo ' ' >> benchmark.txt
+          echo '| Metric | PR | Latest version | '  >> benchmark.txt
+          echo '| --- | --- | --- | '  >> benchmark.txt
+          echo '| RPS | $(jq -r '.summary.requestsPerSec|tonumber|floor' benchmark.json) | $(jq -r '.summary.requestsPerSec|tonumber|floor' benchmark-latest.json) | '  >> benchmark.txt
+          echo '| 200 | $(jq -r '.statusCodeDistribution."200"' benchmark.json) | $(jq -r '.statusCodeDistribution."200"' benchmark-latest.json) | '  >> benchmark.txt
+          echo '| P99 | $(jq -r '.latencyPercentiles.p99' benchmark.json ) | $(jq -r '.latencyPercentiles.p99' benchmark-latest.json ) | '  >> benchmark.txt
       - name: Save results
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
