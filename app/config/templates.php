@@ -27,15 +27,16 @@ const TEMPLATE_RUNTIMES = [
     ]
 ];
 
-function getRuntimes($runtime, $commands, $entrypoint, $providerRootDirectory, $versionsDenyList = []) {
-    return array_map(function($version) use ($runtime, $commands, $entrypoint, $providerRootDirectory) {
+function getRuntimes($runtime, $commands, $entrypoint, $providerRootDirectory, $versionsDenyList = [])
+{
+    return array_map(function ($version) use ($runtime, $commands, $entrypoint, $providerRootDirectory) {
         return [
             'name' => $runtime['name'] . '-' . $version,
             'commands' => $commands,
             'entrypoint' => $entrypoint,
             'providerRootDirectory' => $providerRootDirectory
         ];
-    }, array_filter($runtime['versions'], function($version) use ($versionsDenyList) {
+    }, array_filter($runtime['versions'], function ($version) use ($versionsDenyList) {
         return !in_array($version, $versionsDenyList);
     }));
 }
@@ -46,7 +47,7 @@ return [
         'id' => 'starter',
         'name' => 'Starter function',
         'tagline' =>
-            'A simple function to get started. Edit this function to explore endless possibilities with Appwrite Functions.',
+        'A simple function to get started. Edit this function to explore endless possibilities with Appwrite Functions.',
         'permissions' => ['any'],
         'events' => [],
         'cron' => '',
@@ -123,7 +124,7 @@ return [
                 'description' => 'Authentication token to access your Upstash Vector database. <a class="u-bold" target="_blank" href="https://upstash.com/docs/vector/overall/getstarted">Learn more</a>.',
                 'value' => '',
                 'placeholder' =>
-                    'oe4wNTbwHVLcDNa6oceZfhBEABsCNYh43ii6Xdq4bKBH7mq7qJkUmc4cs3ABbYyuVKWZTxVQjiNjYgydn2dkhABNes4NAuDpj7qxUAmZYqGJT78',
+                'oe4wNTbwHVLcDNa6oceZfhBEABsCNYh43ii6Xdq4bKBH7mq7qJkUmc4cs3ABbYyuVKWZTxVQjiNjYgydn2dkhABNes4NAuDpj7qxUAmZYqGJT78',
                 'required' => true,
                 'type' => 'password'
             ]
@@ -226,7 +227,7 @@ return [
         'id' => 'query-mongo-atlas',
         'name' => 'Query MongoDB Atlas',
         'tagline' =>
-            'Realtime NoSQL document database with geospecial, graph, search, and vector suport.',
+        'Realtime NoSQL document database with geospecial, graph, search, and vector suport.',
         'permissions' => ['any'],
         'events' => [],
         'cron' => '',
@@ -251,7 +252,7 @@ return [
                 'description' => 'The endpoint to connect to your Mongo database. <a class="u-bold" target="_blank" href="https://www.mongodb.com/docs/atlas/getting-started/">Learn more</a>.',
                 'value' => '',
                 'placeholder' =>
-                    'mongodb+srv://appwrite:Yx42hafg7Q4fgkxe@cluster0.7mslfog.mongodb.net/?retryWrites=true&w=majority&appName=Appwrite',
+                'mongodb+srv://appwrite:Yx42hafg7Q4fgkxe@cluster0.7mslfog.mongodb.net/?retryWrites=true&w=majority&appName=Appwrite',
                 'required' => true,
                 'type' => 'password'
             ]
@@ -262,7 +263,7 @@ return [
         'id' => 'query-neon-postgres',
         'name' => 'Query Neon Postgres',
         'tagline' =>
-            'Reliable SQL database with replication, point-in-time recovery, and pgvector support.',
+        'Reliable SQL database with replication, point-in-time recovery, and pgvector support.',
         'permissions' => ['any'],
         'events' => [],
         'cron' => '',
@@ -479,7 +480,7 @@ return [
         'id' => 'censor-with-redact',
         'name' => 'Censor with Redact',
         'tagline' =>
-            'Censor sensitive information from a provided text string using Redact API by Pangea.',
+        'Censor sensitive information from a provided text string using Redact API by Pangea.',
         'permissions' => ['any'],
         'events' => [],
         'cron' => '',
@@ -546,7 +547,7 @@ return [
         'id' => 'github-issue-bot',
         'name' => 'GitHub issue bot',
         'tagline' =>
-            'Automate the process of responding to newly opened issues in a GitHub repository.',
+        'Automate the process of responding to newly opened issues in a GitHub repository.',
         'permissions' => ['any'],
         'events' => [],
         'cron' => '',
