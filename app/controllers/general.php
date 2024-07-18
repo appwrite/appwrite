@@ -1001,15 +1001,12 @@ Http::get('/.well-known/acme-challenge/*')
         $response->text($content);
     });
 
-//include_once __DIR__ . '/shared/api.php';
-//include_once __DIR__ . '/shared/api/auth.php';
-
-// Http::wildcard()
-//     ->groups(['api'])
-//     ->label('scope', 'global')
-//     ->action(function () {
-//         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
-//     });
+Http::wildcard()
+    ->groups(['api'])
+    ->label('scope', 'global')
+    ->action(function () {
+        throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+    });
 
 foreach (Config::getParam('services', []) as $service) {
     //include_once $service['controller'];
