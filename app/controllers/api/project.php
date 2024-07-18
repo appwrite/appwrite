@@ -45,7 +45,8 @@ App::get('/v1/project/usage')
                 METRIC_USERS,
                 METRIC_BUCKETS,
                 METRIC_FILES_STORAGE,
-                METRIC_DATABASES_STORAGE
+                METRIC_DATABASES_STORAGE,
+                METRIC_DEPLOYMENTS_STORAGE
             ],
             'period' => [
                 METRIC_NETWORK_REQUESTS,
@@ -150,6 +151,7 @@ App::get('/v1/project/usage')
             $id = $database->getId();
             $name = $database->getAttribute('name');
             $metric = str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE);
+
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -161,6 +163,23 @@ App::get('/v1/project/usage')
                 'value' => $value['value'] ?? 0,
             ];
         }, $dbForProject->find('databases'));
+
+        $deploymentsStorageBreakdown = array_map(function ($function) use ($dbForProject) {
+            $id = $function->getId();
+            $name = $function->getAttribute('name');
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE);
+
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('functions'));
 
         // merge network inbound + outbound
         $projectBandwidth = [];
@@ -195,9 +214,11 @@ App::get('/v1/project/usage')
             'usersTotal' => $total[METRIC_USERS],
             'bucketsTotal' => $total[METRIC_BUCKETS],
             'filesStorageTotal' => $total[METRIC_FILES_STORAGE],
+            'deploymentsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE],
             'executionsBreakdown' => $executionsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown,
             'databasesStorageBreakdown' => $databasesStorageBreakdown,
+            'deploymentsStorageBreakdown' => $deploymentsStorageBreakdown,
         ]), Response::MODEL_USAGE_PROJECT);
     });
 
