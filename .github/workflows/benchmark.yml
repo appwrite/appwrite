@@ -45,13 +45,13 @@ jobs:
           echo '## :sparkles: Benchmark results' > benchmark.txt
           echo ' ' >> benchmark.txt
           echo "- Requests per second: $(jq -r '.summary.requestsPerSec|tonumber?|floor' benchmark.json)" >> benchmark.txt
-          echo "- Total 200 requests: $(jq -r '.statusCodeDistribution."200"' benchmark.json)" >> benchmark.txt
-          echo "- 99 latency: $(jq -r '.latencyPercentiles.p99' benchmark.json )" >> benchmark.txt
+          echo "- Requests with 200 status code: $(jq -r '.statusCodeDistribution."200"' benchmark.json)" >> benchmark.txt
+          echo "- P99 latency: $(jq -r '.latencyPercentiles.p99' benchmark.json )" >> benchmark.txt
           echo " " >> benchmark.txt
           echo " " >> benchmark.txt
-          echo "## :zap:  Benchmark Compering" >> benchmark.txt
+          echo "## :zap:  Benchmark Comparison" >> benchmark.txt
           echo " " >> benchmark.txt
-          echo "| Metric | PR | Latest version | "  >> benchmark.txt
+          echo "| Metric | This PR | Latest version | "  >> benchmark.txt
           echo "| --- | --- | --- | "  >> benchmark.txt
           echo "| RPS | $(jq -r '.summary.requestsPerSec|tonumber?|floor' benchmark.json) | $(jq -r '.summary.requestsPerSec|tonumber|floor' benchmark-latest.json) | "  >> benchmark.txt
           echo "| 200 | $(jq -r '.statusCodeDistribution."200"' benchmark.json) | $(jq -r '.statusCodeDistribution."200"' benchmark-latest.json) | "  >> benchmark.txt
