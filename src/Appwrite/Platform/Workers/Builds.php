@@ -318,6 +318,9 @@ class Builds extends Action
                     throw new \Exception("Unable to move file");
                 }
 
+                $deployment->setAttribute('path', $path);
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+
                 Console::execute('rm -rf ' . $tmpPath, '', $stdout, $stderr);
 
                 $source = $path;
