@@ -12,5 +12,5 @@ const result = await databases.updateDocument(
     '<COLLECTION_ID>', // collectionId
     '<DOCUMENT_ID>', // documentId
     {}, // data (optional)
-    sdk.Permission.read('any') // permissions (optional)
+    [sdk.Permission.read(sdk.Role.any())] // permissions (optional)
 );

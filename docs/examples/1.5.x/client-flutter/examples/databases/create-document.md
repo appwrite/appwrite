@@ -11,5 +11,5 @@ Document result = await databases.createDocument(
     collectionId: '<COLLECTION_ID>',
     documentId: '<DOCUMENT_ID>',
     data: {},
-    permissions: [Permission.read('any')], // optional
+    permissions: [Permission.read(Role.any())], // optional
 );

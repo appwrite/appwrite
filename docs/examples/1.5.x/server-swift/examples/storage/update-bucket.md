@@ -11,7 +11,7 @@ let storage = Storage(client)
 let bucket = try await storage.updateBucket(
     bucketId: "<BUCKET_ID>",
     name: "<NAME>",
-    permissions: Permission.read(Role.any()), // optional
+    permissions: [Permission.read(Role.any())], // optional
     fileSecurity: false, // optional
     enabled: false, // optional
     maximumFileSize: 1, // optional

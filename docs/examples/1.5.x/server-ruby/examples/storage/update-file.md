@@ -13,5 +13,5 @@ result = storage.update_file(
     bucket_id: '<BUCKET_ID>',
     file_id: '<FILE_ID>',
     name: '<NAME>', # optional
-    permissions: Permissions.read(Role.any()) # optional
+    permissions: [Permission.read(Role.any())] # optional
 )

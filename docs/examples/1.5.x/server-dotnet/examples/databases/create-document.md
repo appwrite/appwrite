@@ -14,5 +14,5 @@ Document result = await databases.CreateDocument(
     collectionId: "<COLLECTION_ID>",
     documentId: "<DOCUMENT_ID>",
     data: [object],
-    permissions: new List<string> { Permission.Read("any") }, // optional
+    permissions: new List<string> { Permission.Read(Role.any()) }, // optional
 );

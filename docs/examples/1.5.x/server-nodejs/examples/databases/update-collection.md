@@ -11,7 +11,7 @@ const result = await databases.updateCollection(
     '<DATABASE_ID>', // databaseId
     '<COLLECTION_ID>', // collectionId
     '<NAME>', // name
-    sdk.Permission.read('any'), // permissions (optional)
+    [sdk.Permission.read(sdk.Role.any())], // permissions (optional)
     false, // documentSecurity (optional)
     false // enabled (optional)
 );

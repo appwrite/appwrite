@@ -2,6 +2,7 @@
 
 use Appwrite\Client;
 use Appwrite\Permission;
+use Appwrite\Role;
 use Appwrite\Services\Databases;
 
 $client = (new Client())
@@ -15,7 +16,7 @@ $result = $databases->createCollection(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     name: '<NAME>',
-    permissions: Permission.read('any'), // optional
+    permissions: [Permission::read(Role::any())], // optional
     documentSecurity: false, // optional
     enabled: false // optional
 );

@@ -1,5 +1,6 @@
 from appwrite.client import Client
 from appwrite.permission import Permission
+from appwrite.role import Role
 
 client = Client()
 client.set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
@@ -13,5 +14,5 @@ result = databases.create_document(
     collection_id = '<COLLECTION_ID>',
     document_id = '<DOCUMENT_ID>',
     data = {},
-    permissions = [Permission.read('any')] # optional
+    permissions = [Permission.read(Role.any())] # optional
 )

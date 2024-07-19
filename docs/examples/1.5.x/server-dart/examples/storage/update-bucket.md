@@ -10,7 +10,7 @@ Storage storage = Storage(client);
 Bucket result = await storage.updateBucket(
     bucketId: '<BUCKET_ID>',
     name: '<NAME>',
-    permissions: [Permission.read('any')], // (optional)
+    permissions: [Permission.read(Role.any())], // (optional)
     fileSecurity: false, // (optional)
     enabled: false, // (optional)
     maximumFileSize: 1, // (optional)

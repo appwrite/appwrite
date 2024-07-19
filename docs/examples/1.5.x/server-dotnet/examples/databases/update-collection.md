@@ -13,7 +13,7 @@ Collection result = await databases.UpdateCollection(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     name: "<NAME>",
-    permissions: new List<string> { Permission.Read("any") }, // optional
+    permissions: new List<string> { Permission.Read(Role.any()) }, // optional
     documentSecurity: false, // optional
     enabled: false // optional
 );

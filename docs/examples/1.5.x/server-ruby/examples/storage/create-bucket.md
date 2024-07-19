@@ -12,7 +12,7 @@ storage = Storage.new(client)
 result = storage.create_bucket(
     bucket_id: '<BUCKET_ID>',
     name: '<NAME>',
-    permissions: Permissions.read(Role.any()), # optional
+    permissions: [Permission.read(Role.any())], # optional
     file_security: false, # optional
     enabled: false, # optional
     maximum_file_size: 1, # optional

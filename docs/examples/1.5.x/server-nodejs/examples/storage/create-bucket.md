@@ -10,7 +10,7 @@ const storage = new sdk.Storage(client);
 const result = await storage.createBucket(
     '<BUCKET_ID>', // bucketId
     '<NAME>', // name
-    sdk.Permission.read('any'), // permissions (optional)
+    [sdk.Permission.read(sdk.Role.any())], // permissions (optional)
     false, // fileSecurity (optional)
     false, // enabled (optional)
     1, // maximumFileSize (optional)

@@ -3,6 +3,7 @@
 use Appwrite\Client;
 use Appwrite\InputFile;
 use Appwrite\Permission;
+use Appwrite\Role;
 use Appwrite\Services\Storage;
 
 $client = (new Client())
@@ -16,5 +17,5 @@ $result = $storage->createFile(
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     file: InputFile::withPath('file.png'),
-    permissions: Permission.read('any') // optional
+    permissions: Permission::read(Role::any()) // optional
 );

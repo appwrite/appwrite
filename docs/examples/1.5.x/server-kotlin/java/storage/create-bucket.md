@@ -2,6 +2,7 @@ import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Storage;
 import io.appwrite.Permission;
+import io.appwrite.Role;
 
 Client client = new Client()
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -13,7 +14,7 @@ Storage storage = new Storage(client);
 storage.createBucket(
     "<BUCKET_ID>", // bucketId
     "<NAME>", // name
-    listOf(Permission.read("any")), // permissions (optional)
+    listOf(Permission.read(Role.any())), // permissions (optional)
     false, // fileSecurity (optional)
     false, // enabled (optional)
     1, // maximumFileSize (optional)

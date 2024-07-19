@@ -10,5 +10,5 @@ File result = await storage.updateFile(
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     name: '<NAME>', // optional
-    permissions: [Permission.read('any')], // optional
+    permissions: [Permission.read(Role.any())], // optional
 );

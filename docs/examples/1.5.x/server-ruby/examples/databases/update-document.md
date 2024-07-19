@@ -14,5 +14,5 @@ result = databases.update_document(
     collection_id: '<COLLECTION_ID>',
     document_id: '<DOCUMENT_ID>',
     data: {}, # optional
-    permissions: Permissions.read(Role.any()) # optional
+    permissions: [Permission.read(Role.any())] # optional
 )
