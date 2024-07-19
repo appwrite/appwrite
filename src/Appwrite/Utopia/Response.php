@@ -44,6 +44,7 @@ use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
+use Appwrite\Utopia\Response\Model\FunctionTemplate;
 use Appwrite\Utopia\Response\Model\Headers;
 use Appwrite\Utopia\Response\Model\HealthAntivirus;
 use Appwrite\Utopia\Response\Model\HealthCertificate;
@@ -82,6 +83,7 @@ use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
+use Appwrite\Utopia\Response\Model\RuntimeTemplate;
 use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Subscriber;
 use Appwrite\Utopia\Response\Model\Target;
@@ -101,6 +103,7 @@ use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
+use Appwrite\Utopia\Response\Model\VariableTemplate;
 use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
@@ -251,6 +254,12 @@ class Response extends SwooleResponse
     public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     public const MODEL_HEADERS = 'headers';
+    public const MODEL_FUNCTION_TEMPLATE = 'functionTemplate';
+    public const MODEL_FUNCTION_TEMPLATE_LIST = 'functionTemplateList';
+    public const MODEL_RUNTIME_TEMPLATE = 'runtimeTemplate';
+    public const MODEL_VARIABLE_TEMPLATE = 'variableTemplate';
+    public const MODEL_RUNTIME_TEMPLATE_LIST = 'runtimeTemplateList';
+    public const MODEL_VARIABLE_TEMPLATE_LIST = 'variableTemplateList';
 
     // Proxy
     public const MODEL_PROXY_RULE = 'proxyRule';
@@ -340,6 +349,9 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
+            ->setModel(new BaseList('Function Templates List', self::MODEL_FUNCTION_TEMPLATE_LIST, 'templates', self::MODEL_FUNCTION_TEMPLATE))
+            ->setModel(new BaseList('Runtime Templates List', self::MODEL_RUNTIME_TEMPLATE_LIST, 'runtimes', self::MODEL_RUNTIME_TEMPLATE))
+            ->setModel(new BaseList('Variable Templates List', self::MODEL_VARIABLE_TEMPLATE_LIST, 'variables', self::MODEL_VARIABLE_TEMPLATE))
             ->setModel(new BaseList('Installations List', self::MODEL_INSTALLATION_LIST, 'installations', self::MODEL_INSTALLATION))
             ->setModel(new BaseList('Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_LIST, 'providerRepositories', self::MODEL_PROVIDER_REPOSITORY))
             ->setModel(new BaseList('Branches List', self::MODEL_BRANCH_LIST, 'branches', self::MODEL_BRANCH))
@@ -409,6 +421,9 @@ class Response extends SwooleResponse
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Func())
+            ->setModel(new FunctionTemplate())
+            ->setModel(new RuntimeTemplate())
+            ->setModel(new VariableTemplate())
             ->setModel(new Installation())
             ->setModel(new ProviderRepository())
             ->setModel(new Detection())

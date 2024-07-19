@@ -2349,3 +2349,23 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
 
         $response->noContent();
     });
+
+App::get('/v1/functions/templates')
+    ->desc('Get function templates')
+    ->groups(['api', 'functions'])
+    ->label('scope', 'functions.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'getFunctionTemplates')
+    ->label('sdk.description', '/docs/references/functions/get-function-templates.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FUNCTION_TEMPLATE_LIST)
+    ->inject('response')
+    ->action(function (Response $response) {
+        $templates = Config::getParam('functionTemplates', []);
+        $response->dynamic(new Document([
+            'templates' => $templates,
+            'total' => \count($templates),
+        ]), Response::MODEL_FUNCTION_TEMPLATE_LIST);
+    });
