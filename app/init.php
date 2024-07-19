@@ -1,6 +1,5 @@
 <?php
-
-///*
+//
 ///**
 // * Init
 // *
@@ -119,7 +118,7 @@
 //const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 //const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 //const APP_CACHE_BUSTER = 4314;
-//const APP_VERSION_STABLE = '1.5.7';
+//const APP_VERSION_STABLE = '1.6.0';
 //const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 //const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 //const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -784,20 +783,20 @@
 //    $group = new Group();
 //
 //    $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-//        'scheme' => 'mariadb',
-//        'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
-//        'port' => System::getEnv('_APP_DB_PORT', '3306'),
-//        'user' => System::getEnv('_APP_DB_USER', ''),
-//        'pass' => System::getEnv('_APP_DB_PASS', ''),
-//        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
-//    ]);
+//            'scheme' => 'mariadb',
+//            'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
+//            'port' => System::getEnv('_APP_DB_PORT', '3306'),
+//            'user' => System::getEnv('_APP_DB_USER', ''),
+//            'pass' => System::getEnv('_APP_DB_PASS', ''),
+//            'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+//        ]);
 //    $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
-//        'scheme' => 'redis',
-//        'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
-//        'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
-//        'user' => System::getEnv('_APP_REDIS_USER', ''),
-//        'pass' => System::getEnv('_APP_REDIS_PASS', ''),
-//    ]);
+//            'scheme' => 'redis',
+//            'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
+//            'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
+//            'user' => System::getEnv('_APP_REDIS_USER', ''),
+//            'pass' => System::getEnv('_APP_REDIS_PASS', ''),
+//        ]);
 //
 //    $connections = [
 //        'console' => [
@@ -1143,7 +1142,7 @@
 //        if (
 //            isset($node['type']) &&
 //            ($node['type'] === Origin::CLIENT_TYPE_WEB ||
-//            $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
+//                $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
 //            !empty($node['hostname'])
 //        ) {
 //            $clients[] = $node['hostname'];
@@ -1732,4 +1731,4 @@
 //}, ['request']);
 //App::setResource('plan', function (array $plan = []) {
 //    return [];
-//});*/
+//});
