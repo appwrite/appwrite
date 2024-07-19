@@ -165,8 +165,6 @@ jobs:
       - name: Load and Start Appwrite
         run: |
           sed -i 's/traefik/localhost/g' .env 
-          sed -i 's/TESTING: true/TESTING: false/g' docker-compose.yml
-          sed -i 's/VERSION: dev/VERSION: production/g' docker-compose.yml
           docker load --input /tmp/${{ env.IMAGE }}.tar          
           docker compose up -d
           sleep 10
