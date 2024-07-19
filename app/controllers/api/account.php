@@ -124,7 +124,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
-        'dateTime' => DateTime::format(new \DateTime(), 'Y-m-d H:i:s'),
+        'dateTime' => DateTime::format(new \DateTime(), 'h:ia MMMM dS'),
         'user' => $user->getAttribute('name'),
         'project' => $project->getAttribute('name'),
         'device' => $session->getAttribute('clientName'),
