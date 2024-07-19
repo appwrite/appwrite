@@ -220,7 +220,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $folder = 'php';
+        $folder = 'php-time';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
 
@@ -268,14 +268,15 @@ class FunctionsCustomClientTest extends Scope
 
         // Schedule execution for the future
         \date_default_timezone_set('UTC');
-        $futureTime = (new \DateTime())->add(new \DateInterval('PT10S'))->format('Y-m-d H:i:s');
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT10S'));
+        $futureTimeString = $futureTime->format('Y-m-d H:i:s');
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'async' => true,
-            'scheduledAt' => $futureTime,
+            'scheduledAt' => $futureTimeString,
             'path' => '/custom',
             'method' => 'GET',
             'body' => 'hello',
@@ -289,7 +290,7 @@ class FunctionsCustomClientTest extends Scope
 
         $executionId = $execution['body']['$id'];
 
-        sleep(15);
+        sleep(13);
 
         $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions/' . $executionId, [
             'content-type' => 'application/json',
@@ -303,6 +304,14 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('/custom', $execution['body']['requestPath']);
         $this->assertEquals('GET', $execution['body']['requestMethod']);
         $this->assertGreaterThan(0, $execution['body']['duration']);
+
+        // Assert that the execution was completed within 3 seconds of the scheduled time
+
+        $output = json_decode($execution['body']['responseBody'], true);
+        $this->assertArrayHasKey('time', $output);
+        $this->assertGreaterThan($output['time'], $futureTime->getTimestamp());
+        $this->assertLessThan($output['time'], $futureTime->getTimestamp() + 3);
+
 
         /* Test for FAILURE */
 
