@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "09274537fc52a7a226561f91542346e3",
+    "content-hash": "741c280f0f13f8618399aafd9c00d7fd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1436,22 +1436,24 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "a2292d71da901ea13129d56f89876626ba92adf0"
+                "reference": "b3105b361311d601069697c7691517d70f1bd32d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/a2292d71da901ea13129d56f89876626ba92adf0",
-                "reference": "a2292d71da901ea13129d56f89876626ba92adf0",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/b3105b361311d601069697c7691517d70f1bd32d",
+                "reference": "b3105b361311d601069697c7691517d70f1bd32d",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
+                "ext-redis": "*",
                 "php": ">=8.0",
                 "utopia-php/database": "dev-feat-framework-v2 as 0.49.99"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
+                "phpbench/phpbench": "^1.2",
                 "phpstan/phpstan": "^1.9",
                 "phpunit/phpunit": "^9.4"
             },
@@ -1477,7 +1479,7 @@
                 "issues": "https://github.com/utopia-php/abuse/issues",
                 "source": "https://github.com/utopia-php/abuse/tree/feat-framework-v2"
             },
-            "time": "2024-04-18T17:04:17+00:00"
+            "time": "2024-07-19T16:13:52+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1531,17 +1533,17 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "49c2a113277bfa0d7d1774c150de2d2fa07349e7"
+                "reference": "ab618a689e99e4f278c71f133e5dda49425fb1f0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/49c2a113277bfa0d7d1774c150de2d2fa07349e7",
-                "reference": "49c2a113277bfa0d7d1774c150de2d2fa07349e7",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/ab618a689e99e4f278c71f133e5dda49425fb1f0",
+                "reference": "ab618a689e99e4f278c71f133e5dda49425fb1f0",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/database": "dev-feat-framework-v2 as 0.49.99"
+                "utopia-php/database": "dev-feat-framework-v2 as 0.50.99"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
@@ -1570,7 +1572,7 @@
                 "issues": "https://github.com/utopia-php/audit/issues",
                 "source": "https://github.com/utopia-php/audit/tree/feat-framework-v2"
             },
-            "time": "2024-04-18T17:02:14+00:00"
+            "time": "2024-07-19T16:19:18+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -1730,12 +1732,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "5b0d6ba40141dd9d4983d3aac018782f8ecdfc8a"
+                "reference": "9ddf91aa4812a0eeb7feb9667b4827b407032df1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/5b0d6ba40141dd9d4983d3aac018782f8ecdfc8a",
-                "reference": "5b0d6ba40141dd9d4983d3aac018782f8ecdfc8a",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/9ddf91aa4812a0eeb7feb9667b4827b407032df1",
+                "reference": "9ddf91aa4812a0eeb7feb9667b4827b407032df1",
                 "shasum": ""
             },
             "require": {
@@ -1778,7 +1780,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-framework-v2"
             },
-            "time": "2024-06-06T00:07:47+00:00"
+            "time": "2024-07-19T17:41:23+00:00"
         },
         {
             "name": "utopia-php/di",
@@ -1847,12 +1849,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "4e7055f0aaba0c16ae60c972faefb9189fa0db1c"
+                "reference": "58c0c8c262329b4f4a7195e63360fc5c4cd05fa9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/4e7055f0aaba0c16ae60c972faefb9189fa0db1c",
-                "reference": "4e7055f0aaba0c16ae60c972faefb9189fa0db1c",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/58c0c8c262329b4f4a7195e63360fc5c4cd05fa9",
+                "reference": "58c0c8c262329b4f4a7195e63360fc5c4cd05fa9",
                 "shasum": ""
             },
             "require": {
@@ -1861,6 +1863,7 @@
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.3"
             },
             "type": "library",
@@ -1899,7 +1902,7 @@
                 "issues": "https://github.com/utopia-php/domains/issues",
                 "source": "https://github.com/utopia-php/domains/tree/feat-framework-v2"
             },
-            "time": "2024-03-08T09:24:35+00:00"
+            "time": "2024-07-19T16:48:25+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -1993,12 +1996,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "d72069f810521fd90a378791adc7e1cf8fc9a378"
+                "reference": "c27a91d11b6d89a2603ed929a5739c7bb9779d18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/d72069f810521fd90a378791adc7e1cf8fc9a378",
-                "reference": "d72069f810521fd90a378791adc7e1cf8fc9a378",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/c27a91d11b6d89a2603ed929a5739c7bb9779d18",
+                "reference": "c27a91d11b6d89a2603ed929a5739c7bb9779d18",
                 "shasum": ""
             },
             "require": {
@@ -2035,7 +2038,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/feat-di-upgrade"
             },
-            "time": "2024-07-04T15:01:24+00:00"
+            "time": "2024-07-19T16:54:13+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2138,16 +2141,16 @@
         },
         {
             "name": "utopia-php/logger",
-            "version": "0.5.2",
+            "version": "0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/logger.git",
-                "reference": "c6dfdb672e41364c309b0c30dc03bc6d45446dba"
+                "reference": "a2d1daeeb8f61fdec6d851950d9a021a3d05c9f9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/logger/zipball/c6dfdb672e41364c309b0c30dc03bc6d45446dba",
-                "reference": "c6dfdb672e41364c309b0c30dc03bc6d45446dba",
+                "url": "https://api.github.com/repos/utopia-php/logger/zipball/a2d1daeeb8f61fdec6d851950d9a021a3d05c9f9",
+                "reference": "a2d1daeeb8f61fdec6d851950d9a021a3d05c9f9",
                 "shasum": ""
             },
             "require": {
@@ -2186,9 +2189,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/logger/issues",
-                "source": "https://github.com/utopia-php/logger/tree/0.5.2"
+                "source": "https://github.com/utopia-php/logger/tree/0.6.0"
             },
-            "time": "2024-05-17T09:32:59+00:00"
+            "time": "2024-05-23T13:37:54+00:00"
         },
         {
             "name": "utopia-php/messaging",
@@ -2558,12 +2561,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "41b76eacae43bb3e46824ffc8e9aa14536771b88"
+                "reference": "d59c8a3f8ab72abc069c8f0c8f963cdae1f135e6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/41b76eacae43bb3e46824ffc8e9aa14536771b88",
-                "reference": "41b76eacae43bb3e46824ffc8e9aa14536771b88",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/d59c8a3f8ab72abc069c8f0c8f963cdae1f135e6",
+                "reference": "d59c8a3f8ab72abc069c8f0c8f963cdae1f135e6",
                 "shasum": ""
             },
             "require": {
@@ -2613,7 +2616,7 @@
                 "issues": "https://github.com/utopia-php/queue/issues",
                 "source": "https://github.com/utopia-php/queue/tree/feat-coroutine-and-di"
             },
-            "time": "2024-07-04T18:02:23+00:00"
+            "time": "2024-07-19T17:00:55+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -2744,12 +2747,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "80eafa63cb86b33ce35d48c0189bae6ebdc02734"
+                "reference": "bdf5f9a996e28b20e768829b3f3ecae57fe5cfea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/80eafa63cb86b33ce35d48c0189bae6ebdc02734",
-                "reference": "80eafa63cb86b33ce35d48c0189bae6ebdc02734",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/bdf5f9a996e28b20e768829b3f3ecae57fe5cfea",
+                "reference": "bdf5f9a996e28b20e768829b3f3ecae57fe5cfea",
                 "shasum": ""
             },
             "require": {
@@ -2791,7 +2794,7 @@
                 "issues": "https://github.com/utopia-php/storage/issues",
                 "source": "https://github.com/utopia-php/storage/tree/feat-framework-v2-v2"
             },
-            "time": "2024-03-08T09:39:46+00:00"
+            "time": "2024-07-19T16:59:30+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -5790,8 +5793,8 @@
         {
             "package": "utopia-php/abuse",
             "version": "dev-feat-framework-v2",
-            "alias": "0.37.99",
-            "alias_normalized": "0.37.99.0"
+            "alias": "0.39.99",
+            "alias_normalized": "0.39.99.0"
         },
         {
             "package": "utopia-php/analytics",
@@ -5802,8 +5805,8 @@
         {
             "package": "utopia-php/audit",
             "version": "dev-feat-framework-v2",
-            "alias": "0.39.99",
-            "alias_normalized": "0.39.99.0"
+            "alias": "0.40.99",
+            "alias_normalized": "0.40.99.0"
         },
         {
             "package": "utopia-php/cli",
@@ -5814,8 +5817,8 @@
         {
             "package": "utopia-php/database",
             "version": "dev-feat-framework-v2",
-            "alias": "0.49.99",
-            "alias_normalized": "0.49.99.0"
+            "alias": "0.50.99",
+            "alias_normalized": "0.50.99.0"
         },
         {
             "package": "utopia-php/domains",
