@@ -24,6 +24,10 @@ const TEMPLATE_RUNTIMES = [
     'BUN' => [
         'name' => 'bun',
         'versions' => ['1.0']
+    ],
+    'GO' => [
+        'name' => 'go',
+        'versions' => ['1.22']
     ]
 ];
 
@@ -69,7 +73,8 @@ return [
                 'python/starter'
             ),
             ...getRuntimes(TEMPLATE_RUNTIMES['DART'], 'dart pub get', 'lib/main.dart', 'dart/starter'),
-            ...getRuntimes(TEMPLATE_RUNTIMES['BUN'], 'bun install', 'src/main.ts', 'bun/starter')
+            ...getRuntimes(TEMPLATE_RUNTIMES['BUN'], 'bun install', 'src/main.ts', 'bun/starter'),
+            ...getRuntimes(TEMPLATE_RUNTIMES['GO'], 'go get', 'main.go', 'go/starter')
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/starter">file</a>.',
         'vcsProvider' => 'github',
@@ -407,6 +412,12 @@ return [
                 'pip install -r requirements.txt && python src/setup.py',
                 'src/main.py',
                 'python/discord_command_bot'
+            ),
+            ...getRuntimes(
+                TEMPLATE_RUNTIMES['GO'],
+                'go get',
+                'main.go',
+                'go/discord-command-bot'
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/discord-command-bot">file</a>.',
