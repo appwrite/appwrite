@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
+use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
 
@@ -46,8 +47,9 @@ class ScheduleExecutions extends ScheduleBase
 
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
 
+
             \go(function () use ($queueForFunctions, $schedule, $delay) {
-                \sleep($delay);
+                Co::sleep($delay);
 
                 $queueForFunctions
                     ->setType('schedule')
