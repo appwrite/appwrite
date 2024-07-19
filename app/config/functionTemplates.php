@@ -74,7 +74,7 @@ return [
             ),
             ...getRuntimes(TEMPLATE_RUNTIMES['DART'], 'dart pub get', 'lib/main.dart', 'dart/starter'),
             ...getRuntimes(TEMPLATE_RUNTIMES['BUN'], 'bun install', 'src/main.ts', 'bun/starter'),
-            ...getRuntimes(TEMPLATE_RUNTIMES['GO'], 'go get', 'main.go', 'go/starter')
+            ...getRuntimes(TEMPLATE_RUNTIMES['GO'], '', 'main.go', 'go/starter')
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/starter">file</a>.',
         'vcsProvider' => 'github',
@@ -415,7 +415,7 @@ return [
             ),
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['GO'],
-                'go get',
+                '',
                 'main.go',
                 'go/discord-command-bot'
             )
