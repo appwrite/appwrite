@@ -33,7 +33,7 @@ use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database as TimeLimit;
 use Utopia\Cache\Adapter\Redis as CacheRedis;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -199,7 +199,7 @@ $global->set('logger', function () {
 
         $providerName = $loggingProvider->getScheme();
         $providerConfig = match ($providerName) {
-            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
+            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://'.$loggingProvider->getHost()],
             'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
             default => ['key' => $loggingProvider->getHost()],
         };
@@ -229,8 +229,9 @@ $global->set('logger', function () {
         'appsignal' => new AppSignal($providerConfig['key']),
         default => throw new Exception('Provider "' . $providerName . '" not supported.')
     };
-
-    return new Logger($adapter);
+    $logger = new Logger($adapter);
+    $logger->setSample(0.4);
+    return $logger;
 });
 
 $global->set('geodb', function () {

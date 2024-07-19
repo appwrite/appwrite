@@ -6,7 +6,7 @@ require_once __DIR__ . '/controllers/general.php';
 use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database as TimeLimit;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -45,6 +45,7 @@ $server = new Server('0.0.0.0', '80', [
     'send_yield' => true,
     'tcp_fastopen' => true,
 ]);
+
 $http = new Http($server, $container, 'UTC');
 $http->setRequestClass(Request::class);
 $http->setResponseClass(Response::class);
