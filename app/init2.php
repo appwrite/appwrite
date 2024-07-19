@@ -99,6 +99,11 @@ if (!Http::isProduction()) {
     PublicDomain::allow(['request-catcher']);
 }
 
+function backwardDBName($db): string
+{
+    return str_replace('database_db_main', 'db_main', $db);
+}
+
 function getDevice($root): Device
 {
     $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
@@ -203,7 +208,7 @@ $global->set('logger', function () {
         $configChunks = \explode(";", $providerConfig);
 
         $providerConfig = match ($providerName) {
-            'sentry' => [ 'key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
+            'sentry' => ['key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
             'logowl' => ['ticket' => $configChunks[0] ?? '', 'host' => ''],
             default => ['key' => $providerConfig],
         };
@@ -758,10 +763,10 @@ $dbForProject
         }
 
         try {
-            $dsn = new DSN($project->getAttribute('database'));
+            $dsn = new DSN(backwardDBName($project->getAttribute('database')));
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+            $dsn = new DSN('mysql://' . backwardDBName($project->getAttribute('database')));
         }
 
         $pool = $pools['pools-database-' . $dsn->getHost()]['pool'];
@@ -780,10 +785,10 @@ $dbForProject
         $database = new Database($adapter, $cache);
 
         try {
-            $dsn = new DSN($project->getAttribute('database'));
+            $dsn = new DSN(backwardDBName($project->getAttribute('database')));
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+            $dsn = new DSN('mysql://' . backwardDBName($project->getAttribute('database')));
         }
 
         if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
@@ -1154,10 +1159,10 @@ $getProjectDB
             }
 
             try {
-                $dsn = new DSN($project->getAttribute('database'));
+                $dsn = new DSN(backwardDBName($project->getAttribute('database')));
             } catch (\InvalidArgumentException) {
                 // TODO: Temporary until all projects are using shared tables
-                $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+                $dsn = new DSN('mysql://' . backwardDBName($project->getAttribute('database')));
             }
 
             if (isset($databases[$dsn->getHost()])) {
