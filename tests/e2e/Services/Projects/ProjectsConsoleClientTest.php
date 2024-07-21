@@ -1671,7 +1671,7 @@ class ProjectsConsoleClientTest extends Scope
             ]
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
+        $this->assertEquals('Duplicate phone numbers are not allowed.', $response['body']['message']);
 
         $numbers = [];
         for ($i = 0; $i < 11; $i++) {
