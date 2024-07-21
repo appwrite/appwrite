@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Migration\Migration;
+use Redis;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -11,13 +12,11 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
-use Utopia\Validator\Text;
 use Utopia\System\System;
-use Redis;
+use Utopia\Validator\Text;
 
 class Migrate extends Action
 {
-
     /**
      * @var Redis
      */
@@ -37,13 +36,13 @@ class Migrate extends Action
             ->inject('dbForConsole')
             ->inject('getProjectDB')
             ->inject('register')
-            ->callback(fn($version, $dbForConsole, $getProjectDB, Registry $register) => $this->action($version, $dbForConsole, $getProjectDB, $register));
+            ->callback(fn ($version, $dbForConsole, $getProjectDB, Registry $register) => $this->action($version, $dbForConsole, $getProjectDB, $register));
 
         $this->redis = new Redis();
         $this->redis->connect(
-            System::getEnv('_APP_REDIS_HOST', null) ,
+            System::getEnv('_APP_REDIS_HOST', null),
             System::getEnv('_APP_REDIS_PORT', 6379),
-            3 ,
+            3,
             null,
             10
         );
@@ -71,7 +70,7 @@ class Migrate extends Action
         }
     }
 
-    public function action(string $version,  Database $dbForConsole, callable $getProjectDB, Registry $register)
+    public function action(string $version, Database $dbForConsole, callable $getProjectDB, Registry $register)
     {
         Authorization::disable();
         if (!array_key_exists($version, Migration::$versions)) {
