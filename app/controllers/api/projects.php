@@ -882,6 +882,26 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        /* Ensure there are no duplicate numbers . Numbers have a structure. Throw an exception if there are duplicate numbers
+        [
+            {
+                "number": "+1234567890",
+                "code": "123456"
+            },
+            {
+                "number": "+1234567891",
+                "code": "123456"
+            }
+        ]
+        */
+        $uniqueNumbers = [];
+        foreach ($numbers as $number) {
+            if (isset($uniqueNumbers[$number['number']])) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Duplicate numbers are not allowed.');
+            }
+            $uniqueNumbers[$number['number']] = $number['code'];
+        }
+
         $auths = $project->getAttribute('auths', []);
 
         $auths['mockNumbers'] = $numbers;

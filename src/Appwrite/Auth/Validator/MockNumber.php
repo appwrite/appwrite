@@ -47,8 +47,8 @@ class MockNumber extends Validator
         }
 
         $otp = new Text(6, 6);
-        if (!$otp->isValid($value['otp'])) {
-            $this->message = 'OTP must be a valid string and exactly 6 characters.';
+        if (!$otp->isValid($value['otp']) || !\ctype_digit($value['otp'])) {
+            $this->message = 'Invalid OTP. Please make sure the OTP is a 6 digit number';
             return false;
         }
 
