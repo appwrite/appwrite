@@ -883,7 +883,7 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
             }
             $uniqueNumbers[$number['phone']] = $number['otp'];
         }
-        
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
