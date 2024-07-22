@@ -355,16 +355,16 @@
         },
         {
             "name": "chillerlan/php-settings-container",
-            "version": "2.1.5",
+            "version": "2.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/chillerlan/php-settings-container.git",
-                "reference": "f705310389264c3578fdd9ffb15aa2cd6d91772e"
+                "reference": "5553558bd381fce5108c6d0343c12e488cfec6bb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/chillerlan/php-settings-container/zipball/f705310389264c3578fdd9ffb15aa2cd6d91772e",
-                "reference": "f705310389264c3578fdd9ffb15aa2cd6d91772e",
+                "url": "https://api.github.com/repos/chillerlan/php-settings-container/zipball/5553558bd381fce5108c6d0343c12e488cfec6bb",
+                "reference": "5553558bd381fce5108c6d0343c12e488cfec6bb",
                 "shasum": ""
             },
             "require": {
@@ -372,15 +372,16 @@
                 "php": "^7.4 || ^8.0"
             },
             "require-dev": {
-                "phan/phan": "^5.4",
-                "phpcsstandards/php_codesniffer": "^3.8",
-                "phpmd/phpmd": "^2.13",
-                "phpunit/phpunit": "^9.6"
+                "phpmd/phpmd": "^2.15",
+                "phpstan/phpstan": "^1.11",
+                "phpstan/phpstan-deprecation-rules": "^1.2",
+                "phpunit/phpunit": "^9.6",
+                "squizlabs/php_codesniffer": "^3.10"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "chillerlan\\Settings\\": "src/"
+                    "chillerlan\\Settings\\": "src"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -417,7 +418,7 @@
                     "type": "ko_fi"
                 }
             ],
-            "time": "2024-01-05T23:20:55+00:00"
+            "time": "2024-07-17T01:04:28+00:00"
         },
         {
             "name": "dragonmantank/cron-expression",

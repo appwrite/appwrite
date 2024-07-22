@@ -140,6 +140,7 @@ class Builds extends Action
         }
 
         $version = $function->getAttribute('version', 'v2');
+        $spec = Config::getParam('runtime-sizes')[$function->getAttribute('size', 's-1vcpu-512mb')];
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $key = $function->getAttribute('runtime');
         $runtime = $runtimes[$key] ?? null;
@@ -391,6 +392,8 @@ class Builds extends Action
                 'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
                 'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
                 'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? 1,
+                'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? 512
             ]);
 
             $command = $deployment->getAttribute('commands', '');
@@ -399,7 +402,7 @@ class Builds extends Action
             $err = null;
 
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, $spec, &$err) {
                     try {
                         $version = $function->getAttribute('version', 'v2');
                         $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
@@ -410,8 +413,8 @@ class Builds extends Action
                             source: $source,
                             image: $runtime['image'],
                             version: $version,
-                            cpus: $function->getAttribute('cpus', 1),
-                            memory: $function->getAttribute('memory', 512),
+                            cpus: $spec['cpus'] ?? 1,
+                            memory: $spec['memory'] ?? 512,
                             remove: true,
                             entrypoint: $deployment->getAttribute('entrypoint'),
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
@@ -542,11 +545,11 @@ class Builds extends Action
                 ->addMetric(METRIC_BUILDS, 1) // per project
                 ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
                 ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
-                ->addMetric(METRIC_BUILDS_MB_SECONDS, $function->getAttribute('memory', 512) * $build->getAttribute('duration', 0) * $function->getAttribute('cpus', 1))
+                ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? 512) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? 1)))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), $function->getAttribute('memory', 512) * $build->getAttribute('duration', 0) * $function->getAttribute('cpus', 1))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? 512) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? 1)))
                 ->setProject($project)
                 ->trigger();
         }

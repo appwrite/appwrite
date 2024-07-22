@@ -386,69 +386,6 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testUpdate
      */
-    public function testUpdateSpecs($data): array
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $response1 = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Test1',
-            'events' => [
-                'users.*.update.name',
-                'users.*.update.email',
-            ],
-            'timeout' => 15,
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
-            'size' => 's-1vcpu-1gb',
-        ]);
-
-        $this->assertEquals(200, $response1['headers']['status-code']);
-        $this->assertNotEmpty($response1['body']['$id']);
-        $this->assertEquals('Test1', $response1['body']['name']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$createdAt']));
-        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$updatedAt']));
-        $this->assertEquals('', $response1['body']['deployment']);
-        $this->assertEquals([
-            'users.*.update.name',
-            'users.*.update.email',
-        ], $response1['body']['events']);
-        $this->assertEquals(15, $response1['body']['timeout']);
-        $this->assertEquals(1024, $response1['body']['memory']);
-        $this->assertEquals(1, $response1['body']['cpus']);
-        $this->assertEquals('s-1vcpu-1gb', $response1['body']['size']);
-
-        /**
-         * Test for FAILURE
-         */
-        $response2 = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Test1',
-            'events' => [
-                'users.*.update.name',
-                'users.*.update.email',
-            ],
-            'timeout' => 15,
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
-            'size' => 's-2vcpu-512mb', // Invalid size
-        ]);
-
-        $this->assertEquals(400, $response2['headers']['status-code']);
-        $this->assertEquals('Invalid `size` param: String must be a valid size value of s-1vcpu-512mb, s-1vcpu-1gb', $response2['body']['message']);
-
-        return $data;
-    }
-
-    /**
-     * @depends testUpdateSpecs
-     */
     public function testCreateDeployment($data): array
     {
         /**
@@ -895,6 +832,99 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals($function['headers']['status-code'], 404);
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetExecution
+     */
+    #[Retry(count: 2)]
+    public function testUpdateSpecs($data): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response1 = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test1',
+            'events' => [
+                'users.*.update.name',
+                'users.*.update.email',
+            ],
+            'timeout' => 15,
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'size' => 's-1vcpu-1gb',
+        ]);
+
+        $this->assertEquals(200, $response1['headers']['status-code']);
+        $this->assertNotEmpty($response1['body']['$id']);
+        $this->assertEquals('s-1vcpu-1gb', $response1['body']['size']);
+
+        // Test Execution
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        
+        $output = json_decode($execution['body']['responseBody'], true);
+        
+        $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
+        $this->assertEquals(1024, $output['APPWRITE_FUNCTION_MEMORY']);
+
+        $response2 = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test1',
+            'events' => [
+                'users.*.update.name',
+                'users.*.update.email',
+            ],
+            'timeout' => 15,
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'size' => 's-1vcpu-512mb',
+        ]);
+
+        $this->assertEquals(200, $response2['headers']['status-code']);
+        $this->assertNotEmpty($response2['body']['$id']);
+        $this->assertEquals('s-1vcpu-512mb', $response2['body']['size']);
+
+        // Test Execution
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        
+        $output = json_decode($execution['body']['responseBody'], true);
+        
+        $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
+        $this->assertEquals(512, $output['APPWRITE_FUNCTION_MEMORY']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response3 = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test1',
+            'events' => [
+                'users.*.update.name',
+                'users.*.update.email',
+            ],
+            'timeout' => 15,
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'size' => 's-2vcpu-512mb', // Invalid size
+        ]);
+
+        $this->assertEquals(400, $response3['headers']['status-code']);
+        $this->assertEquals('Invalid `size` param: String must be a valid size value of s-1vcpu-512mb, s-1vcpu-1gb', $response3['body']['message']);
 
         return $data;
     }

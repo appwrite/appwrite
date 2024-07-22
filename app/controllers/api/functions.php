@@ -237,8 +237,6 @@ App::post('/v1/functions')
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'memory' => $spec['memory'],
-            'cpus' => $spec['cpus'],
             'size' => $size
         ]));
 
@@ -742,7 +740,6 @@ App::put('/v1/functions/:functionId')
     ->inject('gitHub')
     ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $size, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
-
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -847,8 +844,7 @@ App::put('/v1/functions/:functionId')
         }
 
         // Enforce Cold Start if spec limits change.
-        if (($function->getAttribute('cpus') !== $spec['cpus'] ||
-            $function->getAttribute('memory') !== $spec['memory']) && !empty($function->getAttribute('deployment'))) {
+        if ($function->getAttribute('size') !== $size && !empty($function->getAttribute('deployment'))) {
             $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             try {
                 $executor->deleteRuntime($project->getId(), $function->getAttribute('deployment'));
@@ -877,8 +873,6 @@ App::put('/v1/functions/:functionId')
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'memory' => $spec['memory'],
-            'cpus' => $spec['cpus'],
             'size' => $size,
             'search' => implode(' ', [$functionId, $name, $runtime]),
         ])));
@@ -1601,6 +1595,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
+        $spec = Config::getParam('runtime-sizes')[$function->getAttribute('size', 's-1vcpu-512mb')];
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
@@ -1767,6 +1762,8 @@ App::post('/v1/functions/:functionId/executions')
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? 1,
+            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? 512
         ]);
 
         /** Execute function */
@@ -1789,8 +1786,8 @@ App::post('/v1/functions/:functionId/executions')
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
-                cpus: $function->getAttribute('cpus', 1),
-                memory: $function->getAttribute('memory', 512),
+                cpus: $spec['cpus'] ?? 1,
+                memory: $spec['memory'] ?? 512,
                 requestTimeout: 30
             );
 
@@ -1828,8 +1825,8 @@ App::post('/v1/functions/:functionId/executions')
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, $function->getAttribute('memory', 512) * $execution->getAttribute('duration', 0) * $function->getAttribute('cpus', 1))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), $function->getAttribute('memory', 512) * $execution->getAttribute('duration', 0) * $function->getAttribute('cpus', 1))
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? 512) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? 1)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? 512) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? 1)))
             ;
 
             if ($function->getAttribute('logging')) {
