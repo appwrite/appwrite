@@ -129,6 +129,8 @@ class V21 extends Migration
                  * Bump version number.
                  */
                 $document->setAttribute('version', '1.6.0');
+
+                // Add accessedAt attribute
                 $document->setAttribute('accessedAt', DateTime::now());
                 break;
         }
