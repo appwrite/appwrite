@@ -26,7 +26,7 @@ use Utopia\System\System;
 global $global, $container;
 
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
-$workerNumber = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 2));
+$workerNumber = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $server = new Server('0.0.0.0', '80', [
     'open_http2_protocol' => true,
@@ -36,7 +36,7 @@ $server = new Server('0.0.0.0', '80', [
     'buffer_output_size' => $payloadSize,
     // Server
     // 'log_level' => 0,
-    'dispatch_mode' => 1,
+    'dispatch_mode' => 2,
     'worker_num' => $workerNumber,
     'reactor_num' => swoole_cpu_num() * 2,
     'open_cpu_affinity' => true,
