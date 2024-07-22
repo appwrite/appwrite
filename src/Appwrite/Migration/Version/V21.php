@@ -87,6 +87,13 @@ class V21 extends Migration
                         Console::warning("'scopes' from {$id}: {$th->getMessage()}");
                     }
 
+                    // Create size attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'size');
+                    } catch (Throwable $th) {
+                        Console::warning("'size' from {$id}: {$th->getMessage()}");
+                    }
+
                     break;
                 case 'executions':
                     // Create requestMethod index
@@ -133,7 +140,14 @@ class V21 extends Migration
                 // Add accessedAt attribute
                 $document->setAttribute('accessedAt', DateTime::now());
                 break;
+            case 'functions':
+                // Add scopes attribute
+                $document->setAttribute('scopes', []);
+
+                // Add size attribute
+                $document->setAttribute('size', 's-1vcpu-512m');
         }
+
         return $document;
     }
 }
