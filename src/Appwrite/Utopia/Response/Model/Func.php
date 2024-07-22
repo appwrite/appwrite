@@ -145,21 +145,9 @@ class Func extends Model
                 'default' => false,
                 'example' => false,
             ])
-            ->addRule('memory', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Function execution memory limit in MB.',
-                'default' => 512,
-                'example' => 1024,
-            ])
-            ->addRule('cpus', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Function execution CPU cores.',
-                'default' => 1,
-                'example' => 2,
-            ])
             ->addRule('size', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function execution machine size.',
+                'description' => 'Function execution and builds machine size.',
                 'default' => 's-1vcpu-512mb',
                 'example' => 's-1vcpu-512mb',
             ])

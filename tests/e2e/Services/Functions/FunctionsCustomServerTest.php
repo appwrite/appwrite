@@ -869,9 +869,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        
+
         $output = json_decode($execution['body']['responseBody'], true);
-        
+
         $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
         $this->assertEquals(1024, $output['APPWRITE_FUNCTION_MEMORY']);
 
@@ -899,9 +899,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        
+
         $output = json_decode($execution['body']['responseBody'], true);
-        
+
         $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
         $this->assertEquals(512, $output['APPWRITE_FUNCTION_MEMORY']);
 
