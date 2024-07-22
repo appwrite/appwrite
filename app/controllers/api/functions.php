@@ -1621,13 +1621,6 @@ App::post('/v1/functions/:functionId/executions')
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
 
-        /** Auto-update v3 runtimes into v4, remove me after we do migrations */
-        if ($version === 'v3') {
-            $function->setAttribute('version', 'v4');
-            $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
-            $version = 'v4';
-        }
-
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
         if (\is_null($runtime)) {
