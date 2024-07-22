@@ -2743,11 +2743,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('response')
+    ->inject('request')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('mode')
-    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode) {
+    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Request $request, Database $dbForProject, Document $user, Event $queueForEvents, string $mode) {
+
+        if ($request->getHeader('x-appwrite-preserve-dates') === 'true') {
+            $dbForProject->setPreserveDates(true);
+        }
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -2900,18 +2905,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
 
-        var_dump($document);
-
         try {
             $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
         } catch (DuplicateException $exception) {
-            var_dump('DuplicateException found');
-            var_dump($exception->getMessage());
-            var_dump($exception->getFile());
-            var_dump($exception->getLine());
-            var_dump("-----------------");
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         }
 

@@ -4754,6 +4754,8 @@ trait DatabasesBase
 
         $this->assertEquals($longtext['headers']['status-code'], 202);
 
+        $longtext = file_get_contents(__DIR__ . '/../../../resources/longtext.txt');
+
         for ($i = 0; $i < 1; $i++) {
             $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
                 'content-type' => 'application/json',
@@ -4761,7 +4763,7 @@ trait DatabasesBase
             ], $this->getHeaders()), [
                 'documentId' => ID::unique(),
                 'data' => [
-                    'longtext' => file_get_contents(__DIR__ . '/../../../resources/longtext.txt'),
+                    'longtext' => $longtext . $longtext,
                 ],
                 'permissions' => [
                     Permission::read(Role::user($this->getUser()['$id'])),
@@ -4782,5 +4784,57 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(408, $response['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testPreserveDates(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'collectionId' => 'preserve_dates',
+            'name' => 'Preserve Dates',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-preserve-dates' => 'true'
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                '$createdAt' => '2000-01-01 01:01:01',
+                '$updatedAt' => '2020-01-01 01:01:01',
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$id', [$response['body']['$id']])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('2000-01-01T01:01:01.000+00:00', $response['body']['documents'][0]['$createdAt']);
+        $this->assertEquals('2020-01-01T01:01:01.000+00:00', $response['body']['documents'][0]['$updatedAt']);
     }
 }
