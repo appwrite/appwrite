@@ -166,16 +166,13 @@ App::init()
         }
 
         /** Default role */
+        $roles = Config::getParam('roles', []);
         $role = ($user->isEmpty())
             ? Role::guests()->toString()
             : Role::users()->toString();
 
         /** Allowed Scopes for the role */
-        $roles = Config::getParam('roles', []);
         $scopes = $roles[$role]['scopes'];
-
-        var_dump("Mode : " . $mode);
-        var_dump(Auth::getRoles($user));
 
         /**
          * API Key Authentication
@@ -235,7 +232,7 @@ App::init()
         /**
          * Admin User Authentication
          */
-        elseif (APP_MODE_ADMIN === $mode && $project->getId() !== 'console') {
+        elseif (APP_MODE_ADMIN === $mode) {
             if ($user->isEmpty()) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
@@ -248,7 +245,7 @@ App::init()
             $adminRoles = [];
             $memberships = $user->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
-                if ($membership->getAttribute('teamId') === $teamId) {
+                if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $teamId) {
                     $adminRoles = $membership->getAttribute('roles', []);
                     break;
                 }
@@ -258,26 +255,34 @@ App::init()
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
-            /** Get scopes available to that role for this project */
-            foreach ($adminRoles as $role) {
-                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
-            }
+            $adminRoles = array_filter($adminRoles, function ($role) use ($project) {
+                return str_contains($role, $project->getId()) || str_contains($role, 'projects/all') || str_contains($role, 'owner');
+            });
 
-            // Authorization::setRole(Auth::USER_ROLE_ADMIN);
-            // foreach ($membership['roles'] as $memberRole) {
-            //     Authorization::setRole($memberRole);
+            // if (empty($adminRoles)) {
+            //     throw new Exception(Exception::USER_UNAUTHORIZED);
             // }
 
-            Authorization::setRole(Auth::USER_ROLE_DEVELOPER);
-            Authorization::setDefaultStatus(false);
+            var_dump("####### ADMIN ROLES #######");
+            var_dump($adminRoles);
+
+            foreach ($adminRoles as $adminRole) {
+                if (str_contains($adminRole, 'owner')) {
+                    $role = Auth::USER_ROLE_OWNER;
+                    $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+                    break;
+                }
+                $parts = explode('/', $adminRole);
+                $role = $parts[2] ?? Auth::USER_ROLE_GUESTS;
+                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+            }
+            
+            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         }
 
         $scopes = \array_unique($scopes);
-        var_dump("##### Admin Scopes ######");
-        var_dump($scopes);
 
         Authorization::setRole($role);
-
         foreach (Auth::getRoles($user) as $authRole) {
             Authorization::setRole($authRole);
         }

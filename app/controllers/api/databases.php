@@ -416,6 +416,8 @@ App::post('/v1/databases')
 
         $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
 
+        var_dump($databaseId);
+
         try {
             $dbForProject->createDocument('databases', new Document([
                 '$id' => $databaseId,

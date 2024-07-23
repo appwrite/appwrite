@@ -1169,9 +1169,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Auth::$unique = $session['id'] ?? '';
     Auth::$secret = $session['secret'] ?? '';
 
-    var_dump("####### Session ID ##########");
-    var_dump(Auth::$unique);
-
     if (APP_MODE_ADMIN !== $mode) {
         if ($project->isEmpty()) {
             $user = new Document([]);
@@ -1185,9 +1182,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     } else {
         $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
-
-    var_dump("####### User ##########");
-    var_dump($user);
 
     if (
         $user->isEmpty() // Check a document has been found in the DB
