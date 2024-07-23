@@ -76,6 +76,12 @@ class Membership extends Model
                 'default' => false,
                 'example' => false,
             ])
+            ->addRule('mfa', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Multi factor authentication status, true if the user has MFA enabled or false otherwise.',
+                'default' => false,
+                'example' => false,
+            ])
             ->addRule('roles', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User list of roles',

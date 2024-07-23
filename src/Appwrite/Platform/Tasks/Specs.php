@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Platform\Action;
-use Utopia\Validator\Text;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
@@ -17,8 +15,11 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
+use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Request;
+use Utopia\System\System;
+use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Specs extends Action
@@ -82,6 +83,12 @@ class Specs extends Action
                     'description' => '',
                     'in' => 'header',
                 ],
+                'Session' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Session',
+                    'description' => 'The user session to authenticate with',
+                    'in' => 'header',
+                ]
             ],
             APP_PLATFORM_SERVER => [
                 'Project' => [
@@ -106,6 +113,18 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
                     'description' => '',
+                    'in' => 'header',
+                ],
+                'Session' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Session',
+                    'description' => 'The user session to authenticate with',
+                    'in' => 'header',
+                ],
+                'ForwardedUserAgent' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Forwarded-User-Agent',
+                    'description' => 'The user agent string of the client that made the request',
                     'in' => 'header',
                 ],
             ],
@@ -150,29 +169,35 @@ class Specs extends Action
 
             foreach ($appRoutes as $key => $method) {
                 foreach ($method as $route) {
+                    $hide = $route->getLabel('sdk.hide', false);
+                    if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
+                        continue;
+                    }
+
                     /** @var \Utopia\Route $route */
                     $routeSecurity = $route->getLabel('sdk.auth', []);
-                    $sdkPlaforms = [];
+                    $sdkPlatforms = [];
 
                     foreach ($routeSecurity as $value) {
                         switch ($value) {
                             case APP_AUTH_TYPE_SESSION:
-                                $sdkPlaforms[] = APP_PLATFORM_CLIENT;
+                                $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                                 break;
                             case APP_AUTH_TYPE_KEY:
-                                $sdkPlaforms[] = APP_PLATFORM_SERVER;
+                                $sdkPlatforms[] = APP_PLATFORM_SERVER;
                                 break;
                             case APP_AUTH_TYPE_JWT:
-                                $sdkPlaforms[] = APP_PLATFORM_SERVER;
+                                $sdkPlatforms[] = APP_PLATFORM_SERVER;
                                 break;
                             case APP_AUTH_TYPE_ADMIN:
-                                $sdkPlaforms[] = APP_PLATFORM_CONSOLE;
+                                $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
                                 break;
                         }
                     }
 
                     if (empty($routeSecurity)) {
-                        $sdkPlaforms[] = APP_PLATFORM_CLIENT;
+                        $sdkPlatforms[] = APP_PLATFORM_SERVER;
+                        $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                     }
 
                     if (!$route->getLabel('docs', true)) {
@@ -191,7 +216,7 @@ class Specs extends Action
                         continue;
                     }
 
-                    if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlaforms)) {
+                    if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlatforms)) {
                         continue;
                     }
 
@@ -233,13 +258,13 @@ class Specs extends Action
                 };
 
                 $specs = new Specification($formatInstance);
-                $endpoint = App::getEnv('_APP_HOME', '[HOSTNAME]');
-                $email = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $endpoint = System::getEnv('_APP_HOME', '[HOSTNAME]');
+                $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
                 $formatInstance
                     ->setParam('name', APP_NAME)
                     ->setParam('description', 'Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)')
-                    ->setParam('endpoint', 'https://HOSTNAME/v1')
+                    ->setParam('endpoint', 'https://cloud.appwrite.io/v1')
                     ->setParam('version', APP_VERSION_STABLE)
                     ->setParam('terms', $endpoint . '/policy/terms')
                     ->setParam('support.email', $email)

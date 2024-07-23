@@ -2,8 +2,9 @@
 
 namespace Executor;
 
+use Appwrite\Extend\Exception as AppwriteException;
 use Exception;
-use Utopia\App;
+use Utopia\System\System;
 
 class Executor
 {
@@ -34,11 +35,11 @@ class Executor
         }
 
         $this->endpoint = $endpoint;
-        $this->cpus = \intval(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
-        $this->memory = \intval(App::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
+        $this->cpus = \intval(System::getEnv('_APP_FUNCTIONS_CPUS', '1'));
+        $this->memory = \intval(System::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
         $this->headers = [
             'content-type' => 'application/json',
-            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', ''),
+            'authorization' => 'Bearer ' . System::getEnv('_APP_EXECUTOR_SECRET', ''),
             'x-opr-addressing-method' => 'anycast-efficient'
         ];
     }
@@ -70,8 +71,9 @@ class Executor
         array $variables = [],
         string $command = null,
     ) {
-        $runtimeId = "$projectId-$deploymentId";
+        $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
+        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
         $params = [
             'runtimeId' => $runtimeId,
             'source' => $source,
@@ -84,9 +86,8 @@ class Executor
             'cpus' => $this->cpus,
             'memory' => $this->memory,
             'version' => $version,
+            'timeout' => $timeout,
         ];
-
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
         $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
@@ -111,9 +112,9 @@ class Executor
         string $projectId,
         callable $callback
     ) {
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
-        $runtimeId = "$projectId-$deploymentId";
+        $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes/{$runtimeId}/logs";
         $params = [
             'timeout' => $timeout
@@ -177,9 +178,10 @@ class Executor
         string $method,
         array $headers,
         string $runtimeEntrypoint = null,
+        int $requestTimeout = null
     ) {
         if (empty($headers['host'])) {
-            $headers['host'] = App::getEnv('_APP_DOMAIN', '');
+            $headers['host'] = System::getEnv('_APP_DOMAIN', '');
         }
 
         $runtimeId = "$projectId-$deploymentId";
@@ -192,7 +194,6 @@ class Executor
             'path' => $path,
             'method' => $method,
             'headers' => $headers,
-
             'image' => $image,
             'source' => $source,
             'entrypoint' => $entrypoint,
@@ -202,9 +203,13 @@ class Executor
             'runtimeEntrypoint' => $runtimeEntrypoint,
         ];
 
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        // Safety timeout. Executor has timeout, and open runtime has soft timeout.
+        // This one shouldn't really happen, but prevents from unexpected networking behaviours.
+        if ($requestTimeout == null) {
+            $requestTimeout = $timeout + 15;
+        }
 
-        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
+        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $requestTimeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -306,6 +311,8 @@ class Executor
 
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_errno($ch);
+        $curlErrorMessage = curl_error($ch);
 
         if ($decode) {
             switch (substr($responseType, 0, strpos($responseType, ';'))) {
@@ -322,8 +329,11 @@ class Executor
             }
         }
 
-        if ((curl_errno($ch)/* || 200 != $responseStatus*/)) {
-            throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
+        if ($curlError) {
+            if ($curlError == CURLE_OPERATION_TIMEDOUT) {
+                throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT);
+            }
+            throw new Exception($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
         }
 
         curl_close($ch);

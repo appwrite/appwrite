@@ -81,7 +81,11 @@ class FunctionsServerTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_DEPLOYMENT);
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/php/code.tar.gz";
+
+        $folder = 'php';
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
+        $this->packageCode($folder);
+
         $gqlPayload = [
             'operations' => \json_encode([
                 'query' => $query,
