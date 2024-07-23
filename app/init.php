@@ -1169,6 +1169,9 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Auth::$unique = $session['id'] ?? '';
     Auth::$secret = $session['secret'] ?? '';
 
+    var_dump("####### Session ID ##########");
+    var_dump(Auth::$unique);
+
     if (APP_MODE_ADMIN !== $mode) {
         if ($project->isEmpty()) {
             $user = new Document([]);
@@ -1183,6 +1186,9 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
 
+    var_dump("####### User ##########");
+    var_dump($user);
+
     if (
         $user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
@@ -1190,13 +1196,13 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user = new Document([]);
     }
 
-    if (APP_MODE_ADMIN === $mode) {
-        if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
-            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
-        } else {
-            $user = new Document([]);
-        }
-    }
+    // if (APP_MODE_ADMIN === $mode) {
+    //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
+    //         Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+    //     } else {
+    //         $user = new Document([]);
+    //     }
+    // }
 
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
@@ -1272,7 +1278,7 @@ App::setResource('console', function () {
         '$collection' => ID::custom('projects'),
         'description' => 'Appwrite core engine',
         'logo' => '',
-        'teamId' => -1,
+        'teamId' => null,
         'webhooks' => [],
         'keys' => [],
         'platforms' => [

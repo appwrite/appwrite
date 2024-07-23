@@ -135,6 +135,7 @@ class TeamsConsoleClientTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
             'content-type' => 'application/json',
+            'x-appwrite-mode' => 'admin',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => $cookie,
         ]), []);
@@ -147,6 +148,7 @@ class TeamsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => $cookie,
+            'x-appwrite-mode' => 'admin'
         ]), [
             'name' => 'Arsenal Updated',
         ]);
@@ -160,6 +162,7 @@ class TeamsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => $cookie,
+            'x-appwrite-mode' => 'admin'
         ]), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -171,6 +174,7 @@ class TeamsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => $cookie,
+            'x-appwrite-mode' => 'admin'
         ]), [
             'projectId' => 'unique()',
             'name' => 'Project Name',

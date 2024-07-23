@@ -2,7 +2,13 @@
 
 use Appwrite\Auth\Auth;
 
-$guest = [
+$apps = [
+    'global',
+    'health.read',
+    'graphql',
+];
+
+$guests = [
     'global',
     'public',
     'home',
@@ -15,117 +21,106 @@ $guest = [
     'files.write',
     'locale.read',
     'avatars.read',
-    'execution.write'
+    'execution.write',
 ];
 
-$member = array_merge($guest, [
-    'account',
-    'teams.read',
-    'teams.write',
-    'projects.read',
-    'projects.write',
-    'execution.read',
-    'targets.read',
-    'targets.write',
-    'subscribers.read',
-    'subscribers.write',
-    'assistant.read'
-]);
-
-$billing = array_merge($guest, [
-    'teams.read',
-    'teams.write'
-]);
-
-$admin = [
+$member = [
     'global',
+    'public',
+    'home',
+    'console',
     'graphql',
     'sessions.write',
+    'account',
     'teams.read',
     'teams.write',
     'documents.read',
     'documents.write',
     'files.read',
     'files.write',
-    'buckets.read',
-    'buckets.write',
-    'users.read',
-    'users.write',
-    'databases.read',
-    'databases.write',
-    'collections.read',
-    'collections.write',
-    'platforms.read',
-    'platforms.write',
-    'keys.read',
-    'keys.write',
-    'webhooks.read',
-    'webhooks.write',
+    'projects.read',
+    'projects.write',
     'locale.read',
     'avatars.read',
-    'health.read',
-    'functions.read',
-    'functions.write',
     'execution.read',
     'execution.write',
-    'rules.read',
-    'rules.write',
-    'migrations.read',
-    'migrations.write',
-    'vcs.read',
-    'vcs.write',
     'targets.read',
     'targets.write',
-    'providers.write',
-    'providers.read',
-    'messages.write',
-    'messages.read',
-    'topics.write',
-    'topics.read',
     'subscribers.write',
-    'subscribers.read'
+    'subscribers.read',
+    'assistant.read'
 ];
 
-# Same as owner but without the ability to modify teams and projects
-$developer = array_diff($admin, ['teams.write', 'projects.write']);
-
-# Same as developer but without the ability to modify collections, buckets, topics, providers, migrations, rules, subscribers, and messages
-$editor = array_diff($developer, [
-    'collections.write',
-    'buckets.write',
-    'topics.write',
-    'providers.write',
-    'migrations.write',
-    'rules.write',
-    'subscribers.write',
-    'messages.write'
+$analyst = array_merge($member, [
+    'users.read',
+    'databases.read',
+    'collections.read',
+    'buckets.read',
+    'execution.read',
+    'targets.read',
+    'subscribers.read',
+    'assistant.read',
+    'functions.read',
+    'platforms.read',
+    'keys.read',
+    'webhooks.read',
+    'rules.read',
+    'migrations.read',
+    'vcs.read',
+    'providers.read',
+    'messages.read',
+    'topics.read'
 ]);
 
-# Same as editor but without the ability to modify functions, execution, vcs, and webhooks
-$analyst = array_diff($editor, [
-    'databases.write',
-    'functions.write',
+$editor = array_merge($analyst, [
+    'documents.write',
+    'files.write',
     'execution.write',
+    'targets.write',
+    'subscribers.write',
+]);
+
+$developer = array_merge($editor, [
+    'projects.write',
+    'buckets.write',
+    'users.write',
+    'databases.write',
+    'collections.write',
+    'platforms.write',
+    'keys.write',
+    'webhooks.write',
+    'functions.write',
+    'rules.write',
+    'migrations.write',
     'vcs.write',
-    'webhooks.write'
+    'targets.write',
+    'providers.write',
+    'messages.write',
+    'topics.write',
+]);
+
+$owner = array_merge($developer, [
+    'billing.read',
+    'billing.write'
+]);
+
+$billing = array_merge($member, [
+    'billing.read',
+    'billing.write',
 ]);
 
 return [
+    Auth::USER_ROLE_APPS => [
+        'label' => 'Applications',
+        'scopes' => $apps,
+    ],
     Auth::USER_ROLE_GUESTS => [
         'label' => 'Guests',
-        'scopes' => $guest,
+        'scopes' => $guests,
     ],
     Auth::USER_ROLE_USERS => [
         'label' => 'Users',
         'scopes' => $member,
-    ],
-    Auth::USER_ROLE_ADMIN => [
-        'label' => 'Admin',
-        'scopes' => $admin,
-    ],
-    Auth::USER_ROLE_OWNER => [
-        'label' => 'Owner',
-        'scopes' => \array_merge($member, $admin),
     ],
     Auth::USER_ROLE_DEVELOPER => [
         'label' => 'Developer',
@@ -143,8 +138,8 @@ return [
         'label' => 'Billing',
         'scopes' => $billing,
     ],
-    Auth::USER_ROLE_APPS => [
-        'label' => 'Applications',
-        'scopes' => ['global', 'health.read', 'graphql'],
-    ],
+    Auth::USER_ROLE_OWNER => [
+        'label' => 'Owner',
+        'scopes' => $owner,
+    ]
 ];
