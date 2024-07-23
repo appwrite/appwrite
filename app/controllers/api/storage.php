@@ -357,11 +357,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
+    ->inject('project')
     ->inject('queueForEvents')
     ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode, Device $deviceForFiles, Device $deviceForLocal) {
+    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Document $project, Event $queueForEvents, string $mode, Device $deviceForFiles, Device $deviceForLocal) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -386,8 +387,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
         // Map aggregate permissions to into the set of individual permissions they represent.
         $permissions = Permission::aggregate($permissions, $allowedPermissions);
 
-        // Add permissions for current the user if none were provided.
-        if (\is_null($permissions)) {
+        // Add permissions for current the user if none were provided, only if the request is not an admin request or not from console.
+        if (\is_null($permissions) && APP_MODE_ADMIN !== $mode && 'console' !== $project->getId()) {
             $permissions = [];
             if (!empty($user->getId())) {
                 foreach ($allowedPermissions as $permission) {
