@@ -177,7 +177,7 @@ App::init()
         var_dump("Mode : " . $mode);
         var_dump(Auth::getRoles($user));
 
-        /** 
+        /**
          * API Key Authentication
          */
         $authKey = $request->getHeader('x-appwrite-key', '');
@@ -232,7 +232,7 @@ App::init()
                 }
             }
         }
-        /** 
+        /**
          * Admin User Authentication
          */
         elseif (APP_MODE_ADMIN === $mode && $project->getId() !== 'console') {
@@ -271,7 +271,7 @@ App::init()
             Authorization::setRole(Auth::USER_ROLE_DEVELOPER);
             Authorization::setDefaultStatus(false);
         }
-       
+
         $scopes = \array_unique($scopes);
         var_dump("##### Admin Scopes ######");
         var_dump($scopes);
