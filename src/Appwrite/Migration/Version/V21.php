@@ -97,7 +97,7 @@ class V21 extends Migration
                         Console::warning("'scheduleId' from {$id}: {$th->getMessage()}");
                     }
 
-                    break;    
+                    break;
                 case 'schedules':
                     // Create data attribute
                     try {
