@@ -130,10 +130,10 @@ return [ // List of publicly visible scopes
     'assistant.read' => [
         'description' => 'Access to read the Assistant service',
     ],
-    'backups.write' => [
+    'policies.write' => [
         'description' => 'Access to create, update, and delete your backups',
     ],
-    'backups.read' => [
+    'policies.read' => [
         'description' => 'Access to read the backups service',
     ],
 ];
