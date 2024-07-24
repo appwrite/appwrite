@@ -1123,18 +1123,33 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
-            for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
-                $response->chunk(
-                    $deviceForFiles->read(
-                        $path,
-                        ($i * MAX_OUTPUT_CHUNK_SIZE),
-                        min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
-                    ),
-                    (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
-                );
+            $buffer = '';
+            $bytesRead = 0;
+
+            while ($bytesRead < $size) {
+                // Determine how many bytes to read in this iteration
+                $bytesToRead = min(APP_STORAGE_READ_BUFFER, $size - $bytesRead);
+
+                // Read data from the device and append to the buffer
+                $buffer .= $deviceFiles->read($path, $bytesRead, $bytesToRead);
+                $bytesRead += $bytesToRead;
+
+                // Process the buffer in chunks of output size
+                while (strlen($buffer) >= MAX_OUTPUT_CHUNK_SIZE) {
+                    // Send an output chunk of specified size
+                    $response->chunk(substr($buffer, 0, MAX_OUTPUT_CHUNK_SIZE), false);
+                    // Remove the sent chunk from the buffer
+                    $buffer = substr($buffer, MAX_OUTPUT_CHUNK_SIZE);
+                }
+            }
+
+            // Send any remaining data as a final chunk
+            if (strlen($buffer) > 0) {
+                $response->chunk($buffer, true);
             }
         } else {
-            $response->send($deviceForFiles->read($path));
+            // If the file is smaller than the buffer size, read and send the whole file
+            $response->send($deviceFiles->read($path));
         }
     });
 
