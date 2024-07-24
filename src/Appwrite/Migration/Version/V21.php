@@ -69,6 +69,35 @@ class V21 extends Migration
                         Console::warning("'accessedAt' from {$id}: {$th->getMessage()}");
                     }
                     break;
+                case 'executions':
+                    try {
+                        /**
+                         * Create 'scheduledAt' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduledAt');
+                    } catch (\Throwable $th) {
+                        Console::warning("'scheduledAt' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        /**
+                         * Create 'scheduleInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleInternalId');
+                    } catch (\Throwable $th) {
+                        Console::warning("'scheduleInternalId' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        /**
+                         * Create 'scheduleId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleId');
+                    } catch (\Throwable $th) {
+                        Console::warning("'scheduleId' from {$id}: {$th->getMessage()}");
+                    }
+
+                    break;    
                 case 'schedules':
                     // Create data attribute
                     try {
