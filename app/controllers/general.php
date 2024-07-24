@@ -12,9 +12,11 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
+use Appwrite\Utopia\Request\Filters\V18 as RequestV18;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
+use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
@@ -264,6 +266,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_VERSION' => APP_VERSION_STABLE,
+            'APPWRITE_REGION' => $project->getAttribute('region'),
         ]);
 
         /** Execute function */
@@ -286,6 +290,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
+                logging: $function->getAttribute('logging', true),
                 requestTimeout: 30
             );
 
@@ -344,13 +349,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         $execution->setAttribute('responseHeaders', $headers);
 
         $body = $execution['responseBody'] ?? '';
-
-        $encodingKey = \array_search('x-open-runtimes-encoding', \array_column($execution['responseHeaders'], 'name'));
-        if ($encodingKey !== false) {
-            if (($execution['responseHeaders'][$encodingKey]['value'] ?? '') === 'base64') {
-                $body = \base64_decode($body);
-            }
-        }
 
         $contentType = 'text/plain';
         foreach ($execution['responseHeaders'] as $header) {
@@ -452,6 +450,9 @@ App::init()
             }
             if (version_compare($requestFormat, '1.5.0', '<')) {
                 $request->addFilter(new RequestV17());
+            }
+            if (version_compare($requestFormat, '1.6.0', '<')) {
+                $request->addFilter(new RequestV18());
             }
         }
 
@@ -568,6 +569,9 @@ App::init()
             }
             if (version_compare($responseFormat, '1.5.0', '<')) {
                 $response->addFilter(new ResponseV17());
+            }
+            if (version_compare($responseFormat, '1.6.0', '<')) {
+                $response->addFilter(new ResponseV18());
             }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
                 $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is ". APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
@@ -915,7 +919,7 @@ App::get('/robots.txt')
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
-        if ($host === $mainDomain) {
+        if ($host === $mainDomain || $host === 'localhost') {
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
@@ -940,7 +944,7 @@ App::get('/humans.txt')
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
-        if ($host === $mainDomain) {
+        if ($host === $mainDomain || $host === 'localhost') {
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
