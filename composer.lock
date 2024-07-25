@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a6904abee5dfb9496340caaa2c9f1f69",
+    "content-hash": "afb5cff358a14fb833338c25d6337864",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1429,28 +1429,26 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.39.0",
+            "version": "0.38.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "55e184db4d89d93e9b557f29f95f3dea661907b0"
+                "reference": "b7be9086c9d9b4561d810cbd42fdda798742f56c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/55e184db4d89d93e9b557f29f95f3dea661907b0",
-                "reference": "55e184db4d89d93e9b557f29f95f3dea661907b0",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/b7be9086c9d9b4561d810cbd42fdda798742f56c",
+                "reference": "b7be9086c9d9b4561d810cbd42fdda798742f56c",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
-                "ext-redis": "*",
                 "php": ">=8.0",
                 "utopia-php/database": "0.50.*"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
-                "phpbench/phpbench": "^1.2",
                 "phpstan/phpstan": "^1.9",
                 "phpunit/phpunit": "^9.4"
             },
@@ -1474,9 +1472,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.39.0"
+                "source": "https://github.com/utopia-php/abuse/tree/0.38.0"
             },
-            "time": "2024-07-07T20:51:30+00:00"
+            "time": "2024-06-24T00:52:02+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -5606,8 +5604,8 @@
         {
             "package": "utopia-php/migration",
             "version": "dev-backups",
-            "alias": "0.4.4",
-            "alias_normalized": "0.4.4.0"
+            "alias": "0.4.999",
+            "alias_normalized": "0.4.999.0"
         }
     ],
     "minimum-stability": "stable",
