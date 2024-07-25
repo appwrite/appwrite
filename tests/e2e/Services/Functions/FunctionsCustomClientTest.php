@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
@@ -269,7 +270,7 @@ class FunctionsCustomClientTest extends Scope
         // Schedule execution for the future
         \date_default_timezone_set('UTC');
         $futureTime = (new \DateTime())->add(new \DateInterval('PT10S'))->format('Y-m-d H:i:s');
-        $futureTimeIso = (new \DateTime($futureTime))->format('Y-m-d\TH:i:s.vP');
+        $futureTimeIso = DateTime::formatTz($futureTime);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -297,7 +298,6 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
-
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThan(0, \count($response['body']['executions']));
