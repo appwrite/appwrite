@@ -1744,9 +1744,8 @@ App::post('/v1/functions/:functionId/executions')
             ->setContext('function', $function);
 
         if ($async) {
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-
             if(is_null($scheduledAt)) {
+                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
                 $queueForFunctions
                     ->setType('http')
                     ->setExecution($execution)
@@ -1770,7 +1769,7 @@ App::post('/v1/functions/:functionId/executions')
                     'jwt' => $jwt,
                 ];
 
-                $dbForConsole->createDocument('schedules', new Document([
+                $schedule = $dbForConsole->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => ScheduleExecutions::getSupportedResource(),
                     'resourceId' => $execution->getId(),
@@ -1781,6 +1780,13 @@ App::post('/v1/functions/:functionId/executions')
                     'data' => $data,
                     'active' => true,
                 ]));
+
+                $execution = $execution
+                    ->setAttribute('scheduleId', $schedule->getId())
+                    ->setAttribute('scheduleInternalId', $schedule->getInternalId())
+                    ->setAttribute('scheduledAt', $scheduledAt);
+
+                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
             }
 
             return $response
