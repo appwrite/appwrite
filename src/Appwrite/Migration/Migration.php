@@ -83,6 +83,9 @@ abstract class Migration
         '1.5.2'  => 'V20',
         '1.5.3'  => 'V20',
         '1.5.4'  => 'V20',
+        '1.5.5'  => 'V20',
+        '1.5.6'  => 'V20',
+        '1.5.7'  => 'V20',
     ];
 
     /**
@@ -236,7 +239,7 @@ abstract class Migration
     }
 
     /**
-     * Creates colletion from the config collection.
+     * Creates collection from the config collection.
      *
      * @param string $id
      * @param string|null $name
@@ -263,6 +266,7 @@ abstract class Migration
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
                     'required' => $attribute['required'],
+                    'default' => $attribute['default'] ?? null,
                     'signed' => $attribute['signed'],
                     'array' => $attribute['array'],
                     'filters' => $attribute['filters'],

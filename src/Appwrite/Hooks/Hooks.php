@@ -16,11 +16,14 @@ class Hooks
 
     /**
      * @param mixed[] $params
+     * @return mixed
      */
-    public function trigger(string $name, array $params = [])
+    public function trigger(string $name, array $params = []): mixed
     {
         if (isset(self::$hooks[$name])) {
-            call_user_func_array(self::$hooks[$name], $params);
+            return call_user_func_array(self::$hooks[$name], $params);
         }
+
+        return null;
     }
 }

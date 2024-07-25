@@ -294,6 +294,13 @@ class V20 extends Migration
                         Console::warning("'oAuthProviders' from {$id}: {$th->getMessage()}");
                     }
 
+                    // Create apis attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'apis');
+                    } catch (Throwable $th) {
+                        Console::warning("'apis' from {$id}: {$th->getMessage()}");
+                    }
+
                     try {
                         $this->projectDB->purgeCachedCollection($id);
                     } catch (Throwable $th) {
@@ -321,6 +328,32 @@ class V20 extends Migration
                         $this->createAttributeFromCollection($this->projectDB, $id, 'attempts');
                     } catch (Throwable $th) {
                         Console::warning("'attempts' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("Purge cache from {$id}: {$th->getMessage()}");
+                    }
+
+                    break;
+                case 'topics':
+                    try {
+                        $this->projectDB->updateAttributeDefault($id, 'emailTotal', 0);
+                    } catch (Throwable $th) {
+                        Console::warning("'topics' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->projectDB->updateAttributeDefault($id, 'pushTotal', 0);
+                    } catch (Throwable $th) {
+                        Console::warning("'topics' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->projectDB->updateAttributeDefault($id, 'smsTotal', 0);
+                    } catch (Throwable $th) {
+                        Console::warning("'topics' from {$id}: {$th->getMessage()}");
                     }
 
                     try {

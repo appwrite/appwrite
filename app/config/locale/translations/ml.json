@@ -100,6 +100,7 @@
     "countries.gd": "ഗ്രെനാഡ",
     "countries.gt": "ഗ്വാട്ടിമാല",
     "countries.gy": "ഗയാന",
+    "countries.hk": "ഹോങ്കോങ്",
     "countries.hn": "ഹോണ്ടുറാസ്",
     "countries.hr": "ക്രോയേഷ്യ",
     "countries.ht": "ഹെയ്തി",
@@ -163,6 +164,7 @@
     "countries.nz": "ന്യൂസിലൻഡ്",
     "countries.om": "ഒമാൻ",
     "countries.pk": "പാക്കിസ്ഥാൻ",
+    "countries.ps": "പാലസ്തീൻ",
     "countries.pa": "പനാമ",
     "countries.pe": "പെറു",
     "countries.ph": "ഫിലിപ്പീൻസ്",
@@ -248,5 +250,5 @@
     "emails.certificate.footer": "നിങ്ങളുടെ മുൻപത്തെ സർട്ടിഫിക്കറ്റ് ആദ്യ പരാജയത്തിനു ശേഷം 30 ദിവസം വരെ സാധുവായിരിക്കും. ഈ കേസ് അന്വേഷിച്ചു നോക്കുന്നത് ഞങ്ങൾ ശക്തമായി ശുപാർശ ചെയ്യുന്നു, അല്ലെങ്കിൽ നിങ്ങളുടെ ഡൊമെയ്‌ൻ സാധുവായ SSL കമ്മ്യൂണിക്കേഷനില്ലാത്ത ഒരു അവസ്ഥയിലാകും.",
     "emails.certificate.thanks": "നന്ദി",
     "emails.certificate.signature": "{{project}} ടീം",
-    "sms.verification.body": "{{secret}} നിങ്ങളുടെ {{project}} പരിശോധന കോഡാണ്."
+    "sms.verification.body": "{{secret}}"
 }
