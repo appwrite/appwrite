@@ -81,16 +81,8 @@ return [
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
         'providerBranch' => 'main',
-        'variables' => [
-            [
-                'name'  => 'APPWRITE_API_KEY',
-                'description'  => 'The API Key to authenticate against Appwrite\'s Server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value'  => '',
-                'placeholder'  => 'd1efb...aec35',
-                'required'  => false,
-                'type'  => 'password'
-            ]
-        ]
+        'variables' => [],
+        'scopes' => ["users.read"]
     ],
     [
         'icon' => 'icon-upstash',
@@ -621,22 +613,6 @@ return [
         'providerBranch' => 'main',
         'variables' => [
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s Server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The API endpoint of the Appwrite. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
-            [
                 'name' => 'APPWRITE_DATABASE_ID',
                 'description' => 'The ID of the database to store the short URLs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/databases">Learn more</a>.',
                 'value' => 'urlShortener',
@@ -660,7 +636,8 @@ return [
                 'required' => true,
                 'type' => 'url'
             ]
-        ]
+        ],
+        'scopes' => ["databases.read", "databases.write", "collections.write", "attributes.write", "documents.read", "documents.write"]
     ],
     [
         'icon' => 'icon-algolia',
@@ -698,14 +675,6 @@ return [
         'providerOwner' => 'appwrite',
         'providerBranch' => 'main',
         'variables' => [
-            [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s Server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
             [
                 'name' => 'APPWRITE_DATABASE_ID',
                 'description' => 'The ID of the Appwrite database that contains the collection to sync. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/databases">Learn more</a>.',
@@ -748,15 +717,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ]
-        ]
+        ],
+        'scopes' => ["databases.read", "collections.read", "documents.read"]
     ],
     [
         'icon' => 'icon-meilisearch',
@@ -807,14 +769,6 @@ return [
         'providerBranch' => 'main',
         'variables' => [
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s Server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
                 'name' => 'APPWRITE_DATABASE_ID',
                 'description' => 'The ID of the Appwrite database that contains the collection to sync. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/databases">Learn more</a>.',
                 'placeholder' => '64a55...7b912',
@@ -856,15 +810,8 @@ return [
                 'required' => true,
                 'type' => 'text'
             ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ]
-        ]
+        ],
+        'scopes' => ["databases.read", "collections.read", "documents.read"]
     ],
     [
         'icon' => 'icon-vonage',
@@ -1113,22 +1060,6 @@ return [
         'providerBranch' => 'main',
         'variables' => [
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s Server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
-            [
                 'name' => 'STRIPE_SECRET_KEY',
                 'description' => 'Secret for sending requests to the Stripe API. <a class="u-bold" target="_blank" href="https://stripe.com/docs/keys">Learn more</a>.',
                 'placeholder' => 'sk_test_51J...',
@@ -1142,7 +1073,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => ["users.read", "sessions.write", "users.write"]
     ],
     [
         'icon' => 'icon-stripe',
@@ -1168,22 +1100,6 @@ return [
         'providerOwner' => 'appwrite',
         'providerBranch' => 'main',
         'variables' => [
-            [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s Server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
             [
                 'name' => 'STRIPE_SECRET_KEY',
                 'description' => 'Secret for sending requests to the Stripe API. <a class="u-bold" target="_blank" href="https://stripe.com/docs/keys">Learn more</a>.',
@@ -1214,7 +1130,8 @@ return [
                 'required' => false,
                 'type' => 'text'
             ]
-        ]
+        ],
+        'scopes' => ["databases.read", "databases.write", "collections.write", "attributes.write", "documents.read", "documents.write"]
     ],
     [
         'icon' => 'icon-chat',
@@ -1307,22 +1224,6 @@ return [
         'providerBranch' => 'main',
         'variables' => [
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s Server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
-            [
                 'name' => 'APPWRITE_DATABASE_ID',
                 'description' => 'The ID of the database where the responses are stored.  <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/databases">Learn more</a>.',
                 'value' => 'ai',
@@ -1353,7 +1254,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => ["databases.read", "databases.write", "collections.read", "collections.write", "attributes.write", "documents.read", "documents.write", "buckets.read", "buckets.write", "files.read"]
     ],
     [
         'icon' => 'icon-eye',
@@ -1380,22 +1282,6 @@ return [
         'providerBranch' => 'main',
         'variables' => [
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
-            [
                 'name' => 'APPWRITE_DATABASE_ID',
                 'description' => 'The ID of the database where the responses are stored.  <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/databases">Learn more</a>.',
                 'value' => 'ai',
@@ -1426,7 +1312,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        "scopes" => ["databases.read", "databases.write", "collections.read", "collections.write", "attributes.write", "documents.read", "documents.write", "buckets.read", "buckets.write", "files.read"]
     ],
     [
         'icon' => 'icon-text',
@@ -1453,22 +1340,6 @@ return [
         'providerBranch' => 'main',
         'variables' => [
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
-            [
                 'name' => 'APPWRITE_DATABASE_ID',
                 'description' => 'The ID of the database where the responses are stored.  <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/databases">Learn more</a>.',
                 'value' => 'ai',
@@ -1499,7 +1370,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        "scopes" => ["databases.read", "databases.write", "collections.read", "collections.write", "attributes.write", "documents.read", "documents.write", "buckets.read", "buckets.write", "files.read"]
     ],
     [
         'icon' => 'icon-chat',
@@ -1526,22 +1398,6 @@ return [
         'providerBranch' => 'main',
         'variables' => [
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
-            [
                 'name' => 'APPWRITE_DATABASE_ID',
                 'description' => 'The ID of the database where the responses are stored.  <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/databases">Learn more</a>.',
                 'value' => 'ai',
@@ -1572,7 +1428,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        "scopes" => ["buckets.read", "buckets.write", "files.read", "files.write"]
     ],
     [
         'icon' => 'icon-chip',
@@ -1641,29 +1498,14 @@ return [
                 'type' => 'password'
             ],
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
-            [
                 'name' => 'APPWRITE_BUCKET_ID',
                 'description' => 'The ID of the bucket where audio is stored. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/storage/buckets">Learn more</a>.',
                 'placeholder' => 'generated_speech',
                 'required' => true,
                 'type' => 'text'
             ]
-        ]
+        ],
+        "scopes" => ["buckets.write", "files.read", "files.write"]
     ],
     [
         'icon' => 'icon-chip',
@@ -1786,22 +1628,6 @@ return [
                 'type' => 'text'
             ],
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
-            [
                 'name' => 'APPWRITE_DATABASE_ID',
                 'description' => 'The ID of the database where the documents are stored.  <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/databases">Learn more</a>.',
                 'placeholder' => 'my-database',
@@ -1815,7 +1641,8 @@ return [
                 'required' => true,
                 'type' => 'text'
             ]
-        ]
+        ],
+        "scopes" => ["databases.read", "collections.read", "documents.read"]
     ],
     [
         'icon' => 'icon-chip',
@@ -1864,22 +1691,6 @@ return [
                 'type' => 'text'
             ],
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
-            [
                 'name' => 'APPWRITE_DATABASE_ID',
                 'description' => 'The ID of the database where the documents are stored.  <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/databases">Learn more</a>.',
                 'placeholder' => 'my-database',
@@ -1893,7 +1704,8 @@ return [
                 'required' => true,
                 'type' => 'text'
             ]
-        ]
+        ],
+        "scopes" => ["databases.read", "collections.read", "documents.read"]
     ],
     [
         'icon' => 'icon-chat',
@@ -1927,22 +1739,6 @@ return [
                 'type' => 'password'
             ],
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
-            [
                 'name' => 'APPWRITE_DATABASE_ID',
                 'description' => 'The ID of the database where the responses are stored.  <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/databases">Learn more</a>.',
                 'placeholder' => 'my-database',
@@ -1963,7 +1759,8 @@ return [
                 'required' => true,
                 'type' => 'text'
             ]
-        ]
+        ],
+        "scopes" => ["buckets.read", "buckets.write", "files.read", "files.write"]
     ],
     [
         'icon' => 'icon-chip',
@@ -1997,29 +1794,14 @@ return [
                 'type' => 'password'
             ],
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
-            [
                 'name' => 'APPWRITE_BUCKET_ID',
                 'description' => 'The ID of the bucket where audio is stored. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/storage/buckets">Learn more</a>.',
                 'placeholder' => 'generated_speech',
                 'required' => true,
                 'type' => 'text'
             ]
-        ]
+        ],
+        "scopes" => ["buckets.read", "buckets.write", "files.read", "files.write"]
     ],
     [
         'icon' => 'icon-chip',
@@ -2086,22 +1868,6 @@ return [
         'providerBranch' => 'main',
         'variables' => [
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
-            [
                 'name' => 'APPWRITE_BUCKET_ID',
                 'description' => 'The ID of the bucket where generated music is stored. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/storage/buckets">Learn more</a>.',
                 'value' => 'generated_music',
@@ -2116,7 +1882,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        "scopes" => ["buckets.read", "buckets.write", "files.read", "files.write"]
     ],
     [
         'icon' => 'icon-chip',
@@ -2177,22 +1944,6 @@ return [
         'providerBranch' => 'main',
         'variables' => [
             [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s Server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
-            [
                 'name' => 'LEMON_SQUEEZY_API_KEY',
                 'description' => 'API key for sending requests to the Lemon Squeezy API. <a class="u-bold" target="_blank" href="https://docs.lemonsqueezy.com/api#authentication">Learn more</a>.',
                 'placeholder' => 'eyJ0eXAiOiJ...',
@@ -2220,7 +1971,8 @@ return [
                 'required' => true,
                 'type' => 'text'
             ]
-        ]
+        ],
+        "scopes" => ["users.read", "users.write"]
     ],
     [
         'icon' => 'icon-currency-dollar',
@@ -2246,22 +1998,6 @@ return [
         'providerOwner' => 'appwrite',
         'providerBranch' => 'main',
         'variables' => [
-            [
-                'name' => 'APPWRITE_API_KEY',
-                'description' => 'The API Key to authenticate against Appwrite\'s Server APIs. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/advanced/platform/api-keys">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
-            ],
-            [
-                'name' => 'APPWRITE_ENDPOINT',
-                'description' => 'The URL endpoint of the Appwrite server. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/references#api">Learn more</a>.',
-                'value' => 'https://cloud.appwrite.io/v1',
-                'placeholder' => 'https://cloud.appwrite.io/v1',
-                'required' => false,
-                'type' => 'url'
-            ],
             [
                 'name' => 'APPWRITE_DATABASE_ID',
                 'description' => 'The ID of the database to store paid orders. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/databases">Learn more</a>.',
@@ -2306,6 +2042,7 @@ return [
                 'required' => true,
                 'type' => 'text'
             ]
-        ]
+        ],
+        "scopes" => ["users.read", "users.write"]
     ]
 ];
