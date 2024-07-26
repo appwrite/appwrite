@@ -201,7 +201,7 @@ $global->set('logger', function () {
 
         $providerName = $loggingProvider->getScheme();
         $providerConfig = match ($providerName) {
-            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://'.$loggingProvider->getHost()],
+            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
             'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
             default => ['key' => $loggingProvider->getHost()],
         };
@@ -367,7 +367,7 @@ $global->set(
                             (new RedisConfig())
                                 ->withHost($dsnHost)
                                 ->withPort((int)$dsnPort)
-                                ->withAuth($dsnPass),
+                                ->withAuth($dsnPass ?? ''),
                             $poolSize
                         );
                         break;
