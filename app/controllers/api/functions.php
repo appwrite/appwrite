@@ -2360,12 +2360,12 @@ App::get('/v1/functions/templates')
     ->label('sdk.description', '/docs/references/functions/get-function-templates.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FUNCTION_TEMPLATE_LIST)
+    ->label('sdk.response.model', Response::MODEL_TEMPLATE_FUNCTION_LIST)
     ->inject('response')
     ->action(function (Response $response) {
-        $templates = Config::getParam('functionTemplates', []);
+        $templates = Config::getParam('function-templates', []);
         $response->dynamic(new Document([
             'templates' => $templates,
             'total' => \count($templates),
-        ]), Response::MODEL_FUNCTION_TEMPLATE_LIST);
+        ]), Response::MODEL_TEMPLATE_FUNCTION_LIST);
     });

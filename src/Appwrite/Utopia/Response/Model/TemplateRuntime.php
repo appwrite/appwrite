@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class RuntimeTemplate extends Model
+class TemplateRuntime extends Model
 {
     public function __construct()
     {
@@ -44,7 +44,7 @@ class RuntimeTemplate extends Model
      */
     public function getName(): string
     {
-        return 'Runtime Template';
+        return 'Template Runtime';
     }
 
     /**
@@ -54,6 +54,6 @@ class RuntimeTemplate extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_RUNTIME_TEMPLATE;
+        return Response::MODEL_TEMPLATE_RUNTIME;
     }
 }

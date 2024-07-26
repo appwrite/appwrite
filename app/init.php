@@ -303,7 +303,7 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
-Config::load('functionTemplates', __DIR__ . '/config/functionTemplates.php'); // List of function templates
+Config::load('function-templates', __DIR__ . '/config/function-templates.php'); // List of function templates
 
 /**
  * New DB Filters

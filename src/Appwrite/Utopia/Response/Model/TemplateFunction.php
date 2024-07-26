@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class FunctionTemplate extends Model
+class TemplateFunction extends Model
 {
     public function __construct()
     {
@@ -68,7 +68,7 @@ class FunctionTemplate extends Model
                 'array' => true,
             ])
             ->addRule('runtimes', [
-                'type' => Response::MODEL_RUNTIME_TEMPLATE,
+                'type' => Response::MODEL_TEMPLATE_RUNTIME,
                 'description' => 'List of runtimes that can be used with this template.',
                 'default' => [],
                 'example' => [],
@@ -105,7 +105,7 @@ class FunctionTemplate extends Model
                 'example' => 'main',
             ])
             ->addRule('variables', [
-                'type' => Response::MODEL_VARIABLE_TEMPLATE,
+                'type' => Response::MODEL_TEMPLATE_VARIABLE,
                 'description' => 'Function variables.',
                 'default' => [],
                 'example' => [],
@@ -121,7 +121,7 @@ class FunctionTemplate extends Model
      */
     public function getName(): string
     {
-        return 'Function Template';
+        return 'Template Function';
     }
 
     /**
@@ -131,6 +131,6 @@ class FunctionTemplate extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_FUNCTION_TEMPLATE;
+        return Response::MODEL_TEMPLATE_FUNCTION;
     }
 }

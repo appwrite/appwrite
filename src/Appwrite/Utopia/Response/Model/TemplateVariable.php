@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class VariableTemplate extends Model
+class TemplateVariable extends Model
 {
     public function __construct()
     {
@@ -50,7 +50,7 @@ class VariableTemplate extends Model
      */
     public function getName(): string
     {
-        return 'Variable Template';
+        return 'Template Variable';
     }
 
     /**
@@ -60,6 +60,6 @@ class VariableTemplate extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_VARIABLE_TEMPLATE;
+        return Response::MODEL_TEMPLATE_VARIABLE;
     }
 }
