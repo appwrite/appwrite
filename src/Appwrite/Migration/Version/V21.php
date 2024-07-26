@@ -116,6 +116,33 @@ class V21 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'_key_deployment' from {$id}: {$th->getMessage()}");
                     }
+
+                    try {
+                        /**
+                         * Create 'scheduledAt' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduledAt');
+                    } catch (\Throwable $th) {
+                        Console::warning("'scheduledAt' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        /**
+                         * Create 'scheduleInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleInternalId');
+                    } catch (\Throwable $th) {
+                        Console::warning("'scheduleInternalId' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        /**
+                         * Create 'scheduleId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleId');
+                    } catch (\Throwable $th) {
+                        Console::warning("'scheduleId' from {$id}: {$th->getMessage()}");
+                    }
             }
 
             usleep(50000);

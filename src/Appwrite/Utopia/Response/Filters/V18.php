@@ -14,11 +14,18 @@ class V18 extends Filter
 
         $parsedResponse = match($model) {
             Response::MODEL_FUNCTION => $this->parseFunction($content),
+            Response::MODEL_EXECUTION => $this->parseExecution($content),
             Response::MODEL_PROJECT => $this->parseProject($content),
             default => $parsedResponse,
         };
 
         return $parsedResponse;
+    }
+
+    protected function parseExecution(array $content)
+    {
+        unset($content['scheduledAt']);
+        return $content;
     }
 
     protected function parseFunction(array $content)

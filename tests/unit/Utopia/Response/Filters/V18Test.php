@@ -50,6 +50,32 @@ class V18Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
+
+    public function executionProvider(): array
+    {
+        return [
+            'remove scheduledAt' => [
+                [
+                    'scheduledAt' => '2024-07-13T09:00:00.000Z',
+                ],
+                [
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * @dataProvider executionProvider
+     */
+    public function testExecution(array $content, array $expected): void
+    {
+        $model = Response::MODEL_EXECUTION;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
     public function projectProvider(): array
     {
         return [
