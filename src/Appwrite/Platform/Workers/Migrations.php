@@ -8,6 +8,7 @@ use Appwrite\Permission;
 use Appwrite\Role;
 use Exception;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
@@ -152,7 +153,9 @@ class Migrations extends Action
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $credentials['projectId'],
                 str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'],
-                $credentials['apiKey']
+                $credentials['apiKey'],
+                $this->dbForProject,
+                Config::getParam('collections', [])['databases']['collections']
             ),
             default => throw new \Exception('Invalid destination type'),
         };
