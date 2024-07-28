@@ -33,7 +33,9 @@ use Utopia\Queue\Message;
 class Migrations extends Action
 {
     protected Database $dbForProject;
+
     protected Database $dbForConsole;
+
     protected Document $project;
     //protected Document $migration;
 
@@ -57,11 +59,6 @@ class Migrations extends Action
     }
 
     /**
-     * @param Message $message
-     * @param Database $dbForProject
-     * @param Database $dbForConsole
-     * @param Log $log
-     * @return void
      * @throws Exception
      */
     public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log): void
@@ -72,8 +69,8 @@ class Migrations extends Action
             throw new Exception('Missing payload');
         }
 
-        $events    = $payload['events'] ?? [];
-        $project   = new Document($payload['project'] ?? []);
+        $events = $payload['events'] ?? [];
+        $project = new Document($payload['project'] ?? []);
         $migration = new Document($payload['migration'] ?? []);
 
         if ($project->getId() === 'console') {
@@ -99,8 +96,6 @@ class Migrations extends Action
     }
 
     /**
-     * @param Document $migration
-     * @return Source
      * @throws Exception
      */
     protected function processSource(Document $migration): Source
@@ -140,9 +135,6 @@ class Migrations extends Action
     }
 
     /**
-     * @param Document $migration
-     * @param array $credentials
-     * @return Destination
      * @throws Exception
      */
     protected function processDestination(Document $migration, array $credentials): Destination
@@ -155,7 +147,7 @@ class Migrations extends Action
                 str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'],
                 $credentials['apiKey'],
                 $this->dbForProject,
-                Config::getParam('collections', [])['databases']['collections']
+                Config::getParam('collections', [])['databases']['collections'],
             ),
             default => throw new \Exception('Invalid destination type'),
         };
@@ -201,8 +193,6 @@ class Migrations extends Action
     }
 
     /**
-     * @param Document $apiKey
-     * @return void
      * @throws \Utopia\Database\Exception
      * @throws Authorization
      * @throws Conflict
@@ -215,8 +205,6 @@ class Migrations extends Action
     }
 
     /**
-     * @param Document $project
-     * @return Document
      * @throws Authorization
      * @throws Structure
      * @throws \Utopia\Database\Exception
@@ -267,9 +255,6 @@ class Migrations extends Action
     }
 
     /**
-     * @param Document $migration
-     * @param Log $log
-     * @return void
      * @throws Authorization
      * @throws Conflict
      * @throws Restricted
@@ -288,7 +273,7 @@ class Migrations extends Action
             $migration = $this->dbForProject->getDocument('migrations', $migration->getId());
             $migration->setAttribute('stage', 'processing');
             $migration->setAttribute('status', 'processing');
-            $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'processing'", \microtime(true)));
+            $log->addBreadcrumb(new Breadcrumb('debug', 'migration', "Migration hit stage 'processing'", \microtime(true)));
             $this->updateMigrationDocument($migration, $projectDocument);
 
             $log->addTag('type', $migration->getAttribute('source'));
@@ -299,8 +284,8 @@ class Migrations extends Action
                 $migration,
                 [
                     'projectId' => $projectDocument->getId(),
-                    'endpoint'  => 'http://appwrite/v1',
-                    'apiKey'    => $tempAPIKey['secret']
+                    'endpoint' => 'http://appwrite/v1',
+                    'apiKey' => $tempAPIKey['secret'],
                 ]
             );
 
@@ -313,7 +298,7 @@ class Migrations extends Action
 
             /** Start Transfer */
             $migration->setAttribute('stage', 'migrating');
-            $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'migrating'", \microtime(true)));
+            $log->addBreadcrumb(new Breadcrumb('debug', 'migration', "Migration hit stage 'migrating'", \microtime(true)));
             $this->updateMigrationDocument($migration, $projectDocument);
 
             $transfer->run(
@@ -332,10 +317,10 @@ class Migrations extends Action
             $sourceErrors = $source->getErrors();
             $destinationErrors = $destination->getErrors();
 
-            if (!empty($sourceErrors) || !empty($destinationErrors)) {
+            if (! empty($sourceErrors) || ! empty($destinationErrors)) {
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
-                $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and failed", \microtime(true)));
+                $log->addBreadcrumb(new Breadcrumb('debug', 'migration', "Migration hit stage 'finished' and failed", \microtime(true)));
 
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
@@ -356,14 +341,14 @@ class Migrations extends Action
 
             $migration->setAttribute('status', 'completed');
             $migration->setAttribute('stage', 'finished');
-            $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and succeeded", \microtime(true)));
+            $log->addBreadcrumb(new Breadcrumb('debug', 'migration', "Migration hit stage 'finished' and succeeded", \microtime(true)));
         } catch (\Throwable $th) {
 
             Console::error($th->getMessage());
             Console::error($th->getMessage());
             Console::error($th->getTraceAsString());
 
-            if (!$migration->isEmpty()) {
+            if (! $migration->isEmpty()) {
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
                 $migration->setAttribute('errors', [$th->getMessage()]);
@@ -389,14 +374,14 @@ class Migrations extends Action
                 $log->addTag('migrationErrors', json_encode($errorMessages));
             }
         } finally {
-            if (!$tempAPIKey->isEmpty()) {
+            if (! $tempAPIKey->isEmpty()) {
                 $this->removeAPIKey($tempAPIKey);
             }
 
             $this->updateMigrationDocument($migration, $projectDocument);
 
             if ($migration->getAttribute('status', '') == 'failed') {
-                throw new Exception("Migration failed");
+                throw new Exception('Migration failed');
             }
         }
     }
