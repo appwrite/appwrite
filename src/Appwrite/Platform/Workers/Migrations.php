@@ -343,6 +343,7 @@ class Migrations extends Action
                     var_dump($error->getPrevious()->getMessage());
                     var_dump($error->getPrevious()->getLine());
                     var_dump($error->getPrevious()->getFile());
+                    var_dump($error->getPrevious()->getTraceAsString());
                     $errorMessages[] = "Error occurred while pushing '{$error->getResourceName()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
                 }
 
