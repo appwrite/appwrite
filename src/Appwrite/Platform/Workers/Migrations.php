@@ -340,6 +340,7 @@ class Migrations extends Action
                     var_dump($error->getMessage());
                     var_dump($error->getLine());
                     var_dump($error->getFile());
+                    var_dump($error->getTraceAsString());
                     var_dump($error->getPrevious()->getMessage());
                     var_dump($error->getPrevious()->getLine());
                     var_dump($error->getPrevious()->getFile());
