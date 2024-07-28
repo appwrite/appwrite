@@ -329,6 +329,13 @@ class Migrations extends Action
                 }
                 foreach ($destinationErrors as $error) {
                     /** @var MigrationException $error */
+                    var_dump('$destinationErrors ====== ');
+                    var_dump($error->getMessage());
+                    var_dump($error->getLine());
+                    var_dump($error->getFile());
+                    var_dump($error->getPrevious()->getMessage());
+                    var_dump($error->getPrevious()->getLine());
+                    var_dump($error->getPrevious()->getFile());
                     $errorMessages[] = "Error occurred while pushing '{$error->getResourceName()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
                 }
 
