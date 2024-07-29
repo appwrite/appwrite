@@ -988,18 +988,27 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(3, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
+        $this->assertEquals('starter', $templates['body']['templates'][0]['usecases'][0]);
+        $this->assertEquals('ai', $templates['body']['templates'][1]['usecases'][0]);
+        $this->assertEquals('ai', $templates['body']['templates'][2]['usecases'][0]);
+        $this->assertContains('bun-1.0', array_column($templates['body']['templates'][0]['runtimes'], 'name'));
+        $this->assertContains('dart-2.16', array_column($templates['body']['templates'][1]['runtimes'], 'name'));
 
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'limit' => 10,
+            'limit' => 5,
             'offset' => 2,
+            'usecases' => ['databases'],
+            'runtimes' => ['node-16.0']
         ]);
 
         $this->assertEquals(200, $templates['headers']['status-code']);
-        $this->assertEquals(10, $templates['body']['total']);
+        $this->assertEquals(5, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
+        $this->assertEquals('databases', $templates['body']['templates'][0]['usecases'][0]);
+        $this->assertContains('node-16.0', array_column($templates['body']['templates'][0]['runtimes'], 'name'));
     }
 }
