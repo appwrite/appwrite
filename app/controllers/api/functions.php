@@ -2368,9 +2368,11 @@ App::get('/v1/functions/templates')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEMPLATE_FUNCTION_LIST)
+    ->param('limit', 10, new Range(0, 200), 'Limit the number of templates returned in the response. Max limit: 100.', true)
+    ->param('offset', 0, new Range(0, 200), 'Offset the list of returned templates. Max offset: 100.', true)
     ->inject('response')
-    ->action(function (Response $response) {
-        $templates = Config::getParam('function-templates', []);
+    ->action(function (int $limit, int $offset, Response $response) {
+        $templates = \array_slice(Config::getParam('function-templates', []), $offset, $limit);
         $response->dynamic(new Document([
             'templates' => $templates,
             'total' => \count($templates),
