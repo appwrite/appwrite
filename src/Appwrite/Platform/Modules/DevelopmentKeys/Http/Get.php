@@ -1,4 +1,5 @@
 <?php
+
 namespace Appwrite\Platform\Modules\DevelopmentKeys\Http;
 
 use Appwrite\Extend\Exception;

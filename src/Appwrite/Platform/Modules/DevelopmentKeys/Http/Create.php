@@ -66,7 +66,7 @@ class Create extends Action
             'expire' => $expire,
             'sdks' => [],
             'accessedAt' => null,
-            'secret' => API_KEY_STANDARD . '_' . \bin2hex(\random_bytes(128)),
+            'secret' => API_KEY_TEST . '_' . \bin2hex(\random_bytes(128)),
         ]);
 
         $key = $dbForConsole->createDocument('developmentKeys', $key);

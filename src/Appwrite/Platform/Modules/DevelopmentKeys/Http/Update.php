@@ -1,4 +1,5 @@
 <?php
+
 namespace Appwrite\Platform\Modules\DevelopmentKeys\Http;
 
 use Appwrite\Extend\Exception;
@@ -62,7 +63,7 @@ class Update extends Action
             ->setAttribute('name', $name)
             ->setAttribute('expire', $expire);
 
-        $dbForConsole->updateDocument('keys', $key->getId(), $key);
+        $dbForConsole->updateDocument('developmentKeys', $key->getId(), $key);
 
         $dbForConsole->purgeCachedDocument('projects', $project->getId());
 

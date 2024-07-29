@@ -1,4 +1,5 @@
 <?php
+
 namespace Appwrite\Platform\Modules\DevelopmentKeys\Http;
 
 use Appwrite\Extend\Exception;
@@ -55,7 +56,7 @@ class Delete extends Action
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        $dbForConsole->deleteDocument('keys', $key->getId());
+        $dbForConsole->deleteDocument('developmentKeys', $key->getId());
 
         $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
