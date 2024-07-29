@@ -69,7 +69,7 @@ class EventTest extends TestCase
 
         global $global;
         $pools = $global->get('pools');
-        $dsn = $pools['pools-queue-main']['dsn'];
+        $dsn = $pools['pools-queue-queue']['dsn'];
         $queue =  new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
 
         $client = new Client($this->object->getQueue(), $queue);

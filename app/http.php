@@ -65,8 +65,8 @@ Http::onStart()
             do {
                 try {
                     $attempts++;
-                    $pool = $pools['pools-console-main']['pool'];
-                    $dsn = $pools['pools-console-main']['dsn'];
+                    $pool = $pools['pools-console-console']['pool'];
+                    $dsn = $pools['pools-console-console']['dsn'];
                     $connection = $pool->get();
                     $connections->add($connection, $pool);
 

@@ -101,10 +101,6 @@ if (!Http::isProduction()) {
     PublicDomain::allow(['request-catcher']);
 }
 
-function backwardDBName($db): string
-{
-    return str_replace('database_db_main', 'db_main', $db);
-}
 
 function getDevice($root): Device
 {
@@ -304,14 +300,14 @@ $global->set(
 
         foreach ($connections as $key => $connection) {
             $dsns = $connection['dsns'] ?? '';
-            $multipe = $connection['multiple'] ?? false;
+            $multiple = $connection['multiple'] ?? false;
             $schemes = $connection['schemes'] ?? [];
             $dsns = explode(',', $connection['dsns'] ?? '');
             $config = [];
 
             foreach ($dsns as &$dsn) {
                 $dsn = explode('=', $dsn);
-                $name = ($multipe) ? $dsn[0] : 'main';
+                $name = ($multiple) ? $key . '_' . $dsn[0] : $key;
                 $config[] = $name;
                 $dsn = $dsn[1] ?? '';
 
@@ -766,10 +762,10 @@ $dbForProject
         }
 
         try {
-            $dsn = new DSN(backwardDBName($project->getAttribute('database')));
+            $dsn = new DSN($project->getAttribute('database'));
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . backwardDBName($project->getAttribute('database')));
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
         }
 
         $pool = $pools['pools-database-' . $dsn->getHost()]['pool'];
@@ -788,10 +784,10 @@ $dbForProject
         $database = new Database($adapter, $cache);
 
         try {
-            $dsn = new DSN(backwardDBName($project->getAttribute('database')));
+            $dsn = new DSN($project->getAttribute('database'));
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . backwardDBName($project->getAttribute('database')));
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
         }
 
         if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
@@ -817,8 +813,8 @@ $dbForConsole
     ->inject('authorization')
     ->inject('connections')
     ->setCallback(function (array $pools, Cache $cache, Authorization $authorization, Connections $connections): Database {
-        $pool = $pools['pools-console-main']['pool'];
-        $dsn = $pools['pools-console-main']['dsn'];
+        $pool = $pools['pools-console-console']['pool'];
+        $dsn = $pools['pools-console-console']['dsn'];
         $connection = $pool->get();
         $connections->add($connection, $pool);
 
@@ -920,7 +916,7 @@ $queue
     ->inject('pools')
     ->inject('connections')
     ->setCallback(function (array $pools, Connections $connections) {
-        $pool = $pools['pools-queue-main']['pool'];
+        $pool = $pools['pools-queue-queue']['pool'];
         $connection = $pool->get();
         $connections->add($connection, $pool);
 
@@ -1162,10 +1158,10 @@ $getProjectDB
             }
 
             try {
-                $dsn = new DSN(backwardDBName($project->getAttribute('database')));
+                $dsn = new DSN($project->getAttribute('database'));
             } catch (\InvalidArgumentException) {
                 // TODO: Temporary until all projects are using shared tables
-                $dsn = new DSN('mysql://' . backwardDBName($project->getAttribute('database')));
+                $dsn = new DSN('mysql://' . $project->getAttribute('database'));
             }
 
             if (isset($databases[$dsn->getHost()])) {

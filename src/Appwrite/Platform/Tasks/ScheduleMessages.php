@@ -36,8 +36,8 @@ class ScheduleMessages extends ScheduleBase
             }
 
             \go(function () use ($now, $schedule, $pools, $dbForConsole) {
-                $pool = $pools['pools-queue-main']['pool'];
-                $dsn = $pools['pools-queue-main']['dsn'];
+                $pool = $pools['pools-queue-queue']['pool'];
+                $dsn = $pools['pools-queue-queue']['dsn'];
                 $connection = $pool->get();
                 $this->connections->add($connection, $pool);
 

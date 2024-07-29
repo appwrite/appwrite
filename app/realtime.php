@@ -275,7 +275,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
             /** @var Connections $connections */
             $connections = $container->get('connections');
 
-            $pool = $pools['pools-pubsub-main']['pool'];
+            $pool = $pools['pools-pubsub-pubsub']['pool'];
             $connection = $pool->get();
             $connections->add($connection, $pool);
 

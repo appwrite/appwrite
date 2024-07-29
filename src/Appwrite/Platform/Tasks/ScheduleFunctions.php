@@ -68,7 +68,7 @@ class ScheduleFunctions extends ScheduleBase
             \go(function () use ($delay, $scheduleKeys, $pools) {
                 \sleep($delay); // in seconds
 
-                $pool = $pools['pools-queue-main']['pool'];
+                $pool = $pools['pools-queue-queue']['pool'];
                 $connection = $pool->get();
                 $this->connections->add($connection, $pool);
 

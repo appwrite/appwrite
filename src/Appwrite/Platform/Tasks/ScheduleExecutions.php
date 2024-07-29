@@ -23,7 +23,7 @@ class ScheduleExecutions extends ScheduleBase
 
     protected function enqueueResources(array $pools, Database $dbForConsole): void
     {
-        $pool = $pools['pools-queue-main']['pool'];
+        $pool = $pools['pools-queue-queue']['pool'];
         $connection = $pool->get();
         $this->connections->add($connection, $pool);
 
