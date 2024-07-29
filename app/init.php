@@ -435,6 +435,20 @@ Database::addFilter(
 );
 
 Database::addFilter(
+    'subQueryDevelopmentKeys',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database
+            ->find('developmentKeys', [
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
+    }
+);
+
+Database::addFilter(
     'subQueryWebhooks',
     function (mixed $value) {
         return;

@@ -4487,6 +4487,17 @@ $consoleCollections = array_merge([
                 'filters' => ['subQueryKeys'],
             ],
             [
+                '$id' => ID::custom('developmentKeys'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['subQueryDevelopmentKeys'],
+            ],
+            [
                 '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
