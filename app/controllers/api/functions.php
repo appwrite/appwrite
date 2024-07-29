@@ -2368,12 +2368,19 @@ App::get('/v1/functions/templates')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEMPLATE_FUNCTION_LIST)
+    ->param('runtimes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('runtimes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of runtimes allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' runtimes are allowed.', true)
     ->param('usecases', [], new ArrayList(new WhiteList(Config::getParam('template-usecases')), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of usecases allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' usecases are allowed.', true)
     ->param('limit', 100, new Range(0, 200), 'Limit the number of templates returned in the response. Max limit: 200.', true)
     ->param('offset', 0, new Range(0, 200), 'Offset the list of returned templates. Max offset: 200.', true)
     ->inject('response')
-    ->action(function (array $usecases, int $limit, int $offset, Response $response) {
+    ->action(function (array $runtimes, array $usecases, int $limit, int $offset, Response $response) {
         $templates = Config::getParam('function-templates', []);
+
+        if (!empty($runtimes)) {
+            $templates = \array_filter($templates, function ($template) use ($runtimes) {
+                return \count(\array_intersect($runtimes, \array_column($template['runtimes'], 'name'))) > 0;
+            });
+        }
 
         if (!empty($usecases)) {
             $templates = \array_filter($templates, function ($template) use ($usecases) {
