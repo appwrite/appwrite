@@ -3667,7 +3667,10 @@ App::put('/v1/account/mfa/authenticators/:type')
     ->inject('session')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $type, string $otp, Response $response, Document $user, Document $session, Database $dbForProject, Event $queueForEvents) {
+    ->inject('project')
+    ->inject('locale')
+    ->inject('queueForMails')
+    ->action(function (string $type, string $otp, Response $response, Document $user, Document $session, Database $dbForProject, Event $queueForEvents, Document $project, Locale $locale, Mail $queueForMails) {
 
         $authenticator = (match ($type) {
             Type::TOTP => TOTP::getAuthenticatorFromUser($user),
@@ -3702,6 +3705,99 @@ App::put('/v1/account/mfa/authenticators/:type')
 
         $session->setAttribute('factors', $factors);
         $dbForProject->updateDocument('sessions', $session->getId(), $session);
+
+        // Send email to user informing that MFA is enabled
+        $subject = $locale->getText("emails.mfaCreated.subject");
+        $customTemplate = $project->getAttribute('templates', [])['email.mfaCreated-' . $locale->default] ?? [];
+
+        // Appwrite theming for console
+        if ($project->getInternalId() === 'console') {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl');
+            $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-altered.tpl');
+
+            $body
+                ->setParam('{{buttonText}}', $locale->getText("emails.mfaCreated.buttonText"))
+                ->setParam('{{redirect}}', App::getEnv('_APP_DOMAIN') . '/console/account')
+                ->setParam('{{body}}', $locale->getText("emails.mfaCreated.body"), escapeHtml: false)
+                ->setParam('{{project}}', $project->getAttribute('name'))
+                ->setParam('{{user}}', $user->getAttribute('name'));
+
+            $message->setParam('{{body}}', $body->render(), escapeHtml: false);
+        } else {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+
+            $message->setParam('{{body}}', $locale->getText("emails.mfaCreated.body"), escapeHtml: false);
+        }
+
+        $message
+            ->setParam('{{hello}}', $locale->getText("emails.mfaCreated.hello"))
+            ->setParam('{{footer}}', $locale->getText("emails.mfaCreated.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.mfaCreated.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.mfaCreated.signature"));
+
+        $body = $message->render();
+
+        $smtp = $project->getAttribute('smtp', []);
+        $smtpEnabled = $smtp['enabled'] ?? false;
+
+        $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $replyTo = "";
+
+        if ($smtpEnabled) {
+            if (!empty($smtp['senderEmail'])) {
+                $senderEmail = $smtp['senderEmail'];
+            }
+            if (!empty($smtp['senderName'])) {
+                $senderName = $smtp['senderName'];
+            }
+            if (!empty($smtp['replyTo'])) {
+                $replyTo = $smtp['replyTo'];
+            }
+
+            $queueForMails
+                ->setSmtpHost($smtp['host'] ?? '')
+                ->setSmtpPort($smtp['port'] ?? '')
+                ->setSmtpUsername($smtp['username'] ?? '')
+                ->setSmtpPassword($smtp['password'] ?? '')
+                ->setSmtpSecure($smtp['secure'] ?? '');
+
+            if (!empty($customTemplate)) {
+                if (!empty($customTemplate['senderEmail'])) {
+                    $senderEmail = $customTemplate['senderEmail'];
+                }
+                if (!empty($customTemplate['senderName'])) {
+                    $senderName = $customTemplate['senderName'];
+                }
+                if (!empty($customTemplate['replyTo'])) {
+                    $replyTo = $customTemplate['replyTo'];
+                }
+
+                $body = $customTemplate['message'] ?? '';
+                $subject = $customTemplate['subject'] ?? $subject;
+            }
+
+            $queueForMails
+                ->setSmtpReplyTo($replyTo)
+                ->setSmtpSenderEmail($senderEmail)
+                ->setSmtpSenderName($senderName);
+        }
+
+        $emailVariables = [
+            'owner' => $user->getAttribute('name'),
+            'direction' => $locale->getText('settings.direction'),
+            'user' => $user->getAttribute('name'),
+            'project' => $project->getAttribute('name')
+        ];
+
+        $queueForMails
+            ->setSubject($subject)
+            ->setBody($body)
+            ->setRecipient($user->getAttribute('email'))
+            ->setName($user->getAttribute('name'))
+            ->setVariables($emailVariables)
+            ->trigger()
+        ;
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3841,7 +3937,10 @@ App::delete('/v1/account/mfa/authenticators/:type')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $type, string $otp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->inject('project')
+    ->inject('locale')
+    ->inject('queueForMails')
+    ->action(function (string $type, string $otp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Locale $locale, Mail $queueForMails) {
 
         $authenticator = (match ($type) {
             Type::TOTP => TOTP::getAuthenticatorFromUser($user),
@@ -3875,6 +3974,99 @@ App::delete('/v1/account/mfa/authenticators/:type')
 
         $dbForProject->deleteDocument('authenticators', $authenticator->getId());
         $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        // Send email to user informing that MFA is disabled
+        $subject = $locale->getText("emails.mfaRemoved.subject");
+        $customTemplate = $project->getAttribute('templates', [])['email.mfaRemoved-' . $locale->default] ?? [];
+
+        // Appwrite theming for console
+        if ($project->getInternalId() === 'console') {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl');
+            $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-altered.tpl');
+
+            $body
+                ->setParam('{{buttonText}}', $locale->getText("emails.mfaRemoved.buttonText"))
+                ->setParam('{{redirect}}', App::getEnv('_APP_DOMAIN') . '/console/account')
+                ->setParam('{{body}}', $locale->getText("emails.mfaRemoved.body"), escapeHtml: false)
+                ->setParam('{{project}}', $project->getAttribute('name'))
+                ->setParam('{{user}}', $user->getAttribute('name'));
+
+            $message->setParam('{{body}}', $body->render(), escapeHtml: false);
+        } else {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+
+            $message->setParam('{{body}}', $locale->getText("emails.mfaRemoved.body"), escapeHtml: false);
+        }
+
+        $message
+            ->setParam('{{hello}}', $locale->getText("emails.mfaRemoved.hello"))
+            ->setParam('{{footer}}', $locale->getText("emails.mfaRemoved.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.mfaRemoved.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.mfaRemoved.signature"));
+
+        $body = $message->render();
+
+        $smtp = $project->getAttribute('smtp', []);
+        $smtpEnabled = $smtp['enabled'] ?? false;
+
+        $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $replyTo = "";
+
+        if ($smtpEnabled) {
+            if (!empty($smtp['senderEmail'])) {
+                $senderEmail = $smtp['senderEmail'];
+            }
+            if (!empty($smtp['senderName'])) {
+                $senderName = $smtp['senderName'];
+            }
+            if (!empty($smtp['replyTo'])) {
+                $replyTo = $smtp['replyTo'];
+            }
+
+            $queueForMails
+                ->setSmtpHost($smtp['host'] ?? '')
+                ->setSmtpPort($smtp['port'] ?? '')
+                ->setSmtpUsername($smtp['username'] ?? '')
+                ->setSmtpPassword($smtp['password'] ?? '')
+                ->setSmtpSecure($smtp['secure'] ?? '');
+
+            if (!empty($customTemplate)) {
+                if (!empty($customTemplate['senderEmail'])) {
+                    $senderEmail = $customTemplate['senderEmail'];
+                }
+                if (!empty($customTemplate['senderName'])) {
+                    $senderName = $customTemplate['senderName'];
+                }
+                if (!empty($customTemplate['replyTo'])) {
+                    $replyTo = $customTemplate['replyTo'];
+                }
+
+                $body = $customTemplate['message'] ?? '';
+                $subject = $customTemplate['subject'] ?? $subject;
+            }
+
+            $queueForMails
+                ->setSmtpReplyTo($replyTo)
+                ->setSmtpSenderEmail($senderEmail)
+                ->setSmtpSenderName($senderName);
+        }
+
+        $emailVariables = [
+            'owner' => $user->getAttribute('name'),
+            'direction' => $locale->getText('settings.direction'),
+            'user' => $user->getAttribute('name'),
+            'project' => $project->getAttribute('name')
+        ];
+
+        $queueForMails
+            ->setSubject($subject)
+            ->setBody($body)
+            ->setRecipient($user->getAttribute('email'))
+            ->setName($user->getAttribute('name'))
+            ->setVariables($emailVariables)
+            ->trigger()
+        ;
 
         $queueForEvents->setParam('userId', $user->getId());
 
