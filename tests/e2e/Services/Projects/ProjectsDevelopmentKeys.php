@@ -19,7 +19,8 @@ trait ProjectsDevelopmentKeys
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'name' => 'Key Test'
+            'name' => 'Key Test',
+            'expire' => DateTime::addSeconds(new \DateTime(), 36000)
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -30,6 +31,16 @@ trait ProjectsDevelopmentKeys
         $this->assertEmpty($response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertEmpty($response['body']['accessedAt']);
+
+        /** TEST expiry date is required */
+        $res = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/development-keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Key Test'
+        ]);
+
+        $this->assertEquals(400, $res['headers']['status-code']);
 
         $data = array_merge($data, [
             'keyId' => $response['body']['$id'],
@@ -133,7 +144,7 @@ trait ProjectsDevelopmentKeys
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Key Test',
-            'expire' => null,
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
         ]);
 
         $response = $this->client->call(Client::METHOD_GET, '/health', [
