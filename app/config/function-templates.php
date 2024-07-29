@@ -56,7 +56,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Starter'],
+        'usecases' => ['starter'],
         'runtimes' => [
             ...getRuntimes(TEMPLATE_RUNTIMES['NODE'], 'npm install', 'src/main.js', 'node/starter'),
             ...getRuntimes(
@@ -93,7 +93,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Databases'],
+        'usecases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -136,7 +136,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Databases'],
+        'usecases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -178,7 +178,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Databases'],
+        'usecases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -229,7 +229,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Databases'],
+        'usecases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -265,7 +265,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Databases'],
+        'usecases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -331,7 +331,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -391,7 +391,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Messaging'],
+        'usecases' => ['messaging'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -453,7 +453,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -488,7 +488,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -534,7 +534,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Utilities'],
+        'usecases' => ['utilities'],
         'runtimes' => [
             ...getRuntimes(TEMPLATE_RUNTIMES['NODE'], 'npm install', 'src/main.js', 'node/generate-pdf')
         ],
@@ -555,7 +555,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Dev Tools'],
+        'usecases' => ['dev-tools'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -597,7 +597,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Utilities'],
+        'usecases' => ['utilities'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -648,7 +648,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Databases'],
+        'usecases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -729,7 +729,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Databases'],
+        'usecases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -822,7 +822,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Messaging'],
+        'usecases' => ['messaging'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -907,7 +907,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Messaging'],
+        'usecases' => ['messaging'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -962,7 +962,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Utilities'],
+        'usecases' => ['utilities'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1044,7 +1044,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Utilities'],
+        'usecases' => ['utilities'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1085,7 +1085,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Utilities'],
+        'usecases' => ['utilities'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1142,7 +1142,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 30,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1175,7 +1175,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 30,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1208,7 +1208,7 @@ return [
         'events' => ['buckets.*.files.*.create'],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1266,7 +1266,7 @@ return [
         'events' => ['buckets.*.files.*.create'],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1324,7 +1324,7 @@ return [
         'events' => ['buckets.*.files.*.create'],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1382,7 +1382,7 @@ return [
         'events' => ['databases.*.collections.*.documents.*.create'],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1440,7 +1440,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 300,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1474,7 +1474,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 300,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1516,7 +1516,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1556,7 +1556,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 300,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1590,7 +1590,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 30,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1653,7 +1653,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 30,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1716,7 +1716,7 @@ return [
         'cron' => '',
         'events' => [],
         'timeout' => 15,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1771,7 +1771,7 @@ return [
         'cron' => '',
         'events' => [],
         'timeout' => 15,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1812,7 +1812,7 @@ return [
         'cron' => '',
         'events' => [],
         'timeout' => 15,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1852,7 +1852,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1894,7 +1894,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 300,
-        'usecases' => ['AI'],
+        'usecases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1928,7 +1928,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Utilities'],
+        'usecases' => ['utilities'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],
@@ -1983,7 +1983,7 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'usecases' => ['Utilities'],
+        'usecases' => ['utilities'],
         'runtimes' => [
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['NODE'],

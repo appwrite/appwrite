@@ -2360,7 +2360,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
 App::get('/v1/functions/templates')
     ->desc('Get function templates')
     ->groups(['api', 'functions'])
-    ->label('scope', 'functions.read')
+    ->label('scope', 'public')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getFunctionTemplates')
@@ -2368,13 +2368,22 @@ App::get('/v1/functions/templates')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEMPLATE_FUNCTION_LIST)
-    ->param('limit', 10, new Range(0, 200), 'Limit the number of templates returned in the response. Max limit: 100.', true)
-    ->param('offset', 0, new Range(0, 200), 'Offset the list of returned templates. Max offset: 100.', true)
+    ->param('usecases', [], new ArrayList(new WhiteList(Config::getParam('template-usecases')), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of usecases allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' usecases are allowed.', true)
+    ->param('limit', 100, new Range(0, 200), 'Limit the number of templates returned in the response. Max limit: 200.', true)
+    ->param('offset', 0, new Range(0, 200), 'Offset the list of returned templates. Max offset: 200.', true)
     ->inject('response')
-    ->action(function (int $limit, int $offset, Response $response) {
-        $templates = \array_slice(Config::getParam('function-templates', []), $offset, $limit);
+    ->action(function (array $usecases, int $limit, int $offset, Response $response) {
+        $templates = Config::getParam('function-templates', []);
+
+        if (!empty($usecases)) {
+            $templates = \array_filter($templates, function ($template) use ($usecases) {
+                return \count(\array_intersect($usecases, $template['usecases'])) > 0;
+            });
+        }
+
+        $responseTemplates = \array_slice($templates, $offset, $limit);
         $response->dynamic(new Document([
-            'templates' => $templates,
-            'total' => \count($templates),
+            'templates' => $responseTemplates,
+            'total' => \count($responseTemplates),
         ]), Response::MODEL_TEMPLATE_FUNCTION_LIST);
     });
