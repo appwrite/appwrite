@@ -963,4 +963,43 @@ class FunctionsCustomClientTest extends Scope
 
         return [];
     }
+
+    public function testGetFunctionTemplates()
+    {
+        $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $templates['headers']['status-code']);
+        $this->assertGreaterThan(0, $templates['body']['total']);
+        $this->assertIsArray($templates['body']['templates']);
+        $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
+
+        $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'usecases' => ['starter', 'ai'],
+            'runtimes' => ['bun-1.0', 'dart-2.16']
+        ]);
+
+        $this->assertEquals(200, $templates['headers']['status-code']);
+        $this->assertEquals(3, $templates['body']['total']);
+        $this->assertIsArray($templates['body']['templates']);
+        $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
+
+        $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 10,
+            'offset' => 2,
+        ]);
+
+        $this->assertEquals(200, $templates['headers']['status-code']);
+        $this->assertEquals(10, $templates['body']['total']);
+        $this->assertIsArray($templates['body']['templates']);
+        $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
+    }
 }

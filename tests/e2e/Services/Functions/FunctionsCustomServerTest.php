@@ -2097,18 +2097,4 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(204, $response['headers']['status-code']);
     }
-
-    public function testGetFunctionTemplates()
-    {
-        $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $templates['headers']['status-code']);
-        $this->assertGreaterThan(0, $templates['body']['total']);
-        $this->assertIsArray($templates['body']['templates']);
-        $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
-    }
 }
