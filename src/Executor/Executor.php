@@ -75,6 +75,12 @@ class Executor
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
         $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+
+        // Remove after migration
+        if ($version == 'v3') {
+            $version = 'v4';
+        }
+
         $params = [
             'runtimeId' => $runtimeId,
             'source' => $source,
@@ -189,6 +195,13 @@ class Executor
 
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/execution';
+
+
+        // Remove after migration
+        if ($version == 'v3') {
+            $version = 'v4';
+        }
+
         $params = [
             'runtimeId' => $runtimeId,
             'variables' => $variables,

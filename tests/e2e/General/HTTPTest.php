@@ -15,7 +15,7 @@ class HTTPTest extends Scope
     public function setUp(): void
     {
         parent::setUp();
-        $this->client->setEndpoint('http://localhost');
+        $this->client->setEndpoint('http://traefik');
     }
 
     public function testOptions()
@@ -163,11 +163,11 @@ class HTTPTest extends Scope
 
     public function testDefaultOAuth2()
     {
-        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/success', $this->getHeaders());
+        $response = $this->client->call(Client::METHOD_GET, '/console/auth/oauth2/success', $this->getHeaders());
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/failure', $this->getHeaders());
+        $response = $this->client->call(Client::METHOD_GET, '/console/auth/oauth2/failure', $this->getHeaders());
 
         $this->assertEquals(200, $response['headers']['status-code']);
     }
