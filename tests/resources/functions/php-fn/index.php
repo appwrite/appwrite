@@ -12,6 +12,7 @@ return function ($context) {
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => \getenv('APPWRITE_FUNCTION_RUNTIME_VERSION') ?: '',
         'APPWRITE_VERSION' => \getenv('APPWRITE_VERSION') ?: '',
         'APPWRITE_ENV' => \getenv('APPWRITE_ENV') ?: '',
+        'APPWRITE_REGION' => \getenv('APPWRITE_REGION') ?: '',
         'APPWRITE_FUNCTION_EVENT' => $context->req->headers['x-appwrite-event'] ?? '',
         'APPWRITE_FUNCTION_EVENT_DATA' => $context->req->bodyRaw ?? '',
         'APPWRITE_FUNCTION_DATA' => $context->req->bodyRaw ?? '',

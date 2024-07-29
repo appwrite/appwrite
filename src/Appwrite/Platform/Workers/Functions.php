@@ -373,6 +373,9 @@ class Functions extends Action
         $headers['x-appwrite-event'] = $event ?? '';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';
+        $headers['x-appwrite-country-code'] = '';
+        $headers['x-appwrite-continent-code'] = '';
+        $headers['x-appwrite-continent-eu'] = 'false';
 
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
@@ -466,6 +469,7 @@ class Functions extends Action
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_ENV' => 'production',
+            'APPWRITE_REGION' => $project->getAttribute('region'),
         ]);
 
         /** Execute function */

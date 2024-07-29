@@ -113,11 +113,12 @@ const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1_000_000;
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
-const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
-const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
+const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
+const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
+const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4314;
-const APP_VERSION_STABLE = '1.5.7';
+const APP_VERSION_STABLE = '1.6.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -1241,14 +1242,15 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         $jwtUserId = $payload['userId'] ?? '';
-        $jwtSessionId = $payload['sessionId'] ?? '';
-
-        if ($jwtUserId && $jwtSessionId) {
+        if (!empty($jwtUserId)) {
             $user = $dbForProject->getDocument('users', $jwtUserId);
         }
 
-        if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-            $user = new Document([]);
+        $jwtSessionId = $payload['sessionId'] ?? '';
+        if(!empty($jwtSessionId)) {
+            if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+                $user = new Document([]);
+            }
         }
     }
 

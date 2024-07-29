@@ -57,8 +57,6 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server, $workerId) {
     Console::success('Reload completed...');
 });
 
-Files::load(__DIR__ . '/../console');
-
 include __DIR__ . '/controllers/general.php';
 
 $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $register) {

@@ -206,6 +206,7 @@ App::init()
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
 
+            // Remove after migration
             if(!\str_contains($apiKey, '_')) {
                 $keyType = API_KEY_STANDARD;
                 $authKey = $apiKey;
@@ -270,7 +271,7 @@ App::init()
                     Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
 
                     $accessedAt = $key->getAttribute('accessedAt', '');
-                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
+                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
                         $key->setAttribute('accessedAt', DateTime::now());
                         $dbForConsole->updateDocument('keys', $key->getId(), $key);
                         $dbForConsole->purgeCachedDocument('projects', $project->getId());
@@ -761,11 +762,22 @@ App::shutdown()
         }
 
         /**
+         * Update project last activity
+         */
+        if (!$project->isEmpty() && $project->getId() !== 'console') {
+            $accessedAt = $project->getAttribute('accessedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+                $project->setAttribute('accessedAt', DateTime::now());
+                Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
+            }
+        }
+
+        /**
          * Update user last activity
          */
         if (!$user->isEmpty()) {
             $accessedAt = $user->getAttribute('accessedAt', '');
-            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCCESS)) > $accessedAt) {
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if (APP_MODE_ADMIN !== $mode) {
