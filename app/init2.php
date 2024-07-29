@@ -91,7 +91,7 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
-global $http, $container;
+global $http, $container, $global;
 
 Http::setMode(System::getEnv('_APP_ENV', Http::MODE_TYPE_PRODUCTION));
 
