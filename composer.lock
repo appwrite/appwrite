@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fc07cbc344782534962fd7bf0769f7b9",
+    "content-hash": "accbc00b72381a7d9b4559ae2eb74312",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1721,16 +1721,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.50.0",
+            "version": "0.50.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "ce3eaccb2f3bbd34b2b97419836fec633b26b8f7"
+                "reference": "1745147bef29a9bddf5dd03fd9174ec29e2c26f0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/ce3eaccb2f3bbd34b2b97419836fec633b26b8f7",
-                "reference": "ce3eaccb2f3bbd34b2b97419836fec633b26b8f7",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/1745147bef29a9bddf5dd03fd9174ec29e2c26f0",
+                "reference": "1745147bef29a9bddf5dd03fd9174ec29e2c26f0",
                 "shasum": ""
             },
             "require": {
@@ -1771,9 +1771,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.50.0"
+                "source": "https://github.com/utopia-php/database/tree/0.50.1"
             },
-            "time": "2024-06-21T03:21:42+00:00"
+            "time": "2024-07-26T11:56:05+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -1968,21 +1968,21 @@
         },
         {
             "name": "utopia-php/image",
-            "version": "0.6.1",
+            "version": "dev-feat-avif-support",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "2d74c27e69e65a93cf94a16586598a04fe435bf0"
+                "reference": "7be404a23399dbb06585f8c78ed61a375a090450"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/2d74c27e69e65a93cf94a16586598a04fe435bf0",
-                "reference": "2d74c27e69e65a93cf94a16586598a04fe435bf0",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/7be404a23399dbb06585f8c78ed61a375a090450",
+                "reference": "7be404a23399dbb06585f8c78ed61a375a090450",
                 "shasum": ""
             },
             "require": {
                 "ext-imagick": "*",
-                "php": ">=8.0"
+                "php": ">=8.1"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2010,9 +2010,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.6.1"
+                "source": "https://github.com/utopia-php/image/tree/feat-avif-support"
             },
-            "time": "2024-02-05T13:31:44+00:00"
+            "time": "2024-07-29T13:22:58+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -2990,16 +2990,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.39.3",
+            "version": "0.39.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "16142d88270e368030d7956cadf2d7816413f8c4"
+                "reference": "501b92d73ae55e0f880ed00f57bc64a54d0ce137"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/16142d88270e368030d7956cadf2d7816413f8c4",
-                "reference": "16142d88270e368030d7956cadf2d7816413f8c4",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/501b92d73ae55e0f880ed00f57bc64a54d0ce137",
+                "reference": "501b92d73ae55e0f880ed00f57bc64a54d0ce137",
                 "shasum": ""
             },
             "require": {
@@ -3035,9 +3035,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.3"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.4"
             },
-            "time": "2024-07-12T15:29:48+00:00"
+            "time": "2024-07-26T22:34:10+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -3158,16 +3158,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.16.2",
+            "version": "v1.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "51f1ba679a6afe0315621ad143d788bd7ded0eca"
+                "reference": "4dba80c1de4b81dc4c4fb10ea6f4781495eb29f5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/51f1ba679a6afe0315621ad143d788bd7ded0eca",
-                "reference": "51f1ba679a6afe0315621ad143d788bd7ded0eca",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/4dba80c1de4b81dc4c4fb10ea6f4781495eb29f5",
+                "reference": "4dba80c1de4b81dc4c4fb10ea6f4781495eb29f5",
                 "shasum": ""
             },
             "require": {
@@ -3220,7 +3220,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2024-07-09T15:58:08+00:00"
+            "time": "2024-07-23T16:40:20+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -5591,9 +5591,18 @@
             "time": "2023-11-21T18:54:41+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/image",
+            "version": "dev-feat-avif-support",
+            "alias": "0.6.99",
+            "alias_normalized": "0.6.99.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/image": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
