@@ -1,1 +1,0 @@
-List function templates from marketplace.

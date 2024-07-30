@@ -16,7 +16,7 @@ class TemplateFunction extends Model
                 'default' => '',
                 'example' => 'icon-lightning-bolt',
             ])
-            ->addRule('$id', [
+            ->addRule('id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function Template ID.',
                 'default' => '',
@@ -60,9 +60,9 @@ class TemplateFunction extends Model
                 'default' => 15,
                 'example' => 300,
             ])
-            ->addRule('usecases', [
+            ->addRule('useCases', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function usecases.',
+                'description' => 'Function use cases.',
                 'default' => [],
                 'example' => 'Starter',
                 'array' => true,
