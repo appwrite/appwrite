@@ -67,7 +67,7 @@ App::post('/v1/projects')
     ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('region', System::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
+    ->param('region', System::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn ($config) => ! $config['disabled']))), 'Project Region.', true)
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
     ->param('url', '', new URL(), 'Project URL.', true)
@@ -93,8 +93,8 @@ App::post('/v1/projects')
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_PROJECT_REGIONS', '')));
 
-        if (!empty($allowList) && !\in_array($region, $allowList)) {
-            throw new Exception(Exception::PROJECT_REGION_UNSUPPORTED, 'Region "' . $region . '" is not supported');
+        if (! empty($allowList) && ! \in_array($region, $allowList)) {
+            throw new Exception(Exception::PROJECT_REGION_UNSUPPORTED, 'Region "'.$region.'" is not supported');
         }
 
         $auth = Config::getParam('auth', []);
@@ -104,7 +104,7 @@ App::post('/v1/projects')
             'passwordHistory' => 0,
             'passwordDictionary' => false,
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
-            'personalDataCheck' => false
+            'personalDataCheck' => false,
         ];
         foreach ($auth as $method) {
             $auths[$method['key'] ?? ''] = true;
@@ -121,8 +121,8 @@ App::post('/v1/projects')
         } else {
             var_dump('region');
             var_dump($region);
-            if($region !== 'default') {
-                $databases = array_filter($databases, function ($value, $region) {
+            if ($region !== 'default') {
+                $databases = array_filter($databases, function ($value) use ($region) {
                     return str_contains($value, $region);
                 });
                 var_dump('databases');
@@ -141,10 +141,10 @@ App::post('/v1/projects')
             $schema = 'appwrite';
             $database = 'appwrite';
             $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-            $dsn = $schema . '://' . System::getEnv('_APP_DATABASE_SHARED_TABLES', '') . '?database=' . $database;
+            $dsn = $schema.'://'.System::getEnv('_APP_DATABASE_SHARED_TABLES', '').'?database='.$database;
 
-            if (!empty($namespace)) {
-                $dsn .= '&namespace=' . $namespace;
+            if (! empty($namespace)) {
+                $dsn .= '&namespace='.$namespace;
             }
         }
 
@@ -189,7 +189,7 @@ App::post('/v1/projects')
             $dsn = new DSN($dsn);
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $dsn);
+            $dsn = new DSN('mysql://'.$dsn);
         }
 
         $adapter = $pools->get($dsn->getHost())->pop()->getResource();
@@ -204,7 +204,7 @@ App::post('/v1/projects')
             $dbForProject
                 ->setSharedTables(false)
                 ->setTenant(null)
-                ->setNamespace('_' . $project->getInternalId());
+                ->setNamespace('_'.$project->getInternalId());
         }
 
         $dbForProject->create();
@@ -240,7 +240,7 @@ App::post('/v1/projects')
 
         // Hook allowing instant project mirroring during migration
         // Outside of migration, hook is not registered and has no effect
-        $hooks->trigger('afterProjectCreation', [ $project, $pools, $cache ]);
+        $hooks->trigger('afterProjectCreation', [$project, $pools, $cache]);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -257,7 +257,7 @@ App::get('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
-    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
@@ -269,7 +269,7 @@ App::get('/v1/projects')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if (!empty($search)) {
+        if (! empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
@@ -597,15 +597,15 @@ App::patch('/v1/projects/:projectId/oauth2')
         $providers = $project->getAttribute('oAuthProviders', []);
 
         if ($appId !== null) {
-            $providers[$provider . 'Appid'] = $appId;
+            $providers[$provider.'Appid'] = $appId;
         }
 
         if ($secret !== null) {
-            $providers[$provider . 'Secret'] = $secret;
+            $providers[$provider.'Secret'] = $secret;
         }
 
         if ($enabled !== null) {
-            $providers[$provider . 'Enabled'] = $enabled;
+            $providers[$provider.'Enabled'] = $enabled;
         }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('oAuthProviders', $providers));
@@ -686,7 +686,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('method', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method. Possible values: ' . implode(',', \array_keys(Config::getParam('auth'))), false)
+    ->param('method', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method. Possible values: '.implode(',', \array_keys(Config::getParam('auth'))), false)
     ->param('status', false, new Boolean(true), 'Set the status of this auth method.')
     ->inject('response')
     ->inject('dbForConsole')
@@ -720,7 +720,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('limit', 0, new Range(0, APP_LIMIT_USER_PASSWORD_HISTORY), 'Set the max number of passwords to store in user history. User can\'t choose a new password that is already stored in the password history list.  Max number of passwords allowed in history is' . APP_LIMIT_USER_PASSWORD_HISTORY . '. Default value is 0')
+    ->param('limit', 0, new Range(0, APP_LIMIT_USER_PASSWORD_HISTORY), 'Set the max number of passwords to store in user history. User can\'t choose a new password that is already stored in the password history list.  Max number of passwords allowed in history is'.APP_LIMIT_USER_PASSWORD_HISTORY.'. Default value is 0')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
@@ -813,7 +813,7 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('limit', false, new Range(1, APP_LIMIT_USER_SESSIONS_MAX), 'Set the max number of users allowed in this project. Value allowed is between 1-' . APP_LIMIT_USER_SESSIONS_MAX . '. Default is ' . APP_LIMIT_USER_SESSIONS_DEFAULT)
+    ->param('limit', false, new Range(1, APP_LIMIT_USER_SESSIONS_MAX), 'Set the max number of users allowed in this project. Value allowed is between 1-'.APP_LIMIT_USER_SESSIONS_MAX.'. Default is '.APP_LIMIT_USER_SESSIONS_DEFAULT)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
@@ -859,7 +859,7 @@ App::delete('/v1/projects/:projectId')
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($project);
 
-        if (!$dbForConsole->deleteDocument('projects', $projectId)) {
+        if (! $dbForConsole->deleteDocument('projects', $projectId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
         }
 
@@ -881,7 +881,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('enabled', true, new Boolean(true), 'Enable or disable a webhook.', true)
-    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
+    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' events are allowed.')
     ->param('url', '', fn ($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
@@ -1006,7 +1006,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('enabled', true, new Boolean(true), 'Enable or disable a webhook.', true)
-    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
+    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' events are allowed.')
     ->param('url', '', fn ($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
@@ -1141,7 +1141,7 @@ App::post('/v1/projects/:projectId/keys')
     ->label('sdk.response.model', Response::MODEL_KEY)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
+    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' scopes are allowed.')
     ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
@@ -1258,7 +1258,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('keyId', '', new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
+    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' events are allowed.')
     ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
@@ -1369,7 +1369,7 @@ App::post('/v1/projects/:projectId/platforms')
             'name' => $name,
             'key' => $key,
             'store' => $store,
-            'hostname' => $hostname
+            'hostname' => $hostname,
         ]);
 
         $platform = $dbForConsole->createDocument('platforms', $platform);
@@ -1532,7 +1532,6 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         $response->noContent();
     });
 
-
 // CUSTOM SMTP and Templates
 App::patch('/v1/projects/:projectId/smtp')
     ->desc('Update SMTP')
@@ -1592,11 +1591,11 @@ App::patch('/v1/projects/:projectId/smtp')
             try {
                 $valid = $mail->SmtpConnect();
 
-                if (!$valid) {
+                if (! $valid) {
                     throw new Exception('Connection is not valid.');
                 }
             } catch (Throwable $error) {
-                throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, 'Could not connect to SMTP server: ' . $error->getMessage());
+                throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, 'Could not connect to SMTP server: '.$error->getMessage());
             }
         }
 
@@ -1615,7 +1614,7 @@ App::patch('/v1/projects/:projectId/smtp')
             ];
         } else {
             $smtp = [
-                'enabled' => false
+                'enabled' => false,
             ];
         }
 
@@ -1635,7 +1634,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('emails', [], new ArrayList(new Email(), 10), 'Array of emails to send test email to. Maximum of 10 emails are allowed.')
-    ->param('senderName', System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'), new Text(255, 0), 'Name of the email sender')
+    ->param('senderName', System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'), new Text(255, 0), 'Name of the email sender')
     ->param('senderEmail', System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), new Email(), 'Email of the sender')
     ->param('replyTo', '', new Email(), 'Reply to email', true)
     ->param('host', '', new HostName(), 'SMTP server host name')
@@ -1653,10 +1652,10 @@ App::post('/v1/projects/:projectId/smtp/tests')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $replyToEmail = !empty($replyTo) ? $replyTo : $senderEmail;
+        $replyToEmail = ! empty($replyTo) ? $replyTo : $senderEmail;
 
         $subject = 'Custom SMTP email sample';
-        $template = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-smtp-test.tpl');
+        $template = Template::fromFile(__DIR__.'/../../config/locale/templates/email-smtp-test.tpl');
         $template
             ->setParam('{{from}}', "{$senderName} ({$senderEmail})")
             ->setParam('{{replyTo}}', "{$senderName} ({$replyToEmail})");
@@ -1673,7 +1672,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
                 ->setSmtpSenderName($senderName)
                 ->setRecipient($email)
                 ->setName('')
-                ->setbodyTemplate(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl')
+                ->setbodyTemplate(__DIR__.'/../../config/locale/templates/email-base-styled.tpl')
                 ->setBody($template->render())
                 ->setVariables([])
                 ->setSubject($subject)
@@ -1701,7 +1700,6 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
 
         throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1709,11 +1707,11 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
+        $template = $templates['sms.'.$type.'-'.$locale] ?? null;
 
         if (is_null($template)) {
             $template = [
-                'message' => Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl')->render(),
+                'message' => Template::fromFile(__DIR__.'/../../config/locale/templates/sms-base.tpl')->render(),
             ];
         }
 
@@ -1722,7 +1720,6 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
 
         $response->dynamic(new Document($template), Response::MODEL_SMS_TEMPLATE);
     });
-
 
 App::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Get custom email template')
@@ -1748,15 +1745,15 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $template  = $templates['email.' . $type . '-' . $locale] ?? null;
+        $template = $templates['email.'.$type.'-'.$locale] ?? null;
 
         $localeObj = new Locale($locale);
         if (is_null($template)) {
-            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+            $message = Template::fromFile(__DIR__.'/../../config/locale/templates/email-inner-base.tpl');
             $message
                 ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
                 ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
-                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'), escapeHtml: false)
+                ->setParam('{{body}}', $localeObj->getText('emails.'.$type.'.body'), escapeHtml: false)
                 ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
                 ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
                 ->setParam('{{direction}}', $localeObj->getText('settings.direction'));
@@ -1764,9 +1761,9 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
 
             $template = [
                 'message' => $message,
-                'subject' => $localeObj->getText('emails.' . $type . '.subject'),
+                'subject' => $localeObj->getText('emails.'.$type.'.subject'),
                 'senderEmail' => '',
-                'senderName' => ''
+                'senderName' => '',
             ];
         }
 
@@ -1795,7 +1792,6 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->action(function (string $projectId, string $type, string $locale, string $message, Response $response, Database $dbForConsole) {
 
         throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1803,8 +1799,8 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $templates['sms.' . $type . '-' . $locale] = [
-            'message' => $message
+        $templates['sms.'.$type.'-'.$locale] = [
+            'message' => $message,
         ];
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
@@ -1845,12 +1841,12 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $templates['email.' . $type . '-' . $locale] = [
+        $templates['email.'.$type.'-'.$locale] = [
             'senderName' => $senderName,
             'senderEmail' => $senderEmail,
             'subject' => $subject,
             'replyTo' => $replyTo,
-            'message' => $message
+            'message' => $message,
         ];
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
@@ -1862,7 +1858,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
             'senderEmail' => $senderEmail,
             'subject' => $subject,
             'replyTo' => $replyTo,
-            'message' => $message
+            'message' => $message,
         ]), Response::MODEL_EMAIL_TEMPLATE);
     });
 
@@ -1884,7 +1880,6 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
 
         throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1892,20 +1887,20 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
+        $template = $templates['sms.'.$type.'-'.$locale] ?? null;
 
         if (is_null($template)) {
             throw new Exception(Exception::PROJECT_TEMPLATE_DEFAULT_DELETION);
         }
 
-        unset($template['sms.' . $type . '-' . $locale]);
+        unset($template['sms.'.$type.'-'.$locale]);
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
 
         $response->dynamic(new Document([
             'type' => $type,
             'locale' => $locale,
-            'message' => $template['message']
+            'message' => $template['message'],
         ]), Response::MODEL_SMS_TEMPLATE);
     });
 
@@ -1933,13 +1928,13 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $template  = $templates['email.' . $type . '-' . $locale] ?? null;
+        $template = $templates['email.'.$type.'-'.$locale] ?? null;
 
         if (is_null($template)) {
             throw new Exception(Exception::PROJECT_TEMPLATE_DEFAULT_DELETION);
         }
 
-        unset($templates['email.' . $type . '-' . $locale]);
+        unset($templates['email.'.$type.'-'.$locale]);
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
 
@@ -1950,6 +1945,6 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
             'senderEmail' => $template['senderEmail'],
             'subject' => $template['subject'],
             'replyTo' => $template['replyTo'],
-            'message' => $template['message']
+            'message' => $template['message'],
         ]), Response::MODEL_EMAIL_TEMPLATE);
     });
