@@ -81,6 +81,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
             break;
         case $document->getCollection() === 'databases': // databases
             $queueForUsage
+                ->addMetric(METRIC_DATABASES_STORAGE, 1)
                 ->addMetric(METRIC_DATABASES, $value); // per project
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
@@ -93,7 +94,9 @@ $databaseListener = function (string $event, Document $document, Document $proje
             $databaseInternalId = $parts[1] ?? 0;
             $queueForUsage
                 ->addMetric(METRIC_COLLECTIONS, $value) // per project
-                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value) // per database
+                ->addMetric(METRIC_DATABASES_STORAGE, 1)
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value)
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_STORAGE), 1); // per database
             ;
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
@@ -108,7 +111,8 @@ $databaseListener = function (string $event, Document $document, Document $proje
             $queueForUsage
                 ->addMetric(METRIC_DOCUMENTS, $value)  // per project
                 ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
-                ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
+                ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value)  // per collection
+                ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
             break;
         case $document->getCollection() === 'buckets': //buckets
             $queueForUsage

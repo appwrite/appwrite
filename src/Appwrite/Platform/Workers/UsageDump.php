@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Extend\Exception;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -70,6 +71,11 @@ class UsageDump extends Action
                         continue;
                     }
 
+                    if (str_ends_with($key, '.db_storage')) {
+                        $this->handleDBStorageCalculation($key, $dbForProject);
+                        return;
+                    }
+
                     foreach ($this->periods as $period => $format) {
                         $time = 'inf' === $period ? null : date($format, time());
                         $id = \md5("{$time}_{$period}_{$key}");
@@ -104,6 +110,122 @@ class UsageDump extends Action
                 }
             } catch (\Exception $e) {
                 console::error('[' . DateTime::now() . '] project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
+            }
+        }
+    }
+
+    private function handleDBStorageCalculation(string $key, Database $dbForProject): void
+    {
+        $data = explode('.', $key);
+
+        $updateMetric = function (Database $dbForProject, int $value, string $key, string $period, string|null $time) {
+            $id = \md5("{$time}_{$period}_{$key}");
+
+            try {
+                $dbForProject->createDocument('stats', new Document([
+                    '$id' => $id,
+                    'period' => $period,
+                    'time' => $time,
+                    'metric' => $key,
+                    'value' => $value,
+                    'region' => System::getEnv('_APP_REGION', 'default'),
+                ]));
+            } catch (Duplicate $th) {
+                if ($value < 0) {
+                    $dbForProject->decreaseDocumentAttribute(
+                        'stats',
+                        $id,
+                        'value',
+                        abs($value)
+                    );
+                } else {
+                    $dbForProject->increaseDocumentAttribute(
+                        'stats',
+                        $id,
+                        'value',
+                        $value
+                    );
+                }
+            }
+        };
+
+        foreach ($this->periods as $period => $format) {
+            $time = 'inf' === $period ? null : date($format, time());
+            $id = \md5("{$time}_{$period}_{$key}");
+
+            $value = 0;
+            $previousValue = 0;
+            try {
+                $previousValue = ($dbForProject->getDocument('stats', $id))->getAttribute('value', 0);
+            } catch (\Exception $e) {
+                // No previous value
+            }
+
+            switch (count($data)) {
+                // Collection Level
+                case 3:
+                    $databaseInternalId = $data[0];
+                    $collectionInternalId = $data[1];
+
+                    $value = $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collectionInternalId);
+
+                    // Compare with previous value
+                    $diff = $value - $previousValue;
+
+                    if ($diff === 0) {
+                        break;
+                    }
+
+                    // Update Collection
+                    $updateMetric($dbForProject, $diff, $key, $period, $time);
+
+                    // Update Database
+                    $databaseKey = $data[0] . '.db_storage';
+                    $updateMetric($dbForProject, $diff, $databaseKey, $period, $time);
+
+                    // Update Project
+                    $projectKey = 'db_storage';
+                    $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
+                    break;
+                    // Database Level
+                case 2:
+                    $databaseInternalId = $data[0];
+                    $collections = $dbForProject->find('database_' . $databaseInternalId);
+
+                    foreach ($collections as $collection) {
+                        $value += $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collection->getInternalId());
+                    }
+
+                    $diff = $value - $previousValue;
+
+                    // Update Database
+                    $databaseKey = $data[0] . '.db_storage';
+                    $updateMetric($dbForProject, $diff, $databaseKey, $period, $time);
+
+                    // Update Project
+                    $projectKey = 'db_storage';
+                    $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
+                    break;
+                    // Project Level
+                case 1:
+                    // Get all project databases
+                    $databases = $dbForProject->find('database');
+
+                    // Recalculate all databases
+                    foreach ($databases as $database) {
+                        $collections = $dbForProject->find('database_' . $database->getInternalId());
+
+                        foreach ($collections as $collection) {
+                            $value += $dbForProject->getSizeOfCollection('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId());
+                        }
+                    }
+
+                    $diff = $value - $previousValue;
+
+                    // Update Project
+                    $projectKey = 'db_storage';
+                    $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
+                    break;
             }
         }
     }

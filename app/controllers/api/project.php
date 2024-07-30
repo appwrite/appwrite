@@ -45,6 +45,7 @@ App::get('/v1/project/usage')
                 METRIC_USERS,
                 METRIC_BUCKETS,
                 METRIC_FILES_STORAGE,
+                METRIC_DATABASES_STORAGE,
                 METRIC_DEPLOYMENTS_STORAGE
             ],
             'period' => [
@@ -52,7 +53,8 @@ App::get('/v1/project/usage')
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
                 METRIC_USERS,
-                METRIC_EXECUTIONS
+                METRIC_EXECUTIONS,
+                METRIC_DATABASES_STORAGE
             ]
         ];
 
@@ -145,10 +147,28 @@ App::get('/v1/project/usage')
             ];
         }, $dbForProject->find('buckets'));
 
+        $databasesStorageBreakdown = array_map(function ($database) use ($dbForProject) {
+            $id = $database->getId();
+            $name = $database->getAttribute('name');
+            $metric = str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE);
+
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('databases'));
+
         $deploymentsStorageBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
             $metric = str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE);
+
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -190,12 +210,14 @@ App::get('/v1/project/usage')
             'executionsTotal' => $total[METRIC_EXECUTIONS],
             'documentsTotal' => $total[METRIC_DOCUMENTS],
             'databasesTotal' => $total[METRIC_DATABASES],
+            'databasesStorageTotal' => $total[METRIC_DATABASES_STORAGE],
             'usersTotal' => $total[METRIC_USERS],
             'bucketsTotal' => $total[METRIC_BUCKETS],
             'filesStorageTotal' => $total[METRIC_FILES_STORAGE],
             'deploymentsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE],
             'executionsBreakdown' => $executionsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown,
+            'databasesStorageBreakdown' => $databasesStorageBreakdown,
             'deploymentsStorageBreakdown' => $deploymentsStorageBreakdown,
         ]), Response::MODEL_USAGE_PROJECT);
     });
