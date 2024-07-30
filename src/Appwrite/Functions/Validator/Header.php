@@ -5,15 +5,15 @@ namespace Appwrite\Functions\Validator;
 use Utopia\Validator;
 
 /**
- * Header.
+ * Headers.
  *
  * Validates user provided headers
  */
-class Header extends Validator
+class Headers extends Validator
 {
     protected bool $allowEmpty;
 
-    public function __construct(bool $allowEmpty = false)
+    public function __construct(bool $allowEmpty = true)
     {
         $this->allowEmpty = $allowEmpty;
     }
@@ -27,7 +27,7 @@ class Header extends Validator
      */
     public function getDescription(): string
     {
-        return 'Header must be a string and not start with x-appwrite- prefix.';
+        return 'Header keys must be a string and not start with x-appwrite- prefix.';
     }
 
     /**
@@ -43,15 +43,23 @@ class Header extends Validator
             return false;
         }
 
-        if (\strlen($value) > 256) {
-            return false;
+        if (\is_string($value)) {
+            $decoded = \json_decode($value, true);
+
+            if (\json_last_error() == JSON_ERROR_NONE) {
+                if (\is_array($decoded)) {
+                    foreach ($decoded as $key => $val) {
+                        if (0 === strpos($key, 'x-appwrite-')) {
+                            return false;
+                        }
+                        return true;
+                    }
+                }
+            }
+            return \json_last_error() == JSON_ERROR_NONE;
         }
 
-        if (0 === strpos($value, 'x-appwrite-')) {
-            return false;
-        }
-
-        return true;
+        return false;
     }
 
     /**
@@ -63,7 +71,7 @@ class Header extends Validator
      */
     public function isArray(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -75,6 +83,6 @@ class Header extends Validator
      */
     public function getType(): string
     {
-        return self::TYPE_ARRAY;
+        return self::TYPE_OBJECT;
     }
 }
