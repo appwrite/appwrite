@@ -136,4 +136,13 @@ return [ // List of publicly visible scopes
     'policies.read' => [
         'description' => 'Access to read the backups service',
     ],
+    'archives.read' => [
+        'description' => 'Access to read the backups service',
+    ],
+    'archives.write' => [
+        'description' => 'Access to create, update, and delete your archive',
+    ],
+    'restorations.write' => [
+        'description' => 'Access to create, update, and delete your restoration',
+    ],
 ];
