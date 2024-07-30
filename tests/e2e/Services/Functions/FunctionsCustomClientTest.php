@@ -965,7 +965,7 @@ class FunctionsCustomClientTest extends Scope
         return [];
     }
 
-    public function testGetFunctionTemplates()
+    public function testListTemplates()
     {
         /**
          * Test for SUCCESS
@@ -973,7 +973,6 @@ class FunctionsCustomClientTest extends Scope
         $expectedTemplates = array_slice(Config::getParam('function-templates', []), 0, 25);
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $templates['headers']['status-code']);
@@ -994,7 +993,6 @@ class FunctionsCustomClientTest extends Scope
 
         $templates_offset = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'limit' => 1,
             'offset' => 2
@@ -1007,7 +1005,6 @@ class FunctionsCustomClientTest extends Scope
 
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'useCases' => ['starter', 'ai'],
             'runtimes' => ['bun-1.0', 'dart-2.16']
@@ -1046,7 +1043,6 @@ class FunctionsCustomClientTest extends Scope
          */
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'limit' => 5001,
             'offset' => 10,
@@ -1065,5 +1061,34 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(400, $templates['headers']['status-code']);
         $this->assertEquals('Invalid `offset` param: Value must be a valid range between 0 and 5,000', $templates['body']['message']);
+    }
+
+    public function testGetTemplate()
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $template = $this->client->call(Client::METHOD_GET, '/functions/templates/query-neo4j-auradb', array_merge([
+            'content-type' => 'application/json',
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $template['headers']['status-code']);
+        $this->assertIsArray($template['body']);
+        $this->assertEquals('query-neo4j-auradb', $template['body']['id']);
+        $this->assertEquals('Query Neo4j AuraDB', $template['body']['name']);
+        $this->assertEquals('icon-neo4j', $template['body']['icon']);
+        $this->assertEquals('Graph database with focus on relations between data.', $template['body']['tagline']);
+        $this->assertEquals(['databases'], $template['body']['useCases']);
+        $this->assertEquals('github', $template['body']['vcsProvider']);
+
+        /**
+         * Test for FAILURE
+         */
+        $template = $this->client->call(Client::METHOD_GET, '/functions/templates/invalid-template-id', array_merge([
+            'content-type' => 'application/json',
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $template['headers']['status-code']);
+        $this->assertEquals('Function Template with the requested ID could not be found.', $template['body']['message']);
     }
 }

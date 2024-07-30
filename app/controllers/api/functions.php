@@ -2392,3 +2392,28 @@ App::get('/v1/functions/templates')
             'total' => \count($responseTemplates),
         ]), Response::MODEL_TEMPLATE_FUNCTION_LIST);
     });
+
+App::get('/v1/functions/templates/:templateId')
+    ->desc('Get function template')
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'getTemplate')
+    ->label('sdk.description', '/docs/references/functions/get-template.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TEMPLATE_FUNCTION)
+    ->param('templateId', '', new Text(128), 'Template ID.')
+    ->inject('response')
+    ->action(function (string $templateId, Response $response) {
+        $templates = Config::getParam('function-templates', []);
+
+        $template = array_shift(\array_filter($templates, function ($template) use ($templateId) {
+            return $template['id'] === $templateId;
+        }));
+
+        if (empty($template)) {
+            throw new Exception(Exception::FUNCTION_TEMPLATE_NOT_FOUND);
+        }
+
+        $response->dynamic(new Document($template), Response::MODEL_TEMPLATE_FUNCTION);
+    });
