@@ -34,13 +34,13 @@ class V21 extends Migration
         Console::info('Migrating Collections');
         $this->migrateCollections();
 
-        Console::info('Migrating Documents');
-        $this->forEachDocument([$this, 'fixDocument']);
-
         if ($this->project->getInternalId() !== 'console') {
             Console::info('Migrating Buckets');
             $this->migrateBuckets();
         }
+
+        Console::info('Migrating Documents');
+        $this->forEachDocument([$this, 'fixDocument']);
     }
 
     /**
@@ -187,15 +187,17 @@ class V21 extends Migration
      * Migrating Buckets.
      *
      * @return void
-     * @throws Exception
-     * @throws PDOException
      */
     private function migrateBuckets()
     {
         foreach ($this->documentsIterator('buckets') as $bucket) {
             $bucketId = 'bucket_' . $bucket['$internalId'];
 
-            $this->projectDB->updateAttribute($bucketId, 'metadata', size: 75000);
+            try {
+                $this->projectDB->updateAttribute($bucketId, 'metadata', size: 75000);
+            } catch (\Throwable $th) {
+                Console::warning("'bucketId' from {$bucketId}: {$th->getMessage()}");
+            }
         }
     }
 }
