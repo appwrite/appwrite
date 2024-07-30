@@ -36,6 +36,11 @@ class V21 extends Migration
 
         Console::info('Migrating Documents');
         $this->forEachDocument([$this, 'fixDocument']);
+
+        if ($this->project->getInternalId() !== 'console') {
+            Console::info('Migrating Buckets');
+            $this->migrateBuckets();
+        }
     }
 
     /**
@@ -176,5 +181,21 @@ class V21 extends Migration
         }
 
         return $document;
+    }
+
+    /**
+     * Migrating Buckets.
+     *
+     * @return void
+     * @throws Exception
+     * @throws PDOException
+     */
+    private function migrateBuckets()
+    {
+        foreach ($this->documentsIterator('buckets') as $bucket) {
+            $bucketId = 'bucket_' . $bucket['$internalId'];
+
+            $this->projectDB->updateAttribute($bucketId, 'metadata', size: 75000);
+        }
     }
 }
