@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -966,6 +967,10 @@ class FunctionsCustomClientTest extends Scope
 
     public function testGetFunctionTemplates()
     {
+        /**
+         * Test for SUCCESS
+         */
+        $expectedTemplates = array_slice(Config::getParam('function-templates', []), 0, 25);
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -975,24 +980,47 @@ class FunctionsCustomClientTest extends Scope
         $this->assertGreaterThan(0, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
+        $this->assertArrayHasKey('useCases', $templates['body']['templates'][0]);
+        for ($i = 0; $i < 25; $i++) {
+            $this->assertEquals($expectedTemplates[$i]['name'], $templates['body']['templates'][$i]['name']);
+            $this->assertEquals($expectedTemplates[$i]['id'], $templates['body']['templates'][$i]['id']);
+            $this->assertEquals($expectedTemplates[$i]['icon'], $templates['body']['templates'][$i]['icon']);
+            $this->assertEquals($expectedTemplates[$i]['tagline'], $templates['body']['templates'][$i]['tagline']);
+            $this->assertEquals($expectedTemplates[$i]['useCases'], $templates['body']['templates'][$i]['useCases']);
+            $this->assertEquals($expectedTemplates[$i]['vcsProvider'], $templates['body']['templates'][$i]['vcsProvider']);
+            $this->assertEquals($expectedTemplates[$i]['runtimes'], $templates['body']['templates'][$i]['runtimes']);
+            $this->assertEquals($expectedTemplates[$i]['variables'], $templates['body']['templates'][$i]['variables']);
+        }
+
+        $templates_offset = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 1,
+            'offset' => 2
+        ]);
+
+        $this->assertEquals(200, $templates_offset['headers']['status-code']);
+        $this->assertEquals(1, $templates_offset['body']['total']);
+        // assert that offset works as expected
+        $this->assertEquals($templates['body']['templates'][2]['id'], $templates_offset['body']['templates'][0]['id']);
 
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'usecases' => ['starter', 'ai'],
+            'useCases' => ['starter', 'ai'],
             'runtimes' => ['bun-1.0', 'dart-2.16']
         ]);
 
         $this->assertEquals(200, $templates['headers']['status-code']);
-        $this->assertEquals(3, $templates['body']['total']);
+        $this->assertGreaterThanOrEqual(3, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
+        foreach ($templates['body']['templates'] as $template) {
+            $this->assertContains($template['useCases'][0], ['starter', 'ai']);
+        }
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
-        $this->assertEquals('starter', $templates['body']['templates'][0]['usecases'][0]);
-        $this->assertEquals('ai', $templates['body']['templates'][1]['usecases'][0]);
-        $this->assertEquals('ai', $templates['body']['templates'][2]['usecases'][0]);
         $this->assertContains('bun-1.0', array_column($templates['body']['templates'][0]['runtimes'], 'name'));
-        $this->assertContains('dart-2.16', array_column($templates['body']['templates'][1]['runtimes'], 'name'));
 
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
@@ -1000,7 +1028,7 @@ class FunctionsCustomClientTest extends Scope
         ], $this->getHeaders()), [
             'limit' => 5,
             'offset' => 2,
-            'usecases' => ['databases'],
+            'useCases' => ['databases'],
             'runtimes' => ['node-16.0']
         ]);
 
@@ -1008,7 +1036,34 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(5, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
-        $this->assertEquals('databases', $templates['body']['templates'][0]['usecases'][0]);
+        foreach ($templates['body']['templates'] as $template) {
+            $this->assertContains($template['useCases'][0], ['databases']);
+        }
         $this->assertContains('node-16.0', array_column($templates['body']['templates'][0]['runtimes'], 'name'));
+
+        /**
+         * Test for FAILURE
+         */
+        $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 5001,
+            'offset' => 10,
+        ]);
+
+        $this->assertEquals(400, $templates['headers']['status-code']);
+        $this->assertEquals('Invalid `limit` param: Value must be a valid range between 1 and 5,000', $templates['body']['message']);
+
+        $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 5,
+            'offset' => 5001,
+        ]);
+
+        $this->assertEquals(400, $templates['headers']['status-code']);
+        $this->assertEquals('Invalid `offset` param: Value must be a valid range between 0 and 5,000', $templates['body']['message']);
     }
 }
