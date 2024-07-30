@@ -119,6 +119,11 @@ App::post('/v1/projects')
         if ($index !== false) {
             $dsn = $databases[$index];
         } else {
+
+            $databases = array_filter($databases, function($value, $region) {
+                return str_contains($value, $region);
+            });
+
             $dsn = $databases[array_rand($databases)];
         }
 
