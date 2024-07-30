@@ -4,26 +4,18 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Migration\Migration;
 use Utopia\App;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
-use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
-use Utopia\System\System;
-use Redis;
 
 class Migrate extends Action
 {
-
-    /**
-     * @var Redis
-     */
-    protected Redis $redis;
-
     public static function getName(): string
     {
         return 'migrate';
@@ -35,44 +27,23 @@ class Migrate extends Action
             ->desc('Migrate Appwrite to new version')
             /** @TODO APP_VERSION_STABLE needs to be defined */
             ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
+            ->inject('cache')
             ->inject('dbForConsole')
             ->inject('getProjectDB')
             ->inject('register')
-            ->callback(fn($version, $dbForConsole, $getProjectDB, Registry $register) => $this->action($version, $dbForConsole, $getProjectDB, $register));
-
-        $this->redis = new Redis();
-        $this->redis->connect(
-            System::getEnv('_APP_REDIS_HOST', null) ,
-            System::getEnv('_APP_REDIS_PORT', 6379),
-            3 ,
-            null,
-            10
-        );
-
+            ->callback(fn ($version, $cache, $dbForConsole, $getProjectDB, Registry $register) => $this->action($version, $cache, $dbForConsole, $getProjectDB, $register));
     }
 
-    private function clearProjectsCache(Document $project)
+    private function clearProjectsCache(Cache $cache, Document $project)
     {
-
         try {
-            do {
-                $iterator = null;
-                $pattern = "default-cache-_{$project->getInternalId()}:*";
-                $keys = $this->redis->scan($iterator, $pattern, 1000);
-                if ($keys !== false) {
-                    foreach ($keys as $key) {
-                        $this->redis->del($key);
-                    }
-                }
-            } while ($iterator > 0);
-
-
+            $cache->purge("cache-_{$project->getInternalId()}:*");
         } catch (\Throwable $th) {
             Console::error('Failed to clear project ("' . $project->getId() . '") cache with error: ' . $th->getMessage());
         }
     }
 
-    public function action(string $version,  Database $dbForConsole, callable $getProjectDB, Registry $register)
+    public function action(string $version, Cache $cache, Database $dbForConsole, callable $getProjectDB, Registry $register)
     {
         Authorization::disable();
         if (!array_key_exists($version, Migration::$versions)) {
@@ -116,7 +87,7 @@ class Migrate extends Action
                     continue;
                 }
 
-                $this->clearProjectsCache($project);
+                $this->clearProjectsCache($cache, $project);
 
                 try {
                     // TODO: Iterate through all project DBs
@@ -132,7 +103,7 @@ class Migrate extends Action
                     throw $th;
                 }
 
-                $this->clearProjectsCache($project);
+                $this->clearProjectsCache($cache, $project);
             }
 
             $sum = \count($projects);
