@@ -118,7 +118,7 @@ const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4314;
-const APP_VERSION_STABLE = '1.5.7';
+const APP_VERSION_STABLE = '1.6.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -303,6 +303,7 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
+Config::load('function-templates', __DIR__ . '/config/function-templates.php');
 
 /**
  * New DB Filters
@@ -1242,14 +1243,15 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         $jwtUserId = $payload['userId'] ?? '';
-        $jwtSessionId = $payload['sessionId'] ?? '';
-
-        if ($jwtUserId && $jwtSessionId) {
+        if (!empty($jwtUserId)) {
             $user = $dbForProject->getDocument('users', $jwtUserId);
         }
 
-        if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-            $user = new Document([]);
+        $jwtSessionId = $payload['sessionId'] ?? '';
+        if(!empty($jwtSessionId)) {
+            if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+                $user = new Document([]);
+            }
         }
     }
 
