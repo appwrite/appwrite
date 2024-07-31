@@ -195,6 +195,7 @@ class V21 extends Migration
 
             try {
                 $this->projectDB->updateAttribute($bucketId, 'metadata', size: 75000);
+                $this->projectDB->purgeCachedCollection($bucketId);
             } catch (\Throwable $th) {
                 Console::warning("'bucketId' from {$bucketId}: {$th->getMessage()}");
             }
