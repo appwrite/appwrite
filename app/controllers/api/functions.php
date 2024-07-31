@@ -461,15 +461,45 @@ App::get('/v1/functions/sizes')
     ->label('sdk.description', '/docs/references/functions/get-sizes.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SIZES)
+    ->label('sdk.response.model', Response::MODEL_SIZE_LIST)
     ->inject('response')
     ->inject('plan')
     ->action(function (Response $response, array $plan) {
-        $runtimeSizes = new RuntimeSize($plan);
+        $allRuntimesSizes = Config::getParam('runtime-sizes');
+        $plans = Config::getParam('plans', []);
+
+        $runtimeSizes = [];
+        foreach ($allRuntimesSizes as $key => $size) {
+            // Don't perform any billing calculations for CE
+            if (empty($plans)) {
+                $size['enabled'] = true;
+            } else {
+                // Show plan names on sizes
+                foreach ($plans as $billingPlan) {
+                    if (key_exists('runtimeSizes', $billingPlan) && in_array($key, $billingPlan['runtimeSizes'])) {
+                        if ($billingPlan['$id'] !== 'tier-0') {
+                            $size['plan'] = $billingPlan['name'];
+                        }
+                        break;
+                    }
+                }
+
+                // Check if the size is enabled for the current plan
+                if (key_exists('runtimeSizes', $plan)) {
+                    $size['enabled'] = in_array($key, $plan['runtimeSizes']);
+                }
+            }
+
+            // Only add sizes that are within the limits set by environment variables
+            if ($size['cpus'] <= System::getEnv('_APP_FUNCTIONS_CPUS', 1) && $size['memory'] <= System::getEnv('_APP_FUNCTIONS_MEMORY', 512)) {
+                $runtimeSizes[] = $size;
+            }
+        }
+
 
         $response->dynamic(new Document([
-            'sizes' => $runtimeSizes->getAllowedSizes(),
-        ]), Response::MODEL_SIZES);
+            'sizes' => $runtimeSizes,
+        ]), Response::MODEL_SIZE_LIST);
     });
 
 App::get('/v1/functions/:functionId')
