@@ -52,7 +52,6 @@ class Headers extends Validator
                         if (0 === strpos($key, 'x-appwrite-')) {
                             return false;
                         }
-                        return true;
                     }
                 }
             }
