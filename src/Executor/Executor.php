@@ -168,6 +168,7 @@ class Executor
      * @param string $source
      * @param string $entrypoint
      * @param string $runtimeEntrypoint
+     * @param bool $logging
      *
      * @return array
      */
