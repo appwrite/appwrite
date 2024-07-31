@@ -1744,9 +1744,8 @@ App::post('/v1/functions/:functionId/executions')
             ->setContext('function', $function);
 
         if ($async) {
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-
             if(is_null($scheduledAt)) {
+                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
                 $queueForFunctions
                     ->setType('http')
                     ->setExecution($execution)
@@ -1770,7 +1769,7 @@ App::post('/v1/functions/:functionId/executions')
                     'jwt' => $jwt,
                 ];
 
-                $dbForConsole->createDocument('schedules', new Document([
+                $schedule = $dbForConsole->createDocument('schedules', new Document([
                     'region' => System::getEnv('_APP_REGION', 'default'),
                     'resourceType' => ScheduleExecutions::getSupportedResource(),
                     'resourceId' => $execution->getId(),
@@ -1781,6 +1780,13 @@ App::post('/v1/functions/:functionId/executions')
                     'data' => $data,
                     'active' => true,
                 ]));
+
+                $execution = $execution
+                    ->setAttribute('scheduleId', $schedule->getId())
+                    ->setAttribute('scheduleInternalId', $schedule->getInternalId())
+                    ->setAttribute('scheduledAt', $scheduledAt);
+
+                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
             }
 
             return $response
@@ -1825,7 +1831,8 @@ App::post('/v1/functions/:functionId/executions')
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_VERSION' => APP_VERSION_STABLE
+            'APPWRITE_VERSION' => APP_VERSION_STABLE,
+            'APPWRITE_REGION' => $project->getAttribute('region'),
         ]);
 
         /** Execute function */
@@ -2348,4 +2355,65 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response->noContent();
+    });
+
+App::get('/v1/functions/templates')
+    ->desc('List function templates')
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'listTemplates')
+    ->label('sdk.description', '/docs/references/functions/list-templates.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TEMPLATE_FUNCTION_LIST)
+    ->param('runtimes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('runtimes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of runtimes allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' runtimes are allowed.', true)
+    ->param('useCases', [], new ArrayList(new WhiteList(['dev-tools','starter','databases','ai','messaging','utilities']), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of use cases allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' use cases are allowed.', true)
+    ->param('limit', 25, new Range(1, 5000), 'Limit the number of templates returned in the response. Default limit is 25, and maximum limit is 5000.', true)
+    ->param('offset', 0, new Range(0, 5000), 'Offset the list of returned templates. Maximum offset is 5000.', true)
+    ->inject('response')
+    ->action(function (array $runtimes, array $usecases, int $limit, int $offset, Response $response) {
+        $templates = Config::getParam('function-templates', []);
+
+        if (!empty($runtimes)) {
+            $templates = \array_filter($templates, function ($template) use ($runtimes) {
+                return \count(\array_intersect($runtimes, \array_column($template['runtimes'], 'name'))) > 0;
+            });
+        }
+
+        if (!empty($usecases)) {
+            $templates = \array_filter($templates, function ($template) use ($usecases) {
+                return \count(\array_intersect($usecases, $template['useCases'])) > 0;
+            });
+        }
+
+        $responseTemplates = \array_slice($templates, $offset, $limit);
+        $response->dynamic(new Document([
+            'templates' => $responseTemplates,
+            'total' => \count($responseTemplates),
+        ]), Response::MODEL_TEMPLATE_FUNCTION_LIST);
+    });
+
+App::get('/v1/functions/templates/:templateId')
+    ->desc('Get function template')
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'getTemplate')
+    ->label('sdk.description', '/docs/references/functions/get-template.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TEMPLATE_FUNCTION)
+    ->param('templateId', '', new Text(128), 'Template ID.')
+    ->inject('response')
+    ->action(function (string $templateId, Response $response) {
+        $templates = Config::getParam('function-templates', []);
+
+        $template = array_shift(\array_filter($templates, function ($template) use ($templateId) {
+            return $template['id'] === $templateId;
+        }));
+
+        if (empty($template)) {
+            throw new Exception(Exception::FUNCTION_TEMPLATE_NOT_FOUND);
+        }
+
+        $response->dynamic(new Document($template), Response::MODEL_TEMPLATE_FUNCTION);
     });

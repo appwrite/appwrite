@@ -1589,6 +1589,27 @@ trait UsersBase
         ], false);
         $this->assertEquals($user['headers']['status-code'], 201);
 
+        // Create JWT 0, with no session available
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['jwt']);
+        $jwt0 = $response['body']['jwt'];
+
+        // Ensure JWT 0 works
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-jwt' => $jwt0,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($userId, $response['body']['$id']);
+
         // Create two sessions
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -1641,12 +1662,13 @@ trait UsersBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($userId, $response['body']['$id']);
 
-        // Create JWT 2 for latest session using default param
+        // Create JWT 2 for latest session using 'current' param
         $response = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'duration' => 5
+            'duration' => 5,
+            'sessionId' => 'current'
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -1695,6 +1717,27 @@ trait UsersBase
         ]));
 
         $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Ensure JWT 0 works still even with no sessions
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'sessionId' => $session2Id
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-jwt' => $jwt0,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($userId, $response['body']['$id']);
 
         // Cleanup after test
 
