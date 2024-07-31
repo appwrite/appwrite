@@ -27,7 +27,7 @@ jobs:
         output: 'trivy-image-results.json'
         severity: 'CRITICAL,HIGH'
     - name: Run Trivy vulnerability scanner on source code
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.20.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
