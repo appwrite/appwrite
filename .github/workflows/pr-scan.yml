@@ -20,7 +20,7 @@ jobs:
         load: true
         tags: pr_image:${{ github.sha }}
     - name: Run Trivy vulnerability scanner on image
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.20.0
       with:
         image-ref: 'pr_image:${{ github.sha }}'
         format: 'json'
