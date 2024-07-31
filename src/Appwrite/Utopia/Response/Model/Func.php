@@ -145,9 +145,9 @@ class Func extends Model
                 'default' => false,
                 'example' => false,
             ])
-            ->addRule('size', [
+            ->addRule('specification', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function execution and builds machine size.',
+                'description' => 'Function execution and builds machine specification.',
                 'default' => 's-1vcpu-512mb',
                 'example' => 's-1vcpu-512mb',
             ])

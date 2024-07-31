@@ -857,12 +857,12 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
-            'size' => 's-1vcpu-1gb',
+            'specification' => 's-1vcpu-1gb',
         ]);
 
         $this->assertEquals(200, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
-        $this->assertEquals('s-1vcpu-1gb', $response1['body']['size']);
+        $this->assertEquals('s-1vcpu-1gb', $response1['body']['specification']);
 
         // Test Execution
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
@@ -887,12 +887,12 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
-            'size' => 's-1vcpu-512mb',
+            'specification' => 's-1vcpu-512mb',
         ]);
 
         $this->assertEquals(200, $response2['headers']['status-code']);
         $this->assertNotEmpty($response2['body']['$id']);
-        $this->assertEquals('s-1vcpu-512mb', $response2['body']['size']);
+        $this->assertEquals('s-1vcpu-512mb', $response2['body']['specification']);
 
         // Test Execution
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
@@ -920,11 +920,11 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
-            'size' => 's-2vcpu-512mb', // Invalid size
+            'specification' => 's-2vcpu-512mb', // Invalid specification
         ]);
 
         $this->assertEquals(400, $response3['headers']['status-code']);
-        $this->assertEquals('Invalid `size` param: String must be a valid size value of s-1vcpu-512mb, s-1vcpu-1gb', $response3['body']['message']);
+        $this->assertEquals('Invalid `specification` param: String must be a valid specification value of s-1vcpu-512mb, s-1vcpu-1gb', $response3['body']['message']);
 
         return $data;
     }

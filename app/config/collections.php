@@ -3057,7 +3057,7 @@ $projectCollections = array_merge([
             ],
             [
                 'array' => false,
-                '$id' => ID::custom('size'),
+                '$id' => ID::custom('specification'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 128,

@@ -6,7 +6,7 @@ use Utopia\Config\Config;
 use Utopia\System\System;
 use Utopia\Validator;
 
-class RuntimeSize extends Validator
+class RuntimeSpecification extends Validator
 {
     private array $plan;
 
@@ -16,31 +16,31 @@ class RuntimeSize extends Validator
     }
 
     /**
-     * Get Allowed Values.
+     * Get Allowed Specifications.
      *
-     * Get allowed values taking into account the limits set by the environment variables.
+     * Get allowed specifications taking into account the limits set by the environment variables and the plan.
      *
      * @return array
      */
-    public function getAllowedSizes(): array
+    public function getAllowedSpecifications(): array
     {
-        $sizes = Config::getParam('runtime-sizes', []);
+        $specifications = Config::getParam('runtime-specifications', []);
 
-        $allowedSizes = [];
+        $allowedSpecficiations = [];
 
-        foreach ($sizes as $size => $values) {
+        foreach ($specifications as $size => $values) {
             if ($values['cpus'] <= System::getEnv('_APP_FUNCTIONS_CPUS', 1) && $values['memory'] <= System::getEnv('_APP_FUNCTIONS_MEMORY', 512)) {
-                if (!empty($this->plan) && key_exists('runtimeSizes', $this->plan)) {
-                    if (!\in_array($size, $this->plan['runtimeSizes'])) {
+                if (!empty($this->plan) && key_exists('runtimeSpecifications', $this->plan)) {
+                    if (!\in_array($size, $this->plan['runtimeSpecifications'])) {
                         continue;
                     }
                 }
 
-                $allowedSizes[] = $size;
+                $allowedSpecifications[] = $size;
             }
         }
 
-        return $allowedSizes;
+        return $allowedSpecifications;
     }
 
     /**
@@ -52,7 +52,7 @@ class RuntimeSize extends Validator
     */
     public function getDescription(): string
     {
-        return 'String must be a valid size value of ' . implode(', ', $this->getAllowedSizes());
+        return 'String must be a valid size value of ' . implode(', ', $this->getAllowedSpecifications());
     }
 
     /**
@@ -74,7 +74,7 @@ class RuntimeSize extends Validator
             return false;
         }
 
-        if (!\in_array($value, $this->getAllowedSizes())) {
+        if (!\in_array($value, $this->getAllowedSpecifications())) {
             return false;
         }
 

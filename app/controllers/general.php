@@ -130,7 +130,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('runtime-sizes')[$function->getAttribute('size', 's-1vcpu-512mb')];
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', 's-1vcpu-512mb')];
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 

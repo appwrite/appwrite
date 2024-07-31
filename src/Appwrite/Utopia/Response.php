@@ -82,7 +82,7 @@ use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Session;
-use Appwrite\Utopia\Response\Model\Size;
+use Appwrite\Utopia\Response\Model\Specification;
 use Appwrite\Utopia\Response\Model\Subscriber;
 use Appwrite\Utopia\Response\Model\Target;
 use Appwrite\Utopia\Response\Model\Team;
@@ -248,8 +248,8 @@ class Response extends SwooleResponse
     public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     public const MODEL_HEADERS = 'headers';
-    public const MODEL_SIZE = 'size';
-    public const MODEL_SIZE_LIST = 'sizeList';
+    public const MODEL_SPECIFICATION = 'specification';
+    public const MODEL_SPECIFICATION_LIST = 'specificationList';
 
     // Proxy
     public const MODEL_PROXY_RULE = 'proxyRule';
@@ -367,7 +367,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Target list', self::MODEL_TARGET_LIST, 'targets', self::MODEL_TARGET))
             ->setModel(new BaseList('Migrations List', self::MODEL_MIGRATION_LIST, 'migrations', self::MODEL_MIGRATION))
             ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', self::MODEL_MIGRATION_FIREBASE_PROJECT))
-            ->setModel(new BaseList('Sizes List', self::MODEL_SIZE_LIST, 'sizes', self::MODEL_SIZE))
+            ->setModel(new BaseList('Specifications List', self::MODEL_SPECIFICATION_LIST, 'specifications', self::MODEL_SPECIFICATION))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -444,7 +444,7 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
             ->setModel(new Headers())
-            ->setModel(new Size())
+            ->setModel(new Specification())
             ->setModel(new Rule())
             ->setModel(new TemplateSMS())
             ->setModel(new TemplateEmail())

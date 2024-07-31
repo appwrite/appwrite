@@ -10,7 +10,7 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Functions\Validator\RuntimeSize;
+use Appwrite\Functions\Validator\RuntimeSpecification;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -161,7 +161,7 @@ App::post('/v1/functions')
     ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true)
     ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true)
     ->param('templateBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function template.', true)
-    ->param('size', 's-1vcpu-512mb', fn (array $plan) => new RuntimeSize($plan), 'Runtime size for the function and builds.', true, ['plan'])
+    ->param('specification', 's-1vcpu-512mb', fn (array $plan) => new RuntimeSpecification($plan), 'Runtime specification for the function and builds.', true, ['plan'])
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -171,7 +171,7 @@ App::post('/v1/functions')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, string $size, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
@@ -204,10 +204,10 @@ App::post('/v1/functions')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
-        $spec = Config::getParam('runtime-sizes')[$size] ?? [];
+        $spec = Config::getParam('runtime-specifications')[$specification] ?? [];
 
         if (empty($spec) || empty($spec['memory']) || empty($spec['cpus'])) {
-            throw new Exception(Exception::FUNCTION_INVALID_RUNTIME_SIZE);
+            throw new Exception(Exception::FUNCTION_INVALID_RUNTIME_SPECIFICATION);
         }
 
         $function = $dbForProject->createDocument('functions', new Document([
@@ -237,7 +237,7 @@ App::post('/v1/functions')
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'size' => $size
+            'specification' => $specification
         ]));
 
         $schedule = Authorization::skip(
@@ -451,55 +451,55 @@ App::get('/v1/functions/runtimes')
         ]), Response::MODEL_RUNTIME_LIST);
     });
 
-App::get('/v1/functions/sizes')
+App::get('/v1/functions/specifications')
     ->groups(['api', 'functions'])
-    ->desc('Get available function runtime sizes')
+    ->desc('Get available function runtime specifications')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getSizes')
-    ->label('sdk.description', '/docs/references/functions/get-sizes.md')
+    ->label('sdk.method', 'getSpecifications')
+    ->label('sdk.description', '/docs/references/functions/get-specifications.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SIZE_LIST)
+    ->label('sdk.response.model', Response::MODEL_SPECIFICATION_LIST)
     ->inject('response')
     ->inject('plan')
     ->action(function (Response $response, array $plan) {
-        $allRuntimesSizes = Config::getParam('runtime-sizes');
+        $allRuntimeSpecs = Config::getParam('runtime-specifications', []);
         $plans = Config::getParam('plans', []);
 
-        $runtimeSizes = [];
-        foreach ($allRuntimesSizes as $key => $size) {
+        $runtimeSpecs = [];
+        foreach ($allRuntimeSpecs as $key => $spec) {
             // Don't perform any billing calculations for CE
             if (empty($plans)) {
-                $size['enabled'] = true;
+                $spec['enabled'] = true;
             } else {
-                // Show plan names on sizes
+                // Show plan names on specs
                 foreach ($plans as $billingPlan) {
-                    if (key_exists('runtimeSizes', $billingPlan) && in_array($key, $billingPlan['runtimeSizes'])) {
+                    if (key_exists('runtimeSpecifications', $billingPlan) && in_array($key, $billingPlan['runtimeSpecifications'])) {
                         if ($billingPlan['$id'] !== 'tier-0') {
-                            $size['plan'] = $billingPlan['name'];
+                            $spec['plan'] = $billingPlan['name'];
                         }
                         break;
                     }
                 }
 
-                // Check if the size is enabled for the current plan
-                if (key_exists('runtimeSizes', $plan)) {
-                    $size['enabled'] = in_array($key, $plan['runtimeSizes']);
+                // Check if the spec is enabled for the current plan
+                if (key_exists('runtimeSpecifications', $plan)) {
+                    $spec['enabled'] = in_array($key, $plan['runtimeSpecifications']);
                 }
             }
 
-            // Only add sizes that are within the limits set by environment variables
-            if ($size['cpus'] <= System::getEnv('_APP_FUNCTIONS_CPUS', 1) && $size['memory'] <= System::getEnv('_APP_FUNCTIONS_MEMORY', 512)) {
-                $runtimeSizes[] = $size;
+            // Only add specs that are within the limits set by environment variables
+            if ($spec['cpus'] <= System::getEnv('_APP_FUNCTIONS_CPUS', 1) && $spec['memory'] <= System::getEnv('_APP_FUNCTIONS_MEMORY', 512)) {
+                $runtimeSpecs[] = $spec;
             }
         }
 
 
         $response->dynamic(new Document([
-            'sizes' => $runtimeSizes,
-        ]), Response::MODEL_SIZE_LIST);
+            'specifications' => $runtimeSpecs,
+        ]), Response::MODEL_SPECIFICATION_LIST);
     });
 
 App::get('/v1/functions/:functionId')
@@ -759,7 +759,7 @@ App::put('/v1/functions/:functionId')
     ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
     ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
     ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-    ->param('size', 's-1vcpu-512mb', fn (array $plan) => new RuntimeSize($plan), 'Runtime size for the function and builds.', true, ['plan'])
+    ->param('specification', 's-1vcpu-512mb', fn (array $plan) => new RuntimeSpecification($plan), 'Runtime specification for the function and builds.', true, ['plan'])
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -768,7 +768,7 @@ App::put('/v1/functions/:functionId')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $size, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -867,14 +867,14 @@ App::put('/v1/functions/:functionId')
             $live = false;
         }
 
-        $spec = Config::getParam('runtime-sizes')[$size] ?? [];
+        $spec = Config::getParam('runtime-specifications')[$specification] ?? [];
 
         if (empty($spec) || empty($spec['memory']) || empty($spec['cpus'])) {
-            throw new Exception(Exception::FUNCTION_INVALID_RUNTIME_SIZE);
+            throw new Exception(Exception::FUNCTION_INVALID_RUNTIME_SPECIFICATION);
         }
 
         // Enforce Cold Start if spec limits change.
-        if ($function->getAttribute('size') !== $size && !empty($function->getAttribute('deployment'))) {
+        if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deployment'))) {
             $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             try {
                 $executor->deleteRuntime($project->getId(), $function->getAttribute('deployment'));
@@ -903,7 +903,7 @@ App::put('/v1/functions/:functionId')
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'size' => $size,
+            'specification' => $specification,
             'search' => implode(' ', [$functionId, $name, $runtime]),
         ])));
 
@@ -1625,7 +1625,10 @@ App::post('/v1/functions/:functionId/executions')
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('runtime-sizes')[$function->getAttribute('size', 's-1vcpu-512mb')];
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', 's-1vcpu-512mb')];
+
+        var_dump($function);
+        var_dump($spec);
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 

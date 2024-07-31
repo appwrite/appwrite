@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Size extends Model
+class Specification extends Model
 {
     public function __construct()
     {
@@ -49,7 +49,7 @@ class Size extends Model
      */
     public function getName(): string
     {
-        return 'Sizes';
+        return 'Specification';
     }
 
     /**
@@ -59,6 +59,6 @@ class Size extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_SIZE;
+        return Response::MODEL_SPECIFICATION;
     }
 }

@@ -308,7 +308,7 @@ class Functions extends Action
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
-        $spec = Config::getParam('runtime-sizes')[$function->getAttribute('size', 's-1vcpu-512mb')];
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', 's-1vcpu-512mb')];
 
         $log->addTag('deploymentId', $deploymentId);
 
