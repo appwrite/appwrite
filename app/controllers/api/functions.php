@@ -467,7 +467,7 @@ App::get('/v1/functions/specifications')
         foreach ($allRuntimeSpecs as $spec) {
             $spec['enabled'] = true;
 
-            $hooks->trigger('specificationsHandler', [$plan, &$spec]);
+            $spec = $hooks->trigger('specificationsHandler', [$plan, &$spec]) ?? $spec;
 
             // Only add specs that are within the limits set by environment variables
             if ($spec['cpus'] <= System::getEnv('_APP_FUNCTIONS_CPUS', 1) && $spec['memory'] <= System::getEnv('_APP_FUNCTIONS_MEMORY', 512)) {
