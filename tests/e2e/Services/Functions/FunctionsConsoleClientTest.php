@@ -108,6 +108,7 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertIsArray($response['body']['builds']);
         $this->assertIsArray($response['body']['buildsTime']);
         $this->assertIsArray($response['body']['buildsStorage']);
+        $this->assertIsArray($response['body']['buildsTime']);
         $this->assertIsArray($response['body']['buildsMbSeconds']);
         $this->assertIsArray($response['body']['executions']);
         $this->assertIsArray($response['body']['executionsTime']);

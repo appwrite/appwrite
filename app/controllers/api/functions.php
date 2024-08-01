@@ -605,7 +605,7 @@ App::get('/v1/functions/:functionId/usage')
             'buildsMbSecondsTotal' => $usage[$metrics[7]]['total'],
             'buildsMbSeconds' => $usage[$metrics[7]]['data'],
             'executionsMbSeconds' => $usage[$metrics[8]]['data'],
-            'executionsMbSecondsTotal' => $usage[$metrics[8]]['total'],
+            'executionsMbSecondsTotal' => $usage[$metrics[8]]['total']
         ]), Response::MODEL_USAGE_FUNCTION);
     });
 

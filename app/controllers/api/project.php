@@ -197,6 +197,38 @@ App::get('/v1/project/usage')
             ];
         }, $dbForProject->find('functions'));
 
+        $executionsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
+            $id = $function->getId();
+            $name = $function->getAttribute('name');
+            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('functions'));
+
+        $buildsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
+            $id = $function->getId();
+            $name = $function->getAttribute('name');
+            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('functions'));
+
         // merge network inbound + outbound
         $projectBandwidth = [];
         foreach ($usage[METRIC_NETWORK_INBOUND] as $item) {
@@ -233,6 +265,8 @@ App::get('/v1/project/usage')
             'filesStorageTotal' => $total[METRIC_FILES_STORAGE],
             'deploymentsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE],
             'executionsBreakdown' => $executionsBreakdown,
+            'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
+            'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown,
             'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
             'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,

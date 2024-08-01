@@ -779,10 +779,14 @@ class UsageTest extends Scope
         $this->assertIsArray($response['body']['deployments']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
         $this->assertIsNumeric($response['body']['deploymentsStorageTotal']);
+        $this->assertIsNumeric($response['body']['buildsMbSecondsTotal']);
+        $this->assertIsNumeric($response['body']['executionsMbSecondsTotal']);
         $this->assertIsArray($response['body']['builds']);
         $this->assertIsArray($response['body']['buildsTime']);
+        $this->assertIsArray($response['body']['buildsMbSeconds']);
         $this->assertIsArray($response['body']['executions']);
         $this->assertIsArray($response['body']['executionsTime']);
+        $this->assertIsArray($response['body']['executionsMbSeconds']);
         $this->assertEquals($executions, $response['body']['executions'][array_key_last($response['body']['executions'])]['value']);
         $this->validateDates($response['body']['executions']);
         $this->assertEquals($executionTime, $response['body']['executionsTime'][array_key_last($response['body']['executionsTime'])]['value']);
