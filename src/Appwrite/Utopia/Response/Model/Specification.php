@@ -34,12 +34,6 @@ class Specification extends Model
             'default' => '',
             'example' => 's-1vcpu-512mb'
         ]);
-        $this->addRule('plan', [
-            'type' => self::TYPE_STRING,
-            'description' => 'Size plan.',
-            'default' => '',
-            'example' => 'starter'
-        ]);
     }
 
     /**

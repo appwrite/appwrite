@@ -11,6 +11,7 @@ use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\RuntimeSpecification;
+use Appwrite\Hooks\Hooks;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -202,12 +203,6 @@ App::post('/v1/functions')
 
         if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
-        }
-
-        $spec = Config::getParam('runtime-specifications')[$specification] ?? [];
-
-        if (empty($spec) || empty($spec['memory']) || empty($spec['cpus'])) {
-            throw new Exception(Exception::FUNCTION_INVALID_RUNTIME_SPECIFICATION);
         }
 
         $function = $dbForProject->createDocument('functions', new Document([
@@ -455,7 +450,7 @@ App::get('/v1/functions/specifications')
     ->groups(['api', 'functions'])
     ->desc('Get available function runtime specifications')
     ->label('scope', 'functions.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getSpecifications')
     ->label('sdk.description', '/docs/references/functions/get-specifications.md')
@@ -464,31 +459,15 @@ App::get('/v1/functions/specifications')
     ->label('sdk.response.model', Response::MODEL_SPECIFICATION_LIST)
     ->inject('response')
     ->inject('plan')
-    ->action(function (Response $response, array $plan) {
+    ->inject('hooks')
+    ->action(function (Response $response, array $plan, Hooks $hooks) {
         $allRuntimeSpecs = Config::getParam('runtime-specifications', []);
-        $plans = Config::getParam('plans', []);
 
         $runtimeSpecs = [];
-        foreach ($allRuntimeSpecs as $key => $spec) {
-            // Don't perform any billing calculations for CE
-            if (empty($plans)) {
-                $spec['enabled'] = true;
-            } else {
-                // Show plan names on specs
-                foreach ($plans as $billingPlan) {
-                    if (key_exists('runtimeSpecifications', $billingPlan) && in_array($key, $billingPlan['runtimeSpecifications'])) {
-                        if ($billingPlan['$id'] !== 'tier-0') {
-                            $spec['plan'] = $billingPlan['name'];
-                        }
-                        break;
-                    }
-                }
+        foreach ($allRuntimeSpecs as $spec) {
+            $spec['enabled'] = true;
 
-                // Check if the spec is enabled for the current plan
-                if (key_exists('runtimeSpecifications', $plan)) {
-                    $spec['enabled'] = in_array($key, $plan['runtimeSpecifications']);
-                }
-            }
+            $hooks->trigger('specificationsHandler', [$plan, &$spec]);
 
             // Only add specs that are within the limits set by environment variables
             if ($spec['cpus'] <= System::getEnv('_APP_FUNCTIONS_CPUS', 1) && $spec['memory'] <= System::getEnv('_APP_FUNCTIONS_MEMORY', 512)) {
@@ -1626,9 +1605,6 @@ App::post('/v1/functions/:functionId/executions')
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', 's-1vcpu-512mb')];
-
-        var_dump($function);
-        var_dump($spec);
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
