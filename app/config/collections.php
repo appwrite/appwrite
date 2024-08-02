@@ -1,8 +1,8 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use \Appwrite\Messaging\Status as MessagingStatus;
 use Appwrite\Functions\Status;
+use Appwrite\Messaging\Status as MessagingStatus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
