@@ -52,7 +52,7 @@ class RuntimeSpecification extends Validator
     */
     public function getDescription(): string
     {
-        return 'String must be a valid size value of ' . implode(', ', $this->getAllowedSpecifications());
+        return 'String must be a valid specification value of ' . implode(', ', $this->getAllowedSpecifications());
     }
 
     /**
