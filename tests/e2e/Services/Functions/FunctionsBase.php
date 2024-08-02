@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Functions\Status;
 use Tests\E2E\Client;
 use Utopia\CLI\Console;
 
@@ -26,7 +27,7 @@ trait FunctionsBase
 
             if (
                 $deployment['headers']['status-code'] >= 400
-                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+                || \in_array($deployment['body']['status'], [Status::READY, Status::FAILED])
             ) {
                 break;
             }
@@ -36,7 +37,7 @@ trait FunctionsBase
 
         if($checkForSuccess) {
             $this->assertEquals(200, $deployment['headers']['status-code']);
-            $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
+            $this->assertEquals(Status::READY, $deployment['body']['status'], \json_encode($deployment['body']));
         }
     }
 

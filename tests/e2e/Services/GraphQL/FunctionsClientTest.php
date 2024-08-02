@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
+use Appwrite\Functions\Status;
 use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -137,8 +138,8 @@ class FunctionsClientTest extends Scope
             $deployment = $deployment['body']['data']['functionsGetDeployment'];
 
             if (
-                $deployment['status'] === 'ready'
-                || $deployment['status'] === 'failed'
+                $deployment['status'] === Status::READY
+                || $deployment['status'] === Status::FAILED
             ) {
                 break;
             }
@@ -146,7 +147,7 @@ class FunctionsClientTest extends Scope
             \sleep(1);
         }
 
-        $this->assertEquals('ready', $deployment['status']);
+        $this->assertEquals(Status::READY, $deployment['status']);
 
         return $deployment;
     }

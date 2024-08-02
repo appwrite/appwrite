@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Functions\Status;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
@@ -3618,7 +3619,7 @@ $projectCollections = array_merge([
                 'size' => 256,
                 'signed' => true,
                 'required' => true,
-                'default' => 'processing',
+                'default' => Status::BUILDING,
                 'array' => false,
                 'filters' => [],
             ],

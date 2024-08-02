@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
+use Appwrite\Functions\Status;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
@@ -167,7 +168,7 @@ class Builds extends Action
                 'startTime' => $startTime,
                 'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
-                'status' => 'processing',
+                'status' => Status::BUILDING,
                 'path' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
@@ -334,15 +335,15 @@ class Builds extends Action
 
                 $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
 
-                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction(Status::BUILDING, $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
 
             /** Request the executor to build the code... */
-            $build->setAttribute('status', 'building');
+            $build->setAttribute('status', Status::BUILDING);
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction(Status::BUILDING, $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
 
             /** Trigger Webhook */
@@ -496,13 +497,13 @@ class Builds extends Action
             $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
-            $build->setAttribute('status', 'ready');
+            $build->setAttribute('status', Status::READY);
             $build->setAttribute('path', $response['path']);
             $build->setAttribute('size', $response['size']);
             $build->setAttribute('logs', $response['output']);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction(Status::READY, $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
 
             Console::success("Build id: $buildId created");
@@ -539,11 +540,11 @@ class Builds extends Action
             $durationEnd = \microtime(true);
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
-            $build->setAttribute('status', 'failed');
+            $build->setAttribute('status', Status::FAILED);
             $build->setAttribute('logs', $th->getMessage() . "\n" . $th->getFile() . ':' . $th->getLine() . "\n" . $th->getTraceAsString());
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction(Status::FAILED, $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
         } finally {
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
@@ -566,13 +567,13 @@ class Builds extends Action
             );
 
             /** Trigger usage queue */
-            if ($build->getAttribute('status') === 'ready') {
+            if ($build->getAttribute('status') === Status::READY) {
                 $queueForUsage
                     ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$build->getAttribute('duration', 0) * 1000)
                     ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
                     ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$build->getAttribute('duration', 0) * 1000);
-            } elseif ($build->getAttribute('status') === 'failed') {
+            } elseif ($build->getAttribute('status') === Status::FAILED) {
                 $queueForUsage
                     ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$build->getAttribute('duration', 0) * 1000)
@@ -621,16 +622,16 @@ class Builds extends Action
 
         if (!empty($providerCommitHash)) {
             $message = match ($status) {
-                'ready' => 'Build succeeded.',
-                'failed' => 'Build failed.',
-                'processing' => 'Building...',
+                Status::READY => 'Build ready.',
+                Status::FAILED => 'Build failed.',
+                Status::BUILDING => 'Building...',
                 default => $status
             };
 
             $state = match ($status) {
-                'ready' => 'success',
-                'failed' => 'failure',
-                'processing' => 'pending',
+                Status::READY => 'success.',
+                Status::FAILED => 'failure.',
+                Status::BUILDING => 'pending',
                 default => $status
             };
 

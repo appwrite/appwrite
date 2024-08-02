@@ -10,6 +10,7 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\Status;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Task\Validator\Cron;
@@ -965,7 +966,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             throw new Exception(Exception::BUILD_NOT_FOUND);
         }
 
-        if ($build->getAttribute('status') !== 'ready') {
+        if ($build->getAttribute('status') !== Status::READY) {
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
@@ -1319,7 +1320,7 @@ App::get('/v1/functions/:functionId/deployments')
 
         foreach ($results as $result) {
             $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId', ''));
-            $result->setAttribute('status', $build->getAttribute('status', 'processing'));
+            $result->setAttribute('status', $build->getAttribute('status', Status::BUILDING));
             $result->setAttribute('buildLogs', $build->getAttribute('logs', ''));
             $result->setAttribute('buildTime', $build->getAttribute('duration', 0));
             $result->setAttribute('size', $result->getAttribute('size', 0) + $build->getAttribute('size', 0));
@@ -1365,7 +1366,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         }
 
         $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
-        $deployment->setAttribute('status', $build->getAttribute('status', 'waiting'));
+        $deployment->setAttribute('status', $build->getAttribute('status', Status::QUEUED));
         $deployment->setAttribute('buildLogs', $build->getAttribute('logs', ''));
         $deployment->setAttribute('buildTime', $build->getAttribute('duration', 0));
         $deployment->setAttribute('size', $deployment->getAttribute('size', 0) + $build->getAttribute('size', 0));
@@ -1550,7 +1551,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
             $deployment->setAttribute('buildInternalId', $build->getInternalId());
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
         } else {
-            if (\in_array($build->getAttribute('status'), ['ready', 'failed'])) {
+            if (\in_array($build->getAttribute('status'), [Status::READY, Status::FAILED])) {
                 throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
             }
 
@@ -1643,7 +1644,7 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception(Exception::BUILD_NOT_FOUND);
         }
 
-        if ($build->getAttribute('status') !== 'ready') {
+        if ($build->getAttribute('status') !== Status::READY) {
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
@@ -1712,10 +1713,10 @@ App::post('/v1/functions/:functionId/executions')
 
         $executionId = ID::unique();
 
-        $status = $async ? 'waiting' : 'processing';
+        $status = $async ? Status::QUEUED : Status::BUILDING;
 
         if(!is_null($scheduledAt)) {
-            $status = 'scheduled';
+            $status = Status::SCHEDULED;
         }
 
         $execution = new Document([
@@ -1867,7 +1868,7 @@ App::post('/v1/functions/:functionId/executions')
             }
 
             /** Update execution status */
-            $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
+            $status = $executionResponse['statusCode'] >= 400 ? Status::FAILED : Status::SUCCESSFUL;
             $execution->setAttribute('status', $status);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
@@ -1879,7 +1880,7 @@ App::post('/v1/functions/:functionId/executions')
 
             $execution
                 ->setAttribute('duration', $durationEnd - $durationStart)
-                ->setAttribute('status', 'failed')
+                ->setAttribute('status', Status::FAILED)
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
             Console::error($th->getMessage());
@@ -2084,7 +2085,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
         }
         $status = $execution->getAttribute('status');
 
-        if (!in_array($status, ['completed', 'failed', 'scheduled'])) {
+        if (!in_array($status, [Status::SUCCESSFUL, Status::FAILED, Status::SCHEDULED])) {
             throw new Exception(Exception::EXECUTION_IN_PROGRESS);
         }
 
@@ -2092,7 +2093,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove execution from DB');
         }
 
-        if ($status === 'scheduled') {
+        if ($status === Status::SCHEDULED) {
             $schedule = $dbForConsole->findOne('schedules', [
                 Query::equal('resourceId', [$execution->getId()]),
                 Query::equal('resourceType', [ScheduleExecutions::getSupportedResource()]),
