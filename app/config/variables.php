@@ -144,9 +144,18 @@ return [
             ],
             [
                 'name' => '_APP_SYSTEM_EMAIL_ADDRESS',
-                'description' => 'This is the sender email address that will appear on email messages sent to developers from the Appwrite console. The default value is \'team@appwrite.io\'. You should choose an email address that is allowed to be used from your SMTP server to avoid the server email ending in the users\' SPAM folders.',
+                'description' => 'This is the sender email address that will appear on email messages sent to developers from the Appwrite console. The default value is \'noreplay@appwrite.io\'. You should choose an email address that is allowed to be used from your SMTP server to avoid the server email ending in the users\' SPAM folders.',
                 'introduction' => '0.7.0',
-                'default' => 'team@appwrite.io',
+                'default' => 'noreplay@appwrite.io',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SYSTEM_TEAM_EMAIL',
+                'description' => 'This is the sender email address that will appear in the generated specs. The default value is \'teams@appwrite.io\'.',
+                'introduction' => '1.6.0',
+                'default' => 'temas@appwrite.io',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
