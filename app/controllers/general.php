@@ -316,6 +316,10 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 /** @var Document $execution */
                 $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
             }
+
+            $queueForUsage
+                ->setProject($project)
+                ->trigger();
         }
 
         $execution->setAttribute('logs', '');
