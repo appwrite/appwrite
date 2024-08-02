@@ -18,4 +18,13 @@ class Status
     public const SUCCESSFUL = 'successful';
 
 
+    public static function getV18status(string $status): string
+    {
+        return match ($status) {
+            self::QUEUED => 'waiting',
+            self::EXECUTING => 'processing',
+            self::SUCCESSFUL => 'completed',
+            default => $status
+        };
+    }
 }

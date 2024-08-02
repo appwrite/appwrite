@@ -261,7 +261,7 @@ class Databases extends Action
                     }
 
                     if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', Status::FAILED));
+                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', Status::DELETING_FAILED));
                         throw new DatabaseException('Failed to delete Relationship');
                     }
                 } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
@@ -287,13 +287,13 @@ class Databases extends Action
             $dbForProject->updateDocument(
                 'attributes',
                 $attribute->getId(),
-                $attribute->setAttribute('status', Status::FAILED)
+                $attribute->setAttribute('status', Status::DELETING_FAILED)
             );
             if (!$relatedAttribute->isEmpty()) {
                 $dbForProject->updateDocument(
                     'attributes',
                     $relatedAttribute->getId(),
-                    $relatedAttribute->setAttribute('status', Status::FAILED)
+                    $relatedAttribute->setAttribute('status', Status::DELETING_FAILED)
                 );
             }
         } finally {
@@ -470,7 +470,7 @@ class Databases extends Action
             $dbForProject->updateDocument(
                 'indexes',
                 $index->getId(),
-                $index->setAttribute('status', Status::FAILED)
+                $index->setAttribute('status', Status::DELETING_FAILED)
             );
         } finally {
             $this->trigger($database, $collection, $index, $project, $projectId, $events);

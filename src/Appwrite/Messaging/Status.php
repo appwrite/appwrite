@@ -24,4 +24,13 @@ class Status
      * Sent with some errors
      */
     public const FAILED = 'failed';
+
+    public static function getV18status(string $status): string
+    {
+        return match ($status) {
+            self::DELIVERED => 'sent',
+            self::SENDING => 'processing',
+            default => $status
+        };
+    }
 }
