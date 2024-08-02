@@ -15,11 +15,11 @@ class Status
     /**
      * Picked up by the worker and starting to send
      */
-    public const PROCESSING = 'processing';
+    public const SENDING = 'sending';
     /**
      * Sent without errors
      */
-    public const SENT = 'sent';
+    public const DELIVERED = 'delivered';
     /**
      * Sent with some errors
      */

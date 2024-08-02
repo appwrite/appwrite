@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Messaging\Status;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\DateTime;
@@ -96,8 +97,8 @@ class Message extends Model
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Status of delivery.',
-                'default' => 'draft',
-                'example' => 'Message status can be one of the following: draft, processing, scheduled, sent, or failed.',
+                'default' => Status::DRAFT,
+                'example' => 'Message status can be one of the following: ' . Status::DRAFT . ',' . Status::SCHEDULED . ',' . Status::SENDING . ',' . Status::DELIVERED . ' or '.Status::FAILED.'.',
             ]);
     }
 

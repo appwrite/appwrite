@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use \Appwrite\Messaging\Status as MessagingStatus;
 use Appwrite\Functions\Status;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -1822,7 +1823,7 @@ $commonCollections = [
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
                 'required' => true,
-                'default' => 'processing',
+                'default' => MessagingStatus::SENDING,
                 'array' => false,
                 'filters' => [],
             ],

@@ -315,7 +315,7 @@ class Messaging extends Action
         if (\count($message->getAttribute('deliveryErrors')) > 0) {
             $message->setAttribute('status', MessageStatus::FAILED);
         } else {
-            $message->setAttribute('status', MessageStatus::SENT);
+            $message->setAttribute('status', MessageStatus::DELIVERED);
         }
 
         $message->removeAttribute('to');

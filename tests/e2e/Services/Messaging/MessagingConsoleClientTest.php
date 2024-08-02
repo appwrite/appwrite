@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Messaging;
 
+use Appwrite\Messaging\Status;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -334,7 +335,7 @@ class MessagingConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'messageId' => ID::unique(),
-            'status' => 'draft',
+            'status' => Status::DRAFT,
             'topics' => [ID::unique()],
             'subject' => 'Khali beats Undertaker',
             'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
