@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Database\Status;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
@@ -24,7 +25,7 @@ class Index extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Index status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`',
+                'description' => 'Index status. Possible values: `'.Status::QUEUED.'`,`'.Status::CREATING.'`,`'.Status::DELETING.'`,`'.Status::AVAILABLE.'`, , or `'.Status::FAILED.'`',
                 'default' => '',
                 'example' => 'available',
             ])

@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Realtime;
 
+use Appwrite\Database\Status;
 use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -209,7 +210,7 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
-        $this->assertEquals('processing', $response['data']['payload']['status']);
+        $this->assertEquals(Status::CREATING, $response['data']['payload']['status']);
 
         $response = json_decode($client->receive(), true);
 
@@ -229,7 +230,7 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
-        $this->assertEquals('available', $response['data']['payload']['status']);
+        $this->assertEquals(Status::AVAILABLE, $response['data']['payload']['status']);
 
         $client->close();
 
@@ -294,7 +295,7 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertContains("databases.{$databaseId}.collections.*.indexes.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
-        $this->assertEquals('processing', $response['data']['payload']['status']);
+        $this->assertEquals(Status::CREATING, $response['data']['payload']['status']);
 
         $response = json_decode($client->receive(), true);
 
@@ -312,7 +313,7 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertContains("databases.{$databaseId}.collections.*.indexes.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
-        $this->assertEquals('available', $response['data']['payload']['status']);
+        $this->assertEquals(Status::AVAILABLE, $response['data']['payload']['status']);
 
         $client->close();
 
