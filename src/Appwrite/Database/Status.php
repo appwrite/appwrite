@@ -6,7 +6,6 @@ class Status
 {
     public const QUEUED = 'queued';
     public const FAILED = 'failed';
-    public const DELETING_FAILED = 'failed';
     public const AVAILABLE = 'available';
     public const DELETING = 'deleting';
     public const CREATING = 'creating';
@@ -15,7 +14,6 @@ class Status
     {
         return match ($status) {
             self::CREATING => 'processing',
-            self::DELETING_FAILED => 'stuck',
             default => $status
         };
     }
