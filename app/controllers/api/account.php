@@ -3717,7 +3717,7 @@ App::put('/v1/account/mfa/authenticators/:type')
 
             $body
                 ->setParam('{{buttonText}}', $locale->getText("emails.mfaCreated.buttonText"))
-                ->setParam('{{redirect}}', App::getEnv('_APP_DOMAIN') . '/console/account')
+                ->setParam('{{redirect}}', 'http://' . App::getEnv('_APP_DOMAIN') . '/console/account')
                 ->setParam('{{body}}', $locale->getText("emails.mfaCreated.body"), escapeHtml: false)
                 ->setParam('{{project}}', $project->getAttribute('name'))
                 ->setParam('{{user}}', $user->getAttribute('name'));
@@ -3986,7 +3986,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
 
             $body
                 ->setParam('{{buttonText}}', $locale->getText("emails.mfaRemoved.buttonText"))
-                ->setParam('{{redirect}}', App::getEnv('_APP_DOMAIN') . '/console/account')
+                ->setParam('{{redirect}}', 'http://' . App::getEnv('_APP_DOMAIN') . '/console/account')
                 ->setParam('{{body}}', $locale->getText("emails.mfaRemoved.body"), escapeHtml: false)
                 ->setParam('{{project}}', $project->getAttribute('name'))
                 ->setParam('{{user}}', $user->getAttribute('name'));
