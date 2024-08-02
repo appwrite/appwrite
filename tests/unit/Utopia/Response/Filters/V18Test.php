@@ -57,8 +57,10 @@ class V18Test extends TestCase
             'remove scheduledAt' => [
                 [
                     'scheduledAt' => '2024-07-13T09:00:00.000Z',
+                    'status' => 'queued'
                 ],
                 [
+                    'status' => 'waiting'
                 ]
             ]
         ];
