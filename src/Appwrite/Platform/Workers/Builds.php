@@ -387,6 +387,13 @@ class Builds extends Action
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
+            $cpus = $spec['cpus'] ?? 1;
+            $memory = max($spec['memory'] ?? 1024, 1024);
+
+            if ($memory < 1024) {
+                $memory = 1024;
+            }
+
             // Appwrite vars
             $vars = \array_merge($vars, [
                 'APPWRITE_FUNCTION_ID' => $function->getId(),
@@ -395,8 +402,8 @@ class Builds extends Action
                 'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
                 'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
                 'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-                'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? 1,
-                'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? 512
+                'APPWRITE_FUNCTION_CPUS' => $cpus,
+                'APPWRITE_FUNCTION_MEMORY' => $memory
             ]);
 
             $command = $deployment->getAttribute('commands', '');
@@ -405,7 +412,7 @@ class Builds extends Action
             $err = null;
 
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, $spec, &$err) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, $cpus, $memory, &$err) {
                     try {
                         $version = $function->getAttribute('version', 'v2');
                         $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
@@ -416,8 +423,8 @@ class Builds extends Action
                             source: $source,
                             image: $runtime['image'],
                             version: $version,
-                            cpus: $spec['cpus'] ?? 1,
-                            memory: $spec['memory'] ?? 512,
+                            cpus: $cpus,
+                            memory: $memory,
                             remove: true,
                             entrypoint: $deployment->getAttribute('entrypoint'),
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",

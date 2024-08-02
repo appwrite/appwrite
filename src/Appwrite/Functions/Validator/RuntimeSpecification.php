@@ -26,7 +26,7 @@ class RuntimeSpecification extends Validator
     {
         $specifications = Config::getParam('runtime-specifications', []);
 
-        $allowedSpecficiations = [];
+        $allowedSpecifications = [];
 
         foreach ($specifications as $size => $values) {
             if ($values['cpus'] <= System::getEnv('_APP_FUNCTIONS_CPUS', 1) && $values['memory'] <= System::getEnv('_APP_FUNCTIONS_MEMORY', 512)) {
