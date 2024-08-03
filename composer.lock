@@ -1720,16 +1720,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.50.2",
+            "version": "0.50.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "c712d1f6c8ec37886a7a1ad4d60a8cd75dec00aa"
+                "reference": "1745147bef29a9bddf5dd03fd9174ec29e2c26f0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/c712d1f6c8ec37886a7a1ad4d60a8cd75dec00aa",
-                "reference": "c712d1f6c8ec37886a7a1ad4d60a8cd75dec00aa",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/1745147bef29a9bddf5dd03fd9174ec29e2c26f0",
+                "reference": "1745147bef29a9bddf5dd03fd9174ec29e2c26f0",
                 "shasum": ""
             },
             "require": {
@@ -1770,9 +1770,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.50.2"
+                "source": "https://github.com/utopia-php/database/tree/0.50.1"
             },
-            "time": "2024-07-31T10:12:19+00:00"
+            "time": "2024-07-26T11:56:05+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -1922,16 +1922,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.7",
+            "version": "0.33.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "78d293d99a262bd63ece750bbf989c7e0643b825"
+                "reference": "8fe57da0cecd57e3b17cd395b4a666a24f4c07a6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/78d293d99a262bd63ece750bbf989c7e0643b825",
-                "reference": "78d293d99a262bd63ece750bbf989c7e0643b825",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/8fe57da0cecd57e3b17cd395b4a666a24f4c07a6",
+                "reference": "8fe57da0cecd57e3b17cd395b4a666a24f4c07a6",
                 "shasum": ""
             },
             "require": {
@@ -1961,9 +1961,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.7"
+                "source": "https://github.com/utopia-php/http/tree/0.33.6"
             },
-            "time": "2024-08-01T14:01:04+00:00"
+            "time": "2024-03-21T18:10:57+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -3158,16 +3158,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.17.1",
+            "version": "v1.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "b5b6f716db298671c1dfea5b1082ec2c0ae7064f"
+                "reference": "4dba80c1de4b81dc4c4fb10ea6f4781495eb29f5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/b5b6f716db298671c1dfea5b1082ec2c0ae7064f",
-                "reference": "b5b6f716db298671c1dfea5b1082ec2c0ae7064f",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/4dba80c1de4b81dc4c4fb10ea6f4781495eb29f5",
+                "reference": "4dba80c1de4b81dc4c4fb10ea6f4781495eb29f5",
                 "shasum": ""
             },
             "require": {
@@ -3220,7 +3220,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2024-08-01T09:06:33+00:00"
+            "time": "2024-07-23T16:40:20+00:00"
         },
         {
             "name": "matthiasmullie/minify",
