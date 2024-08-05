@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
+use Appwrite\Messaging\Status;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -706,7 +707,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
-                'status' => 'draft',
+                'status' => Status::DRAFT,
                 'topics' => [$email['topics'][0]],
                 'subject' => 'Khali beats Undertaker',
                 'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -725,7 +726,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => $email['body']['data']['messagingCreateEmail']['_id'],
-                'status' => 'processing',
+                'status' => Status::SENDING,
             ],
         ];
         $email = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -910,7 +911,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
-                'status' => 'draft',
+                'status' => Status::DRAFT,
                 'topics' => [$sms['topics'][0]],
                 'content' => '345463',
             ],
@@ -928,7 +929,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => $sms['body']['data']['messagingCreateSMS']['_id'],
-                'status' => 'processing',
+                'status' => Status::SENDING,
             ],
         ];
         $sms = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -1116,7 +1117,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
-                'status' => 'draft',
+                'status' => Status::DRAFT,
                 'topics' => [$push['topics'][0]],
                 'title' => 'Push Notification Title',
                 'body' => 'Push Notifiaction Body',
@@ -1135,7 +1136,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => $push['body']['data']['messagingCreatePushNotification']['_id'],
-                'status' => 'processing',
+                'status' => Status::SENDING,
             ],
         ];
         $push = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([

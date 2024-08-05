@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Databases;
 
+use Appwrite\Database\Status;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
@@ -789,7 +790,7 @@ trait DatabasesBase
         $this->assertEquals(200, $stringResponse['headers']['status-code']);
         $this->assertEquals($string['body']['key'], $stringResponse['body']['key']);
         $this->assertEquals($string['body']['type'], $stringResponse['body']['type']);
-        $this->assertEquals('available', $stringResponse['body']['status']);
+        $this->assertEquals(Status::AVAILABLE, $stringResponse['body']['status']);
         $this->assertEquals($string['body']['required'], $stringResponse['body']['required']);
         $this->assertEquals($string['body']['array'], $stringResponse['body']['array']);
         $this->assertEquals(16, $stringResponse['body']['size']);
@@ -798,7 +799,7 @@ trait DatabasesBase
         $this->assertEquals(200, $emailResponse['headers']['status-code']);
         $this->assertEquals($email['body']['key'], $emailResponse['body']['key']);
         $this->assertEquals($email['body']['type'], $emailResponse['body']['type']);
-        $this->assertEquals('available', $emailResponse['body']['status']);
+        $this->assertEquals(Status::AVAILABLE, $emailResponse['body']['status']);
         $this->assertEquals($email['body']['required'], $emailResponse['body']['required']);
         $this->assertEquals($email['body']['array'], $emailResponse['body']['array']);
         $this->assertEquals($email['body']['format'], $emailResponse['body']['format']);
@@ -807,7 +808,7 @@ trait DatabasesBase
         $this->assertEquals(200, $enumResponse['headers']['status-code']);
         $this->assertEquals($enum['body']['key'], $enumResponse['body']['key']);
         $this->assertEquals($enum['body']['type'], $enumResponse['body']['type']);
-        $this->assertEquals('available', $enumResponse['body']['status']);
+        $this->assertEquals(Status::AVAILABLE, $enumResponse['body']['status']);
         $this->assertEquals($enum['body']['required'], $enumResponse['body']['required']);
         $this->assertEquals($enum['body']['array'], $enumResponse['body']['array']);
         $this->assertEquals($enum['body']['format'], $enumResponse['body']['format']);
@@ -817,7 +818,7 @@ trait DatabasesBase
         $this->assertEquals(200, $ipResponse['headers']['status-code']);
         $this->assertEquals($ip['body']['key'], $ipResponse['body']['key']);
         $this->assertEquals($ip['body']['type'], $ipResponse['body']['type']);
-        $this->assertEquals('available', $ipResponse['body']['status']);
+        $this->assertEquals(Status::AVAILABLE, $ipResponse['body']['status']);
         $this->assertEquals($ip['body']['required'], $ipResponse['body']['required']);
         $this->assertEquals($ip['body']['array'], $ipResponse['body']['array']);
         $this->assertEquals($ip['body']['format'], $ipResponse['body']['format']);
@@ -826,7 +827,7 @@ trait DatabasesBase
         $this->assertEquals(200, $urlResponse['headers']['status-code']);
         $this->assertEquals($url['body']['key'], $urlResponse['body']['key']);
         $this->assertEquals($url['body']['type'], $urlResponse['body']['type']);
-        $this->assertEquals('available', $urlResponse['body']['status']);
+        $this->assertEquals(Status::AVAILABLE, $urlResponse['body']['status']);
         $this->assertEquals($url['body']['required'], $urlResponse['body']['required']);
         $this->assertEquals($url['body']['array'], $urlResponse['body']['array']);
         $this->assertEquals($url['body']['format'], $urlResponse['body']['format']);
@@ -835,7 +836,7 @@ trait DatabasesBase
         $this->assertEquals(200, $integerResponse['headers']['status-code']);
         $this->assertEquals($integer['body']['key'], $integerResponse['body']['key']);
         $this->assertEquals($integer['body']['type'], $integerResponse['body']['type']);
-        $this->assertEquals('available', $integerResponse['body']['status']);
+        $this->assertEquals(Status::AVAILABLE, $integerResponse['body']['status']);
         $this->assertEquals($integer['body']['required'], $integerResponse['body']['required']);
         $this->assertEquals($integer['body']['array'], $integerResponse['body']['array']);
         $this->assertEquals($integer['body']['min'], $integerResponse['body']['min']);
@@ -845,7 +846,7 @@ trait DatabasesBase
         $this->assertEquals(200, $floatResponse['headers']['status-code']);
         $this->assertEquals($float['body']['key'], $floatResponse['body']['key']);
         $this->assertEquals($float['body']['type'], $floatResponse['body']['type']);
-        $this->assertEquals('available', $floatResponse['body']['status']);
+        $this->assertEquals(Status::AVAILABLE, $floatResponse['body']['status']);
         $this->assertEquals($float['body']['required'], $floatResponse['body']['required']);
         $this->assertEquals($float['body']['array'], $floatResponse['body']['array']);
         $this->assertEquals($float['body']['min'], $floatResponse['body']['min']);
@@ -855,7 +856,7 @@ trait DatabasesBase
         $this->assertEquals(200, $booleanResponse['headers']['status-code']);
         $this->assertEquals($boolean['body']['key'], $booleanResponse['body']['key']);
         $this->assertEquals($boolean['body']['type'], $booleanResponse['body']['type']);
-        $this->assertEquals('available', $booleanResponse['body']['status']);
+        $this->assertEquals(Status::AVAILABLE, $booleanResponse['body']['status']);
         $this->assertEquals($boolean['body']['required'], $booleanResponse['body']['required']);
         $this->assertEquals($boolean['body']['array'], $booleanResponse['body']['array']);
         $this->assertEquals($boolean['body']['default'], $booleanResponse['body']['default']);
@@ -863,7 +864,7 @@ trait DatabasesBase
         $this->assertEquals(200, $datetimeResponse['headers']['status-code']);
         $this->assertEquals($datetime['body']['key'], $datetimeResponse['body']['key']);
         $this->assertEquals($datetime['body']['type'], $datetimeResponse['body']['type']);
-        $this->assertEquals('available', $datetimeResponse['body']['status']);
+        $this->assertEquals(Status::AVAILABLE, $datetimeResponse['body']['status']);
         $this->assertEquals($datetime['body']['required'], $datetimeResponse['body']['required']);
         $this->assertEquals($datetime['body']['array'], $datetimeResponse['body']['array']);
         $this->assertEquals($datetime['body']['default'], $datetimeResponse['body']['default']);
@@ -871,7 +872,7 @@ trait DatabasesBase
         $this->assertEquals(200, $relationshipResponse['headers']['status-code']);
         $this->assertEquals($relationship['body']['key'], $relationshipResponse['body']['key']);
         $this->assertEquals($relationship['body']['type'], $relationshipResponse['body']['type']);
-        $this->assertEquals('available', $relationshipResponse['body']['status']);
+        $this->assertEquals(Status::AVAILABLE, $relationshipResponse['body']['status']);
         $this->assertEquals($relationship['body']['required'], $relationshipResponse['body']['required']);
         $this->assertEquals($relationship['body']['array'], $relationshipResponse['body']['array']);
         $this->assertEquals($relationship['body']['relatedCollection'], $relationshipResponse['body']['relatedCollection']);
@@ -1343,7 +1344,7 @@ trait DatabasesBase
         $this->assertEquals($releaseWithDate1['body']['key'], $movies['body']['indexes'][2]['key']);
         $this->assertEquals($releaseWithDate2['body']['key'], $movies['body']['indexes'][3]['key']);
         foreach ($movies['body']['indexes'] as $index) {
-            $this->assertEquals('available', $index['status']);
+            $this->assertEquals(Status::AVAILABLE, $index['status']);
         }
 
         return $data;
@@ -3785,7 +3786,7 @@ trait DatabasesBase
         $this->assertEquals(202, $relation['headers']['status-code']);
         $this->assertEquals('library', $relation['body']['key']);
         $this->assertEquals('relationship', $relation['body']['type']);
-        $this->assertEquals('processing', $relation['body']['status']);
+        $this->assertEquals(Status::CREATING, $relation['body']['status']);
 
         $attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes', array_merge([
             'content-type' => 'application/json',
@@ -3809,7 +3810,7 @@ trait DatabasesBase
         ]));
 
         $this->assertEquals(200, $attribute['headers']['status-code']);
-        $this->assertEquals('available', $attribute['body']['status']);
+        $this->assertEquals(Status::AVAILABLE, $attribute['body']['status']);
         $this->assertEquals('library', $attribute['body']['key']);
         $this->assertEquals('relationship', $attribute['body']['type']);
         $this->assertEquals(false, $attribute['body']['required']);
@@ -3993,7 +3994,7 @@ trait DatabasesBase
         ]));
 
         $this->assertEquals(200, $attribute['headers']['status-code']);
-        $this->assertEquals('available', $attribute['body']['status']);
+        $this->assertEquals(Status::AVAILABLE, $attribute['body']['status']);
         $this->assertEquals('libraries', $attribute['body']['key']);
         $this->assertEquals('relationship', $attribute['body']['type']);
         $this->assertEquals(false, $attribute['body']['required']);
@@ -4078,7 +4079,7 @@ trait DatabasesBase
         ]));
 
         $this->assertEquals(200, $attribute['headers']['status-code']);
-        $this->assertEquals('available', $attribute['body']['status']);
+        $this->assertEquals(Status::AVAILABLE, $attribute['body']['status']);
         $this->assertEquals('libraries', $attribute['body']['key']);
         $this->assertEquals('relationship', $attribute['body']['type']);
         $this->assertEquals(false, $attribute['body']['required']);

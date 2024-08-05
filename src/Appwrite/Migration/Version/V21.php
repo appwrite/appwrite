@@ -2,6 +2,9 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Database\Status as DatabaseStatus;
+use Appwrite\Functions\Status as FunctionStatus;
+use Appwrite\Messaging\Status as MessagingStatus;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
@@ -173,6 +176,41 @@ class V21 extends Migration
 
                 // Add size attribute
                 $document->setAttribute('size', 's-1vcpu-512m');
+                break;
+            case 'executions':
+                $status = $document->getAttribute('status');
+
+                $status = match ($status) {
+                    'waiting' => FunctionStatus::QUEUED,
+                    'processing' => FunctionStatus::EXECUTING,
+                    'completed' => FunctionStatus::SUCCESSFUL,
+                    default => $status
+                };
+
+                $document->setAttribute('status', $status);
+                break;
+            case 'messages':
+                $status = $document->getAttribute('status');
+
+                $status = match ($status) {
+                    'sent' => MessagingStatus::DELIVERED,
+                    'processing' => MessagingStatus::SENDING,
+                    default => $status
+                };
+
+                $document->setAttribute('status', $status);
+                break;
+            case 'attributes':
+                $status = $document->getAttribute('status');
+
+                $status = match ($status) {
+                    'processing' => DatabaseStatus::CREATING,
+                    'stuck' => DatabaseStatus::FAILED,
+                    default => $status
+                };
+
+                $document->setAttribute('status', $status);
+                break;
         }
 
         return $document;

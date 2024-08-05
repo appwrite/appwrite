@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Functions\Status;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\DateTime;
@@ -51,9 +52,9 @@ class Execution extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, or `failed`.',
+                'description' => 'The status of the function execution. Possible values can be: `'.Status::QUEUED.'`,`'.Status::EXECUTING.'`,`'.Status::SUCCESSFUL.'`,`'.Status::CANCELLED.'`, or `'.Status::FAILED.'`.',
                 'default' => '',
-                'example' => 'processing',
+                'example' => Status::EXECUTING,
             ])
             ->addRule('requestMethod', [
                 'type' => self::TYPE_STRING,

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Vcs;
 
+use Appwrite\Functions\Status;
 use Utopia\Database\Document;
 use Utopia\System\System;
 
@@ -76,9 +77,9 @@ class Comment
             $hostname = System::getEnv('_APP_DOMAIN');
 
             foreach ($project['functions'] as $functionId => $function) {
-                if ($function['status'] === 'waiting' || $function['status'] === 'processing' || $function['status'] === 'building') {
+                if ($function['status'] == Status::QUEUED || $function['status'] === Status::BUILDING) {
                     $text .= "**Your function deployment is in progress. Please check back in a few minutes for the updated status.**\n\n";
-                } elseif ($function['status'] === 'ready') {
+                } elseif ($function['status'] === Status::READY) {
                     $text .= "**Your function has been successfully deployed.**\n\n";
                 } else {
                     $text .= "**Your function deployment has failed. Please check the logs for more details and retry.**\n\n";
@@ -89,7 +90,7 @@ class Comment
                 $text .= "| :- | :-  | :-  | :- |\n";
 
                 $generateImage = function (string $status) use ($protocol, $hostname) {
-                    $extention = $status === 'building' ? 'gif' : 'png';
+                    $extention = $status === Status::BUILDING ? 'gif' : 'png';
                     $imagesUrl = $protocol . '://' . $hostname . '/images/vcs/';
                     $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imagesUrl . 'status-' . $status . '-dark.' . $extention . '"><img alt="' . $status . '" height="25" align="center" src="' . $imagesUrl . 'status-' . $status . '-light.' . $extention . '"></picture>';
 
@@ -97,11 +98,10 @@ class Comment
                 };
 
                 $status = match ($function['status']) {
-                    'waiting' => $generateImage('waiting') . ' Waiting to build',
-                    'processing' => $generateImage('processing') . ' Processing',
-                    'building' => $generateImage('building') . ' Building',
-                    'ready' => $generateImage('ready') . ' Ready',
-                    'failed' => $generateImage('failed') . ' Failed',
+                    Status::QUEUED => $generateImage(Status::QUEUED) . ' Queued',
+                    Status::BUILDING => $generateImage(Status::BUILDING) . ' Building',
+                    Status::READY => $generateImage(Status::READY) . ' Ready',
+                    Status::FAILED => $generateImage(Status::FAILED) . ' Failed',
                 };
 
                 if ($function['action']['type'] === 'logs') {

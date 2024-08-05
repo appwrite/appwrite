@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Database\Status;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
@@ -131,7 +132,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             'collectionInternalId' => $collection->getInternalId(),
             'collectionId' => $collectionId,
             'type' => $type,
-            'status' => 'processing', // processing, available, failed, deleting, stuck
+            'status' => Status::CREATING,
             'size' => $size,
             'required' => $required,
             'signed' => $signed,
@@ -173,7 +174,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
                 'collectionInternalId' => $relatedCollection->getInternalId(),
                 'collectionId' => $relatedCollection->getId(),
                 'type' => $type,
-                'status' => 'processing', // processing, available, failed, deleting, stuck
+                'status' => Status::CREATING,
                 'size' => $size,
                 'required' => $required,
                 'signed' => $signed,
@@ -254,7 +255,7 @@ function updateAttribute(
         throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
     }
 
-    if ($attribute->getAttribute('status') !== 'available') {
+    if ($attribute->getAttribute('status') !== Status::AVAILABLE) {
         throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE);
     }
 
@@ -2306,8 +2307,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         }
 
         // Only update status if removing available attribute
-        if ($attribute->getAttribute('status') === 'available') {
-            $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
+        if ($attribute->getAttribute('status') === Status::AVAILABLE) {
+            $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', Status::DELETING));
         }
 
         $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
@@ -2328,8 +2329,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
                     throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
                 }
 
-                if ($relatedAttribute->getAttribute('status') === 'available') {
-                    $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'deleting'));
+                if ($relatedAttribute->getAttribute('status') === Status::AVAILABLE) {
+                    $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', Status::DELETING));
                 }
 
                 $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
@@ -2430,7 +2431,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         $oldAttributes[] = [
             'key' => '$id',
             'type' => Database::VAR_STRING,
-            'status' => 'available',
+            'status' => Status::AVAILABLE,
             'required' => true,
             'array' => false,
             'default' => null,
@@ -2440,7 +2441,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         $oldAttributes[] = [
             'key' => '$createdAt',
             'type' => Database::VAR_DATETIME,
-            'status' => 'available',
+            'status' => Status::AVAILABLE,
             'signed' => false,
             'required' => false,
             'array' => false,
@@ -2451,7 +2452,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         $oldAttributes[] = [
             'key' => '$updatedAt',
             'type' => Database::VAR_DATETIME,
-            'status' => 'available',
+            'status' => Status::AVAILABLE,
             'signed' => false,
             'required' => false,
             'array' => false,
@@ -2480,7 +2481,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             }
 
             // ensure attribute is available
-            if ($attributeStatus !== 'available') {
+            if ($attributeStatus !== Status::AVAILABLE) {
                 throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Attribute not available: ' . $oldAttributes[$attributeIndex]['key']);
             }
 
@@ -2499,7 +2500,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         $index = new Document([
             '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
             'key' => $key,
-            'status' => 'processing', // processing, available, failed, deleting, stuck
+            'status' => Status::CREATING,
             'databaseInternalId' => $db->getInternalId(),
             'databaseId' => $databaseId,
             'collectionInternalId' => $collection->getInternalId(),
@@ -2694,8 +2695,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         }
 
         // Only update status if removing available index
-        if ($index->getAttribute('status') === 'available') {
-            $index = $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
+        if ($index->getAttribute('status') === Status::AVAILABLE) {
+            $index = $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', Status::DELETING));
         }
 
         $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);

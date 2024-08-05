@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Functions\Status;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
@@ -72,9 +73,9 @@ class Deployment extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The deployment status. Possible values are "processing", "building", "waiting", "ready", and "failed".',
+                'description' => 'The deployment status. Possible values are "' . Status::QUEUED . '","' . Status::BUILDING . '","' . Status::READY . '","' . Status::FAILED . '", and "' . Status::CANCELLED . '".',
                 'default' => '',
-                'example' => 'ready',
+                'example' => Status::READY,
             ])
             ->addRule('buildLogs', [
                 'type' => self::TYPE_STRING,

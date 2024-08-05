@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Realtime;
 
+use Appwrite\Functions\Status;
 use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -1303,7 +1304,7 @@ class RealtimeCustomClientTest extends Scope
 
             if (
                 $deployment['headers']['status-code'] >= 400
-                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+                || \in_array($deployment['body']['status'], [Status::READY, Status::FAILED])
             ) {
                 break;
             }

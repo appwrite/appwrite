@@ -15,13 +15,22 @@ class Status
     /**
      * Picked up by the worker and starting to send
      */
-    public const PROCESSING = 'processing';
+    public const SENDING = 'sending';
     /**
      * Sent without errors
      */
-    public const SENT = 'sent';
+    public const DELIVERED = 'delivered';
     /**
      * Sent with some errors
      */
     public const FAILED = 'failed';
+
+    public static function getV18status(string $status): string
+    {
+        return match ($status) {
+            self::DELIVERED => 'sent',
+            self::SENDING => 'processing',
+            default => $status
+        };
+    }
 }

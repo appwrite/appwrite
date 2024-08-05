@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\General;
 
+use Appwrite\Functions\Status;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use DateTime;
@@ -686,9 +687,9 @@ class UsageTest extends Scope
 
         $executionTime += (int) ($response['body']['duration'] * 1000);
 
-        if ($response['body']['status'] == 'failed') {
+        if ($response['body']['status'] == Status::FAILED) {
             $failures += 1;
-        } elseif ($response['body']['status'] == 'completed') {
+        } elseif ($response['body']['status'] == Status::SUCCESSFUL) {
             $executions += 1;
         }
 
@@ -708,9 +709,9 @@ class UsageTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($functionId, $response['body']['functionId']);
 
-        if ($response['body']['status'] == 'failed') {
+        if ($response['body']['status'] == Status::FAILED) {
             $failures += 1;
-        } elseif ($response['body']['status'] == 'completed') {
+        } elseif ($response['body']['status'] == Status::SUCCESSFUL) {
             $executions += 1;
         }
         $executionTime += (int) ($response['body']['duration'] * 1000);
@@ -741,9 +742,9 @@ class UsageTest extends Scope
             ], $this->getHeaders()),
         );
 
-        if ($response['body']['status'] == 'failed') {
+        if ($response['body']['status'] == Status::FAILED) {
             $failures += 1;
-        } elseif ($response['body']['status'] == 'completed') {
+        } elseif ($response['body']['status'] == Status::SUCCESSFUL) {
             $executions += 1;
         }
 

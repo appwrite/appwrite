@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Database\Status;
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Exception;
@@ -160,7 +161,7 @@ class Databases extends Action
 
                     if ($options['twoWay']) {
                         $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'available'));
+                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', Status::AVAILABLE));
                     }
                     break;
                 default:
@@ -169,7 +170,7 @@ class Databases extends Action
                     }
             }
 
-            $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
+            $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', Status::AVAILABLE));
         } catch (\Throwable $e) {
             // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
@@ -184,14 +185,14 @@ class Databases extends Action
             $dbForProject->updateDocument(
                 'attributes',
                 $attribute->getId(),
-                $attribute->setAttribute('status', 'failed')
+                $attribute->setAttribute('status', Status::FAILED)
             );
 
             if (isset($relatedAttribute)) {
                 $dbForProject->updateDocument(
                     'attributes',
                     $relatedAttribute->getId(),
-                    $relatedAttribute->setAttribute('status', 'failed')
+                    $relatedAttribute->setAttribute('status', Status::FAILED)
                 );
             }
         } finally {
@@ -249,7 +250,7 @@ class Databases extends Action
         // - stuck: attribute was available but cannot be removed
 
         try {
-            if ($status !== 'failed') {
+            if ($status !== Status::FAILED) {
                 if ($type === Database::VAR_RELATIONSHIP) {
                     if ($options['twoWay']) {
                         $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
@@ -260,7 +261,7 @@ class Databases extends Action
                     }
 
                     if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
+                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', Status::FAILED));
                         throw new DatabaseException('Failed to delete Relationship');
                     }
                 } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
@@ -286,13 +287,13 @@ class Databases extends Action
             $dbForProject->updateDocument(
                 'attributes',
                 $attribute->getId(),
-                $attribute->setAttribute('status', 'stuck')
+                $attribute->setAttribute('status', Status::FAILED)
             );
             if (!$relatedAttribute->isEmpty()) {
                 $dbForProject->updateDocument(
                     'attributes',
                     $relatedAttribute->getId(),
-                    $relatedAttribute->setAttribute('status', 'stuck')
+                    $relatedAttribute->setAttribute('status', Status::FAILED)
                 );
             }
         } finally {
@@ -400,7 +401,7 @@ class Databases extends Action
             if (!$dbForProject->createIndex('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $attributes, $lengths, $orders)) {
                 throw new DatabaseException('Failed to create Index');
             }
-            $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
+            $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', Status::AVAILABLE));
         } catch (\Throwable $e) {
             // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
@@ -411,7 +412,7 @@ class Databases extends Action
             $dbForProject->updateDocument(
                 'indexes',
                 $index->getId(),
-                $index->setAttribute('status', 'failed')
+                $index->setAttribute('status', Status::FAILED)
             );
         } finally {
             $this->trigger($database, $collection, $index, $project, $projectId, $events);
@@ -454,7 +455,7 @@ class Databases extends Action
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if ($status !== 'failed' && !$dbForProject->deleteIndex('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+            if ($status !== Status::FAILED && !$dbForProject->deleteIndex('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
                 throw new DatabaseException('Failed to delete index');
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
@@ -469,7 +470,7 @@ class Databases extends Action
             $dbForProject->updateDocument(
                 'indexes',
                 $index->getId(),
-                $index->setAttribute('status', 'stuck')
+                $index->setAttribute('status', Status::FAILED)
             );
         } finally {
             $this->trigger($database, $collection, $index, $project, $projectId, $events);

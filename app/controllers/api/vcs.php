@@ -4,6 +4,7 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\Status;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -94,7 +95,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 }
             }
 
-            $commentStatus = $isAuthorized ? 'waiting' : 'failed';
+            $commentStatus = $isAuthorized ? Status::QUEUED : Status::FAILED;
 
             $authorizeUrl = $request->getProtocol() . '://' . $request->getHostname() . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 

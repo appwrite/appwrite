@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Functions\Status;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
@@ -505,7 +506,7 @@ class FunctionsCustomServerTest extends Scope
 
             if (
                 $deployment['headers']['status-code'] >= 400
-                || $deployment['body']['status'] === 'building'
+                || $deployment['body']['status'] === Status::BUILDING
             ) {
                 break;
             }
@@ -788,7 +789,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($execution['body']['functionId']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($execution['body']['$createdAt']));
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
-        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(Status::SUCCESSFUL, $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertStringContainsString($execution['body']['functionId'], $execution['body']['responseBody']);
         $this->assertStringContainsString($data['deploymentId'], $execution['body']['responseBody']);
@@ -910,7 +911,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(Status::SUCCESSFUL, $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertStringContainsString('Test1', $execution['body']['responseBody']);
         $this->assertStringContainsString('http', $execution['body']['responseBody']);
@@ -1156,7 +1157,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-        $this->assertEquals($executions['body']['executions'][0]['status'], 'failed');
+        $this->assertEquals($executions['body']['executions'][0]['status'], Status::FAILED);
         $this->assertEquals($executions['body']['executions'][0]['responseStatusCode'], 500);
         $this->assertGreaterThan(2, $executions['body']['executions'][0]['duration']);
         $this->assertLessThan(20, $executions['body']['executions'][0]['duration']);
@@ -1276,7 +1277,7 @@ class FunctionsCustomServerTest extends Scope
         $output = json_decode($execution['body']['responseBody'], true);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(Status::SUCCESSFUL, $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
         $this->assertEquals('Test ' . $name, $output['APPWRITE_FUNCTION_NAME']);
@@ -1384,7 +1385,7 @@ class FunctionsCustomServerTest extends Scope
         $output = json_decode($execution['body']['responseBody'], true);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(Status::SUCCESSFUL, $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals(true, $output['v2Woks']);
 
@@ -1492,7 +1493,7 @@ class FunctionsCustomServerTest extends Scope
         $execution = $executions['body']['executions'][0];
 
         $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertEquals('completed', $execution['status']);
+        $this->assertEquals(Status::SUCCESSFUL, $execution['status']);
         $this->assertEquals(204, $execution['responseStatusCode']);
         $this->assertStringContainsString($userId, $execution['logs']);
         $this->assertStringContainsString('Event User', $execution['logs']);
@@ -1571,7 +1572,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(Status::SUCCESSFUL, $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertNotEmpty($execution['body']['responseBody']);
         $this->assertGreaterThan(0, $execution['body']['duration']);
@@ -1644,7 +1645,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(Status::SUCCESSFUL, $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals($cookie, $execution['body']['responseBody']);
         $this->assertGreaterThan(0, $execution['body']['duration']);

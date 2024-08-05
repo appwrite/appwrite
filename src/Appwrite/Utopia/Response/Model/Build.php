@@ -2,6 +2,8 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Functions\Status as FunctionsStatus;
+use Appwrite\Messaging\Status;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
@@ -22,16 +24,12 @@ class Build extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            // Build Status
-            // Failed - The deployment build has failed. More details can usually be found in buildStderr
-            // Ready - The deployment build was successful and the deployment is ready to be deployed
-            // Processing - The deployment is currently waiting to have a build triggered
-            // Building - The deployment is currently being built
+            /** Build Status check \Appwrite\Functions\Status */
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The build status. There are a few different types and each one means something different. \nFailed - The deployment build has failed. More details can usually be found in buildStderr\nReady - The deployment build was successful and the deployment is ready to be deployed\nProcessing - The deployment is currently waiting to have a build triggered\nBuilding - The deployment is currently being built',
                 'default' => '',
-                'example' => 'ready',
+                'example' => FunctionsStatus::READY,
             ])
             ->addRule('stdout', [
                 'type' => self::TYPE_STRING,

@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Databases;
 
+use Appwrite\Database\Status;
 use Appwrite\Extend\Exception as AppwriteException;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -1432,7 +1433,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertCount(0, $collection['body']['indexes']);
 
         foreach ($collection['body']['attributes'] as $attribute) {
-            $this->assertEquals('available', $attribute['status'], 'attribute: ' . $attribute['key']);
+            $this->assertEquals(Status::AVAILABLE, $attribute['status'], 'attribute: ' . $attribute['key']);
         }
 
         // Test indexLimit = 64

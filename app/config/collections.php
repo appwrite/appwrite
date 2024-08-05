@@ -1,6 +1,8 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Functions\Status;
+use Appwrite\Messaging\Status as MessagingStatus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
@@ -1821,7 +1823,7 @@ $commonCollections = [
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
                 'required' => true,
-                'default' => 'processing',
+                'default' => MessagingStatus::SENDING,
                 'array' => false,
                 'filters' => [],
             ],
@@ -3618,7 +3620,7 @@ $projectCollections = array_merge([
                 'size' => 256,
                 'signed' => true,
                 'required' => true,
-                'default' => 'processing',
+                'default' => Status::BUILDING,
                 'array' => false,
                 'filters' => [],
             ],

@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Functions\Status;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
@@ -162,7 +163,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertCount(2, $executions['body']['executions']);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][1]['trigger'], 'schedule');
-        $this->assertEquals($executions['body']['executions'][1]['status'], 'completed');
+        $this->assertEquals($executions['body']['executions'][1]['status'], Status::SUCCESSFUL);
         $this->assertEquals($executions['body']['executions'][1]['responseStatusCode'], 200);
         $this->assertEquals($executions['body']['executions'][1]['responseBody'], '');
         $this->assertEquals($executions['body']['executions'][1]['logs'], '');
@@ -252,7 +253,7 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(202, $execution['headers']['status-code']);
-        $this->assertEquals('scheduled', $execution['body']['status']);
+        $this->assertEquals(Status::SCHEDULED, $execution['body']['status']);
         $this->assertEquals($futureTimeIso, $execution['body']['scheduledAt']);
 
         $executionId = $execution['body']['$id'];
@@ -280,7 +281,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(200, $execution['headers']['status-code']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(Status::SUCCESSFUL, $execution['body']['status']);
         $this->assertEquals('/custom', $execution['body']['requestPath']);
         $this->assertEquals('GET', $execution['body']['requestMethod']);
         $this->assertGreaterThan(0, $execution['body']['duration']);
@@ -405,7 +406,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertGreaterThan(0, $execution['body']['duration']);
-        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(Status::SUCCESSFUL, $execution['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
         $this->assertEquals('Test', $output['APPWRITE_FUNCTION_NAME']);
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
@@ -570,8 +571,8 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(200, $base['headers']['status-code']);
         $this->assertCount(3, $base['body']['executions']);
-        $this->assertEquals('completed', $base['body']['executions'][0]['status']);
-        $this->assertEquals('completed', $base['body']['executions'][1]['status']);
+        $this->assertEquals(Status::SUCCESSFUL, $base['body']['executions'][0]['status']);
+        $this->assertEquals(Status::SUCCESSFUL, $base['body']['executions'][1]['status']);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
             'content-type' => 'application/json',
@@ -605,7 +606,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-key' => $apikey,
         ], [
             'queries' => [
-                Query::equal('status', ['completed'])->toString(),
+                Query::equal('status', [Status::SUCCESSFUL])->toString(),
             ],
         ]);
 
@@ -618,7 +619,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-key' => $apikey,
         ], [
             'queries' => [
-                Query::equal('status', ['failed'])->toString(),
+                Query::equal('status', [Status::FAILED])->toString(),
             ],
         ]);
 
@@ -754,7 +755,7 @@ class FunctionsCustomClientTest extends Scope
 
         $output = json_decode($execution['body']['responseBody'], true);
         $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(Status::SUCCESSFUL, $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
         $this->assertEquals('Test', $output['APPWRITE_FUNCTION_NAME']);

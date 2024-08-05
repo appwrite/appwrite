@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Database\Status;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
@@ -24,9 +25,9 @@ class Attribute extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`',
+                'description' => 'Attribute status. Possible values: `'.Status::QUEUED.'`,`'.Status::CREATING.'`,`'.Status::DELETING.'`,`'.Status::AVAILABLE.'`, , or `'.Status::FAILED.'`',
                 'default' => '',
-                'example' => 'available',
+                'example' => Status::AVAILABLE,
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,

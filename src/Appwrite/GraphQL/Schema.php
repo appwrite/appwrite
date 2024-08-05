@@ -2,6 +2,7 @@
 
 namespace Appwrite\GraphQL;
 
+use Appwrite\Database\Status;
 use Appwrite\GraphQL\Types\Mapper;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
@@ -157,7 +158,7 @@ class Schema
 
         while (!empty($attrs = $attributes($limit, $offset))) {
             foreach ($attrs as $attr) {
-                if ($attr['status'] !== 'available') {
+                if ($attr['status'] !== Status::AVAILABLE) {
                     continue;
                 }
                 $databaseId = $attr['databaseId'];

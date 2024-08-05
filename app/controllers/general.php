@@ -8,6 +8,7 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\Status;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
@@ -156,7 +157,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             throw new AppwriteException(AppwriteException::BUILD_NOT_FOUND);
         }
 
-        if ($build->getAttribute('status') !== 'ready') {
+        if ($build->getAttribute('status') !== Status::READY) {
             throw new AppwriteException(AppwriteException::BUILD_NOT_READY);
         }
 
@@ -212,7 +213,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
-            'status' =>  'processing', // waiting / processing / completed / failed
+            'status' =>  Status::EXECUTING,
             'responseStatusCode' => 0,
             'responseHeaders' => [],
             'requestPath' => $path,
@@ -302,7 +303,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             }
 
             /** Update execution status */
-            $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
+            $status = $executionResponse['statusCode'] >= 400 ? Status::FAILED : Status::SUCCESSFUL;
             $execution->setAttribute('status', $status);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
@@ -315,7 +316,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
             $execution
                 ->setAttribute('duration', $durationEnd - $durationStart)
-                ->setAttribute('status', 'failed')
+                ->setAttribute('status', Status::FAILED)
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
             Console::error($th->getMessage());

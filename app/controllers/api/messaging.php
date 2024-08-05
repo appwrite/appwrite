@@ -2610,7 +2610,7 @@ App::post('/v1/messaging/messages/email')
             $status = MessageStatus::DRAFT;
         } else {
             $status = \is_null($scheduledAt)
-                ? MessageStatus::PROCESSING
+                ? MessageStatus::SENDING
                 : MessageStatus::SCHEDULED;
         }
 
@@ -2684,7 +2684,7 @@ App::post('/v1/messaging/messages/email')
         ]));
 
         switch ($status) {
-            case MessageStatus::PROCESSING:
+            case MessageStatus::SENDING:
                 $queueForMessaging
                     ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
                     ->setMessageId($message->getId());
@@ -2757,7 +2757,7 @@ App::post('/v1/messaging/messages/sms')
             $status = MessageStatus::DRAFT;
         } else {
             $status = \is_null($scheduledAt)
-                ? MessageStatus::PROCESSING
+                ? MessageStatus::SENDING
                 : MessageStatus::SCHEDULED;
         }
 
@@ -2800,7 +2800,7 @@ App::post('/v1/messaging/messages/sms')
         ]));
 
         switch ($status) {
-            case MessageStatus::PROCESSING:
+            case MessageStatus::SENDING:
                 $queueForMessaging
                     ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
                     ->setMessageId($message->getId());
@@ -2882,7 +2882,7 @@ App::post('/v1/messaging/messages/push')
             $status = MessageStatus::DRAFT;
         } else {
             $status = \is_null($scheduledAt)
-                ? MessageStatus::PROCESSING
+                ? MessageStatus::SENDING
                 : MessageStatus::SCHEDULED;
         }
 
@@ -2976,7 +2976,7 @@ App::post('/v1/messaging/messages/push')
         ]));
 
         switch ($status) {
-            case MessageStatus::PROCESSING:
+            case MessageStatus::SENDING:
                 $queueForMessaging
                     ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
                     ->setMessageId($message->getId());
@@ -3286,7 +3286,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                 $status = MessageStatus::DRAFT;
             } else {
                 $status = \is_null($scheduledAt)
-                    ? MessageStatus::PROCESSING
+                    ? MessageStatus::SENDING
                     : MessageStatus::SCHEDULED;
             }
         } else {
@@ -3305,9 +3305,9 @@ App::patch('/v1/messaging/messages/email/:messageId')
         $currentScheduledAt = $message->getAttribute('scheduledAt');
 
         switch ($message->getAttribute('status')) {
-            case MessageStatus::PROCESSING:
+            case MessageStatus::SENDING:
                 throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
-            case MessageStatus::SENT:
+            case MessageStatus::DELIVERED:
                 throw new Exception(Exception::MESSAGE_ALREADY_SENT);
             case MessageStatus::FAILED:
                 throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
@@ -3429,7 +3429,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === MessageStatus::PROCESSING) {
+        if ($status === MessageStatus::SENDING) {
             $queueForMessaging
                 ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
                 ->setMessageId($message->getId());
@@ -3481,7 +3481,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 $status = MessageStatus::DRAFT;
             } else {
                 $status = \is_null($scheduledAt)
-                    ? MessageStatus::PROCESSING
+                    ? MessageStatus::SENDING
                     : MessageStatus::SCHEDULED;
             }
         } else {
@@ -3500,9 +3500,9 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         $currentScheduledAt = $message->getAttribute('scheduledAt');
 
         switch ($message->getAttribute('status')) {
-            case MessageStatus::PROCESSING:
+            case MessageStatus::SENDING:
                 throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
-            case MessageStatus::SENT:
+            case MessageStatus::DELIVERED:
                 throw new Exception(Exception::MESSAGE_ALREADY_SENT);
             case MessageStatus::FAILED:
                 throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
@@ -3584,7 +3584,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === MessageStatus::PROCESSING) {
+        if ($status === MessageStatus::SENDING) {
             $queueForMessaging
                 ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
                 ->setMessageId($message->getId());
@@ -3645,7 +3645,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 $status = MessageStatus::DRAFT;
             } else {
                 $status = \is_null($scheduledAt)
-                    ? MessageStatus::PROCESSING
+                    ? MessageStatus::SENDING
                     : MessageStatus::SCHEDULED;
             }
         } else {
@@ -3664,9 +3664,9 @@ App::patch('/v1/messaging/messages/push/:messageId')
         $currentScheduledAt = $message->getAttribute('scheduledAt');
 
         switch ($message->getAttribute('status')) {
-            case MessageStatus::PROCESSING:
+            case MessageStatus::SENDING:
                 throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
-            case MessageStatus::SENT:
+            case MessageStatus::DELIVERED:
                 throw new Exception(Exception::MESSAGE_ALREADY_SENT);
             case MessageStatus::FAILED:
                 throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
@@ -3822,7 +3822,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === MessageStatus::PROCESSING) {
+        if ($status === MessageStatus::SENDING) {
             $queueForMessaging
                 ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
                 ->setMessageId($message->getId());
@@ -3862,7 +3862,7 @@ App::delete('/v1/messaging/messages/:messageId')
         }
 
         switch ($message->getAttribute('status')) {
-            case MessageStatus::PROCESSING:
+            case MessageStatus::SENDING:
                 throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
             case MessageStatus::SCHEDULED:
                 $scheduleId = $message->getAttribute('scheduleId');

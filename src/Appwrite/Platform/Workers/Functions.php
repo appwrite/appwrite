@@ -6,6 +6,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
+use Appwrite\Functions\Status;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Execution;
 use Exception;
@@ -248,7 +249,7 @@ class Functions extends Action
             'deploymentInternalId' => '',
             'deploymentId' => '',
             'trigger' => $trigger,
-            'status' => 'failed',
+            'status' => Status::FAILED,
             'responseStatusCode' => 0,
             'responseHeaders' => [],
             'requestPath' => $path,
@@ -345,7 +346,7 @@ class Functions extends Action
             return;
         }
 
-        if ($build->getAttribute('status') !== 'ready') {
+        if ($build->getAttribute('status') !== Status::READY) {
             $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
             $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
@@ -396,7 +397,7 @@ class Functions extends Action
                 'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
                 'trigger' => $trigger,
-                'status' => 'processing',
+                'status' => Status::EXECUTING,
                 'responseStatusCode' => 0,
                 'responseHeaders' => [],
                 'requestPath' => $path,
@@ -417,8 +418,8 @@ class Functions extends Action
             }
         }
 
-        if ($execution->getAttribute('status') !== 'processing') {
-            $execution->setAttribute('status', 'processing');
+        if ($execution->getAttribute('status') !== Status::EXECUTING) {
+            $execution->setAttribute('status', Status::EXECUTING);
 
             $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
         }
@@ -494,7 +495,7 @@ class Functions extends Action
                 logging: $function->getAttribute('logging', true),
             );
 
-            $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
+            $status = $executionResponse['statusCode'] >= 400 ? Status::FAILED : Status::SUCCESSFUL;
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
@@ -515,7 +516,7 @@ class Functions extends Action
             $durationEnd = \microtime(true);
             $execution
                 ->setAttribute('duration', $durationEnd - $durationStart)
-                ->setAttribute('status', 'failed')
+                ->setAttribute('status', Status::FAILED)
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
 
