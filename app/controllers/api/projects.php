@@ -135,7 +135,7 @@ App::post('/v1/projects')
 
         // TODO: Temporary until all projects are using shared tables.
         $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        if (in_array($dsn, $sharedTablesKeys)) {
+        if (in_array($dsn->getHost(), $sharedTablesKeys)) {
             $schema = 'appwrite';
             $database = 'appwrite';
             $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
@@ -199,7 +199,8 @@ App::post('/v1/projects')
         $adapter = $pools->get($dsn->getHost())->pop()->getResource();
         $dbForProject = new Database($adapter, $cache);
 
-        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+        $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        if (in_array($dsn->getHost(), $sharedTablesKeys)) {
             $dbForProject
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())

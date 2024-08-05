@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '/init.php';
-require_once __DIR__ . '/controllers/general.php';
+require_once __DIR__.'/init.php';
+require_once __DIR__.'/controllers/general.php';
 
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
@@ -35,8 +35,7 @@ CLI::setResource('cache', function ($pools) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
     return new Cache(new Sharding($adapters));
@@ -72,7 +71,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             $collections = Config::getParam('collections', [])['console'];
             $last = \array_key_last($collections);
 
-            if (!($dbForConsole->exists($dbForConsole->getDatabase(), $last))) { /** TODO cache ready variable using registry */
+            if (! ($dbForConsole->exists($dbForConsole->getDatabase(), $last))) { /** TODO cache ready variable using registry */
                 throw new Exception('Tables not ready yet.');
             }
 
@@ -82,10 +81,10 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             $pools->get('console')->reclaim();
             sleep($sleep);
         }
-    } while ($attempts < $maxAttempts && !$ready);
+    } while ($attempts < $maxAttempts && ! $ready);
 
-    if (!$ready) {
-        throw new Exception("Console is not ready yet. Please try again later.");
+    if (! $ready) {
+        throw new Exception('Console is not ready yet. Please try again later.');
     }
 
     return $dbForConsole;
@@ -103,13 +102,13 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             $dsn = new DSN($project->getAttribute('database'));
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+            $dsn = new DSN('mysql://'.$project->getAttribute('database'));
         }
 
         if (isset($databases[$dsn->getHost()])) {
             $database = $databases[$dsn->getHost()];
-
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+            if (in_array($dsn->getHost(), $sharedTablesKeys)) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
@@ -118,7 +117,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 $database
                     ->setSharedTables(false)
                     ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
+                    ->setNamespace('_'.$project->getInternalId());
             }
 
             return $database;
@@ -133,7 +132,8 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $databases[$dsn->getHost()] = $database;
 
-        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+        $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        if (in_array($dsn->getHost(), $sharedTablesKeys)) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
@@ -142,7 +142,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             $database
                 ->setSharedTables(false)
                 ->setTenant(null)
-                ->setNamespace('_' . $project->getInternalId());
+                ->setNamespace('_'.$project->getInternalId());
         }
 
         $database
@@ -192,7 +192,7 @@ CLI::setResource('logError', function (Registry $register) {
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);
-            Console::info('Usage stats log pushed with status code: ' . $responseCode);
+            Console::info('Usage stats log pushed with status code: '.$responseCode);
         }
 
         Console::warning("Failed: {$error->getMessage()}");

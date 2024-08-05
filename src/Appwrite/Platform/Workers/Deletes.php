@@ -69,13 +69,13 @@ class Deletes extends Action
             throw new Exception('Missing payload');
         }
 
-        $type     = $payload['type'] ?? '';
+        $type = $payload['type'] ?? '';
         $datetime = $payload['datetime'] ?? null;
         $hourlyUsageRetentionDatetime = $payload['hourlyUsageRetentionDatetime'] ?? null;
         $resource = $payload['resource'] ?? null;
         $resourceType = $payload['resourceType'] ?? null;
         $document = new Document($payload['document'] ?? []);
-        $project  = new Document($payload['project'] ?? []);
+        $project = new Document($payload['project'] ?? []);
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
@@ -111,7 +111,7 @@ class Deletes extends Action
                         $this->deleteRule($dbForConsole, $document);
                         break;
                     default:
-                        Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
+                        Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
                         break;
                 }
                 break;
@@ -119,12 +119,12 @@ class Deletes extends Action
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
                 break;
             case DELETE_TYPE_AUDIT:
-                if (!$project->isEmpty()) {
+                if (! $project->isEmpty()) {
                     $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
                 }
 
-                if (!$document->isEmpty()) {
-                    $this->deleteAuditLogsByResource($getProjectDB, 'document/' . $document->getId(), $project);
+                if (! $document->isEmpty()) {
+                    $this->deleteAuditLogsByResource($getProjectDB, 'document/'.$document->getId(), $project);
                 }
                 break;
             case DELETE_TYPE_ABUSE:
@@ -161,16 +161,13 @@ class Deletes extends Action
                 $this->deleteSessionTargets($project, $getProjectDB, $document);
                 break;
             default:
-                throw new \Exception('No delete operation for type: ' . \strval($type));
+                throw new \Exception('No delete operation for type: '.\strval($type));
         }
     }
 
     /**
-     * @param Database $dbForConsole
-     * @param callable $getProjectDB
-     * @param string $datetime
-     * @param Document|null $document
-     * @return void
+     * @param  Document|null  $document
+     *
      * @throws Authorization
      * @throws Conflict
      * @throws Restricted
@@ -192,7 +189,8 @@ class Deletes extends Action
 
                 if ($project->isEmpty()) {
                     $dbForConsole->deleteDocument('schedules', $document->getId());
-                    Console::success('Deleted schedule for deleted project ' . $document->getAttribute('projectId'));
+                    Console::success('Deleted schedule for deleted project '.$document->getAttribute('projectId'));
+
                     return;
                 }
 
@@ -216,38 +214,33 @@ class Deletes extends Action
 
                 if ($delete) {
                     $dbForConsole->deleteDocument('schedules', $document->getId());
-                    Console::success('Deleting schedule for ' . $document->getAttribute('resourceType') . ' ' . $document->getAttribute('resourceId'));
+                    Console::success('Deleting schedule for '.$document->getAttribute('resourceType').' '.$document->getAttribute('resourceId'));
                 }
             }
         );
     }
 
     /**
-     * @param Document $project
-     * @param callable $getProjectDB
-     * @param Document $topic
      * @throws Exception
      */
     private function deleteTopic(Document $project, callable $getProjectDB, Document $topic)
     {
         if ($topic->isEmpty()) {
             Console::error('Failed to delete subscribers. Topic not found');
+
             return;
         }
 
         $this->deleteByGroup(
             'subscribers',
             [
-                Query::equal('topicInternalId', [$topic->getInternalId()])
+                Query::equal('topicInternalId', [$topic->getInternalId()]),
             ],
             $getProjectDB($project)
         );
     }
 
     /**
-     * @param Document $project
-     * @param callable $getProjectDB
-     * @param Document $target
      * @throws Exception
      */
     private function deleteTargetSubscribers(Document $project, callable $getProjectDB, Document $target): void
@@ -259,14 +252,14 @@ class Deletes extends Action
         $this->deleteByGroup(
             'subscribers',
             [
-                Query::equal('targetInternalId', [$target->getInternalId()])
+                Query::equal('targetInternalId', [$target->getInternalId()]),
             ],
             $dbForProject,
             function (Document $subscriber) use ($dbForProject, $target) {
                 $topicId = $subscriber->getAttribute('topicId');
                 $topicInternalId = $subscriber->getAttribute('topicInternalId');
                 $topic = $dbForProject->getDocument('topics', $topicId);
-                if (!$topic->isEmpty() && $topic->getInternalId() === $topicInternalId) {
+                if (! $topic->isEmpty() && $topic->getInternalId() === $topicInternalId) {
                     $totalAttribute = match ($target->getAttribute('providerType')) {
                         MESSAGE_TYPE_EMAIL => 'emailTotal',
                         MESSAGE_TYPE_SMS => 'smsTotal',
@@ -285,10 +278,8 @@ class Deletes extends Action
     }
 
     /**
-     * @param Document $project
-     * @param callable $getProjectDB
-     * @param Document $target
-     * @return void
+     * @param  Document  $target
+     *
      * @throws Exception
      */
     private function deleteExpiredTargets(Document $project, callable $getProjectDB): void
@@ -296,7 +287,7 @@ class Deletes extends Action
         $this->deleteByGroup(
             'targets',
             [
-                Query::equal('expired', [true])
+                Query::equal('expired', [true]),
             ],
             $getProjectDB($project),
             function (Document $target) use ($getProjectDB, $project) {
@@ -310,7 +301,7 @@ class Deletes extends Action
         $this->deleteByGroup(
             'targets',
             [
-                Query::equal('sessionInternalId', [$session->getInternalId()])
+                Query::equal('sessionInternalId', [$session->getInternalId()]),
             ],
             $getProjectDB($project),
             function (Document $target) use ($getProjectDB, $project) {
@@ -320,25 +311,20 @@ class Deletes extends Action
     }
 
     /**
-     * @param Document $project
-     * @param callable $getProjectDB
-     * @param string $resource
-     * @return void
      * @throws Authorization
-     * @param string|null $resourceType
      * @throws Exception
      */
-    private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, string $resourceType = null): void
+    private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, ?string $resourceType = null): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
 
         $cache = new Cache(
-            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
+            new Filesystem(APP_STORAGE_CACHE.DIRECTORY_SEPARATOR.'app-'.$projectId)
         );
 
         $query[] = Query::equal('resource', [$resource]);
-        if (!empty($resourceType)) {
+        if (! empty($resourceType)) {
             $query[] = Query::equal('resourceType', [$resourceType]);
         }
 
@@ -347,12 +333,12 @@ class Deletes extends Action
             $query,
             $dbForProject,
             function (Document $document) use ($cache, $projectId) {
-                $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
+                $path = APP_STORAGE_CACHE.DIRECTORY_SEPARATOR.'app-'.$projectId.DIRECTORY_SEPARATOR.$document->getId();
 
                 if ($cache->purge($document->getId())) {
-                    Console::success('Deleting cache file: ' . $path);
+                    Console::success('Deleting cache file: '.$path);
                 } else {
-                    Console::error('Failed to delete cache file: ' . $path);
+                    Console::error('Failed to delete cache file: '.$path);
                 }
             }
         );
@@ -360,10 +346,7 @@ class Deletes extends Action
 
     /**
      * Document $project
-     * @param Document $project
-     * @param callable $getProjectDB
-     * @param string $datetime
-     * @return void
+     *
      * @throws Exception
      */
     private function deleteCacheByDate(Document $project, callable $getProjectDB, string $datetime): void
@@ -372,7 +355,7 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         $cache = new Cache(
-            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
+            new Filesystem(APP_STORAGE_CACHE.DIRECTORY_SEPARATOR.'app-'.$projectId)
         );
 
         $query = [
@@ -384,22 +367,20 @@ class Deletes extends Action
             $query,
             $dbForProject,
             function (Document $document) use ($cache, $projectId) {
-                $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
+                $path = APP_STORAGE_CACHE.DIRECTORY_SEPARATOR.'app-'.$projectId.DIRECTORY_SEPARATOR.$document->getId();
 
                 if ($cache->purge($document->getId())) {
-                    Console::success('Deleting cache file: ' . $path);
+                    Console::success('Deleting cache file: '.$path);
                 } else {
-                    Console::error('Failed to delete cache file: ' . $path);
+                    Console::error('Failed to delete cache file: '.$path);
                 }
             }
         );
     }
 
     /**
-     * @param Database $dbForConsole
-     * @param callable $getProjectDB
-     * @param string $hourlyUsageRetentionDatetime
-     * @return void
+     * @param  Database  $dbForConsole
+     *
      * @throws Exception
      */
     private function deleteUsageStats(Document $project, callable $getProjectDB, string $hourlyUsageRetentionDatetime): void
@@ -413,10 +394,8 @@ class Deletes extends Action
     }
 
     /**
-     * @param callable $getProjectDB
-     * @param Document $document teams document
-     * @param Document $project
-     * @return void
+     * @param  Document  $document  teams document
+     *
      * @throws Exception
      */
     private function deleteMemberships(callable $getProjectDB, Document $document, Document $project): void
@@ -428,7 +407,7 @@ class Deletes extends Action
         $this->deleteByGroup(
             'memberships',
             [
-                Query::equal('teamInternalId', [$teamInternalId])
+                Query::equal('teamInternalId', [$teamInternalId]),
             ],
             $dbForProject,
             function (Document $membership) use ($dbForProject) {
@@ -439,9 +418,6 @@ class Deletes extends Action
     }
 
     /**
-     * @param Database $dbForConsole
-     * @param Document $document
-     * @return void
      * @throws Authorization
      * @throws DatabaseException
      * @throws Conflict
@@ -452,7 +428,7 @@ class Deletes extends Action
     {
 
         $projects = $dbForConsole->find('projects', [
-            Query::equal('teamInternalId', [$document->getInternalId()])
+            Query::equal('teamInternalId', [$document->getInternalId()]),
         ]);
         foreach ($projects as $project) {
             $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $project);
@@ -461,14 +437,6 @@ class Deletes extends Action
     }
 
     /**
-     * @param Database $dbForConsole
-     * @param callable $getProjectDB
-     * @param Device $deviceForFiles
-     * @param Device $deviceForFunctions
-     * @param Device $deviceForBuilds
-     * @param Device $deviceForCache
-     * @param Document $document
-     * @return void
      * @throws Exception
      * @throws Authorization
      * @throws DatabaseException
@@ -481,7 +449,7 @@ class Deletes extends Action
             $dsn = new DSN($document->getAttribute('database', 'console'));
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $document->getAttribute('database', 'console'));
+            $dsn = new DSN('mysql://'.$document->getAttribute('database', 'console'));
         }
 
         $dbForProject = $getProjectDB($document);
@@ -498,14 +466,15 @@ class Deletes extends Action
             $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
-                if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
+                $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+                if (! in_array($dsn->getHost(), $sharedTablesKeys) || ! \in_array($collection->getId(), $projectCollectionIds)) {
                     $dbForProject->deleteCollection($collection->getId());
                 } else {
                     $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                 }
             }
-
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+            if (in_array($dsn->getHost(), $sharedTablesKeys)) {
                 $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
 
                 if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
@@ -518,29 +487,29 @@ class Deletes extends Action
 
         // Delete Platforms
         $this->deleteByGroup('platforms', [
-            Query::equal('projectInternalId', [$projectInternalId])
+            Query::equal('projectInternalId', [$projectInternalId]),
         ], $dbForConsole);
 
         // Delete project and function rules
         $this->deleteByGroup('rules', [
-            Query::equal('projectInternalId', [$projectInternalId])
+            Query::equal('projectInternalId', [$projectInternalId]),
         ], $dbForConsole, function (Document $document) use ($dbForConsole) {
             $this->deleteRule($dbForConsole, $document);
         });
 
         // Delete Keys
         $this->deleteByGroup('keys', [
-            Query::equal('projectInternalId', [$projectInternalId])
+            Query::equal('projectInternalId', [$projectInternalId]),
         ], $dbForConsole);
 
         // Delete Webhooks
         $this->deleteByGroup('webhooks', [
-            Query::equal('projectInternalId', [$projectInternalId])
+            Query::equal('projectInternalId', [$projectInternalId]),
         ], $dbForConsole);
 
         // Delete VCS Installations
         $this->deleteByGroup('installations', [
-            Query::equal('projectInternalId', [$projectInternalId])
+            Query::equal('projectInternalId', [$projectInternalId]),
         ], $dbForConsole);
 
         // Delete VCS Repositories
@@ -554,7 +523,8 @@ class Deletes extends Action
         ], $dbForConsole);
 
         // Delete metadata table
-        if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+        $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        if (! in_array($dsn, $sharedTablesKeys)) {
             $dbForProject->deleteCollection('_metadata');
         } else {
             $this->deleteByGroup('_metadata', [], $dbForProject);
@@ -568,10 +538,8 @@ class Deletes extends Action
     }
 
     /**
-     * @param callable $getProjectDB
-     * @param Document $document user document
-     * @param Document $project
-     * @return void
+     * @param  Document  $document  user document
+     *
      * @throws Exception
      */
     private function deleteUser(callable $getProjectDB, Document $document, Document $project): void
@@ -582,19 +550,19 @@ class Deletes extends Action
 
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record
         $this->deleteByGroup('sessions', [
-            Query::equal('userInternalId', [$userInternalId])
+            Query::equal('userInternalId', [$userInternalId]),
         ], $dbForProject);
 
         $dbForProject->purgeCachedDocument('users', $userId);
 
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
-            Query::equal('userInternalId', [$userInternalId])
+            Query::equal('userInternalId', [$userInternalId]),
         ], $dbForProject, function (Document $document) use ($dbForProject) {
             if ($document->getAttribute('confirm')) { // Count only confirmed members
                 $teamId = $document->getAttribute('teamId');
                 $team = $dbForProject->getDocument('teams', $teamId);
-                if (!$team->isEmpty()) {
+                if (! $team->isEmpty()) {
                     $dbForProject->decreaseDocumentAttribute('teams', $teamId, 'total', 1, 0);
                 }
             }
@@ -602,19 +570,19 @@ class Deletes extends Action
 
         // Delete tokens
         $this->deleteByGroup('tokens', [
-            Query::equal('userInternalId', [$userInternalId])
+            Query::equal('userInternalId', [$userInternalId]),
         ], $dbForProject);
 
         // Delete identities
         $this->deleteByGroup('identities', [
-            Query::equal('userInternalId', [$userInternalId])
+            Query::equal('userInternalId', [$userInternalId]),
         ], $dbForProject);
 
         // Delete targets
         $this->deleteByGroup(
             'targets',
             [
-                Query::equal('userInternalId', [$userInternalId])
+                Query::equal('userInternalId', [$userInternalId]),
             ],
             $dbForProject,
             function (Document $target) use ($getProjectDB, $project) {
@@ -624,10 +592,8 @@ class Deletes extends Action
     }
 
     /**
-     * @param database $dbForConsole
-     * @param callable $getProjectDB
-     * @param string $datetime
-     * @return void
+     * @param  database  $dbForConsole
+     *
      * @throws Exception
      */
     private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime): void
@@ -635,14 +601,13 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
         // Delete Executions
         $this->deleteByGroup('executions', [
-            Query::lessThan('$createdAt', $datetime)
+            Query::lessThan('$createdAt', $datetime),
         ], $dbForProject);
     }
 
     /**
-     * @param Database $dbForConsole
-     * @param callable $getProjectDB
-     * @return void
+     * @param  Database  $dbForConsole
+     *
      * @throws Exception|Throwable
      */
     private function deleteExpiredSessions(Document $project, callable $getProjectDB): void
@@ -653,50 +618,45 @@ class Deletes extends Action
 
         // Delete Sessions
         $this->deleteByGroup('sessions', [
-            Query::lessThan('$createdAt', $expired)
+            Query::lessThan('$createdAt', $expired),
         ], $dbForProject);
     }
 
     /**
-     * @param Database $dbForConsole
-     * @param string $datetime
-     * @return void
      * @throws Exception
      */
     private function deleteRealtimeUsage(Database $dbForConsole, string $datetime): void
     {
         // Delete Dead Realtime Logs
         $this->deleteByGroup('realtime', [
-            Query::lessThan('timestamp', $datetime)
+            Query::lessThan('timestamp', $datetime),
         ], $dbForConsole);
     }
 
     /**
-     * @param Database $dbForConsole
-     * @param callable $getProjectDB
-     * @param string $datetime
-     * @return void
+     * @param  Database  $dbForConsole
+     * @param  string  $datetime
+     *
      * @throws Exception
      */
     private function deleteAbuseLogs(Document $project, callable $getProjectDB, string $abuseRetention): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
-        $timeLimit = new TimeLimit("", 0, 1, $dbForProject);
+        $timeLimit = new TimeLimit('', 0, 1, $dbForProject);
         $abuse = new Abuse($timeLimit);
 
         try {
             $abuse->cleanup($abuseRetention);
         } catch (DatabaseException $e) {
-            Console::error('Failed to delete abuse logs for project ' . $projectId . ': ' . $e->getMessage());
+            Console::error('Failed to delete abuse logs for project '.$projectId.': '.$e->getMessage());
         }
     }
 
     /**
-     * @param Database $dbForConsole
-     * @param callable $getProjectDB
-     * @param string $datetime
-     * @return void
+     * @param  Database  $dbForConsole
+     * @param  string  $datetime
+     *
      * @throws Exception
      */
     private function deleteAuditLogs(Document $project, callable $getProjectDB, string $auditRetention): void
@@ -708,15 +668,11 @@ class Deletes extends Action
         try {
             $audit->cleanup($auditRetention);
         } catch (DatabaseException $e) {
-            Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $e->getMessage());
+            Console::error('Failed to delete audit logs for project '.$projectId.': '.$e->getMessage());
         }
     }
 
     /**
-     * @param callable $getProjectDB
-     * @param string $resource
-     * @param Document $project
-     * @return void
      * @throws Exception
      */
     private function deleteAuditLogsByResource(callable $getProjectDB, string $resource, Document $project): void
@@ -724,17 +680,13 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         $this->deleteByGroup(Audit::COLLECTION, [
-            Query::equal('resource', [$resource])
+            Query::equal('resource', [$resource]),
         ], $dbForProject);
     }
 
     /**
-     * @param callable $getProjectDB
-     * @param Device $deviceForFunctions
-     * @param Device $deviceForBuilds
-     * @param Document $document function document
-     * @param Document $project
-     * @return void
+     * @param  Document  $document  function document
+     *
      * @throws Exception
      */
     private function deleteFunction(Database $dbForConsole, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, Document $project): void
@@ -747,32 +699,32 @@ class Deletes extends Action
         /**
          * Delete rules
          */
-        Console::info("Deleting rules for function " . $functionId);
+        Console::info('Deleting rules for function '.$functionId);
         $this->deleteByGroup('rules', [
             Query::equal('resourceType', ['function']),
             Query::equal('resourceInternalId', [$functionInternalId]),
-            Query::equal('projectInternalId', [$project->getInternalId()])
-        ], $dbForConsole, function (Document $document) use ($project, $dbForConsole) {
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ], $dbForConsole, function (Document $document) use ($dbForConsole) {
             $this->deleteRule($dbForConsole, $document);
         });
 
         /**
          * Delete Variables
          */
-        Console::info("Deleting variables for function " . $functionId);
+        Console::info('Deleting variables for function '.$functionId);
         $this->deleteByGroup('variables', [
             Query::equal('resourceType', ['function']),
-            Query::equal('resourceInternalId', [$functionInternalId])
+            Query::equal('resourceInternalId', [$functionInternalId]),
         ], $dbForProject);
 
         /**
          * Delete Deployments
          */
-        Console::info("Deleting deployments for function " . $functionId);
+        Console::info('Deleting deployments for function '.$functionId);
 
         $deploymentInternalIds = [];
         $this->deleteByGroup('deployments', [
-            Query::equal('resourceInternalId', [$functionInternalId])
+            Query::equal('resourceInternalId', [$functionInternalId]),
         ], $dbForProject, function (Document $document) use ($deviceForFunctions, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
             $this->deleteDeploymentFiles($deviceForFunctions, $document);
@@ -781,11 +733,11 @@ class Deletes extends Action
         /**
          * Delete builds
          */
-        Console::info("Deleting builds for function " . $functionId);
+        Console::info('Deleting builds for function '.$functionId);
 
         foreach ($deploymentInternalIds as $deploymentInternalId) {
             $this->deleteByGroup('builds', [
-                Query::equal('deploymentInternalId', [$deploymentInternalId])
+                Query::equal('deploymentInternalId', [$deploymentInternalId]),
             ], $dbForProject, function (Document $document) use ($deviceForBuilds) {
                 $this->deleteBuildFiles($deviceForBuilds, $document);
             });
@@ -794,15 +746,15 @@ class Deletes extends Action
         /**
          * Delete Executions
          */
-        Console::info("Deleting executions for function " . $functionId);
+        Console::info('Deleting executions for function '.$functionId);
         $this->deleteByGroup('executions', [
-            Query::equal('functionInternalId', [$functionInternalId])
+            Query::equal('functionInternalId', [$functionInternalId]),
         ], $dbForProject);
 
         /**
          * Delete VCS Repositories and VCS Comments
          */
-        Console::info("Deleting VCS repositories and comments linked to function " . $functionId);
+        Console::info('Deleting VCS repositories and comments linked to function '.$functionId);
         $this->deleteByGroup('repositories', [
             Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::equal('resourceInternalId', [$functionInternalId]),
@@ -819,79 +771,65 @@ class Deletes extends Action
         /**
          * Request executor to delete all deployment containers
          */
-        Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
+        Console::info('Requesting executor to delete all deployment containers for function '.$functionId);
         $this->deleteRuntimes($getProjectDB, $document, $project);
     }
 
-    /**
-     * @param Device $device
-     * @param Document $deployment
-     * @return void
-     */
     private function deleteDeploymentFiles(Device $device, Document $deployment): void
     {
         $deploymentId = $deployment->getId();
         $deploymentPath = $deployment->getAttribute('path', '');
 
         if (empty($deploymentPath)) {
-            Console::info("No deployment files for deployment " . $deploymentId);
+            Console::info('No deployment files for deployment '.$deploymentId);
+
             return;
         }
 
-        Console::info("Deleting deployment files for deployment " . $deploymentId);
+        Console::info('Deleting deployment files for deployment '.$deploymentId);
 
         try {
             if ($device->delete($deploymentPath, true)) {
-                Console::success('Deleted deployment files: ' . $deploymentPath);
+                Console::success('Deleted deployment files: '.$deploymentPath);
             } else {
-                Console::error('Failed to delete deployment files: ' . $deploymentPath);
+                Console::error('Failed to delete deployment files: '.$deploymentPath);
             }
         } catch (\Throwable $th) {
-            Console::error('Failed to delete deployment files: ' . $deploymentPath);
-            Console::error('[Error] Type: ' . get_class($th));
-            Console::error('[Error] Message: ' . $th->getMessage());
-            Console::error('[Error] File: ' . $th->getFile());
-            Console::error('[Error] Line: ' . $th->getLine());
+            Console::error('Failed to delete deployment files: '.$deploymentPath);
+            Console::error('[Error] Type: '.get_class($th));
+            Console::error('[Error] Message: '.$th->getMessage());
+            Console::error('[Error] File: '.$th->getFile());
+            Console::error('[Error] Line: '.$th->getLine());
         }
     }
 
-    /**
-     * @param Device $device
-     * @param Document $build
-     * @return void
-     */
     private function deleteBuildFiles(Device $device, Document $build): void
     {
         $buildId = $build->getId();
         $buildPath = $build->getAttribute('path', '');
 
         if (empty($buildPath)) {
-            Console::info("No build files for build " . $buildId);
+            Console::info('No build files for build '.$buildId);
+
             return;
         }
 
         try {
             if ($device->delete($buildPath, true)) {
-                Console::success('Deleted build files: ' . $buildPath);
+                Console::success('Deleted build files: '.$buildPath);
             } else {
-                Console::error('Failed to delete build files: ' . $buildPath);
+                Console::error('Failed to delete build files: '.$buildPath);
             }
         } catch (\Throwable $th) {
-            Console::error('Failed to delete deployment files: ' . $buildPath);
-            Console::error('[Error] Type: ' . get_class($th));
-            Console::error('[Error] Message: ' . $th->getMessage());
-            Console::error('[Error] File: ' . $th->getFile());
-            Console::error('[Error] Line: ' . $th->getLine());
+            Console::error('Failed to delete deployment files: '.$buildPath);
+            Console::error('[Error] Type: '.get_class($th));
+            Console::error('[Error] Message: '.$th->getMessage());
+            Console::error('[Error] File: '.$th->getFile());
+            Console::error('[Error] Line: '.$th->getLine());
         }
     }
 
     /**
-     * @param callable $getProjectDB
-     * @param Device $deviceForFunctions
-     * @param Device $deviceForBuilds
-     * @param Document $document
-     * @param Document $project
-     * @return void
      * @throws Exception
      */
     private function deleteDeployment(callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, Document $project): void
@@ -909,10 +847,10 @@ class Deletes extends Action
         /**
          * Delete builds
          */
-        Console::info("Deleting builds for deployment " . $deploymentId);
+        Console::info('Deleting builds for deployment '.$deploymentId);
 
         $this->deleteByGroup('builds', [
-            Query::equal('deploymentInternalId', [$deploymentInternalId])
+            Query::equal('deploymentInternalId', [$deploymentInternalId]),
         ], $dbForProject, function (Document $document) use ($deviceForBuilds) {
             $this->deleteBuildFiles($deviceForBuilds, $document);
         });
@@ -920,38 +858,34 @@ class Deletes extends Action
         /**
          * Request executor to delete all deployment containers
          */
-        Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
+        Console::info('Requesting executor to delete deployment container for deployment '.$deploymentId);
         $this->deleteRuntimes($getProjectDB, $document, $project);
     }
 
     /**
-     * @param Document $document to be deleted
-     * @param Database $database to delete it from
-     * @param callable|null $callback to perform after document is deleted
-     * @return void
+     * @param  Document  $document  to be deleted
+     * @param  Database  $database  to delete it from
+     * @param  callable|null  $callback  to perform after document is deleted
      */
-    private function deleteById(Document $document, Database $database, callable $callback = null): void
+    private function deleteById(Document $document, Database $database, ?callable $callback = null): void
     {
         if ($database->deleteDocument($document->getCollection(), $document->getId())) {
-            Console::success('Deleted document "' . $document->getId() . '" successfully');
+            Console::success('Deleted document "'.$document->getId().'" successfully');
 
             if (is_callable($callback)) {
                 $callback($document);
             }
         } else {
-            Console::error('Failed to delete document: ' . $document->getId());
+            Console::error('Failed to delete document: '.$document->getId());
         }
     }
 
     /**
-     * @param string $collection collectionID
-     * @param array $queries
-     * @param Database $database
-     * @param callable|null $callback
-     * @return void
+     * @param  string  $collection  collectionID
+     *
      * @throws Exception
      */
-    private function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    private function deleteByGroup(string $collection, array $queries, Database $database, ?callable $callback = null): void
     {
         $count = 0;
         $chunk = 0;
@@ -966,13 +900,14 @@ class Deletes extends Action
             try {
                 $results = $database->find($collection, [Query::limit($limit), ...$queries]);
             } catch (DatabaseException $e) {
-                Console::error('Failed to find documents for collection ' . $collection . ': ' . $e->getMessage());
+                Console::error('Failed to find documents for collection '.$collection.': '.$e->getMessage());
+
                 return;
             }
 
             $sum = count($results);
 
-            Console::info('Deleting chunk #' . $chunk . '. Found ' . $sum . ' documents');
+            Console::info('Deleting chunk #'.$chunk.'. Found '.$sum.' documents');
 
             foreach ($results as $document) {
                 $this->deleteById($document, $database, $callback);
@@ -982,18 +917,16 @@ class Deletes extends Action
 
         $executionEnd = \microtime(true);
 
-        Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+        Console::info("Deleted {$count} document by group in ".($executionEnd - $executionStart).' seconds');
     }
 
     /**
-     * @param string $collection collectionID
-     * @param Query[] $queries
-     * @param Database $database
-     * @param callable|null $callback
-     * @return void
+     * @param  string  $collection  collectionID
+     * @param  Query[]  $queries
+     *
      * @throws Exception
      */
-    private function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    private function listByGroup(string $collection, array $queries, Database $database, ?callable $callback = null): void
     {
         $count = 0;
         $chunk = 0;
@@ -1031,24 +964,22 @@ class Deletes extends Action
 
         $executionEnd = \microtime(true);
 
-        Console::info("Listed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+        Console::info("Listed {$count} document by group in ".($executionEnd - $executionStart).' seconds');
     }
 
     /**
-     * @param Database $dbForConsole
-     * @param Document $document rule document
-     * @return void
+     * @param  Document  $document  rule document
      */
     private function deleteRule(Database $dbForConsole, Document $document): void
     {
 
         $domain = $document->getAttribute('domain');
-        $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
+        $directory = APP_STORAGE_CERTIFICATES.'/'.$domain;
         $checkTraversal = realpath($directory) === $directory;
 
         if ($checkTraversal && is_dir($directory)) {
             // Delete files, so Traefik is aware of change
-            array_map('unlink', glob($directory . '/*.*'));
+            array_map('unlink', glob($directory.'/*.*'));
             rmdir($directory);
             Console::info("Deleted certificate files for {$domain}");
         } else {
@@ -1061,28 +992,16 @@ class Deletes extends Action
         }
     }
 
-    /**
-     * @param callable $getProjectDB
-     * @param Device $deviceForFiles
-     * @param Document $document
-     * @param Document $project
-     * @return void
-     */
     private function deleteBucket(callable $getProjectDB, Device $deviceForFiles, Document $document, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
 
-        $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
+        $dbForProject->deleteCollection('bucket_'.$document->getInternalId());
 
         $deviceForFiles->deletePath($document->getId());
     }
 
     /**
-     * @param Database $dbForConsole
-     * @param callable $getProjectDB
-     * @param Document $document
-     * @param Document $project
-     * @return void
      * @throws Exception
      */
     private function deleteInstallation(Database $dbForConsole, callable $getProjectDB, Document $document, Document $project): void
@@ -1090,7 +1009,7 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         $this->listByGroup('functions', [
-            Query::equal('installationInternalId', [$document->getInternalId()])
+            Query::equal('installationInternalId', [$document->getInternalId()]),
         ], $dbForProject, function ($function) use ($dbForProject, $dbForConsole) {
             $dbForConsole->deleteDocument('repositories', $function->getAttribute('repositoryId'));
 
@@ -1108,10 +1027,8 @@ class Deletes extends Action
     }
 
     /**
-     * @param callable $getProjectDB
-     * @param ?Document $function
-     * @param Document $project
-     * @return void
+     * @param  ?Document  $function
+     *
      * @throws Exception
      */
     private function deleteRuntimes(callable $getProjectDB, ?Document $function, Document $project): void
@@ -1134,10 +1051,10 @@ class Deletes extends Action
                         Console::info("Runtime for deployment {$deploymentId} deleted.");
                     } catch (Throwable $th) {
                         Console::warning("Runtime for deployment {$deploymentId} skipped:");
-                        Console::error('[Error] Type: ' . get_class($th));
-                        Console::error('[Error] Message: ' . $th->getMessage());
-                        Console::error('[Error] File: ' . $th->getFile());
-                        Console::error('[Error] Line: ' . $th->getLine());
+                        Console::error('[Error] Type: '.get_class($th));
+                        Console::error('[Error] Message: '.$th->getMessage());
+                        Console::error('[Error] File: '.$th->getFile());
+                        Console::error('[Error] Line: '.$th->getLine());
                     }
                 }
             );

@@ -5,11 +5,9 @@
  *
  * Initializes both Appwrite API entry point, queue workers, and CLI tasks.
  * Set configuration, framework resources & app constants
- *
  */
-
-if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
-    require_once __DIR__ . '/../vendor/autoload.php';
+if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
+    require_once __DIR__.'/../vendor/autoload.php';
 }
 
 \ini_set('memory_limit', '512M');
@@ -89,7 +87,7 @@ const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
 const APP_EMAIL_SECURITY = ''; // Default security email address
-const APP_USERAGENT = APP_NAME . '-Server v%s. Please report abuse at %s';
+const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
@@ -178,7 +176,7 @@ const DELETE_TYPE_INSTALLATIONS = 'installations';
 const DELETE_TYPE_RULES = 'rules';
 const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
-const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
+const DELETE_TYPE_CACHE_BY_RESOURCE = 'cacheByResource';
 const DELETE_TYPE_SCHEDULES = 'schedules';
 const DELETE_TYPE_TOPIC = 'topic';
 const DELETE_TYPE_TARGET = 'target';
@@ -211,9 +209,9 @@ const MESSAGE_TYPE_PUSH = 'push';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
-const METRIC_MESSAGES  = 'messages';
-const METRIC_MESSAGES_COUNTRY_CODE  = '{countryCode}.messages';
-const METRIC_SESSIONS  = 'sessions';
+const METRIC_MESSAGES = 'messages';
+const METRIC_MESSAGES_COUNTRY_CODE = '{countryCode}.messages';
+const METRIC_SESSIONS = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
 const METRIC_DATABASE_ID_COLLECTIONS = '{databaseInternalId}.collections';
@@ -221,38 +219,38 @@ const METRIC_DOCUMENTS = 'documents';
 const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
 const METRIC_BUCKETS = 'buckets';
-const METRIC_FILES  = 'files';
-const METRIC_FILES_STORAGE  = 'files.storage';
+const METRIC_FILES = 'files';
+const METRIC_FILES_STORAGE = 'files.storage';
 const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
-const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
-const METRIC_FUNCTIONS  = 'functions';
-const METRIC_DEPLOYMENTS  = 'deployments';
-const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
-const METRIC_BUILDS  = 'builds';
-const METRIC_BUILDS_STORAGE  = 'builds.storage';
-const METRIC_BUILDS_COMPUTE  = 'builds.compute';
+const METRIC_BUCKET_ID_FILES_STORAGE = '{bucketInternalId}.files.storage';
+const METRIC_FUNCTIONS = 'functions';
+const METRIC_DEPLOYMENTS = 'deployments';
+const METRIC_DEPLOYMENTS_STORAGE = 'deployments.storage';
+const METRIC_BUILDS = 'builds';
+const METRIC_BUILDS_STORAGE = 'builds.storage';
+const METRIC_BUILDS_COMPUTE = 'builds.compute';
 const METRIC_BUILDS_MB_SECONDS = 'builds.mbSeconds';
-const METRIC_FUNCTION_ID_BUILDS  = '{functionInternalId}.builds';
+const METRIC_FUNCTION_ID_BUILDS = '{functionInternalId}.builds';
 const METRIC_FUNCTION_ID_BUILDS_STORAGE = '{functionInternalId}.builds.storage';
-const METRIC_FUNCTION_ID_BUILDS_COMPUTE  = '{functionInternalId}.builds.compute';
-const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
-const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
+const METRIC_FUNCTION_ID_BUILDS_COMPUTE = '{functionInternalId}.builds.compute';
+const METRIC_FUNCTION_ID_DEPLOYMENTS = '{resourceType}.{resourceInternalId}.deployments';
+const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE = '{resourceType}.{resourceInternalId}.deployments.storage';
 const METRIC_FUNCTION_ID_BUILDS_MB_SECONDS = '{functionInternalId}.builds.mbSeconds';
-const METRIC_EXECUTIONS  = 'executions';
-const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
+const METRIC_EXECUTIONS = 'executions';
+const METRIC_EXECUTIONS_COMPUTE = 'executions.compute';
 const METRIC_EXECUTIONS_MB_SECONDS = 'executions.mbSeconds';
-const METRIC_FUNCTION_ID_EXECUTIONS  = '{functionInternalId}.executions';
-const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE  = '{functionInternalId}.executions.compute';
+const METRIC_FUNCTION_ID_EXECUTIONS = '{functionInternalId}.executions';
+const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE = '{functionInternalId}.executions.compute';
 const METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS = '{functionInternalId}.executions.mbSeconds';
-const METRIC_NETWORK_REQUESTS  = 'network.requests';
-const METRIC_NETWORK_INBOUND  = 'network.inbound';
-const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
+const METRIC_NETWORK_REQUESTS = 'network.requests';
+const METRIC_NETWORK_INBOUND = 'network.inbound';
+const METRIC_NETWORK_OUTBOUND = 'network.outbound';
 
 $register = new Registry();
 
 App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 
-if (!App::isProduction()) {
+if (! App::isProduction()) {
     // Allow specific domains to skip public domain validation in dev environment
     // Useful for existing tests involving webhooks
     PublicDomain::allow(['request-catcher']);
@@ -261,36 +259,36 @@ if (!App::isProduction()) {
 /*
  * ENV vars
  */
-Config::load('events', __DIR__ . '/config/events.php');
-Config::load('auth', __DIR__ . '/config/auth.php');
-Config::load('apis', __DIR__ . '/config/apis.php');  // List of APIs
-Config::load('errors', __DIR__ . '/config/errors.php');
-Config::load('oAuthProviders', __DIR__ . '/config/oAuthProviders.php');
-Config::load('platforms', __DIR__ . '/config/platforms.php');
-Config::load('collections', __DIR__ . '/config/collections.php');
-Config::load('runtimes', __DIR__ . '/config/runtimes.php');
-Config::load('runtimes-v2', __DIR__ . '/config/runtimes-v2.php');
-Config::load('usage', __DIR__ . '/config/usage.php');
-Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
-Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
-Config::load('services', __DIR__ . '/config/services.php');  // List of services
-Config::load('variables', __DIR__ . '/config/variables.php');  // List of env variables
-Config::load('regions', __DIR__ . '/config/regions.php'); // List of available regions
-Config::load('avatar-browsers', __DIR__ . '/config/avatars/browsers.php');
-Config::load('avatar-credit-cards', __DIR__ . '/config/avatars/credit-cards.php');
-Config::load('avatar-flags', __DIR__ . '/config/avatars/flags.php');
-Config::load('locale-codes', __DIR__ . '/config/locale/codes.php');
-Config::load('locale-currencies', __DIR__ . '/config/locale/currencies.php');
-Config::load('locale-eu', __DIR__ . '/config/locale/eu.php');
-Config::load('locale-languages', __DIR__ . '/config/locale/languages.php');
-Config::load('locale-phones', __DIR__ . '/config/locale/phones.php');
-Config::load('locale-countries', __DIR__ . '/config/locale/countries.php');
-Config::load('locale-continents', __DIR__ . '/config/locale/continents.php');
-Config::load('locale-templates', __DIR__ . '/config/locale/templates.php');
-Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
-Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
-Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
-Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
+Config::load('events', __DIR__.'/config/events.php');
+Config::load('auth', __DIR__.'/config/auth.php');
+Config::load('apis', __DIR__.'/config/apis.php');  // List of APIs
+Config::load('errors', __DIR__.'/config/errors.php');
+Config::load('oAuthProviders', __DIR__.'/config/oAuthProviders.php');
+Config::load('platforms', __DIR__.'/config/platforms.php');
+Config::load('collections', __DIR__.'/config/collections.php');
+Config::load('runtimes', __DIR__.'/config/runtimes.php');
+Config::load('runtimes-v2', __DIR__.'/config/runtimes-v2.php');
+Config::load('usage', __DIR__.'/config/usage.php');
+Config::load('roles', __DIR__.'/config/roles.php');  // User roles and scopes
+Config::load('scopes', __DIR__.'/config/scopes.php');  // User roles and scopes
+Config::load('services', __DIR__.'/config/services.php');  // List of services
+Config::load('variables', __DIR__.'/config/variables.php');  // List of env variables
+Config::load('regions', __DIR__.'/config/regions.php'); // List of available regions
+Config::load('avatar-browsers', __DIR__.'/config/avatars/browsers.php');
+Config::load('avatar-credit-cards', __DIR__.'/config/avatars/credit-cards.php');
+Config::load('avatar-flags', __DIR__.'/config/avatars/flags.php');
+Config::load('locale-codes', __DIR__.'/config/locale/codes.php');
+Config::load('locale-currencies', __DIR__.'/config/locale/currencies.php');
+Config::load('locale-eu', __DIR__.'/config/locale/eu.php');
+Config::load('locale-languages', __DIR__.'/config/locale/languages.php');
+Config::load('locale-phones', __DIR__.'/config/locale/phones.php');
+Config::load('locale-countries', __DIR__.'/config/locale/countries.php');
+Config::load('locale-continents', __DIR__.'/config/locale/continents.php');
+Config::load('locale-templates', __DIR__.'/config/locale/templates.php');
+Config::load('storage-logos', __DIR__.'/config/storage/logos.php');
+Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php');
+Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php');
+Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php');
 
 /**
  * New DB Filters
@@ -345,8 +343,7 @@ Database::addFilter(
         if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
             $attribute
                 ->setAttribute('min', $formatOptions['min'])
-                ->setAttribute('max', $formatOptions['max'])
-            ;
+                ->setAttribute('max', $formatOptions['max']);
         }
 
         return $value;
@@ -355,9 +352,7 @@ Database::addFilter(
 
 Database::addFilter(
     'subQueryAttributes',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         $attributes = $database->find('attributes', [
             Query::equal('collectionInternalId', [$document->getInternalId()]),
@@ -381,9 +376,7 @@ Database::addFilter(
 
 Database::addFilter(
     'subQueryIndexes',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('indexes', [
@@ -396,9 +389,7 @@ Database::addFilter(
 
 Database::addFilter(
     'subQueryPlatforms',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('platforms', [
@@ -410,9 +401,7 @@ Database::addFilter(
 
 Database::addFilter(
     'subQueryKeys',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('keys', [
@@ -424,9 +413,7 @@ Database::addFilter(
 
 Database::addFilter(
     'subQueryWebhooks',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('webhooks', [
@@ -438,9 +425,7 @@ Database::addFilter(
 
 Database::addFilter(
     'subQuerySessions',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database->find('sessions', [
             Query::equal('userInternalId', [$document->getInternalId()]),
@@ -451,9 +436,7 @@ Database::addFilter(
 
 Database::addFilter(
     'subQueryTokens',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
             ->find('tokens', [
@@ -465,9 +448,7 @@ Database::addFilter(
 
 Database::addFilter(
     'subQueryChallenges',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
             ->find('challenges', [
@@ -479,9 +460,7 @@ Database::addFilter(
 
 Database::addFilter(
     'subQueryAuthenticators',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
             ->find('authenticators', [
@@ -493,9 +472,7 @@ Database::addFilter(
 
 Database::addFilter(
     'subQueryMemberships',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
             ->find('memberships', [
@@ -507,9 +484,7 @@ Database::addFilter(
 
 Database::addFilter(
     'subQueryVariables',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('variables', [
@@ -540,7 +515,7 @@ Database::addFilter(
             return;
         }
         $value = json_decode($value, true);
-        $key = System::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
+        $key = System::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }
@@ -548,14 +523,12 @@ Database::addFilter(
 
 Database::addFilter(
     'subQueryProjectVariables',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('variables', [
                 Query::equal('resourceType', ['project']),
-                Query::limit(APP_LIMIT_SUBQUERY)
+                Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
 );
@@ -567,11 +540,11 @@ Database::addFilter(
             $user->getId(),
             $user->getAttribute('email', ''),
             $user->getAttribute('name', ''),
-            $user->getAttribute('phone', '')
+            $user->getAttribute('phone', ''),
         ];
 
         foreach ($user->getAttribute('labels', []) as $label) {
-            $searchValues[] = 'label:' . $label;
+            $searchValues[] = 'label:'.$label;
         }
 
         $search = implode(' ', \array_filter($searchValues));
@@ -585,36 +558,33 @@ Database::addFilter(
 
 Database::addFilter(
     'subQueryTargets',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database
             ->find('targets', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
-                Query::limit(APP_LIMIT_SUBQUERY)
+                Query::limit(APP_LIMIT_SUBQUERY),
             ]));
     }
 );
 
 Database::addFilter(
     'subQueryTopicTargets',
-    function (mixed $value) {
-        return;
-    },
+    function (mixed $value) {},
     function (mixed $value, Document $document, Database $database) {
         $targetIds = Authorization::skip(fn () => \array_map(
             fn ($document) => $document->getAttribute('targetInternalId'),
             $database->find('subscribers', [
                 Query::equal('topicInternalId', [$document->getInternalId()]),
-                Query::limit(APP_LIMIT_SUBSCRIBERS_SUBQUERY)
+                Query::limit(APP_LIMIT_SUBSCRIBERS_SUBQUERY),
             ])
         ));
         if (\count($targetIds) > 0) {
             return $database->skipValidation(fn () => $database->find('targets', [
-                Query::equal('$internalId', $targetIds)
+                Query::equal('$internalId', $targetIds),
             ]));
         }
+
         return [];
     }
 );
@@ -626,7 +596,7 @@ Database::addFilter(
             $provider->getId(),
             $provider->getAttribute('name', ''),
             $provider->getAttribute('provider', ''),
-            $provider->getAttribute('type', '')
+            $provider->getAttribute('type', ''),
         ];
 
         $search = \implode(' ', \array_filter($searchValues));
@@ -698,6 +668,7 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_DATETIME, function () {
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function ($attribute) {
     $elements = $attribute['formatOptions']['elements'];
+
     return new WhiteList($elements, true);
 }, Database::VAR_STRING);
 
@@ -712,12 +683,14 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_URL, function () {
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function ($attribute) {
     $min = $attribute['formatOptions']['min'] ?? -INF;
     $max = $attribute['formatOptions']['max'] ?? INF;
+
     return new Range($min, $max, Range::TYPE_INTEGER);
 }, Database::VAR_INTEGER);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
     $min = $attribute['formatOptions']['min'] ?? -INF;
     $max = $attribute['formatOptions']['max'] ?? INF;
+
     return new Range($min, $max, Range::TYPE_FLOAT);
 }, Database::VAR_FLOAT);
 
@@ -733,28 +706,29 @@ $register->set('logger', function () {
         return;
     }
 
-    if (!Logger::hasProvider($providerName)) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
+    if (! Logger::hasProvider($providerName)) {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Logging provider not supported. Logging is disabled');
     }
 
     // Old Sentry Format conversion. Fallback until the old syntax is completely deprecated.
     if (str_contains($providerConfig, ';') && strtolower($providerName) == 'sentry') {
-        $configChunks = \explode(";", $providerConfig);
+        $configChunks = \explode(';', $providerConfig);
 
         $sentryKey = $configChunks[0];
         $projectId = $configChunks[1];
 
-        $providerConfig = 'https://' . $sentryKey . '@sentry.io/' . $projectId;
+        $providerConfig = 'https://'.$sentryKey.'@sentry.io/'.$projectId;
     }
 
-    $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
+    $classname = '\\Utopia\\Logger\\Adapter\\'.\ucfirst($providerName);
     $adapter = new $classname($providerConfig);
+
     return new Logger($adapter);
 });
 $register->set('pools', function () {
     $group = new Group();
 
-    $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
+    $fallbackForDB = 'db_main='.AppwriteURL::unparse([
         'scheme' => 'mariadb',
         'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
         'port' => System::getEnv('_APP_DB_PORT', '3306'),
@@ -762,7 +736,7 @@ $register->set('pools', function () {
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
-    $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
+    $fallbackForRedis = 'redis_main='.AppwriteURL::unparse([
         'scheme' => 'redis',
         'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
         'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
@@ -818,7 +792,7 @@ $register->set('pools', function () {
         throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
     }
 
-    $poolSize = (int)($instanceConnections / $workerCount);
+    $poolSize = (int) ($instanceConnections / $workerCount);
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
@@ -828,7 +802,7 @@ $register->set('pools', function () {
         $dsns = explode(',', $connection['dsns'] ?? '');
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
-            $name = ($multiple) ? $key . '_' . $dsn[0] : $key;
+            $name = ($multiple) ? $key.'_'.$dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
             if (empty($dsn)) {
@@ -844,8 +818,8 @@ $register->set('pools', function () {
             $dsnScheme = $dsn->getScheme();
             $dsnDatabase = $dsn->getPath();
 
-            if (!in_array($dsnScheme, $schemes)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
+            if (! in_array($dsnScheme, $schemes)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid console database scheme');
             }
 
             /**
@@ -859,18 +833,18 @@ $register->set('pools', function () {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                        return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
                             PDO::ATTR_TIMEOUT => 3, // Seconds
                             PDO::ATTR_PERSISTENT => true,
                             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                             PDO::ATTR_EMULATE_PREPARES => true,
-                            PDO::ATTR_STRINGIFY_FETCHES => true
-                        ));
+                            PDO::ATTR_STRINGIFY_FETCHES => true,
+                        ]);
                     });
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new Redis();
-                    @$redis->pconnect($dsnHost, (int)$dsnPort);
+                    @$redis->pconnect($dsnHost, (int) $dsnPort);
                     if ($dsnPass) {
                         $redis->auth($dsnPass);
                     }
@@ -910,7 +884,7 @@ $register->set('pools', function () {
                         break;
 
                     default:
-                        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Server error: Missing adapter implementation.');
                 }
 
                 return $adapter;
@@ -919,7 +893,7 @@ $register->set('pools', function () {
             $group->add($pool);
         }
 
-        Config::setParam('pools-' . $key, $config);
+        Config::setParam('pools-'.$key, $config);
     }
 
     return $group;
@@ -952,14 +926,14 @@ $register->set('smtp', function () {
     $mail->XMailer = 'Appwrite Mailer';
     $mail->Host = System::getEnv('_APP_SMTP_HOST', 'smtp');
     $mail->Port = System::getEnv('_APP_SMTP_PORT', 25);
-    $mail->SMTPAuth = !empty($username) && !empty($password);
+    $mail->SMTPAuth = ! empty($username) && ! empty($password);
     $mail->Username = $username;
     $mail->Password = $password;
     $mail->SMTPSecure = System::getEnv('_APP_SMTP_SECURE', '');
     $mail->SMTPAutoTLS = false;
     $mail->CharSet = 'UTF-8';
 
-    $from = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+    $from = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'));
     $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
     $mail->setFrom($email, $from);
@@ -970,12 +944,13 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-02.mmdb');
+    return new Reader(__DIR__.'/assets/dbip/dbip-country-lite-2024-02.mmdb');
 });
 $register->set('passwordsDictionary', function () {
-    $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
+    $content = \file_get_contents(__DIR__.'/assets/security/10k-common-passwords');
     $content = explode("\n", $content);
     $content = array_flip($content);
+
     return $content;
 });
 $register->set('promiseAdapter', function () {
@@ -994,12 +969,12 @@ $locales = Config::getParam('locale-codes', []);
 foreach ($locales as $locale) {
     $code = $locale['code'];
 
-    $path = __DIR__ . '/config/locale/translations/' . $code . '.json';
+    $path = __DIR__.'/config/locale/translations/'.$code.'.json';
 
-    if (!\file_exists($path)) {
-        $path = __DIR__ . '/config/locale/translations/' . \substr($code, 0, 2) . '.json'; // if `ar-ae` doesn't exist, look for `ar`
-        if (!\file_exists($path)) {
-            $path = __DIR__ . '/config/locale/translations/en.json'; // if none translation exists, use default from `en.json`
+    if (! \file_exists($path)) {
+        $path = __DIR__.'/config/locale/translations/'.\substr($code, 0, 2).'.json'; // if `ar-ae` doesn't exist, look for `ar`
+        if (! \file_exists($path)) {
+            $path = __DIR__.'/config/locale/translations/en.json'; // if none translation exists, use default from `en.json`
         }
     }
 
@@ -1084,7 +1059,7 @@ App::setResource('clients', function ($request, $console, $project) {
     $validator = new Hostname();
     foreach ($hostnames as $hostname) {
         $hostname = trim($hostname);
-        if (!$validator->isValid($hostname)) {
+        if (! $validator->isValid($hostname)) {
             continue;
         }
         $console->setAttribute('platforms', [
@@ -1103,7 +1078,7 @@ App::setResource('clients', function ($request, $console, $project) {
         fn ($node) => $node['hostname'],
         \array_filter(
             $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && !empty($node['hostname']))
+            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && ! empty($node['hostname']))
         )
     );
 
@@ -1115,7 +1090,7 @@ App::setResource('clients', function ($request, $console, $project) {
             isset($node['type']) &&
             ($node['type'] === Origin::CLIENT_TYPE_WEB ||
             $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
-            !empty($node['hostname'])
+            ! empty($node['hostname'])
         ) {
             $clients[] = $node['hostname'];
         }
@@ -1131,19 +1106,18 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     /** @var Utopia\Database\Database $dbForProject */
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var string $mode */
-
     Authorization::setDefaultStatus(true);
 
-    Auth::setCookieName('a_session_' . $project->getId());
+    Auth::setCookieName('a_session_'.$project->getId());
 
-    if (APP_MODE_ADMIN === $mode) {
-        Auth::setCookieName('a_session_' . $console->getId());
+    if ($mode === APP_MODE_ADMIN) {
+        Auth::setCookieName('a_session_'.$console->getId());
     }
 
     $session = Auth::decodeSession(
         $request->getCookie(
             Auth::$cookieName, // Get sessions
-            $request->getCookie(Auth::$cookieName . '_legacy', '')
+            $request->getCookie(Auth::$cookieName.'_legacy', '')
         )
     );
 
@@ -1151,7 +1125,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     if (empty($session['id']) && empty($session['secret'])) {
         $sessionHeader = $request->getHeader('x-appwrite-session', '');
 
-        if (!empty($sessionHeader)) {
+        if (! empty($sessionHeader)) {
             $session = Auth::decodeSession($sessionHeader);
         }
     }
@@ -1173,7 +1147,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Auth::$unique = $session['id'] ?? '';
     Auth::$secret = $session['secret'] ?? '';
 
-    if (APP_MODE_ADMIN !== $mode) {
+    if ($mode !== APP_MODE_ADMIN) {
         if ($project->isEmpty()) {
             $user = new Document([]);
         } else {
@@ -1189,12 +1163,12 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     if (
         $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
+        || ! Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
     ) { // Validate user has valid login token
         $user = new Document([]);
     }
 
-    if (APP_MODE_ADMIN === $mode) {
+    if ($mode === APP_MODE_ADMIN) {
         if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
@@ -1204,13 +1178,13 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
-    if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
+    if (! empty($authJWT) && ! $project->isEmpty()) { // JWT authentication
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         try {
             $payload = $jwt->decode($authJWT);
         } catch (JWTException $error) {
-            throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
+            throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. '.$error->getMessage());
         }
 
         $jwtUserId = $payload['userId'] ?? '';
@@ -1235,7 +1209,6 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
-
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
 
     if (empty($projectId) || $projectId === 'console') {
@@ -1255,7 +1228,7 @@ App::setResource('session', function (Document $user) {
     $sessions = $user->getAttribute('sessions', []);
     $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
 
-    if (!$sessionId) {
+    if (! $sessionId) {
         return;
     }
 
@@ -1265,8 +1238,7 @@ App::setResource('session', function (Document $user) {
         }
     }
 
-    return;
-}, ['user']);
+    }, ['user']);
 
 App::setResource('console', function () {
     return new Document([
@@ -1298,12 +1270,12 @@ App::setResource('console', function () {
             'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
         ],
-        'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
-        'authWhitelistIPs' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
+        'authWhitelistEmails' => (! empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
+        'authWhitelistIPs' => (! empty(System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
         'oAuthProviders' => [
             'githubEnabled' => true,
             'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
-            'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
+            'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', ''),
         ],
     ]);
 }, []);
@@ -1317,7 +1289,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         $dsn = new DSN($project->getAttribute('database'));
     } catch (\InvalidArgumentException) {
         // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        $dsn = new DSN('mysql://'.$project->getAttribute('database'));
     }
 
     $dbAdapter = $pools
@@ -1336,10 +1308,11 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         $dsn = new DSN($project->getAttribute('database'));
     } catch (\InvalidArgumentException) {
         // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        $dsn = new DSN('mysql://'.$project->getAttribute('database'));
     }
 
-    if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+    $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+    if (in_array($dsn->getHost(), $sharedTablesKeys)) {
         $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
@@ -1348,7 +1321,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         $database
             ->setSharedTables(false)
             ->setTenant(null)
-            ->setNamespace('_' . $project->getInternalId());
+            ->setNamespace('_'.$project->getInternalId());
     }
 
     return $database;
@@ -1383,7 +1356,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             $dsn = new DSN($project->getAttribute('database'));
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+            $dsn = new DSN('mysql://'.$project->getAttribute('database'));
         }
 
         $configure = (function (Database $database) use ($project, $dsn) {
@@ -1392,7 +1365,8 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+            if (in_array($dsn->getHost(), $sharedTablesKeys)) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
@@ -1401,13 +1375,14 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 $database
                     ->setSharedTables(false)
                     ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
+                    ->setNamespace('_'.$project->getInternalId());
             }
         });
 
         if (isset($databases[$dsn->getHost()])) {
             $database = $databases[$dsn->getHost()];
             $configure($database);
+
             return $database;
         }
 
@@ -1432,8 +1407,7 @@ App::setResource('cache', function (Group $pools) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
     return new Cache(new Sharding($adapters));
@@ -1444,22 +1418,22 @@ App::setResource('deviceForLocal', function () {
 });
 
 App::setResource('deviceForFiles', function ($project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_UPLOADS.'/app-'.$project->getId());
 }, ['project']);
 
 App::setResource('deviceForFunctions', function ($project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId());
 }, ['project']);
 
 App::setResource('deviceForBuilds', function ($project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_BUILDS.'/app-'.$project->getId());
 }, ['project']);
 
 function getDevice($root): Device
 {
     $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
-    if (!empty($connection)) {
+    if (! empty($connection)) {
         $acl = 'private';
         $device = Storage::DEVICE_LOCAL;
         $accessKey = '';
@@ -1475,7 +1449,7 @@ function getDevice($root): Device
             $bucket = $dsn->getPath() ?? '';
             $region = $dsn->getParam('region');
         } catch (\Throwable $e) {
-            Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
+            Console::warning($e->getMessage().'Invalid DSN. Defaulting to Local device.');
         }
 
         switch ($device) {
@@ -1484,6 +1458,7 @@ function getDevice($root): Device
             case STORAGE::DEVICE_DO_SPACES:
                 $device = new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
                 $device->setHttpVersion(S3::HTTP_VERSION_1_1);
+
                 return $device;
             case Storage::DEVICE_BACKBLAZE:
                 return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
@@ -1506,6 +1481,7 @@ function getDevice($root): Device
                 $s3Region = System::getEnv('_APP_STORAGE_S3_REGION', '');
                 $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
                 $s3Acl = 'private';
+
                 return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
             case Storage::DEVICE_DO_SPACES:
                 $doSpacesAccessKey = System::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
@@ -1515,6 +1491,7 @@ function getDevice($root): Device
                 $doSpacesAcl = 'private';
                 $device = new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
                 $device->setHttpVersion(S3::HTTP_VERSION_1_1);
+
                 return $device;
             case Storage::DEVICE_BACKBLAZE:
                 $backblazeAccessKey = System::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
@@ -1522,6 +1499,7 @@ function getDevice($root): Device
                 $backblazeRegion = System::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
                 $backblazeBucket = System::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
                 $backblazeAcl = 'private';
+
                 return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
             case Storage::DEVICE_LINODE:
                 $linodeAccessKey = System::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
@@ -1529,6 +1507,7 @@ function getDevice($root): Device
                 $linodeRegion = System::getEnv('_APP_STORAGE_LINODE_REGION', '');
                 $linodeBucket = System::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
                 $linodeAcl = 'private';
+
                 return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
             case Storage::DEVICE_WASABI:
                 $wasabiAccessKey = System::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
@@ -1536,6 +1515,7 @@ function getDevice($root): Device
                 $wasabiRegion = System::getEnv('_APP_STORAGE_WASABI_REGION', '');
                 $wasabiBucket = System::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
                 $wasabiAcl = 'private';
+
                 return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
         }
     }
@@ -1561,7 +1541,6 @@ App::setResource('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('passwordsDictionary');
 }, ['register']);
-
 
 App::setResource('servers', function () {
     $platforms = Config::getParam('platforms');
@@ -1619,7 +1598,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
 
     $params = [
         'list' => function (string $databaseId, string $collectionId, array $args) {
-            return [ 'queries' => $args['queries']];
+            return ['queries' => $args['queries']];
         },
         'create' => function (string $databaseId, string $collectionId, array $args) {
             $id = $args['id'] ?? 'unique()';
@@ -1667,18 +1646,21 @@ App::setResource('schema', function ($utopia, $dbForProject) {
 App::setResource('contributors', function () {
     $path = 'app/config/contributors.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
+
     return $list;
 });
 
 App::setResource('employees', function () {
     $path = 'app/config/employees.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
+
     return $list;
 });
 
 App::setResource('heroes', function () {
     $path = 'app/config/heroes.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
+
     return $list;
 });
 
@@ -1690,13 +1672,14 @@ App::setResource('requestTimestamp', function ($request) {
     //TODO: Move this to the Request class itself
     $timestampHeader = $request->getHeader('x-appwrite-timestamp');
     $requestTimestamp = null;
-    if (!empty($timestampHeader)) {
+    if (! empty($timestampHeader)) {
         try {
             $requestTimestamp = new \DateTime($timestampHeader);
         } catch (\Throwable $e) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Timestamp header value');
         }
     }
+
     return $requestTimestamp;
 }, ['request']);
 App::setResource('plan', function (array $plan = []) {
