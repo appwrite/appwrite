@@ -146,7 +146,7 @@ return [
                 'name' => '_APP_SYSTEM_EMAIL_ADDRESS',
                 'description' => 'This is the sender email address that will appear on email messages sent to developers from the Appwrite console. The default value is \'noreplay@appwrite.io\'. You should choose an email address that is allowed to be used from your SMTP server to avoid the server email ending in the users\' SPAM folders.',
                 'introduction' => '0.7.0',
-                'default' => 'noreplay@appwrite.io',
+                'default' => 'noreply@appwrite.io',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
