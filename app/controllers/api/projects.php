@@ -147,6 +147,7 @@ App::post('/v1/projects')
         }
 
         var_dump([
+            '_APP_DATABASE_SHARED_TABLES' => System::getEnv('_APP_DATABASE_SHARED_TABLES', ''),
             'region' => $region,
             'dsn' => $dsn,
         ]);
