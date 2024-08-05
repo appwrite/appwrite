@@ -1,5 +1,7 @@
 <?php
 
+namespace Appwrite\Functions;
+
 enum Specifications: string
 {
     case S_1VCPU_512MB = 's-1vcpu-512mb';

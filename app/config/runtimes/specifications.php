@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/enum.php';
+use Appwrite\Functions\Specifications;
 
 return [
     Specifications::S_1VCPU_512MB->value => [
