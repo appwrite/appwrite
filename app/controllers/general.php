@@ -317,6 +317,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
                 ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? 512) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? 1)))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? 512) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? 1)))
+                ->setProject($project)
+                ->trigger()
             ;
 
             if ($function->getAttribute('logging')) {
