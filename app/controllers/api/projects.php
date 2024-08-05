@@ -119,18 +119,20 @@ App::post('/v1/projects')
         if ($index !== false) {
             $dsn = $databases[$index];
         } else {
-            var_dump('region');
-            var_dump($region);
             if ($region !== 'default') {
                 $databases = array_filter($databases, function ($value) use ($region) {
                     return str_contains($value, $region);
                 });
-                var_dump('databases');
-                var_dump($databases);
+
             }
 
             $dsn = $databases[array_rand($databases)];
         }
+
+        var_dump([
+            'region' => $region,
+            'dsn' => $dsn,
+        ]);
 
         if ($projectId === 'console') {
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
