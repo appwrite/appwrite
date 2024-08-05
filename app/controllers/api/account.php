@@ -124,7 +124,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
-        'dateTime' => DateTime::format(new \DateTime(), 'Y-m-d H:i:s'),
+        'dateTime' => DateTime::format(new \DateTime(), 'h:ia MMMM dS'),
         'user' => $user->getAttribute('name'),
         'project' => $project->getAttribute('name'),
         'device' => $session->getAttribute('clientName'),
@@ -177,12 +177,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
     });
 
-    $sendAlert = (match ($verifiedToken->getAttribute('type')) {
-        Auth::TOKEN_TYPE_MAGIC_URL,
-        Auth::TOKEN_TYPE_EMAIL => false,
-        default => true
-    });
-
     $session = new Document(array_merge(
         [
             '$id' => ID::unique(),
@@ -229,8 +223,12 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
-    if (($project->getAttribute('auths', [])['sessionAlerts'] ?? false) && $sendAlert) {
-        sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+    if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
+        if ($dbForProject->count('sessions', [
+            Query::equal('userId', [$user->getId()]),
+        ]) !== 1) {
+            sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+        }
     }
 
     $queueForEvents
@@ -910,7 +908,11 @@ App::post('/v1/account/sessions/email')
         ;
 
         if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
-            sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+            if ($dbForProject->count('sessions', [
+                Query::equal('userId', [$user->getId()]),
+            ]) !== 1) {
+                sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+            }
         }
 
         $response->dynamic($session, Response::MODEL_SESSION);
