@@ -17,6 +17,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
 use Appwrite\Utopia\Database\Validator\Queries\Executions;
 use Appwrite\Utopia\Database\Validator\Queries\Functions;
+use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Executor\Executor;
@@ -44,6 +45,7 @@ use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
+use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
@@ -1592,9 +1594,10 @@ App::post('/v1/functions/:functionId/executions')
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
-    ->param('headers', [], new Assoc(), 'HTTP headers of execution. Defaults to empty.', true)
+    ->param('headers', [], new AnyOf([new Text(65535), new Assoc()], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('response')
+    ->inject('request')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('dbForConsole')
@@ -1603,10 +1606,31 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('queueForUsage')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, ?string $scheduledAt, Response $response, Document $project, Database $dbForProject, Database $dbForConsole, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
+    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForConsole, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
 
         if(!$async && !is_null($scheduledAt)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Scheduled executions must run asynchronously. Set scheduledAt to a future date, or set async to true.');
+        }
+
+        /**
+         * @var array<string, mixed> $headers
+         */
+        $assocParams = ['headers'];
+        foreach ($assocParams as $assocParam) {
+            if (!empty('headers') && !is_array($$assocParam)) {
+                $$assocParam = \json_decode($$assocParam, true);
+            }
+        }
+
+        // 'body' validator
+        if (\strlen($body) > 20971520) {
+            throw new Exception("Parameter body can be only up to 20MB in size.");
+        }
+
+        // 'headers' validator
+        $validator = new Assoc();
+        if (!$validator->isValid($headers)) {
+            throw new Exception($validator->getDescription(), 400);
         }
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
@@ -1915,9 +1939,38 @@ App::post('/v1/functions/:functionId/executions')
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($execution, Response::MODEL_EXECUTION);
+        $acceptTypes = \explode(', ', $request->getHeader('accept', 'multipart/form-data'));
+        $isJson = false;
+
+        foreach ($acceptTypes as $acceptType) {
+            if (\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
+                $isJson = true;
+                break;
+            }
+        }
+
+        if ($isJson) {
+            $executionString = \json_encode($execution, JSON_UNESCAPED_UNICODE);
+            if (!$executionString) {
+                throw new Exception('Execution resulted in binary response, but JSON response does not allow binaries. Use "Accept: multipart/form-data" header to support binaries.', 400);
+            }
+
+            $response
+                ->setStatusCode(Response::STATUS_CODE_OK)
+                ->addHeader('content-type', 'application/json')
+                ->send($executionString);
+        } else {
+            // Multipart form data response
+            $multipart = new BodyMultipart();
+            foreach ($execution as $key => $value) {
+                $multipart->setPart($key, $value);
+            }
+
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->addHeader('content-type', $multipart->exportHeader())
+                ->send($multipart->exportBody());
+        }
     });
 
 App::get('/v1/functions/:functionId/executions')
