@@ -129,11 +129,6 @@ App::post('/v1/projects')
             $dsn = $databases[array_rand($databases)];
         }
 
-        var_dump([
-            'region' => $region,
-            'dsn' => $dsn,
-        ]);
-
         if ($projectId === 'console') {
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
@@ -150,6 +145,11 @@ App::post('/v1/projects')
                 $dsn .= '&namespace='.$namespace;
             }
         }
+
+        var_dump([
+            'region' => $region,
+            'dsn' => $dsn,
+        ]);
 
         try {
             $project = $dbForConsole->createDocument('projects', new Document([
