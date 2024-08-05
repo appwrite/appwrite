@@ -1579,7 +1579,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'range' => '24h'
         ]);
-    
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(19, count($response['body']));
         $this->assertEquals('24h', $response['body']['range']);
