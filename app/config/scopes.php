@@ -142,6 +142,9 @@ return [ // List of publicly visible scopes
     'archives.write' => [
         'description' => 'Access to create, update, and delete your archive',
     ],
+    'restorations.read' => [
+        'description' => 'Access to read your restorations',
+    ],
     'restorations.write' => [
         'description' => 'Access to create, update, and delete your restoration',
     ],
