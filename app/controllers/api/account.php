@@ -177,7 +177,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
     });
 
-    $sendingAlerts = (match ($verifiedToken->getAttribute('type')) {
+    $sendAlert = (match ($verifiedToken->getAttribute('type')) {
         Auth::TOKEN_TYPE_MAGIC_URL,
         Auth::TOKEN_TYPE_EMAIL => false,
         default => true
@@ -229,7 +229,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
-    if (($project->getAttribute('auths', [])['sessionAlerts'] ?? false) && $sendingAlerts) {
+    if (($project->getAttribute('auths', [])['sessionAlerts'] ?? false) && $sendAlert) {
         sendSessionAlert($locale, $user, $project, $session, $queueForMails);
     }
 
