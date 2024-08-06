@@ -10,6 +10,7 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\Validator\Headers;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Task\Validator\Cron;
@@ -1628,7 +1629,7 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         // 'headers' validator
-        $validator = new Assoc();
+        $validator = new Headers();
         if (!$validator->isValid($headers)) {
             throw new Exception($validator->getDescription(), 400);
         }
