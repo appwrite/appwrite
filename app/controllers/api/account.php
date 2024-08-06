@@ -125,7 +125,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
-        'dateTime' => DateTime::format(new \DateTime(), 'Y-m-d H:i:s'),
+        'dateTime' => DateTime::format(new \DateTime(), 'h:ia MMMM dS'),
         'user' => $user->getAttribute('name'),
         'project' => $project->getAttribute('name'),
         'device' => $session->getAttribute('clientName'),
@@ -224,7 +224,11 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     }
 
     if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
-        sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+        if ($dbForProject->count('sessions', [
+            Query::equal('userId', [$user->getId()]),
+        ]) !== 1) {
+            sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+        }
     }
 
     $queueForEvents
@@ -911,7 +915,11 @@ Http::post('/v1/account/sessions/email')
         ;
 
         if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
-            sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+            if ($dbForProject->count('sessions', [
+                Query::equal('userId', [$user->getId()]),
+            ]) !== 1) {
+                sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+            }
         }
 
         $response->dynamic($session, Response::MODEL_SESSION);

@@ -335,6 +335,7 @@ class Builds extends Action
                 $source = $path;
 
                 $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source));
 
                 $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
@@ -402,7 +403,8 @@ class Builds extends Action
                 'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
                 'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
                 'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-                'APPWRITE_VERSION' => APP_VERSION_STABLE
+                'APPWRITE_VERSION' => APP_VERSION_STABLE,
+                'APPWRITE_REGION' => $project->getAttribute('region'),
             ]);
 
             $command = $deployment->getAttribute('commands', '');

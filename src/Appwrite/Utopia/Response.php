@@ -151,6 +151,10 @@ class Response extends HttpResponse
     public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     public const MODEL_HEADERS = 'headers';
+    public const MODEL_TEMPLATE_FUNCTION = 'templateFunction';
+    public const MODEL_TEMPLATE_FUNCTION_LIST = 'templateFunctionList';
+    public const MODEL_TEMPLATE_RUNTIME = 'templateRuntime';
+    public const MODEL_TEMPLATE_VARIABLE = 'templateVariable';
 
     // Proxy
     public const MODEL_PROXY_RULE = 'proxyRule';

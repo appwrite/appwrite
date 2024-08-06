@@ -529,6 +529,11 @@ return [
         'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
         'code' => 408,
     ],
+    Exception::FUNCTION_TEMPLATE_NOT_FOUND => [
+        'name' => Exception::FUNCTION_TEMPLATE_NOT_FOUND,
+        'description' => 'Function Template with the requested ID could not be found.',
+        'code' => 404,
+    ],
 
     /** Builds  */
     Exception::BUILD_NOT_FOUND => [

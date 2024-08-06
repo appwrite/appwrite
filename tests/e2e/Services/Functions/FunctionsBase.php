@@ -14,6 +14,31 @@ trait FunctionsBase
         Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->output);
     }
 
+    protected function awaitDeploymentIsBuilt($functionId, $deploymentId, $checkForSuccess = true): void
+    {
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        if($checkForSuccess) {
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
+        }
+    }
+
     // /**
     //  * @depends testCreateTeam
     //  */

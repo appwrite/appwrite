@@ -10,9 +10,11 @@ use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
+use Appwrite\Utopia\Request\Filters\V18 as RequestV18;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
+use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
@@ -161,7 +163,15 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
             throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED, 'To execute function using domain, execute permissions must include "any" or "guests"');
         }
 
+        $jwtExpiry = $function->getAttribute('timeout', 900);
+        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+        $apiKey = $jwtObj->encode([
+            'projectId' => $project->getId(),
+            'scopes' => $function->getAttribute('scopes', [])
+        ]);
+
         $headers = \array_merge([], $requestHeaders);
+        $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = '';
         $headers['x-appwrite-user-jwt'] = '';
@@ -240,15 +250,21 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = System::getEnv('_APP_DOMAIN');
+        $endpoint = $protocol . '://' . $hostname . "/v1";
+
         // Appwrite vars
         $vars = \array_merge($vars, [
+            'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_VERSION' => APP_VERSION_STABLE
+            'APPWRITE_VERSION' => APP_VERSION_STABLE,
+            'APPWRITE_REGION' => $project->getAttribute('region'),
         ]);
 
         /** Execute function */
@@ -446,6 +462,9 @@ Http::init()
             if (version_compare($requestFormat, '1.5.0', '<')) {
                 $request->addFilter(new RequestV17());
             }
+            if (version_compare($requestFormat, '1.6.0', '<')) {
+                $request->addFilter(new RequestV18());
+            }
         }
 
         $domain = $request->getHostname();
@@ -561,6 +580,9 @@ Http::init()
             }
             if (version_compare($responseFormat, '1.5.0', '<')) {
                 $response->addFilter(new ResponseV17());
+            }
+            if (version_compare($responseFormat, '1.6.0', '<')) {
+                $response->addFilter(new ResponseV18());
             }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
                 $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
