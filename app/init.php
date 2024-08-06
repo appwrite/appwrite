@@ -303,6 +303,7 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
+Config::load('function-templates', __DIR__ . '/config/function-templates.php');
 
 /**
  * New DB Filters
@@ -998,7 +999,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-02.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-08.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
@@ -1242,14 +1243,15 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         $jwtUserId = $payload['userId'] ?? '';
-        $jwtSessionId = $payload['sessionId'] ?? '';
-
-        if ($jwtUserId && $jwtSessionId) {
+        if (!empty($jwtUserId)) {
             $user = $dbForProject->getDocument('users', $jwtUserId);
         }
 
-        if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-            $user = new Document([]);
+        $jwtSessionId = $payload['sessionId'] ?? '';
+        if(!empty($jwtSessionId)) {
+            if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+                $user = new Document([]);
+            }
         }
     }
 
