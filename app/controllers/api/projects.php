@@ -123,7 +123,6 @@ App::post('/v1/projects')
                 $databases = array_filter($databases, function ($value) use ($region) {
                     return str_contains($value, $region);
                 });
-
             }
 
             $dsn = $databases[array_rand($databases)];
@@ -141,7 +140,7 @@ App::post('/v1/projects')
 
         // TODO: Temporary until all projects are using shared tables.
         $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        if (in_array($dsn->getHost(), $sharedTablesKeys)) {
+        if (in_array($dsn, $sharedTablesKeys)) {
             $schema = 'appwrite';
             $database = 'appwrite';
             $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
