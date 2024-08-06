@@ -218,7 +218,15 @@ class Builds extends Action
 
                 $branchName = $deployment->getAttribute('providerBranch');
                 $commitHash = $deployment->getAttribute('providerCommitHash', '');
-                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory, $commitHash);
+
+                $cloneVersion = $branchName;
+                $cloneType = GitHub::CLONE_TYPE_BRANCH;
+                if(!empty($commitHash)) {
+                    $cloneVersion = $commitHash;
+                    $cloneType = GitHub::CLONE_TYPE_COMMIT;
+                }
+
+                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $cloneVersion, $cloneType, $tmpDirectory, $rootDirectory);
                 $stdout = '';
                 $stderr = '';
                 Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
@@ -241,7 +249,13 @@ class Builds extends Action
                 if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateBranch)) {
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . \escapeshellcmd($buildId) . '/template';
-                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, $tmpTemplateDirectory, $templateRootDirectory);
+
+                    $cloneType = GitHub::CLONE_TYPE_BRANCH;
+                    if(\str_starts_with($templateBranch, '0.1.')) { // Temporary fix for 1.5. In future versions this only support tag names
+                        $cloneType = GitHub::CLONE_TYPE_TAG;
+                    }
+
+                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, $cloneType, $tmpTemplateDirectory, $templateRootDirectory);
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
