@@ -216,6 +216,7 @@ const MESSAGE_TYPE_PUSH = 'push';
 // API key types
 const API_KEY_STANDARD = 'standard';
 const API_KEY_DYNAMIC = 'dynamic';
+const API_KEY_TEST = 'test';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
@@ -428,6 +429,20 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('keys', [
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
+    }
+);
+
+Database::addFilter(
+    'subQueryDevelopmentKeys',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database
+            ->find('developmentKeys', [
                 Query::equal('projectInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
