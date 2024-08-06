@@ -4085,6 +4085,17 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('resourceType'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('statusCounters'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
