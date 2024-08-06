@@ -1365,6 +1365,12 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
+            var_dump([
+                'location' => 'Init::getProjectDB',
+                '_APP_DATABASE_SHARED_TABLES' => System::getEnv('_APP_DATABASE_SHARED_TABLES', ''),
+                'dsn' => $dsn,
+            ]);
+
             $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
             if (in_array($dsn->getHost(), $sharedTablesKeys)) {
                 $database
