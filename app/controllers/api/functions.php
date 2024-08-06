@@ -1462,7 +1462,8 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('queueForBuilds')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds) {
+    ->inject('deviceForFunctions')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Device $deviceForFunctions) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1474,13 +1475,23 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        $path = $deployment->getAttribute('path');
+        if(empty($path) || !$deviceForFunctions->exists($path)) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
         $deploymentId = ID::unique();
+
+        $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+        $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
 
         $deployment->removeAttribute('$internalId');
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
+            '$internalId' => '',
             '$id' => $deploymentId,
             'buildId' => '',
             'buildInternalId' => '',
+            'path' => $destination,
             'entrypoint' => $function->getAttribute('entrypoint'),
             'commands' => $function->getAttribute('commands', ''),
             'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
