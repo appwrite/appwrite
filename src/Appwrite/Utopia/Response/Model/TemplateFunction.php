@@ -110,8 +110,7 @@ class TemplateFunction extends Model
                 'default' => [],
                 'example' => [],
                 'array' => true
-            ])
-        ;
+            ]);
     }
 
     /**
