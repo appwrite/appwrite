@@ -2,17 +2,24 @@
 
 namespace Appwrite\Functions\Validator;
 
-use Utopia\Config\Config;
-use Utopia\System\System;
 use Utopia\Validator;
 
 class RuntimeSpecification extends Validator
 {
     private array $plan;
 
-    public function __construct(array $plan)
+    private array $specifications;
+
+    private float $maxCpus;
+
+    private int $maxMemory;
+
+    public function __construct(array $plan, array $specifications, float $maxCpus, int $maxMemory)
     {
         $this->plan = $plan;
+        $this->specifications = $specifications;
+        $this->maxCpus = $maxCpus;
+        $this->maxMemory = $maxMemory;
     }
 
     /**
@@ -24,12 +31,10 @@ class RuntimeSpecification extends Validator
      */
     public function getAllowedSpecifications(): array
     {
-        $specifications = Config::getParam('runtime-specifications', []);
-
         $allowedSpecifications = [];
 
-        foreach ($specifications as $size => $values) {
-            if ($values['cpus'] <= System::getEnv('_APP_FUNCTIONS_CPUS', 1) && $values['memory'] <= System::getEnv('_APP_FUNCTIONS_MEMORY', 512)) {
+        foreach ($this->specifications as $size => $values) {
+            if ($values['cpus'] <= $this->maxCpus && $values['memory'] <= $this->maxMemory) {
                 if (!empty($this->plan) && key_exists('runtimeSpecifications', $this->plan)) {
                     if (!\in_array($size, $this->plan['runtimeSpecifications'])) {
                         continue;
@@ -52,7 +57,7 @@ class RuntimeSpecification extends Validator
     */
     public function getDescription(): string
     {
-        return 'String must be a valid specification value of ' . implode(', ', $this->getAllowedSpecifications());
+        return 'Specification must be one of: ' . implode(', ', $this->getAllowedSpecifications());
     }
 
     /**

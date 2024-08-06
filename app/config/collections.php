@@ -3063,7 +3063,7 @@ $projectCollections = array_merge([
                 'size' => 128,
                 'signed' => false,
                 'required' => false,
-                'default' => 's-1vcpu-512mb',
+                'default' => APP_FUNCTION_BASE_SPECIFICATION,
                 'filters' => [],
             ],
         ],

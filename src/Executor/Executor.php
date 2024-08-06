@@ -59,7 +59,7 @@ class Executor
         string $source,
         string $image,
         string $version,
-        int $cpus,
+        float $cpus,
         int $memory,
         bool $remove = false,
         string $entrypoint = '',
@@ -173,7 +173,7 @@ class Executor
         string $path,
         string $method,
         array $headers,
-        int $cpus,
+        float $cpus,
         int $memory,
         string $runtimeEntrypoint = null,
         int $requestTimeout = null

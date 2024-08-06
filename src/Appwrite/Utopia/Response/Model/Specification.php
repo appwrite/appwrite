@@ -32,7 +32,7 @@ class Specification extends Model
             'type' => self::TYPE_STRING,
             'description' => 'Size slug.',
             'default' => '',
-            'example' => 's-1vcpu-512mb'
+            'example' => APP_FUNCTION_BASE_SPECIFICATION
         ]);
     }
 

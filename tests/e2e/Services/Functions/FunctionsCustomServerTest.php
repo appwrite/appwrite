@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Functions\Specification;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
@@ -858,12 +859,12 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
-            'specification' => 's-1vcpu-1gb',
+            'specification' => Specification::S_1VCPU_1GB,
         ]);
 
         $this->assertEquals(200, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
-        $this->assertEquals('s-1vcpu-1gb', $response1['body']['specification']);
+        $this->assertEquals(Specification::S_1VCPU_1GB, $response1['body']['specification']);
 
         // Test Execution
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
@@ -888,12 +889,12 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
-            'specification' => 's-1vcpu-512mb',
+            'specification' => Specification::S_1VCPU_512MB,
         ]);
 
         $this->assertEquals(200, $response2['headers']['status-code']);
         $this->assertNotEmpty($response2['body']['$id']);
-        $this->assertEquals('s-1vcpu-512mb', $response2['body']['specification']);
+        $this->assertEquals(Specification::S_1VCPU_512MB, $response2['body']['specification']);
 
         // Test Execution
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
@@ -925,7 +926,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $response3['headers']['status-code']);
-        $this->assertEquals('Invalid `specification` param: String must be a valid specification value of s-1vcpu-512mb, s-1vcpu-1gb', $response3['body']['message']);
+        $this->assertStringStartsWith('Invalid `specification` param: String must be a valid specification value of', $response3['body']['message']);
 
         return $data;
     }

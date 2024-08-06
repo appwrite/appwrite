@@ -308,7 +308,7 @@ class Functions extends Action
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
-        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', 's-1vcpu-512mb')];
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_BASE_SPECIFICATION)];
 
         $log->addTag('deploymentId', $deploymentId);
 
@@ -449,8 +449,8 @@ class Functions extends Action
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_CPUS' => ($spec['cpus'] ?? 1),
-            'APPWRITE_FUNCTION_MEMORY' => ($spec['memory'] ?? 512)
+            'APPWRITE_FUNCTION_CPUS' => ($spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS),
+            'APPWRITE_FUNCTION_MEMORY' => ($spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY)
         ]);
 
         /** Execute function */
@@ -473,8 +473,8 @@ class Functions extends Action
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
-                cpus: $spec['cpus'] ?? 1,
-                memory: $spec['memory'] ?? 512,
+                cpus: $spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS,
+                memory: $spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY,
             );
 
             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
@@ -512,8 +512,8 @@ class Functions extends Action
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
-                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? 512) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? 1)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? 512) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? 1)))
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS)))
                 ->trigger()
             ;
         }

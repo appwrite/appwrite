@@ -524,13 +524,6 @@ return [
         'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
         'code' => 408,
     ],
-
-    Exception::FUNCTION_INVALID_RUNTIME_SPECIFICATION => [
-        'name' => Exception::FUNCTION_INVALID_RUNTIME_SPECIFICATION,
-        'description' => "The requested runtime specification is either unsupported or isn't included in your plan. If your running community edition check the value of the _APP_FUNCTIONS_MEMORY and _APP_FUNCTIONS_CPUS environment variable.",
-        'code' => 400,
-    ],
-
     /** Builds  */
     Exception::BUILD_NOT_FOUND => [
         'name' => Exception::BUILD_NOT_FOUND,
