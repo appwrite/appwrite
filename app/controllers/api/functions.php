@@ -1602,7 +1602,7 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('body', '', new Text(0, 0), 'HTTP body of execution. Default value is empty string.', true)
+    ->param('body', '', new Text(20971520, 0), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
@@ -1634,9 +1634,25 @@ App::post('/v1/functions/:functionId/executions')
             }
         }
 
-        // 'body' validator
-        if (\strlen($body) > 20971520) {
-            throw new Exception("Parameter body can be only up to 20MB in size.");
+        $booleanParams = ['async'];
+        foreach ($booleanParams as $booleamParam) {
+            if (!empty($$booleamParam) && !is_bool($$booleamParam)) {
+                $$booleamParam = $$booleamParam === "true" ? true : false;
+            }
+        }
+
+        $datetimeParams = ['scheduledAt'];
+        foreach ($datetimeParams as $datetimeParam) {
+            if (!empty($$datetimeParam)) {
+                $$datetimeParam = new DateTime($$datetimeParam);
+            }
+        }
+
+        $validator = new DatetimeValidator(requireDateInFuture: true);
+        foreach ($datetimeParams as $datetimeParam) {
+            if (!empty($$datetimeParam) && !$validator->isValid($$datetimeParam)) {
+                throw new Exception($validator->getDescription(), 400);
+            }
         }
 
         // 'headers' validator
@@ -1951,7 +1967,7 @@ App::post('/v1/functions/:functionId/executions')
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 
-        $acceptTypes = \explode(', ', $request->getHeader('accept', 'multipart/form-data'));
+        $acceptTypes = \explode(', ', $request->getHeader('accept', 'application/json'));
         $isJson = false;
 
         foreach ($acceptTypes as $acceptType) {

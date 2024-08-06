@@ -1385,12 +1385,17 @@ class FunctionsCustomServerTest extends Scope
             'body' => null,
         ]);
 
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertStringContainsString('multipart/form-data', $execution['headers']['content-type']);
         $bytes = unpack('C*byte', $execution['body']['responseBody']);
         $this->assertCount(3, $bytes);
         $this->assertEquals(0, $bytes['byte1']);
         $this->assertEquals(10, $bytes['byte2']);
         $this->assertEquals(255, $bytes['byte3']);
 
+        /**
+         * Test for FAILURE
+         */
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
             'accept' => 'application/json',
@@ -1496,6 +1501,21 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $execution['headers']['status-code']);
         $this->assertEquals(\md5($bytes), $executionBody['responseBody']);
+        $this->assertEquals($execution['headers']['content-type'], 'application/json');
+
+        /**
+         * Test for FAILURE
+         */
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'accept' => 'application/json',
+        ], $this->getHeaders()), [
+            'body' => $bytes,
+        ], false);
+
+        $executionBody = json_decode($execution['body'], true);
+        $this->assertNotEquals(\md5($bytes), $executionBody['responseBody']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
