@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Services;
 
+use Appwrite\Platform\Tasks\DevGenerateTranslations;
 use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
@@ -25,6 +26,7 @@ class Tasks extends Service
     {
         $this->type = Service::TYPE_TASK;
         $this
+            ->addAction(DevGenerateTranslations::getName(), new DevGenerateTranslations())
             ->addAction(Doctor::getName(), new Doctor())
             ->addAction(Install::getName(), new Install())
             ->addAction(Maintenance::getName(), new Maintenance())

@@ -236,7 +236,7 @@ $global->set('geodb', function () {
     /**
      * @disregard P1009 Undefined type
      */
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-02.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-08.mmdb');
 });
 
 $global->set('hooks', function () {
@@ -631,14 +631,15 @@ $user
             }
 
             $jwtUserId = $payload['userId'] ?? '';
-            $jwtSessionId = $payload['sessionId'] ?? '';
-
-            if ($jwtUserId && $jwtSessionId) {
+            if (!empty($jwtUserId)) {
                 $user = $dbForProject->getDocument('users', $jwtUserId);
             }
 
-            if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-                $user = new Document([]);
+            $jwtSessionId = $payload['sessionId'] ?? '';
+            if(!empty($jwtSessionId)) {
+                if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+                    $user = new Document([]);
+                }
             }
         }
 

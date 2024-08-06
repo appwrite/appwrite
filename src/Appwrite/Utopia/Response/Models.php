@@ -127,6 +127,7 @@ class Models
         self::setModel(new BaseList('Teams List', Response::MODEL_TEAM_LIST, 'teams', Response::MODEL_TEAM));
         self::setModel(new BaseList('Memberships List', Response::MODEL_MEMBERSHIP_LIST, 'memberships', Response::MODEL_MEMBERSHIP));
         self::setModel(new BaseList('Functions List', Response::MODEL_FUNCTION_LIST, 'functions', Response::MODEL_FUNCTION));
+        self::setModel(new BaseList('Function Templates List', Response::MODEL_TEMPLATE_FUNCTION_LIST, 'templates', Response::MODEL_TEMPLATE_FUNCTION));
         self::setModel(new BaseList('Installations List', Response::MODEL_INSTALLATION_LIST, 'installations', Response::MODEL_INSTALLATION));
         self::setModel(new BaseList('Provider Repositories List', Response::MODEL_PROVIDER_REPOSITORY_LIST, 'providerRepositories', Response::MODEL_PROVIDER_REPOSITORY));
         self::setModel(new BaseList('Branches List', Response::MODEL_BRANCH_LIST, 'branches', Response::MODEL_BRANCH));
