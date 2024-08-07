@@ -127,7 +127,8 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
         if (isset($databases[$dsn->getHost()])) {
             $database = $databases[$dsn->getHost()];
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+            if (in_array($dsn->getHost(), $sharedTablesKeys)) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())

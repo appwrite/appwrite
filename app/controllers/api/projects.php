@@ -145,7 +145,7 @@ App::post('/v1/projects')
             $schema = 'appwrite';
             $database = 'appwrite';
             $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-            $dsn = $schema . '://' . System::getEnv('_APP_DATABASE_SHARED_TABLES', '') . '?database=' . $database;
+            $dsn = $schema . '://' . $dsn . '?database=' . $database;
 
             if (!empty($namespace)) {
                 $dsn .= '&namespace=' . $namespace;
