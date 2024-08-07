@@ -1403,8 +1403,8 @@ class FunctionsCustomServerTest extends Scope
             'body' => null,
         ]);
 
-        $this->assertEquals(500, $execution['headers']['status-code']);
-        $this->assertStringContainsString('Execution resulted in binary response, but JSON response does not allow binaries.', $execution['body']['type']);
+        $this->assertEquals(400, $execution['headers']['status-code']);
+        $this->assertStringContainsString('Failed to parse binary response', $execution['body']['message']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
@@ -1499,9 +1499,9 @@ class FunctionsCustomServerTest extends Scope
 
         $executionBody = json_decode($execution['body'], true);
 
-        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals(\md5($bytes), $executionBody['responseBody']);
-        $this->assertEquals($execution['headers']['content-type'], 'application/json');
+        $this->assertStringStartsWith('application/json', $execution['headers']['content-type']);
 
         /**
          * Test for FAILURE

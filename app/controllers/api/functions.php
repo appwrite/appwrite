@@ -18,7 +18,6 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
 use Appwrite\Utopia\Database\Validator\Queries\Executions;
 use Appwrite\Utopia\Database\Validator\Queries\Functions;
-use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Executor\Executor;
@@ -1641,20 +1640,6 @@ App::post('/v1/functions/:functionId/executions')
             }
         }
 
-        $datetimeParams = ['scheduledAt'];
-        foreach ($datetimeParams as $datetimeParam) {
-            if (!empty($$datetimeParam)) {
-                $$datetimeParam = new DateTime($$datetimeParam);
-            }
-        }
-
-        $validator = new DatetimeValidator(requireDateInFuture: true);
-        foreach ($datetimeParams as $datetimeParam) {
-            if (!empty($$datetimeParam) && !$validator->isValid($$datetimeParam)) {
-                throw new Exception($validator->getDescription(), 400);
-            }
-        }
-
         // 'headers' validator
         $validator = new Headers();
         if (!$validator->isValid($headers)) {
@@ -1967,9 +1952,9 @@ App::post('/v1/functions/:functionId/executions')
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 
-        $acceptTypes = \explode(', ', $request->getHeader('accept', 'application/json'));
         $isJson = false;
 
+        $acceptTypes = \explode(', ', $request->getHeader('accept', 'application/json'));
         foreach ($acceptTypes as $acceptType) {
             if (\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
                 $isJson = true;
@@ -1977,28 +1962,10 @@ App::post('/v1/functions/:functionId/executions')
             }
         }
 
-        if ($isJson) {
-            $executionString = \json_encode($execution, JSON_UNESCAPED_UNICODE);
-            if (!$executionString) {
-                throw new Exception('Execution resulted in binary response, but JSON response does not allow binaries. Use "Accept: multipart/form-data" header to support binaries.', 400);
-            }
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_OK)
-                ->addHeader('content-type', 'application/json')
-                ->send($executionString);
-        } else {
-            // Multipart form data response
-            $multipart = new BodyMultipart();
-            foreach ($execution as $key => $value) {
-                $multipart->setPart($key, $value);
-            }
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->addHeader('content-type', $multipart->exportHeader())
-                ->send($multipart->exportBody());
-        }
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->setContentType($isJson ? Response::CONTENT_TYPE_JSON : Response::CONTENT_TYPE_MULTIPART)
+            ->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')

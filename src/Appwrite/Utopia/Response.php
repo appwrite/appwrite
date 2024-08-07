@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Account;
@@ -107,6 +108,7 @@ use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
+use JsonException;
 use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
 use Utopia\Database\Document;
@@ -486,6 +488,7 @@ class Response extends SwooleResponse
      */
     public const CONTENT_TYPE_YAML = 'application/x-yaml';
     public const CONTENT_TYPE_NULL = 'null';
+    public const CONTENT_TYPE_MULTIPART = 'multipart/form-data';
 
     /**
      * List of defined output objects
@@ -556,7 +559,11 @@ class Response extends SwooleResponse
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
-                $this->json(!empty($output) ? $output : new \stdClass());
+                try {
+                    $this->json(!empty($output) ? $output : new \stdClass());
+                } catch (JsonException $e) {
+                    throw new Exception('Failed to parse binary response: ' . $e->getMessage(), 400);
+                }
                 break;
 
             case self::CONTENT_TYPE_YAML:
@@ -564,6 +571,10 @@ class Response extends SwooleResponse
                 break;
 
             case self::CONTENT_TYPE_NULL:
+                break;
+
+            case self::CONTENT_TYPE_MULTIPART:
+                $this->multipart(!empty($output) ? $output : new \stdClass());
                 break;
 
             default:
@@ -695,6 +706,49 @@ class Response extends SwooleResponse
         $this
             ->setContentType(Response::CONTENT_TYPE_YAML)
             ->send(\yaml_emit($data, YAML_UTF8_ENCODING));
+    }
+
+    /**
+     * Multipart
+     *
+     * This helper is for sending multipart/form-data HTTP response.
+     * It sets relevant content type header ('multipart/form-data') and convert a PHP array ($data) to valid Multipart using BodyMultipart
+     *
+     * @param array $data
+     *
+     * @return void
+     */
+    public function multipart(array $data): void
+    {
+        $multipart = new BodyMultipart();
+        foreach ($data as $key => $value) {
+            $multipart->setPart($key, $value);
+        }
+
+        $this
+            ->send($multipart->exportBody());
+    }
+
+    /**
+     * JSON
+     *
+     * This helper is for sending JSON HTTP response.
+     * It sets relevant content type header ('application/json') and convert a PHP array ($data) to valid JSON using native json_encode
+     *
+     * @see http://en.wikipedia.org/wiki/JSON
+     *
+     * @param  mixed  $data
+     * @return void
+     */
+    public function json($data): void
+    {
+        if (!is_array($data) && !$data instanceof \stdClass) {
+            throw new \Exception('Invalid JSON input var');
+        }
+
+        $this
+            ->setContentType(Response::CONTENT_TYPE_JSON, self::CHARSET_UTF8)
+            ->send(\json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
     }
 
     /**
