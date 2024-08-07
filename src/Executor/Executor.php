@@ -168,6 +168,7 @@ class Executor
      * @param string $source
      * @param string $entrypoint
      * @param string $runtimeEntrypoint
+     * @param bool $logging
      *
      * @return array
      */
@@ -193,8 +194,7 @@ class Executor
         }
 
         $runtimeId = "$projectId-$deploymentId";
-        $route = '/runtimes/' . $runtimeId . '/execution';
-
+        $route = '/runtimes/' . $runtimeId . '/executions';
 
         // Remove after migration
         if ($version == 'v3') {
@@ -216,6 +216,7 @@ class Executor
             'version' => $version,
             'runtimeEntrypoint' => $runtimeEntrypoint,
             'logging' => $logging,
+            'restartPolicy' => 'always' // Once utopia/orchestration has it, use DockerAPI::ALWAYS (0.13+)
         ];
 
         if(!empty($body)) {
