@@ -1238,7 +1238,7 @@ App::setResource('session', function (Document $user) {
         }
     }
 
-    }, ['user']);
+}, ['user']);
 
 App::setResource('console', function () {
     return new Document([
@@ -1423,23 +1423,27 @@ App::setResource('deviceForLocal', function () {
     return new Local();
 });
 
-App::setResource('deviceForFiles', function ($project) {
-    return getDevice(APP_STORAGE_UPLOADS.'/app-'.$project->getId());
-}, ['project']);
+App::setResource('deviceForFiles', function ($project, $connectionStorage) {
+    return getDevice(APP_STORAGE_UPLOADS.'/app-'.$project->getId(), $connectionStorage);
+}, ['project', 'connectionStorage']);
 
-App::setResource('deviceForFunctions', function ($project) {
-    return getDevice(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId());
-}, ['project']);
+App::setResource('deviceForFunctions', function ($project, $connectionStorage) {
+    return getDevice(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId(), $connectionStorage);
+}, ['project', 'connectionStorage']);
 
-App::setResource('deviceForBuilds', function ($project) {
-    return getDevice(APP_STORAGE_BUILDS.'/app-'.$project->getId());
-}, ['project']);
+App::setResource('deviceForBuilds', function ($project, $connectionStorage) {
+    return getDevice(APP_STORAGE_BUILDS.'/app-'.$project->getId(), $connectionStorage);
+}, ['project', 'connectionStorage']);
 
-function getDevice($root): Device
+App::setResource('connectionStorage', function () {
+    return '';
+});
+
+function getDevice(string $root, string $connectionStorage = ''): Device
 {
-    $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    $connectionStorage = ! empty($connectionStorage) ? $connectionStorage : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
-    if (! empty($connection)) {
+    if (! empty($connectionStorage)) {
         $acl = 'private';
         $device = Storage::DEVICE_LOCAL;
         $accessKey = '';
@@ -1448,7 +1452,7 @@ function getDevice($root): Device
         $region = '';
 
         try {
-            $dsn = new DSN($connection);
+            $dsn = new DSN($connectionStorage);
             $device = $dsn->getScheme();
             $accessKey = $dsn->getUser() ?? '';
             $accessSecret = $dsn->getPassword() ?? '';
