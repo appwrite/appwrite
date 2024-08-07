@@ -43,7 +43,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
         $replace = $parts[1] ?? '';
 
         $params = match ($namespace) {
-            'user' => (array) $user,
+            'user' => (array)$user,
             'request' => $requestParams,
             default => $responsePayload,
         };
@@ -52,7 +52,6 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
             $label = \str_replace($find, $params[$replace], $label);
         }
     }
-
     return $label;
 };
 
@@ -89,12 +88,13 @@ $databaseListener = function (string $event, Document $document, Document $proje
                     ->addReduce($document);
             }
             break;
-        case str_starts_with($document->getCollection(), 'database_') && ! str_contains($document->getCollection(), 'collection'): //collections
+        case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
             $parts = explode('_', $document->getCollection());
             $databaseInternalId = $parts[1] ?? 0;
             $queueForUsage
                 ->addMetric(METRIC_COLLECTIONS, $value) // per project
-                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value); // per database
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value) // per database
+            ;
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
                 $queueForUsage
@@ -103,7 +103,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
             break;
         case str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_'): //documents
             $parts = explode('_', $document->getCollection());
-            $databaseInternalId = $parts[1] ?? 0;
+            $databaseInternalId   = $parts[1] ?? 0;
             $collectionInternalId = $parts[3] ?? 0;
             $queueForUsage
                 ->addMetric(METRIC_DOCUMENTS, $value)  // per project
@@ -120,7 +120,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
             break;
         case str_starts_with($document->getCollection(), 'bucket_'): // files
             $parts = explode('_', $document->getCollection());
-            $bucketInternalId = $parts[1];
+            $bucketInternalId  = $parts[1];
             $queueForUsage
                 ->addMetric(METRIC_FILES, $value) // per project
                 ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value) // per project
@@ -197,9 +197,9 @@ App::init()
 
         $authKey = $request->getHeader('x-appwrite-key', '');
 
-        if (! empty($authKey)) { // API Key authentication
+        if (!empty($authKey)) { // API Key authentication
             // Do not allow API key and session to be set at the same time
-            if (! $user->isEmpty()) {
+            if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
 
@@ -209,7 +209,7 @@ App::init()
                 $user = new Document([
                     '$id' => '',
                     'status' => true,
-                    'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
+                    'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                     'password' => '',
                     'name' => $project->getAttribute('name', 'Untitled'),
                 ]);
@@ -218,7 +218,7 @@ App::init()
                 $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
                 $expire = $key->getAttribute('expire');
-                if (! empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
+                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
                     throw new Exception(Exception::PROJECT_KEY_EXPIRED);
                 }
 
@@ -236,7 +236,7 @@ App::init()
                 $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
                 if ($sdkValidator->isValid($sdk)) {
                     $sdks = $key->getAttribute('sdks', []);
-                    if (! in_array($sdk, $sdks)) {
+                    if (!in_array($sdk, $sdks)) {
                         array_push($sdks, $sdk);
                         $key->setAttribute('sdks', $sdks);
 
@@ -256,24 +256,24 @@ App::init()
         }
 
         $service = $route->getLabel('sdk.namespace', '');
-        if (! empty($service)) {
+        if (!empty($service)) {
             if (
                 array_key_exists($service, $project->getAttribute('services', []))
-                && ! $project->getAttribute('services', [])[$service]
-                && ! (Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+                && !$project->getAttribute('services', [])[$service]
+                && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
         }
-        if (! \in_array($scope, $scopes)) {
+        if (!\in_array($scope, $scopes)) {
             if ($project->isEmpty()) { // Check if permission is denied because project is missing
                 throw new Exception(Exception::PROJECT_NOT_FOUND);
             }
 
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')');
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
         }
 
-        if ($user->getAttribute('status') === false) { // Account is blocked
+        if (false === $user->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }
 
@@ -288,7 +288,7 @@ App::init()
         $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
-        if (! in_array('mfa', $route->getGroups())) {
+        if (!in_array('mfa', $route->getGroups())) {
             if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
@@ -317,8 +317,8 @@ App::init()
 
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
-            && ! $project->getAttribute('apis', [])['rest']
-            && ! (Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+            && !$project->getAttribute('apis', [])['rest']
+            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -329,7 +329,7 @@ App::init()
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $timeLimitArray = [];
 
-        $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+        $abuseKeyLabel = (!is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
         foreach ($abuseKeyLabel as $abuseKey) {
             $start = $request->getContentRangeStart();
@@ -340,7 +340,7 @@ App::init()
                 ->setParam('{userId}', $user->getId())
                 ->setParam('{userAgent}', $request->getUserAgent(''))
                 ->setParam('{ip}', $request->getIP())
-                ->setParam('{url}', $request->getHostname().$route->getPath())
+                ->setParam('{url}', $request->getHostname() . $route->getPath())
                 ->setParam('{method}', $request->getMethod())
                 ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
             $timeLimitArray[] = $timeLimit;
@@ -354,8 +354,8 @@ App::init()
 
         foreach ($timeLimitArray as $timeLimit) {
             foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-                if (! empty($value)) {
-                    $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
+                if (!empty($value)) {
+                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
                 }
             }
 
@@ -376,8 +376,8 @@ App::init()
 
             if (
                 $enabled                // Abuse is enabled
-                && ! $isAppUser          // User is not API key
-                && ! $isPrivilegedUser   // User is not an admin
+                && !$isAppUser          // User is not API key
+                && !$isPrivilegedUser   // User is not an admin
                 && $abuse->check()      // Route is rate-limited
             ) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
@@ -411,10 +411,10 @@ App::init()
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
-            $key = md5($request->getURI().'*'.implode('*', $request->getParams()).'*'.APP_CACHE_BUSTER);
-            $cacheLog = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
+            $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+            $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
-                new Filesystem(APP_STORAGE_CACHE.DIRECTORY_SEPARATOR.'app-'.$project->getId())
+                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
@@ -427,12 +427,12 @@ App::init()
 
                 if ($type === 'bucket') {
                     $bucketId = $parts[1] ?? null;
-                    $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+                    $bucket   = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
                     $isAPIKey = Auth::isAppUser(Authorization::getRoles());
                     $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
-                    if ($bucket->isEmpty() || (! $bucket->getAttribute('enabled') && ! $isAPIKey && ! $isPrivilegedUser)) {
+                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                     }
 
@@ -440,17 +440,17 @@ App::init()
                     $validator = new Authorization(Database::PERMISSION_READ);
                     $valid = $validator->isValid($bucket->getRead());
 
-                    if (! $fileSecurity && ! $valid) {
+                    if (!$fileSecurity && !$valid) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
 
                     $parts = explode('/', $cacheLog->getAttribute('resource'));
                     $fileId = $parts[1] ?? null;
 
-                    if ($fileSecurity && ! $valid) {
-                        $file = $dbForProject->getDocument('bucket_'.$bucket->getInternalId(), $fileId);
+                    if ($fileSecurity && !$valid) {
+                        $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
                     } else {
-                        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_'.$bucket->getInternalId(), $fileId));
+                        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
                     }
 
                     if ($file->isEmpty()) {
@@ -459,7 +459,7 @@ App::init()
                 }
 
                 $response
-                    ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp).' GMT')
+                    ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'))
                     ->send($data);
@@ -468,7 +468,8 @@ App::init()
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Pragma', 'no-cache')
                     ->addHeader('Expires', 0)
-                    ->addHeader('X-Appwrite-Cache', 'miss');
+                    ->addHeader('X-Appwrite-Cache', 'miss')
+                ;
             }
         }
     });
@@ -482,7 +483,7 @@ App::init()
             return;
         }
 
-        if (! $user->isEmpty()) {
+        if (!$user->isEmpty()) {
             throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
         }
     });
@@ -549,7 +550,7 @@ App::shutdown()
 
         $responsePayload = $response->getPayload();
 
-        if (! empty($queueForEvents->getEvent())) {
+        if (!empty($queueForEvents->getEvent())) {
             if (empty($queueForEvents->getPayload())) {
                 $queueForEvents->setPayload($responsePayload);
             }
@@ -598,7 +599,7 @@ App::shutdown()
                     roles: $target['roles'],
                     options: [
                         'permissionsChanged' => $target['permissionsChanged'],
-                        'userId' => $queueForEvents->getParam('userId'),
+                        'userId' => $queueForEvents->getParam('userId')
                     ]
                 );
             }
@@ -611,24 +612,24 @@ App::shutdown()
          * Audit labels
          */
         $pattern = $route->getLabel('audits.resource', null);
-        if (! empty($pattern)) {
+        if (!empty($pattern)) {
             $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
-            if (! empty($resource) && $resource !== $pattern) {
+            if (!empty($resource) && $resource !== $pattern) {
                 $queueForAudits->setResource($resource);
             }
         }
 
-        if (! $user->isEmpty()) {
+        if (!$user->isEmpty()) {
             $queueForAudits->setUser($user);
         }
 
-        if (! empty($queueForAudits->getResource()) && ! empty($queueForAudits->getUser()->getId())) {
+        if (!empty($queueForAudits->getResource()) && !empty($queueForAudits->getUser()->getId())) {
             /**
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints
              */
             $pattern = $route->getLabel('audits.payload', true);
-            if (! empty($pattern)) {
+            if (!empty($pattern)) {
                 $queueForAudits->setPayload($responsePayload);
             }
 
@@ -638,19 +639,19 @@ App::shutdown()
             $queueForAudits->trigger();
         }
 
-        if (! empty($queueForDeletes->getType())) {
+        if (!empty($queueForDeletes->getType())) {
             $queueForDeletes->trigger();
         }
 
-        if (! empty($queueForDatabase->getType())) {
+        if (!empty($queueForDatabase->getType())) {
             $queueForDatabase->trigger();
         }
 
-        if (! empty($queueForBuilds->getType())) {
+        if (!empty($queueForBuilds->getType())) {
             $queueForBuilds->trigger();
         }
 
-        if (! empty($queueForMessaging->getType())) {
+        if (!empty($queueForMessaging->getType())) {
             $queueForMessaging->trigger();
         }
 
@@ -661,20 +662,20 @@ App::shutdown()
         if ($useCache) {
             $resource = $resourceType = null;
             $data = $response->getPayload();
-            if (! empty($data['payload'])) {
+            if (!empty($data['payload'])) {
                 $pattern = $route->getLabel('cache.resource', null);
-                if (! empty($pattern)) {
+                if (!empty($pattern)) {
                     $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
                 $pattern = $route->getLabel('cache.resourceType', null);
-                if (! empty($pattern)) {
+                if (!empty($pattern)) {
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
-                $key = md5($request->getURI().'*'.implode('*', $request->getParams()).'*'.APP_CACHE_BUSTER);
+                $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
                 $signature = md5($data['payload']);
-                $cacheLog = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
+                $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
@@ -693,18 +694,20 @@ App::shutdown()
 
                 if ($signature !== $cacheLog->getAttribute('signature')) {
                     $cache = new Cache(
-                        new Filesystem(APP_STORAGE_CACHE.DIRECTORY_SEPARATOR.'app-'.$project->getId())
+                        new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
                     );
                     $cache->save($key, $data['payload']);
                 }
             }
         }
 
+
+
         if ($project->getId() !== 'console') {
-            if (! Auth::isPrivilegedUser(Authorization::getRoles())) {
+            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
-                if (! empty($file)) {
+                if (!empty($file)) {
                     $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
                 }
 
@@ -722,12 +725,12 @@ App::shutdown()
         /**
          * Update user last activity
          */
-        if (! $user->isEmpty()) {
+        if (!$user->isEmpty()) {
             $accessedAt = $user->getAttribute('accessedAt', '');
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
-                if ($mode !== APP_MODE_ADMIN) {
+                if (APP_MODE_ADMIN !== $mode) {
                     $dbForProject->updateDocument('users', $user->getId(), $user);
                 } else {
                     $dbForConsole->updateDocument('users', $user->getId(), $user);
