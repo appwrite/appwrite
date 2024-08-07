@@ -1442,7 +1442,8 @@ App::setResource('connectionStorage', function () {
 function getDevice(string $root, string $connectionStorage = ''): Device
 {
     $connectionStorage = ! empty($connectionStorage) ? $connectionStorage : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
-
+    var_dump('*****$connectionStorag****');
+    var_dump($connectionStorage);
     if (! empty($connectionStorage)) {
         $acl = 'private';
         $device = Storage::DEVICE_LOCAL;
