@@ -37,7 +37,6 @@ class Migrations extends Action
     protected Database $dbForConsole;
 
     protected Document $project;
-    //protected Document $migration;
 
     public static function getName(): string
     {
@@ -375,6 +374,9 @@ class Migrations extends Action
                 $log->addTag('migrationErrors', json_encode($errorMessages));
             }
         } finally {
+            $destination->error($migration);
+            $source->error($migration);
+
             if (! $tempAPIKey->isEmpty()) {
                 $this->removeAPIKey($tempAPIKey);
             }
