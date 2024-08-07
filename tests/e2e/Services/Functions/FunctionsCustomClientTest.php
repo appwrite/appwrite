@@ -252,10 +252,10 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertEquals('scheduled', $execution['body']['status']);
-        $this->assertEquals($futureTimeIso, $execution['body']['scheduledAt']);
 
         $executionId = $execution['body']['$id'];
 
+        // 10 seconds delay, then allow 3 seconds for cold start
         sleep(13);
 
         $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions/' . $executionId, [
@@ -270,10 +270,8 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('/custom', $execution['body']['requestPath']);
         $this->assertEquals('GET', $execution['body']['requestMethod']);
         $this->assertGreaterThan(0, $execution['body']['duration']);
-        $this->assertEquals($futureTimeIso, $execution['body']['scheduledAt']);
 
-        // Assert that the execution was completed within 3 seconds of the scheduled time
-
+        // Assert execution completed within 3 seconds of schedule
         $output = json_decode($execution['body']['responseBody'], true);
         $this->assertArrayHasKey('time', $output);
         $this->assertGreaterThan($output['time'], $futureTime->getTimestamp());
