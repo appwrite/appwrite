@@ -442,8 +442,8 @@ class Builds extends Action
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
-                            callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
-                                if ($response === null) {
+                            callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $allEvents, $project) {
+                                if ($response === null && $err === null) {
                                     $build = $dbForProject->getDocument('builds', $build->getId());
 
                                     if ($build->isEmpty()) {
