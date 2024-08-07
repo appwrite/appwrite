@@ -374,9 +374,6 @@ class Migrations extends Action
                 $log->addTag('migrationErrors', json_encode($errorMessages));
             }
         } finally {
-            $destination->error();
-            $source->error();
-
             if (! $tempAPIKey->isEmpty()) {
                 $this->removeAPIKey($tempAPIKey);
             }
@@ -384,6 +381,9 @@ class Migrations extends Action
             $this->updateMigrationDocument($migration, $projectDocument);
 
             if ($migration->getAttribute('status', '') == 'failed') {
+                $destination->error();
+                $source->error();
+
                 throw new Exception('Migration failed');
             }
         }
