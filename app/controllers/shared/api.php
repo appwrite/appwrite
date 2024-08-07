@@ -206,6 +206,7 @@ App::init()
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
 
+            // Remove after migration
             if(!\str_contains($apiKey, '_')) {
                 $keyType = API_KEY_STANDARD;
                 $authKey = $apiKey;

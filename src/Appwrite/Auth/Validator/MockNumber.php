@@ -46,9 +46,9 @@ class MockNumber extends Validator
             return false;
         }
 
-        $otp = new Text(6, 6);
+        $otp = new Text(6, 6, Text::NUMBERS);
         if (!$otp->isValid($value['otp'])) {
-            $this->message = 'OTP must be a valid string and exactly 6 characters.';
+            $this->message = 'Invalid OTP. Please make sure the OTP is a 6 digit number';
             return false;
         }
 
