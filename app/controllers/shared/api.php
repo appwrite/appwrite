@@ -165,39 +165,20 @@ App::init()
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        /**
-         * ACL Check
-         */
+        /** Default role */
+        $roles = Config::getParam('roles', []);
         $role = ($user->isEmpty())
             ? Role::guests()->toString()
             : Role::users()->toString();
 
-        // Add user roles
-        $memberships = $user->find('teamId', $project->getAttribute('teamId'), 'memberships');
+        /** Allowed Scopes for the role */
+        $scopes = $roles[$role]['scopes'];
 
-        if ($memberships) {
-            foreach ($memberships->getAttribute('roles', []) as $memberRole) {
-                switch ($memberRole) {
-                    case 'owner':
-                        $role = Auth::USER_ROLE_OWNER;
-                        break;
-                    case 'admin':
-                        $role = Auth::USER_ROLE_ADMIN;
-                        break;
-                    case 'developer':
-                        $role = Auth::USER_ROLE_DEVELOPER;
-                        break;
-                }
-            }
-        }
-
-        $roles = Config::getParam('roles', []);
-        $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
-        $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
-
+        /**
+         * API Key Authentication
+         */
         $authKey = $request->getHeader('x-appwrite-key', '');
-
-        if (!empty($authKey)) { // API Key authentication
+        if (!empty($authKey)) {
             // Do not allow API key and session to be set at the same time
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
@@ -248,13 +229,65 @@ App::init()
                 }
             }
         }
+        /**
+         * Admin User Authentication
+         */
+        elseif (APP_MODE_ADMIN === $mode) {
+            if ($user->isEmpty()) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
+
+            $teamId = $project->getAttribute('teamId', null);
+            if (empty($teamId)) {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'APP_MODE : admin is not allowed for the console project');
+            }
+
+            $adminRoles = [];
+            $memberships = $user->getAttribute('memberships', []);
+            foreach ($memberships as $membership) {
+                if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $teamId) {
+                    $adminRoles = $membership->getAttribute('roles', []);
+                    break;
+                }
+            }
+
+            if (empty($adminRoles)) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
+
+            $adminRoles = array_filter($adminRoles, function ($role) use ($project) {
+                return str_contains($role, $project->getId()) || str_contains($role, 'projects/all') || str_contains($role, 'owner');
+            });
+
+            // if (empty($adminRoles)) {
+            //     throw new Exception(Exception::USER_UNAUTHORIZED);
+            // }
+
+            var_dump("####### ADMIN ROLES #######");
+            var_dump($adminRoles);
+
+            foreach ($adminRoles as $adminRole) {
+                if (str_contains($adminRole, 'owner')) {
+                    $role = Auth::USER_ROLE_OWNER;
+                    $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+                    break;
+                }
+                $parts = explode('/', $adminRole);
+                $role = $parts[2] ?? Auth::USER_ROLE_GUESTS;
+                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+            }
+            
+            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+        }
+
+        $scopes = \array_unique($scopes);
 
         Authorization::setRole($role);
-
         foreach (Auth::getRoles($user) as $authRole) {
             Authorization::setRole($authRole);
         }
 
+        /** Do not allow access to disabled services */
         $service = $route->getLabel('sdk.namespace', '');
         if (!empty($service)) {
             if (
@@ -265,14 +298,14 @@ App::init()
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
         }
-        if (!\in_array($scope, $scopes)) {
-            if ($project->isEmpty()) { // Check if permission is denied because project is missing
-                throw new Exception(Exception::PROJECT_NOT_FOUND);
-            }
 
+        /** Do now allow access if scope is not allowed */
+        $scope = $route->getLabel('scope', 'none');
+        if (!\in_array($scope, $scopes)) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
         }
 
+        /** Do not allow access to blocked accounts */
         if (false === $user->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }

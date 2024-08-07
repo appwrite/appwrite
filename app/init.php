@@ -1194,13 +1194,13 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user = new Document([]);
     }
 
-    if (APP_MODE_ADMIN === $mode) {
-        if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
-            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
-        } else {
-            $user = new Document([]);
-        }
-    }
+    // if (APP_MODE_ADMIN === $mode) {
+    //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
+    //         Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+    //     } else {
+    //         $user = new Document([]);
+    //     }
+    // }
 
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
@@ -1276,7 +1276,7 @@ App::setResource('console', function () {
         '$collection' => ID::custom('projects'),
         'description' => 'Appwrite core engine',
         'logo' => '',
-        'teamId' => -1,
+        'teamId' => null,
         'webhooks' => [],
         'keys' => [],
         'platforms' => [

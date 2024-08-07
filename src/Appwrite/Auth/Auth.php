@@ -37,8 +37,10 @@ class Auth
     public const USER_ROLE_ANY = 'any';
     public const USER_ROLE_GUESTS = 'guests';
     public const USER_ROLE_USERS = 'users';
-    public const USER_ROLE_ADMIN = 'admin';
     public const USER_ROLE_DEVELOPER = 'developer';
+    public const USER_ROLE_EDITOR = 'editor';
+    public const USER_ROLE_ANALYST = 'analyst';
+    public const USER_ROLE_BILLING = 'billing';
     public const USER_ROLE_OWNER = 'owner';
     public const USER_ROLE_APPS = 'apps';
     public const USER_ROLE_SYSTEM = 'system';
@@ -411,7 +413,9 @@ class Auth
         if (
             in_array(self::USER_ROLE_OWNER, $roles) ||
             in_array(self::USER_ROLE_DEVELOPER, $roles) ||
-            in_array(self::USER_ROLE_ADMIN, $roles)
+            in_array(self::USER_ROLE_EDITOR, $roles) ||
+            in_array(self::USER_ROLE_ANALYST, $roles) ||
+            in_array(self::USER_ROLE_BILLING, $roles)
         ) {
             return true;
         }
