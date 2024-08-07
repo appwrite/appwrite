@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__.'/init.php';
+require_once __DIR__ . '/init.php';
 
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
@@ -76,7 +76,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         $dsn = new DSN($project->getAttribute('database'));
     } catch (\InvalidArgumentException) {
         // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://'.$project->getAttribute('database'));
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
     $adapter = $pools
@@ -90,7 +90,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         $dsn = new DSN($project->getAttribute('database'));
     } catch (\InvalidArgumentException) {
         // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://'.$project->getAttribute('database'));
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
     $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
@@ -103,7 +103,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         $database
             ->setSharedTables(false)
             ->setTenant(null)
-            ->setNamespace('_'.$project->getInternalId());
+            ->setNamespace('_' . $project->getInternalId());
     }
 
     return $database;
@@ -121,14 +121,13 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
             $dsn = new DSN($project->getAttribute('database'));
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://'.$project->getAttribute('database'));
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
         }
 
         if (isset($databases[$dsn->getHost()])) {
             $database = $databases[$dsn->getHost()];
 
-            $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-            if (in_array($dsn->getHost(), $sharedTablesKeys)) {
+            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
@@ -137,7 +136,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
                 $database
                     ->setSharedTables(false)
                     ->setTenant(null)
-                    ->setNamespace('_'.$project->getInternalId());
+                    ->setNamespace('_' . $project->getInternalId());
             }
 
             return $database;
@@ -162,7 +161,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
             $database
                 ->setSharedTables(false)
                 ->setTenant(null)
-                ->setNamespace('_'.$project->getInternalId());
+                ->setNamespace('_' . $project->getInternalId());
         }
 
         return $database;
@@ -190,7 +189,8 @@ Server::setResource('cache', function (Registry $register) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource();
+            ->getResource()
+        ;
     }
 
     return new Cache(new Sharding($adapters));
@@ -278,7 +278,7 @@ $pools = $register->get('pools');
 $platform = new Appwrite();
 $args = $platform->getEnv('argv');
 
-if (! isset($args[1])) {
+if (!isset($args[1])) {
     Console::error('Missing worker name');
     Console::exit(1);
 }
@@ -289,7 +289,7 @@ $workerName = $args[0];
 if (\str_starts_with($workerName, 'databases')) {
     $queueName = System::getEnv('_APP_QUEUE_NAME', 'database_db_main');
 } else {
-    $queueName = System::getEnv('_APP_QUEUE_NAME', 'v1-'.strtolower($workerName));
+    $queueName = System::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
 }
 
 try {
@@ -306,7 +306,7 @@ try {
         'queueName' => $queueName,
     ]);
 } catch (\Throwable $e) {
-    Console::error($e->getMessage().', File: '.$e->getFile().', Line: '.$e->getLine());
+    Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
 }
 
 $worker = $platform->getWorker();
@@ -330,12 +330,12 @@ $worker
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($logger) {
-            $log->setNamespace('appwrite-worker');
+            $log->setNamespace("appwrite-worker");
             $log->setServer(\gethostname());
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-queue-'.$queueName);
+            $log->setAction('appwrite-queue-' . $queueName);
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
             $log->addTag('projectId', $project->getId() ?? 'n/a');
@@ -348,13 +348,13 @@ $worker
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);
-            Console::info('Usage stats log pushed with status code: '.$responseCode);
+            Console::info('Usage stats log pushed with status code: ' . $responseCode);
         }
 
-        Console::error('[Error] Type: '.get_class($error));
-        Console::error('[Error] Message: '.$error->getMessage());
-        Console::error('[Error] File: '.$error->getFile());
-        Console::error('[Error] Line: '.$error->getLine());
+        Console::error('[Error] Type: ' . get_class($error));
+        Console::error('[Error] Message: ' . $error->getMessage());
+        Console::error('[Error] File: ' . $error->getFile());
+        Console::error('[Error] Line: ' . $error->getLine());
     });
 
 $worker->workerStart()
