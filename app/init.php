@@ -112,7 +112,7 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4327;
+const APP_CACHE_BUSTER = 4323;
 const APP_VERSION_STABLE = '1.5.8';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -755,20 +755,20 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-            'scheme' => 'mariadb',
-            'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
-            'port' => System::getEnv('_APP_DB_PORT', '3306'),
-            'user' => System::getEnv('_APP_DB_USER', ''),
-            'pass' => System::getEnv('_APP_DB_PASS', ''),
-            'path' => System::getEnv('_APP_DB_SCHEMA', ''),
-        ]);
+        'scheme' => 'mariadb',
+        'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
+        'port' => System::getEnv('_APP_DB_PORT', '3306'),
+        'user' => System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+    ]);
     $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
-            'scheme' => 'redis',
-            'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
-            'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
-            'user' => System::getEnv('_APP_REDIS_USER', ''),
-            'pass' => System::getEnv('_APP_REDIS_PASS', ''),
-        ]);
+        'scheme' => 'redis',
+        'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
+        'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
+        'user' => System::getEnv('_APP_REDIS_USER', ''),
+        'pass' => System::getEnv('_APP_REDIS_PASS', ''),
+    ]);
 
     $connections = [
         'console' => [
@@ -1114,7 +1114,7 @@ App::setResource('clients', function ($request, $console, $project) {
         if (
             isset($node['type']) &&
             ($node['type'] === Origin::CLIENT_TYPE_WEB ||
-                $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
+            $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
             !empty($node['hostname'])
         ) {
             $clients[] = $node['hostname'];
