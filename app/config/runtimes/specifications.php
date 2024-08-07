@@ -28,4 +28,24 @@ return [
         'memory' => 4096,
         'cpus' => 2
     ],
+    Specification::S_4VCPU_4GB => [
+        'slug' => 's-4vcpu-4gb',
+        'memory' => 4096,
+        'cpus' => 4
+    ],
+    Specification::S_4VCPU_8GB => [
+        'slug' => 's-4vcpu-8gb',
+        'memory' => 8192,
+        'cpus' => 4
+    ],
+    Specification::S_8VCPU_4GB => [
+        'slug' => 's-8vcpu-4gb',
+        'memory' => 4096,
+        'cpus' => 8
+    ],
+    Specification::S_8VCPU_8GB => [
+        'slug' => 's-8vcpu-8gb',
+        'memory' => 8192,
+        'cpus' => 8
+    ]
 ];
