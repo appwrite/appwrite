@@ -720,7 +720,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_BUILD_SIZE_LIMIT',
-                'description' => 'The maximum size of a built deployment in bytes. The default value is 2GB.',
+                'description' => 'The maximum size of a built deployment in bytes. The default value is 2,000,000,000 (2GB), and the maximum value is 4,294,967,295 (4.2GB).',
                 'introduction' => '1.6.0',
                 'default' => '2000000000',
                 'required' => false,
