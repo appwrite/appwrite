@@ -443,6 +443,7 @@ class Builds extends Action
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
                             callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $allEvents, $project) {
+                                // If we have response or error from concurrent coroutine, we already have latest logs
                                 if ($response === null && $err === null) {
                                     $build = $dbForProject->getDocument('builds', $build->getId());
 
@@ -541,7 +542,7 @@ class Builds extends Action
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'failed');
-            $build->setAttribute('logs', $th->getMessage() . "\n" . $th->getFile() . ':' . $th->getLine() . "\n" . $th->getTraceAsString());
+            $build->setAttribute('logs', $th->getMessage());
 
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
