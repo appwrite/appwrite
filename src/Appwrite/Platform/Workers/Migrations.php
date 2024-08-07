@@ -374,8 +374,8 @@ class Migrations extends Action
                 $log->addTag('migrationErrors', json_encode($errorMessages));
             }
         } finally {
-            $destination->error($migration);
-            $source->error($migration);
+            $destination->error();
+            $source->error();
 
             if (! $tempAPIKey->isEmpty()) {
                 $this->removeAPIKey($tempAPIKey);
