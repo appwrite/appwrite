@@ -280,9 +280,9 @@ class Project extends Model
     }
 
     /**
-     * Get Collection
+     * Filter document structure
      *
-     * @return string
+     * @return Document
      */
     public function filter(Document $document): Document
     {
