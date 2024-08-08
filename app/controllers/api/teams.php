@@ -364,7 +364,7 @@ App::delete('/v1/teams/:teamId')
         $response->noContent();
     });
 
-    App::post('/v1/teams/:teamId/memberships')
+App::post('/v1/teams/:teamId/memberships')
     ->desc('Create team membership')
     ->groups(['api', 'teams', 'auth'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].create')
