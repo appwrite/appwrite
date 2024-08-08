@@ -404,9 +404,6 @@ class Builds extends Action
             $cpus = $spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS;
             $memory = max($spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY, 1024);
 
-            if ($memory < 1024) {
-                $memory = 1024;
-            }
 
             // Appwrite vars
             $vars = \array_merge($vars, [
