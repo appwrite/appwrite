@@ -8,7 +8,7 @@ jobs:
   tests:
     name: Release
     runs-on: ubuntu-latest
-
+    if: github.repository == 'appwrite/appwrite'
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
