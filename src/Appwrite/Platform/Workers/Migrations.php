@@ -268,6 +268,13 @@ class Migrations extends Action
         $project = $this->project;
         $projectDocument = $this->dbForConsole->getDocument('projects', $project->getId());
         $tempAPIKey = $this->generateAPIKey($projectDocument);
+
+        $this->credentials = [
+            'projectId' => $projectDocument->getId(),
+            'endpoint' => 'http://appwrite/v1',
+            'apiKey' => $tempAPIKey['secret'],
+        ];
+        
         $transfer = $source = $destination = null;
 
         try {
@@ -278,19 +285,6 @@ class Migrations extends Action
             $this->updateMigrationDocument($migration, $projectDocument);
 
             $log->addTag('type', $migration->getAttribute('source'));
-
-//            if (
-//                $migration->getAttribute('source') === SourceAppwrite::getName() ||
-//                $migration->getAttribute('destination') === DestinationAppwrite::getName()
-//            ) {
-//                $migration->setAttribute('credentials', );
-//            }
-
-            $this->credentials = [
-                'projectId' => $projectDocument->getId(),
-                'endpoint' => 'http://appwrite/v1',
-                'apiKey' => $tempAPIKey['secret'],
-            ];
 
             $source = $this->processSource($migration);
             $destination = $this->processDestination($migration);
