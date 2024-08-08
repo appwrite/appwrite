@@ -10,6 +10,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
+use Appwrite\Platform\Workers\Deletes;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Memberships;
@@ -338,10 +339,12 @@ App::delete('/v1/teams/:teamId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
+    ->inject('getProjectDB')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
     ->inject('queueForDeletes')
-    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->inject('queueForEvents')
+    ->inject('project')
+    ->action(function (string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Document $project) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -353,9 +356,14 @@ App::delete('/v1/teams/:teamId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($team);
+        $deletes = new Deletes();
+        $deletes->deleteMemberships($getProjectDB, $team, $project);
+
+        if ($project->getId() === 'console') {
+            $queueForDeletes
+                ->setType(DELETE_TYPE_TEAM_PROJECTS)
+                ->setDocument($team);
+        }
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
