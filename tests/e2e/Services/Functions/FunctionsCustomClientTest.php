@@ -881,6 +881,7 @@ class FunctionsCustomClientTest extends Scope
             $this->assertEquals($expectedTemplates[$i]['vcsProvider'], $templates['body']['templates'][$i]['vcsProvider']);
             $this->assertEquals($expectedTemplates[$i]['runtimes'], $templates['body']['templates'][$i]['runtimes']);
             $this->assertEquals($expectedTemplates[$i]['variables'], $templates['body']['templates'][$i]['variables']);
+            $this->assertEquals($expectedTemplates[$i]['scopes'], $templates['body']['templates'][$i]['scopes']);
         }
 
         $templates_offset = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
