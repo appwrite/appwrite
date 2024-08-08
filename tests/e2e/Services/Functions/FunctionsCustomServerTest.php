@@ -1544,7 +1544,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
-            'commands' => 'sh setup.sh',
+            'commands' => 'sh setup.sh && composer install',
             'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
             'activate' => true
         ]);
