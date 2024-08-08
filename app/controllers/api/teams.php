@@ -341,11 +341,10 @@ App::delete('/v1/teams/:teamId')
     ->inject('response')
     ->inject('getProjectDB')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
     ->inject('queueForDeletes')
     ->inject('queueForEvents')
     ->inject('project')
-    ->action(function (string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, Database $dbForConsole, Delete $queueForDeletes, Event $queueForEvents, Document $project) {
+    ->action(function (string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Document $project) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 

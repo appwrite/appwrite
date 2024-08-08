@@ -65,7 +65,6 @@ $image = $this->getParam('image', '');
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-functions:/storage/functions:rw
-      - appwrite-builds:/storage/builds:rw
     depends_on:
       - mariadb
       - redis
