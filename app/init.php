@@ -1446,6 +1446,8 @@ App::setResource('deviceForLocal', function () {
 });
 
 App::setResource('deviceForFiles', function ($project, $connectionString) {
+    var_dump('deviceForFiles');
+    var_dump($connectionString);
     return getDevice(APP_STORAGE_UPLOADS.'/app-'.$project->getId(), $connectionString);
 }, ['project', 'connectionString']);
 
@@ -1458,6 +1460,8 @@ App::setResource('deviceForBuilds', function ($project, $connectionString) {
 }, ['project', 'connectionString']);
 
 App::setResource('connectionString', function () {
+    var_dump('connectionString appwrite');
+    var_dump(System::getEnv('_APP_CONNECTIONS_STORAGE', ''));
     return System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 });
 
