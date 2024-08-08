@@ -3,7 +3,6 @@
 require_once __DIR__ . '/init.php';
 
 use Appwrite\Event\Audit;
-use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
@@ -218,10 +217,6 @@ Server::setResource('queueForMessaging', function (Connection $queue) {
 
 Server::setResource('queueForMails', function (Connection $queue) {
     return new Mail($queue);
-}, ['queue']);
-
-Server::setResource('queueForBuilds', function (Connection $queue) {
-    return new Build($queue);
 }, ['queue']);
 
 Server::setResource('queueForDeletes', function (Connection $queue) {

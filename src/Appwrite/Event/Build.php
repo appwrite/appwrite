@@ -13,12 +13,18 @@ class Build extends Event
     protected ?Document $deployment = null;
     protected ?Document $template = null;
 
-    public function __construct(protected Connection $connection)
+    public function __construct(protected Connection $connection, array $plan)
     {
         parent::__construct($connection);
 
+        $queue = Event::BUILDS_QUEUE_NAME;
+
+        if (isset($plan['$id'])) {
+            $queue = $queue . '-' . $plan['$id'];
+        }
+
         $this
-            ->setQueue(Event::BUILDS_QUEUE_NAME)
+            ->setQueue($queue)
             ->setClass(Event::BUILDS_CLASS_NAME);
     }
 

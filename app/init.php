@@ -1074,9 +1074,9 @@ App::setResource('queueForMessaging', function (Connection $queue) {
 App::setResource('queueForMails', function (Connection $queue) {
     return new Mail($queue);
 }, ['queue']);
-App::setResource('queueForBuilds', function (Connection $queue) {
-    return new Build($queue);
-}, ['queue']);
+App::setResource('queueForBuilds', function (Connection $queue, array $plan) {
+    return new Build($queue, $plan);
+}, ['queue','plan']);
 App::setResource('queueForDatabase', function (Connection $queue) {
     return new EventDatabase($queue);
 }, ['queue']);
