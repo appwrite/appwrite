@@ -499,6 +499,8 @@ App::get('/v1/functions/:functionId/usage')
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE),
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS),
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS)
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -561,6 +563,10 @@ App::get('/v1/functions/:functionId/usage')
             'buildsTime' => $usage[$metrics[4]]['data'],
             'executions' => $usage[$metrics[5]]['data'],
             'executionsTime' => $usage[$metrics[6]]['data'],
+            'buildsMbSecondsTotal' => $usage[$metrics[7]]['total'],
+            'buildsMbSeconds' => $usage[$metrics[7]]['data'],
+            'executionsMbSeconds' => $usage[$metrics[8]]['data'],
+            'executionsMbSecondsTotal' => $usage[$metrics[8]]['total']
         ]), Response::MODEL_USAGE_FUNCTION);
     });
 
@@ -591,6 +597,8 @@ App::get('/v1/functions/usage')
             METRIC_BUILDS_COMPUTE,
             METRIC_EXECUTIONS,
             METRIC_EXECUTIONS_COMPUTE,
+            METRIC_BUILDS_MB_SECONDS,
+            METRIC_EXECUTIONS_MB_SECONDS,
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -654,6 +662,10 @@ App::get('/v1/functions/usage')
             'buildsTime' => $usage[$metrics[5]]['data'],
             'executions' => $usage[$metrics[6]]['data'],
             'executionsTime' => $usage[$metrics[7]]['data'],
+            'buildsMbSecondsTotal' => $usage[$metrics[8]]['total'],
+            'buildsMbSeconds' => $usage[$metrics[8]]['data'],
+            'executionsMbSeconds' => $usage[$metrics[9]]['data'],
+            'executionsMbSecondsTotal' => $usage[$metrics[9]]['total'],
         ]), Response::MODEL_USAGE_FUNCTIONS);
     });
 
@@ -838,7 +850,7 @@ App::put('/v1/functions/:functionId')
 
 App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->groups(['api', 'functions'])
-    ->desc('Download Deployment')
+    ->desc('Download deployment')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -923,7 +935,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
 
 App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Update function deployment')
+    ->desc('Update deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
@@ -1759,6 +1771,8 @@ App::post('/v1/functions/:functionId/executions')
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(512 * $execution->getAttribute('duration', 0)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(512 * $execution->getAttribute('duration', 0)))
             ;
 
             if ($function->getAttribute('logging')) {
