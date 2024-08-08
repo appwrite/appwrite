@@ -147,7 +147,7 @@ class Func extends Model
             ])
             ->addRule('specification', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function execution and builds machine specification.',
+                'description' => 'Machine specification for builds and executions.',
                 'default' => APP_FUNCTION_BASE_SPECIFICATION,
                 'example' => APP_FUNCTION_BASE_SPECIFICATION,
             ])
