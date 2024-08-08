@@ -34,6 +34,46 @@ class V18Test extends TestCase
                 ],
                 [
                 ]
+            ],
+            'update 404 status' => [
+                [
+                    'statusCode' => '404',
+                    'status' => 'completed'
+                ],
+                [
+                    'statusCode' => '404',
+                    'status' => 'failed'
+                ]
+            ],
+            'update 400 status' => [
+                [
+                    'statusCode' => '400',
+                    'status' => 'completed'
+                ],
+                [
+                    'statusCode' => '400',
+                    'status' => 'failed'
+                ]
+            ],
+            'dont update 200 status' => [
+                [
+                    'statusCode' => '200',
+                    'status' => 'completed'
+                ],
+                [
+                    'statusCode' => '200',
+                    'status' => 'completed'
+                ]
+            ],
+            'dont update 500 status' => [
+                [
+                    'statusCode' => '500',
+                    'status' => 'failed'
+                ],
+                [
+                    'statusCode' => '500',
+                    'status' => 'failed'
+                ]
             ]
         ];
     }
