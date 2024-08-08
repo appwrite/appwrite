@@ -35,6 +35,32 @@ class V18Test extends TestCase
                 [
                 ]
             ],
+        ];
+    }
+
+    /**
+     * @dataProvider functionProvider
+     */
+    public function testFunction(array $content, array $expected): void
+    {
+        $model = Response::MODEL_FUNCTION;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+
+    public function executionProvider(): array
+    {
+        return [
+            'remove scheduledAt' => [
+                [
+                    'scheduledAt' => '2024-07-13T09:00:00.000Z',
+                ],
+                [
+                ]
+            ],
             'update 404 status' => [
                 [
                     'statusCode' => '404',
@@ -73,32 +99,6 @@ class V18Test extends TestCase
                 [
                     'statusCode' => '500',
                     'status' => 'failed'
-                ]
-            ]
-        ];
-    }
-
-    /**
-     * @dataProvider functionProvider
-     */
-    public function testFunction(array $content, array $expected): void
-    {
-        $model = Response::MODEL_FUNCTION;
-
-        $result = $this->filter->parse($content, $model);
-
-        $this->assertEquals($expected, $result);
-    }
-
-
-    public function executionProvider(): array
-    {
-        return [
-            'remove scheduledAt' => [
-                [
-                    'scheduledAt' => '2024-07-13T09:00:00.000Z',
-                ],
-                [
                 ]
             ]
         ];
