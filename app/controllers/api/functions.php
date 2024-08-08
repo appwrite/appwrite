@@ -739,7 +739,7 @@ App::put('/v1/functions/:functionId')
 
         $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
 
-        // Git disconnect logic
+        // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
         if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
             $repositories = $dbForConsole->find('repositories', [
                 Query::equal('projectInternalId', [$project->getInternalId()]),
