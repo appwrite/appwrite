@@ -38,6 +38,8 @@ class Migrations extends Action
 
     protected Document $project;
 
+    protected array $credentials = [];
+
     public static function getName(): string
     {
         return 'migrations';
@@ -125,9 +127,9 @@ class Migrations extends Action
                 $credentials['port'],
             ),
             SourceAppwrite::getName() => new SourceAppwrite(
-                $credentials['projectId'],
-                $credentials['endpoint'],
-                $credentials['apiKey']
+                $this->credentials['projectId'],
+                $this->credentials['endpoint'],
+                $this->credentials['apiKey']
             ),
             default => throw new \Exception('Invalid source type'),
         };
@@ -139,13 +141,12 @@ class Migrations extends Action
     protected function processDestination(Document $migration): Destination
     {
         $destination = $migration->getAttribute('destination');
-        $credentials = $migration->getAttribute('credentials');
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
-                $credentials['projectId'],
-                $credentials['endpoint'],
-                $credentials['apiKey'],
+                $this->credentials['projectId'],
+                $this->credentials['endpoint'],
+                $this->credentials['apiKey'],
                 $this->dbForProject,
                 Config::getParam('collections', [])['databases']['collections'],
             ),
@@ -278,16 +279,18 @@ class Migrations extends Action
 
             $log->addTag('type', $migration->getAttribute('source'));
 
-            if (
-                $migration->getAttribute('source') === SourceAppwrite::getName() ||
-                $migration->getAttribute('destination') === DestinationAppwrite::getName()
-            ) {
-                $migration->setAttribute('credentials', [
-                    'projectId' => $projectDocument->getId(),
-                    'endpoint' => 'http://appwrite/v1',
-                    'apiKey' => $tempAPIKey['secret'],
-                ]);
-            }
+//            if (
+//                $migration->getAttribute('source') === SourceAppwrite::getName() ||
+//                $migration->getAttribute('destination') === DestinationAppwrite::getName()
+//            ) {
+//                $migration->setAttribute('credentials', );
+//            }
+
+            $this->credentials = [
+                'projectId' => $projectDocument->getId(),
+                'endpoint' => 'http://appwrite/v1',
+                'apiKey' => $tempAPIKey['secret'],
+            ];
 
             $source = $this->processSource($migration);
             $destination = $this->processDestination($migration);
