@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Messaging;
 use Utopia\Database\Database;
-use Utopia\Pools\Group;
+use Utopia\Queue\Connection\Redis;
 
 class ScheduleMessages extends ScheduleBase
 {
@@ -21,7 +21,7 @@ class ScheduleMessages extends ScheduleBase
         return 'message';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole): void
+    protected function enqueueResources(array $pools, Database $dbForConsole): void
     {
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
@@ -35,10 +35,15 @@ class ScheduleMessages extends ScheduleBase
                 continue;
             }
 
-            \go(function () use ($schedule, $pools, $dbForConsole) {
-                $queue = $pools->get('queue')->pop();
-                $connection = $queue->getResource();
-                $queueForMessaging = new Messaging($connection);
+            \go(function () use ($now, $schedule, $pools, $dbForConsole) {
+                $pool = $pools['pools-queue-queue']['pool'];
+                $dsn = $pools['pools-queue-queue']['dsn'];
+                $connection = $pool->get();
+                $this->connections->add($connection, $pool);
+
+                $queueConnection = new Redis($dsn->getHost(), $dsn->getPort());
+
+                $queueForMessaging = new Messaging($queueConnection);
 
                 $queueForMessaging
                     ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
@@ -51,7 +56,8 @@ class ScheduleMessages extends ScheduleBase
                     $schedule['$id'],
                 );
 
-                $queue->reclaim();
+                $this->connections->reclaim();
+                // $queue->reclaim(); // TODO: Do in try/catch/finally, or add to connectons resource
 
                 unset($this->schedules[$schedule['resourceId']]);
             });

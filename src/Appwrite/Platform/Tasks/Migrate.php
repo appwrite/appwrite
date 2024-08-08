@@ -3,16 +3,15 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Migration\Migration;
-use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Validator\Text;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
-use Utopia\Validator\Text;
 
 class Migrate extends Action
 {
@@ -31,7 +30,9 @@ class Migrate extends Action
             ->inject('dbForConsole')
             ->inject('getProjectDB')
             ->inject('register')
-            ->callback(fn ($version, $cache, $dbForConsole, $getProjectDB, Registry $register) => $this->action($version, $cache, $dbForConsole, $getProjectDB, $register));
+            ->inject('authorization')
+            ->inject('console')
+            ->callback(fn ($version, $cache, $dbForConsole, $getProjectDB, Registry $register, Authorization $authorization, Document $console) => $this->action($version, $cache, $dbForConsole, $getProjectDB, $register, $authorization, $console));
     }
 
     private function clearProjectsCache(Cache $cache, Document $project)
@@ -43,20 +44,17 @@ class Migrate extends Action
         }
     }
 
-    public function action(string $version, Cache $cache, Database $dbForConsole, callable $getProjectDB, Registry $register)
+    public function action(string $version, Cache $cache, Database $dbForConsole, callable $getProjectDB, Registry $register, Authorization $auth, Document $console)
     {
-        Authorization::disable();
+        $auth->disable();
         if (!array_key_exists($version, Migration::$versions)) {
             Console::error("Version {$version} not found.");
             Console::exit(1);
             return;
         }
 
-        $app = new App('UTC');
 
         Console::success('Starting Data Migration to version ' . $version);
-
-        $console = $app->getResource('console');
 
         $limit = 30;
         $sum = 30;
@@ -76,7 +74,7 @@ class Migrate extends Action
 
         $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
         /** @var Migration $migration */
-        $migration = new $class();
+        $migration = new $class($auth, );
 
         while (!empty($projects)) {
             foreach ($projects as $project) {

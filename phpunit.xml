@@ -1,6 +1,6 @@
 <phpunit backupGlobals="false"
          backupStaticAttributes="false"
-         bootstrap="app/init.php"
+         bootstrap="app/init2.php"
          colors="true"
          convertErrorsToExceptions="true"
          convertNoticesToExceptions="true"

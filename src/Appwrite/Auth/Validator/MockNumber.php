@@ -2,8 +2,7 @@
 
 namespace Appwrite\Auth\Validator;
 
-use Utopia\Validator;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator;
 
 /**
  * MockNumber.
@@ -46,7 +45,7 @@ class MockNumber extends Validator
             return false;
         }
 
-        $otp = new Text(6, 6, Text::NUMBERS);
+        $otp = new Validator\Text(6, 6, Validator\Text::NUMBERS);
         if (!$otp->isValid($value['otp'])) {
             $this->message = 'Invalid OTP. Please make sure the OTP is a 6 digit number';
             return false;

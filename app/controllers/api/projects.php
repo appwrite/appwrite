@@ -13,14 +13,16 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
+use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\App;
+use Utopia\Abuse\Adapters\Database as TimeLimit;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -30,24 +32,25 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\Hostname;
+use Utopia\Http\Validator\Integer;
+use Utopia\Http\Validator\Multiple;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\URL;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Locale\Locale;
-use Utopia\Pools\Group;
 use Utopia\System\System;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Hostname;
-use Utopia\Validator\Integer;
-use Utopia\Validator\Multiple;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
 
-App::init()
+Http::init()
     ->groups(['projects'])
     ->inject('project')
     ->action(function (Document $project) {
@@ -56,7 +59,7 @@ App::init()
         }
     });
 
-App::post('/v1/projects')
+Http::post('/v1/projects')
     ->desc('Create project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -85,8 +88,9 @@ App::post('/v1/projects')
     ->inject('cache')
     ->inject('pools')
     ->inject('hooks')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForConsole, Cache $cache, Group $pools, Hooks $hooks) {
-
+    ->inject('authorization')
+    ->inject('connections')
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForConsole, Cache $cache, array $pools, Hooks $hooks, Authorization $authorization, Connections $connections) {
         $team = $dbForConsole->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
@@ -188,8 +192,21 @@ App::post('/v1/projects')
             $dsn = new DSN('mysql://' . $dsn);
         }
 
-        $adapter = $pools->get($dsn->getHost())->pop()->getResource();
+        $pool = $pools['pools-database-' . $dsn->getHost()]['pool'];
+        $connectionDsn = $pools['pools-database-' . $dsn->getHost()]['dsn'];
+        $connection = $pool->get();
+        $connections->add($connection, $pool);
+
+        $adapter = match ($connectionDsn->getScheme()) {
+            'mariadb' => new MariaDB($connection),
+            'mysql' => new MySQL($connection),
+            default => null
+        };
+
+        $adapter->setDatabase($connectionDsn->getPath());
+
         $dbForProject = new Database($adapter, $cache);
+        $dbForProject->setAuthorization($authorization);
 
         if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
             $dbForProject
@@ -207,10 +224,8 @@ App::post('/v1/projects')
 
         $audit = new Audit($dbForProject);
         $audit->setup();
-
         $abuse = new TimeLimit('', 0, 1, $dbForProject);
         $abuse->setup();
-
         /** @var array $collections */
         $collections = Config::getParam('collections', [])['projects'] ?? [];
 
@@ -233,17 +248,17 @@ App::post('/v1/projects')
                 // Collection already exists
             }
         }
-
+        $connections->reclaim();
         // Hook allowing instant project mirroring during migration
         // Outside of migration, hook is not registered and has no effect
-        $hooks->trigger('afterProjectCreation', [ $project, $pools, $cache ]);
+        $hooks->trigger('afterProjectCreation', [$project, $pools, $cache]);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::get('/v1/projects')
+Http::get('/v1/projects')
     ->desc('List projects')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -258,7 +273,6 @@ App::get('/v1/projects')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (array $queries, string $search, Response $response, Database $dbForConsole) {
-
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -296,7 +310,7 @@ App::get('/v1/projects')
         ]), Response::MODEL_PROJECT_LIST);
     });
 
-App::get('/v1/projects/:projectId')
+Http::get('/v1/projects/:projectId')
     ->desc('Get project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -310,7 +324,6 @@ App::get('/v1/projects/:projectId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -320,7 +333,7 @@ App::get('/v1/projects/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId')
+Http::patch('/v1/projects/:projectId')
     ->desc('Update project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -344,31 +357,34 @@ App::patch('/v1/projects/:projectId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('name', $name)
-            ->setAttribute('description', $description)
-            ->setAttribute('logo', $logo)
-            ->setAttribute('url', $url)
-            ->setAttribute('legalName', $legalName)
-            ->setAttribute('legalCountry', $legalCountry)
-            ->setAttribute('legalState', $legalState)
-            ->setAttribute('legalCity', $legalCity)
-            ->setAttribute('legalAddress', $legalAddress)
-            ->setAttribute('legalTaxId', $legalTaxId)
-            ->setAttribute('search', implode(' ', [$projectId, $name])));
+        $project = $dbForConsole->updateDocument(
+            'projects',
+            $project->getId(),
+            $project
+                ->setAttribute('name', $name)
+                ->setAttribute('description', $description)
+                ->setAttribute('logo', $logo)
+                ->setAttribute('url', $url)
+                ->setAttribute('legalName', $legalName)
+                ->setAttribute('legalCountry', $legalCountry)
+                ->setAttribute('legalState', $legalState)
+                ->setAttribute('legalCity', $legalCity)
+                ->setAttribute('legalAddress', $legalAddress)
+                ->setAttribute('legalTaxId', $legalTaxId)
+                ->setAttribute('search', implode(' ', [$projectId, $name]))
+        );
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/team')
-    ->desc('Update project team')
+Http::patch('/v1/projects/:projectId/team')
+    ->desc('Update Project Team')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -382,7 +398,6 @@ App::patch('/v1/projects/:projectId/team')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $teamId, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -435,7 +450,7 @@ App::patch('/v1/projects/:projectId/team')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/service')
+Http::patch('/v1/projects/:projectId/service')
     ->desc('Update service status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -451,7 +466,6 @@ App::patch('/v1/projects/:projectId/service')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $service, bool $status, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -466,7 +480,7 @@ App::patch('/v1/projects/:projectId/service')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/service/all')
+Http::patch('/v1/projects/:projectId/service/all')
     ->desc('Update all service status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -481,7 +495,6 @@ App::patch('/v1/projects/:projectId/service/all')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $status, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -500,7 +513,7 @@ App::patch('/v1/projects/:projectId/service/all')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/api')
+Http::patch('/v1/projects/:projectId/api')
     ->desc('Update API status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -516,7 +529,6 @@ App::patch('/v1/projects/:projectId/api')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $api, bool $status, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -531,7 +543,7 @@ App::patch('/v1/projects/:projectId/api')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/api/all')
+Http::patch('/v1/projects/:projectId/api/all')
     ->desc('Update all API status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -546,7 +558,6 @@ App::patch('/v1/projects/:projectId/api/all')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $status, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -565,7 +576,7 @@ App::patch('/v1/projects/:projectId/api/all')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/oauth2')
+Http::patch('/v1/projects/:projectId/oauth2')
     ->desc('Update project OAuth2')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -583,7 +594,6 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $provider, ?string $appId, ?string $secret, ?bool $enabled, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -609,7 +619,7 @@ App::patch('/v1/projects/:projectId/oauth2')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/session-alerts')
+Http::patch('/v1/projects/:projectId/auth/session-alerts')
     ->desc('Update project sessions emails')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -640,7 +650,7 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/limit')
+Http::patch('/v1/projects/:projectId/auth/limit')
     ->desc('Update project users limit')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -655,7 +665,6 @@ App::patch('/v1/projects/:projectId/auth/limit')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -665,13 +674,17 @@ App::patch('/v1/projects/:projectId/auth/limit')
         $auths = $project->getAttribute('auths', []);
         $auths['limit'] = $limit;
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+        $dbForConsole->updateDocument(
+            'projects',
+            $project->getId(),
+            $project
+                ->setAttribute('auths', $auths)
+        );
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/duration')
+Http::patch('/v1/projects/:projectId/auth/duration')
     ->desc('Update project authentication duration')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -686,7 +699,6 @@ App::patch('/v1/projects/:projectId/auth/duration')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, int $duration, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -696,13 +708,17 @@ App::patch('/v1/projects/:projectId/auth/duration')
         $auths = $project->getAttribute('auths', []);
         $auths['duration'] = $duration;
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+        $dbForConsole->updateDocument(
+            'projects',
+            $project->getId(),
+            $project
+                ->setAttribute('auths', $auths)
+        );
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/:method')
+Http::patch('/v1/projects/:projectId/auth/:method')
     ->desc('Update project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -718,10 +734,9 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $method, bool $status, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
-        $auth = Config::getParam('auth')[$method] ?? [];
-        $authKey = $auth['key'] ?? '';
+        $authConfig = Config::getParam('auth')[$method] ?? [];
+        $authKey = $authConfig['key'] ?? '';
         $status = ($status === '1' || $status === 'true' || $status === 1 || $status === true);
 
         if ($project->isEmpty()) {
@@ -736,7 +751,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/password-history')
+Http::patch('/v1/projects/:projectId/auth/password-history')
     ->desc('Update authentication password history. Use this endpoint to set the number of password history to save and 0 to disable password history.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -751,7 +766,6 @@ App::patch('/v1/projects/:projectId/auth/password-history')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -761,13 +775,17 @@ App::patch('/v1/projects/:projectId/auth/password-history')
         $auths = $project->getAttribute('auths', []);
         $auths['passwordHistory'] = $limit;
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+        $dbForConsole->updateDocument(
+            'projects',
+            $project->getId(),
+            $project
+                ->setAttribute('auths', $auths)
+        );
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/password-dictionary')
+Http::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->desc('Update authentication password dictionary status. Use this endpoint to enable or disable the dicitonary check for user password')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -782,7 +800,6 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -792,13 +809,17 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
         $auths = $project->getAttribute('auths', []);
         $auths['passwordDictionary'] = $enabled;
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+        $dbForConsole->updateDocument(
+            'projects',
+            $project->getId(),
+            $project
+                ->setAttribute('auths', $auths)
+        );
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/personal-data')
+Http::patch('/v1/projects/:projectId/auth/personal-data')
     ->desc('Enable or disable checking user passwords for similarity with their personal data.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -813,7 +834,6 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -823,13 +843,17 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
         $auths = $project->getAttribute('auths', []);
         $auths['personalDataCheck'] = $enabled;
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+        $dbForConsole->updateDocument(
+            'projects',
+            $project->getId(),
+            $project
+                ->setAttribute('auths', $auths)
+        );
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/max-sessions')
+Http::patch('/v1/projects/:projectId/auth/max-sessions')
     ->desc('Update project user sessions limit')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -844,7 +868,6 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -854,13 +877,17 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
         $auths = $project->getAttribute('auths', []);
         $auths['maxSessions'] = $limit;
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
+        $dbForConsole->updateDocument(
+            'projects',
+            $project->getId(),
+            $project
+                ->setAttribute('auths', $auths)
+        );
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/mock-numbers')
+Http::patch('/v1/projects/:projectId/auth/mock-numbers')
     ->desc('Update the mock numbers for the project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -899,7 +926,7 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::delete('/v1/projects/:projectId')
+Http::delete('/v1/projects/:projectId')
     ->desc('Delete project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -933,7 +960,7 @@ App::delete('/v1/projects/:projectId')
 
 // Webhooks
 
-App::post('/v1/projects/:projectId/webhooks')
+Http::post('/v1/projects/:projectId/webhooks')
     ->desc('Create webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -954,14 +981,13 @@ App::post('/v1/projects/:projectId/webhooks')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
+        $security = (bool)filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
         $webhook = new Document([
             '$id' => ID::unique(),
@@ -991,7 +1017,7 @@ App::post('/v1/projects/:projectId/webhooks')
             ->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::get('/v1/projects/:projectId/webhooks')
+Http::get('/v1/projects/:projectId/webhooks')
     ->desc('List webhooks')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1005,7 +1031,6 @@ App::get('/v1/projects/:projectId/webhooks')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1023,7 +1048,7 @@ App::get('/v1/projects/:projectId/webhooks')
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
-App::get('/v1/projects/:projectId/webhooks/:webhookId')
+Http::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Get webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1038,7 +1063,6 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1057,7 +1081,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::put('/v1/projects/:projectId/webhooks/:webhookId')
+Http::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Update webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1079,7 +1103,6 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1116,7 +1139,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
+Http::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
     ->desc('Update webhook signature key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1131,7 +1154,6 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1155,7 +1177,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::delete('/v1/projects/:projectId/webhooks/:webhookId')
+Http::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Delete webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1169,7 +1191,6 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1194,7 +1215,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 
 // Keys
 
-App::post('/v1/projects/:projectId/keys')
+Http::post('/v1/projects/:projectId/keys')
     ->desc('Create key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1211,7 +1232,6 @@ App::post('/v1/projects/:projectId/keys')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1244,7 +1264,7 @@ App::post('/v1/projects/:projectId/keys')
             ->dynamic($key, Response::MODEL_KEY);
     });
 
-App::get('/v1/projects/:projectId/keys')
+Http::get('/v1/projects/:projectId/keys')
     ->desc('List keys')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1258,7 +1278,6 @@ App::get('/v1/projects/:projectId/keys')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1276,7 +1295,7 @@ App::get('/v1/projects/:projectId/keys')
         ]), Response::MODEL_KEY_LIST);
     });
 
-App::get('/v1/projects/:projectId/keys/:keyId')
+Http::get('/v1/projects/:projectId/keys/:keyId')
     ->desc('Get key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1291,7 +1310,6 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1310,7 +1328,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
-App::put('/v1/projects/:projectId/keys/:keyId')
+Http::put('/v1/projects/:projectId/keys/:keyId')
     ->desc('Update key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1328,7 +1346,6 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1356,7 +1373,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
-App::delete('/v1/projects/:projectId/keys/:keyId')
+Http::delete('/v1/projects/:projectId/keys/:keyId')
     ->desc('Delete key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1370,7 +1387,6 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1395,7 +1411,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
 // JWT Keys
 
-App::post('/v1/projects/:projectId/jwts')
+Http::post('/v1/projects/:projectId/jwts')
     ->groups(['api', 'projects'])
     ->desc('Create JWT')
     ->label('scope', 'projects.write')
@@ -1430,7 +1446,7 @@ App::post('/v1/projects/:projectId/jwts')
 
 // Platforms
 
-App::post('/v1/projects/:projectId/platforms')
+Http::post('/v1/projects/:projectId/platforms')
     ->desc('Create platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1441,7 +1457,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PLATFORM)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS,  Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY], true), 'Platform type.')
+    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS, Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
@@ -1480,7 +1496,7 @@ App::post('/v1/projects/:projectId/platforms')
             ->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::get('/v1/projects/:projectId/platforms')
+Http::get('/v1/projects/:projectId/platforms')
     ->desc('List platforms')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1494,7 +1510,6 @@ App::get('/v1/projects/:projectId/platforms')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1512,7 +1527,7 @@ App::get('/v1/projects/:projectId/platforms')
         ]), Response::MODEL_PLATFORM_LIST);
     });
 
-App::get('/v1/projects/:projectId/platforms/:platformId')
+Http::get('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Get platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1527,7 +1542,6 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $platformId, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1546,7 +1560,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::put('/v1/projects/:projectId/platforms/:platformId')
+Http::put('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Update platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1593,7 +1607,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::delete('/v1/projects/:projectId/platforms/:platformId')
+Http::delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1607,7 +1621,6 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $platformId, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1632,7 +1645,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
 
 // CUSTOM SMTP and Templates
-App::patch('/v1/projects/:projectId/smtp')
+Http::patch('/v1/projects/:projectId/smtp')
     ->desc('Update SMTP')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1655,7 +1668,6 @@ App::patch('/v1/projects/:projectId/smtp')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $enabled, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1722,7 +1734,7 @@ App::patch('/v1/projects/:projectId/smtp')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::post('/v1/projects/:projectId/smtp/tests')
+Http::post('/v1/projects/:projectId/smtp/tests')
     ->desc('Create SMTP test')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1781,7 +1793,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
         return $response->noContent();
     });
 
-App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
+Http::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Get custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1797,7 +1809,6 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
-
         throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
 
         $project = $dbForConsole->getDocument('projects', $projectId);
@@ -1807,7 +1818,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
+        $template = $templates['sms.' . $type . '-' . $locale] ?? null;
 
         if (is_null($template)) {
             $template = [
@@ -1822,7 +1833,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     });
 
 
-App::get('/v1/projects/:projectId/templates/email/:type/:locale')
+Http::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Get custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1838,7 +1849,6 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1846,7 +1856,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $template  = $templates['email.' . $type . '-' . $locale] ?? null;
+        $template = $templates['email.' . $type . '-' . $locale] ?? null;
 
         $localeObj = new Locale($locale);
         if (is_null($template)) {
@@ -1854,7 +1864,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
             $message
                 ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
                 ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
-                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'), escapeHtml: false)
+                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'), escape: false)
                 ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
                 ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
                 ->setParam('{{direction}}', $localeObj->getText('settings.direction'));
@@ -1874,7 +1884,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         $response->dynamic(new Document($template), Response::MODEL_EMAIL_TEMPLATE);
     });
 
-App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
+Http::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Update custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1891,7 +1901,6 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, string $message, Response $response, Database $dbForConsole) {
-
         throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
 
         $project = $dbForConsole->getDocument('projects', $projectId);
@@ -1914,7 +1923,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
         ]), Response::MODEL_SMS_TEMPLATE);
     });
 
-App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
+Http::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Update custom email templates')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1935,7 +1944,6 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, string $subject, string $message, string $senderName, string $senderEmail, string $replyTo, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1964,7 +1972,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
         ]), Response::MODEL_EMAIL_TEMPLATE);
     });
 
-App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
+Http::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Reset custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1980,7 +1988,6 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
-
         throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
 
         $project = $dbForConsole->getDocument('projects', $projectId);
@@ -1990,7 +1997,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
+        $template = $templates['sms.' . $type . '-' . $locale] ?? null;
 
         if (is_null($template)) {
             throw new Exception(Exception::PROJECT_TEMPLATE_DEFAULT_DELETION);
@@ -2007,7 +2014,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
         ]), Response::MODEL_SMS_TEMPLATE);
     });
 
-App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
+Http::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Reset custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -2023,7 +2030,6 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -2031,7 +2037,7 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $template  = $templates['email.' . $type . '-' . $locale] ?? null;
+        $template = $templates['email.' . $type . '-' . $locale] ?? null;
 
         if (is_null($template)) {
             throw new Exception(Exception::PROJECT_TEMPLATE_DEFAULT_DELETION);

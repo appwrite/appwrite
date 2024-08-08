@@ -94,10 +94,10 @@ abstract class Migration
      */
     protected array $collections;
 
-    public function __construct()
+    public function __construct(Authorization $auth)
     {
-        Authorization::disable();
-        Authorization::setDefaultStatus(false);
+        $auth->disable();
+        $auth->setDefaultStatus(false);
 
         $this->collections = Config::getParam('collections', []);
 
@@ -171,29 +171,25 @@ abstract class Migration
 
             Console::log('Migrating Collection ' . $collection['$id'] . ':');
 
-            \Co\run(function (array $collection, callable $callback) {
-                foreach ($this->documentsIterator($collection['$id']) as $document) {
-                    go(function (Document $document, callable $callback) {
-                        if (empty($document->getId()) || empty($document->getCollection())) {
-                            return;
-                        }
-
-                        $old = $document->getArrayCopy();
-                        $new = call_user_func($callback, $document);
-
-                        if (is_null($new) || $new->getArrayCopy() == $old) {
-                            return;
-                        }
-
-                        try {
-                            $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
-                        } catch (\Throwable $th) {
-                            Console::error('Failed to update document: ' . $th->getMessage());
-                            return;
-                        }
-                    }, $document, $callback);
+            foreach ($this->documentsIterator($collection['$id']) as $document) {
+                if (empty($document->getId()) || empty($document->getCollection())) {
+                    return;
                 }
-            }, $collection, $callback);
+
+                $old = $document->getArrayCopy();
+                $new = call_user_func($callback, $document);
+
+                if (is_null($new) || $new->getArrayCopy() == $old) {
+                    return;
+                }
+
+                try {
+                    $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
+                } catch (\Throwable $th) {
+                    Console::error('Failed to update document: ' . $th->getMessage());
+                    return;
+                }
+            }
         }
     }
 

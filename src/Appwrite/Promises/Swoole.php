@@ -6,23 +6,16 @@ use Swoole\Coroutine\Channel;
 
 class Swoole extends Promise
 {
-    public function __construct(?callable $executor = null)
-    {
-        parent::__construct($executor);
-    }
-
     protected function execute(
         callable $executor,
         callable $resolve,
         callable $reject
     ): void {
-        \go(function () use ($executor, $resolve, $reject) {
-            try {
-                $executor($resolve, $reject);
-            } catch (\Throwable $exception) {
-                $reject($exception);
-            }
-        });
+        try {
+            $executor($resolve, $reject);
+        } catch (\Throwable $exception) {
+            $reject($exception);
+        }
     }
 
     /**
