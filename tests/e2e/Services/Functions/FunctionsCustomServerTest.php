@@ -926,7 +926,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $response3['headers']['status-code']);
-        $this->assertStringStartsWith('Invalid `specification` param: String must be a valid specification value of', $response3['body']['message']);
+        $this->assertStringStartsWith('Invalid `specification` param: Specification must be one of:', $response3['body']['message']);
 
         return $data;
     }
