@@ -364,7 +364,7 @@ App::delete('/v1/teams/:teamId')
         $response->noContent();
     });
 
-App::post('/v1/teams/:teamId/memberships')
+    App::post('/v1/teams/:teamId/memberships')
     ->desc('Create team membership')
     ->groups(['api', 'teams', 'auth'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].create')
@@ -511,17 +511,14 @@ App::post('/v1/teams/:teamId/memberships')
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
         }
-
-        $existingMembership = $dbForProject->findOne('memberships', [
-            Query::equal('teamId', [$teamId]),
-            Query::equal('userEmail', [$email]),
-            Query::equal('confirm', [false]),
+        $membership = $dbForProject->findOne('memberships', [
+            Query::equal('userId', [$invitee->getId()]),
+            Query::equal('teamId', [$team->getId()]),
         ]);
-        $shouldCreateMembership = true;
-
-        if (empty($existingMembership)) {
+        $createdMembership = false;
+        if (!$membership) {
             $secret = Auth::tokenGenerator();
-
+    
             $membershipId = ID::unique();
             $membership = new Document([
                 '$id' => $membershipId,
@@ -543,15 +540,14 @@ App::post('/v1/teams/:teamId/memberships')
                 'secret' => Auth::hash($secret),
                 'search' => implode(' ', [$membershipId, $invitee->getId()])
             ]);
+            $createdMembership = true;
         } else {
-            $membership = $existingMembership;
             $membership->setAttribute('invited', DateTime::now());
-            $shouldCreateMembership = false;
         }
 
         if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
             try {
-                if ($shouldCreateMembership) {
+                if ($createdMembership) {
                     $membership = Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership));
                     Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
                 } else {
@@ -564,8 +560,9 @@ App::post('/v1/teams/:teamId/memberships')
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
             try {
-                if ($shouldCreateMembership) {
+                if ($createdMembership) {
                     $membership = Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership));
+                    Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
                 } else {
                     $membership = Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership));
                 }
@@ -687,7 +684,8 @@ App::post('/v1/teams/:teamId/memberships')
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
-            ->setParam('membershipId', $membership->getId());
+            ->setParam('membershipId', $membership->getId())
+        ;
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
