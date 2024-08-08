@@ -562,7 +562,7 @@ class Response extends SwooleResponse
                 try {
                     $this->json(!empty($output) ? $output : new \stdClass());
                 } catch (JsonException $e) {
-                    throw new Exception('Failed to parse binary response: ' . $e->getMessage(), 400);
+                    throw new Exception('Failed to parse response: ' . $e->getMessage(), 400);
                 }
                 break;
 
