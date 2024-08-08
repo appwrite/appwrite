@@ -126,7 +126,7 @@ class Migrations extends Action
             ),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
-                str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'],
+                $credentials['endpoint'],
                 $credentials['apiKey']
             ),
             default => throw new \Exception('Invalid source type'),
@@ -136,14 +136,15 @@ class Migrations extends Action
     /**
      * @throws Exception
      */
-    protected function processDestination(Document $migration, array $credentials): Destination
+    protected function processDestination(Document $migration): Destination
     {
         $destination = $migration->getAttribute('destination');
+        $credentials = $migration->getAttribute('credentials');
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $credentials['projectId'],
-                str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'],
+                $credentials['endpoint'],
                 $credentials['apiKey'],
                 $this->dbForProject,
                 Config::getParam('collections', [])['databases']['collections'],
@@ -277,16 +278,19 @@ class Migrations extends Action
 
             $log->addTag('type', $migration->getAttribute('source'));
 
-            $source = $this->processSource($migration);
-
-            $destination = $this->processDestination(
-                $migration,
-                [
+            if (
+                $migration->getAttribute('source') === SourceAppwrite::getName() ||
+                $migration->getAttribute('destination') === DestinationAppwrite::getName()
+            ) {
+                $migration->setAttribute('credentials', [
                     'projectId' => $projectDocument->getId(),
                     'endpoint' => 'http://appwrite/v1',
                     'apiKey' => $tempAPIKey['secret'],
-                ]
-            );
+                ]);
+            }
+
+            $source = $this->processSource($migration);
+            $destination = $this->processDestination($migration);
 
             $source->report();
 
