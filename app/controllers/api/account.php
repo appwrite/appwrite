@@ -76,6 +76,11 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::USER_INVALID_TOKEN);
     }
 
+    $identity = $dbForProject->findOne('identities', [
+        Query::equal('userInternalId', [$userFromRequest->getInternalId()]),
+        Query::equal('provider', [$verifiedToken->getAttribute('provider')]),
+    ]);
+
     $user->setAttributes($userFromRequest->getArrayCopy());
 
     $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -109,6 +114,14 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         $detector->getClient(),
         $detector->getDevice()
     ));
+
+    if ($identity !== false && !$identity->isEmpty()) {
+        $session->setAttribute('provider', $identity->getAttribute('provider'));
+        $session->setAttribute('providerUid', $identity->getAttribute('providerUid'));
+        $session->setAttribute('providerAccessToken', $identity->getAttribute('providerAccessToken'));
+        $session->setAttribute('providerRefreshToken', $identity->getAttribute('providerRefreshToken'));
+        $session->setAttribute('providerAccessTokenExpiry', $identity->getAttribute('providerAccessTokenExpiry'));
+    }
 
     Authorization::setRole(Role::user($user->getId())->toString());
 
@@ -1466,6 +1479,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'type' => Auth::TOKEN_TYPE_OAUTH2,
+                'provider' => $provider,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expire,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
