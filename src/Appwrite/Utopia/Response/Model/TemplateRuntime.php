@@ -33,8 +33,7 @@ class TemplateRuntime extends Model
                 'description' => 'Path to function in VCS (Version Control System) repository',
                 'default' => '',
                 'example' => 'node/starter',
-            ])
-        ;
+            ]);
     }
 
     /**
