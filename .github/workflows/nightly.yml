@@ -1,0 +1,47 @@
+name: Nightly Security Scan
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 12am UTC daily runtime
+  workflow_dispatch:
+
+jobs:
+  scan-image:
+    name: Scan Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build the Docker image
+        run: docker build . -t appwrite_image:latest
+      - name: Run Trivy vulnerability scanner on image
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          image-ref: 'appwrite_image:latest'
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+          ignore-unfixed: 'false'
+          severity: 'CRITICAL,HIGH'
+      - name: Upload Docker Image Scan Results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+
+  scan-code:
+    name: Scan Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Run Trivy vulnerability scanner on filesystem
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          scan-type: 'fs'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      - name: Upload Code Scan Results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-fs-results.sarif'
