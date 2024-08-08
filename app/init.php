@@ -112,7 +112,7 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4327;
+const APP_CACHE_BUSTER = 4323;
 const APP_VERSION_STABLE = '1.5.8';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -1339,7 +1339,8 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+    $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+    if (in_array($dsn->getHost(), $sharedTablesKeys)) {
         $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
@@ -1392,7 +1393,8 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+            if (in_array($dsn->getHost(), $sharedTablesKeys)) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
@@ -1443,23 +1445,27 @@ App::setResource('deviceForLocal', function () {
     return new Local();
 });
 
-App::setResource('deviceForFiles', function ($project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
+App::setResource('deviceForFiles', function ($project, $connectionString) {
+    return getDevice(APP_STORAGE_UPLOADS.'/app-'.$project->getId(), $connectionString);
+}, ['project', 'connectionString']);
 
-App::setResource('deviceForFunctions', function ($project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-}, ['project']);
+App::setResource('deviceForFunctions', function ($project, $connectionString) {
+    return getDevice(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId(), $connectionString);
+}, ['project', 'connectionString']);
 
-App::setResource('deviceForBuilds', function ($project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-}, ['project']);
+App::setResource('deviceForBuilds', function ($project, $connectionString) {
+    return getDevice(APP_STORAGE_BUILDS.'/app-'.$project->getId(), $connectionString);
+}, ['project', 'connectionString']);
 
-function getDevice($root): Device
+App::setResource('connectionString', function () {
+    return System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+});
+
+
+function getDevice(string $root, string $connectionString = ''): Device
 {
-    $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
-    if (!empty($connection)) {
+    if (! empty($connectionString)) {
         $acl = 'private';
         $device = Storage::DEVICE_LOCAL;
         $accessKey = '';
@@ -1468,7 +1474,7 @@ function getDevice($root): Device
         $region = '';
 
         try {
-            $dsn = new DSN($connection);
+            $dsn = new DSN($connectionString);
             $device = $dsn->getScheme();
             $accessKey = $dsn->getUser() ?? '';
             $accessSecret = $dsn->getPassword() ?? '';

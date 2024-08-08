@@ -119,6 +119,12 @@ App::post('/v1/projects')
         if ($index !== false) {
             $dsn = $databases[$index];
         } else {
+            if ($region !== 'default') {
+                $databases = array_filter($databases, function ($value) use ($region) {
+                    return str_contains($value, $region);
+                });
+            }
+
             $dsn = $databases[array_rand($databases)];
         }
 
@@ -126,12 +132,20 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
+        var_dump([
+            'location' => 'Api::projects',
+            '_APP_DATABASE_SHARED_TABLES' => System::getEnv('_APP_DATABASE_SHARED_TABLES', ''),
+            'region' => $region,
+            'dsn' => $dsn,
+        ]);
+
         // TODO: Temporary until all projects are using shared tables.
-        if ($dsn === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+        $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        if (in_array($dsn, $sharedTablesKeys)) {
             $schema = 'appwrite';
             $database = 'appwrite';
             $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-            $dsn = $schema . '://' . System::getEnv('_APP_DATABASE_SHARED_TABLES', '') . '?database=' . $database;
+            $dsn = $schema . '://' . $dsn . '?database=' . $database;
 
             if (!empty($namespace)) {
                 $dsn .= '&namespace=' . $namespace;
@@ -185,7 +199,8 @@ App::post('/v1/projects')
         $adapter = $pools->get($dsn->getHost())->pop()->getResource();
         $dbForProject = new Database($adapter, $cache);
 
-        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+        $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        if (in_array($dsn->getHost(), $sharedTablesKeys)) {
             $dbForProject
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
