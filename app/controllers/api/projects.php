@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Validator\MockNumber;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
@@ -21,6 +22,7 @@ use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Query as QueryException;
@@ -104,8 +106,11 @@ App::post('/v1/projects')
             'passwordHistory' => 0,
             'passwordDictionary' => false,
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
-            'personalDataCheck' => false
+            'personalDataCheck' => false,
+            'mockNumbers' => [],
+            'sessionAlerts' => false,
         ];
+
         foreach ($auth as $method) {
             $auths[$method['key'] ?? ''] = true;
         }
@@ -168,6 +173,7 @@ App::post('/v1/projects')
                 'webhooks' => null,
                 'keys' => null,
                 'auths' => $auths,
+                'accessedAt' => DateTime::now(),
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
             ]));
@@ -362,7 +368,7 @@ App::patch('/v1/projects/:projectId')
     });
 
 App::patch('/v1/projects/:projectId/team')
-    ->desc('Update Project Team')
+    ->desc('Update project team')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -603,6 +609,37 @@ App::patch('/v1/projects/:projectId/oauth2')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
+App::patch('/v1/projects/:projectId/auth/session-alerts')
+    ->desc('Update project sessions emails')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateSessionAlerts')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('alerts', false, new Boolean(true), 'Set to true to enable session emails.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, bool $alerts, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['sessionAlerts'] = $alerts;
+
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
 App::patch('/v1/projects/:projectId/auth/limit')
     ->desc('Update project users limit')
     ->groups(['api', 'projects'])
@@ -819,6 +856,45 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/auth/mock-numbers')
+    ->desc('Update the mock numbers for the project')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateMockNumbers')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('numbers', '', new ArrayList(new MockNumber(), 10), 'An array of mock numbers and their corresponding verification codes (OTPs). Each number should be a valid E.164 formatted phone number. Maximum of 10 numbers are allowed.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, array $numbers, Response $response, Database $dbForConsole) {
+
+        $uniqueNumbers = [];
+        foreach ($numbers as $number) {
+            if (isset($uniqueNumbers[$number['phone']])) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Duplicate phone numbers are not allowed.');
+            }
+            $uniqueNumbers[$number['phone']] = $number['otp'];
+        }
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+
+        $auths['mockNumbers'] = $numbers;
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });

@@ -250,6 +250,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_CONSOLE_SESSION_ALERTS',
+                'description' => 'This option allows you configure if a new login in the Appwrite Console should send an alert email to the user. It\'s disabled by default with value "disabled", and to enable it, pass value "enabled".',
+                'introduction' => '1.6.0',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
@@ -702,9 +711,18 @@ return [
         'variables' => [
             [
                 'name' => '_APP_FUNCTIONS_SIZE_LIMIT',
-                'description' => 'The maximum size deployment in bytes. The default value is 30MB.',
+                'description' => 'The maximum size of a function in bytes. The default value is 30MB.',
                 'introduction' => '0.13.0',
                 'default' => '30000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_BUILD_SIZE_LIMIT',
+                'description' => 'The maximum size of a built deployment in bytes. The default value is 2,000,000,000 (2GB), and the maximum value is 4,294,967,295 (4.2GB).',
+                'introduction' => '1.6.0',
+                'default' => '2000000000',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

@@ -2697,7 +2697,7 @@ App::post('/v1/messaging/messages/email')
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
-                    'schedule'  => $scheduledAt,
+                    'schedule' => $scheduledAt,
                     'active' => true,
                 ]));
 
@@ -2813,7 +2813,7 @@ App::post('/v1/messaging/messages/sms')
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
-                    'schedule'  => $scheduledAt,
+                    'schedule' => $scheduledAt,
                     'active' => true,
                 ]));
 
@@ -2989,7 +2989,7 @@ App::post('/v1/messaging/messages/push')
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
-                    'schedule'  => $scheduledAt,
+                    'schedule' => $scheduledAt,
                     'active' => true,
                 ]));
 

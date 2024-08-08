@@ -76,6 +76,7 @@ $image = $this->getParam('image', '');
       - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
+      - _APP_CONSOLE_SESSION_ALERTS
       - _APP_CONSOLE_WHITELIST_IPS
       - _APP_CONSOLE_HOSTNAMES
       - _APP_SYSTEM_EMAIL_NAME
@@ -162,6 +163,28 @@ $image = $this->getParam('image', '');
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_ASSISTANT_OPENAI_API_KEY
+
+  appwrite-console:
+    <<: *x-logging
+    container_name: appwrite-console
+    image: <?php echo $organization; ?>/console:appwrite/console:5.0.0-rc.11
+    restart: unless-stopped
+    networks:
+      - appwrite
+    labels:
+      - "traefik.enable=true"
+      - "traefik.constraint-label-stack=appwrite"
+      - "traefik.docker.network=appwrite"
+      - "traefik.http.services.appwrite_console.loadbalancer.server.port=80"
+      #ws
+      - traefik.http.routers.appwrite_console_http.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_console_http.rule=PathPrefix(`/console`)
+      - traefik.http.routers.appwrite_console_http.service=appwrite_console
+      # wss
+      - traefik.http.routers.appwrite_console_https.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_console_https.rule=PathPrefix(`/console`)
+      - traefik.http.routers.appwrite_console_https.service=appwrite_console
+      - traefik.http.routers.appwrite_console_https.tls=true
 
   appwrite-realtime:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -699,6 +722,31 @@ $image = $this->getParam('image', '');
       - _APP_DB_USER
       - _APP_DB_PASS
 
+  appwrite-task-scheduler-executions:
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    entrypoint: schedule-executions
+    container_name: appwrite-task-scheduler-executions
+    <<: *x-logging
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
   appwrite-task-scheduler-messages:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: schedule-messages
@@ -740,7 +788,7 @@ $image = $this->getParam('image', '');
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.5.5
+    image: openruntimes/executor:0.6.5
     networks:
       - appwrite
       - runtimes

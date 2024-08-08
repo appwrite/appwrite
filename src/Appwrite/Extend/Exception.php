@@ -156,6 +156,7 @@ class Exception extends \Exception
     public const FUNCTION_RUNTIME_UNSUPPORTED      = 'function_runtime_unsupported';
     public const FUNCTION_ENTRYPOINT_MISSING       = 'function_entrypoint_missing';
     public const FUNCTION_SYNCHRONOUS_TIMEOUT      = 'function_synchronous_timeout';
+    public const FUNCTION_TEMPLATE_NOT_FOUND       = 'function_template_not_found';
 
     /** Deployments */
     public const DEPLOYMENT_NOT_FOUND              = 'deployment_not_found';
@@ -168,6 +169,7 @@ class Exception extends \Exception
 
     /** Execution */
     public const EXECUTION_NOT_FOUND               = 'execution_not_found';
+    public const EXECUTION_IN_PROGRESS             = 'execution_in_progress';
 
     /** Databases */
     public const DATABASE_NOT_FOUND                = 'database_not_found';

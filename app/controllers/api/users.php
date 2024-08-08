@@ -1786,7 +1786,7 @@ App::post('/v1/users/:userId/sessions')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret = Auth::codeGenerator();
+        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
 
@@ -1803,6 +1803,7 @@ App::post('/v1/users/:userId/sessions')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => $expire,
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1814,7 +1815,6 @@ App::post('/v1/users/:userId/sessions')
         $session = $dbForProject->createDocument('sessions', $session);
         $session
             ->setAttribute('secret', $secret)
-            ->setAttribute('expire', $expire)
             ->setAttribute('countryName', $countryName);
 
         $queueForEvents
@@ -2109,7 +2109,7 @@ App::post('/v1/users/:userId/jwts')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_JWT)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('sessionId', 'recent', new UID(), 'Session ID. Use the string \'recent\' to use the most recent session. Defaults to the most recent session.', true)
+    ->param('sessionId', '', new UID(), 'Session ID. Use the string \'recent\' to use the most recent session. Defaults to the most recent session.', true)
     ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -2137,17 +2137,13 @@ App::post('/v1/users/:userId/jwts')
             }
         }
 
-        if ($session->isEmpty()) {
-            throw new Exception(Exception::USER_SESSION_NOT_FOUND);
-        }
-
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
                 'userId' => $user->getId(),
-                'sessionId' => $session->getId()
+                'sessionId' => $session->isEmpty() ? '' : $session->getId()
             ])]), Response::MODEL_JWT);
     });
 

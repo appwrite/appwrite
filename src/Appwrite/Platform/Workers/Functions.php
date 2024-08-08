@@ -83,6 +83,7 @@ class Functions extends Action
         $eventData = $payload['payload'] ?? '';
         $project = new Document($payload['project'] ?? []);
         $function = new Document($payload['function'] ?? []);
+        $functionId = $payload['functionId'] ?? '';
         $user = new Document($payload['user'] ?? []);
         $method = $payload['method'] ?? 'POST';
         $headers = $payload['headers'] ?? [];
@@ -90,6 +91,10 @@ class Functions extends Action
 
         if ($project->getId() === 'console') {
             return;
+        }
+
+        if ($function->isEmpty() && !empty($functionId)) {
+            $function = $dbForProject->getDocument('functions', $functionId);
         }
 
         $log->addTag('functionId', $function->getId());
@@ -176,6 +181,7 @@ class Functions extends Action
                 );
                 break;
             case 'schedule':
+                $execution = new Document($payload['execution'] ?? []);
                 $this->execute(
                     log: $log,
                     dbForProject: $dbForProject,
@@ -193,7 +199,7 @@ class Functions extends Action
                     jwt: null,
                     event: null,
                     eventData: null,
-                    executionId: null,
+                    executionId: $execution->getId() ?? null
                 );
                 break;
         }
@@ -367,6 +373,9 @@ class Functions extends Action
         $headers['x-appwrite-event'] = $event ?? '';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';
+        $headers['x-appwrite-country-code'] = '';
+        $headers['x-appwrite-continent-code'] = '';
+        $headers['x-appwrite-continent-eu'] = 'false';
 
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
@@ -399,9 +408,7 @@ class Functions extends Action
                 'search' => implode(' ', [$functionId, $executionId]),
             ]);
 
-            if ($function->getAttribute('logging')) {
-                $execution = $dbForProject->createDocument('executions', $execution);
-            }
+            $execution = $dbForProject->createDocument('executions', $execution);
 
             // TODO: @Meldiron Trigger executions.create event here
 
@@ -413,9 +420,7 @@ class Functions extends Action
         if ($execution->getAttribute('status') !== 'processing') {
             $execution->setAttribute('status', 'processing');
 
-            if ($function->getAttribute('logging')) {
-                $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-            }
+            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
         }
 
         $durationStart = \microtime(true);
@@ -462,6 +467,8 @@ class Functions extends Action
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_VERSION' => APP_VERSION_STABLE,
+            'APPWRITE_REGION' => $project->getAttribute('region'),
         ]);
 
         /** Execute function */
@@ -483,7 +490,8 @@ class Functions extends Action
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: $command
+                runtimeEntrypoint: $command,
+                logging: $function->getAttribute('logging', true),
             );
 
             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
@@ -525,9 +533,9 @@ class Functions extends Action
             ;
         }
 
-        if ($function->getAttribute('logging')) {
-            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-        }
+
+        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+
         /** Trigger Webhook */
         $executionModel = new Execution();
         $queueForEvents

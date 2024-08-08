@@ -72,6 +72,7 @@ use Appwrite\Utopia\Response\Model\Migration;
 use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
 use Appwrite\Utopia\Response\Model\MigrationReport;
 use Appwrite\Utopia\Response\Model\Mock;
+use Appwrite\Utopia\Response\Model\MockNumber;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
@@ -86,7 +87,10 @@ use Appwrite\Utopia\Response\Model\Subscriber;
 use Appwrite\Utopia\Response\Model\Target;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\TemplateEmail;
+use Appwrite\Utopia\Response\Model\TemplateFunction;
+use Appwrite\Utopia\Response\Model\TemplateRuntime;
 use Appwrite\Utopia\Response\Model\TemplateSMS;
+use Appwrite\Utopia\Response\Model\TemplateVariable;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Topic;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
@@ -250,6 +254,10 @@ class Response extends SwooleResponse
     public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     public const MODEL_HEADERS = 'headers';
+    public const MODEL_TEMPLATE_FUNCTION = 'templateFunction';
+    public const MODEL_TEMPLATE_FUNCTION_LIST = 'templateFunctionList';
+    public const MODEL_TEMPLATE_RUNTIME = 'templateRuntime';
+    public const MODEL_TEMPLATE_VARIABLE = 'templateVariable';
 
     // Proxy
     public const MODEL_PROXY_RULE = 'proxyRule';
@@ -269,6 +277,7 @@ class Response extends SwooleResponse
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
+    public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM = 'platform';
@@ -338,6 +347,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
+            ->setModel(new BaseList('Function Templates List', self::MODEL_TEMPLATE_FUNCTION_LIST, 'templates', self::MODEL_TEMPLATE_FUNCTION))
             ->setModel(new BaseList('Installations List', self::MODEL_INSTALLATION_LIST, 'installations', self::MODEL_INSTALLATION))
             ->setModel(new BaseList('Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_LIST, 'providerRepositories', self::MODEL_PROVIDER_REPOSITORY))
             ->setModel(new BaseList('Branches List', self::MODEL_BRANCH_LIST, 'branches', self::MODEL_BRANCH))
@@ -407,6 +417,9 @@ class Response extends SwooleResponse
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Func())
+            ->setModel(new TemplateFunction())
+            ->setModel(new TemplateRuntime())
+            ->setModel(new TemplateVariable())
             ->setModel(new Installation())
             ->setModel(new ProviderRepository())
             ->setModel(new Detection())
@@ -419,6 +432,7 @@ class Response extends SwooleResponse
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
+            ->setModel(new MockNumber())
             ->setModel(new AuthProvider())
             ->setModel(new Platform())
             ->setModel(new Variable())

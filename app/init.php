@@ -62,6 +62,10 @@ use Utopia\Database\Validator\Structure;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
+use Utopia\Logger\Adapter\AppSignal;
+use Utopia\Logger\Adapter\LogOwl;
+use Utopia\Logger\Adapter\Raygun;
+use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
@@ -109,11 +113,12 @@ const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1_000_000;
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
-const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
-const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
+const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
+const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
+const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 443;
-const APP_VERSION_STABLE = '1.5.7';
+const APP_CACHE_BUSTER = 4314;
+const APP_VERSION_STABLE = '1.6.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -298,6 +303,7 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
+Config::load('function-templates', __DIR__ . '/config/function-templates.php');
 
 /**
  * New DB Filters
@@ -617,9 +623,9 @@ Database::addFilter(
             ])
         ));
         if (\count($targetIds) > 0) {
-            return $database->find('targets', [
+            return $database->skipValidation(fn () => $database->find('targets', [
                 Query::equal('$internalId', $targetIds)
-            ]);
+            ]));
         }
         return [];
     }
@@ -763,20 +769,17 @@ $register->set('logger', function () {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
-    // Old Sentry Format conversion. Fallback until the old syntax is completely deprecated.
-    if (str_contains($providerConfig, ';') && strtolower($providerName) == 'sentry') {
-        $configChunks = \explode(";", $providerConfig);
+    $adapter = match ($providerName) {
+        'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
+        'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
+        'raygun' => new Raygun($providerConfig['key']),
+        'appsignal' => new AppSignal($providerConfig['key']),
+        default => throw new Exception('Provider "' . $providerName . '" not supported.')
+    };
 
-        $sentryKey = $configChunks[0];
-        $projectId = $configChunks[1];
-
-        $providerConfig = 'https://' . $sentryKey . '@sentry.io/' . $projectId;
-    }
-
-    $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
-    $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
+
 $register->set('pools', function () {
     $group = new Group();
 
@@ -996,7 +999,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-02.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-08.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
@@ -1240,14 +1243,15 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         $jwtUserId = $payload['userId'] ?? '';
-        $jwtSessionId = $payload['sessionId'] ?? '';
-
-        if ($jwtUserId && $jwtSessionId) {
+        if (!empty($jwtUserId)) {
             $user = $dbForProject->getDocument('users', $jwtUserId);
         }
 
-        if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-            $user = new Document([]);
+        $jwtSessionId = $payload['sessionId'] ?? '';
+        if(!empty($jwtSessionId)) {
+            if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+                $user = new Document([]);
+            }
         }
     }
 
@@ -1320,9 +1324,11 @@ App::setResource('console', function () {
         'legalAddress' => '',
         'legalTaxId' => '',
         'auths' => [
+            'mockNumbers' => [],
             'invites' => System::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
             'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
+            'sessionAlerts' => System::getEnv('_APP_CONSOLE_SESSION_ALERTS', 'disabled') === 'enabled'
         ],
         'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],

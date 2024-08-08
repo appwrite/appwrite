@@ -333,6 +333,7 @@ class Builds extends Action
                 $source = $path;
 
                 $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source));
 
                 $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
@@ -400,6 +401,8 @@ class Builds extends Action
                 'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
                 'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
                 'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                'APPWRITE_VERSION' => APP_VERSION_STABLE,
+                'APPWRITE_REGION' => $project->getAttribute('region'),
             ]);
 
             $command = $deployment->getAttribute('commands', '');
@@ -489,6 +492,11 @@ class Builds extends Action
 
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
+
+            $buildSizeLimit = (int) System::getEnv('_APP_FUNCTIONS_BUILD_SIZE_LIMIT', '2000000000');
+            if ($response['size'] > $buildSizeLimit) {
+                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
+            }
 
             /** Update the build document */
             $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
