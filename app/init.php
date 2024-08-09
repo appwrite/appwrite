@@ -697,6 +697,104 @@ Database::addFilter(
     }
 );
 
+Database::addFilter(
+    'subQueryMigrationStatus',
+    function (mixed $value) {
+        return $value;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        $groups = $database->find('migrationsGroup', [
+            Query::equal('migrationInternalId', [$document->getInternalId()]),
+        ]);
+
+        $status = 'pending';
+
+        foreach ($groups as $document) {
+            if ($document->getAttribute('status') === 'processing') {
+                $status = 'processing';
+                break;
+            }
+
+            if ($document->getAttribute('status') === 'failed') {
+                $status = 'failed';
+                break;
+            }
+
+            if ($document->getAttribute('status') === 'completed') {
+                $status = 'completed';
+            }
+        }
+
+        return $status;
+    }
+);
+
+Database::addFilter(
+    'subQueryStatusCounters',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        $groups = $database->find('migrationsGroup', [
+            Query::equal('migrationInternalId', [$document->getInternalId()]),
+        ]);
+
+        $statusCounter = [];
+
+        foreach ($groups as $document) {
+            $data = $document->getAttribute('statusCounters');
+
+            $statusCounter = array_merge($statusCounter, $data);
+        }
+
+        return $statusCounter;
+    }
+);
+
+Database::addFilter(
+    'subQueryResourceData',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        $groups = $database->find('migrationsGroup', [
+            Query::equal('migrationInternalId', [$document->getInternalId()]),
+        ]);
+
+        $resourceData = [];
+
+        foreach ($groups as $document) {
+            $data = $document->getAttribute('resourceData');
+
+            $resourceData = array_merge($resourceData, $data);
+        }
+
+        return $resourceData;
+    }
+);
+
+Database::addFilter(
+    'subQueryMigrationErrors',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        $groups = $database->find('migrationsGroup', [
+            Query::equal('migrationInternalId', [$document->getInternalId()]),
+        ]);
+
+        $errors = [];
+
+        foreach ($groups as $document) {
+            $data = $document->getAttribute('errors');
+
+            $errors = array_merge($errors, $data);
+        }
+
+        return $errors;
+    }
+);
+
 /**
  * DB Formats
  */
