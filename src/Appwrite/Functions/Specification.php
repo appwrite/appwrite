@@ -4,7 +4,7 @@ namespace Appwrite\Functions;
 
 class Specification
 {
-    public const S_05VCPU_512MB = 's-05vcpu-512mb';
+    public const S_05VCPU_512MB = 's-0.5vcpu-512mb';
     public const S_1VCPU_512MB = 's-1vcpu-512mb';
     public const S_1VCPU_1GB = 's-1vcpu-1gb';
     public const S_2VCPU_2GB = 's-2vcpu-2gb';
