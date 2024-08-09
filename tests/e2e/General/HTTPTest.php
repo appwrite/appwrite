@@ -131,7 +131,6 @@ class HTTPTest extends Scope
                 'content-type' => 'application/json',
             ], json_decode(file_get_contents($directory . $file), true));
 
-            $response['body'] = json_decode($response['body'], true);
             $this->assertEquals(200, $response['headers']['status-code']);
             // looks like recent change in the validator
             $this->assertTrue(empty($response['body']['schemaValidationMessages']));
