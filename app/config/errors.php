@@ -524,7 +524,6 @@ return [
         'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
         'code' => 408,
     ],
-
     /** Builds  */
     Exception::BUILD_NOT_FOUND => [
         'name' => Exception::BUILD_NOT_FOUND,

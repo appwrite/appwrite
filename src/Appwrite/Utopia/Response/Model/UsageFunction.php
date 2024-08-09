@@ -119,7 +119,6 @@ class UsageFunction extends Model
                 'example' => [],
                 'array' => true
             ])
-
             ->addRule('executionsTime', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of function executions compute time per period.',

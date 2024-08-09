@@ -145,6 +145,12 @@ class Func extends Model
                 'default' => false,
                 'example' => false,
             ])
+            ->addRule('specification', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Machine specification for builds and executions.',
+                'default' => APP_FUNCTION_BASE_SPECIFICATION,
+                'example' => APP_FUNCTION_BASE_SPECIFICATION,
+            ])
         ;
     }
 
