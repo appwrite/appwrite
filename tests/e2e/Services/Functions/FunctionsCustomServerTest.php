@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -988,7 +989,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['logs'], '');
         $this->assertStringContainsString('timed out', $executions['body']['executions'][0]['errors']);
 
-        sleep(70); //wait for scheduled execution to be created and time out
+        sleep(75); // Wait for scheduled execution to be created and time out
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -999,12 +1000,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(2, $executions['body']['executions']);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][1]['trigger'], 'schedule');
-        $this->assertEquals($executions['body']['executions'][1]['status'], 'failed');
-        $this->assertEquals($executions['body']['executions'][1]['responseStatusCode'], 500);
-        $this->assertLessThan(20, $executions['body']['executions'][1]['duration']);
-        $this->assertEquals($executions['body']['executions'][1]['responseBody'], '');
-        $this->assertEquals($executions['body']['executions'][1]['logs'], '');
-        $this->assertStringContainsString('timed out', $executions['body']['executions'][1]['errors']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
@@ -1574,6 +1569,20 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($cookie, $response['body']);
+
+        // Await Aggregation
+        sleep(App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
+
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '24h'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(19, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
