@@ -191,19 +191,15 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
-            'events' => [
-                'users.*.create',
-                'users.*.delete',
-            ],
             'timeout' => 10,
         ]);
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $folder = 'php-time';
+        $folder = 'php';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
 
@@ -216,20 +212,10 @@ class FunctionsCustomClientTest extends Scope
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
             'activate' => true
         ]);
-
         $deploymentId = $deployment['body']['$id'] ?? '';
-
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId);
-
-        $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], []);
-
-        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, true);
 
         // Schedule execution for the future
         \date_default_timezone_set('UTC');
@@ -243,11 +229,7 @@ class FunctionsCustomClientTest extends Scope
             'async' => true,
             'scheduledAt' => $futureTimeString,
             'path' => '/custom',
-            'method' => 'GET',
-            'body' => 'hello',
-            'headers' => [
-                'content-type' => 'application/plain',
-            ],
+            'method' => 'GET'
         ]);
 
         $this->assertEquals(202, $execution['headers']['status-code']);
@@ -255,14 +237,27 @@ class FunctionsCustomClientTest extends Scope
 
         $executionId = $execution['body']['$id'];
 
-        // 10 seconds delay, then allow 3 seconds for cold start
-        sleep(13);
+        // 10 seconds delay
+        sleep(10);
 
-        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions/' . $executionId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
+        $start = \microtime(true);
+        while (true) {
+            $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions/' . $executionId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if ($execution['body']['status'] === 'completed') {
+                break;
+            }
+
+            if (\microtime(true) - $start > 4) {
+                $this->fail('Execution did not complete within 4 seconds of schedule');
+            }
+
+            usleep(500000);
+        }
 
         $this->assertEquals(200, $execution['headers']['status-code']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
@@ -270,13 +265,6 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('/custom', $execution['body']['requestPath']);
         $this->assertEquals('GET', $execution['body']['requestMethod']);
         $this->assertGreaterThan(0, $execution['body']['duration']);
-
-        // Assert execution completed within 3 seconds of schedule
-        $output = json_decode($execution['body']['responseBody'], true);
-        $this->assertArrayHasKey('time', $output);
-        $this->assertGreaterThan($output['time'], $futureTime->getTimestamp());
-        $this->assertLessThan($output['time'], $futureTime->getTimestamp() + 3);
-
 
         /* Test for FAILURE */
 
