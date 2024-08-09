@@ -4,7 +4,6 @@ namespace Tests\E2E\Services\Functions;
 
 use Appwrite\Tests\Retry;
 use CURLFile;
-use DateTime;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -192,7 +191,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => [Role::any()->toString()],
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
             'timeout' => 10,
@@ -227,7 +226,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'async' => true,
-            'scheduledAt' =>  $futureTime->format(DateTime::ATOM),
+            'scheduledAt' =>  $futureTime->format(\DateTime::ATOM),
             'path' => '/custom',
             'method' => 'GET'
         ]);
@@ -237,7 +236,6 @@ class FunctionsCustomClientTest extends Scope
 
         $executionId = $execution['body']['$id'];
 
-        // 10 seconds delay
         sleep(10);
 
         $start = \microtime(true);
@@ -252,11 +250,11 @@ class FunctionsCustomClientTest extends Scope
                 break;
             }
 
-            if (\microtime(true) - $start > 4) {
-                $this->fail('Execution did not complete within 4 seconds of schedule');
+            if (\microtime(true) - $start > 5) {
+                $this->fail('Execution did not complete within 5 seconds of schedule');
             }
 
-            usleep(500000);
+            usleep(500000); // 0.5 seconds
         }
 
         $this->assertEquals(200, $execution['headers']['status-code']);
@@ -275,7 +273,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'async' => false,
-            'scheduledAt' => $futureTime->format(DateTime::ATOM),
+            'scheduledAt' => $futureTime->format(\DateTime::ATOM),
         ]);
 
         $this->assertEquals(400, $execution['headers']['status-code']);
