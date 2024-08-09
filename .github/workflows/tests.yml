@@ -212,8 +212,17 @@ jobs:
           name: benchmark.json
           path: benchmark.json
           retention-days: 7
-      - name: Comment on PR
-        uses: thollander/actions-comment-pull-request@v2
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: fc
         with:
-          filePath: benchmark.txt
-          comment_tag: benchmark
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Benchmark results
+      - name: Comment on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: benchmark.txt
+          edit-mode: replace
