@@ -1412,6 +1412,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertArrayHasKey('$id', $runtime);
         $this->assertArrayHasKey('name', $runtime);
+        $this->assertArrayHasKey('key', $runtime);
         $this->assertArrayHasKey('version', $runtime);
         $this->assertArrayHasKey('logo', $runtime);
         $this->assertArrayHasKey('image', $runtime);

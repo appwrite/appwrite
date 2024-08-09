@@ -436,8 +436,8 @@ App::get('/v1/functions/runtimes')
                 continue;
             }
 
-            $runtimes[$key]['$id'] = $key;
-            $allowed[] = $runtimes[$key];
+            $runtime['$id'] = $key;
+            $allowed[] = $runtime;
         }
 
         $response->dynamic(new Document([
