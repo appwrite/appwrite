@@ -1404,7 +1404,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $execution['headers']['status-code']);
-        $this->assertStringContainsString('Failed to parse binary response', $execution['body']['message']);
+        $this->assertStringContainsString('Failed to parse response', $execution['body']['message']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
