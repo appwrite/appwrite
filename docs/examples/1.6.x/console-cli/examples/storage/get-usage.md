@@ -1,0 +1,2 @@
+appwrite storage getUsage \
+

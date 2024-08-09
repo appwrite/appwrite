@@ -497,6 +497,18 @@ If you are in PHP Storm you don't need any plugin. Below are the settings requir
 2. If needed edit the **dev/xdebug.ini** file to your needs.
 3. Launch your Appwrite instance while your debugger is listening for connections.
 
+## Profiling
+Appwrite uses XDebug [Profiler](https://xdebug.org/docs/profiler) for generating **CacheGrind** files. The generated file would be located in each of the `appwrite` containers inside the `/tmp/xdebug` folder.
+
+To disable the profiler while debugging remove the `,profiler` mode from the `xdebug.ini` file
+```diff
+zend_extension=xdebug
+
+[xdebug]
+-xdebug.mode=develop,debug,profile
++xdebug.mode=develop,debug
+```
+
 ### VS Code Launch Configuration
 
 ```json
