@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Functions;
 
 use Appwrite\Tests\Retry;
 use CURLFile;
+use DateTime;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -220,14 +221,13 @@ class FunctionsCustomClientTest extends Scope
         // Schedule execution for the future
         \date_default_timezone_set('UTC');
         $futureTime = (new \DateTime())->add(new \DateInterval('PT10S'));
-        $futureTimeString = $futureTime->format('Y-m-d H:i:s');
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'async' => true,
-            'scheduledAt' => $futureTimeString,
+            'scheduledAt' =>  $futureTime->format(DateTime::ATOM),
             'path' => '/custom',
             'method' => 'GET'
         ]);
@@ -275,7 +275,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'async' => false,
-            'scheduledAt' => $futureTime,
+            'scheduledAt' => $futureTime->format(DateTime::ATOM),
         ]);
 
         $this->assertEquals(400, $execution['headers']['status-code']);
