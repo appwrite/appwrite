@@ -620,9 +620,9 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'userId' => ID::unique(),
-            'email' =>  $data['email'],
-            'password' =>  $data['password'],
-            'name' =>  $data['name'],
+            'email' => $data['email'],
+            'password' => $data['password'],
+            'name' => $data['name'],
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -1258,6 +1258,56 @@ class AccountCustomClientTest extends Scope
         $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']); // IP Address
         $this->assertStringContainsString('Unknown', $lastEmail['text']); // Country
         $this->assertStringContainsString($response['body']['clientName'], $lastEmail['text']); // Client name
+
+        // Verify no alert sent in OTP login
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => 'otpuser2@appwrite.io'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['$createdAt']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertNotEmpty($response['body']['expire']);
+        $this->assertEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['phrase']);
+
+        $userId = $response['body']['userId'];
+
+        $lastEmail = $this->getLastEmail();
+
+        $this->assertEquals('otpuser2@appwrite.io', $lastEmail['to'][0]['address']);
+        $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
+
+        // FInd 6 concurrent digits in email text - OTP
+        preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
+        $code = ($matches[0] ?? [])[0] ?? '';
+
+        $this->assertNotEmpty($code);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $userId,
+            'secret' => $code
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($userId, $response['body']['userId']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['expire']);
+        $this->assertEmpty($response['body']['secret']);
+
+        $lastEmailId = $lastEmail['id'];
+        $lastEmail = $this->getLastEmail();
+        $this->assertEquals($lastEmailId, $lastEmail['id']);
     }
 
     /**
