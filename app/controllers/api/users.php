@@ -1996,6 +1996,17 @@ App::delete('/v1/users/:userId')
         // clone user object to send to workers
         $clone = clone $user;
 
+        // New code Finding all sessions for this user and deleting them in for loop
+        // Like we did in previous method. However Should we also call Delete in cache copy
+        $sessions = $user->getAttribute('sessions', []);
+
+        foreach ($sessions as $key => $session) {
+            /** @var Document $session */
+            $dbForProject->deleteDocument('sessions', $session->getId());
+            //TODO: fix this
+        }
+        // Once user is getting deleted its values in memory should also be deleted
+        $dbForProject->purgeCachedDocument('users', $user->getId());
         $dbForProject->deleteDocument('users', $userId);
 
         $queueForDeletes
