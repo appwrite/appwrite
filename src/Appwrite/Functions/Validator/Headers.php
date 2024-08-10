@@ -47,21 +47,33 @@ class Headers extends Validator
             $value = \json_decode($value, true);
         }
 
-        if (\json_last_error() == JSON_ERROR_NONE) {
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return false;
+        } else {
             if (\is_array($value)) {
                 foreach ($value as $key => $val) {
-                    // Check for invalid characters in key and value
-                    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $key)) {
+                    // Reject non-string keys
+                    if (!\is_string($key) || \strlen($key) === 0) {
+                        return false;
+                    }
+
+                    // Check if the key is a single character and ensure it is an alphabetic character
+                    if (\strlen($key) === 1 && !preg_match('/^[a-zA-Z]$/', $key)) {
+                        return false;
+                    }
+
+                    // Check for invalid characters in keys longer than one character
+                    if (\strlen($key) > 1 && !preg_match('/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/', $key)) {
                         return false;
                     }
                     // Check for x-appwrite- prefix
-                    if (0 === strpos($key, 'x-appwrite-')) {
+                    if (str_starts_with($key, 'x-appwrite-')) {
                         return false;
                     }
                 }
             }
+            return true;
         }
-        return true;
     }
 
     /**

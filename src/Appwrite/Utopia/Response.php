@@ -743,7 +743,7 @@ class Response extends SwooleResponse
     public function json($data): void
     {
         if (!is_array($data) && !$data instanceof \stdClass) {
-            throw new \Exception('Invalid JSON input var');
+            throw new \Exception('Response body is not a valid JSON object.');
         }
 
         $this
