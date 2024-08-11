@@ -1952,12 +1952,12 @@ App::post('/v1/functions/:functionId/executions')
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 
-        $isJson = false;
+        $isJson = true;
 
         $acceptTypes = \explode(', ', $request->getHeader('accept', 'application/json'));
         foreach ($acceptTypes as $acceptType) {
-            if (\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
-                $isJson = true;
+            if (\str_starts_with($acceptType, 'multipart/form-data') || \str_starts_with($acceptType, 'multipart/*')) {
+                $isJson = false;
                 break;
             }
         }
