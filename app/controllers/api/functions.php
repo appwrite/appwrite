@@ -1952,19 +1952,19 @@ App::post('/v1/functions/:functionId/executions')
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 
-        $isJson = true;
-
-        $acceptTypes = \explode(', ', $request->getHeader('accept', 'application/json'));
+        $acceptTypes = \explode(', ', $request->getHeader('accept'));
         foreach ($acceptTypes as $acceptType) {
-            if (\str_starts_with($acceptType, 'multipart/form-data') || \str_starts_with($acceptType, 'multipart/*')) {
-                $isJson = false;
+            if(\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
+                $response->setContentType(Response::CONTENT_TYPE_JSON);
+                break;
+            } elseif (\str_starts_with($acceptType, 'multipart/form-data') || \str_starts_with($acceptType, 'multipart/*')) {
+                $response->setContentType(Response::CONTENT_TYPE_MULTIPART);
                 break;
             }
         }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->setContentType($isJson ? Response::CONTENT_TYPE_JSON : Response::CONTENT_TYPE_MULTIPART)
             ->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
