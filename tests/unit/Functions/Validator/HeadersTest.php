@@ -95,5 +95,14 @@ class HeadersTest extends TestCase
             'a' => 'b',
         ];
         $this->assertTrue($this->object->isValid($headers));
+
+        $headers = 123;
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = true;
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = 'string';
+        $this->assertFalse($this->object->isValid($headers));
     }
 }

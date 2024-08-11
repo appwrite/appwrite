@@ -47,6 +47,10 @@ class Headers extends Validator
             $value = \json_decode($value, true);
         }
 
+        if (!\is_array($value)) {
+            return false;
+        }
+
         if (json_last_error() !== JSON_ERROR_NONE) {
             return false;
         } else {
