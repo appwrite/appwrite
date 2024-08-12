@@ -357,7 +357,8 @@ App::init()
     ->inject('queueForUsage')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->inject('hasDevelopmentKey')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode, bool $hasDevelopmentKey) use ($databaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -424,6 +425,7 @@ App::init()
                 $enabled                // Abuse is enabled
                 && !$isAppUser          // User is not API key
                 && !$isPrivilegedUser   // User is not an admin
+                && !$hasDevelopmentKey  // request doesn't not contain development key
                 && $abuse->check()      // Route is rate-limited
             ) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);

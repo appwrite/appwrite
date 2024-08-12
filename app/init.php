@@ -1752,10 +1752,9 @@ App::setResource('plan', function (array $plan = []) {
 
 App::setResource('hasDevelopmentKey', function ($request, $project, $dbForConsole) {
     $developmentKey = $request->getHeader('x-appwrite-development-key', '');
-    // Check if given key match project Test API keys
+    // Check if given key match project's development keys
     $key = $project->find('secret', $developmentKey, 'developmentKeys');
     if ($key) {
-
         $expire = $key->getAttribute('expire');
         if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
             return false;

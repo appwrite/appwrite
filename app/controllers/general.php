@@ -671,7 +671,8 @@ App::error()
     ->inject('logger')
     ->inject('log')
     ->inject('queueForUsage')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Usage $queueForUsage) {
+    ->inject('hasDevelopmentKey')
+    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Usage $queueForUsage, bool $hasDevelopmentKey) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
@@ -859,7 +860,7 @@ App::error()
 
         $type = $error->getType();
 
-        $output = ((App::isDevelopment())) ? [
+        $output = ((App::isDevelopment()) || $hasDevelopmentKey) ? [
             'message' => $message,
             'code' => $code,
             'file' => $file,
@@ -900,7 +901,7 @@ App::error()
 
         $response->dynamic(
             new Document($output),
-            $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
+            $utopia->isDevelopment() || $hasDevelopmentKey ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
         );
     });
 
