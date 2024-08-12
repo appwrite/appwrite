@@ -53,20 +53,24 @@ class Headers extends Validator
 
         if (\is_array($value)) {
             foreach ($value as $key => $val) {
+                $length = \strlen($key);
                 // Reject non-string keys
-                if (!\is_string($key) || \strlen($key) === 0) {
+                if (!\is_string($key) || $length === 0) {
                     return false;
                 }
 
-                // Check if the key is a single character and ensure it is an alphabetic character
-                if (\strlen($key) === 1 && !preg_match('/^[a-zA-Z]$/', $key)) {
+                // Check first and last character
+                if (!ctype_alnum($key[0]) || !ctype_alnum($key[$length - 1])) {
                     return false;
                 }
 
-                // Check for invalid characters in keys longer than one character
-                if (\strlen($key) > 1 && !preg_match('/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/', $key)) {
-                    return false;
+                // Check middle characters
+                for ($i = 1; $i < $length - 1; $i++) {
+                    if (!ctype_alnum($key[$i]) && $key[$i] !== '-') {
+                        return false;
+                    }
                 }
+
                 // Check for x-appwrite- prefix
                 if (str_starts_with($key, 'x-appwrite-')) {
                     return false;
