@@ -7,8 +7,8 @@ return [
         'recovery',
         'invitation',
         'mfaChallenge',
-        'mfaCreated',
-        'mfaRemoved',
+        'mfaEnabled',
+        'mfaDisabled',
     ],
     'sms' => [
         'verification',
