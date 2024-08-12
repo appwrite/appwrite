@@ -47,10 +47,6 @@ class Headers extends Validator
             return false;
         }
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return false;
-        }
-
         if (\is_array($value)) {
             foreach ($value as $key => $val) {
                 $length = \strlen($key);
