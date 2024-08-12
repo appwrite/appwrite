@@ -24,6 +24,12 @@ class V18 extends Filter
 
     protected function parseExecution(array $content)
     {
+        if(!empty($content['status']) && !empty($content['statusCode'])) {
+            if($content['status'] === 'completed' && $content['statusCode'] >= 400 && $content['statusCode'] < 500) {
+                $content['status'] = 'failed';
+            }
+        }
+
         unset($content['scheduledAt']);
         return $content;
     }

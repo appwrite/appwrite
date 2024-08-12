@@ -494,7 +494,7 @@ class Functions extends Action
                 logging: $function->getAttribute('logging', true),
             );
 
-            $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
+            $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
