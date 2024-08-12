@@ -55,8 +55,8 @@ use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
-$oauthDefaultSuccess = '/auth/oauth2/success';
-$oauthDefaultFailure = '/auth/oauth2/failure';
+$oauthDefaultSuccess = '/console/auth/oauth2/success';
+$oauthDefaultFailure = '/console/auth/oauth2/failure';
 
 function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
 {
@@ -1874,7 +1874,7 @@ App::post('/v1/account/tokens/magic-url')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if (empty($url)) {
-            $url = $request->getProtocol() . '://' . $request->getHostname() . '/auth/magic-url';
+            $url = $request->getProtocol() . '://' . $request->getHostname() . '/console/auth/magic-url';
         }
 
         $url = Template::parseURL($url);
