@@ -431,13 +431,13 @@ App::get('/v1/functions/runtimes')
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
         $allowed = [];
-        foreach ($runtimes as $key => $runtime) {
-            if (!empty($allowList) && !\in_array($key, $allowList)) {
+        foreach ($runtimes as $id => $runtime) {
+            if (!empty($allowList) && !\in_array($id, $allowList)) {
                 continue;
             }
 
-            $runtimes[$key]['$id'] = $key;
-            $allowed[] = $runtimes[$key];
+            $runtime['$id'] = $id;
+            $allowed[] = $runtime;
         }
 
         $response->dynamic(new Document([
@@ -1878,7 +1878,7 @@ App::post('/v1/functions/:functionId/executions')
             }
 
             /** Update execution status */
-            $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
+            $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);

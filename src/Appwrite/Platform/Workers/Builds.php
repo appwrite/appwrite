@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
@@ -393,8 +394,21 @@ class Builds extends Action
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
+            $jwtExpiry = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+            $apiKey = $jwtObj->encode([
+                'projectId' => $project->getId(),
+                'scopes' => $function->getAttribute('scopes', [])
+            ]);
+
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $hostname = System::getEnv('_APP_DOMAIN');
+            $endpoint = $protocol . '://' . $hostname . "/v1";
+
             // Appwrite vars
             $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
+                'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                 'APPWRITE_FUNCTION_ID' => $function->getId(),
                 'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
                 'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
