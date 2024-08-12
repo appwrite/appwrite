@@ -1,0 +1,4 @@
+tls:
+  certificates:
+    - certFile: /storage/certificates/migration.appwrite.org/fullchain.pem
+      keyFile: /storage/certificates/migration.appwrite.org/privkey.pem
