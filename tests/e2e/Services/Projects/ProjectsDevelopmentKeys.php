@@ -113,7 +113,7 @@ trait ProjectsDevelopmentKeys
      * @depends testCreateProject
      * @group developmentKeys
      */
-    public function testValidateProjectDevelopmentKey($data): void
+    public function testNoRateLimitWithDevelopmentKey($data): void
     {
         $id = $data['projectId'] ?? '';
 
@@ -127,33 +127,38 @@ trait ProjectsDevelopmentKeys
             'name' => 'Key Test',
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
         ]);
-        var_dump($response['body']['secret']);
-        $response = $this->client->call(Client::METHOD_GET, '/health', [
+
+        $developmentKey = $response['body']['secret'];
+
+        //
+        for($i = 0; $i < 11; $i++) {
+            $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $id,
+            ], [
+                'email' => 'user@appwrite.io',
+                'password' => 'password'
+            ]);
+        }
+        $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
-            'x-appwrite-key' => $response['body']['secret']
-        ], []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/development-keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
+        ], [
+            'email' => 'user@appwrite.io',
+            'password' => 'password'
         ]);
+        $this->assertEquals('429', $res['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/health', [
+        $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
-            'x-appwrite-key' => $response['body']['secret']
-        ], []);
+            'x-appwrite-development-key' => $developmentKey
+        ], [
+            'email' => 'user@appwrite.io',
+            'password' => 'password'
+        ]);
+        $this->assertEquals('401', $res['headers']['status-code']);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
 
         /**
          * Test for FAILURE
@@ -166,13 +171,15 @@ trait ProjectsDevelopmentKeys
             'expire' => DateTime::addSeconds(new \DateTime(), -3600),
         ]);
 
-        $response = $this->client->call(Client::METHOD_GET, '/health', [
+        $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
-            'x-appwrite-key' => $response['body']['secret']
-        ], []);
-
-        $this->assertEquals(401, $response['headers']['status-code']);
+            'x-appwrite-development-key' => $response['body']['secret']
+        ], [
+            'email' => 'user@appwrite.io',
+            'password' => 'password'
+        ]);
+        $this->assertEquals('429', $res['headers']['status-code']);
     }
 
 
