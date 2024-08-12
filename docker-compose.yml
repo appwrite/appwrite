@@ -923,7 +923,7 @@ services:
     hostname: proxy
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/proxy:0.3.1
+    image: openruntimes/proxy:0.5.4
     networks:
       - appwrite
       - runtimes
