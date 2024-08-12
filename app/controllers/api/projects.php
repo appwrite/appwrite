@@ -188,7 +188,7 @@ App::post('/v1/projects')
         if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
             $dbForProject
                 ->setSharedTables(true)
-                ->setTenant($project->getInternalId())
+                ->setTenant(null)
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $dbForProject
