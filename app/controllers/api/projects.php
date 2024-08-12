@@ -132,13 +132,6 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        var_dump([
-            'location' => 'Api::projects',
-            '_APP_DATABASE_SHARED_TABLES' => System::getEnv('_APP_DATABASE_SHARED_TABLES', ''),
-            'region' => $region,
-            'dsn' => $dsn,
-        ]);
-
         // TODO: Temporary until all projects are using shared tables.
         $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         if (in_array($dsn, $sharedTablesKeys)) {

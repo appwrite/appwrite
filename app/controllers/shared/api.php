@@ -420,8 +420,6 @@ App::init()
             $data = $cache->load($key, $timestamp);
 
             if (! empty($data) && ! $cacheLog->isEmpty()) {
-                var_dump('cache log');
-                var_dump($cacheLog);
                 $parts = explode('/', $cacheLog->getAttribute('resourceType'));
                 $type = $parts[0] ?? null;
 
