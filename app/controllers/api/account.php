@@ -247,8 +247,7 @@ $sendMFAAlert = function (Document $project, Document $user, Locale $locale, Mai
         'owner' => $user->getAttribute('name'),
         'direction' => $locale->getText('settings.direction'),
         'user' => $user->getAttribute('name'),
-        'project' => $project->getAttribute('name'),
-        'redirect' => $redirect
+        'project' => $project->getAttribute('name')
     ];
 
     $queueForMails
