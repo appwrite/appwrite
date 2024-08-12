@@ -222,7 +222,8 @@ class Builds extends Action
 
                 $branchName = $deployment->getAttribute('providerBranch');
                 $commitHash = $deployment->getAttribute('providerCommitHash', '');
-                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory, $commitHash);
+                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory . '/*', $commitHash);
+
                 $stdout = '';
                 $stderr = '';
                 Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
@@ -237,6 +238,20 @@ class Builds extends Action
                 if ($exit !== 0) {
                     throw new \Exception('Unable to clone code repository: ' . $stderr);
                 }
+
+                // Local refactoring for function folder with spaces
+                if (str_contains($rootDirectory, ' ')) {
+                    $rootDirectoryWithoutSpaces = str_replace(' ', '', $rootDirectory);
+                    $from = $tmpDirectory . '/' . $rootDirectory;
+                    $to = $tmpDirectory . '/' . $rootDirectoryWithoutSpaces;
+                    $exit = Console::execute('mv "' . \escapeshellarg($from) . '" "' . \escapeshellarg($to) . '"', '', $stdout, $stderr);
+
+                    if ($exit !== 0) {
+                        throw new \Exception('Unable to move function with spaces' . $stderr);
+                    }
+                    $rootDirectory = $rootDirectoryWithoutSpaces;
+                }
+
 
                 // Build from template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
@@ -315,7 +330,7 @@ class Builds extends Action
                 }
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
-                $functionsSizeLimit = (int) System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
+                $functionsSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
                 if ($directorySize > $functionsSizeLimit) {
                     throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
                 }
@@ -351,13 +366,13 @@ class Builds extends Action
             $deploymentModel = new Deployment();
             $deploymentUpdate =
                 $queueForEvents
-                ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-                ->setClass(Event::WEBHOOK_CLASS_NAME)
-                ->setProject($project)
-                ->setEvent('functions.[functionId].deployments.[deploymentId].update')
-                ->setParam('functionId', $function->getId())
-                ->setParam('deploymentId', $deployment->getId())
-                ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
+                    ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+                    ->setClass(Event::WEBHOOK_CLASS_NAME)
+                    ->setProject($project)
+                    ->setEvent('functions.[functionId].deployments.[deploymentId].update')
+                    ->setParam('functionId', $function->getId())
+                    ->setParam('deploymentId', $deployment->getId())
+                    ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
 
             $deploymentUpdate->trigger();
 
@@ -394,7 +409,7 @@ class Builds extends Action
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
-            $jwtExpiry = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+            $jwtExpiry = (int)System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
             $apiKey = $jwtObj->encode([
                 'projectId' => $project->getId(),
@@ -507,7 +522,7 @@ class Builds extends Action
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
 
-            $buildSizeLimit = (int) System::getEnv('_APP_FUNCTIONS_BUILD_SIZE_LIMIT', '2000000000');
+            $buildSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_BUILD_SIZE_LIMIT', '2000000000');
             if ($response['size'] > $buildSizeLimit) {
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
             }
