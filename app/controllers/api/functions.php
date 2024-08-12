@@ -49,6 +49,7 @@ use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -690,7 +691,7 @@ App::put('/v1/functions/:functionId')
     ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
     ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API Key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true)
     ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Controle System) deployment.', true)
-    ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function', true)
+    ->param('providerRepositoryId', null, new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the function', true)
     ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
     ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
     ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
@@ -702,7 +703,7 @@ App::put('/v1/functions/:functionId')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -740,8 +741,8 @@ App::put('/v1/functions/:functionId')
 
         $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
 
-        // Git disconnect logic
-        if ($isConnected && empty($providerRepositoryId)) {
+        // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
+        if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
             $repositories = $dbForConsole->find('repositories', [
                 Query::equal('projectInternalId', [$project->getInternalId()]),
                 Query::equal('resourceInternalId', [$function->getInternalId()]),

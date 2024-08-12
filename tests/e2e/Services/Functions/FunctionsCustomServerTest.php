@@ -732,6 +732,108 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(3, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
 
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::equal('type', ['manual'])->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(3, $function['body']['total']);
+
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::equal('type', ['vcs'])->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(0, $function['body']['total']);
+
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::equal('type', ['invalid-string'])->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(0, $function['body']['total']);
+
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::greaterThan('size', 10000)->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(1, $function['body']['total']);
+
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::greaterThan('size', 0)->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(3, $function['body']['total']);
+
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::greaterThan('size', -100)->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(3, $function['body']['total']);
+
         return $data;
     }
 
