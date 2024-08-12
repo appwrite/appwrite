@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b5c0db330bf30bd1d240b96116d96baf",
+    "content-hash": "2ca805c838d52ddffe38af10dcbcfacb",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1720,16 +1720,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.50.1",
+            "version": "dev-feat-single-shared-metadata-doc",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "1745147bef29a9bddf5dd03fd9174ec29e2c26f0"
+                "reference": "397aaa6ed4e7ee87042c51b2a1d900de13100679"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/1745147bef29a9bddf5dd03fd9174ec29e2c26f0",
-                "reference": "1745147bef29a9bddf5dd03fd9174ec29e2c26f0",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/397aaa6ed4e7ee87042c51b2a1d900de13100679",
+                "reference": "397aaa6ed4e7ee87042c51b2a1d900de13100679",
                 "shasum": ""
             },
             "require": {
@@ -1770,9 +1770,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.50.1"
+                "source": "https://github.com/utopia-php/database/tree/feat-single-shared-metadata-doc"
             },
-            "time": "2024-07-26T11:56:05+00:00"
+            "time": "2024-08-12T03:46:06+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5591,9 +5591,18 @@
             "time": "2023-11-21T18:54:41+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-single-shared-metadata-doc",
+            "alias": "0.50.1",
+            "alias_normalized": "0.50.1.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
