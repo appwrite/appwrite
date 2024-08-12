@@ -1,6 +1,8 @@
 <?php
 
 return function ($context) {
+    $statusCode = $context->req->query['code'] ?? '200';
+
     return $context->res->json([
         'APPWRITE_FUNCTION_ID' => \getenv('APPWRITE_FUNCTION_ID') ?: '',
         'APPWRITE_FUNCTION_NAME' => \getenv('APPWRITE_FUNCTION_NAME') ?: '',
@@ -11,5 +13,5 @@ return function ($context) {
         'APPWRITE_REGION' => \getenv('APPWRITE_REGION') ?: '',
         'UNICODE_TEST' => "êä",
         'GLOBAL_VARIABLE' => \getenv('GLOBAL_VARIABLE') ?: ''
-    ]);
+    ], \intval($statusCode));
 };
