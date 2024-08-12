@@ -54,7 +54,7 @@ class Builds extends Action
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('log')
-            ->callback(fn($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
+            ->callback(fn ($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
     }
 
     /**
@@ -307,7 +307,7 @@ class Builds extends Action
                      * Send realtime Event
                      */
                     $target = Realtime::fromPayload(
-                    // Pass first, most verbose event pattern
+                        // Pass first, most verbose event pattern
                         event: $allEvents[0],
                         payload: $build,
                         project: $project
@@ -383,7 +383,7 @@ class Builds extends Action
 
             /** Trigger Realtime */
             $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $build,
                 project: $project
@@ -488,7 +488,7 @@ class Builds extends Action
                                      * Send realtime Event
                                      */
                                     $target = Realtime::fromPayload(
-                                    // Pass first, most verbose event pattern
+                                        // Pass first, most verbose event pattern
                                         event: $allEvents[0],
                                         payload: $build,
                                         project: $project
@@ -563,7 +563,7 @@ class Builds extends Action
                 ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('schedule', $function->getAttribute('schedule'))
                 ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-            Authorization::skip(fn() => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
@@ -587,7 +587,7 @@ class Builds extends Action
              * Send realtime Event
              */
             $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $build,
                 project: $project
