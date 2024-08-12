@@ -758,6 +758,40 @@ class FunctionsCustomServerTest extends Scope
             ], $this->getHeaders()),
             [
                 'queries' => [
+                    Query::equal('type', ['vcs'])->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(0, $function['body']['total']);
+
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::equal('type', ['invalid-string'])->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(0, $function['body']['total']);
+
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
                     Query::greaterThan('size', 10000)->toString(),
                 ],
             ]
@@ -776,6 +810,23 @@ class FunctionsCustomServerTest extends Scope
             [
                 'queries' => [
                     Query::greaterThan('size', 0)->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(3, $function['body']['total']);
+
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::greaterThan('size', -100)->toString(),
                 ],
             ]
         );
