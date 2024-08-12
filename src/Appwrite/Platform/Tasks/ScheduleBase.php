@@ -60,7 +60,10 @@ abstract class ScheduleBase extends Action
          * @var Document $schedule
          */
         $getSchedule = function (Document $schedule) use ($dbForConsole, $getProjectDB): array {
+            $function = null; /** for ScheduleExecutions */
+
             $project = $dbForConsole->getDocument('projects', $schedule->getAttribute('projectId'));
+            $projectDB = $getProjectDB($project);
 
             $collectionId = match ($schedule->getAttribute('resourceType')) {
                 'function' => 'functions',
@@ -68,10 +71,20 @@ abstract class ScheduleBase extends Action
                 'execution' => 'executions'
             };
 
-            $resource = $getProjectDB($project)->getDocument(
+            $resource = $projectDB->getDocument(
                 $collectionId,
                 $schedule->getAttribute('resourceId')
             );
+
+            /**
+             * Get the function this execution is a part of.
+             */
+            if ($collectionId === 'executions') {
+                $function = $projectDB->getDocument(
+                    'functions',
+                    $resource->getAttribute('functionId')
+                );
+            }
 
             return [
                 '$id' => $schedule->getId(),
@@ -79,6 +92,7 @@ abstract class ScheduleBase extends Action
                 'schedule' => $schedule->getAttribute('schedule'),
                 'active' => $schedule->getAttribute('active'),
                 'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
+                'function' => $function,
                 'project' => $project, // TODO: @Meldiron Send only ID to worker to reduce memory usage here
                 'resource' => $resource, // TODO: @Meldiron Send only ID to worker to reduce memory usage here
             ];
