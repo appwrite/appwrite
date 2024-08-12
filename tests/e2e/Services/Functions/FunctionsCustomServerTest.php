@@ -802,6 +802,23 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $execution['body']['logs']);
         $this->assertLessThan(10, $execution['body']['duration']);
 
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => false,
+            'path' => '/?code=400'
+        ]);
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(400, $execution['body']['responseStatusCode']);
+
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $execution['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(204, $execution['headers']['status-code']);
+
         return array_merge($data, ['executionId' => $executionId]);
     }
 
@@ -1582,6 +1599,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertArrayHasKey('$id', $runtime);
         $this->assertArrayHasKey('name', $runtime);
+        $this->assertArrayHasKey('key', $runtime);
         $this->assertArrayHasKey('version', $runtime);
         $this->assertArrayHasKey('logo', $runtime);
         $this->assertArrayHasKey('image', $runtime);
@@ -1714,6 +1732,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
+            'commands' => 'sh setup.sh && composer install',
             'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
             'activate' => true
         ]);
@@ -1722,6 +1741,16 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, checkForSuccess: false);
+
+        $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertStringContainsStringIgnoringCase("200 OK", $deployment['body']['buildLogs']);
+        $this->assertStringContainsStringIgnoringCase('"total":', $deployment['body']['buildLogs']);
+        $this->assertStringContainsStringIgnoringCase('"users":', $deployment['body']['buildLogs']);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
