@@ -81,10 +81,10 @@ class Execution extends Model
                 'example' => 200,
             ])
             ->addRule('responseBody', [
-                'type' => self::TYPE_STRING,
+                'type' => Response::MODEL_PAYLOAD,
                 'description' => 'HTTP response body. This will return empty unless execution is created as synchronous.',
-                'default' => '',
-                'example' => 'Developers are awesome.',
+                'default' => new \stdClass(),
+                'example' => ['message' => 'Hello World'],
             ])
             ->addRule('responseHeaders', [
                 'type' => Response::MODEL_HEADERS,

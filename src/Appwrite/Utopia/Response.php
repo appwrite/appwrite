@@ -260,6 +260,7 @@ class Response extends SwooleResponse
     public const MODEL_TEMPLATE_FUNCTION_LIST = 'templateFunctionList';
     public const MODEL_TEMPLATE_RUNTIME = 'templateRuntime';
     public const MODEL_TEMPLATE_VARIABLE = 'templateVariable';
+    public const MODEL_PAYLOAD = 'payload';
 
     // Proxy
     public const MODEL_PROXY_RULE = 'proxyRule';
