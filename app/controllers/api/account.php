@@ -3613,7 +3613,7 @@ App::patch('/v1/account/mfa')
         if ($mfa !== $user->getAttribute('mfa')) {
             $domain = $request->getHostname();
             $protocol = $request->getProtocol();
-    
+
             $redirect = $protocol . '://' . $domain . '/console/account';
 
             $sendMFAAlert($project, $user, $locale, $queueForMails, $mfa ? 'mfaEnabled' : 'mfaDisabled', $redirect);
