@@ -111,7 +111,13 @@ class TemplateFunction extends Model
                 'example' => [],
                 'array' => true
             ])
-        ;
+            ->addRule('scopes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function scopes.',
+                'default' => [],
+                'example' => 'users.read',
+                'array' => true,
+            ]);
     }
 
     /**

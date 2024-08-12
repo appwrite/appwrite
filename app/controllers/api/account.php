@@ -177,6 +177,12 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
     });
 
+    $sendAlert = (match ($verifiedToken->getAttribute('type')) {
+        Auth::TOKEN_TYPE_MAGIC_URL,
+        Auth::TOKEN_TYPE_EMAIL => false,
+        default => true
+    });
+
     $session = new Document(array_merge(
         [
             '$id' => ID::unique(),
@@ -223,7 +229,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
-    if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
+    if (($project->getAttribute('auths', [])['sessionAlerts'] ?? false) && $sendAlert) {
         if ($dbForProject->count('sessions', [
             Query::equal('userId', [$user->getId()]),
         ]) !== 1) {

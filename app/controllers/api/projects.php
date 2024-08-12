@@ -876,6 +876,14 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
     ->inject('dbForConsole')
     ->action(function (string $projectId, array $numbers, Response $response, Database $dbForConsole) {
 
+        $uniqueNumbers = [];
+        foreach ($numbers as $number) {
+            if (isset($uniqueNumbers[$number['phone']])) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Duplicate phone numbers are not allowed.');
+            }
+            $uniqueNumbers[$number['phone']] = $number['otp'];
+        }
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
