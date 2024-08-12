@@ -244,10 +244,10 @@ class Builds extends Action
                     $rootDirectoryWithoutSpaces = str_replace(' ', '', $rootDirectory);
                     $from = $tmpDirectory . '/' . $rootDirectory;
                     $to = $tmpDirectory . '/' . $rootDirectoryWithoutSpaces;
-                    $exit = Console::execute('mv "' . $from . '" "' . $to . '"', '', $stdout, $stderr);
+                    $exit = Console::execute('mv "' . \escapeshellcmd($from) . '" "' . \escapeshellcmd($to) . '"', '', $stdout, $stderr);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to remove function spaces' . $stderr);
+                        throw new \Exception('Unable to move function with spaces' . $stderr);
                     }
                     $rootDirectory = $rootDirectoryWithoutSpaces;
                 }
