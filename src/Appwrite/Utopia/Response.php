@@ -75,6 +75,7 @@ use Appwrite\Utopia\Response\Model\MigrationReport;
 use Appwrite\Utopia\Response\Model\Mock;
 use Appwrite\Utopia\Response\Model\MockNumber;
 use Appwrite\Utopia\Response\Model\None;
+use Appwrite\Utopia\Response\Model\Payload;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Preferences;
@@ -478,6 +479,7 @@ class Response extends SwooleResponse
             ->setModel(new Migration())
             ->setModel(new MigrationReport())
             ->setModel(new MigrationFirebaseProject())
+            ->setModel(new Payload())
             // Tests (keep last)
             ->setModel(new Mock());
 
