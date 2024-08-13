@@ -1279,7 +1279,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['responseStatusCode'], 500);
         $this->assertGreaterThan(2, $executions['body']['executions'][0]['duration']);
         $this->assertLessThan(20, $executions['body']['executions'][0]['duration']);
-        $this->assertEquals($executions['body']['executions'][0]['responseBody'], '');
+        $this->assertEquals($executions['body']['executions'][0]['responseBody'], []);
         $this->assertEquals($executions['body']['executions'][0]['logs'], '');
         $this->assertStringContainsString('timed out', $executions['body']['executions'][0]['errors']);
 
