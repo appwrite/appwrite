@@ -1724,12 +1724,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "397aaa6ed4e7ee87042c51b2a1d900de13100679"
+                "reference": "d7ae07e0b431c8245a72fb10aea6c08a0290dc4d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/397aaa6ed4e7ee87042c51b2a1d900de13100679",
-                "reference": "397aaa6ed4e7ee87042c51b2a1d900de13100679",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/d7ae07e0b431c8245a72fb10aea6c08a0290dc4d",
+                "reference": "d7ae07e0b431c8245a72fb10aea6c08a0290dc4d",
                 "shasum": ""
             },
             "require": {
@@ -1747,7 +1747,7 @@
                 "phpstan/phpstan": "1.10.*",
                 "phpunit/phpunit": "^9.4",
                 "rregeer/phpunit-coverage-check": "^0.3.1",
-                "swoole/ide-helper": "4.8.0",
+                "swoole/ide-helper": "5.1.2",
                 "utopia-php/cli": "^0.14.0"
             },
             "type": "library",
@@ -1772,7 +1772,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-single-shared-metadata-doc"
             },
-            "time": "2024-08-12T03:46:06+00:00"
+            "time": "2024-08-13T08:57:53+00:00"
         },
         {
             "name": "utopia-php/domains",
