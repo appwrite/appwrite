@@ -2421,6 +2421,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     });
 
 App::get('/v1/functions/templates')
+    ->groups(['api'])
     ->desc('List function templates')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'functions')
