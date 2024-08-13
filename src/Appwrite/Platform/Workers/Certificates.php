@@ -383,7 +383,7 @@ class Certificates extends Action
      */
     protected function applyCertificateFiles(string $folder, string $domain, array $letsEncryptData): void
     {
-
+        var_dump('app:0');
         // Prepare folder in storage for domain
         $path = APP_STORAGE_CERTIFICATES . '/' . $domain;
         if (!\is_readable($path)) {
@@ -420,6 +420,7 @@ class Certificates extends Action
         if (!\file_put_contents(APP_STORAGE_CONFIG . '/' . $domain . '.yml', $config)) {
             throw new Exception('Failed to save Traefik configuration.');
         }
+        var_dump('app:1');
     }
 
     /**
