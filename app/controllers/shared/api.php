@@ -508,7 +508,12 @@ App::init()
                     ->setContentType($cacheLog->getAttribute('mimeType'))
                     ->send($data);
             } else {
-                $response->addHeader('X-Appwrite-Cache', 'miss');
+                $response
+                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->addHeader('Expires', 0)
+                    ->addHeader('X-Appwrite-Cache', 'miss')
+                ;
             }
         }
     });
