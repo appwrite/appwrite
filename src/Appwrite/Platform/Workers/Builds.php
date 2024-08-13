@@ -207,7 +207,66 @@ class Builds extends Action
         }
 
         try {
-            if ($isNewBuild && $isVcsEnabled) {
+            if($isNewBuild && !$isVcsEnabled) {
+                // Non-vcs+Template
+
+                $templateRepositoryName = $template->getAttribute('repositoryName', '');
+                $templateOwnerName = $template->getAttribute('ownerName', '');
+                $templateBranch = $template->getAttribute('branch', '');
+
+                $templateRootDirectory = $template->getAttribute('rootDirectory', '');
+                $templateRootDirectory = \rtrim($templateRootDirectory, '/');
+                $templateRootDirectory = \ltrim($templateRootDirectory, '.');
+                $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+
+                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateBranch)) {
+                    $stdout = '';
+                    $stderr = '';
+
+                    // Clone template repo
+                    $tmpTemplateDirectory = '/tmp/builds/' . \escapeshellcmd($buildId) . '-template';
+                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
+                    $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
+
+                    if ($exit !== 0) {
+                        throw new \Exception('Unable to clone code repository: ' . $stderr);
+                    }
+
+                    // Ensure directories
+                    Console::execute('mkdir -p ' . $tmpTemplateDirectory . '/' . $templateRootDirectory, '', $stdout, $stderr);
+
+                    $tmpPathFile = $tmpTemplateDirectory . '/code.tar.gz';
+
+                    $localDevice = new Local();
+
+                    if (substr($tmpTemplateDirectory, -1) !== '/') {
+                        $tmpTemplateDirectory .= '/';
+                    }
+
+                    $directorySize = $localDevice->getDirectorySize($tmpTemplateDirectory);
+                    $functionsSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
+                    if ($directorySize > $functionsSizeLimit) {
+                        throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
+                    }
+
+                    Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '-template' . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory) . ' .', '', $stdout, $stderr);
+
+                    $path = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                    $result = $localDevice->transfer($tmpPathFile, $path, $deviceForFunctions);
+
+                    if (!$result) {
+                        throw new \Exception("Unable to move file");
+                    }
+
+                    Console::execute('rm -rf ' . $tmpTemplateDirectory, '', $stdout, $stderr);
+
+                    $source = $path;
+
+                    $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source));
+                }
+            } elseif ($isNewBuild && $isVcsEnabled) {
+                // VCS and VCS+Temaplte
                 $tmpDirectory = '/tmp/builds/' . $buildId . '/code';
                 $rootDirectory = $function->getAttribute('providerRootDirectory', '');
                 $rootDirectory = \rtrim($rootDirectory, '/');
@@ -222,7 +281,8 @@ class Builds extends Action
 
                 $branchName = $deployment->getAttribute('providerBranch');
                 $commitHash = $deployment->getAttribute('providerCommitHash', '');
-                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory . '/*', $commitHash);
+
+                $gitCloneCommandForTemplate = $github->generateCloneCommand($cloneOwner, $cloneRepository, $commitHash, GitHub::CLONE_TYPE_COMMIT, $tmpDirectory, $rootDirectory . '/*');
 
                 $stdout = '';
                 $stderr = '';
@@ -233,7 +293,7 @@ class Builds extends Action
                     return;
                 }
 
-                $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
+                $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                 if ($exit !== 0) {
                     throw new \Exception('Unable to clone code repository: ' . $stderr);
@@ -266,7 +326,7 @@ class Builds extends Action
                 if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateBranch)) {
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . \escapeshellcmd($buildId) . '/template';
-                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, $tmpTemplateDirectory, $templateRootDirectory);
+                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {

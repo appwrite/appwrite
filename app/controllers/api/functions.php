@@ -284,9 +284,34 @@ App::post('/v1/functions')
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
 
-        // Redeploy vcs logic
         if (!empty($providerRepositoryId)) {
+            // Deploy VCS
             $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
+        } elseif(!$template->isEmpty()) {
+            // Deploy non-VCS from template
+            $deploymentId = ID::unique();
+            $deployment = $dbForProject->createDocument('deployments', new Document([
+                '$id' => $deploymentId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'resourceId' => $function->getId(),
+                'resourceInternalId' => $function->getInternalId(),
+                'resourceType' => 'functions',
+                'entrypoint' => $function->getAttribute('entrypoint', ''),
+                'commands' => $function->getAttribute('commands', ''),
+                'type' => 'manual',
+                'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint', '')]),
+                'activate' => true,
+            ]));
+
+            $queueForBuilds
+                ->setType(BUILD_TYPE_DEPLOYMENT)
+                ->setResource($function)
+                ->setDeployment($deployment)
+                ->setTemplate($template);
         }
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
