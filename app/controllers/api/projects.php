@@ -197,7 +197,11 @@ App::post('/v1/projects')
                 ->setNamespace('_' . $project->getInternalId());
         }
 
-        $dbForProject->create();
+        try {
+            $dbForProject->create();
+        } catch (Duplicate) {
+            // Database already exists
+        }
 
         $audit = new Audit($dbForProject);
         $audit->setup();
