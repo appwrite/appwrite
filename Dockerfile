@@ -1,4 +1,4 @@
-FROM composer:2.0 as composer
+FROM composer:2.0 AS composer
 
 ARG TESTING=false
 ENV TESTING=$TESTING
@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM --platform=$BUILDPLATFORM node:20.11.0-alpine3.19 as node
+FROM --platform=$BUILDPLATFORM node:20.11.0-alpine3.19 AS node
 
 COPY app/console /usr/local/src/console
 
@@ -29,7 +29,7 @@ ENV VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
 RUN npm ci
 RUN npm run build
 
-FROM appwrite/base:0.9.1 as final
+FROM appwrite/base:0.9.1 AS final
 
 LABEL maintainer="team@appwrite.io"
 
