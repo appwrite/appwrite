@@ -116,8 +116,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 443;
-const APP_VERSION_STABLE = '1.5.7';
+const APP_CACHE_BUSTER = 4327;
+const APP_VERSION_STABLE = '1.5.8';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -242,6 +242,7 @@ const METRIC_BUILDS_STORAGE  = 'builds.storage';
 const METRIC_BUILDS_COMPUTE  = 'builds.compute';
 const METRIC_BUILDS_COMPUTE_SUCCESS  = 'builds.compute.success';
 const METRIC_BUILDS_COMPUTE_FAILED  = 'builds.compute.failed';
+const METRIC_BUILDS_MB_SECONDS = 'builds.mbSeconds';
 const METRIC_FUNCTION_ID_BUILDS  = '{functionInternalId}.builds';
 const METRIC_FUNCTION_ID_BUILDS_SUCCESS  = '{functionInternalId}.builds.success';
 const METRIC_FUNCTION_ID_BUILDS_FAILED  = '{functionInternalId}.builds.failed';
@@ -251,10 +252,13 @@ const METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS  = '{functionInternalId}.builds.
 const METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED  = '{functionInternalId}.builds.compute.failed';
 const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
 const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
+const METRIC_FUNCTION_ID_BUILDS_MB_SECONDS = '{functionInternalId}.builds.mbSeconds';
 const METRIC_EXECUTIONS  = 'executions';
 const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
+const METRIC_EXECUTIONS_MB_SECONDS = 'executions.mbSeconds';
 const METRIC_FUNCTION_ID_EXECUTIONS  = '{functionInternalId}.executions';
 const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE  = '{functionInternalId}.executions.compute';
+const METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS = '{functionInternalId}.executions.mbSeconds';
 const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
@@ -621,9 +625,9 @@ Database::addFilter(
             ])
         ));
         if (\count($targetIds) > 0) {
-            return $database->find('targets', [
+            return $database->skipValidation(fn () => $database->find('targets', [
                 Query::equal('$internalId', $targetIds)
-            ]);
+            ]));
         }
         return [];
     }
