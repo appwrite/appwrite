@@ -1038,29 +1038,46 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
-    #[Retry(count: 1)]
     public function testUpdateUserStatus(array $data): array
     {
         /**
-         * Test for SUCCESS
+         * Test for SUCCESS: Activate User
          */
-        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'status' => false,
+            'status' => true // Activate the user
         ]);
 
-        $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertEquals($user['body']['status'], false);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['status'], true);
 
-        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+        /**
+         * Test for SUCCESS: Block User
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'status' => false // Block the user
+        ]);
 
-        $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertEquals($user['body']['status'], false);
+        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertStringContainsString('user_blocked', $response['body']['message']);
+
+        /**
+         * Test for FAILURE: Invalid User ID
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/invalidUserId/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'status' => false // Block the user with invalid ID
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 404);
+        $this->assertStringContainsString('USER_NOT_FOUND', $response['body']['message']);
 
         return $data;
     }
