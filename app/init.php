@@ -769,13 +769,22 @@ $register->set('logger', function () {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
-    $adapter = match ($providerName) {
-        'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
-        'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
-        'raygun' => new Raygun($providerConfig['key']),
-        'appsignal' => new AppSignal($providerConfig['key']),
-        default => throw new Exception('Provider "' . $providerName . '" not supported.')
-    };
+    try {
+        $adapter = match ($providerName) {
+            'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
+            'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
+            'raygun' => new Raygun($providerConfig['key']),
+            'appsignal' => new AppSignal($providerConfig['key']),
+            default => null
+        };
+    } catch (Throwable $th) {
+        $adapter = null;
+    }
+
+    if($adapter === null) {
+        Console::error("Logging provider not supported. Logging is disabled");
+        return;
+    }
 
     return new Logger($adapter);
 });

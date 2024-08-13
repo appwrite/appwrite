@@ -732,6 +732,108 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(3, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
 
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::equal('type', ['manual'])->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(3, $function['body']['total']);
+
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::equal('type', ['vcs'])->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(0, $function['body']['total']);
+
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::equal('type', ['invalid-string'])->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(0, $function['body']['total']);
+
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::greaterThan('size', 10000)->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(1, $function['body']['total']);
+
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::greaterThan('size', 0)->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(3, $function['body']['total']);
+
+        $function = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $data['functionId'] . '/deployments',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'queries' => [
+                    Query::greaterThan('size', -100)->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals(3, $function['body']['total']);
+
         return $data;
     }
 
@@ -1333,6 +1435,176 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
+    public function testCreateCustomExecutionBinaryResponse()
+    {
+        $timeout = 15;
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/php-binary-response/code.tar.gz";
+        $this->packageCode('php-binary-response');
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test PHP Binary executions',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => $timeout,
+            'execute' => ['any']
+        ]);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.php',
+            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, checkForSuccess: false);
+
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+
+        // Wait a little for activation to finish
+        sleep(5);
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'accept' => 'multipart/form-data',
+        ], $this->getHeaders()), [
+            'body' => null,
+        ]);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertStringContainsString('multipart/form-data', $execution['headers']['content-type']);
+        $bytes = unpack('C*byte', $execution['body']['responseBody']);
+        $this->assertCount(3, $bytes);
+        $this->assertEquals(0, $bytes['byte1']);
+        $this->assertEquals(10, $bytes['byte2']);
+        $this->assertEquals(255, $bytes['byte3']);
+
+        /**
+         * Test for FAILURE
+         */
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'accept' => 'application/json',
+        ], $this->getHeaders()), [
+            'body' => null,
+        ]);
+
+        $this->assertEquals(400, $execution['headers']['status-code']);
+        $this->assertStringContainsString('Failed to parse response', $execution['body']['message']);
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testCreateCustomExecutionBinaryRequest()
+    {
+        $timeout = 15;
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/php-binary-request/code.tar.gz";
+        $this->packageCode('php-binary-request');
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test PHP Binary executions',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => $timeout,
+            'execute' => ['any']
+        ]);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.php',
+            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, checkForSuccess: false);
+
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+
+        // Wait a little for activation to finish
+        sleep(5);
+
+        $bytes = pack('C*', ...[0, 20, 255]);
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'accept' => 'application/json',
+        ], $this->getHeaders()), [
+            'body' => $bytes,
+        ], false);
+
+        $executionBody = json_decode($execution['body'], true);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(\md5($bytes), $executionBody['responseBody']);
+        $this->assertStringStartsWith('application/json', $execution['headers']['content-type']);
+
+        /**
+         * Test for FAILURE
+         */
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'accept' => 'application/json',
+        ], $this->getHeaders()), [
+            'body' => $bytes,
+        ], false);
+
+        $executionBody = json_decode($execution['body'], true);
+        $this->assertNotEquals(\md5($bytes), $executionBody['responseBody']);
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
     public function testv2Function()
     {
         $timeout = 15;
@@ -1429,6 +1701,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertArrayHasKey('$id', $runtime);
         $this->assertArrayHasKey('name', $runtime);
+        $this->assertArrayHasKey('key', $runtime);
         $this->assertArrayHasKey('version', $runtime);
         $this->assertArrayHasKey('logo', $runtime);
         $this->assertArrayHasKey('image', $runtime);
@@ -1774,7 +2047,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
-    public function testFunctionsDomainBianryResponse()
+    public function testFunctionsDomainBinaryResponse()
     {
         $timeout = 15;
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/php-binary-response/code.tar.gz";
@@ -1860,7 +2133,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
-    public function testFunctionsDomainBianryRequest()
+    public function testFunctionsDomainBinaryRequest()
     {
         $timeout = 15;
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/php-binary-request/code.tar.gz";

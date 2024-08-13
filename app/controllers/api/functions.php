@@ -10,6 +10,7 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\Validator\Headers;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Task\Validator\Cron;
@@ -44,9 +45,11 @@ use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
+use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -431,13 +434,13 @@ App::get('/v1/functions/runtimes')
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
         $allowed = [];
-        foreach ($runtimes as $key => $runtime) {
-            if (!empty($allowList) && !\in_array($key, $allowList)) {
+        foreach ($runtimes as $id => $runtime) {
+            if (!empty($allowList) && !\in_array($id, $allowList)) {
                 continue;
             }
 
-            $runtimes[$key]['$id'] = $key;
-            $allowed[] = $runtimes[$key];
+            $runtime['$id'] = $id;
+            $allowed[] = $runtime;
         }
 
         $response->dynamic(new Document([
@@ -688,7 +691,7 @@ App::put('/v1/functions/:functionId')
     ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
     ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API Key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true)
     ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Controle System) deployment.', true)
-    ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function', true)
+    ->param('providerRepositoryId', null, new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the function', true)
     ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
     ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
     ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
@@ -700,7 +703,7 @@ App::put('/v1/functions/:functionId')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -738,8 +741,8 @@ App::put('/v1/functions/:functionId')
 
         $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
 
-        // Git disconnect logic
-        if ($isConnected && empty($providerRepositoryId)) {
+        // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
+        if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
             $repositories = $dbForConsole->find('repositories', [
                 Query::equal('projectInternalId', [$project->getInternalId()]),
                 Query::equal('resourceInternalId', [$function->getInternalId()]),
@@ -1599,13 +1602,14 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('body', '', new Text(0, 0), 'HTTP body of execution. Default value is empty string.', true)
+    ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
-    ->param('headers', [], new Assoc(), 'HTTP headers of execution. Defaults to empty.', true)
+    ->param('headers', [], new AnyOf([new Text(65535), new Assoc()], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('response')
+    ->inject('request')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('dbForConsole')
@@ -1614,10 +1618,33 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('queueForUsage')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, ?string $scheduledAt, Response $response, Document $project, Database $dbForProject, Database $dbForConsole, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
+    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForConsole, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
 
         if(!$async && !is_null($scheduledAt)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Scheduled executions must run asynchronously. Set scheduledAt to a future date, or set async to true.');
+        }
+
+        /**
+         * @var array<string, mixed> $headers
+         */
+        $assocParams = ['headers'];
+        foreach ($assocParams as $assocParam) {
+            if (!empty('headers') && !is_array($$assocParam)) {
+                $$assocParam = \json_decode($$assocParam, true);
+            }
+        }
+
+        $booleanParams = ['async'];
+        foreach ($booleanParams as $booleamParam) {
+            if (!empty($$booleamParam) && !is_bool($$booleamParam)) {
+                $$booleamParam = $$booleamParam === "true" ? true : false;
+            }
+        }
+
+        // 'headers' validator
+        $validator = new Headers();
+        if (!$validator->isValid($headers)) {
+            throw new Exception($validator->getDescription(), 400);
         }
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
@@ -1925,6 +1952,17 @@ App::post('/v1/functions/:functionId/executions')
 
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
+
+        $acceptTypes = \explode(', ', $request->getHeader('accept'));
+        foreach ($acceptTypes as $acceptType) {
+            if(\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
+                $response->setContentType(Response::CONTENT_TYPE_JSON);
+                break;
+            } elseif (\str_starts_with($acceptType, 'multipart/form-data') || \str_starts_with($acceptType, 'multipart/*')) {
+                $response->setContentType(Response::CONTENT_TYPE_MULTIPART);
+                break;
+            }
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
