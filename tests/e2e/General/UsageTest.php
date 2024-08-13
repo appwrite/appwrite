@@ -140,7 +140,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(12, count($response['body']));
+        $this->assertEquals(18, count($response['body']));
         $this->validateDates($response['body']['network']);
         $this->validateDates($response['body']['requests']);
         $this->validateDates($response['body']['users']);
@@ -321,7 +321,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(12, count($response['body']));
+        $this->assertEquals(18, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
         $this->validateDates($response['body']['requests']);
@@ -542,7 +542,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(12, count($response['body']));
+        $this->assertEquals(18, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals(1, count($response['body']['network']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
@@ -774,14 +774,19 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(15, count($response['body']));
+        $this->assertEquals(19, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['deployments']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
+        $this->assertIsNumeric($response['body']['deploymentsStorageTotal']);
+        $this->assertIsNumeric($response['body']['buildsMbSecondsTotal']);
+        $this->assertIsNumeric($response['body']['executionsMbSecondsTotal']);
         $this->assertIsArray($response['body']['builds']);
         $this->assertIsArray($response['body']['buildsTime']);
+        $this->assertIsArray($response['body']['buildsMbSeconds']);
         $this->assertIsArray($response['body']['executions']);
         $this->assertIsArray($response['body']['executionsTime']);
+        $this->assertIsArray($response['body']['executionsMbSeconds']);
         $this->assertEquals($executions, $response['body']['executions'][array_key_last($response['body']['executions'])]['value']);
         $this->validateDates($response['body']['executions']);
         $this->assertEquals($executionTime, $response['body']['executionsTime'][array_key_last($response['body']['executionsTime'])]['value']);
@@ -794,15 +799,17 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(17, count($response['body']));
+        $this->assertEquals(21, count($response['body']));
         $this->assertEquals($response['body']['range'], '30d');
         $this->assertIsArray($response['body']['functions']);
         $this->assertIsArray($response['body']['deployments']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
         $this->assertIsArray($response['body']['builds']);
         $this->assertIsArray($response['body']['buildsTime']);
+        $this->assertIsArray($response['body']['buildsMbSeconds']);
         $this->assertIsArray($response['body']['executions']);
         $this->assertIsArray($response['body']['executionsTime']);
+        $this->assertIsArray($response['body']['executionsMbSeconds']);
         $this->assertEquals($executions, $response['body']['executions'][array_key_last($response['body']['executions'])]['value']);
         $this->validateDates($response['body']['executions']);
         $this->assertEquals($executionTime, $response['body']['executionsTime'][array_key_last($response['body']['executionsTime'])]['value']);
