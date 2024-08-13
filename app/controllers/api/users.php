@@ -954,7 +954,7 @@ App::get('/v1/users/identities')
         ]), Response::MODEL_IDENTITY_LIST);
     });
 
-App::patch('/v1/users/:userId/status')
+    App::patch('/v1/users/:userId/status')
     ->desc('Update user status')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.status')
@@ -962,6 +962,7 @@ App::patch('/v1/users/:userId/status')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateStatus')
@@ -976,17 +977,44 @@ App::patch('/v1/users/:userId/status')
     ->inject('queueForEvents')
     ->action(function (string $userId, bool $status, Response $response, Database $dbForProject, Event $queueForEvents) {
 
+        // Fetch the user document from the database using the provided userId
         $user = $dbForProject->getDocument('users', $userId);
 
+        // If the user document is not found, throw an exception
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
+        // Update the user's status (active or blocked) based on the input
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
 
+        // If the user is being blocked (status is false), proceed to delete all their sessions
+        if (!$status) {
+            // Retrieve the user's active sessions from the user document
+            $sessions = $user->getAttribute('sessions', []);
+
+            // Loop through each session and delete it from the sessions collection
+            foreach ($sessions as $session) {
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }
+
+            // Clear the cached version of the user document
+            $dbForProject->deleteCachedDocument('users', $user->getId());
+
+            // Log the event for session deletion
+            $queueForEvents
+                ->setParam('userId', $user->getId())
+                ->setPayload($response->output($user, Response::MODEL_USER));
+
+            // Throw an exception with a custom message and a 401 status code to indicate that the user is blocked
+            throw new Exception('AppwriteException: user_blocked, The current user has been blocked. You can unblock the user from the Appwrite console.', 401);
+        }
+
+        // If the user is not blocked, proceed to trigger the user status update event
         $queueForEvents
             ->setParam('userId', $user->getId());
 
+        // Send the updated user document in the response
         $response->dynamic($user, Response::MODEL_USER);
     });
 
