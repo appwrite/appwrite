@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7680daa08c49ca1a1307df557c9ee87c",
+    "content-hash": "9f0148c3d90031407444e496f05c52ab",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1724,12 +1724,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "6b0defbcb442507a5928afb7c40035f245e04d5c"
+                "reference": "09da873eec2aff442a6201b74c9ddc2bee566cd7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/6b0defbcb442507a5928afb7c40035f245e04d5c",
-                "reference": "6b0defbcb442507a5928afb7c40035f245e04d5c",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/09da873eec2aff442a6201b74c9ddc2bee566cd7",
+                "reference": "09da873eec2aff442a6201b74c9ddc2bee566cd7",
                 "shasum": ""
             },
             "require": {
@@ -1747,7 +1747,7 @@
                 "phpstan/phpstan": "1.10.*",
                 "phpunit/phpunit": "^9.4",
                 "rregeer/phpunit-coverage-check": "^0.3.1",
-                "swoole/ide-helper": "4.8.0",
+                "swoole/ide-helper": "5.1.2",
                 "utopia-php/cli": "^0.14.0"
             },
             "type": "library",
@@ -1772,7 +1772,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-migrations"
             },
-            "time": "2024-07-23T05:38:47+00:00"
+            "time": "2024-08-13T10:00:28+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5595,8 +5595,8 @@
         {
             "package": "utopia-php/database",
             "version": "dev-feat-migrations",
-            "alias": "0.50.0",
-            "alias_normalized": "0.50.0.0"
+            "alias": "0.50.4",
+            "alias_normalized": "0.50.4.0"
         }
     ],
     "minimum-stability": "stable",
