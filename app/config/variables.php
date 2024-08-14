@@ -144,8 +144,17 @@ return [
             ],
             [
                 'name' => '_APP_SYSTEM_EMAIL_ADDRESS',
-                'description' => 'This is the sender email address that will appear on email messages sent to developers from the Appwrite console. The default value is \'team@appwrite.io\'. You should choose an email address that is allowed to be used from your SMTP server to avoid the server email ending in the users\' SPAM folders.',
+                'description' => 'This is the sender email address that will appear on email messages sent to developers from the Appwrite console. The default value is \'noreply@appwrite.io\'. You should choose an email address that is allowed to be used from your SMTP server to avoid the server email ending in the users\' SPAM folders.',
                 'introduction' => '0.7.0',
+                'default' => 'noreply@appwrite.io',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SYSTEM_TEAM_EMAIL',
+                'description' => 'This is the sender email address that will appear in the generated specs. The default value is \'team@appwrite.io\'.',
+                'introduction' => '1.6.0',
                 'default' => 'team@appwrite.io',
                 'required' => false,
                 'question' => '',
@@ -711,9 +720,18 @@ return [
         'variables' => [
             [
                 'name' => '_APP_FUNCTIONS_SIZE_LIMIT',
-                'description' => 'The maximum size deployment in bytes. The default value is 30MB.',
+                'description' => 'The maximum size of a function in bytes. The default value is 30MB.',
                 'introduction' => '0.13.0',
                 'default' => '30000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_BUILD_SIZE_LIMIT',
+                'description' => 'The maximum size of a built deployment in bytes. The default value is 2,000,000,000 (2GB), and the maximum value is 4,294,967,295 (4.2GB).',
+                'introduction' => '1.6.0',
+                'default' => '2000000000',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

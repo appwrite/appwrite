@@ -1593,7 +1593,7 @@ class ProjectsConsoleClientTest extends Scope
             ]
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and OTP must be a valid string and exactly 6 characters.', $response['body']['message']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Invalid OTP. Please make sure the OTP is a 6 digit number', $response['body']['message']);
 
         /** Trying to pass an OTP shorter than 6 characters*/
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
@@ -1608,7 +1608,22 @@ class ProjectsConsoleClientTest extends Scope
             ]
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and OTP must be a valid string and exactly 6 characters.', $response['body']['message']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Invalid OTP. Please make sure the OTP is a 6 digit number', $response['body']['message']);
+
+        /** Trying to pass an OTP with non numeric characters */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '123re2'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Invalid OTP. Please make sure the OTP is a 6 digit number', $response['body']['message']);
 
         /** Trying to pass an invalid phone number  */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
@@ -1639,6 +1654,25 @@ class ProjectsConsoleClientTest extends Scope
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
+
+        /** Trying to pass duplicate numbers  */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '123456'
+                ],
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '123456'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Duplicate phone numbers are not allowed.', $response['body']['message']);
 
         $numbers = [];
         for ($i = 0; $i < 11; $i++) {

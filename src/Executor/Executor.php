@@ -75,6 +75,12 @@ class Executor
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
         $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+
+        // Remove after migration
+        if ($version == 'v3') {
+            $version = 'v4';
+        }
+
         $params = [
             'runtimeId' => $runtimeId,
             'source' => $source,
@@ -162,6 +168,7 @@ class Executor
      * @param string $source
      * @param string $entrypoint
      * @param string $runtimeEntrypoint
+     * @param bool $logging
      *
      * @return array
      */
@@ -187,7 +194,13 @@ class Executor
         }
 
         $runtimeId = "$projectId-$deploymentId";
-        $route = '/runtimes/' . $runtimeId . '/execution';
+        $route = '/runtimes/' . $runtimeId . '/executions';
+
+        // Remove after migration
+        if ($version == 'v3') {
+            $version = 'v4';
+        }
+
         $params = [
             'runtimeId' => $runtimeId,
             'variables' => $variables,
@@ -203,6 +216,7 @@ class Executor
             'version' => $version,
             'runtimeEntrypoint' => $runtimeEntrypoint,
             'logging' => $logging,
+            'restartPolicy' => 'always' // Once utopia/orchestration has it, use DockerAPI::ALWAYS (0.13+)
         ];
 
         if(!empty($body)) {

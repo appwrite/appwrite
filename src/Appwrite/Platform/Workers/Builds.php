@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
@@ -245,6 +246,20 @@ class Builds extends Action
                     throw new \Exception('Unable to clone code repository: ' . $stderr);
                 }
 
+                // Local refactoring for function folder with spaces
+                if (str_contains($rootDirectory, ' ')) {
+                    $rootDirectoryWithoutSpaces = str_replace(' ', '', $rootDirectory);
+                    $from = $tmpDirectory . '/' . $rootDirectory;
+                    $to = $tmpDirectory . '/' . $rootDirectoryWithoutSpaces;
+                    $exit = Console::execute('mv "' . \escapeshellarg($from) . '" "' . \escapeshellarg($to) . '"', '', $stdout, $stderr);
+
+                    if ($exit !== 0) {
+                        throw new \Exception('Unable to move function with spaces' . $stderr);
+                    }
+                    $rootDirectory = $rootDirectoryWithoutSpaces;
+                }
+
+
                 // Build from template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
                 $templateOwnerName = $template->getAttribute('ownerName', '');
@@ -328,7 +343,7 @@ class Builds extends Action
                 }
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
-                $functionsSizeLimit = (int) System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
+                $functionsSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
                 if ($directorySize > $functionsSizeLimit) {
                     throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
                 }
@@ -350,6 +365,7 @@ class Builds extends Action
                 $source = $path;
 
                 $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source));
 
                 $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
@@ -366,13 +382,13 @@ class Builds extends Action
             $deploymentModel = new Deployment();
             $deploymentUpdate =
                 $queueForEvents
-                ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-                ->setClass(Event::WEBHOOK_CLASS_NAME)
-                ->setProject($project)
-                ->setEvent('functions.[functionId].deployments.[deploymentId].update')
-                ->setParam('functionId', $function->getId())
-                ->setParam('deploymentId', $deployment->getId())
-                ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
+                    ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+                    ->setClass(Event::WEBHOOK_CLASS_NAME)
+                    ->setProject($project)
+                    ->setEvent('functions.[functionId].deployments.[deploymentId].update')
+                    ->setParam('functionId', $function->getId())
+                    ->setParam('deploymentId', $deployment->getId())
+                    ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
 
             $deploymentUpdate->trigger();
 
@@ -409,15 +425,29 @@ class Builds extends Action
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
+            $jwtExpiry = (int)System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+            $apiKey = $jwtObj->encode([
+                'projectId' => $project->getId(),
+                'scopes' => $function->getAttribute('scopes', [])
+            ]);
+
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $hostname = System::getEnv('_APP_DOMAIN');
+            $endpoint = $protocol . '://' . $hostname . "/v1";
+
             // Appwrite vars
             $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
+                'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                 'APPWRITE_FUNCTION_ID' => $function->getId(),
                 'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
                 'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
                 'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
                 'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
                 'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-                'APPWRITE_VERSION' => APP_VERSION_STABLE
+                'APPWRITE_VERSION' => APP_VERSION_STABLE,
+                'APPWRITE_REGION' => $project->getAttribute('region'),
             ]);
 
             $command = $deployment->getAttribute('commands', '');
@@ -457,8 +487,9 @@ class Builds extends Action
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
-                            callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
-                                if ($response === null) {
+                            callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $allEvents, $project) {
+                                // If we have response or error from concurrent coroutine, we already have latest logs
+                                if ($response === null && $err === null) {
                                     $build = $dbForProject->getDocument('builds', $build->getId());
 
                                     if ($build->isEmpty()) {
@@ -508,6 +539,11 @@ class Builds extends Action
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
 
+            $buildSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_BUILD_SIZE_LIMIT', '2000000000');
+            if ($response['size'] > $buildSizeLimit) {
+                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
+            }
+
             /** Update the build document */
             $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
             $build->setAttribute('endTime', $endTime);
@@ -556,7 +592,7 @@ class Builds extends Action
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'failed');
-            $build->setAttribute('logs', $th->getMessage() . "\n" . $th->getFile() . ':' . $th->getLine() . "\n" . $th->getTraceAsString());
+            $build->setAttribute('logs', $th->getMessage());
 
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);

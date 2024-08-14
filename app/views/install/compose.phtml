@@ -163,6 +163,28 @@ $image = $this->getParam('image', '');
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_ASSISTANT_OPENAI_API_KEY
 
+  appwrite-console:
+    <<: *x-logging
+    container_name: appwrite-console
+    image: <?php echo $organization; ?>/console:appwrite/console:5.0.0-rc14
+    restart: unless-stopped
+    networks:
+      - appwrite
+    labels:
+      - "traefik.enable=true"
+      - "traefik.constraint-label-stack=appwrite"
+      - "traefik.docker.network=appwrite"
+      - "traefik.http.services.appwrite_console.loadbalancer.server.port=80"
+      #ws
+      - traefik.http.routers.appwrite_console_http.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_console_http.rule=PathPrefix(`/console`)
+      - traefik.http.routers.appwrite_console_http.service=appwrite_console
+      # wss
+      - traefik.http.routers.appwrite_console_https.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_console_https.rule=PathPrefix(`/console`)
+      - traefik.http.routers.appwrite_console_https.service=appwrite_console
+      - traefik.http.routers.appwrite_console_https.tls=true
+
   appwrite-realtime:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: realtime
@@ -765,7 +787,7 @@ $image = $this->getParam('image', '');
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.5.5
+    image: openruntimes/executor:0.6.5
     networks:
       - appwrite
       - runtimes

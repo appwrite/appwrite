@@ -1,3 +1,34 @@
+# Version 1.5.10
+
+## What's Changed
+
+### Notable changes
+
+* Bump console to version 4.3.30 in [#8520](https://github.com/appwrite/appwrite/pull/8520)
+
+### Fixes
+
+* Fix migration stuck at "Starting Data Migration [...]" in [#8519](https://github.com/appwrite/appwrite/pull/8519)
+
+# Version 1.5.9
+
+## What's Changed
+
+### Notable changes
+
+* Add Darija (Moroccan Arabic) translation file in [7501](https://github.com/appwrite/appwrite/pull/7501)
+* Bump console to version 4.3.29 in [8504](https://github.com/appwrite/appwrite/pull/8504)
+
+### Fixes
+
+* Fix domain check in [8472](https://github.com/appwrite/appwrite/pull/8472)
+* Fix "API must be called in the coroutine" in [8495](https://github.com/appwrite/appwrite/pull/8495)
+* Bump executor version from 0.5.5 to 0.5.7 in [8502](https://github.com/appwrite/appwrite/pull/8502)
+
+### Miscellaneous
+* Add profiler for debugging in [8397](https://github.com/appwrite/appwrite/pull/8397)
+* Document APIs that don't support redirects in [8233](https://github.com/appwrite/appwrite/pull/8233)
+
 # Version 1.5.8
 
 ## What's Changed

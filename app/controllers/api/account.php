@@ -55,8 +55,8 @@ use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
-$oauthDefaultSuccess = '/auth/oauth2/success';
-$oauthDefaultFailure = '/auth/oauth2/failure';
+$oauthDefaultSuccess = '/console/auth/oauth2/success';
+$oauthDefaultFailure = '/console/auth/oauth2/failure';
 
 function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
 {
@@ -124,7 +124,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
-        'dateTime' => DateTime::format(new \DateTime(), 'Y-m-d H:i:s'),
+        'dateTime' => DateTime::format(new \DateTime(), 'h:ia MMMM dS'),
         'user' => $user->getAttribute('name'),
         'project' => $project->getAttribute('name'),
         'device' => $session->getAttribute('clientName'),
@@ -177,6 +177,12 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
     });
 
+    $sendAlert = (match ($verifiedToken->getAttribute('type')) {
+        Auth::TOKEN_TYPE_MAGIC_URL,
+        Auth::TOKEN_TYPE_EMAIL => false,
+        default => true
+    });
+
     $session = new Document(array_merge(
         [
             '$id' => ID::unique(),
@@ -223,8 +229,12 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
-    if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
-        sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+    if (($project->getAttribute('auths', [])['sessionAlerts'] ?? false) && $sendAlert) {
+        if ($dbForProject->count('sessions', [
+            Query::equal('userId', [$user->getId()]),
+        ]) !== 1) {
+            sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+        }
     }
 
     $queueForEvents
@@ -904,7 +914,11 @@ App::post('/v1/account/sessions/email')
         ;
 
         if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
-            sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+            if ($dbForProject->count('sessions', [
+                Query::equal('userId', [$user->getId()]),
+            ]) !== 1) {
+                sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+            }
         }
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1860,7 +1874,7 @@ App::post('/v1/account/tokens/magic-url')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if (empty($url)) {
-            $url = $request->getProtocol() . '://' . $request->getHostname() . '/auth/magic-url';
+            $url = $request->getProtocol() . '://' . $request->getHostname() . '/console/auth/magic-url';
         }
 
         $url = Template::parseURL($url);
@@ -3947,7 +3961,7 @@ App::get('/v1/account/mfa/recovery-codes')
 
 App::delete('/v1/account/mfa/authenticators/:type')
     ->desc('Delete Authenticator')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'mfaProtected'])
     ->label('event', 'users.[userId].delete.mfa')
     ->label('scope', 'account')
     ->label('audits.event', 'user.update')
@@ -3960,12 +3974,11 @@ App::delete('/v1/account/mfa/authenticators/:type')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
-    ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $type, string $otp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $authenticator = (match ($type) {
             Type::TOTP => TOTP::getAuthenticatorFromUser($user),
@@ -3974,27 +3987,6 @@ App::delete('/v1/account/mfa/authenticators/:type')
 
         if (!$authenticator) {
             throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
-        }
-
-        $success = (match ($type) {
-            Type::TOTP => Challenge\TOTP::verify($user, $otp),
-            default => false
-        });
-
-        if (!$success) {
-            $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
-            if (in_array($otp, $mfaRecoveryCodes)) {
-                $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
-                $mfaRecoveryCodes = array_values($mfaRecoveryCodes);
-                $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
-                $dbForProject->updateDocument('users', $user->getId(), $user);
-
-                $success = true;
-            }
-        }
-
-        if (!$success) {
-            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $dbForProject->deleteDocument('authenticators', $authenticator->getId());
