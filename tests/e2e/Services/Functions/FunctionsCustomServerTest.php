@@ -1434,8 +1434,8 @@ class FunctionsCustomServerTest extends Scope
                 break;
             }
 
-            if (\microtime(true) - $start > 120) {
-                $this->fail('Execution did not create within 120 seconds of schedule in status ' . $execution['body']['status'] . ': ' . \json_encode($execution));
+            if (\microtime(true) - $start > 70) {
+                $this->fail('Execution did not create within 70 seconds of schedule in status ' . $execution['body']['status'] . ': ' . \json_encode($execution));
             }
 
             usleep(1000000); // 1 second
