@@ -1434,8 +1434,14 @@ class FunctionsCustomServerTest extends Scope
                 break;
             }
 
-            if (\microtime(true) - $start > 70) {
-                $this->fail('Execution did not create within 70 seconds of schedule: ' . \json_encode($executions));
+            // 0s would mean instant execution
+            // +60 seconds, maximum possible waiting time before next minute
+            // +10 seconds, maximum update interval time
+            // +60 seconds, possible overlap between update and schedule tick
+            // +10 seconds, maximum execution time including cold-start
+            // Result: We allow maximum 
+            if (\microtime(true) - $start > 140) {
+                $this->fail('Execution did not create within 140 seconds of schedule: ' . \json_encode($executions));
             }
 
             usleep(1000000); // 1 second
