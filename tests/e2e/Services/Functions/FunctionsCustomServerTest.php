@@ -1430,12 +1430,12 @@ class FunctionsCustomServerTest extends Scope
 
             $this->assertEquals(200, $executions['headers']['status-code']);
 
-            if (\count($execution['body']['executions']) > 0) {
+            if (\count($executions['body']['executions']) > 0) {
                 break;
             }
 
             if (\microtime(true) - $start > 70) {
-                $this->fail('Execution did not create within 70 seconds of schedule in status ' . $execution['body']['status'] . ': ' . \json_encode($execution));
+                $this->fail('Execution did not create within 70 seconds of schedule: ' . \json_encode($executions));
             }
 
             usleep(1000000); // 1 second
