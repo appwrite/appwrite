@@ -848,6 +848,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(200, $templates['headers']['status-code']);
         $this->assertGreaterThan(0, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
+
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
         $this->assertArrayHasKey('useCases', $templates['body']['templates'][0]);
         for ($i = 0; $i < 25; $i++) {
