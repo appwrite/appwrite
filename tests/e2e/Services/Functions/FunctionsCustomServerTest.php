@@ -468,6 +468,39 @@ class FunctionsCustomServerTest extends Scope
 
         $this->awaitDeploymentIsBuilt($data['functionId'], $deploymentId);
 
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => 'false'
+        ]);
+
+        \var_dump($deployment);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deploymentIdInactive = $deployment['body']['$id'] ?? '';
+
+        $this->awaitDeploymentIsBuilt($data['functionId'], $deploymentIdInactive);
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($deploymentId, $function['body']['deployment']);
+        $this->assertNotEquals($deploymentIdInactive, $function['body']['deployment']);
+
+        $deployment = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentIdInactive, array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $deployment['headers']['status-code']);
+
         return array_merge($data, ['deploymentId' => $deploymentId]);
     }
 
