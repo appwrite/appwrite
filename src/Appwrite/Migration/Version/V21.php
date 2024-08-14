@@ -92,11 +92,11 @@ class V21 extends Migration
                         Console::warning("'scopes' from {$id}: {$th->getMessage()}");
                     }
 
-                    // Create size attribute
+                    // Create specification attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'size');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'specification');
                     } catch (Throwable $th) {
-                        Console::warning("'size' from {$id}: {$th->getMessage()}");
+                        Console::warning("'specification' from {$id}: {$th->getMessage()}");
                     }
 
                     break;
@@ -177,7 +177,7 @@ class V21 extends Migration
                 $document->setAttribute('scopes', []);
 
                 // Add size attribute
-                $document->setAttribute('size', 's-1vcpu-512m');
+                $document->setAttribute('specification', APP_FUNCTION_BASE_SPECIFICATION);
         }
 
         return $document;
