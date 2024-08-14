@@ -251,7 +251,7 @@ class FunctionsCustomClientTest extends Scope
             }
 
             if (\microtime(true) - $start > 10) {
-                $this->fail('Execution did not complete within 10 seconds of schedule');
+                $this->fail('Execution did not complete within 10 seconds of schedule in status ' . $execution['body']['status'] . ': ' . \json_encode($execution));
             }
 
             usleep(500000); // 0.5 seconds
