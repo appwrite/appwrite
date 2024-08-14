@@ -250,7 +250,7 @@ class Builds extends Action
                     }
 
                     $tarParamDirectory = \escapeshellarg('/tmp/builds/' . $buildId . '-template' . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory));
-                    Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellarg($tarParamDirectory) . ' .', '', $stdout, $stderr);
+                    Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
 
                     $source = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
                     $result = $localDevice->transfer($tmpPathFile, $source, $deviceForFunctions);
@@ -291,7 +291,7 @@ class Builds extends Action
                 $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $cloneVersion, $cloneType, $tmpDirectory, $rootDirectory);
                 $stdout = '';
                 $stderr = '';
-                
+
                 Console::execute('mkdir -p ' . \escapeshellarg('/tmp/builds/' . $buildId), '', $stdout, $stderr);
 
                 if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
@@ -403,7 +403,7 @@ class Builds extends Action
                 }
 
                 $tarParamDirectory = '/tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory);
-                Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellarg($tarParamDirectory) . ' .', '', $stdout, $stderr);
+                Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
 
                 $source = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
                 $result = $localDevice->transfer($tmpPathFile, $source, $deviceForFunctions);
