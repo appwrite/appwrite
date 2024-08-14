@@ -476,12 +476,10 @@ class FunctionsCustomServerTest extends Scope
             'activate' => 'false'
         ]);
 
-        \var_dump($deployment);
-
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
 
-        $deploymentIdInactive = $deployment['body']['$id'] ?? '';
+        $deploymentIdInactive = $deployment['body']['$id'];
 
         $this->awaitDeploymentIsBuilt($data['functionId'], $deploymentIdInactive);
 
@@ -495,7 +493,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEquals($deploymentIdInactive, $function['body']['deployment']);
 
         $deployment = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentIdInactive, array_merge([
-            'content-type' => 'multipart/form-data',
+            'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
