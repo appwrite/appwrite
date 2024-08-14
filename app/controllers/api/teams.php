@@ -401,6 +401,7 @@ App::post('/v1/teams/:teamId/memberships')
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
+        $url = htmlentities($url);
         if (empty($url)) {
             if (!$isAPIKey && !$isPrivilegedUser) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'URL is required');
@@ -668,6 +669,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $queueForEvents
+            ->setParam('userId', $invitee->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
         ;
@@ -901,6 +903,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents
+            ->setParam('userId', $profile->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
@@ -1026,6 +1029,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
         $queueForEvents
+            ->setParam('userId', $user->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
         ;
@@ -1107,6 +1111,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         }
 
         $queueForEvents
+            ->setParam('userId', $user->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
             ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP))

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "15ad1b6580df488ad53dee9760b4edde",
+    "content-hash": "340aae0879435fc71eac688d47033eb4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2172,16 +2172,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.4.4",
+            "version": "0.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "a8a5d392bebf082faf289f4dfe09d9fd76844c33"
+                "reference": "f18d44d4459f78c292dac9edde856fd156fe497a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/a8a5d392bebf082faf289f4dfe09d9fd76844c33",
-                "reference": "a8a5d392bebf082faf289f4dfe09d9fd76844c33",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f18d44d4459f78c292dac9edde856fd156fe497a",
+                "reference": "f18d44d4459f78c292dac9edde856fd156fe497a",
                 "shasum": ""
             },
             "require": {
@@ -2191,6 +2191,7 @@
             "require-dev": {
                 "laravel/pint": "1.*",
                 "phpunit/phpunit": "9.*",
+                "utopia-php/cli": "^0.18.0",
                 "vlucas/phpdotenv": "5.*"
             },
             "type": "library",
@@ -2213,9 +2214,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.4.4"
+                "source": "https://github.com/utopia-php/migration/tree/0.5.2"
             },
-            "time": "2024-05-17T05:25:31+00:00"
+            "time": "2024-07-22T09:27:07+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -2758,16 +2759,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "dev-fix-unauthorized-clone",
+            "version": "0.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "515e796de71982f485aed6b43753ea9eb80c692b"
+                "reference": "3084aa93d24ed1e70f01e75f4318fc0d07f12596"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/515e796de71982f485aed6b43753ea9eb80c692b",
-                "reference": "515e796de71982f485aed6b43753ea9eb80c692b",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/3084aa93d24ed1e70f01e75f4318fc0d07f12596",
+                "reference": "3084aa93d24ed1e70f01e75f4318fc0d07f12596",
                 "shasum": ""
             },
             "require": {
@@ -2801,9 +2802,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/fix-unauthorized-clone"
+                "source": "https://github.com/utopia-php/vcs/tree/0.8.1"
             },
-            "time": "2024-08-13T10:33:07+00:00"
+            "time": "2024-07-29T20:49:09+00:00"
         },
         {
             "name": "utopia-php/websocket",

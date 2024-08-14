@@ -212,20 +212,20 @@ class Builds extends Action
 
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
                 $templateOwnerName = $template->getAttribute('ownerName', '');
-                $templateBranch = $template->getAttribute('branch', '');
+                $tempalteVersion = $template->getAttribute('version', '');
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
                 $templateRootDirectory = \rtrim($templateRootDirectory, '/');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '.');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '/');
 
-                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateBranch)) {
+                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($tempalteVersion)) {
                     $stdout = '';
                     $stderr = '';
 
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . \escapeshellcmd($buildId) . '-template';
-                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
+                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $tempalteVersion, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
@@ -282,8 +282,14 @@ class Builds extends Action
                 $branchName = $deployment->getAttribute('providerBranch');
                 $commitHash = $deployment->getAttribute('providerCommitHash', '');
 
-                $gitCloneCommandForTemplate = $github->generateCloneCommand($cloneOwner, $cloneRepository, $commitHash, GitHub::CLONE_TYPE_COMMIT, $tmpDirectory, $rootDirectory . '/*');
+                $cloneVersion = $branchName;
+                $cloneType = GitHub::CLONE_TYPE_BRANCH;
+                if(!empty($commitHash)) {
+                    $cloneVersion = $commitHash;
+                    $cloneType = GitHub::CLONE_TYPE_COMMIT;
+                }
 
+                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $cloneVersion, $cloneType, $tmpDirectory, $rootDirectory);
                 $stdout = '';
                 $stderr = '';
                 Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
@@ -293,7 +299,7 @@ class Builds extends Action
                     return;
                 }
 
-                $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
+                $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
 
                 if ($exit !== 0) {
                     throw new \Exception('Unable to clone code repository: ' . $stderr);
@@ -316,17 +322,18 @@ class Builds extends Action
                 // Build from template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
                 $templateOwnerName = $template->getAttribute('ownerName', '');
-                $templateBranch = $template->getAttribute('branch', '');
+                $tempalteVersion = $template->getAttribute('version', '');
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
                 $templateRootDirectory = \rtrim($templateRootDirectory, '/');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '.');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '/');
 
-                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateBranch)) {
+                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($tempalteVersion)) {
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . \escapeshellcmd($buildId) . '/template';
-                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
+
+                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $tempalteVersion, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
@@ -403,6 +410,9 @@ class Builds extends Action
                 if (!$result) {
                     throw new \Exception("Unable to move file");
                 }
+
+                $deployment->setAttribute('path', $path);
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
                 Console::execute('rm -rf ' . $tmpPath, '', $stdout, $stderr);
 
@@ -680,9 +690,11 @@ class Builds extends Action
                 ->addMetric(METRIC_BUILDS, 1) // per project
                 ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
                 ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+                ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(512 * $build->getAttribute('duration', 0)))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(512 * $build->getAttribute('duration', 0)))
                 ->setProject($project)
                 ->trigger();
         }

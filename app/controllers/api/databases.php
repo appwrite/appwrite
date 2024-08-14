@@ -2943,17 +2943,26 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $processDocument($collection, $document);
 
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($document, Response::MODEL_DOCUMENT);
+
+        $relationships = \array_map(
+            fn ($document) => $document->getAttribute('key'),
+            \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            )
+        );
+
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $database)
-        ;
+            ->setPayload($response->getPayload(), sensitive: $relationships);
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
@@ -3524,15 +3533,23 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $processDocument($collection, $document);
 
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
+
+        $relationships = \array_map(
+            fn ($document) => $document->getAttribute('key'),
+            \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            )
+        );
+
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $database)
-        ;
-
-        $response->dynamic($document, Response::MODEL_DOCUMENT);
+            ->setPayload($response->getPayload(), sensitive: $relationships);
     });
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
@@ -3628,6 +3645,14 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $processDocument($collection, $document);
 
+        $relationships = \array_map(
+            fn ($document) => $document->getAttribute('key'),
+            \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            )
+        );
+
         $queueForDeletes
             ->setType(DELETE_TYPE_AUDIT)
             ->setDocument($document);
@@ -3638,7 +3663,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $database)
-            ->setPayload($response->output($document, Response::MODEL_DOCUMENT));
+            ->setPayload($response->output($document, Response::MODEL_DOCUMENT), sensitive: $relationships);
 
         $response->noContent();
     });
