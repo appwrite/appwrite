@@ -439,6 +439,136 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('cli', $functionDetails['body']['type']);
     }
 
+    public function testCreateDeploymentFromTemplate()
+    {
+        $runtimeName = 'php-8.0';
+
+        // Fetch starter template (used to create function later)
+        $template = $this->client->call(Client::METHOD_GET, '/functions/templates/starter', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $template['headers']['status-code']);
+        $this->assertArrayHasKey('', $template['body']);
+
+        $entrypoint = null;
+        $rootDirectory = null;
+        $commands = null;
+        foreach($template['runtimes'] as $runtime) {
+            if($runtime["name"] !== $runtimeName) {
+                continue;
+            }
+
+            $entrypoint = $runtime["entrypoint"];
+            $rootDirectory = $runtime["providerRootDirectory"];
+            $commands = $runtime["commands"];
+            break;
+        }
+
+        $this->assertNotNull($entrypoint);
+
+        /**
+         * If below test ever starts failing, it means temaplate used in
+         * this test now has some variables. This test currently doesnt test variables.
+         * Remove bellow assertion and update test to crete variable,
+         * and ensure variable works as expected in execution.
+         */
+        $this->assertEmpty($template['variables']);
+
+        // Create function using settings from template.
+        // Deployment is automatically created from template inside endpoint
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => $template['body']['name'],
+            'runtime' => $runtimeName,
+            'execute' => $template['body']['permissions'],
+            'entrypoint' => $entrypoint,
+            'events' => $template['body']['events'],
+            'schedule' => $template['body']['cron'],
+            'timeout' => $template['body']['timeout'],
+            'commands' => $commands,
+            'scopes' => $template['body']['scopes'],
+            'templateRepository' => $template['body']['providerRepositoryId'],
+            'templateOwner' => $template['body']['providerOwner'],
+            'templateRootDirectory' => $rootDirectory,
+            'templateVersion' => $template['body']['providerVersion'],
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertNotEmpty($function['body']['$id']);
+
+        $functionId = $function['body']['$id'];
+
+        // List deployments so we can await deployment build
+        $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(200, $deployments['headers']['status-code']);
+        $this->assertEquals(1, $deployments['body']['total']);
+        $this->assertNotEmpty($deployments['body']['deployments']['$id']);
+
+        $deploymentId = $deployments['body']['deployments']['$id'];
+
+        // Wait for deployment build to finish
+        // Deployment is automatically activated
+        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId);
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($deploymentId, $function['body']['deployment']);
+
+        // Execute function to ensure starter code is used
+        // Also tests if dynamic keys works as expected
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'path' => '/ping'
+        ]);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals("completed", $execution['body']['status']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+        $this->assertEquals("Pong", $execution['body']['responseBody']);
+        $this->assertEmpty($execution['body']['errors']);
+
+        // Get users to ensure execution logged correct total users
+        $users = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertIsInt($execution['body']['total']);
+
+        $totalusers = $users['body']['total'];
+
+        $this->assertStringContainsString("Total users: " . $totalusers, $execution['body']['logs']);
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
     /**
      * @depends testUpdate
      */
