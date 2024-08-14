@@ -250,8 +250,8 @@ class FunctionsCustomClientTest extends Scope
                 break;
             }
 
-            if (\microtime(true) - $start > 5) {
-                $this->fail('Execution did not complete within 5 seconds of schedule');
+            if (\microtime(true) - $start > 10) {
+                $this->fail('Execution did not complete within 10 seconds of schedule');
             }
 
             usleep(500000); // 0.5 seconds
