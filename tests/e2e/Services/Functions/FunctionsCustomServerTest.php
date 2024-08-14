@@ -450,12 +450,11 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $template['headers']['status-code']);
-        $this->assertArrayHasKey('', $template['body']);
 
         $entrypoint = null;
         $rootDirectory = null;
         $commands = null;
-        foreach($template['runtimes'] as $runtime) {
+        foreach($template['body']['runtimes'] as $runtime) {
             if($runtime["name"] !== $runtimeName) {
                 continue;
             }
@@ -474,7 +473,7 @@ class FunctionsCustomServerTest extends Scope
          * Remove bellow assertion and update test to crete variable,
          * and ensure variable works as expected in execution.
          */
-        $this->assertEmpty($template['variables']);
+        $this->assertEmpty($template['body']['variables']);
 
         // Create function using settings from template.
         // Deployment is automatically created from template inside endpoint
@@ -513,9 +512,9 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertEquals(1, $deployments['body']['total']);
-        $this->assertNotEmpty($deployments['body']['deployments']['$id']);
+        $this->assertNotEmpty($deployments['body']['deployments'][0]['$id']);
 
-        $deploymentId = $deployments['body']['deployments']['$id'];
+        $deploymentId = $deployments['body']['deployments'][0]['$id'];
 
         // Wait for deployment build to finish
         // Deployment is automatically activated
@@ -552,8 +551,8 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), []);
 
-        $this->assertEquals(200, $execution['headers']['status-code']);
-        $this->assertIsInt($execution['body']['total']);
+        $this->assertEquals(200, $users['headers']['status-code']);
+        $this->assertIsInt($users['body']['total']);
 
         $totalusers = $users['body']['total'];
 
