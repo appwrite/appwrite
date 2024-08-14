@@ -49,7 +49,6 @@ class Certificates extends Action
             ->inject('queueForFunctions')
             ->inject('log')
             ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
-        var_dump('app:0');
     }
 
     /**
@@ -65,7 +64,7 @@ class Certificates extends Action
      */
     public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log): void
     {
-        var_dump('app:1');
+
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -94,7 +93,7 @@ class Certificates extends Action
      */
     protected function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, bool $skipRenewCheck = false): void
     {
-        var_dump('app:2');
+
         /**
          * 1. Read arguments and validate domain
          * 2. Get main domain
@@ -386,7 +385,7 @@ class Certificates extends Action
      */
     protected function applyCertificateFiles(string $folder, string $domain, array $letsEncryptData): void
     {
-        var_dump('app:4');
+
         // Prepare folder in storage for domain
         $path = APP_STORAGE_CERTIFICATES . '/' . $domain;
         if (!\is_readable($path)) {
@@ -423,7 +422,7 @@ class Certificates extends Action
         if (!\file_put_contents(APP_STORAGE_CONFIG . '/' . $domain . '.yml', $config)) {
             throw new Exception('Failed to save Traefik configuration.');
         }
-        var_dump('app:5');
+        Console::info('all files done for domain: ' . $domain);
     }
 
     /**
