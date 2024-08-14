@@ -1417,20 +1417,32 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['logs'], '');
         $this->assertStringContainsString('timed out', $executions['body']['executions'][0]['errors']);
 
-        sleep(75); // Wait for scheduled execution to be created and time out
+        $start = \microtime(true);
+        while (true) {
+            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('trigger', ['schedule'])->toString(),
+                ],
+            ]);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('trigger', ['schedule'])->toString(),
-            ],
-        ]);
+            $this->assertEquals(200, $executions['headers']['status-code']);
+
+            if (\count($execution['body']['executions']) > 0) {
+                break;
+            }
+
+            if (\microtime(true) - $start > 120) {
+                $this->fail('Execution did not create within 120 seconds of schedule in status ' . $execution['body']['status'] . ': ' . \json_encode($execution));
+            }
+
+            usleep(1000000); // 1 second
+        }
 
         $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertGreaterThanOrEqual(1, $executions['body']['executions']);
-        $this->assertIsArray($executions['body']['executions']);
+        $this->assertGreaterThanOrEqual(1, \count($executions['body']['executions']));
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'schedule');
 
         // Cleanup : Delete function
