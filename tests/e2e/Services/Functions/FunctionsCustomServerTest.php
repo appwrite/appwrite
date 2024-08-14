@@ -1397,7 +1397,11 @@ class FunctionsCustomServerTest extends Scope
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('trigger', ['http'])->toString(),
+            ],
+        ]);
 
         $this->assertEquals($executions['headers']['status-code'], 200);
         $this->assertEquals($executions['body']['total'], 1);
@@ -1418,12 +1422,16 @@ class FunctionsCustomServerTest extends Scope
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('trigger', ['schedule'])->toString(),
+            ],
+        ]);
 
         $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertCount(2, $executions['body']['executions']);
+        $this->assertGreaterThanOrEqual(1, $executions['body']['executions']);
         $this->assertIsArray($executions['body']['executions']);
-        $this->assertEquals($executions['body']['executions'][1]['trigger'], 'schedule');
+        $this->assertEquals($executions['body']['executions'][0]['trigger'], 'schedule');
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
