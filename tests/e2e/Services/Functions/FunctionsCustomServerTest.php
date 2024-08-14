@@ -1646,6 +1646,8 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertStringContainsString('multipart/form-data', $execution['headers']['content-type']);
+        $contentType = explode(';', $execution['headers']['content-type']);
+        $this->assertStringContainsString('boundary=----', $contentType[1]);
         $bytes = unpack('C*byte', $execution['body']['responseBody']);
         $this->assertCount(3, $bytes);
         $this->assertEquals(0, $bytes['byte1']);
