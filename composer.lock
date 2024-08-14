@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b5c0db330bf30bd1d240b96116d96baf",
+    "content-hash": "340aae0879435fc71eac688d47033eb4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -156,16 +156,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.13.5",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "ba24c3a163f1a1da6cd355db92def508d05e59f7"
+                "reference": "9bae5bebe7c7cb3e4bf3a05a1d36c9d6ce3a2d3e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/ba24c3a163f1a1da6cd355db92def508d05e59f7",
-                "reference": "ba24c3a163f1a1da6cd355db92def508d05e59f7",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/9bae5bebe7c7cb3e4bf3a05a1d36c9d6ce3a2d3e",
+                "reference": "9bae5bebe7c7cb3e4bf3a05a1d36c9d6ce3a2d3e",
                 "shasum": ""
             },
             "require": {
@@ -173,8 +173,9 @@
                 "utopia-php/system": "0.8.*"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "laravel/pint": "^1.15",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -204,9 +205,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.13.5"
+                "source": "https://github.com/appwrite/runtimes/tree/0.14.0"
             },
-            "time": "2024-04-01T10:35:02+00:00"
+            "time": "2024-07-03T10:18:32+00:00"
         },
         {
             "name": "beberlei/assert",
@@ -1720,16 +1721,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.50.2",
+            "version": "0.50.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "c712d1f6c8ec37886a7a1ad4d60a8cd75dec00aa"
+                "reference": "fd3b856be77bd643bc8a9e3572ee11e4185b9230"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/c712d1f6c8ec37886a7a1ad4d60a8cd75dec00aa",
-                "reference": "c712d1f6c8ec37886a7a1ad4d60a8cd75dec00aa",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/fd3b856be77bd643bc8a9e3572ee11e4185b9230",
+                "reference": "fd3b856be77bd643bc8a9e3572ee11e4185b9230",
                 "shasum": ""
             },
             "require": {
@@ -1770,9 +1771,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.50.2"
+                "source": "https://github.com/utopia-php/database/tree/0.50.4"
             },
-            "time": "2024-07-31T10:12:19+00:00"
+            "time": "2024-08-13T03:18:26+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2066,16 +2067,16 @@
         },
         {
             "name": "utopia-php/logger",
-            "version": "0.5.2",
+            "version": "0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/logger.git",
-                "reference": "c6dfdb672e41364c309b0c30dc03bc6d45446dba"
+                "reference": "a2d1daeeb8f61fdec6d851950d9a021a3d05c9f9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/logger/zipball/c6dfdb672e41364c309b0c30dc03bc6d45446dba",
-                "reference": "c6dfdb672e41364c309b0c30dc03bc6d45446dba",
+                "url": "https://api.github.com/repos/utopia-php/logger/zipball/a2d1daeeb8f61fdec6d851950d9a021a3d05c9f9",
+                "reference": "a2d1daeeb8f61fdec6d851950d9a021a3d05c9f9",
                 "shasum": ""
             },
             "require": {
@@ -2114,9 +2115,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/logger/issues",
-                "source": "https://github.com/utopia-php/logger/tree/0.5.2"
+                "source": "https://github.com/utopia-php/logger/tree/0.6.0"
             },
-            "time": "2024-05-17T09:32:59+00:00"
+            "time": "2024-05-23T13:37:54+00:00"
         },
         {
             "name": "utopia-php/messaging",
@@ -2758,16 +2759,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.8.1",
+            "version": "0.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "3084aa93d24ed1e70f01e75f4318fc0d07f12596"
+                "reference": "eb9b7eade1a46a4f660e0d5a6304f7fa26ec9d18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/3084aa93d24ed1e70f01e75f4318fc0d07f12596",
-                "reference": "3084aa93d24ed1e70f01e75f4318fc0d07f12596",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/eb9b7eade1a46a4f660e0d5a6304f7fa26ec9d18",
+                "reference": "eb9b7eade1a46a4f660e0d5a6304f7fa26ec9d18",
                 "shasum": ""
             },
             "require": {
@@ -2801,9 +2802,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.8.1"
+                "source": "https://github.com/utopia-php/vcs/tree/0.8.2"
             },
-            "time": "2024-07-29T20:49:09+00:00"
+            "time": "2024-08-13T14:36:30+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -2990,16 +2991,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.38.8",
+            "version": "0.39.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "6367c57ddbcf7b88cacb900c4fe7ef3f28bf38ef"
+                "reference": "00e6f9e77ea380d8ab3138a36548b353077e4061"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6367c57ddbcf7b88cacb900c4fe7ef3f28bf38ef",
-                "reference": "6367c57ddbcf7b88cacb900c4fe7ef3f28bf38ef",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/00e6f9e77ea380d8ab3138a36548b353077e4061",
+                "reference": "00e6f9e77ea380d8ab3138a36548b353077e4061",
                 "shasum": ""
             },
             "require": {
@@ -3035,9 +3036,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.38.8"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.6"
             },
-            "time": "2024-06-17T00:42:27+00:00"
+            "time": "2024-08-08T12:44:28+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -3158,16 +3159,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.17.1",
+            "version": "v1.17.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "b5b6f716db298671c1dfea5b1082ec2c0ae7064f"
+                "reference": "e8a88130a25e3f9d4d5785e6a1afca98268ab110"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/b5b6f716db298671c1dfea5b1082ec2c0ae7064f",
-                "reference": "b5b6f716db298671c1dfea5b1082ec2c0ae7064f",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/e8a88130a25e3f9d4d5785e6a1afca98268ab110",
+                "reference": "e8a88130a25e3f9d4d5785e6a1afca98268ab110",
                 "shasum": ""
             },
             "require": {
@@ -3178,13 +3179,13 @@
                 "php": "^8.1.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.59.3",
-                "illuminate/view": "^10.48.12",
-                "larastan/larastan": "^2.9.7",
+                "friendsofphp/php-cs-fixer": "^3.61.1",
+                "illuminate/view": "^10.48.18",
+                "larastan/larastan": "^2.9.8",
                 "laravel-zero/framework": "^10.4.0",
                 "mockery/mockery": "^1.6.12",
                 "nunomaduro/termwind": "^1.15.1",
-                "pestphp/pest": "^2.34.8"
+                "pestphp/pest": "^2.35.0"
             },
             "bin": [
                 "builds/pint"
@@ -3220,7 +3221,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2024-08-01T09:06:33+00:00"
+            "time": "2024-08-06T15:11:54+00:00"
         },
         {
             "name": "matthiasmullie/minify",

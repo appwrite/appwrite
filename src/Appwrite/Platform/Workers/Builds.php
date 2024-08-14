@@ -2,12 +2,14 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
+use Exception;
 use Executor\Executor;
 use Swoole\Coroutine as Co;
 use Utopia\Cache\Cache;
@@ -157,9 +159,9 @@ class Builds extends Action
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
         $buildId = $deployment->getAttribute('buildId', '');
+        $build = $dbForProject->getDocument('builds', $buildId);
         $isNewBuild = empty($buildId);
-
-        if ($isNewBuild) {
+        if ($build->isEmpty()) {
             $buildId = ID::unique();
             $build = $dbForProject->createDocument('builds', new Document([
                 '$id' => $buildId,
@@ -181,6 +183,9 @@ class Builds extends Action
             $deployment->setAttribute('buildId', $build->getId());
             $deployment->setAttribute('buildInternalId', $build->getInternalId());
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+        } elseif ($build->getAttribute('status') === 'canceled') {
+            Console::info('Build has been canceled');
+            return;
         } else {
             $build = $dbForProject->getDocument('builds', $buildId);
         }
@@ -230,11 +235,31 @@ class Builds extends Action
                 $stdout = '';
                 $stderr = '';
                 Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
+
+                if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
+                    Console::info('Build has been canceled');
+                    return;
+                }
+
                 $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
 
                 if ($exit !== 0) {
                     throw new \Exception('Unable to clone code repository: ' . $stderr);
                 }
+
+                // Local refactoring for function folder with spaces
+                if (str_contains($rootDirectory, ' ')) {
+                    $rootDirectoryWithoutSpaces = str_replace(' ', '', $rootDirectory);
+                    $from = $tmpDirectory . '/' . $rootDirectory;
+                    $to = $tmpDirectory . '/' . $rootDirectoryWithoutSpaces;
+                    $exit = Console::execute('mv "' . \escapeshellarg($from) . '" "' . \escapeshellarg($to) . '"', '', $stdout, $stderr);
+
+                    if ($exit !== 0) {
+                        throw new \Exception('Unable to move function with spaces' . $stderr);
+                    }
+                    $rootDirectory = $rootDirectoryWithoutSpaces;
+                }
+
 
                 // Build from template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
@@ -319,7 +344,7 @@ class Builds extends Action
                 }
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
-                $functionsSizeLimit = (int) System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
+                $functionsSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
                 if ($directorySize > $functionsSizeLimit) {
                     throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
                 }
@@ -341,6 +366,7 @@ class Builds extends Action
                 $source = $path;
 
                 $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source));
 
                 $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
@@ -363,8 +389,7 @@ class Builds extends Action
                     ->setEvent('functions.[functionId].deployments.[deploymentId].update')
                     ->setParam('functionId', $function->getId())
                     ->setParam('deploymentId', $deployment->getId())
-                    ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())))
-            ;
+                    ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
 
             $deploymentUpdate->trigger();
 
@@ -404,9 +429,21 @@ class Builds extends Action
             $cpus = $spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS;
             $memory = max($spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY, 1024);
 
+            $jwtExpiry = (int)System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+            $apiKey = $jwtObj->encode([
+                'projectId' => $project->getId(),
+                'scopes' => $function->getAttribute('scopes', [])
+            ]);
+
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $hostname = System::getEnv('_APP_DOMAIN');
+            $endpoint = $protocol . '://' . $hostname . "/v1";
 
             // Appwrite vars
             $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
+                'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                 'APPWRITE_FUNCTION_ID' => $function->getId(),
                 'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
                 'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -414,13 +451,20 @@ class Builds extends Action
                 'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
                 'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
                 'APPWRITE_FUNCTION_CPUS' => $cpus,
-                'APPWRITE_FUNCTION_MEMORY' => $memory
+                'APPWRITE_FUNCTION_MEMORY' => $memory,
+                'APPWRITE_VERSION' => APP_VERSION_STABLE,
+                'APPWRITE_REGION' => $project->getAttribute('region'),
             ]);
 
             $command = $deployment->getAttribute('commands', '');
 
             $response = null;
             $err = null;
+
+            if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
+                Console::info('Build has been canceled');
+                return;
+            }
 
             Co::join([
                 Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, $cpus, $memory, &$err) {
@@ -451,8 +495,9 @@ class Builds extends Action
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
-                            callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
-                                if ($response === null) {
+                            callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $allEvents, $project) {
+                                // If we have response or error from concurrent coroutine, we already have latest logs
+                                if ($response === null && $err === null) {
                                     $build = $dbForProject->getDocument('builds', $build->getId());
 
                                     if ($build->isEmpty()) {
@@ -465,8 +510,8 @@ class Builds extends Action
                                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
 
                                     /**
-                                         * Send realtime Event
-                                         */
+                                     * Send realtime Event
+                                     */
                                     $target = Realtime::fromPayload(
                                         // Pass first, most verbose event pattern
                                         event: $allEvents[0],
@@ -492,11 +537,20 @@ class Builds extends Action
             ]);
 
             if ($err) {
+                if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
+                    Console::info('Build has been canceled');
+                    return;
+                }
                 throw $err;
             }
 
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
+
+            $buildSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_BUILD_SIZE_LIMIT', '2000000000');
+            if ($response['size'] > $buildSizeLimit) {
+                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
+            }
 
             /** Update the build document */
             $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
@@ -521,6 +575,11 @@ class Builds extends Action
                 $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
             }
 
+            if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
+                Console::info('Build has been canceled');
+                return;
+            }
+
             /** Update function schedule */
 
             // Inform scheduler if function is still active
@@ -531,12 +590,17 @@ class Builds extends Action
                 ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
             Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
+            if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
+                Console::info('Build has been canceled');
+                return;
+            }
+
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'failed');
-            $build->setAttribute('logs', $th->getMessage() . "\n" . $th->getFile() . ':' . $th->getLine() . "\n" . $th->getTraceAsString());
+            $build->setAttribute('logs', $th->getMessage());
 
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
@@ -562,6 +626,20 @@ class Builds extends Action
             );
 
             /** Trigger usage queue */
+            if ($build->getAttribute('status') === 'ready') {
+                $queueForUsage
+                    ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
+                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$build->getAttribute('duration', 0) * 1000)
+                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
+                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$build->getAttribute('duration', 0) * 1000);
+            } elseif ($build->getAttribute('status') === 'failed') {
+                $queueForUsage
+                    ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
+                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$build->getAttribute('duration', 0) * 1000)
+                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_FAILED), 1) // per function
+                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED), (int)$build->getAttribute('duration', 0) * 1000);
+            }
+
             $queueForUsage
                 ->addMetric(METRIC_BUILDS, 1) // per project
                 ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))

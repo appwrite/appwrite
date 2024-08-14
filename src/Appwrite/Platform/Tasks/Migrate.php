@@ -33,15 +33,18 @@ class Migrate extends Action
             ->inject('dbForConsole')
             ->inject('getProjectDB')
             ->inject('register')
-            ->callback(fn ($version, $dbForConsole, $getProjectDB, Registry $register) => $this->action($version, $dbForConsole, $getProjectDB, $register));
-
+            ->callback(function ($version, $dbForConsole, $getProjectDB, Registry $register) {
+                \Co\run(function () use ($version, $dbForConsole, $getProjectDB, $register) {
+                    $this->action($version, $dbForConsole, $getProjectDB, $register);
+                });
+            });
     }
 
     private function clearProjectsCache(Document $project)
     {
         try {
+            $iterator = null;
             do {
-                $iterator = null;
                 $pattern = "default-cache-_{$project->getInternalId()}:*";
                 $keys = $this->redis->scan($iterator, $pattern, 1000);
                 if ($keys !== false) {
@@ -50,16 +53,15 @@ class Migrate extends Action
                     }
                 }
             } while ($iterator > 0);
-
         } catch (\Throwable $th) {
-            Console::error('Failed to clear project ("'.$project->getId().'") cache with error: '.$th->getMessage());
+            Console::error('Failed to clear project ("' . $project->getId() . '") cache with error: ' . $th->getMessage());
         }
     }
 
     public function action(string $version, Database $dbForConsole, callable $getProjectDB, Registry $register)
     {
         Authorization::disable();
-        if (! array_key_exists($version, Migration::$versions)) {
+        if (!array_key_exists($version, Migration::$versions)) {
             Console::error("Version {$version} not found.");
             Console::exit(1);
 
@@ -77,7 +79,7 @@ class Migrate extends Action
 
         $app = new App('UTC');
 
-        Console::success('Starting Data Migration to version '.$version);
+        Console::success('Starting Data Migration to version ' . $version);
 
         $console = $app->getResource('console');
 
@@ -97,11 +99,11 @@ class Migrate extends Action
             $totalProjects = $dbForConsole->count('projects') + 1;
         }
 
-        $class = 'Appwrite\\Migration\\Version\\'.Migration::$versions[$version];
+        $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
         /** @var Migration $migration */
         $migration = new $class();
 
-        while (! empty($projects)) {
+        while (!empty($projects)) {
             foreach ($projects as $project) {
                 /**
                  * Skip user projects with id 'console'
@@ -122,7 +124,7 @@ class Migrate extends Action
                         ->setPDO($register->get('db', true))
                         ->execute();
                 } catch (\Throwable $th) {
-                    Console::error('Failed to update project ("'.$project->getId().'") version with error: '.$th->getMessage());
+                    Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
                     throw $th;
                 }
 
@@ -135,7 +137,7 @@ class Migrate extends Action
             $offset = $offset + $limit;
             $count = $count + $sum;
 
-            Console::log('Migrated '.$count.'/'.$totalProjects.' projects...');
+            Console::log('Migrated ' . $count . '/' . $totalProjects . ' projects...');
         }
 
         Console::success('Data Migration Completed');
