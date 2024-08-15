@@ -5,14 +5,6 @@ const TEMPLATE_RUNTIMES = [
         'name' => 'node',
         'versions' => ['21.0', '20.0', '19.0', '18.0', '16.0', '14.5']
     ],
-    'PHP' => [
-        'name' => 'php',
-        'versions' => ['8.3', '8.2', '8.1', '8.0']
-    ],
-    'RUBY' => [
-        'name' => 'ruby',
-        'versions' => ['3.3', '3.2', '3.1', '3.0']
-    ],
     'PYTHON' => [
         'name' => 'python',
         'versions' => ['3.12', '3.11', '3.10', '3.9', '3.8']
@@ -21,14 +13,22 @@ const TEMPLATE_RUNTIMES = [
         'name' => 'dart',
         'versions' => ['3.3', '3.1', '3.0', '2.19', '2.18', '2.17', '2.16', '2.16']
     ],
+    'GO' => [
+        'name' => 'go',
+        'versions' => ['1.22']
+    ],
+    'PHP' => [
+        'name' => 'php',
+        'versions' => ['8.3', '8.2', '8.1', '8.0']
+    ],
     'BUN' => [
         'name' => 'bun',
         'versions' => ['1.0']
     ],
-    'GO' => [
-        'name' => 'go',
-        'versions' => ['1.22']
-    ]
+    'RUBY' => [
+        'name' => 'ruby',
+        'versions' => ['3.3', '3.2', '3.1', '3.0']
+    ],
 ];
 
 function getRuntimes($runtime, $commands, $entrypoint, $providerRootDirectory, $versionsDenyList = [])
@@ -60,21 +60,21 @@ return [
         'runtimes' => [
             ...getRuntimes(TEMPLATE_RUNTIMES['NODE'], 'npm install', 'src/main.js', 'node/starter'),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PHP'],
-                'composer install',
-                'src/index.php',
-                'php/starter'
-            ),
-            ...getRuntimes(TEMPLATE_RUNTIMES['RUBY'], 'bundle install', 'lib/main.rb', 'ruby/starter'),
-            ...getRuntimes(
                 TEMPLATE_RUNTIMES['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
                 'python/starter'
             ),
             ...getRuntimes(TEMPLATE_RUNTIMES['DART'], 'dart pub get', 'lib/main.dart', 'dart/starter'),
+            ...getRuntimes(TEMPLATE_RUNTIMES['GO'], '', 'main.go', 'go/starter'),
+            ...getRuntimes(
+                TEMPLATE_RUNTIMES['PHP'],
+                'composer install',
+                'src/index.php',
+                'php/starter'
+            ),
             ...getRuntimes(TEMPLATE_RUNTIMES['BUN'], 'bun install', 'src/main.ts', 'bun/starter'),
-            ...getRuntimes(TEMPLATE_RUNTIMES['GO'], '', 'main.go', 'go/starter')
+            ...getRuntimes(TEMPLATE_RUNTIMES['RUBY'], 'bundle install', 'lib/main.rb', 'ruby/starter'),
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/starter">file</a>.',
         'vcsProvider' => 'github',
@@ -837,16 +837,22 @@ return [
                 'python/whatsapp_with_vonage'
             ),
             ...getRuntimes(
+                TEMPLATE_RUNTIMES['DART'],
+                'dart pub get',
+                'lib/main.dart',
+                'dart/whatsapp-with-vonage'
+            ),
+            ...getRuntimes(
                 TEMPLATE_RUNTIMES['PHP'],
                 'composer install',
                 'src/index.php',
                 'php/whatsapp-with-vonage'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['DART'],
-                'dart pub get',
-                'lib/main.dart',
-                'dart/whatsapp-with-vonage'
+                TEMPLATE_RUNTIMES['BUN'],
+                'bun install',
+                'src/main.ts',
+                'bun/whatsapp-with-vonage'
             ),
             ...getRuntimes(
                 TEMPLATE_RUNTIMES['RUBY'],
@@ -854,12 +860,6 @@ return [
                 'lib/main.rb',
                 'ruby/whatsapp-with-vonage'
             ),
-            ...getRuntimes(
-                TEMPLATE_RUNTIMES['BUN'],
-                'bun install',
-                'src/main.ts',
-                'bun/whatsapp-with-vonage'
-            )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/whatsapp-with-vonage">file</a>.',
         'vcsProvider' => 'github',
