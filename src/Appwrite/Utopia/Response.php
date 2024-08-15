@@ -731,6 +731,7 @@ class Response extends SwooleResponse
         }
 
         $this
+            ->setContentType($multipart->exportHeader())
             ->send($multipart->exportBody());
     }
 
