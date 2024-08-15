@@ -13,7 +13,10 @@ class V18 extends Filter
             case 'account.deleteMfaAuthenticator':
                 unset($content['otp']);
                 break;
-
+            case 'functions.create':
+                $content['templateVersion'] = $content['templateBranch'];
+                unset($content['templateBranch']);
+                break;
         }
 
         return $content;
