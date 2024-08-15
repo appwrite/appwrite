@@ -53,7 +53,7 @@
         "utopia-php/database": "0.50.*",
         "utopia-php/domains": "0.5.*",
         "utopia-php/dsn": "0.2.1",
-        "utopia-php/framework": "dev-feat-multiple-validator-export as 0.33.99",
+        "utopia-php/framework": "0.33.*",
         "utopia-php/fetch": "0.2.*",
         "utopia-php/image": "0.6.*",
         "utopia-php/locale": "0.4.*",
