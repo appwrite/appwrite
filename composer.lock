@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "340aae0879435fc71eac688d47033eb4",
+    "content-hash": "219bceaa390a41c5c9a0d670a0dffbc0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1923,16 +1923,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.7",
+            "version": "dev-feat-multiple-validator-export",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "78d293d99a262bd63ece750bbf989c7e0643b825"
+                "reference": "3cf34e0bf000054b3c2f817c0ebde557a59b9916"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/78d293d99a262bd63ece750bbf989c7e0643b825",
-                "reference": "78d293d99a262bd63ece750bbf989c7e0643b825",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/3cf34e0bf000054b3c2f817c0ebde557a59b9916",
+                "reference": "3cf34e0bf000054b3c2f817c0ebde557a59b9916",
                 "shasum": ""
             },
             "require": {
@@ -1962,9 +1962,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.7"
+                "source": "https://github.com/utopia-php/http/tree/feat-multiple-validator-export"
             },
-            "time": "2024-08-01T14:01:04+00:00"
+            "time": "2024-08-15T12:03:07+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5592,9 +5592,18 @@
             "time": "2023-11-21T18:54:41+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/framework",
+            "version": "dev-feat-multiple-validator-export",
+            "alias": "0.33.99",
+            "alias_normalized": "0.33.99.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/framework": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
