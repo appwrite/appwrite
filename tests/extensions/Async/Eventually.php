@@ -9,7 +9,7 @@ final class Eventually extends Constraint
     private int $timeoutMs;
     private int $waitMs;
 
-    public function __construct(int $timeoutMs = 10000, int $waitMs = 500)
+    public function __construct(int $timeoutMs, int $waitMs)
     {
         $this->timeoutMs = $timeoutMs;
         $this->waitMs = $waitMs;
@@ -44,7 +44,7 @@ final class Eventually extends Constraint
 
     protected function failureDescription(mixed $other): string
     {
-        return 'the given probe was satisfied within the provided timeout';
+        return 'the given probe was satisfied within ' . $this->timeoutMs . 'ms.';
     }
 
     public function toString(): string

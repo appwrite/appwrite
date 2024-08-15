@@ -2,13 +2,16 @@
 
 namespace Appwrite\Tests;
 
-use PHPUnit\Framework\Assert;
 use Appwrite\Tests\Async\Eventually;
+use PHPUnit\Framework\Assert;
+
+const DEFAULT_TIMEOUT_MS = 10000;
+const DEFAULT_WAIT_MS = 500;
 
 trait Async
 {
-    public static function assertEventually(callable $probe, int $timeoutMilliseconds = 10000, int $waitMilliseconds = 500): void
+    public static function assertEventually(callable $probe, int $timeoutMs = DEFAULT_TIMEOUT_MS, int $waitMs = DEFAULT_WAIT_MS): void
     {
-        Assert::assertThat($probe, new Eventually($timeoutMilliseconds, $waitMilliseconds));
+        Assert::assertThat($probe, new Eventually($timeoutMs, $waitMs));
     }
 }
