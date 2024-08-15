@@ -251,7 +251,7 @@ class FunctionsCustomClientTest extends Scope
             }
 
             if (\microtime(true) - $start > 10) {
-                $this->fail('Execution did not complete within 10 seconds of schedule');
+                $this->fail('Execution did not complete within 10 seconds of schedule in status ' . $execution['body']['status'] . ': ' . \json_encode($execution));
             }
 
             usleep(500000); // 0.5 seconds
@@ -848,6 +848,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(200, $templates['headers']['status-code']);
         $this->assertGreaterThan(0, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
+
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
         $this->assertArrayHasKey('useCases', $templates['body']['templates'][0]);
         for ($i = 0; $i < 25; $i++) {
