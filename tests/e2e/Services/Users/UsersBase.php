@@ -290,6 +290,28 @@ trait UsersBase
         $this->assertArrayNotHasKey('secret', $token['body']);
     }
 
+    /**
+     * @depends testCreateUser
+     */
+    public function testCreateSession(array $data): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['body'];
+        $this->assertEquals($data['userId'], $session['userId']);
+        $this->assertNotEmpty($session['secret']);
+        $this->assertNotEmpty($session['expire']);
+        $this->assertEquals('server', $session['provider']);
+    }
+
 
     /**
      * Tests all optional parameters of createUser (email, phone, anonymous..)
@@ -977,6 +999,7 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertNotEmpty($user['body']['$id']);
         $this->assertEmpty($user['body']['password']);
+        sleep(5);
 
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
@@ -986,7 +1009,7 @@ trait UsersBase
             'password' => 'password'
         ]);
 
-        $this->assertEquals($session['headers']['status-code'], 401);
+        $this->assertEquals(401, $session['headers']['status-code']);
 
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
             'content-type' => 'application/json',
