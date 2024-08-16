@@ -16,7 +16,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database as AbuseDatabase;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
@@ -209,7 +209,7 @@ App::post('/v1/projects')
         $audit = new Audit($dbForProject);
         $audit->setup();
 
-        $abuse = new TimeLimit('', 0, 1, $dbForProject);
+        $abuse = new AbuseDatabase('', 0, 1, $dbForProject);
         $abuse->setup();
 
         /** @var array $collections */
