@@ -1038,29 +1038,66 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
-    #[Retry(count: 1)]
     public function testUpdateUserStatus(array $data): array
     {
-        /**
-         * Test for SUCCESS
-         */
-        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
+        // Verify that the user exists
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+
+        // Test: Activate user
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'status' => true
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['status'], true);
+
+        // Verify activation
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['status'], true);
+
+        // Test: Block user
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'status' => false,
         ]);
 
-        $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertEquals($user['body']['status'], false);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['status'], false);
 
-        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+        // Verify session deletion and block status
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertEquals($user['body']['status'], false);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['status'], false);
+
+        // Test: Reactivate user
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'status' => true,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['status'], true);
 
         return $data;
     }

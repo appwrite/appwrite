@@ -962,6 +962,7 @@ App::patch('/v1/users/:userId/status')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateStatus')
@@ -983,6 +984,21 @@ App::patch('/v1/users/:userId/status')
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
+
+        // If the user is being blocked, delete all their sessions
+        if (!$status) {
+            $sessions = $user->getAttribute('sessions', []);
+
+            foreach ($sessions as $session) {
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }
+
+            $dbForProject->deleteCachedDocument('users', $user->getId());
+
+            $queueForEvents
+                ->setParam('userId', $user->getId())
+                ->setPayload($response->output($user, Response::MODEL_USER));
+        }
 
         $queueForEvents
             ->setParam('userId', $user->getId());
