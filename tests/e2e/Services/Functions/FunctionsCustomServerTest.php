@@ -88,40 +88,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $variable2['headers']['status-code']);
         $this->assertEquals(201, $variable3['headers']['status-code']);
 
-        $response2 = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-response-format' => '1.5.0',
-        ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
-            'name' => 'Test',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
-            'events' => [
-                'buckets.*.create',
-                'buckets.*.delete',
-            ],
-            'schedule' => '0 0 1 1 *',
-            'timeout' => 10,
-        ]);
-
-        $this->assertEquals(201, $response2['headers']['status-code']);
-        $this->assertNotEmpty($response2['body']['$id']);
-        $this->assertEquals('Test', $response2['body']['name']);
-        $this->assertEquals('php-8.0', $response2['body']['runtime']);
-        $this->assertEquals(true, $dateValidator->isValid($response2['body']['$createdAt']));
-        $this->assertEquals(true, $dateValidator->isValid($response2['body']['$updatedAt']));
-
-        $functionId2 = $response2['body']['$id'];
-
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId2, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], []);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-
         /**
          * Test for FAILURE
          */
@@ -488,8 +454,8 @@ class FunctionsCustomServerTest extends Scope
         $entrypoint = null;
         $rootDirectory = null;
         $commands = null;
-        foreach($template['body']['runtimes'] as $runtime) {
-            if($runtime["name"] !== $runtimeName) {
+        foreach ($template['body']['runtimes'] as $runtime) {
+            if ($runtime["name"] !== $runtimeName) {
                 continue;
             }
 
@@ -2445,6 +2411,32 @@ class FunctionsCustomServerTest extends Scope
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testCreateFunctionWithResponseFormatHeader()
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.5.0', // add response format header
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => 15,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $response['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
