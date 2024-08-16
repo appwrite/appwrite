@@ -14,7 +14,7 @@ class V18 extends Filter
                 unset($content['otp']);
                 break;
             case 'functions.create':
-                $content['templateVersion'] = $content['templateBranch'];
+                $content['templateVersion'] = $content['templateBranch'] ?? "";
                 unset($content['templateBranch']);
                 break;
         }
