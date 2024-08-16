@@ -1,15 +1,19 @@
 name: PR Security Scan
-on:
+on: 
   pull_request_target:
-    branches: ['**']
-
+    types: [opened, synchronize, reopened]
+ 
 jobs:
   scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-    - name: Check out code
+    - name: Check out code 
       uses: actions/checkout@v4
       with:
+        ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
         submodules: 'recursive'
 
@@ -42,7 +46,6 @@ jobs:
       id: process-results
       uses: actions/github-script@v7
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const fs = require('fs');
           let commentBody = '## Security Scan Results for PR\n\n';
@@ -85,12 +88,10 @@ jobs:
           }
           
           core.setOutput('comment-body', commentBody);
-
     - name: Find Comment
       uses: peter-evans/find-comment@v3
       id: fc
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
         issue-number: ${{ github.event.pull_request.number }}
         comment-author: 'github-actions[bot]'
         body-includes: Security Scan Results for PR
@@ -98,7 +99,6 @@ jobs:
     - name: Create or update comment
       uses: peter-evans/create-or-update-comment@v3
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
         issue-number: ${{ github.event.pull_request.number }}
         comment-id: ${{ steps.fc.outputs.comment-id }}
         body: ${{ steps.process-results.outputs.comment-body }}
