@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "805f7e1ff986ab086b516ce351a7750a",
+    "content-hash": "cd0323e7303780f34b2f775a526de516",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1429,26 +1429,28 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.38.0",
+            "version": "0.40.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "b7be9086c9d9b4561d810cbd42fdda798742f56c"
+                "reference": "69748a6741a9e44f0c9e430f3c2bd2b8a677c048"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/b7be9086c9d9b4561d810cbd42fdda798742f56c",
-                "reference": "b7be9086c9d9b4561d810cbd42fdda798742f56c",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/69748a6741a9e44f0c9e430f3c2bd2b8a677c048",
+                "reference": "69748a6741a9e44f0c9e430f3c2bd2b8a677c048",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
+                "ext-redis": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.50.*"
+                "utopia-php/database": "0.51.*"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
+                "phpbench/phpbench": "^1.2",
                 "phpstan/phpstan": "^1.9",
                 "phpunit/phpunit": "^9.4"
             },
@@ -1472,9 +1474,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.38.0"
+                "source": "https://github.com/utopia-php/abuse/tree/0.40.0"
             },
-            "time": "2024-06-24T00:52:02+00:00"
+            "time": "2024-08-16T06:08:24+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1524,21 +1526,21 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.40.0",
+            "version": "0.41.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "735ae211ce5fee5b52b736731571b4030b1d7cdc"
+                "reference": "77f1d0a95ea791e38a38a8bc1b7728ffcedcd2d1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/735ae211ce5fee5b52b736731571b4030b1d7cdc",
-                "reference": "735ae211ce5fee5b52b736731571b4030b1d7cdc",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/77f1d0a95ea791e38a38a8bc1b7728ffcedcd2d1",
+                "reference": "77f1d0a95ea791e38a38a8bc1b7728ffcedcd2d1",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/database": "0.50.*"
+                "utopia-php/database": "0.51.*"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
@@ -1565,9 +1567,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.40.0"
+                "source": "https://github.com/utopia-php/audit/tree/0.41.0"
             },
-            "time": "2024-06-24T00:52:17+00:00"
+            "time": "2024-08-16T06:08:00+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -1721,16 +1723,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-datetime-validator-precision",
+            "version": "0.51.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "22e52918240f0e7da814497ab04e83cfb4ab89a1"
+                "reference": "845783a54cced784e00db084a29486fdb96d3d58"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/22e52918240f0e7da814497ab04e83cfb4ab89a1",
-                "reference": "22e52918240f0e7da814497ab04e83cfb4ab89a1",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/845783a54cced784e00db084a29486fdb96d3d58",
+                "reference": "845783a54cced784e00db084a29486fdb96d3d58",
                 "shasum": ""
             },
             "require": {
@@ -1771,9 +1773,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-datetime-validator-precision"
+                "source": "https://github.com/utopia-php/database/tree/0.51.1"
             },
-            "time": "2024-08-16T09:10:30+00:00"
+            "time": "2024-08-16T10:54:25+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5592,18 +5594,9 @@
             "time": "2023-11-21T18:54:41+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-feat-datetime-validator-precision",
-            "alias": "0.50.99",
-            "alias_normalized": "0.50.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
