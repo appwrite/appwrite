@@ -219,7 +219,8 @@ class FunctionsCustomClientTest extends Scope
 
         // Schedule execution for the future
         \date_default_timezone_set('UTC');
-        $futureTime = (new \DateTime())->add(new \DateInterval('PT10S'));
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT2M'));
+        $futureTime->setTime($futureTime->format('H'), $futureTime->format('i'), 0, 0);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -236,7 +237,7 @@ class FunctionsCustomClientTest extends Scope
 
         $executionId = $execution['body']['$id'];
 
-        sleep(10);
+        sleep(60 + 60 + 15); // up to 1 minute round up, 1 minute schedule postpone, 15s cold start safety
 
         $start = \microtime(true);
         while (true) {
@@ -251,7 +252,7 @@ class FunctionsCustomClientTest extends Scope
             }
 
             if (\microtime(true) - $start > 10) {
-                $this->fail('Execution did not complete within 10 seconds of schedule in status ' . $execution['body']['status'] . ': ' . \json_encode($execution));
+                $this->fail('Scheduled execution did not complete with status ' . $execution['body']['status'] . ': ' . \json_encode($execution));
             }
 
             usleep(500000); // 0.5 seconds
@@ -267,13 +268,47 @@ class FunctionsCustomClientTest extends Scope
         /* Test for FAILURE */
 
         // Schedule synchronous execution
-
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'async' => false,
             'scheduledAt' => $futureTime->format(\DateTime::ATOM),
+        ]);
+
+        $this->assertEquals(400, $execution['headers']['status-code']);
+
+        // Execution with seconds precision
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true,
+            'scheduledAt' => (new \DateTime("2100-12-08 16:12:02"))->format(\DateTime::ATOM)
+        ]);
+
+        $this->assertEquals(400, $execution['headers']['status-code']);
+
+        // Execution with milliseconds precision
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true,
+            'scheduledAt' => (new \DateTime("2100-12-08 16:12:02.255"))->format(\DateTime::ATOM)
+        ]);
+
+        $this->assertEquals(400, $execution['headers']['status-code']);
+
+        // Execution too soon
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT1M'));
+        $futureTime->setTime($futureTime->format('H'), $futureTime->format('i'), 0, 0);
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true,
+            'scheduledAt' => (new \DateTime("2100-12-08 16:12:02.255"))->format(\DateTime::ATOM)
         ]);
 
         $this->assertEquals(400, $execution['headers']['status-code']);
