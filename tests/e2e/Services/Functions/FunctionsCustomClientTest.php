@@ -308,7 +308,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'async' => true,
-            'scheduledAt' => (new \DateTime("2100-12-08 16:12:02.255"))->format(\DateTime::ATOM)
+            'scheduledAt' => $futureTime->format(\DateTime::ATOM),
         ]);
 
         $this->assertEquals(400, $execution['headers']['status-code']);
