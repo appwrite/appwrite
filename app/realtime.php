@@ -13,7 +13,7 @@ use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database as AbuseDatabase;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -463,12 +463,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $dbForProject);
-        $timeLimit
+        $abuseAdapter = new AbuseDatabase('url:{url},ip:{ip}', 128, 60, $dbForProject);
+        $abuseAdapter
             ->setParam('{ip}', $request->getIP())
             ->setParam('{url}', $request->getURI());
 
-        $abuse = new Abuse($timeLimit);
+        $abuse = new Abuse($abuseAdapter);
 
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many requests');
@@ -563,13 +563,13 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $database);
+        $abuseDatabase = new AbuseDatabase('url:{url},connection:{connection}', 32, 60, $database);
 
-        $timeLimit
+        $abuseDatabase
             ->setParam('{connection}', $connection)
             ->setParam('{container}', $containerId);
 
-        $abuse = new Abuse($timeLimit);
+        $abuse = new Abuse($abuseDatabase);
 
         if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');

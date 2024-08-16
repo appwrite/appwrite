@@ -7,7 +7,7 @@ use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database as AbuseDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -493,7 +493,7 @@ class Deletes extends Action
         $projectCollectionIds = [
             ...\array_keys(Config::getParam('collections', [])['projects']),
             Audit::COLLECTION,
-            TimeLimit::COLLECTION,
+            AbuseDatabase::COLLECTION,
         ];
 
         $limit = \count($projectCollectionIds) + 25;
@@ -686,8 +686,8 @@ class Deletes extends Action
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
-        $timeLimit = new TimeLimit("", 0, 1, $dbForProject);
-        $abuse = new Abuse($timeLimit);
+        $abuseAdapter = new AbuseDatabase("", 0, 1, $dbForProject);
+        $abuse = new Abuse($abuseAdapter);
 
         try {
             $abuse->cleanup($abuseRetention);
