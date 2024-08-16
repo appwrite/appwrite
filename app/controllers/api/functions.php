@@ -165,7 +165,7 @@ App::post('/v1/functions')
     ->param('templateRepository', '', new Text(128, 0), 'Repository name of the template.', true)
     ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true)
     ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true)
-    ->param('templateBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function template.', true)
+    ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -175,7 +175,7 @@ App::post('/v1/functions')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
@@ -190,12 +190,12 @@ App::post('/v1/functions')
             !empty($templateRepository)
             && !empty($templateOwner)
             && !empty($templateRootDirectory)
-            && !empty($templateBranch)
+            && !empty($templateVersion)
         ) {
             $template->setAttribute('repositoryName', $templateRepository)
                 ->setAttribute('ownerName', $templateOwner)
                 ->setAttribute('rootDirectory', $templateRootDirectory)
-                ->setAttribute('branch', $templateBranch);
+                ->setAttribute('version', $templateVersion);
         }
 
         $installation = $dbForConsole->getDocument('installations', $installationId);
@@ -284,9 +284,34 @@ App::post('/v1/functions')
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
 
-        // Redeploy vcs logic
         if (!empty($providerRepositoryId)) {
+            // Deploy VCS
             $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
+        } elseif(!$template->isEmpty()) {
+            // Deploy non-VCS from template
+            $deploymentId = ID::unique();
+            $deployment = $dbForProject->createDocument('deployments', new Document([
+                '$id' => $deploymentId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'resourceId' => $function->getId(),
+                'resourceInternalId' => $function->getInternalId(),
+                'resourceType' => 'functions',
+                'entrypoint' => $function->getAttribute('entrypoint', ''),
+                'commands' => $function->getAttribute('commands', ''),
+                'type' => 'manual',
+                'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint', '')]),
+                'activate' => true,
+            ]));
+
+            $queueForBuilds
+                ->setType(BUILD_TYPE_DEPLOYMENT)
+                ->setResource($function)
+                ->setDeployment($deployment)
+                ->setTemplate($template);
         }
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
@@ -861,7 +886,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->groups(['api', 'functions'])
     ->desc('Download deployment')
     ->label('scope', 'functions.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getDeploymentDownload')
     ->label('sdk.description', '/docs/references/functions/get-deployment-download.md')
@@ -1080,9 +1105,9 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('deviceForFunctions')
     ->inject('deviceForLocal')
     ->inject('queueForBuilds')
-    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds) {
+    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds) {
 
-        $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
+        $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1180,7 +1205,6 @@ App::post('/v1/functions/:functionId/deployments')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
         }
 
-        $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
         $type = $request->getHeader('x-sdk-language') === 'cli' ? 'cli' : 'manual';
 
         if ($chunksUploaded === $chunks) {
