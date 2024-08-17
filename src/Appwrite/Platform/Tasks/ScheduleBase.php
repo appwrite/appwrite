@@ -63,7 +63,7 @@ abstract class ScheduleBase extends Action
             $function = null; /** for ScheduleExecutions */
 
             $project = $dbForConsole->getDocument('projects', $schedule->getAttribute('projectId'));
-            $projectDB = $getProjectDB($project);
+            $dbForProject = $getProjectDB($project);
 
             $collectionId = match ($schedule->getAttribute('resourceType')) {
                 'function' => 'functions',
@@ -71,7 +71,7 @@ abstract class ScheduleBase extends Action
                 'execution' => 'executions'
             };
 
-            $resource = $projectDB->getDocument(
+            $resource = $dbForProject->getDocument(
                 $collectionId,
                 $schedule->getAttribute('resourceId')
             );
@@ -80,7 +80,7 @@ abstract class ScheduleBase extends Action
              * Get the function this execution is a part of.
              */
             if ($collectionId === 'executions') {
-                $function = $projectDB->getDocument(
+                $function = $dbForProject->getDocument(
                     'functions',
                     $resource->getAttribute('functionId')
                 );
