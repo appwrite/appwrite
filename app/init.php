@@ -117,7 +117,7 @@ const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4314;
+const APP_CACHE_BUSTER = 4315;
 const APP_VERSION_STABLE = '1.6.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -172,7 +172,7 @@ const DELETE_TYPE_PROJECTS = 'projects';
 const DELETE_TYPE_FUNCTIONS = 'functions';
 const DELETE_TYPE_DEPLOYMENTS = 'deployments';
 const DELETE_TYPE_USERS = 'users';
-const DELETE_TYPE_TEAMS = 'teams';
+const DELETE_TYPE_TEAM_PROJECTS = 'teams_projects';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
@@ -243,6 +243,7 @@ const METRIC_BUILDS_STORAGE  = 'builds.storage';
 const METRIC_BUILDS_COMPUTE  = 'builds.compute';
 const METRIC_BUILDS_COMPUTE_SUCCESS  = 'builds.compute.success';
 const METRIC_BUILDS_COMPUTE_FAILED  = 'builds.compute.failed';
+const METRIC_BUILDS_MB_SECONDS = 'builds.mbSeconds';
 const METRIC_FUNCTION_ID_BUILDS  = '{functionInternalId}.builds';
 const METRIC_FUNCTION_ID_BUILDS_SUCCESS  = '{functionInternalId}.builds.success';
 const METRIC_FUNCTION_ID_BUILDS_FAILED  = '{functionInternalId}.builds.failed';
@@ -252,10 +253,13 @@ const METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS  = '{functionInternalId}.builds.
 const METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED  = '{functionInternalId}.builds.compute.failed';
 const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
 const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
+const METRIC_FUNCTION_ID_BUILDS_MB_SECONDS = '{functionInternalId}.builds.mbSeconds';
 const METRIC_EXECUTIONS  = 'executions';
 const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
+const METRIC_EXECUTIONS_MB_SECONDS = 'executions.mbSeconds';
 const METRIC_FUNCTION_ID_EXECUTIONS  = '{functionInternalId}.executions';
 const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE  = '{functionInternalId}.executions.compute';
+const METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS = '{functionInternalId}.executions.mbSeconds';
 const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
@@ -746,7 +750,7 @@ $register->set('logger', function () {
 
         $providerName = $loggingProvider->getScheme();
         $providerConfig = match ($providerName) {
-            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
+            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
             'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
             default => ['key' => $loggingProvider->getHost()],
         };

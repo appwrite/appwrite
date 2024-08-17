@@ -18,7 +18,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database as AbuseDatabase;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -380,7 +380,7 @@ App::init()
         foreach ($abuseKeyLabel as $abuseKey) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
-            $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
+            $timeLimit = new AbuseDatabase($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
             $timeLimit
                 ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())
@@ -508,7 +508,12 @@ App::init()
                     ->setContentType($cacheLog->getAttribute('mimeType'))
                     ->send($data);
             } else {
-                $response->addHeader('X-Appwrite-Cache', 'miss');
+                $response
+                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->addHeader('Expires', 0)
+                    ->addHeader('X-Appwrite-Cache', 'miss')
+                ;
             }
         }
     });

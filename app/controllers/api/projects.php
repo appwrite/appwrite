@@ -16,7 +16,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database as AbuseDatabase;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
@@ -59,6 +59,7 @@ App::init()
 App::post('/v1/projects')
     ->desc('Create project')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.create')
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
@@ -208,7 +209,7 @@ App::post('/v1/projects')
         $audit = new Audit($dbForProject);
         $audit->setup();
 
-        $abuse = new TimeLimit('', 0, 1, $dbForProject);
+        $abuse = new AbuseDatabase('', 0, 1, $dbForProject);
         $abuse->setup();
 
         /** @var array $collections */
@@ -902,6 +903,7 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
 App::delete('/v1/projects/:projectId')
     ->desc('Delete project')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.delete')
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
@@ -1433,6 +1435,7 @@ App::post('/v1/projects/:projectId/jwts')
 App::post('/v1/projects/:projectId/platforms')
     ->desc('Create platform')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'platforms.create')
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
@@ -1596,6 +1599,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
 App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete platform')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'platforms.delete')
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')

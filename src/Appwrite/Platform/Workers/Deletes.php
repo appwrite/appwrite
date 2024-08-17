@@ -7,7 +7,7 @@ use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database as AbuseDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -95,12 +95,6 @@ class Deletes extends Action
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
                         break;
-                    case DELETE_TYPE_TEAMS:
-                        $this->deleteMemberships($getProjectDB, $document, $project);
-                        if ($project->getId() === 'console') {
-                            $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $document);
-                        }
-                        break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
                         break;
@@ -114,6 +108,9 @@ class Deletes extends Action
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
                         break;
                 }
+                break;
+            case DELETE_TYPE_TEAM_PROJECTS:
+                $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $document);
                 break;
             case DELETE_TYPE_EXECUTIONS:
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
@@ -419,7 +416,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteMemberships(callable $getProjectDB, Document $document, Document $project): void
+    public function deleteMemberships(callable $getProjectDB, Document $document, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
         $teamInternalId = $document->getInternalId();
@@ -447,14 +444,21 @@ class Deletes extends Action
      * @throws Conflict
      * @throws Restricted
      * @throws Structure
+     * @throws Exception
      */
-    private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
+    private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, Document $document): void
     {
 
         $projects = $dbForConsole->find('projects', [
             Query::equal('teamInternalId', [$document->getInternalId()])
         ]);
+
         foreach ($projects as $project) {
+            $deviceForFiles = getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+            $deviceForFunctions = getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+            $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+            $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
+
             $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $project);
             $dbForConsole->deleteDocument('projects', $project->getId());
         }
@@ -489,7 +493,7 @@ class Deletes extends Action
         $projectCollectionIds = [
             ...\array_keys(Config::getParam('collections', [])['projects']),
             Audit::COLLECTION,
-            TimeLimit::COLLECTION,
+            AbuseDatabase::COLLECTION,
         ];
 
         $limit = \count($projectCollectionIds) + 25;
@@ -682,7 +686,7 @@ class Deletes extends Action
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
-        $timeLimit = new TimeLimit("", 0, 1, $dbForProject);
+        $timeLimit = new AbuseDatabase("", 0, 1, $dbForProject);
         $abuse = new Abuse($timeLimit);
 
         try {

@@ -13,7 +13,7 @@ use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database as AbuseDatabase;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -178,7 +178,6 @@ $logError = function (Throwable $error, string $action) use ($register) {
         $log->addExtra('file', $error->getFile());
         $log->addExtra('line', $error->getLine());
         $log->addExtra('trace', $error->getTraceAsString());
-        $log->addExtra('detailedTrace', $error->getTrace());
 
         $log->setAction($action);
 
@@ -381,8 +380,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $user = $database->getDocument('users', $userId);
 
                         $roles = Auth::getRoles($user);
+                        $channels = $realtime->connections[$connection]['channels'];
 
-                        $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
+                        $realtime->unsubscribe($connection);
+                        $realtime->subscribe($projectId, $connection, $roles, $channels);
 
                         $register->get('pools')->reclaim();
                     }
@@ -462,7 +463,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $dbForProject);
+        $timeLimit = new AbuseDatabase('url:{url},ip:{ip}', 128, 60, $dbForProject);
         $timeLimit
             ->setParam('{ip}', $request->getIP())
             ->setParam('{url}', $request->getURI());
@@ -562,7 +563,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $database);
+        $timeLimit = new AbuseDatabase('url:{url},connection:{connection}', 32, 60, $database);
 
         $timeLimit
             ->setParam('{connection}', $connection)

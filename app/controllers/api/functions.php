@@ -165,7 +165,7 @@ App::post('/v1/functions')
     ->param('templateRepository', '', new Text(128, 0), 'Repository name of the template.', true)
     ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true)
     ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true)
-    ->param('templateBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function template.', true)
+    ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -175,7 +175,7 @@ App::post('/v1/functions')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
@@ -190,12 +190,12 @@ App::post('/v1/functions')
             !empty($templateRepository)
             && !empty($templateOwner)
             && !empty($templateRootDirectory)
-            && !empty($templateBranch)
+            && !empty($templateVersion)
         ) {
             $template->setAttribute('repositoryName', $templateRepository)
                 ->setAttribute('ownerName', $templateOwner)
                 ->setAttribute('rootDirectory', $templateRootDirectory)
-                ->setAttribute('branch', $templateBranch);
+                ->setAttribute('version', $templateVersion);
         }
 
         $installation = $dbForConsole->getDocument('installations', $installationId);
@@ -284,9 +284,34 @@ App::post('/v1/functions')
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
 
-        // Redeploy vcs logic
         if (!empty($providerRepositoryId)) {
+            // Deploy VCS
             $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
+        } elseif(!$template->isEmpty()) {
+            // Deploy non-VCS from template
+            $deploymentId = ID::unique();
+            $deployment = $dbForProject->createDocument('deployments', new Document([
+                '$id' => $deploymentId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'resourceId' => $function->getId(),
+                'resourceInternalId' => $function->getInternalId(),
+                'resourceType' => 'functions',
+                'entrypoint' => $function->getAttribute('entrypoint', ''),
+                'commands' => $function->getAttribute('commands', ''),
+                'type' => 'manual',
+                'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint', '')]),
+                'activate' => true,
+            ]));
+
+            $queueForBuilds
+                ->setType(BUILD_TYPE_DEPLOYMENT)
+                ->setResource($function)
+                ->setDeployment($deployment)
+                ->setTemplate($template);
         }
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
@@ -506,6 +531,8 @@ App::get('/v1/functions/:functionId/usage')
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE),
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS),
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS)
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -568,6 +595,10 @@ App::get('/v1/functions/:functionId/usage')
             'buildsTime' => $usage[$metrics[4]]['data'],
             'executions' => $usage[$metrics[5]]['data'],
             'executionsTime' => $usage[$metrics[6]]['data'],
+            'buildsMbSecondsTotal' => $usage[$metrics[7]]['total'],
+            'buildsMbSeconds' => $usage[$metrics[7]]['data'],
+            'executionsMbSeconds' => $usage[$metrics[8]]['data'],
+            'executionsMbSecondsTotal' => $usage[$metrics[8]]['total']
         ]), Response::MODEL_USAGE_FUNCTION);
     });
 
@@ -598,6 +629,8 @@ App::get('/v1/functions/usage')
             METRIC_BUILDS_COMPUTE,
             METRIC_EXECUTIONS,
             METRIC_EXECUTIONS_COMPUTE,
+            METRIC_BUILDS_MB_SECONDS,
+            METRIC_EXECUTIONS_MB_SECONDS,
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -661,6 +694,10 @@ App::get('/v1/functions/usage')
             'buildsTime' => $usage[$metrics[5]]['data'],
             'executions' => $usage[$metrics[6]]['data'],
             'executionsTime' => $usage[$metrics[7]]['data'],
+            'buildsMbSecondsTotal' => $usage[$metrics[8]]['total'],
+            'buildsMbSeconds' => $usage[$metrics[8]]['data'],
+            'executionsMbSeconds' => $usage[$metrics[9]]['data'],
+            'executionsMbSecondsTotal' => $usage[$metrics[9]]['total'],
         ]), Response::MODEL_USAGE_FUNCTIONS);
     });
 
@@ -847,9 +884,9 @@ App::put('/v1/functions/:functionId')
 
 App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->groups(['api', 'functions'])
-    ->desc('Download Deployment')
+    ->desc('Download deployment')
     ->label('scope', 'functions.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getDeploymentDownload')
     ->label('sdk.description', '/docs/references/functions/get-deployment-download.md')
@@ -932,7 +969,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
 
 App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Update function deployment')
+    ->desc('Update deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
@@ -1068,9 +1105,9 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('deviceForFunctions')
     ->inject('deviceForLocal')
     ->inject('queueForBuilds')
-    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds) {
+    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds) {
 
-        $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
+        $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1168,7 +1205,6 @@ App::post('/v1/functions/:functionId/deployments')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
         }
 
-        $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
         $type = $request->getHeader('x-sdk-language') === 'cli' ? 'cli' : 'manual';
 
         if ($chunksUploaded === $chunks) {
@@ -1599,15 +1635,16 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.method', 'createExecution')
     ->label('sdk.description', '/docs/references/functions/create-execution.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_MULTIPART)
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
+    ->label('sdk.request.type', Response::CONTENT_TYPE_MULTIPART)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
-    ->param('headers', [], new AnyOf([new Text(65535), new Assoc()], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
-    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
+    ->param('scheduledAt', null, new DatetimeValidator(true, DateTimeValidator::PRECISION_MINUTES, 60), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
     ->inject('response')
     ->inject('request')
     ->inject('project')
@@ -1931,6 +1968,8 @@ App::post('/v1/functions/:functionId/executions')
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(512 * $execution->getAttribute('duration', 0)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(512 * $execution->getAttribute('duration', 0)))
             ;
 
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
@@ -2407,6 +2446,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     });
 
 App::get('/v1/functions/templates')
+    ->groups(['api'])
     ->desc('List function templates')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'functions')

@@ -207,7 +207,65 @@ class Builds extends Action
         }
 
         try {
-            if ($isNewBuild && $isVcsEnabled) {
+            if($isNewBuild && !$isVcsEnabled) {
+                // Non-vcs+Template
+
+                $templateRepositoryName = $template->getAttribute('repositoryName', '');
+                $templateOwnerName = $template->getAttribute('ownerName', '');
+                $templateVersion = $template->getAttribute('version', '');
+
+                $templateRootDirectory = $template->getAttribute('rootDirectory', '');
+                $templateRootDirectory = \rtrim($templateRootDirectory, '/');
+                $templateRootDirectory = \ltrim($templateRootDirectory, '.');
+                $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+
+                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateVersion)) {
+                    $stdout = '';
+                    $stderr = '';
+
+                    // Clone template repo
+                    $tmpTemplateDirectory = '/tmp/builds/' . $buildId . '-template';
+                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateVersion, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
+                    $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
+
+                    if ($exit !== 0) {
+                        throw new \Exception('Unable to clone code repository: ' . $stderr);
+                    }
+
+                    // Ensure directories
+                    Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
+
+                    $tmpPathFile = $tmpTemplateDirectory . '/code.tar.gz';
+
+                    $localDevice = new Local();
+
+                    if (substr($tmpTemplateDirectory, -1) !== '/') {
+                        $tmpTemplateDirectory .= '/';
+                    }
+
+                    $directorySize = $localDevice->getDirectorySize($tmpTemplateDirectory);
+                    $functionsSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
+                    if ($directorySize > $functionsSizeLimit) {
+                        throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
+                    }
+
+                    $tarParamDirectory = \escapeshellarg('/tmp/builds/' . $buildId . '-template' . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory));
+                    Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
+
+                    $source = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                    $result = $localDevice->transfer($tmpPathFile, $source, $deviceForFunctions);
+
+                    if (!$result) {
+                        throw new \Exception("Unable to move file");
+                    }
+
+                    Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
+
+                    $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source));
+                }
+            } elseif ($isNewBuild && $isVcsEnabled) {
+                // VCS and VCS+Temaplte
                 $tmpDirectory = '/tmp/builds/' . $buildId . '/code';
                 $rootDirectory = $function->getAttribute('providerRootDirectory', '');
                 $rootDirectory = \rtrim($rootDirectory, '/');
@@ -222,11 +280,19 @@ class Builds extends Action
 
                 $branchName = $deployment->getAttribute('providerBranch');
                 $commitHash = $deployment->getAttribute('providerCommitHash', '');
-                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory . '/*', $commitHash);
 
+                $cloneVersion = $branchName;
+                $cloneType = GitHub::CLONE_TYPE_BRANCH;
+                if(!empty($commitHash)) {
+                    $cloneVersion = $commitHash;
+                    $cloneType = GitHub::CLONE_TYPE_COMMIT;
+                }
+
+                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $cloneVersion, $cloneType, $tmpDirectory, $rootDirectory);
                 $stdout = '';
                 $stderr = '';
-                Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
+
+                Console::execute('mkdir -p ' . \escapeshellarg('/tmp/builds/' . $buildId), '', $stdout, $stderr);
 
                 if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
                     Console::info('Build has been canceled');
@@ -256,17 +322,18 @@ class Builds extends Action
                 // Build from template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
                 $templateOwnerName = $template->getAttribute('ownerName', '');
-                $templateBranch = $template->getAttribute('branch', '');
+                $templateVersion = $template->getAttribute('version', '');
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
                 $templateRootDirectory = \rtrim($templateRootDirectory, '/');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '.');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '/');
 
-                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateBranch)) {
+                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateVersion)) {
                     // Clone template repo
-                    $tmpTemplateDirectory = '/tmp/builds/' . \escapeshellcmd($buildId) . '/template';
-                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, $tmpTemplateDirectory, $templateRootDirectory);
+                    $tmpTemplateDirectory = '/tmp/builds/' . $buildId . '/template';
+
+                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateVersion, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
@@ -274,20 +341,20 @@ class Builds extends Action
                     }
 
                     // Ensure directories
-                    Console::execute('mkdir -p ' . $tmpTemplateDirectory . '/' . $templateRootDirectory, '', $stdout, $stderr);
-                    Console::execute('mkdir -p ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
+                    Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
+                    Console::execute('mkdir -p ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
 
                     // Merge template into user repo
-                    Console::execute('rsync -av --exclude \'.git\' ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/ ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
+                    Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . \escapeshellcmd($function->getAttribute('name', '')) . '\' function" && git push origin ' . \escapeshellcmd($branchName), '', $stdout, $stderr);
+                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . \escapeshellarg($tmpDirectory) . ' && git add . && git commit -m "Create ' . \escapeshellarg($function->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to push code repository: ' . $stderr);
                     }
 
-                    $exit = Console::execute('cd ' . $tmpDirectory . ' && git rev-parse HEAD', '', $stdout, $stderr);
+                    $exit = Console::execute('cd ' . \escapeshellarg($tmpDirectory) . ' && git rev-parse HEAD', '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to get vcs commit SHA: ' . $stderr);
@@ -321,7 +388,7 @@ class Builds extends Action
                     );
                 }
 
-                $tmpPath = '/tmp/builds/' . \escapeshellcmd($buildId);
+                $tmpPath = '/tmp/builds/' . $buildId;
                 $tmpPathFile = $tmpPath . '/code.tar.gz';
                 $localDevice = new Local();
 
@@ -335,18 +402,17 @@ class Builds extends Action
                     throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
                 }
 
-                Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
+                $tarParamDirectory = '/tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory);
+                Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
 
-                $path = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-                $result = $localDevice->transfer($tmpPathFile, $path, $deviceForFunctions);
+                $source = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                $result = $localDevice->transfer($tmpPathFile, $source, $deviceForFunctions);
 
                 if (!$result) {
                     throw new \Exception("Unable to move file");
                 }
 
-                Console::execute('rm -rf ' . $tmpPath, '', $stdout, $stderr);
-
-                $source = $path;
+                Console::execute('rm -rf ' . \escapeshellarg($tmpPath), '', $stdout, $stderr);
 
                 $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source));
@@ -620,9 +686,11 @@ class Builds extends Action
                 ->addMetric(METRIC_BUILDS, 1) // per project
                 ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
                 ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+                ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(512 * $build->getAttribute('duration', 0)))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(512 * $build->getAttribute('duration', 0)))
                 ->setProject($project)
                 ->trigger();
         }

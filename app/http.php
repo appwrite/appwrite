@@ -9,7 +9,7 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Http\Server;
 use Swoole\Process;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database as AbuseDatabase;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
@@ -101,8 +101,8 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             $audit->setup();
         }
 
-        if ($dbForConsole->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
-            $adapter = new TimeLimit("", 0, 1, $dbForConsole);
+        if ($dbForConsole->getCollection(AbuseDatabase::COLLECTION)->isEmpty()) {
+            $adapter = new AbuseDatabase("", 0, 1, $dbForConsole);
             $adapter->setup();
         }
 
@@ -290,7 +290,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $log->addExtra('file', $th->getFile());
             $log->addExtra('line', $th->getLine());
             $log->addExtra('trace', $th->getTraceAsString());
-            $log->addExtra('detailedTrace', $th->getTrace());
             $log->addExtra('roles', Authorization::getRoles());
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
