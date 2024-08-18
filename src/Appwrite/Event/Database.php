@@ -116,7 +116,7 @@ class Database extends Event
         }
 
         $this->setQueue($dsn->getHost());
-
+        var_dump('** setting Database queue to : ' . $dsn->getHost());
         $client = new Client($this->queue, $this->connection);
 
         try {
