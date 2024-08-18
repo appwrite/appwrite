@@ -11,4 +11,4 @@ const result = await projects.list(
     '<SEARCH>' // search (optional)
 );
 
-console.log(response);
+console.log(result);

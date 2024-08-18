@@ -12,4 +12,4 @@ const result = await databases.deleteDocument(
     '<DOCUMENT_ID>' // documentId
 );
 
-console.log(response);
+console.log(result);

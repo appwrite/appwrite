@@ -11,4 +11,4 @@ const result = await health.getQueueDatabases(
     null // threshold (optional)
 );
 
-console.log(response);
+console.log(result);

@@ -22,4 +22,4 @@ const result = await projects.create(
     '<LEGAL_TAX_ID>' // legalTaxId (optional)
 );
 
-console.log(response);
+console.log(result);

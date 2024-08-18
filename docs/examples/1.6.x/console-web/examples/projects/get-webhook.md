@@ -11,4 +11,4 @@ const result = await projects.getWebhook(
     '<WEBHOOK_ID>' // webhookId
 );
 
-console.log(response);
+console.log(result);

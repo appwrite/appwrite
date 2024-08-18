@@ -10,4 +10,4 @@ const result = await messaging.delete(
     '<MESSAGE_ID>' // messageId
 );
 
-console.log(response);
+console.log(result);

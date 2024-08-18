@@ -8,4 +8,4 @@ const functions = new Functions(client);
 
 const result = await functions.listRuntimes();
 
-console.log(response);
+console.log(result);

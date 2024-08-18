@@ -8,4 +8,4 @@ const account = new Account(client);
 
 const result = await account.deleteSessions();
 
-console.log(response);
+console.log(result);

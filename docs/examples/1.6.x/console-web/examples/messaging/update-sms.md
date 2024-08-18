@@ -16,4 +16,4 @@ const result = await messaging.updateSms(
     '' // scheduledAt (optional)
 );
 
-console.log(response);
+console.log(result);

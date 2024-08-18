@@ -14,4 +14,4 @@ const result = await projects.updateOAuth2(
     false // enabled (optional)
 );
 
-console.log(response);
+console.log(result);

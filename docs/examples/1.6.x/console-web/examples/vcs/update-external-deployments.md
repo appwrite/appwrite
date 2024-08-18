@@ -12,4 +12,4 @@ const result = await vcs.updateExternalDeployments(
     '<PROVIDER_PULL_REQUEST_ID>' // providerPullRequestId
 );
 
-console.log(response);
+console.log(result);

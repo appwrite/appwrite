@@ -11,4 +11,4 @@ const result = await health.getFailedJobs(
     null // threshold (optional)
 );
 
-console.log(response);
+console.log(result);

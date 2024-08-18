@@ -12,4 +12,4 @@ const result = await messaging.listSubscribers(
     '<SEARCH>' // search (optional)
 );
 
-console.log(response);
+console.log(result);

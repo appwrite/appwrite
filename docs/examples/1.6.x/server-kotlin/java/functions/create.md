@@ -31,7 +31,7 @@ functions.create(
     "<TEMPLATE_REPOSITORY>", // templateRepository (optional)
     "<TEMPLATE_OWNER>", // templateOwner (optional)
     "<TEMPLATE_ROOT_DIRECTORY>", // templateRootDirectory (optional)
-    "<TEMPLATE_BRANCH>", // templateBranch (optional)
+    "<TEMPLATE_VERSION>", // templateVersion (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

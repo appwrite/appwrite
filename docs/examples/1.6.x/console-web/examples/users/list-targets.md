@@ -11,4 +11,4 @@ const result = await users.listTargets(
     [] // queries (optional)
 );
 
-console.log(response);
+console.log(result);

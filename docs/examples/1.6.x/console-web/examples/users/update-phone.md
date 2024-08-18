@@ -11,4 +11,4 @@ const result = await users.updatePhone(
     '+12065550100' // number
 );
 
-console.log(response);
+console.log(result);

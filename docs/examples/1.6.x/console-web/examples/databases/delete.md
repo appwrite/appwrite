@@ -10,4 +10,4 @@ const result = await databases.delete(
     '<DATABASE_ID>' // databaseId
 );
 
-console.log(response);
+console.log(result);

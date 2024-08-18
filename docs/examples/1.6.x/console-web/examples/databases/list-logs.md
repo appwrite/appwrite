@@ -11,4 +11,4 @@ const result = await databases.listLogs(
     [] // queries (optional)
 );
 
-console.log(response);
+console.log(result);

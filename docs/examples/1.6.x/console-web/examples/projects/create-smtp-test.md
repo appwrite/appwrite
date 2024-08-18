@@ -19,4 +19,4 @@ const result = await projects.createSmtpTest(
     SMTPSecure.Tls // secure (optional)
 );
 
-console.log(response);
+console.log(result);

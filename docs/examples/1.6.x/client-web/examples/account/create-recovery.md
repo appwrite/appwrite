@@ -11,4 +11,4 @@ const result = await account.createRecovery(
     'https://example.com' // url
 );
 
-console.log(response);
+console.log(result);

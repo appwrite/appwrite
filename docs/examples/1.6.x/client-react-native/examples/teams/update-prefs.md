@@ -11,4 +11,4 @@ const result = await teams.updatePrefs(
     {} // prefs
 );
 
-console.log(response);
+console.log(result);

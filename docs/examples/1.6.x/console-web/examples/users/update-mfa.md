@@ -11,4 +11,4 @@ const result = await users.updateMfa(
     false // mfa
 );
 
-console.log(response);
+console.log(result);

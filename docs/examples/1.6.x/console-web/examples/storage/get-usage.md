@@ -10,4 +10,4 @@ const result = await storage.getUsage(
     StorageUsageRange.TwentyFourHours // range (optional)
 );
 
-console.log(response);
+console.log(result);

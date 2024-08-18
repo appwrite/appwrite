@@ -15,4 +15,4 @@ const result = await databases.createBooleanAttribute(
     false // array (optional)
 );
 
-console.log(response);
+console.log(result);

@@ -12,4 +12,4 @@ const result = await proxy.createRule(
     '<RESOURCE_ID>' // resourceId (optional)
 );
 
-console.log(response);
+console.log(result);

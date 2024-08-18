@@ -11,4 +11,4 @@ const result = await users.updateEmail(
     'email@example.com' // email
 );
 
-console.log(response);
+console.log(result);

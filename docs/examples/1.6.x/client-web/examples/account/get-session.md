@@ -10,4 +10,4 @@ const result = await account.getSession(
     '<SESSION_ID>' // sessionId
 );
 
-console.log(response);
+console.log(result);

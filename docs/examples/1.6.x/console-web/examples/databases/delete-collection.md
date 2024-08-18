@@ -11,4 +11,4 @@ const result = await databases.deleteCollection(
     '<COLLECTION_ID>' // collectionId
 );
 
-console.log(response);
+console.log(result);

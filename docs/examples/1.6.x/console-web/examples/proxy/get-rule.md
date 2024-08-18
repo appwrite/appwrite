@@ -10,4 +10,4 @@ const result = await proxy.getRule(
     '<RULE_ID>' // ruleId
 );
 
-console.log(response);
+console.log(result);

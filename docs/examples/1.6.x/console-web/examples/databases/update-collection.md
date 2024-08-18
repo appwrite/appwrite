@@ -15,4 +15,4 @@ const result = await databases.updateCollection(
     false // enabled (optional)
 );
 
-console.log(response);
+console.log(result);

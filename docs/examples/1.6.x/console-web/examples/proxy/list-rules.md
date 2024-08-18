@@ -11,4 +11,4 @@ const result = await proxy.listRules(
     '<SEARCH>' // search (optional)
 );
 
-console.log(response);
+console.log(result);

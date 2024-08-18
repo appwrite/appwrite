@@ -11,4 +11,4 @@ const result = await teams.updateName(
     '<NAME>' // name
 );
 
-console.log(response);
+console.log(result);

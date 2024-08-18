@@ -11,4 +11,4 @@ const result = await account.updatePhoneSession(
     '<SECRET>' // secret
 );
 
-console.log(response);
+console.log(result);

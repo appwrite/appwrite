@@ -17,4 +17,4 @@ const result = await messaging.createSendgridProvider(
     false // enabled (optional)
 );
 
-console.log(response);
+console.log(result);

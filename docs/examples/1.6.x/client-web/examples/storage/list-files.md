@@ -12,4 +12,4 @@ const result = await storage.listFiles(
     '<SEARCH>' // search (optional)
 );
 
-console.log(response);
+console.log(result);

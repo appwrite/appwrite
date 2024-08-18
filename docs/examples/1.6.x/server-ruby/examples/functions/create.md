@@ -31,5 +31,5 @@ result = functions.create(
     template_repository: '<TEMPLATE_REPOSITORY>', # optional
     template_owner: '<TEMPLATE_OWNER>', # optional
     template_root_directory: '<TEMPLATE_ROOT_DIRECTORY>', # optional
-    template_branch: '<TEMPLATE_BRANCH>' # optional
+    template_version: '<TEMPLATE_VERSION>' # optional
 )

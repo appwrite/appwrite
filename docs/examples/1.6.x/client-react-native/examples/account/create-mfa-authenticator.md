@@ -10,4 +10,4 @@ const result = await account.createMfaAuthenticator(
     AuthenticatorType.Totp // type
 );
 
-console.log(response);
+console.log(result);

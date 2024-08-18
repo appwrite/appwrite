@@ -15,4 +15,4 @@ const result = await projects.updatePlatform(
     '' // hostname (optional)
 );
 
-console.log(response);
+console.log(result);

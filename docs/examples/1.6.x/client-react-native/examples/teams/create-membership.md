@@ -16,4 +16,4 @@ const result = await teams.createMembership(
     '<NAME>' // name (optional)
 );
 
-console.log(response);
+console.log(result);

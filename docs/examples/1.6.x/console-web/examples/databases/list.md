@@ -11,4 +11,4 @@ const result = await databases.list(
     '<SEARCH>' // search (optional)
 );
 
-console.log(response);
+console.log(result);

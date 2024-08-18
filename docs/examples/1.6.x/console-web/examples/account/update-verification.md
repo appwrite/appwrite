@@ -11,4 +11,4 @@ const result = await account.updateVerification(
     '<SECRET>' // secret
 );
 
-console.log(response);
+console.log(result);

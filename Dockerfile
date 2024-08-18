@@ -28,6 +28,9 @@ RUN \
     apk add boost boost-dev; \
   fi
 
+RUN apk add git openssh-client
+RUN git config --global user.email "christyjacob4@gmail.com"
+
 WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor

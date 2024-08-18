@@ -8,6 +8,5 @@ const client = new sdk.Client()
 const account = new sdk.Account(client);
 
 const result = await account.deleteMfaAuthenticator(
-    sdk.AuthenticatorType.Totp, // type
-    '<OTP>' // otp
+    sdk.AuthenticatorType.Totp // type
 );

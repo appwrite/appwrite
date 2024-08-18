@@ -11,4 +11,4 @@ const result = await projects.getKey(
     '<KEY_ID>' // keyId
 );
 
-console.log(response);
+console.log(result);

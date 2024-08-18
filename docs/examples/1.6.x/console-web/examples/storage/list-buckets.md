@@ -11,4 +11,4 @@ const result = await storage.listBuckets(
     '<SEARCH>' // search (optional)
 );
 
-console.log(response);
+console.log(result);

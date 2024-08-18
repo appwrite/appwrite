@@ -10,4 +10,4 @@ const result = await account.listLogs(
     [] // queries (optional)
 );
 
-console.log(response);
+console.log(result);

@@ -11,4 +11,4 @@ const result = await users.updateEmailVerification(
     false // emailVerification
 );
 
-console.log(response);
+console.log(result);

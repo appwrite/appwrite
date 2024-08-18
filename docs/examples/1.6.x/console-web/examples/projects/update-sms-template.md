@@ -13,4 +13,4 @@ const result = await projects.updateSmsTemplate(
     '<MESSAGE>' // message
 );
 
-console.log(response);
+console.log(result);

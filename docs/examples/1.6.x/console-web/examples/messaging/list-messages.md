@@ -11,4 +11,4 @@ const result = await messaging.listMessages(
     '<SEARCH>' // search (optional)
 );
 
-console.log(response);
+console.log(result);

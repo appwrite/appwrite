@@ -11,4 +11,4 @@ const result = await users.updatePassword(
     '' // password
 );
 
-console.log(response);
+console.log(result);

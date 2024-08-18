@@ -10,4 +10,4 @@ const result = await account.deletePushTarget(
     '<TARGET_ID>' // targetId
 );
 
-console.log(response);
+console.log(result);

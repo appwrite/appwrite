@@ -13,4 +13,4 @@ const result = await functions.updateVariable(
     '<VALUE>' // value (optional)
 );
 
-console.log(response);
+console.log(result);

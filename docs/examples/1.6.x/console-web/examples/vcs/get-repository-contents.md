@@ -12,4 +12,4 @@ const result = await vcs.getRepositoryContents(
     '<PROVIDER_ROOT_DIRECTORY>' // providerRootDirectory (optional)
 );
 
-console.log(response);
+console.log(result);

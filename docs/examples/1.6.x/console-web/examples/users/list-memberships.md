@@ -10,4 +10,4 @@ const result = await users.listMemberships(
     '<USER_ID>' // userId
 );
 
-console.log(response);
+console.log(result);

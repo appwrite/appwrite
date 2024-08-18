@@ -11,4 +11,4 @@ const result = await functions.getFunctionUsage(
     FunctionUsageRange.TwentyFourHours // range (optional)
 );
 
-console.log(response);
+console.log(result);

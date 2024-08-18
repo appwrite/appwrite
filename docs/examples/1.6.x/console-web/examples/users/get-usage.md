@@ -10,4 +10,4 @@ const result = await users.getUsage(
     UserUsageRange.TwentyFourHours // range (optional)
 );
 
-console.log(response);
+console.log(result);

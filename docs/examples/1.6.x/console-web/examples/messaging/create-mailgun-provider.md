@@ -19,4 +19,4 @@ const result = await messaging.createMailgunProvider(
     false // enabled (optional)
 );
 
-console.log(response);
+console.log(result);

@@ -10,4 +10,4 @@ const result = await functions.get(
     '<FUNCTION_ID>' // functionId
 );
 
-console.log(response);
+console.log(result);

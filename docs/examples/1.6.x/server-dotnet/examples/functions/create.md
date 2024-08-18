@@ -31,5 +31,5 @@ Function result = await functions.Create(
     templateRepository: "<TEMPLATE_REPOSITORY>", // optional
     templateOwner: "<TEMPLATE_OWNER>", // optional
     templateRootDirectory: "<TEMPLATE_ROOT_DIRECTORY>", // optional
-    templateBranch: "<TEMPLATE_BRANCH>" // optional
+    templateVersion: "<TEMPLATE_VERSION>" // optional
 );

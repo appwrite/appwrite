@@ -14,4 +14,4 @@ const result = await databases.updateStringAttribute(
     '<DEFAULT>' // default
 );
 
-console.log(response);
+console.log(result);

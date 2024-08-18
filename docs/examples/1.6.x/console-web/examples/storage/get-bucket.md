@@ -10,4 +10,4 @@ const result = await storage.getBucket(
     '<BUCKET_ID>' // bucketId
 );
 
-console.log(response);
+console.log(result);

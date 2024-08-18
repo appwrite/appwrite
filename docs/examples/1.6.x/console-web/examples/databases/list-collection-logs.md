@@ -12,4 +12,4 @@ const result = await databases.listCollectionLogs(
     [] // queries (optional)
 );
 
-console.log(response);
+console.log(result);
