@@ -38,6 +38,7 @@ class V18 extends Filter
     protected function parseFunction(array $content)
     {
         unset($content['scopes']);
+        unset($content['specification']);
         return $content;
     }
 
