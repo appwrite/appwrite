@@ -3527,41 +3527,41 @@ App::patch('/v1/account/mfa')
 
             $subject = $locale->getText("emails.{$type}.subject");
             $customTemplate = $project->getAttribute('templates', [])["email.{$type}-" . $locale->default] ?? [];
-        
+
             // Appwrite Theming for Console
             if ($project->getInternalId() === 'console') {
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl');
                 $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-altered.tpl');
-        
+
                 $body
                     ->setParam('{{buttonText}}', $locale->getText("emails.{$type}.buttonText"))
                     ->setParam('{{redirect}}', $redirect)
                     ->setParam('{{body}}', $locale->getText("emails.{$type}.body"), escapeHtml: false)
                     ->setParam('{{project}}', $project->getAttribute('name'))
                     ->setParam('{{user}}', $user->getAttribute('name'));
-        
+
                 $message->setParam('{{body}}', $body->render(), escapeHtml: false);
             } else {
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
-        
+
                 $message->setParam('{{body}}', $locale->getText("emails.{$type}.body"), escapeHtml: false);
             }
-        
+
             $message
                 ->setParam('{{hello}}', $locale->getText("emails.{$type}.hello"))
                 ->setParam('{{footer}}', $locale->getText("emails.{$type}.footer"))
                 ->setParam('{{thanks}}', $locale->getText("emails.{$type}.thanks"))
                 ->setParam('{{signature}}', $locale->getText("emails.{$type}.signature"));
-        
+
             $body = $message->render();
-        
+
             $smtp = $project->getAttribute('smtp', []);
             $smtpEnabled = $smtp['enabled'] ?? false;
-        
+
             $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
             $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
             $replyTo = "";
-        
+
             if ($smtpEnabled) {
                 if (!empty($smtp['senderEmail'])) {
                     $senderEmail = $smtp['senderEmail'];
@@ -3572,14 +3572,14 @@ App::patch('/v1/account/mfa')
                 if (!empty($smtp['replyTo'])) {
                     $replyTo = $smtp['replyTo'];
                 }
-        
+
                 $queueForMails
                     ->setSmtpHost($smtp['host'] ?? '')
                     ->setSmtpPort($smtp['port'] ?? '')
                     ->setSmtpUsername($smtp['username'] ?? '')
                     ->setSmtpPassword($smtp['password'] ?? '')
                     ->setSmtpSecure($smtp['secure'] ?? '');
-        
+
                 if (!empty($customTemplate)) {
                     if (!empty($customTemplate['senderEmail'])) {
                         $senderEmail = $customTemplate['senderEmail'];
@@ -3590,24 +3590,24 @@ App::patch('/v1/account/mfa')
                     if (!empty($customTemplate['replyTo'])) {
                         $replyTo = $customTemplate['replyTo'];
                     }
-        
+
                     $body = $customTemplate['message'] ?? '';
                     $subject = $customTemplate['subject'] ?? $subject;
                 }
-        
+
                 $queueForMails
                     ->setSmtpReplyTo($replyTo ?? '')
                     ->setSmtpSenderEmail($senderEmail ?? '')
                     ->setSmtpSenderName($senderName ?? '');
             }
-        
+
             $emailVariables = [
                 'owner' => $user->getAttribute('name'),
                 'direction' => $locale->getText('settings.direction'),
                 'user' => $user->getAttribute('name'),
                 'project' => $project->getAttribute('name')
             ];
-        
+
             $queueForMails
                 ->setSubject($subject)
                 ->setBody($body)
