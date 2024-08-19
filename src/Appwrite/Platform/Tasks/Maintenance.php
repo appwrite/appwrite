@@ -67,6 +67,8 @@ class Maintenance extends Action implements Projects
 
     public function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly): void
     {
+        Console::info("Appwrite notifyProjects");
+
         $this->notifyDeleteExecutionLogs($queueForDeletes);
         $this->notifyDeleteAbuseLogs($queueForDeletes);
         $this->notifyDeleteAuditLogs($queueForDeletes);
