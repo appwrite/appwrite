@@ -149,16 +149,6 @@ class V21 extends Migration
                         Console::warning("'scheduleId' from {$id}: {$th->getMessage()}");
                     }
                     break;
-                case 'files':
-                    try {
-                        /**
-                         * Increase metadata size to 7500
-                         */
-                        $this->projectDB->updateAttribute($id, 'metadata', size: 75000);
-                    } catch (\Throwable $th) {
-                        Console::warning("'metadata' from {$id}: {$th->getMessage()}");
-                    }
-                    break;
             }
 
             usleep(50000);
@@ -205,7 +195,7 @@ class V21 extends Migration
             $bucketId = 'bucket_' . $bucket['$internalId'];
 
             try {
-                $this->projectDB->updateAttribute($bucketId, 'metadata', size: 75000);
+                $this->projectDB->updateAttribute($bucketId, 'metadata', size: 65000);
                 $this->projectDB->purgeCachedCollection($bucketId);
             } catch (\Throwable $th) {
                 Console::warning("'bucketId' from {$bucketId}: {$th->getMessage()}");
