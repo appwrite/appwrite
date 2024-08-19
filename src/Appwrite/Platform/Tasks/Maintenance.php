@@ -12,12 +12,12 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 
-//interface Projects
-//{
-//    public function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly);
-//}
+interface Iprojects
+{
+    public function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly);
+}
 
-class Maintenance extends Action
+class Maintenance extends Action implements Iprojects
 {
     public static function getName(): string
     {
@@ -51,16 +51,12 @@ class Maintenance extends Action
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
-            var_dump('shmuel 1');
             $this->foreachProject($dbForConsole, function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
                 $queueForDeletes->setProject($project);
 
-                var_dump('shmuel 2');
                 $this->notifyProjects($queueForDeletes, $usageStatsRetentionHourly);
-                var_dump('shmuel 3');
             });
 
-            var_dump('shmuel 4');
             $this->notifyDeleteConnections($queueForDeletes);
             $this->renewCertificates($dbForConsole, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
@@ -82,9 +78,6 @@ class Maintenance extends Action
 
     protected function foreachProject(Database $dbForConsole, callable $callback): void
     {
-
-        var_dump('shmuel 22');
-
         // TODO: @Meldiron name of this method no longer matches. It does not delete, and it gives whole document
         $count = 0;
         $chunk = 0;
@@ -93,14 +86,12 @@ class Maintenance extends Action
         $executionStart = \microtime(true);
 
         while ($sum === $limit) {
-            var_dump('shmuel 33');
             $projects = $dbForConsole->find('projects', [Query::limit($limit), Query::offset($chunk * $limit)]);
 
             $chunk++;
 
             /** @var string[] $projectIds */
             $sum = count($projects);
-            var_dump('shmuel 44');
             foreach ($projects as $project) {
                 $callback($project);
                 $count++;
