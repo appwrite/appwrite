@@ -12,5 +12,7 @@ return function ($context) {
         ->setProject(getenv('APPWRITE_FUNCTION_PROJECT_ID'))
         ->setKey($context->req->headers['x-appwrite-key']);
     $users = new Users($client);
-    return $context->res->json($users->list());
+    $response = $users->list();
+    $context->log($response);
+    return $context->res->json($response);
 };
