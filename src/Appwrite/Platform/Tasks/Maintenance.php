@@ -12,7 +12,12 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 
-class Maintenance extends Action
+interface Projects
+{
+    public function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly);
+}
+
+class Maintenance extends Action implements Projects
 {
     public static function getName(): string
     {
@@ -60,7 +65,7 @@ class Maintenance extends Action
         }, $interval, $delay);
     }
 
-    protected function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly): void
+    public function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly): void
     {
         $this->notifyDeleteExecutionLogs($queueForDeletes);
         $this->notifyDeleteAbuseLogs($queueForDeletes);
@@ -187,5 +192,15 @@ class Maintenance extends Action
         $queueForDeletes
             ->setType(DELETE_TYPE_EXPIRED_TARGETS)
             ->trigger();
+    }
+
+    public function setVariable($name, $var)
+    {
+        // TODO: Implement setVariable() method.
+    }
+
+    public function getHtml($template)
+    {
+        // TODO: Implement getHtml() method.
     }
 }
