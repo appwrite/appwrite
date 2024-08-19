@@ -262,7 +262,7 @@ class Builds extends Action
                     Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
 
                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source));
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
                 }
             } elseif ($isNewBuild && $isVcsEnabled) {
                 // VCS and VCS+Temaplte

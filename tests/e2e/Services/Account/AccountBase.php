@@ -13,6 +13,7 @@ trait AccountBase
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
         $name = 'User Name';
+        \var_dump($email);
 
         /**
          * Test for SUCCESS
