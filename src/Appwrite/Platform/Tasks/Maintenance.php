@@ -49,11 +49,7 @@ class Maintenance extends Action
             $this->foreachProject($dbForConsole, function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
                 $queueForDeletes->setProject($project);
 
-                $this->notifyDeleteExecutionLogs($queueForDeletes);
-                $this->notifyDeleteAbuseLogs($queueForDeletes);
-                $this->notifyDeleteAuditLogs($queueForDeletes);
-                $this->notifyDeleteUsageStats($usageStatsRetentionHourly, $queueForDeletes);
-                $this->notifyDeleteExpiredSessions($queueForDeletes);
+                $this->notifyProjects($queueForDeletes, $usageStatsRetentionHourly);
             });
 
             $this->notifyDeleteConnections($queueForDeletes);
@@ -62,6 +58,15 @@ class Maintenance extends Action
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
             $this->notifyDeleteTargets($queueForDeletes);
         }, $interval, $delay);
+    }
+
+    protected function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly): void
+    {
+        $this->notifyDeleteExecutionLogs($queueForDeletes);
+        $this->notifyDeleteAbuseLogs($queueForDeletes);
+        $this->notifyDeleteAuditLogs($queueForDeletes);
+        $this->notifyDeleteUsageStats($usageStatsRetentionHourly, $queueForDeletes);
+        $this->notifyDeleteExpiredSessions($queueForDeletes);
     }
 
     protected function foreachProject(Database $dbForConsole, callable $callback): void
