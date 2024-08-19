@@ -12,12 +12,12 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 
-interface Projects
-{
-    public function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly);
-}
+//interface Projects
+//{
+//    public function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly);
+//}
 
-class Maintenance extends Action implements Projects
+class Maintenance extends Action
 {
     public static function getName(): string
     {
@@ -51,12 +51,16 @@ class Maintenance extends Action implements Projects
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
+            var_dump('shmuel 1');
             $this->foreachProject($dbForConsole, function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
                 $queueForDeletes->setProject($project);
 
+                var_dump('shmuel 2');
                 $this->notifyProjects($queueForDeletes, $usageStatsRetentionHourly);
+                var_dump('shmuel 3');
             });
 
+            var_dump('shmuel 4');
             $this->notifyDeleteConnections($queueForDeletes);
             $this->renewCertificates($dbForConsole, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
