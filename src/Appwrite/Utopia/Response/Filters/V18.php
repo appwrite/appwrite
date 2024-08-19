@@ -16,6 +16,7 @@ class V18 extends Filter
             Response::MODEL_FUNCTION => $this->parseFunction($content),
             Response::MODEL_EXECUTION => $this->parseExecution($content),
             Response::MODEL_PROJECT => $this->parseProject($content),
+            Response::MODEL_RUNTIME => $this->parseRuntime($content),
             default => $parsedResponse,
         };
 
@@ -44,6 +45,12 @@ class V18 extends Filter
     {
         unset($content['authMockNumbers']);
         unset($content['authSessionAlerts']);
+        return $content;
+    }
+
+    protected function parseRuntime(array $content)
+    {
+        unset($content['key']);
         return $content;
     }
 }

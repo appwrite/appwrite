@@ -148,6 +148,17 @@ class V21 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'scheduleId' from {$id}: {$th->getMessage()}");
                     }
+                    break;
+                case 'files':
+                    try {
+                        /**
+                         * Increase metadata size to 7500
+                         */
+                        $this->projectDB->updateAttribute($id, 'metadata', size: 75000);
+                    } catch (\Throwable $th) {
+                        Console::warning("'metadata' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
             }
 
             usleep(50000);
@@ -177,7 +188,7 @@ class V21 extends Migration
                 $document->setAttribute('scopes', []);
 
                 // Add size attribute
-                $document->setAttribute('specification', APP_FUNCTION_BASE_SPECIFICATION);
+                // $document->setAttribute('specification', APP_FUNCTION_BASE_SPECIFICATION); Uncomment after we merge variable runtimes specifications.
         }
 
         return $document;
