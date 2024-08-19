@@ -1726,12 +1726,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "ddf94c9928fed48f251722d7594c62fe1fdf664a"
+                "reference": "ab549c157bbfadbfad0ab1144fd0ea3953f30170"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/ddf94c9928fed48f251722d7594c62fe1fdf664a",
-                "reference": "ddf94c9928fed48f251722d7594c62fe1fdf664a",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/ab549c157bbfadbfad0ab1144fd0ea3953f30170",
+                "reference": "ab549c157bbfadbfad0ab1144fd0ea3953f30170",
                 "shasum": ""
             },
             "require": {
@@ -1774,7 +1774,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-migrations"
             },
-            "time": "2024-08-19T02:27:52+00:00"
+            "time": "2024-08-19T06:26:02+00:00"
         },
         {
             "name": "utopia-php/domains",
