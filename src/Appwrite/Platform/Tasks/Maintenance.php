@@ -82,6 +82,9 @@ class Maintenance extends Action
 
     protected function foreachProject(Database $dbForConsole, callable $callback): void
     {
+
+        var_dump('shmuel 22');
+
         // TODO: @Meldiron name of this method no longer matches. It does not delete, and it gives whole document
         $count = 0;
         $chunk = 0;
@@ -90,13 +93,14 @@ class Maintenance extends Action
         $executionStart = \microtime(true);
 
         while ($sum === $limit) {
+            var_dump('shmuel 33');
             $projects = $dbForConsole->find('projects', [Query::limit($limit), Query::offset($chunk * $limit)]);
 
             $chunk++;
 
             /** @var string[] $projectIds */
             $sum = count($projects);
-
+            var_dump('shmuel 44');
             foreach ($projects as $project) {
                 $callback($project);
                 $count++;
