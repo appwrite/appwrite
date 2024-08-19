@@ -514,6 +514,7 @@ App::get('/v1/functions/specifications')
 
         $response->dynamic(new Document([
             'specifications' => $runtimeSpecs,
+            'total' => count($runtimeSpecs)
         ]), Response::MODEL_SPECIFICATION_LIST);
     });
 
