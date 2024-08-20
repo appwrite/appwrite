@@ -33,6 +33,7 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\Specification;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Hooks\Hooks;
@@ -147,6 +148,9 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 const APP_HOSTNAME_INTERNAL = 'appwrite';
+const APP_FUNCTION_SPECIFICATION_DEFAULT = Specification::S_05VCPU_512MB;
+const APP_FUNCTION_CPUS_DEFAULT = 0.5;
+const APP_FUNCTION_MEMORY_DEFAULT = 512;
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
@@ -307,6 +311,7 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
+Config::load('runtime-specifications', __DIR__ . '/config/runtimes/specifications.php');
 Config::load('function-templates', __DIR__ . '/config/function-templates.php');
 
 /**

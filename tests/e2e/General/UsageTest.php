@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\General;
 
+use Appwrite\Functions\Specification;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use DateTime;
@@ -617,6 +618,7 @@ class UsageTest extends Scope
                 ],
                 'schedule' => '0 0 1 1 *',
                 'timeout' => 10,
+                'specification' => Specification::S_8VCPU_8GB
             ]
         );
 
