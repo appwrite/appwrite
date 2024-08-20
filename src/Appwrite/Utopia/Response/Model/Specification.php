@@ -17,7 +17,7 @@ class Specification extends Model
             'example' => 512
         ]);
         $this->addRule('cpus', [
-            'type' => self::TYPE_INTEGER,
+            'type' => self::TYPE_FLOAT,
             'description' => 'Number of CPUs.',
             'default' => 0,
             'example' => 1
