@@ -12,4 +12,4 @@ const result = await projects.getSmsTemplate(
     SmsTemplateLocale.Af // locale
 );
 
-console.log(response);
+console.log(result);

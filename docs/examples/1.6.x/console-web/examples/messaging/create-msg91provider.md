@@ -15,4 +15,4 @@ const result = await messaging.createMsg91Provider(
     false // enabled (optional)
 );
 
-console.log(response);
+console.log(result);

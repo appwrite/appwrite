@@ -15,4 +15,4 @@ const result = await databases.createUrlAttribute(
     false // array (optional)
 );
 
-console.log(response);
+console.log(result);

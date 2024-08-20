@@ -8,4 +8,4 @@ const project = new Project(client);
 
 const result = await project.listVariables();
 
-console.log(response);
+console.log(result);

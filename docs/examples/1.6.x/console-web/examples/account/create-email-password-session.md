@@ -11,4 +11,4 @@ const result = await account.createEmailPasswordSession(
     'password' // password
 );
 
-console.log(response);
+console.log(result);

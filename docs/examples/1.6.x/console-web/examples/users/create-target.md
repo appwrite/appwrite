@@ -15,4 +15,4 @@ const result = await users.createTarget(
     '<NAME>' // name (optional)
 );
 
-console.log(response);
+console.log(result);

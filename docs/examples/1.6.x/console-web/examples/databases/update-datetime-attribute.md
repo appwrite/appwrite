@@ -14,4 +14,4 @@ const result = await databases.updateDatetimeAttribute(
     '' // default
 );
 
-console.log(response);
+console.log(result);

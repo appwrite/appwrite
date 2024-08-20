@@ -10,4 +10,4 @@ const result = await migrations.get(
     '<MIGRATION_ID>' // migrationId
 );
 
-console.log(response);
+console.log(result);

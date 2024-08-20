@@ -10,4 +10,4 @@ const result = await health.getQueueCertificates(
     null // threshold (optional)
 );
 
-console.log(response);
+console.log(result);

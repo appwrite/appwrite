@@ -11,4 +11,4 @@ const result = await databases.getDatabaseUsage(
     DatabaseUsageRange.TwentyFourHours // range (optional)
 );
 
-console.log(response);
+console.log(result);

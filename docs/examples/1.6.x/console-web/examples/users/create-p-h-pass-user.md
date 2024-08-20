@@ -13,4 +13,4 @@ const result = await users.createPHPassUser(
     '<NAME>' // name (optional)
 );
 
-console.log(response);
+console.log(result);

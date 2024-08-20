@@ -10,4 +10,4 @@ const result = await projects.listKeys(
     '<PROJECT_ID>' // projectId
 );
 
-console.log(response);
+console.log(result);

@@ -10,4 +10,4 @@ const result = await teams.delete(
     '<TEAM_ID>' // teamId
 );
 
-console.log(response);
+console.log(result);

@@ -10,4 +10,4 @@ const result = await migrations.retry(
     '<MIGRATION_ID>' // migrationId
 );
 
-console.log(response);
+console.log(result);

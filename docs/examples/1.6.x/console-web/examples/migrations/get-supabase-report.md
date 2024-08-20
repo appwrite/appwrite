@@ -16,4 +16,4 @@ const result = await migrations.getSupabaseReport(
     null // port (optional)
 );
 
-console.log(response);
+console.log(result);

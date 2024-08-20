@@ -11,4 +11,4 @@ const result = await projects.updateMockNumbers(
     [] // numbers
 );
 
-console.log(response);
+console.log(result);

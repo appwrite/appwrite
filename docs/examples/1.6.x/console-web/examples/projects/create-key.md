@@ -13,4 +13,4 @@ const result = await projects.createKey(
     '' // expire (optional)
 );
 
-console.log(response);
+console.log(result);

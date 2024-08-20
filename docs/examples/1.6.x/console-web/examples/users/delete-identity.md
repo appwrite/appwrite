@@ -10,4 +10,4 @@ const result = await users.deleteIdentity(
     '<IDENTITY_ID>' // identityId
 );
 
-console.log(response);
+console.log(result);

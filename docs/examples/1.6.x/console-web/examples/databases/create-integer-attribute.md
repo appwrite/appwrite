@@ -17,4 +17,4 @@ const result = await databases.createIntegerAttribute(
     false // array (optional)
 );
 
-console.log(response);
+console.log(result);

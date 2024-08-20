@@ -17,4 +17,4 @@ const result = await messaging.createApnsProvider(
     false // enabled (optional)
 );
 
-console.log(response);
+console.log(result);

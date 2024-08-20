@@ -18,4 +18,4 @@ const result = await users.createScryptUser(
     '<NAME>' // name (optional)
 );
 
-console.log(response);
+console.log(result);

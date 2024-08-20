@@ -11,4 +11,4 @@ const result = await migrations.createFirebaseOAuthMigration(
     '<PROJECT_ID>' // projectId
 );
 
-console.log(response);
+console.log(result);

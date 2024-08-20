@@ -13,4 +13,4 @@ const result = await migrations.createAppwriteMigration(
     '<API_KEY>' // apiKey
 );
 
-console.log(response);
+console.log(result);

@@ -10,4 +10,4 @@ const result = await project.deleteVariable(
     '<VARIABLE_ID>' // variableId
 );
 
-console.log(response);
+console.log(result);

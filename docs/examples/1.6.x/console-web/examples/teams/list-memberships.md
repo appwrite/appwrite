@@ -12,4 +12,4 @@ const result = await teams.listMemberships(
     '<SEARCH>' // search (optional)
 );
 
-console.log(response);
+console.log(result);

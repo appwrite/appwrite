@@ -16,4 +16,4 @@ const result = await migrations.createSupabaseMigration(
     null // port (optional)
 );
 
-console.log(response);
+console.log(result);

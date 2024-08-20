@@ -15,4 +15,4 @@ const result = await messaging.updateTwilioProvider(
     '<FROM>' // from (optional)
 );
 
-console.log(response);
+console.log(result);

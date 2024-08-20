@@ -16,4 +16,4 @@ const result = await messaging.createSms(
     '' // scheduledAt (optional)
 );
 
-console.log(response);
+console.log(result);

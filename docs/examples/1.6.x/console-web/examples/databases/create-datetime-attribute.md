@@ -15,4 +15,4 @@ const result = await databases.createDatetimeAttribute(
     false // array (optional)
 );
 
-console.log(response);
+console.log(result);

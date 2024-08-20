@@ -11,4 +11,4 @@ const result = await users.updateLabels(
     [] // labels
 );
 
-console.log(response);
+console.log(result);

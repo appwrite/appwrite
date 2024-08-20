@@ -12,4 +12,4 @@ const result = await users.createToken(
     60 // expire (optional)
 );
 
-console.log(response);
+console.log(result);

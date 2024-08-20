@@ -12,4 +12,4 @@ const result = await account.createPushTarget(
     '<PROVIDER_ID>' // providerId (optional)
 );
 
-console.log(response);
+console.log(result);

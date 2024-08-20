@@ -11,4 +11,4 @@ const result = await project.createVariable(
     '<VALUE>' // value
 );
 
-console.log(response);
+console.log(result);

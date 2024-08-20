@@ -11,4 +11,4 @@ const result = await functions.deleteVariable(
     '<VARIABLE_ID>' // variableId
 );
 
-console.log(response);
+console.log(result);

@@ -10,4 +10,4 @@ const result = await account.createVerification(
     'https://example.com' // url
 );
 
-console.log(response);
+console.log(result);

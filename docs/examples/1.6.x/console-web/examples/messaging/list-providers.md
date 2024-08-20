@@ -11,4 +11,4 @@ const result = await messaging.listProviders(
     '<SEARCH>' // search (optional)
 );
 
-console.log(response);
+console.log(result);

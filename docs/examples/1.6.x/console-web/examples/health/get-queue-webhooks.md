@@ -10,4 +10,4 @@ const result = await health.getQueueWebhooks(
     null // threshold (optional)
 );
 
-console.log(response);
+console.log(result);

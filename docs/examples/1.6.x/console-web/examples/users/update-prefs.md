@@ -11,4 +11,4 @@ const result = await users.updatePrefs(
     {} // prefs
 );
 
-console.log(response);
+console.log(result);

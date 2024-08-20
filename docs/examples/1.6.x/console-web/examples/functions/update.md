@@ -26,4 +26,4 @@ const result = await functions.update(
     '<PROVIDER_ROOT_DIRECTORY>' // providerRootDirectory (optional)
 );
 
-console.log(response);
+console.log(result);

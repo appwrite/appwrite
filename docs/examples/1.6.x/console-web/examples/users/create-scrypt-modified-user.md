@@ -16,4 +16,4 @@ const result = await users.createScryptModifiedUser(
     '<NAME>' // name (optional)
 );
 
-console.log(response);
+console.log(result);

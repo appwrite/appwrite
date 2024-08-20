@@ -10,4 +10,4 @@ const result = await vcs.getInstallation(
     '<INSTALLATION_ID>' // installationId
 );
 
-console.log(response);
+console.log(result);

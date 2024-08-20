@@ -8,4 +8,4 @@ const migrations = new Migrations(client);
 
 const result = await migrations.deleteFirebaseAuth();
 
-console.log(response);
+console.log(result);

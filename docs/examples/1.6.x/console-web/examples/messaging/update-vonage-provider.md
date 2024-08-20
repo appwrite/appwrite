@@ -15,4 +15,4 @@ const result = await messaging.updateVonageProvider(
     '<FROM>' // from (optional)
 );
 
-console.log(response);
+console.log(result);

@@ -19,4 +19,4 @@ const result = await storage.createBucket(
     false // antivirus (optional)
 );
 
-console.log(response);
+console.log(result);

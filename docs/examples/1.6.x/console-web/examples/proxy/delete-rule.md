@@ -10,4 +10,4 @@ const result = await proxy.deleteRule(
     '<RULE_ID>' // ruleId
 );
 
-console.log(response);
+console.log(result);

@@ -8,4 +8,4 @@ const console = new Console(client);
 
 const result = await console.variables();
 
-console.log(response);
+console.log(result);

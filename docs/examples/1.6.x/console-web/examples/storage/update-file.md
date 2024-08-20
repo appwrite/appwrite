@@ -13,4 +13,4 @@ const result = await storage.updateFile(
     ["read("any")"] // permissions (optional)
 );
 
-console.log(response);
+console.log(result);

@@ -11,4 +11,4 @@ const result = await users.updateName(
     '<NAME>' // name
 );
 
-console.log(response);
+console.log(result);

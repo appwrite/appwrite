@@ -25,4 +25,4 @@ const result = await messaging.createPush(
     '' // scheduledAt (optional)
 );
 
-console.log(response);
+console.log(result);

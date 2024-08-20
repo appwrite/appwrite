@@ -15,4 +15,4 @@ const result = await messaging.createVonageProvider(
     false // enabled (optional)
 );
 
-console.log(response);
+console.log(result);
