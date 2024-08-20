@@ -147,4 +147,29 @@ class V18Test extends TestCase
 
         $this->assertEquals($expected, $result);
     }
+
+    public function runtimeProvider(): array
+    {
+        return [
+            'remove key' => [
+                [
+                    'key' => 'example_key',
+                ],
+                [
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * @dataProvider runtimeProvider
+     */
+    public function testRuntime(array $content, array $expected): void
+    {
+        $model = Response::MODEL_RUNTIME;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
 }
