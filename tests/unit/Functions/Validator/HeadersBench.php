@@ -40,9 +40,9 @@ final class HeadersBench
 
         $value = [];
         for($i = 0; $i < 100; $i++) {
-            $value[bin2hex(random_bytes(64))] = bin2hex(random_bytes(64));
+            $value[bin2hex(random_bytes(32))] = bin2hex(random_bytes(32));
         }
-        yield 'items_100-size_25600' => [ 'value' => $value ];
+        yield 'items_100-size_12800' => [ 'value' => $value ];
     }
 
     #[BeforeMethods('prepare')]
