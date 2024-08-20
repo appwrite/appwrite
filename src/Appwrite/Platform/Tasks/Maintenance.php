@@ -62,10 +62,6 @@ class Maintenance extends Action
 
     /**
      * Overridable method for Cloud, Please do not delete
-     *
-     * @param Delete $queueForDeletes
-     * @param int $usageStatsRetentionHourly
-     * @return void
      */
     protected function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly): void
     {
