@@ -13,7 +13,8 @@
     "scripts": {
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/pint --test",
-        "format": "vendor/bin/pint"
+        "format": "vendor/bin/pint",
+        "bench": "vendor/bin/phpbench run --report=benchmark"
     },
     "autoload": {
         "psr-4": {
@@ -86,7 +87,8 @@
         "phpunit/phpunit": "9.5.20",
         "swoole/ide-helper": "5.1.2",
         "textalk/websocket": "1.5.7",
-        "laravel/pint": "^1.14"
+        "laravel/pint": "^1.14",
+        "phpbench/phpbench": "^1.2"
     },
     "provide": {
         "ext-phpiredis": "*"
