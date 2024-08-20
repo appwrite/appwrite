@@ -38,8 +38,6 @@ class Migrations extends Action
 
     protected Document $project;
 
-    //protected array $credentials = [];
-
     public static function getName(): string
     {
         return 'migrations';
@@ -70,8 +68,8 @@ class Migrations extends Action
             throw new Exception('Missing payload');
         }
 
-        $events = $payload['events'] ?? [];
-        $project = new Document($payload['project'] ?? []);
+        $events    = $payload['events'] ?? [];
+        $project   = new Document($payload['project'] ?? []);
         $migration = new Document($payload['migration'] ?? []);
 
         if ($project->getId() === 'console') {
@@ -81,7 +79,6 @@ class Migrations extends Action
         $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
         $this->project = $project;
-        //$this->migration = $migration;
 
         /**
          * Handle Event execution.
@@ -269,12 +266,6 @@ class Migrations extends Action
         $project = $this->project;
         $projectDocument = $this->dbForConsole->getDocument('projects', $project->getId());
         $tempAPIKey = $this->generateAPIKey($projectDocument);
-
-        //        $this->credentials = [
-        //            'projectId' => $projectDocument->getId(),
-        //            'endpoint' => 'http://appwrite/v1',
-        //            'apiKey' => $tempAPIKey['secret'],
-        //        ];
 
         $transfer = $source = $destination = null;
 

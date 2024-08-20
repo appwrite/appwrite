@@ -138,7 +138,9 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                if($existingTarget) {
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                }
             }
         }
 
@@ -160,7 +162,9 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$phone]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                if($existingTarget) {
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                }
             }
         }
 
@@ -1780,7 +1784,7 @@ App::post('/v1/users/:userId/sessions')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret = Auth::codeGenerator();
+        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
 
@@ -1797,6 +1801,7 @@ App::post('/v1/users/:userId/sessions')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => $expire,
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1808,7 +1813,6 @@ App::post('/v1/users/:userId/sessions')
         $session = $dbForProject->createDocument('sessions', $session);
         $session
             ->setAttribute('secret', $secret)
-            ->setAttribute('expire', $expire)
             ->setAttribute('countryName', $countryName);
 
         $queueForEvents

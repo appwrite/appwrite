@@ -290,7 +290,9 @@ App::post('/v1/account')
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                if($existingTarget) {
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                }
             }
 
             $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -1670,10 +1672,10 @@ App::post('/v1/account/tokens/magic-url')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
-
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
+        $url = htmlentities($url);
 
         if ($phrase === true) {
             $phrase = Phrase::generate();
@@ -2858,6 +2860,7 @@ App::post('/v1/account/recovery')
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
+        $url = htmlentities($url);
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -3121,6 +3124,7 @@ App::post('/v1/account/verification')
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
+        $url = htmlentities($url);
         if ($user->getAttribute('emailVerification')) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
         }
@@ -3427,7 +3431,7 @@ App::post('/v1/account/verification/phone')
     });
 
 App::put('/v1/account/verification/phone')
-    ->desc('Create phone verification (confirmation)')
+    ->desc('Update phone verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].verification.[tokenId].update')
@@ -3570,7 +3574,7 @@ App::get('/v1/account/mfa/factors')
     });
 
 App::post('/v1/account/mfa/authenticators/:type')
-    ->desc('Add Authenticator')
+    ->desc('Create Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'account')
@@ -3880,7 +3884,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
     });
 
 App::post('/v1/account/mfa/challenge')
-    ->desc('Create 2FA Challenge')
+    ->desc('Create MFA Challenge')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].challenges.[challengeId].create')

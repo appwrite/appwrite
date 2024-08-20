@@ -56,7 +56,6 @@ class Maintenance extends Action
             $this->renewCertificates($dbForConsole, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
-            $this->notifyDeleteTargets($queueForDeletes);
         }, $interval, $delay);
     }
 
@@ -67,6 +66,7 @@ class Maintenance extends Action
     {
         var_dump("Appwrite notifyProjects");
 
+        $this->notifyDeleteTargets($queueForDeletes);
         $this->notifyDeleteExecutionLogs($queueForDeletes);
         $this->notifyDeleteAbuseLogs($queueForDeletes);
         $this->notifyDeleteAuditLogs($queueForDeletes);
@@ -90,6 +90,7 @@ class Maintenance extends Action
 
             /** @var string[] $projectIds */
             $sum = count($projects);
+
             foreach ($projects as $project) {
                 $callback($project);
                 $count++;
@@ -191,15 +192,5 @@ class Maintenance extends Action
         $queueForDeletes
             ->setType(DELETE_TYPE_EXPIRED_TARGETS)
             ->trigger();
-    }
-
-    public function setVariable($name, $var)
-    {
-        // TODO: Implement setVariable() method.
-    }
-
-    public function getHtml($template)
-    {
-        // TODO: Implement getHtml() method.
     }
 }

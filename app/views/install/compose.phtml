@@ -79,7 +79,7 @@ $image = $this->getParam('image', '');
       - _APP_CONSOLE_HOSTNAMES
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_EMAIL_SECURITY
       - _APP_SYSTEM_RESPONSE_FORMAT
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
@@ -249,6 +249,7 @@ $image = $this->getParam('image', '');
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_EMAIL_SECURITY
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -430,7 +431,7 @@ $image = $this->getParam('image', '');
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_DOMAIN_FUNCTIONS
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_EMAIL_CERTIFICATES
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -580,7 +581,7 @@ $image = $this->getParam('image', '');
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_EMAIL_SECURITY
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -752,7 +753,7 @@ $image = $this->getParam('image', '');
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.5.5
+    image: openruntimes/executor:0.5.7
     networks:
       - appwrite
       - runtimes
