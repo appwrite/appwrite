@@ -28,38 +28,26 @@ final class HeadersBench
         for($i = 0; $i < 10; $i++) {
             $value[bin2hex(random_bytes(8))] = bin2hex(random_bytes(8));
         }
-        yield 'xxs' => [ 'value' => $value ];
+        yield 'items_10-size_320' => [ 'value' => $value ];
 
         $value = [];
         for($i = 0; $i < 100; $i++) {
             $value[bin2hex(random_bytes(8))] = bin2hex(random_bytes(8));
         }
-        yield 'xs' => [ 'value' => $value ];
+        yield 'items_100-size_3200' => [ 'value' => $value ];
 
         $value = [];
-        for($i = 0; $i < 1000; $i++) {
-            $value[bin2hex(random_bytes(8))] = bin2hex(random_bytes(8));
+        for($i = 0; $i < 100; $i++) {
+            $value[bin2hex(random_bytes(64))] = bin2hex(random_bytes(64));
         }
-        yield 'sm' => [ 'value' => $value ];
-
-        $value = [];
-        for($i = 0; $i < 10000; $i++) {
-            $value[bin2hex(random_bytes(16))] = bin2hex(random_bytes(16));
-        }
-        yield 'md' => [ 'value' => $value ];
-
-        $value = [];
-        for($i = 0; $i < 100000; $i++) {
-            $value[bin2hex(random_bytes(16))] = bin2hex(random_bytes(16));
-        }
-        yield 'lg' => [ 'value' => $value ];
+        yield 'items_100-size_25600' => [ 'value' => $value ];
     }
 
     #[BeforeMethods('prepare')]
     #[AfterMethods('tearDown')]
     #[ParamProviders('providers')]
     #[Iterations(50)]
-    #[Assert('mode(variant.time.avg) < 500 ms')]
+    #[Assert('mode(variant.time.avg) < 1 ms')]
     public function benchHeadersValidator(array $data): void
     {
         $assertion = $this->validator->isValid($data['value']);

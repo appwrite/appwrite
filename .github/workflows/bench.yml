@@ -10,7 +10,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Run Linter
+    - name: Run Benchmark
       run: |
         docker run --rm -v $PWD:/app composer sh -c \
         "composer install --profile --ignore-platform-reqs && git config --global --add safe.directory /app && composer bench -- --progress=plain"
