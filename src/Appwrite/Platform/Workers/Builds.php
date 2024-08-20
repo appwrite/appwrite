@@ -142,6 +142,7 @@ class Builds extends Action
         }
 
         $version = $function->getAttribute('version', 'v2');
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specifications', APP_FUNCTION_SPECIFICATION_DEFAULT)];
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $key = $function->getAttribute('runtime');
         $runtime = $runtimes[$key] ?? null;
@@ -475,6 +476,9 @@ class Builds extends Action
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
+            $cpus = $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT;
+            $memory = max($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT, 1024); // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
+
             $jwtExpiry = (int)System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
             $apiKey = $jwtObj->encode([
@@ -496,6 +500,8 @@ class Builds extends Action
                 'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
                 'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
                 'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                'APPWRITE_FUNCTION_CPUS' => $cpus,
+                'APPWRITE_FUNCTION_MEMORY' => $memory,
                 'APPWRITE_VERSION' => APP_VERSION_STABLE,
                 'APPWRITE_REGION' => $project->getAttribute('region'),
             ]);
@@ -511,7 +517,7 @@ class Builds extends Action
             }
 
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, $cpus, $memory, &$err) {
                     try {
                         $version = $function->getAttribute('version', 'v2');
                         $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
@@ -522,6 +528,8 @@ class Builds extends Action
                             source: $source,
                             image: $runtime['image'],
                             version: $version,
+                            cpus: $cpus,
+                            memory: $memory,
                             remove: true,
                             entrypoint: $deployment->getAttribute('entrypoint'),
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
@@ -686,11 +694,11 @@ class Builds extends Action
                 ->addMetric(METRIC_BUILDS, 1) // per project
                 ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
                 ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
-                ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(512 * $build->getAttribute('duration', 0)))
+                ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(512 * $build->getAttribute('duration', 0)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
                 ->setProject($project)
                 ->trigger();
         }
