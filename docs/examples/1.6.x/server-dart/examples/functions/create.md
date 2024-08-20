@@ -29,4 +29,5 @@ Func result = await functions.create(
     templateOwner: '<TEMPLATE_OWNER>', // (optional)
     templateRootDirectory: '<TEMPLATE_ROOT_DIRECTORY>', // (optional)
     templateVersion: '<TEMPLATE_VERSION>', // (optional)
+    specification: '', // (optional)
 );

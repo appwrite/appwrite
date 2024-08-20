@@ -29,6 +29,7 @@ let function = try await functions.create(
     templateRepository: "<TEMPLATE_REPOSITORY>", // optional
     templateOwner: "<TEMPLATE_OWNER>", // optional
     templateRootDirectory: "<TEMPLATE_ROOT_DIRECTORY>", // optional
-    templateVersion: "<TEMPLATE_VERSION>" // optional
+    templateVersion: "<TEMPLATE_VERSION>", // optional
+    specification: "" // optional
 )
 

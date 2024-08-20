@@ -28,5 +28,6 @@ const result = await functions.create(
     '<TEMPLATE_REPOSITORY>', // templateRepository (optional)
     '<TEMPLATE_OWNER>', // templateOwner (optional)
     '<TEMPLATE_ROOT_DIRECTORY>', // templateRootDirectory (optional)
-    '<TEMPLATE_VERSION>' // templateVersion (optional)
+    '<TEMPLATE_VERSION>', // templateVersion (optional)
+    '' // specification (optional)
 );

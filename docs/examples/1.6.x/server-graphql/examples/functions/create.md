@@ -20,7 +20,8 @@ mutation {
         templateRepository: "<TEMPLATE_REPOSITORY>",
         templateOwner: "<TEMPLATE_OWNER>",
         templateRootDirectory: "<TEMPLATE_ROOT_DIRECTORY>",
-        templateVersion: "<TEMPLATE_VERSION>"
+        templateVersion: "<TEMPLATE_VERSION>",
+        specification: ""
     ) {
         _id
         _createdAt
@@ -53,5 +54,6 @@ mutation {
         providerBranch
         providerRootDirectory
         providerSilentMode
+        specification
     }
 }

@@ -1,5 +1,4 @@
 const sdk = require('node-appwrite');
-const fs = require('fs');
 
 const client = new sdk.Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint

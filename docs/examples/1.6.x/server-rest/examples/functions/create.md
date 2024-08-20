@@ -26,5 +26,6 @@ X-Appwrite-Key: &lt;YOUR_API_KEY&gt;
   "templateRepository": "<TEMPLATE_REPOSITORY>",
   "templateOwner": "<TEMPLATE_OWNER>",
   "templateRootDirectory": "<TEMPLATE_ROOT_DIRECTORY>",
-  "templateVersion": "<TEMPLATE_VERSION>"
+  "templateVersion": "<TEMPLATE_VERSION>",
+  "specification": 
 }

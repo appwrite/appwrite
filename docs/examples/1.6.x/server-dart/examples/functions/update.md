@@ -25,4 +25,5 @@ Func result = await functions.update(
     providerBranch: '<PROVIDER_BRANCH>', // (optional)
     providerSilentMode: false, // (optional)
     providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>', // (optional)
+    specification: '', // (optional)
 );

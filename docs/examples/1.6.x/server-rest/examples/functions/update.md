@@ -21,5 +21,6 @@ X-Appwrite-Key: &lt;YOUR_API_KEY&gt;
   "providerRepositoryId": "<PROVIDER_REPOSITORY_ID>",
   "providerBranch": "<PROVIDER_BRANCH>",
   "providerSilentMode": false,
-  "providerRootDirectory": "<PROVIDER_ROOT_DIRECTORY>"
+  "providerRootDirectory": "<PROVIDER_ROOT_DIRECTORY>",
+  "specification": 
 }

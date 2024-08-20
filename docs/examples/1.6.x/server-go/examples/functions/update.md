@@ -32,6 +32,7 @@ func main() {
         functions.WithUpdateProviderBranch("<PROVIDER_BRANCH>"),
         functions.WithUpdateProviderSilentMode(false),
         functions.WithUpdateProviderRootDirectory("<PROVIDER_ROOT_DIRECTORY>"),
+        functions.WithUpdateSpecification(""),
     )
 
     if error != nil {
