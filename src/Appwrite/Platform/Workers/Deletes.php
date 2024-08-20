@@ -686,8 +686,8 @@ class Deletes extends Action
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
-        $abuseAdapter = new AbuseDatabase("", 0, 1, $dbForProject);
-        $abuse = new Abuse($abuseAdapter);
+        $timeLimit = new AbuseDatabase("", 0, 1, $dbForProject);
+        $abuse = new Abuse($timeLimit);
 
         try {
             $abuse->cleanup($abuseRetention);

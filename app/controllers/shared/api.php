@@ -373,15 +373,15 @@ App::init()
         * Abuse Check
         */
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-        $abuseAdapterArray = [];
+        $timeLimitArray = [];
 
         $abuseKeyLabel = (!is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
         foreach ($abuseKeyLabel as $abuseKey) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
-            $abuseAdapter = new AbuseDatabase($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
-            $abuseAdapter
+            $timeLimit = new AbuseDatabase($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
+            $timeLimit
                 ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())
                 ->setParam('{userAgent}', $request->getUserAgent(''))
@@ -389,7 +389,7 @@ App::init()
                 ->setParam('{url}', $request->getHostname() . $route->getPath())
                 ->setParam('{method}', $request->getMethod())
                 ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
-            $abuseAdapterArray[] = $abuseAdapter;
+            $timeLimitArray[] = $timeLimit;
         }
 
         $closestLimit = null;
@@ -398,17 +398,17 @@ App::init()
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        foreach ($abuseAdapterArray as $abuseAdapter) {
+        foreach ($timeLimitArray as $timeLimit) {
             foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
                 if (!empty($value)) {
-                    $abuseAdapter->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
                 }
             }
 
-            $abuse = new Abuse($abuseAdapter);
-            $remaining = $abuseAdapter->remaining();
-            $limit = $abuseAdapter->limit();
-            $time = (new \DateTime($abuseAdapter->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
+            $abuse = new Abuse($timeLimit);
+            $remaining = $timeLimit->remaining();
+            $limit = $timeLimit->limit();
+            $time = (new \DateTime($timeLimit->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
 
             if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
                 $closestLimit = $remaining;
