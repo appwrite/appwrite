@@ -1,0 +1,16 @@
+name: "Benchmarks"
+
+on: [pull_request]
+jobs:
+  lint:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Run Linter
+      run: |
+        docker run --rm -v $PWD:/app composer sh -c \
+        "composer install --profile --ignore-platform-reqs && git config --global --add safe.directory /app && composer bench -- --progress=plain"
