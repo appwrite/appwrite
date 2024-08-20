@@ -13,7 +13,9 @@ final class HeadersBench
 {
     private Headers $validator;
 
-    public function tearDown(): void {}
+    public function tearDown(): void
+    {
+    }
 
     public function prepare(): void
     {
