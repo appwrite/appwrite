@@ -243,13 +243,7 @@ class Builds extends Action
                         $tmpTemplateDirectory .= '/';
                     }
 
-                    $directorySize = $localDevice->getDirectorySize($tmpTemplateDirectory);
-                    $functionsSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
-                    if ($directorySize > $functionsSizeLimit) {
-                        throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
-                    }
-
-                    $tarParamDirectory = \escapeshellarg('/tmp/builds/' . $buildId . '-template' . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory));
+                    $tarParamDirectory = \escapeshellarg($tmpTemplateDirectory . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory));
                     Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
 
                     $source = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
@@ -261,6 +255,7 @@ class Builds extends Action
 
                     Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
 
+                    $directorySize = $deviceForFunctions->getFileSize($source);
                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
                 }
@@ -578,11 +573,12 @@ class Builds extends Action
                 }),
             ]);
 
+            if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
+                Console::info('Build has been canceled');
+                return;
+            }
+
             if ($err) {
-                if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
-                    Console::info('Build has been canceled');
-                    return;
-                }
                 throw $err;
             }
 

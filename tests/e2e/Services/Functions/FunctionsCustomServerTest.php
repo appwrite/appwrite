@@ -513,6 +513,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertEquals(1, $deployments['body']['total']);
         $this->assertNotEmpty($deployments['body']['deployments'][0]['$id']);
+        $this->assertGreaterThan(0, $deployments['body']['deployments'][0]['size']);
 
         $deploymentId = $deployments['body']['deployments'][0]['$id'];
 
@@ -688,6 +689,18 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('canceled', $cancel['body']['status']);
 
         // Confirm the deployment is canceled
+        $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        /**
+         * Build worker still runs the build.
+         * 15s sleep gives worker enough time to finish build.
+         * After build finished, it should still be canceled, not ready.
+         */
+        \sleep(15);
         $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cd0323e7303780f34b2f775a526de516",
+    "content-hash": "5e00b5476de82f72e55b5c0d6ae215c5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2993,16 +2993,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.39.6",
+            "version": "dev-fix-cookie-fallback",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "00e6f9e77ea380d8ab3138a36548b353077e4061"
+                "reference": "9cbad6d71172322e7f1121f39fe460ea5ffc3633"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/00e6f9e77ea380d8ab3138a36548b353077e4061",
-                "reference": "00e6f9e77ea380d8ab3138a36548b353077e4061",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9cbad6d71172322e7f1121f39fe460ea5ffc3633",
+                "reference": "9cbad6d71172322e7f1121f39fe460ea5ffc3633",
                 "shasum": ""
             },
             "require": {
@@ -3038,9 +3038,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.6"
+                "source": "https://github.com/appwrite/sdk-generator/tree/fix-cookie-fallback"
             },
-            "time": "2024-08-08T12:44:28+00:00"
+            "time": "2024-08-20T10:27:20+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -5594,9 +5594,18 @@
             "time": "2023-11-21T18:54:41+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "appwrite/sdk-generator",
+            "version": "dev-fix-cookie-fallback",
+            "alias": "0.39.99",
+            "alias_normalized": "0.39.99.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "appwrite/sdk-generator": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
