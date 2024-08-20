@@ -12,12 +12,7 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 
-interface Iprojects
-{
-    public function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly);
-}
-
-class Maintenance extends Action implements Iprojects
+class Maintenance extends Action
 {
     public static function getName(): string
     {
@@ -65,9 +60,16 @@ class Maintenance extends Action implements Iprojects
         }, $interval, $delay);
     }
 
-    public function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly): void
+    /**
+     * Overridable method for Cloud, Please do not delete
+     *
+     * @param Delete $queueForDeletes
+     * @param int $usageStatsRetentionHourly
+     * @return void
+     */
+    protected function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly): void
     {
-        Console::info("Appwrite notifyProjects");
+        var_dump("Appwrite notifyProjects");
 
         $this->notifyDeleteExecutionLogs($queueForDeletes);
         $this->notifyDeleteAbuseLogs($queueForDeletes);
