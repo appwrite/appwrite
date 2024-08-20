@@ -148,9 +148,9 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 const APP_HOSTNAME_INTERNAL = 'appwrite';
-const APP_FUNCTION_BASE_SPECIFICATION = Specification::S_05VCPU_512MB;
-const APP_FUNCTION_BASE_SPECIFICATION_CPUS = 0.5;
-const APP_FUNCTION_BASE_SPECIFICATION_MEMORY = 512;
+const APP_FUNCTION_SPECIFICATION_DEFAULT = Specification::S_05VCPU_512MB;
+const APP_FUNCTION_CPUS_DEFAULT = 0.5;
+const APP_FUNCTION_MEMORY_DEFAULT = 512;
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;

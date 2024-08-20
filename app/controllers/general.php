@@ -133,7 +133,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_BASE_SPECIFICATION)];
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
@@ -267,8 +267,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS,
-            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY,
+            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
         ]);
@@ -293,8 +293,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
-                cpus: $spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS,
-                memory: $spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY,
+                cpus: $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+                memory: $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
                 logging: $function->getAttribute('logging', true),
                 requestTimeout: 30
             );
@@ -334,8 +334,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS)))
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
                 ->setProject($project)
                 ->trigger()
             ;

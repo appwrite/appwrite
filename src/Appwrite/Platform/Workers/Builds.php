@@ -142,7 +142,7 @@ class Builds extends Action
         }
 
         $version = $function->getAttribute('version', 'v2');
-        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specifications', APP_FUNCTION_BASE_SPECIFICATION)];
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specifications', APP_FUNCTION_SPECIFICATION_DEFAULT)];
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $key = $function->getAttribute('runtime');
         $runtime = $runtimes[$key] ?? null;
@@ -476,8 +476,8 @@ class Builds extends Action
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
-            $cpus = $spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS;
-            $memory = max($spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY, 1024);
+            $cpus = $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT;
+            $memory = max($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT, 1024); // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
 
             $jwtExpiry = (int)System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
@@ -694,11 +694,11 @@ class Builds extends Action
                 ->addMetric(METRIC_BUILDS, 1) // per project
                 ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
                 ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
-                ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS)))
+                ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
                 ->setProject($project)
                 ->trigger();
         }

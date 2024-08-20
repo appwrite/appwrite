@@ -167,11 +167,11 @@ App::post('/v1/functions')
     ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true)
     ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true)
     ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true)
-    ->param('specification', APP_FUNCTION_BASE_SPECIFICATION, fn (array $plan) => new RuntimeSpecification(
+    ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
         $plan,
         Config::getParam('runtime-specifications', []),
-        App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_BASE_SPECIFICATION_CPUS),
-        App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_BASE_SPECIFICATION_MEMORY)
+        App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
+        App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
     ), 'Runtime specification for the function and builds.', true, ['plan'])
     ->inject('request')
     ->inject('response')
@@ -484,12 +484,12 @@ App::get('/v1/functions/runtimes')
 
 App::get('/v1/functions/specifications')
     ->groups(['api', 'functions'])
-    ->desc('Get available function runtime specifications')
+    ->desc('List available function runtime specifications')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getSpecifications')
-    ->label('sdk.description', '/docs/references/functions/get-specifications.md')
+    ->label('sdk.method', 'listSpecifications')
+    ->label('sdk.description', '/docs/references/functions/list-specifications.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_SPECIFICATION_LIST)
@@ -776,11 +776,11 @@ App::put('/v1/functions/:functionId')
     ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
     ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
     ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-    ->param('specification', APP_FUNCTION_BASE_SPECIFICATION, fn (array $plan) => new RuntimeSpecification(
+    ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
         $plan,
         Config::getParam('runtime-specifications', []),
-        App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_BASE_SPECIFICATION_CPUS),
-        App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_BASE_SPECIFICATION_MEMORY)
+        App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
+        App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
     ), 'Runtime specification for the function and builds.', true, ['plan'])
     ->inject('request')
     ->inject('response')
@@ -1760,7 +1760,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_BASE_SPECIFICATION)];
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
@@ -1972,8 +1972,8 @@ App::post('/v1/functions/:functionId/executions')
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS,
-            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY,
+            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
         ]);
@@ -1998,8 +1998,8 @@ App::post('/v1/functions/:functionId/executions')
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
-                cpus: $spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS,
-                memory: $spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY,
+                cpus: $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+                memory: $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
                 logging: $function->getAttribute('logging', true),
                 requestTimeout: 30
             );
@@ -2038,8 +2038,8 @@ App::post('/v1/functions/:functionId/executions')
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_BASE_SPECIFICATION_MEMORY) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_BASE_SPECIFICATION_CPUS)))
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
             ;
 
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
