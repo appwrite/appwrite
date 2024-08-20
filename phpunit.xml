@@ -19,9 +19,11 @@
             <file>./tests/e2e/Client.php</file>
             <directory>./tests/e2e/General</directory>
             <directory>./tests/e2e/Scopes</directory>
-            <directory>./tests/e2e/Services/Account</directory>
-            <directory>./tests/e2e/Services/Console</directory>
+            <directory>./tests/e2e/Services/Teams</directory>
             <directory>./tests/e2e/Services/Realtime</directory>
+            <directory>./tests/e2e/Services/Account</directory>
+            <directory>./tests/e2e/Services/Users</directory>
+            <directory>./tests/e2e/Services/Console</directory>
             <directory>./tests/e2e/Services/Avatars</directory>
             <directory>./tests/e2e/Services/Databases</directory>
             <directory>./tests/e2e/Services/GraphQL</directory>
@@ -29,9 +31,8 @@
             <directory>./tests/e2e/Services/Locale</directory>
             <directory>./tests/e2e/Services/Projects</directory>
             <directory>./tests/e2e/Services/Storage</directory>
-            <directory>./tests/e2e/Services/Teams</directory>
-            <directory>./tests/e2e/Services/Users</directory>
             <directory>./tests/e2e/Services/Webhooks</directory>
+            <directory>./tests/e2e/Services/Messaging</directory>
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>

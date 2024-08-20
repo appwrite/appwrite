@@ -68,6 +68,7 @@ class Migration extends Model
             ->addRule('errors', [
                 'type' => self::TYPE_STRING,
                 'description' => 'All errors that occurred during the migration process.',
+                'array' => true,
                 'default' => [],
                 'example' => [],
             ])

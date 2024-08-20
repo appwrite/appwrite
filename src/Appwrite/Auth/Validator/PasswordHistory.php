@@ -17,6 +17,8 @@ class PasswordHistory extends Password
 
     public function __construct(array $history, string $algo, array $algoOptions = [])
     {
+        parent::__construct();
+
         $this->history = $history;
         $this->algo = $algo;
         $this->algoOptions = $algoOptions;
@@ -44,7 +46,7 @@ class PasswordHistory extends Password
     public function isValid($value): bool
     {
         foreach ($this->history as $hash) {
-            if (Auth::passwordVerify($value, $hash, $this->algo, $this->algoOptions)) {
+            if (!empty($hash) && Auth::passwordVerify($value, $hash, $this->algo, $this->algoOptions)) {
                 return false;
             }
         }

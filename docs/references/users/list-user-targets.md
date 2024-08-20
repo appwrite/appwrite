@@ -1,0 +1,1 @@
+List the messaging targets that are associated with a user.

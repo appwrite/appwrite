@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -22,6 +21,7 @@ App::get('/console/*')
     ->alias('auth/*')
     ->alias('/invite')
     ->alias('/login')
+    ->alias('/mfa')
     ->alias('/card/*')
     ->alias('/recover')
     ->alias('/register/*')

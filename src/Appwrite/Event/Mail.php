@@ -2,8 +2,8 @@
 
 namespace Appwrite\Event;
 
-use Resque;
-use Utopia\Database\Document;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Mail extends Event
 {
@@ -13,10 +13,16 @@ class Mail extends Event
     protected string $body = '';
     protected array $smtp = [];
     protected array $variables = [];
+    protected string $bodyTemplate = '';
+    protected array $attachment = [];
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::MAILS_QUEUE_NAME)
+            ->setClass(Event::MAILS_CLASS_NAME);
     }
 
     /**
@@ -109,6 +115,29 @@ class Mail extends Event
     public function getName(): string
     {
         return $this->name;
+    }
+
+    /**
+     * Sets bodyTemplate for the mail event.
+     *
+     * @param string $bodyTemplate
+     * @return self
+     */
+    public function setbodyTemplate(string $bodyTemplate): self
+    {
+        $this->bodyTemplate = $bodyTemplate;
+
+        return $this;
+    }
+
+    /**
+     * Returns subject for the mail event.
+     *
+     * @return string
+     */
+    public function getbodyTemplate(): string
+    {
+        return $this->bodyTemplate;
     }
 
     /**
@@ -310,6 +339,64 @@ class Mail extends Event
     }
 
     /**
+     * Set attachment
+     * @param string $content
+     * @param string $filename
+     * @param string $encoding
+     * @param string $type
+     * @return self
+     */
+    public function setAttachment(string $content, string $filename, string $encoding = 'base64', string $type = 'plain/text')
+    {
+        $this->attachment = [
+            'content' => base64_encode($content),
+            'filename' => $filename,
+            'encoding' => $encoding,
+            'type' => $type,
+        ];
+        return $this;
+    }
+
+    /**
+     * Get attachment
+     *
+     * @return array
+     */
+    public function getAttachment(): array
+    {
+        return $this->attachment;
+    }
+
+    /**
+     * Reset attachment
+     *
+     * @return self
+     */
+    public function resetAttachment(): self
+    {
+        $this->attachment = [];
+        return $this;
+    }
+
+    /**
+     * Reset
+     *
+     * @return self
+     */
+    public function reset(): self
+    {
+        $this->project = null;
+        $this->recipient = '';
+        $this->name = '';
+        $this->subject = '';
+        $this->body = '';
+        $this->variables = [];
+        $this->bodyTemplate = '';
+        $this->attachment = [];
+        return $this;
+    }
+
+    /**
      * Executes the event and sends it to the mails worker.
      *
      * @return string|bool
@@ -317,13 +404,18 @@ class Mail extends Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        $client = new Client($this->queue, $this->connection);
+
+        return $client->enqueue([
+            'project' => $this->project,
             'recipient' => $this->recipient,
             'name' => $this->name,
             'subject' => $this->subject,
+            'bodyTemplate' => $this->bodyTemplate,
             'body' => $this->body,
             'smtp' => $this->smtp,
             'variables' => $this->variables,
+            'attachment' => $this->attachment,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }

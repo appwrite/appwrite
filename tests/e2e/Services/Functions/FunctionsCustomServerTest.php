@@ -8,8 +8,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\DateTime;
+use Utopia\App;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class FunctionsCustomServerTest extends Scope
@@ -32,8 +34,8 @@ class FunctionsCustomServerTest extends Scope
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
             'events' => [
-                'users.*.create',
-                'users.*.delete',
+                'buckets.*.create',
+                'buckets.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,
@@ -50,8 +52,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(true, $dateValidator->isValid($response1['body']['$updatedAt']));
         $this->assertEquals('', $response1['body']['deployment']);
         $this->assertEquals([
-            'users.*.create',
-            'users.*.delete',
+            'buckets.*.create',
+            'buckets.*.delete',
         ], $response1['body']['events']);
         $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(10, $response1['body']['timeout']);
@@ -121,7 +123,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ]
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -131,7 +135,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ]
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -141,7 +147,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("enabled", true)' ]
+            'queries' => [
+                Query::equal('enabled', [true])->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -151,7 +159,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("enabled", false)' ]
+            'queries' => [
+                Query::equal('enabled', [false])->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -191,8 +201,8 @@ class FunctionsCustomServerTest extends Scope
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
             'events' => [
-                'users.*.create',
-                'users.*.delete',
+                'buckets.*.create',
+                'buckets.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,
@@ -244,7 +254,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("' . $functions['body']['functions'][0]['$id'] . '")' ],
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => $functions['body']['functions'][0]['$id']]))->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -255,7 +267,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorBefore("' . $functions['body']['functions'][1]['$id'] . '")' ],
+            'queries' => [
+                Query::cursorBefore(new Document(['$id' => $functions['body']['functions'][1]['$id']]))->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -269,7 +283,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("unknown")' ],
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => 'unknown']))->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -354,10 +370,10 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-mode' => 'admin',
         ];
 
-         $variable = $this->client->call(Client::METHOD_POST, '/project/variables', $headers, [
+        $variable = $this->client->call(Client::METHOD_POST, '/project/variables', $headers, [
             'key' => 'GLOBAL_VARIABLE',
             'value' => 'Global Variable Value',
-         ]);
+        ]);
 
         $this->assertEquals(201, $variable['headers']['status-code']);
 
@@ -532,7 +548,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ]
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($function['headers']['status-code'], 200);
@@ -542,7 +560,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ]
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($function['headers']['status-code'], 200);
@@ -552,7 +572,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("entrypoint", "index.php")' ]
+            'queries' => [
+                Query::equal('entrypoint', ['index.php'])->toString(),
+            ],
         ]);
 
         $this->assertEquals($function['headers']['status-code'], 200);
@@ -562,7 +584,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("entrypoint", "index.js")' ]
+            'queries' => [
+                Query::equal('entrypoint', ['index.js'])->toString(),
+            ],
         ]);
 
         $this->assertEquals($function['headers']['status-code'], 200);
@@ -690,7 +714,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ]
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -700,7 +726,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ]
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -710,7 +738,9 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("trigger", "http")' ]
+            'queries' => [
+                Query::equal('trigger', ['http'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -885,12 +915,14 @@ class FunctionsCustomServerTest extends Scope
             'runtime' => $name,
             'entrypoint' => $entrypoint,
             'events' => [],
+            'schedule' => '* * * * *', // execute every minute
             'timeout' => $timeout,
         ]);
 
         $functionId = $function['body']['$id'] ?? '';
 
         $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertEquals('* * * * *', $function['body']['schedule']);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
@@ -956,6 +988,18 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['responseBody'], '');
         $this->assertEquals($executions['body']['executions'][0]['logs'], '');
         $this->assertStringContainsString('timed out', $executions['body']['executions'][0]['errors']);
+
+        sleep(75); // Wait for scheduled execution to be created and time out
+
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertCount(2, $executions['body']['executions']);
+        $this->assertIsArray($executions['body']['executions']);
+        $this->assertEquals($executions['body']['executions'][1]['trigger'], 'schedule');
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
@@ -1230,5 +1274,323 @@ class FunctionsCustomServerTest extends Scope
         $this->assertArrayHasKey('image', $runtime);
         $this->assertArrayHasKey('base', $runtime);
         $this->assertArrayHasKey('supports', $runtime);
+    }
+
+
+    public function testEventTrigger()
+    {
+        $timeout = 5;
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/php-event/code.tar.gz";
+        $this->packageCode('php-event');
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test PHP Event executions',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'events' => [
+                'users.*.create',
+            ],
+            'timeout' => $timeout,
+        ]);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.php',
+            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+
+        // Wait a little for activation to finish
+        sleep(5);
+
+        // Create user to trigger event
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'name' => 'Event User'
+        ]);
+
+        $userId = $user['body']['$id'];
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        // Wait for execution to occur
+        sleep(15);
+
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $execution = $executions['body']['executions'][0];
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertEquals('completed', $execution['status']);
+        $this->assertEquals(204, $execution['responseStatusCode']);
+        $this->assertStringContainsString($userId, $execution['logs']);
+        $this->assertStringContainsString('Event User', $execution['logs']);
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        // Cleanup : Delete user
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testCookieExecution()
+    {
+        $timeout = 5;
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/php-cookie/code.tar.gz";
+        $this->packageCode('php-cookie');
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test PHP Cookie executions',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => $timeout,
+        ]);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.php',
+            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+
+        // Wait a little for activation to finish
+        sleep(5);
+
+        $cookie = 'cookieName=cookieValue; cookie2=value2; cookie3=value=3; cookie4=val:ue4; cookie5=value5';
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => false,
+            'headers' => [
+                'cookie' => $cookie
+            ]
+        ]);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+        $this->assertEquals($cookie, $execution['body']['responseBody']);
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testFunctionsDomain()
+    {
+        $timeout = 5;
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/php-cookie/code.tar.gz";
+        $this->packageCode('php-cookie');
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test PHP Cookie executions',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => $timeout,
+            'execute' => ['any']
+        ]);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('resourceId', [$functionId])->toString(),
+                Query::equal('resourceType', ['function'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(1, $rules['body']['total']);
+        $this->assertCount(1, $rules['body']['rules']);
+        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
+
+        $domain = $rules['body']['rules'][0]['domain'];
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.php',
+            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+
+        // Wait a little for activation to finish
+        sleep(5);
+
+        $cookie = 'cookieName=cookieValue; cookie2=value2; cookie3=value=3; cookie4=val:ue4; cookie5=value5';
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => $cookie
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($cookie, $response['body']);
+
+        // Await Aggregation
+        sleep(App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
+
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '24h'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(19, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 }

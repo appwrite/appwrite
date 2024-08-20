@@ -10,10 +10,13 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
+use Utopia\Logger\Log;
+use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -37,14 +40,21 @@ App::post('/v1/proxy/rules')
     ->param('resourceId', '', new UID(), 'ID of resource for the action type. If resourceType is "api", leave empty. If resourceType is "function", provide ID of the function.', true)
     ->inject('response')
     ->inject('project')
-    ->inject('events')
+    ->inject('queueForCertificates')
+    ->inject('queueForEvents')
     ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->action(function (string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Event $events, Database $dbForConsole, Database $dbForProject) {
-        $mainDomain = App::getEnv('_APP_DOMAIN', '');
+    ->action(function (string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForConsole, Database $dbForProject) {
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
         if ($domain === $mainDomain) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your main domain to specific resource. Please use subdomain or a different domain.');
         }
+
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        if ($functionsDomain != '' && str_ends_with($domain, $functionsDomain)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
+        }
+
         if ($domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
@@ -86,7 +96,11 @@ App::post('/v1/proxy/rules')
             $resourceInternalId = $function->getInternalId();
         }
 
-        $domain = new Domain($domain);
+        try {
+            $domain = new Domain($domain);
+        } catch (\Throwable) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
+        }
 
         $ruleId = ID::unique();
         $rule = new Document([
@@ -101,20 +115,19 @@ App::post('/v1/proxy/rules')
         ]);
 
         $status = 'created';
-        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS');
         if (!empty($functionsDomain) && \str_ends_with($domain->get(), $functionsDomain)) {
             $status = 'verified';
         }
 
         if ($status === 'created') {
-            $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+            $target = new Domain(System::getEnv('_APP_DOMAIN_TARGET', ''));
             $validator = new CNAME($target->get()); // Verify Domain with DNS records
 
             if ($validator->isValid($domain->get())) {
                 $status = 'verifying';
 
-                $event = new Certificate();
-                $event
+                $queueForCertificates
                     ->setDomain(new Document([
                         'domain' => $rule->getAttribute('domain')
                     ]))
@@ -125,7 +138,7 @@ App::post('/v1/proxy/rules')
         $rule->setAttribute('status', $status);
         $rule = $dbForConsole->createDocument('rules', $rule);
 
-        $events->setParam('ruleId', $rule->getId());
+        $queueForEvents->setParam('ruleId', $rule->getId());
 
         $rule->setAttribute('logs', '');
 
@@ -151,7 +164,11 @@ App::get('/v1/proxy/rules')
     ->inject('project')
     ->inject('dbForConsole')
     ->action(function (array $queries, string $search, Response $response, Document $project, Database $dbForConsole) {
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -159,8 +176,12 @@ App::get('/v1/proxy/rules')
 
         $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -235,9 +256,9 @@ App::delete('/v1/proxy/rules/:ruleId')
     ->inject('response')
     ->inject('project')
     ->inject('dbForConsole')
-    ->inject('deletes')
-    ->inject('events')
-    ->action(function (string $ruleId, Response $response, Document $project, Database $dbForConsole, Delete $deletes, Event $events) {
+    ->inject('queueForDeletes')
+    ->inject('queueForEvents')
+    ->action(function (string $ruleId, Response $response, Document $project, Database $dbForConsole, Delete $queueForDeletes, Event $queueForEvents) {
         $rule = $dbForConsole->getDocument('rules', $ruleId);
 
         if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
@@ -246,11 +267,11 @@ App::delete('/v1/proxy/rules/:ruleId')
 
         $dbForConsole->deleteDocument('rules', $rule->getId());
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($rule);
 
-        $events->setParam('ruleId', $rule->getId());
+        $queueForEvents->setParam('ruleId', $rule->getId());
 
         $response->noContent();
     });
@@ -270,17 +291,19 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
     ->label('sdk.response.model', Response::MODEL_PROXY_RULE)
     ->param('ruleId', '', new UID(), 'Rule ID.')
     ->inject('response')
-    ->inject('events')
+    ->inject('queueForCertificates')
+    ->inject('queueForEvents')
     ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $ruleId, Response $response, Event $events, Document $project, Database $dbForConsole) {
+    ->inject('log')
+    ->action(function (string $ruleId, Response $response, Certificate $queueForCertificates, Event $queueForEvents, Document $project, Database $dbForConsole, Log $log) {
         $rule = $dbForConsole->getDocument('rules', $ruleId);
 
         if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
-        $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+        $target = new Domain(System::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Domain target must be configured as environment variable.');
@@ -293,21 +316,27 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
         $validator = new CNAME($target->get()); // Verify Domain with DNS records
         $domain = new Domain($rule->getAttribute('domain', ''));
 
+        $validationStart = \microtime(true);
         if (!$validator->isValid($domain->get())) {
+            $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
+            $log->addTag('dnsDomain', $domain->get());
+
+            $error = $validator->getLogs();
+            $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
+
             throw new Exception(Exception::RULE_VERIFICATION_FAILED);
         }
 
         $dbForConsole->updateDocument('rules', $rule->getId(), $rule->setAttribute('status', 'verifying'));
 
         // Issue a TLS certificate when domain is verified
-        $event = new Certificate();
-        $event
+        $queueForCertificates
             ->setDomain(new Document([
                 'domain' => $rule->getAttribute('domain')
             ]))
             ->trigger();
 
-        $events->setParam('ruleId', $rule->getId());
+        $queueForEvents->setParam('ruleId', $rule->getId());
 
         $certificate = $dbForConsole->getDocument('certificates', $rule->getAttribute('certificateId', ''));
         $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));

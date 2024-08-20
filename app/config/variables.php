@@ -36,8 +36,26 @@ return [
             ],
             [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
-                'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443.',
+                'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443, and you have set up wildcard certificates with DNS challenge.',
                 'introduction' => '',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS',
+                'description' => 'Allows you to force HTTPS connection to function domains. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443.',
+                'introduction' => '',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OPTIONS_ROUTER_PROTECTION',
+                'description' => 'Protects server from serving requests from unknown hostnames, and from serving Console for custom project domains. By default, set to \'disabled\'. To start router protection, set to \'enabled\'. It is recommended to enable this variable on production environment.',
+                'introduction' => '1.4.4',
                 'default' => 'disabled',
                 'required' => false,
                 'question' => '',
@@ -97,18 +115,19 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
-            // [
-            //     'name' => '_APP_CONSOLE_WHITELIST_DOMAINS',
-            //     'description' => 'This option allows you to limit creation of users to Appwrite console for users sharing the same email domains. This option is very useful for team working with company emails domain.\n\nTo enable this option, pass a list of allowed email domains separated by a comma.',
-            //     'introduction' => '',
-            //     'default' => '',
-            //     'required' => false,
-            //     'question' => '',
-            // ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_IPS',
                 'description' => "This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.\n\nTo enable/activate this option, pass a list of allowed IP addresses separated by a comma.",
                 'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_HOSTNAMES',
+                'description' => 'This option allows you to add additional hostnames to your Appwrite console. This option is very useful for allowing access to the console project from additional domains. To enable it, pass a list of allowed hostnames separated by a comma.',
+                'introduction' => '1.5.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -143,10 +162,28 @@ return [
             ],
             [
                 'name' => '_APP_SYSTEM_SECURITY_EMAIL_ADDRESS',
-                'description' => 'This is the email address used to issue SSL certificates for custom domains or the user agent in your webhooks payload.',
+                'description' => 'Deprecated since 1.5.1 use _APP_EMAIL_SECURITY and _APP_EMAIL_CERTIFICATES instead',
                 'introduction' => '0.7.0',
                 'default' => 'certs@appwrite.io',
                 'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EMAIL_SECURITY',
+                'description' => 'This is the email address used as the user agent in your webhooks payload.',
+                'introduction' => '1.5.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EMAIL_CERTIFICATES',
+                'description' => 'This is the email address used to issue SSL certificates for custom domains',
+                'introduction' => '1.5.1',
+                'default' => '',
+                'required' => true,
                 'question' => '',
                 'filter' => ''
             ],
@@ -319,7 +356,7 @@ return [
     ],
     [
         'category' => 'InfluxDB',
-        'description' => 'Appwrite uses an InfluxDB server for managing time-series data and server stats. The InfluxDB env vars are used to allow Appwrite server to connect to the InfluxDB container.',
+        'description' => 'Deprecated since 1.4.8.',
         'variables' => [
             [
                 'name' => '_APP_INFLUXDB_HOST',
@@ -343,7 +380,7 @@ return [
     ],
     [
         'category' => 'StatsD',
-        'description' => 'Appwrite uses a StatsD server for aggregating and sending stats data over a fast UDP connection. The StatsD env vars are used to allow Appwrite server to connect to the StatsD container.',
+        'description' => 'Deprecated since 1.4.8.',
         'variables' => [
             [
                 'name' => '_APP_STATSD_HOST',
@@ -389,7 +426,7 @@ return [
             ],
             [
                 'name' => '_APP_SMTP_SECURE',
-                'description' => 'SMTP secure connection protocol. Empty by default, change to \'tls\' if running on a secure connection.',
+                'description' => 'SMTP secure connection protocol. Empty by default, change to \'tls\' or \'ssl\' if running on a secure connection.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -422,7 +459,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMS_PROVIDER',
-                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, text-magic, telesign, msg91, and vonage.",
+                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, Textmagic, telesign, msg91, and vonage.",
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
@@ -431,7 +468,7 @@ return [
             ],
             [
                 'name' => '_APP_SMS_FROM',
-                'description' => 'Phone number used for sending out messages. Must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789).',
+                'description' => 'Phone number used for sending out messages. If using Twilio, this may be a Messaging Service SID, starting with MG. Otherwise, the number must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789). ',
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
@@ -737,7 +774,7 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_SECRET',
-                'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this!',
+                'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this.',
                 'introduction' => '0.13.0',
                 'default' => 'your-secret-key',
                 'required' => false,
@@ -746,9 +783,9 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_HOST',
-                'description' => 'The host used by Appwrite to communicate with the function executor!',
+                'description' => 'The host used by Appwrite to communicate with the function executor.',
                 'introduction' => '0.13.0',
-                'default' => 'http://appwrite-executor/v1',
+                'default' => 'http://exc1/v1',
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
@@ -756,7 +793,7 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_RUNTIME_NETWORK',
-                'description' => 'Deprecated with 0.14.0, use \'OPEN_RUNTIMES_NETWORK\' instead!',
+                'description' => 'Deprecated with 0.14.0, use \'OPEN_RUNTIMES_NETWORK\' instead.',
                 'introduction' => '0.13.0',
                 'default' => 'appwrite_runtimes',
                 'required' => false,
@@ -765,7 +802,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_ENVS',
-                'description' => 'Deprecated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
+                'description' => 'Deprecated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead.',
                 'introduction' => '0.7.0',
                 'default' => 'node-16.0,php-7.4,python-3.9,ruby-3.0',
                 'required' => false,
@@ -783,7 +820,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_USERNAME',
-                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_USERNAME\' instead!',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_USERNAME\' instead.',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -792,7 +829,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_PASSWORD',
-                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_PASSWORD\' instead!',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_PASSWORD\' instead.',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -810,7 +847,7 @@ return [
             ],
             [
                 'name' => 'OPEN_RUNTIMES_NETWORK',
-                'description' => 'Deprecated with 1.2.0, use \'_APP_FUNCTIONS_RUNTIMES_NETWORK\' instead!',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_FUNCTIONS_RUNTIMES_NETWORK\' instead.',
                 'introduction' => '0.13.0',
                 'default' => 'appwrite_runtimes',
                 'required' => false,
@@ -925,6 +962,15 @@ return [
                 'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
                 'introduction' => '0.7.0',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_DELAY',
+                'description' => 'Delay value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 0 seconds.',
+                'introduction' => '1.5.0',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

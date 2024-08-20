@@ -8,58 +8,68 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\FunctionEvent;
-use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
-use Utopia\Validator\Assoc;
-use Appwrite\Usage\Stats;
+use Appwrite\Task\Validator\Cron;
+use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries\Deployments;
+use Appwrite\Utopia\Database\Validator\Queries\Executions;
+use Appwrite\Utopia\Database\Validator\Queries\Functions;
+use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model\Rule;
+use Executor\Executor;
+use MaxMind\Db\Reader;
+use Utopia\App;
+use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Device;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
-use Appwrite\Utopia\Response;
 use Utopia\Swoole\Request;
-use Appwrite\Task\Validator\Cron;
-use Appwrite\Utopia\Database\Validator\Queries\Deployments;
-use Appwrite\Utopia\Database\Validator\Queries\Executions;
-use Appwrite\Utopia\Database\Validator\Queries\Functions;
-use Utopia\App;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\DateTime;
-use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\Text;
-use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
-use Utopia\Config\Config;
-use Executor\Executor;
-use Utopia\CLI\Console;
-use Utopia\Database\Validator\Roles;
+use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
-use Utopia\Database\Exception\Duplicate as DuplicateException;
-use MaxMind\Db\Reader;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Exception\RepositoryNotFound;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$redeployVcs = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Document $template, GitHub $github) {
+$redeployVcs = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github) {
     $deploymentId = ID::unique();
     $entrypoint = $function->getAttribute('entrypoint', '');
     $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
-    $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-    $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+    $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+    $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
     $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
     $owner = $github->getOwnerName($providerInstallationId);
     $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
-    $repositoryName = $github->getRepositoryName($providerRepositoryId);
+    try {
+        $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+        if (empty($repositoryName)) {
+            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+        }
+    } catch (RepositoryNotFound $e) {
+        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+    }
     $providerBranch = $function->getAttribute('providerBranch', 'main');
     $authorUrl = "https://github.com/$owner";
     $repositoryUrl = "https://github.com/$owner/$repositoryName";
@@ -84,6 +94,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
             Permission::delete(Role::any()),
         ],
         'resourceId' => $function->getId(),
+        'resourceInternalId' => $function->getInternalId(),
         'resourceType' => 'functions',
         'entrypoint' => $entrypoint,
         'commands' => $function->getAttribute('commands', ''),
@@ -108,14 +119,11 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         'activate' => true,
     ]));
 
-    $buildEvent = new Build();
-    $buildEvent
+    $queueForBuilds
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
         ->setDeployment($deployment)
-        ->setTemplate($template)
-        ->setProject($project)
-        ->trigger();
+        ->setTemplate($template);
 };
 
 App::post('/v1/functions')
@@ -138,7 +146,7 @@ App::post('/v1/functions')
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
+    ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
     ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
     ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
@@ -157,11 +165,18 @@ App::post('/v1/functions')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
+    ->inject('queueForEvents')
+    ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
+
+        $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
+
+        if (!empty($allowList) && !\in_array($runtime, $allowList)) {
+            throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $runtime . '" is not supported');
+        }
 
         // build from template
         $template = new Document([]);
@@ -218,7 +233,7 @@ App::post('/v1/functions')
 
         $schedule = Authorization::skip(
             fn () => $dbForConsole->createDocument('schedules', new Document([
-                'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                'region' => System::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                 'resourceType' => 'function',
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getInternalId(),
@@ -234,12 +249,16 @@ App::post('/v1/functions')
 
         // Git connect logic
         if (!empty($providerRepositoryId)) {
+            $teamId = $project->getAttribute('teamId', '');
+
             $repository = $dbForConsole->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
+                    Permission::read(Role::team(ID::custom($teamId))),
+                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getInternalId(),
@@ -260,10 +279,10 @@ App::post('/v1/functions')
 
         // Redeploy vcs logic
         if (!empty($providerRepositoryId)) {
-            $redeployVcs($request, $function, $project, $installation, $dbForProject, $template, $github);
+            $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
         }
 
-        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         if (!empty($functionsDomain)) {
             $ruleId = ID::unique();
             $routeSubdomain = ID::unique();
@@ -285,7 +304,11 @@ App::post('/v1/functions')
 
             /** Trigger Webhook */
             $ruleModel = new Rule();
-            $ruleCreate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
+            $ruleCreate =
+                $queueForEvents
+                ->setClass(Event::WEBHOOK_CLASS_NAME)
+                ->setQueue(Event::WEBHOOK_QUEUE_NAME);
+
             $ruleCreate
                 ->setProject($project)
                 ->setEvent('rules.[ruleId].create')
@@ -325,7 +348,7 @@ App::post('/v1/functions')
             );
         }
 
-        $eventsInstance->setParam('functionId', $function->getId());
+        $queueForEvents->setParam('functionId', $function->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -349,15 +372,21 @@ App::get('/v1/functions')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -393,17 +422,23 @@ App::get('/v1/functions/runtimes')
     ->label('sdk.response.model', Response::MODEL_RUNTIME_LIST)
     ->inject('response')
     ->action(function (Response $response) {
-
         $runtimes = Config::getParam('runtimes');
 
-        $runtimes = array_map(function ($key) use ($runtimes) {
+        $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
+
+        $allowed = [];
+        foreach ($runtimes as $key => $runtime) {
+            if (!empty($allowList) && !\in_array($key, $allowList)) {
+                continue;
+            }
+
             $runtimes[$key]['$id'] = $key;
-            return $runtimes[$key];
-        }, array_keys($runtimes));
+            $allowed[] = $runtimes[$key];
+        }
 
         $response->dynamic(new Document([
-            'total' => count($runtimes),
-            'runtimes' => $runtimes
+            'total' => count($allowed),
+            'runtimes' => $allowed
         ]), Response::MODEL_RUNTIME_LIST);
     });
 
@@ -440,9 +475,9 @@ App::get('/v1/functions/:functionId/usage')
     ->label('sdk.method', 'getFunctionUsage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
+    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $range, Response $response, Database $dbForProject) {
@@ -453,97 +488,91 @@ App::get('/v1/functions/:functionId/usage')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '1h',
-                    'limit' => 24,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS)
+        ];
 
-            $metrics = [
-                "executions.$functionId.compute.total",
-                "executions.$functionId.compute.success",
-                "executions.$functionId.compute.failure",
-                "executions.$functionId.compute.time",
-                "builds.$functionId.compute.total",
-                "builds.$functionId.compute.success",
-                "builds.$functionId.compute.failure",
-                "builds.$functionId.compute.time",
-            ];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $result =  $dbForProject->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
 
-            $stats = [];
-
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        Query::equal('period', [$period]),
-                        Query::equal('metric', [$metric]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
-
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '1h' => 3600,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-                        ];
-                        $backfill--;
-                    }
-                    $stats[$metric] = array_reverse($stats[$metric]);
+                $stats[$metric]['total'] = $result['value'] ?? 0;
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric]['data'] = [];
+                foreach ($results as $result) {
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
                 }
-            });
+            }
+        });
 
-            $usage = new Document([
-                'range' => $range,
-                'executionsTotal' => $stats["executions.$functionId.compute.total"] ?? [],
-                'executionsFailure' => $stats["executions.$functionId.compute.failure"] ?? [],
-                'executionsSuccesse' => $stats["executions.$functionId.compute.success"] ?? [],
-                'executionsTime' => $stats["executions.$functionId.compute.time"] ?? [],
-                'buildsTotal' => $stats["builds.$functionId.compute.total"] ?? [],
-                'buildsFailure' => $stats["builds.$functionId.compute.failure"] ?? [],
-                'buildsSuccess' => $stats["builds.$functionId.compute.success"] ?? [],
-                'buildsTime' => $stats["builds.$functionId.compute.time" ?? []]
-            ]);
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+        foreach ($metrics as $metric) {
+            $usage[$metric]['total'] =  $stats[$metric]['total'];
+            $usage[$metric]['data'] = [];
+            $leap = time() - ($days['limit'] * $days['factor']);
+            while ($leap < time()) {
+                $leap += $days['factor'];
+                $formatDate = date($format, $leap);
+                $usage[$metric]['data'][] = [
+                    'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
+                ];
+            }
         }
 
-        $response->dynamic($usage, Response::MODEL_USAGE_FUNCTION);
+        $response->dynamic(new Document([
+            'range' => $range,
+            'deploymentsTotal' => $usage[$metrics[0]]['total'],
+            'deploymentsStorageTotal' => $usage[$metrics[1]]['total'],
+            'buildsTotal' => $usage[$metrics[2]]['total'],
+            'buildsStorageTotal' => $usage[$metrics[3]]['total'],
+            'buildsTimeTotal' => $usage[$metrics[4]]['total'],
+            'executionsTotal' => $usage[$metrics[5]]['total'],
+            'executionsTimeTotal' => $usage[$metrics[6]]['total'],
+            'deployments' => $usage[$metrics[0]]['data'],
+            'deploymentsStorage' => $usage[$metrics[1]]['data'],
+            'builds' => $usage[$metrics[2]]['data'],
+            'buildsStorage' => $usage[$metrics[3]]['data'],
+            'buildsTime' => $usage[$metrics[4]]['data'],
+            'executions' => $usage[$metrics[5]]['data'],
+            'executionsTime' => $usage[$metrics[6]]['data'],
+            'buildsMbSecondsTotal' => $usage[$metrics[7]]['total'],
+            'buildsMbSeconds' => $usage[$metrics[7]]['data'],
+            'executionsMbSeconds' => $usage[$metrics[8]]['data'],
+            'executionsMbSecondsTotal' => $usage[$metrics[8]]['total']
+        ]), Response::MODEL_USAGE_FUNCTION);
     });
 
 App::get('/v1/functions/usage')
     ->desc('Get functions usage')
-    ->groups(['api', 'functions', 'usage'])
+    ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
@@ -551,97 +580,93 @@ App::get('/v1/functions/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
 
-        $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '1h',
-                    'limit' => 24,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            METRIC_FUNCTIONS,
+            METRIC_DEPLOYMENTS,
+            METRIC_DEPLOYMENTS_STORAGE,
+            METRIC_BUILDS,
+            METRIC_BUILDS_STORAGE,
+            METRIC_BUILDS_COMPUTE,
+            METRIC_EXECUTIONS,
+            METRIC_EXECUTIONS_COMPUTE,
+            METRIC_BUILDS_MB_SECONDS,
+            METRIC_EXECUTIONS_MB_SECONDS,
+        ];
 
-            $metrics = [
-                'executions.$all.compute.total',
-                'executions.$all.compute.failure',
-                'executions.$all.compute.success',
-                'executions.$all.compute.time',
-                'builds.$all.compute.total',
-                'builds.$all.compute.failure',
-                'builds.$all.compute.success',
-                'builds.$all.compute.time',
-            ];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $result =  $dbForProject->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
 
-            $stats = [];
-
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        Query::equal('period', [$period]),
-                        Query::equal('metric', [$metric]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
-
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '1h' => 3600,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-                        ];
-                        $backfill--;
-                    }
-                    $stats[$metric] = array_reverse($stats[$metric]);
+                $stats[$metric]['total'] = $result['value'] ?? 0;
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric]['data'] = [];
+                foreach ($results as $result) {
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
                 }
-            });
+            }
+        });
 
-            $usage = new Document([
-                'range' => $range,
-                'executionsTotal' => $stats[$metrics[0]] ?? [],
-                'executionsFailure' => $stats[$metrics[1]] ?? [],
-                'executionsSuccess' => $stats[$metrics[2]] ?? [],
-                'executionsTime' => $stats[$metrics[3]] ?? [],
-                'buildsTotal' => $stats[$metrics[4]] ?? [],
-                'buildsFailure' => $stats[$metrics[5]] ?? [],
-                'buildsSuccess' => $stats[$metrics[6]] ?? [],
-                'buildsTime' => $stats[$metrics[7]] ?? [],
-            ]);
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+        foreach ($metrics as $metric) {
+            $usage[$metric]['total'] =  $stats[$metric]['total'];
+            $usage[$metric]['data'] = [];
+            $leap = time() - ($days['limit'] * $days['factor']);
+            while ($leap < time()) {
+                $leap += $days['factor'];
+                $formatDate = date($format, $leap);
+                $usage[$metric]['data'][] = [
+                    'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
+                ];
+            }
         }
-
-        $response->dynamic($usage, Response::MODEL_USAGE_FUNCTIONS);
+        $response->dynamic(new Document([
+            'range' => $range,
+            'functionsTotal' => $usage[$metrics[0]]['total'],
+            'deploymentsTotal' => $usage[$metrics[1]]['total'],
+            'deploymentsStorageTotal' => $usage[$metrics[2]]['total'],
+            'buildsTotal' => $usage[$metrics[3]]['total'],
+            'buildsStorageTotal' => $usage[$metrics[4]]['total'],
+            'buildsTimeTotal' => $usage[$metrics[5]]['total'],
+            'executionsTotal' => $usage[$metrics[6]]['total'],
+            'executionsTimeTotal' => $usage[$metrics[7]]['total'],
+            'functions' => $usage[$metrics[0]]['data'],
+            'deployments' => $usage[$metrics[1]]['data'],
+            'deploymentsStorage' => $usage[$metrics[2]]['data'],
+            'builds' => $usage[$metrics[3]]['data'],
+            'buildsStorage' => $usage[$metrics[4]]['data'],
+            'buildsTime' => $usage[$metrics[5]]['data'],
+            'executions' => $usage[$metrics[6]]['data'],
+            'executionsTime' => $usage[$metrics[7]]['data'],
+            'buildsMbSecondsTotal' => $usage[$metrics[8]]['total'],
+            'buildsMbSeconds' => $usage[$metrics[8]]['data'],
+            'executionsMbSeconds' => $usage[$metrics[9]]['data'],
+            'executionsMbSecondsTotal' => $usage[$metrics[9]]['total'],
+        ]), Response::MODEL_USAGE_FUNCTIONS);
     });
 
 App::put('/v1/functions/:functionId')
@@ -664,7 +689,7 @@ App::put('/v1/functions/:functionId')
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
+    ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
     ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
     ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
@@ -678,10 +703,11 @@ App::put('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('events')
+    ->inject('queueForEvents')
+    ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $eventsInstance, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -806,7 +832,7 @@ App::put('/v1/functions/:functionId')
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $redeployVcs($request, $function, $project, $installation, $dbForProject, new Document(), $github);
+            $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $github);
         }
 
         // Inform scheduler if function is still active
@@ -817,14 +843,14 @@ App::put('/v1/functions/:functionId')
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
-        $eventsInstance->setParam('functionId', $function->getId());
+        $queueForEvents->setParam('functionId', $function->getId());
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
 App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->groups(['api', 'functions'])
-    ->desc('Download Deployment')
+    ->desc('Download deployment')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -838,8 +864,8 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->inject('response')
     ->inject('request')
     ->inject('dbForProject')
-    ->inject('deviceFunctions')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Request $request, Database $dbForProject, Device $deviceFunctions) {
+    ->inject('deviceForFunctions')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Request $request, Database $dbForProject, Device $deviceForFunctions) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -856,7 +882,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
         }
 
         $path = $deployment->getAttribute('path', '');
-        if (!$deviceFunctions->exists($path)) {
+        if (!$deviceForFunctions->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -864,10 +890,9 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
             ->setContentType('application/gzip')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"')
-        ;
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"');
 
-        $size = $deviceFunctions->getFileSize($path);
+        $size = $deviceForFunctions->getFileSize($path);
         $rangeHeader = $request->getHeader('range');
 
         if (!empty($rangeHeader)) {
@@ -889,14 +914,13 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
-            $response->send($deviceFunctions->read($path, $start, ($end - $start + 1)));
+            $response->send($deviceForFunctions->read($path, $start, ($end - $start + 1)));
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
-            $response->addHeader('Content-Length', $deviceFunctions->getFileSize($path));
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $deviceFunctions->read(
+                    $deviceForFunctions->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -905,13 +929,13 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
                 );
             }
         } else {
-            $response->send($deviceFunctions->read($path));
+            $response->send($deviceForFunctions->read($path));
         }
     });
 
 App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Update function deployment')
+    ->desc('Update deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
@@ -927,9 +951,9 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
+    ->inject('queueForEvents')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $events, Database $dbForConsole) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -964,7 +988,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
@@ -987,10 +1011,10 @@ App::delete('/v1/functions/:functionId')
     ->param('functionId', '', new UID(), 'Function ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('deletes')
-    ->inject('events')
+    ->inject('queueForDeletes')
+    ->inject('queueForEvents')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Database $dbForConsole) {
+    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1009,11 +1033,11 @@ App::delete('/v1/functions/:functionId')
             ->setAttribute('active', false);
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($function);
 
-        $events->setParam('functionId', $function->getId());
+        $queueForEvents->setParam('functionId', $function->getId());
 
         $response->noContent();
     });
@@ -1042,11 +1066,13 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
+    ->inject('queueForEvents')
     ->inject('project')
-    ->inject('deviceFunctions')
-    ->inject('deviceLocal')
-    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->inject('deviceForFunctions')
+    ->inject('deviceForLocal')
+    ->inject('queueForBuilds')
+    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds) {
+
         $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -1079,7 +1105,7 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0));
+        $fileSizeValidator = new FileSize(System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000'));
         $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way
@@ -1126,11 +1152,11 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         // Save to storage
-        $fileSize ??= $deviceLocal->getFileSize($fileTmpName);
-        $path = $deviceFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+        $fileSize ??= $deviceForLocal->getFileSize($fileTmpName);
+        $path = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
+        $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
         if (!$deployment->isEmpty()) {
             $chunks = $deployment->getAttribute('chunksTotal', 1);
             $metadata = $deployment->getAttribute('metadata', []);
@@ -1139,7 +1165,7 @@ App::post('/v1/functions/:functionId/deployments')
             }
         }
 
-        $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
+        $chunksUploaded = $deviceForFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
 
         if (empty($chunksUploaded)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
@@ -1162,7 +1188,7 @@ App::post('/v1/functions/:functionId/deployments')
                 }
             }
 
-            $fileSize = $deviceFunctions->getFileSize($path);
+            $fileSize = $deviceForFunctions->getFileSize($path);
 
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -1190,13 +1216,10 @@ App::post('/v1/functions/:functionId/deployments')
             }
 
             // Start the build
-            $buildEvent = new Build();
-            $buildEvent
+            $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
-                ->setDeployment($deployment)
-                ->setProject($project)
-                ->trigger();
+                ->setDeployment($deployment);
         } else {
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -1228,7 +1251,7 @@ App::post('/v1/functions/:functionId/deployments')
 
         $metadata = null;
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
@@ -1261,19 +1284,25 @@ App::get('/v1/functions/:functionId/deployments')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
         // Set resource queries
-        $queries[] = Query::equal('resourceId', [$function->getId()]);
+        $queries[] = Query::equal('resourceInternalId', [$function->getInternalId()]);
         $queries[] = Query::equal('resourceType', ['functions']);
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -1366,10 +1395,10 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('deletes')
-    ->inject('events')
-    ->inject('deviceFunctions')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Device $deviceFunctions) {
+    ->inject('queueForDeletes')
+    ->inject('queueForEvents')
+    ->inject('deviceForFunctions')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Device $deviceForFunctions) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -1390,7 +1419,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         }
 
         if (!empty($deployment->getAttribute('path', ''))) {
-            if (!($deviceFunctions->delete($deployment->getAttribute('path', '')))) {
+            if (!($deviceForFunctions->delete($deployment->getAttribute('path', '')))) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
         }
@@ -1402,11 +1431,11 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
             ])));
         }
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($deployment);
 
@@ -1433,8 +1462,9 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('events')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $events) use ($redeployVcs) {
+    ->inject('queueForEvents')
+    ->inject('queueForBuilds')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1466,16 +1496,12 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
         ]));
 
-        $buildEvent = new Build();
-
-        $buildEvent
+        $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($function)
-            ->setDeployment($deployment)
-            ->setProject($project)
-            ->trigger();
+            ->setDeployment($deployment);
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
@@ -1495,7 +1521,7 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('body', '', new Text(8192, 0), 'HTTP body of execution. Default value is empty string.', true)
+    ->param('body', '', new Text(0, 0), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
@@ -1504,12 +1530,12 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('user')
-    ->inject('events')
-    ->inject('usage')
+    ->inject('queueForEvents')
+    ->inject('queueForUsage')
     ->inject('mode')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Func $queueForFunctions, Reader $geodb) {
+    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, string $mode, Func $queueForFunctions, Reader $geodb) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1568,7 +1594,7 @@ App::post('/v1/functions/:functionId/executions')
             }
 
             if (!$current->isEmpty()) {
-                $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
                 $jwt = $jwtObj->encode([
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
@@ -1625,7 +1651,7 @@ App::post('/v1/functions/:functionId/executions')
             'search' => implode(' ', [$functionId, $executionId]),
         ]);
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('executionId', $execution->getId())
             ->setContext('function', $function);
@@ -1647,6 +1673,8 @@ App::post('/v1/functions/:functionId/executions')
                 ->setJWT($jwt)
                 ->setProject($project)
                 ->setUser($user)
+                ->setParam('functionId', $function->getId())
+                ->setParam('executionId', $execution->getId())
                 ->trigger();
 
             return $response
@@ -1689,7 +1717,7 @@ App::post('/v1/functions/:functionId/executions')
         ]);
 
         /** Execute function */
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
@@ -1707,7 +1735,8 @@ App::post('/v1/functions/:functionId/executions')
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: $command
+                runtimeEntrypoint: $command,
+                requestTimeout: 30
             );
 
             $headersFiltered = [];
@@ -1734,20 +1763,25 @@ App::post('/v1/functions/:functionId/executions')
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
             Console::error($th->getMessage());
+
+            if ($th instanceof AppwriteException) {
+                throw $th;
+            }
+        } finally {
+            $queueForUsage
+                ->addMetric(METRIC_EXECUTIONS, 1)
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(512 * $execution->getAttribute('duration', 0)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(512 * $execution->getAttribute('duration', 0)))
+            ;
+
+            if ($function->getAttribute('logging')) {
+                /** @var Document $execution */
+                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            }
         }
-
-        if ($function->getAttribute('logging')) {
-            /** @var Document $execution */
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-        }
-
-        // TODO revise this later using route label
-        $usage
-            ->setParam('functionId', $function->getId())
-            ->setParam('executions.{scope}.compute', 1)
-            ->setParam('executionStatus', $execution->getAttribute('status', ''))
-            ->setParam('executionTime', $execution->getAttribute('duration')); // ms
-
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -1798,7 +1832,11 @@ App::get('/v1/functions/:functionId/executions')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -1807,9 +1845,11 @@ App::get('/v1/functions/:functionId/executions')
         // Set internal queries
         $queries[] = Query::equal('functionId', [$function->getId()]);
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
