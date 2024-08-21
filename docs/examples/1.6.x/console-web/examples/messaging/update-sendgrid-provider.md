@@ -17,4 +17,4 @@ const result = await messaging.updateSendgridProvider(
     '<REPLY_TO_EMAIL>' // replyToEmail (optional)
 );
 
-console.log(response);
+console.log(result);

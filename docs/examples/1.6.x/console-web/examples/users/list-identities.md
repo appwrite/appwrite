@@ -11,4 +11,4 @@ const result = await users.listIdentities(
     '<SEARCH>' // search (optional)
 );
 
-console.log(response);
+console.log(result);

@@ -11,4 +11,4 @@ const result = await account.updateMfaAuthenticator(
     '<OTP>' // otp
 );
 
-console.log(response);
+console.log(result);

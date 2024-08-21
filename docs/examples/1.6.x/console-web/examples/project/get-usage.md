@@ -12,4 +12,4 @@ const result = await project.getUsage(
     ProjectUsageRange.OneHour // period (optional)
 );
 
-console.log(response);
+console.log(result);

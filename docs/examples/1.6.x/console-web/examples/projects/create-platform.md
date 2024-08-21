@@ -15,4 +15,4 @@ const result = await projects.createPlatform(
     '' // hostname (optional)
 );
 
-console.log(response);
+console.log(result);

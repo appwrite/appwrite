@@ -15,4 +15,4 @@ const result = await messaging.updateTelesignProvider(
     '<FROM>' // from (optional)
 );
 
-console.log(response);
+console.log(result);

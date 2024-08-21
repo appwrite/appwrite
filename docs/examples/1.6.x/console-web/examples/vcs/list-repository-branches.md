@@ -11,4 +11,4 @@ const result = await vcs.listRepositoryBranches(
     '<PROVIDER_REPOSITORY_ID>' // providerRepositoryId
 );
 
-console.log(response);
+console.log(result);

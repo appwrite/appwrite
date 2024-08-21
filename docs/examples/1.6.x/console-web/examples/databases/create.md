@@ -12,4 +12,4 @@ const result = await databases.create(
     false // enabled (optional)
 );
 
-console.log(response);
+console.log(result);

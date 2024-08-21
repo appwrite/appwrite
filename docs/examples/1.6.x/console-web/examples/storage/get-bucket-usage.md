@@ -11,4 +11,4 @@ const result = await storage.getBucketUsage(
     StorageUsageRange.TwentyFourHours // range (optional)
 );
 
-console.log(response);
+console.log(result);

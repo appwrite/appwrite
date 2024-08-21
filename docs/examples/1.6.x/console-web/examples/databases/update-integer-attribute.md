@@ -16,4 +16,4 @@ const result = await databases.updateIntegerAttribute(
     null // default
 );
 
-console.log(response);
+console.log(result);

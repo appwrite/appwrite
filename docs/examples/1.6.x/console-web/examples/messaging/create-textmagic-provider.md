@@ -15,4 +15,4 @@ const result = await messaging.createTextmagicProvider(
     false // enabled (optional)
 );
 
-console.log(response);
+console.log(result);

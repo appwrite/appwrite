@@ -13,4 +13,4 @@ const result = await databases.updateRelationshipAttribute(
     RelationMutate.Cascade // onDelete (optional)
 );
 
-console.log(response);
+console.log(result);

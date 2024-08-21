@@ -13,4 +13,4 @@ const result = await migrations.getAppwriteReport(
     '<KEY>' // key
 );
 
-console.log(response);
+console.log(result);

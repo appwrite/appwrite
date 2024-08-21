@@ -10,4 +10,4 @@ const result = await health.getCertificate(
     '' // domain (optional)
 );
 
-console.log(response);
+console.log(result);

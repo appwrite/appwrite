@@ -12,4 +12,4 @@ const result = await databases.listCollections(
     '<SEARCH>' // search (optional)
 );
 
-console.log(response);
+console.log(result);

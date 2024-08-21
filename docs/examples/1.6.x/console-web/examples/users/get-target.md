@@ -11,4 +11,4 @@ const result = await users.getTarget(
     '<TARGET_ID>' // targetId
 );
 
-console.log(response);
+console.log(result);

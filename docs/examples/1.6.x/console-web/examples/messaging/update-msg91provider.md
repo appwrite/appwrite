@@ -15,4 +15,4 @@ const result = await messaging.updateMsg91Provider(
     '<AUTH_KEY>' // authKey (optional)
 );
 
-console.log(response);
+console.log(result);

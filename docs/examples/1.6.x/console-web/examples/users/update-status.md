@@ -11,4 +11,4 @@ const result = await users.updateStatus(
     false // status
 );
 
-console.log(response);
+console.log(result);

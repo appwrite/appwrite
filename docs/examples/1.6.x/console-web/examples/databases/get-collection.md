@@ -11,4 +11,4 @@ const result = await databases.getCollection(
     '<COLLECTION_ID>' // collectionId
 );
 
-console.log(response);
+console.log(result);

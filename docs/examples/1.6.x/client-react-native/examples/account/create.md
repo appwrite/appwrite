@@ -13,4 +13,4 @@ const result = await account.create(
     '<NAME>' // name (optional)
 );
 
-console.log(response);
+console.log(result);

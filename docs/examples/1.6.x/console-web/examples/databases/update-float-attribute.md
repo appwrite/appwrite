@@ -16,4 +16,4 @@ const result = await databases.updateFloatAttribute(
     null // default
 );
 
-console.log(response);
+console.log(result);

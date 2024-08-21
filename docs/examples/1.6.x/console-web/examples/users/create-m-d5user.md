@@ -13,4 +13,4 @@ const result = await users.createMD5User(
     '<NAME>' // name (optional)
 );
 
-console.log(response);
+console.log(result);

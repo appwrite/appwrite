@@ -10,4 +10,4 @@ const result = await account.listIdentities(
     [] // queries (optional)
 );
 
-console.log(response);
+console.log(result);

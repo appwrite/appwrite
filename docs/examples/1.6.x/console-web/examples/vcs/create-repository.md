@@ -12,4 +12,4 @@ const result = await vcs.createRepository(
     false // private
 );
 
-console.log(response);
+console.log(result);

@@ -10,4 +10,4 @@ const result = await account.updatePrefs(
     {} // prefs
 );
 
-console.log(response);
+console.log(result);

@@ -11,4 +11,4 @@ const result = await users.listLogs(
     [] // queries (optional)
 );
 
-console.log(response);
+console.log(result);

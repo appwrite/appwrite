@@ -12,4 +12,4 @@ const result = await messaging.createSubscriber(
     '<TARGET_ID>' // targetId
 );
 
-console.log(response);
+console.log(result);

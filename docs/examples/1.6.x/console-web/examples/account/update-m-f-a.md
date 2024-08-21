@@ -10,4 +10,4 @@ const result = await account.updateMFA(
     false // mfa
 );
 
-console.log(response);
+console.log(result);

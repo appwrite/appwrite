@@ -12,4 +12,4 @@ const result = await functions.createVariable(
     '<VALUE>' // value
 );
 
-console.log(response);
+console.log(result);

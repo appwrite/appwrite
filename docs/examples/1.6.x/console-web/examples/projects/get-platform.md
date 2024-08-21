@@ -11,4 +11,4 @@ const result = await projects.getPlatform(
     '<PLATFORM_ID>' // platformId
 );
 
-console.log(response);
+console.log(result);

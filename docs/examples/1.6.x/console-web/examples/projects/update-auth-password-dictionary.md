@@ -11,4 +11,4 @@ const result = await projects.updateAuthPasswordDictionary(
     false // enabled
 );
 
-console.log(response);
+console.log(result);

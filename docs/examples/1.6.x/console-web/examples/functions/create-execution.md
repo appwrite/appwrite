@@ -16,4 +16,4 @@ const result = await functions.createExecution(
     '' // scheduledAt (optional)
 );
 
-console.log(response);
+console.log(result);

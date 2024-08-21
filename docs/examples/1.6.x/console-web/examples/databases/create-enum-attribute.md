@@ -16,4 +16,4 @@ const result = await databases.createEnumAttribute(
     false // array (optional)
 );
 
-console.log(response);
+console.log(result);

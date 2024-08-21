@@ -11,4 +11,4 @@ const result = await messaging.listTopicLogs(
     [] // queries (optional)
 );
 
-console.log(response);
+console.log(result);

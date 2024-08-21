@@ -8,4 +8,4 @@ const health = new Health(client);
 
 const result = await health.getTime();
 
-console.log(response);
+console.log(result);

@@ -12,4 +12,4 @@ const result = await teams.updateMembership(
     [] // roles
 );
 
-console.log(response);
+console.log(result);

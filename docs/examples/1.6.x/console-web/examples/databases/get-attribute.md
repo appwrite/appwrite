@@ -12,4 +12,4 @@ const result = await databases.getAttribute(
     '' // key
 );
 
-console.log(response);
+console.log(result);

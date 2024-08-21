@@ -11,4 +11,4 @@ const result = await migrations.createFirebaseMigration(
     '<SERVICE_ACCOUNT>' // serviceAccount
 );
 
-console.log(response);
+console.log(result);

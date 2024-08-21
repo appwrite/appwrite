@@ -11,4 +11,4 @@ const result = await projects.updateAuthPasswordHistory(
     0 // limit
 );
 
-console.log(response);
+console.log(result);

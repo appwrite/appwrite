@@ -10,4 +10,4 @@ const result = await functions.delete(
     '<FUNCTION_ID>' // functionId
 );
 
-console.log(response);
+console.log(result);

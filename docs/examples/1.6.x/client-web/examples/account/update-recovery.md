@@ -12,4 +12,4 @@ const result = await account.updateRecovery(
     '' // password
 );
 
-console.log(response);
+console.log(result);

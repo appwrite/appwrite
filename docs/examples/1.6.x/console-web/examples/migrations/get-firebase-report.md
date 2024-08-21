@@ -11,4 +11,4 @@ const result = await migrations.getFirebaseReport(
     '<SERVICE_ACCOUNT>' // serviceAccount
 );
 
-console.log(response);
+console.log(result);

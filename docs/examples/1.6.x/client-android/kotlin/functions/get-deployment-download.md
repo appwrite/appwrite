@@ -1,0 +1,14 @@
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Functions
+
+val client = Client(context)
+    .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("&lt;YOUR_PROJECT_ID&gt;") // Your project ID
+
+val functions = Functions(client)
+
+val result = functions.getDeploymentDownload(
+    functionId = "<FUNCTION_ID>", 
+    deploymentId = "<DEPLOYMENT_ID>", 
+)

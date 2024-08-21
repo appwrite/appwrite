@@ -12,4 +12,4 @@ const result = await project.updateVariable(
     '<VALUE>' // value (optional)
 );
 
-console.log(response);
+console.log(result);

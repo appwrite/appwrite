@@ -11,4 +11,4 @@ const result = await projects.updateAuthSessionsLimit(
     1 // limit
 );
 
-console.log(response);
+console.log(result);

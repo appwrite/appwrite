@@ -35,7 +35,8 @@ func main() {
         functions.WithCreateTemplateRepository("<TEMPLATE_REPOSITORY>"),
         functions.WithCreateTemplateOwner("<TEMPLATE_OWNER>"),
         functions.WithCreateTemplateRootDirectory("<TEMPLATE_ROOT_DIRECTORY>"),
-        functions.WithCreateTemplateBranch("<TEMPLATE_BRANCH>"),
+        functions.WithCreateTemplateVersion("<TEMPLATE_VERSION>"),
+        functions.WithCreateSpecification(""),
     )
 
     if error != nil {

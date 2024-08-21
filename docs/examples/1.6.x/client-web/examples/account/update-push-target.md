@@ -11,4 +11,4 @@ const result = await account.updatePushTarget(
     '<IDENTIFIER>' // identifier
 );
 
-console.log(response);
+console.log(result);

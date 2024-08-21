@@ -11,4 +11,4 @@ const result = await functions.deleteExecution(
     '<EXECUTION_ID>' // executionId
 );
 
-console.log(response);
+console.log(result);

@@ -14,4 +14,4 @@ const result = await projects.updateKey(
     '' // expire (optional)
 );
 
-console.log(response);
+console.log(result);

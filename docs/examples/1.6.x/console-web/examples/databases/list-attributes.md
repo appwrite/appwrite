@@ -12,4 +12,4 @@ const result = await databases.listAttributes(
     [] // queries (optional)
 );
 
-console.log(response);
+console.log(result);

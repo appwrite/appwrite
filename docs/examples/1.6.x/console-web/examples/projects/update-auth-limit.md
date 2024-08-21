@@ -11,4 +11,4 @@ const result = await projects.updateAuthLimit(
     0 // limit
 );
 
-console.log(response);
+console.log(result);

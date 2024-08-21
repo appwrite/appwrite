@@ -10,4 +10,4 @@ const result = await migrations.delete(
     '<MIGRATION_ID>' // migrationId
 );
 
-console.log(response);
+console.log(result);

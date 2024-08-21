@@ -11,4 +11,4 @@ const result = await teams.listLogs(
     [] // queries (optional)
 );
 
-console.log(response);
+console.log(result);

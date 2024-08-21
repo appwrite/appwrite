@@ -17,4 +17,4 @@ const result = await projects.createWebhook(
     '<HTTP_PASS>' // httpPass (optional)
 );
 
-console.log(response);
+console.log(result);

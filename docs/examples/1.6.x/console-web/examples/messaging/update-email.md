@@ -21,4 +21,4 @@ const result = await messaging.updateEmail(
     [] // attachments (optional)
 );
 
-console.log(response);
+console.log(result);

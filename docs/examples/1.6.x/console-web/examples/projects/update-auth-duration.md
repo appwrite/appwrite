@@ -11,4 +11,4 @@ const result = await projects.updateAuthDuration(
     0 // duration
 );
 
-console.log(response);
+console.log(result);

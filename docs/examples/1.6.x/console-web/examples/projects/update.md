@@ -20,4 +20,4 @@ const result = await projects.update(
     '<LEGAL_TAX_ID>' // legalTaxId (optional)
 );
 
-console.log(response);
+console.log(result);

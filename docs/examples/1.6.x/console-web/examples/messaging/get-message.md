@@ -10,4 +10,4 @@ const result = await messaging.getMessage(
     '<MESSAGE_ID>' // messageId
 );
 
-console.log(response);
+console.log(result);

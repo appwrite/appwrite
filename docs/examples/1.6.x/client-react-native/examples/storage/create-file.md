@@ -13,4 +13,4 @@ const result = await storage.createFile(
     ["read("any")"] // permissions (optional)
 );
 
-console.log(response);
+console.log(result);

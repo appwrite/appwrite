@@ -10,4 +10,4 @@ const result = await functions.listVariables(
     '<FUNCTION_ID>' // functionId
 );
 
-console.log(response);
+console.log(result);

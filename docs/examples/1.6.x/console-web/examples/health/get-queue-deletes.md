@@ -10,4 +10,4 @@ const result = await health.getQueueDeletes(
     null // threshold (optional)
 );
 
-console.log(response);
+console.log(result);
