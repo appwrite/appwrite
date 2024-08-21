@@ -3,7 +3,7 @@
 ## What's Changed
 
 ### Notable changes
-
+ 
 * Bump console to version 4.3.30 in [#8520](https://github.com/appwrite/appwrite/pull/8520)
 
 ### Fixes
