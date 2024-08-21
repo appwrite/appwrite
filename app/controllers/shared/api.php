@@ -266,14 +266,7 @@ App::init()
             var_dump("####### ADMIN ROLES #######");
             var_dump($adminRoles);
 
-            foreach ($adminRoles as $adminRole) {
-                if (str_contains($adminRole, 'owner')) {
-                    $role = Auth::USER_ROLE_OWNER;
-                    $scopes = \array_merge($scopes, $roles[$role]['scopes']);
-                    break;
-                }
-                $parts = explode('/', $adminRole);
-                $role = $parts[2] ?? Auth::USER_ROLE_GUESTS;
+            foreach ($adminRoles as $role) {
                 $scopes = \array_merge($scopes, $roles[$role]['scopes']);
             }
             
