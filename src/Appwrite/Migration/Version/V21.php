@@ -74,6 +74,14 @@ class V21 extends Migration
                         Console::warning("'accessedAt' from {$id}: {$th->getMessage()}");
                     }
                     break;
+                case 'platforms':
+                    // Increase 'type' length to 255
+                    try {
+                        $this->projectDB->updateAttribute($id, 'type', size: 255);
+                    } catch (Throwable $th) {
+                        Console::warning("'type' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
                 case 'schedules':
                     // Create data attribute
                     try {
@@ -188,7 +196,7 @@ class V21 extends Migration
      *
      * @return void
      */
-    private function migrateBuckets()
+    private function migrateBuckets(): void
     {
         foreach ($this->documentsIterator('buckets') as $bucket) {
             $bucketId = 'bucket_' . $bucket['$internalId'];
