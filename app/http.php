@@ -9,7 +9,7 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Http\Server;
 use Swoole\Process;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
