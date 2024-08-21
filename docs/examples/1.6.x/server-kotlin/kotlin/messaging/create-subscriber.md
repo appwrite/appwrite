@@ -4,8 +4,8 @@ import io.appwrite.services.Messaging
 
 val client = Client()
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
-    .setProject("&lt;YOUR_PROJECT_ID&gt;") // Your project ID
-    .setJWT("&lt;YOUR_JWT&gt;") // Your secret JSON Web Token
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setJWT("<YOUR_JWT>") // Your secret JSON Web Token
 
 val messaging = Messaging(client)
 
