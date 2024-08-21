@@ -2993,16 +2993,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-fix-cookie-fallback",
+            "version": "0.39.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "9cbad6d71172322e7f1121f39fe460ea5ffc3633"
+                "reference": "a3998d8971c43ff2247542c128f98a94fa4833e7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9cbad6d71172322e7f1121f39fe460ea5ffc3633",
-                "reference": "9cbad6d71172322e7f1121f39fe460ea5ffc3633",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a3998d8971c43ff2247542c128f98a94fa4833e7",
+                "reference": "a3998d8971c43ff2247542c128f98a94fa4833e7",
                 "shasum": ""
             },
             "require": {
@@ -3038,9 +3038,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/fix-cookie-fallback"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.7"
             },
-            "time": "2024-08-20T10:27:20+00:00"
+            "time": "2024-08-19T09:33:17+00:00"
         },
         {
             "name": "doctrine/deprecations",
