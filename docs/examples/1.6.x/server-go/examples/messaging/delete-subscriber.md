@@ -10,8 +10,8 @@ func main() {
     client := client.NewClient()
 
     client.SetEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
-    client.SetProject("") // Your project ID
-    client.SetJWT("") // Your secret JSON Web Token
+    client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    client.SetJWT("<YOUR_JWT>") // Your secret JSON Web Token
 
     service := messaging.NewMessaging(client)
     response, error := service.DeleteSubscriber(
