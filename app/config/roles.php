@@ -2,28 +2,6 @@
 
 use Appwrite\Auth\Auth;
 
-$apps = [
-    'global',
-    'health.read',
-    'graphql',
-];
-
-$guests = [
-    'global',
-    'public',
-    'home',
-    'console',
-    'graphql',
-    'sessions.write',
-    'documents.read',
-    'documents.write',
-    'files.read',
-    'files.write',
-    'locale.read',
-    'avatars.read',
-    'execution.write',
-];
-
 $member = [
     'global',
     'public',
@@ -48,98 +26,95 @@ $member = [
     'targets.write',
     'subscribers.write',
     'subscribers.read',
-    'assistant.read'
+    'assistant.read',
 ];
 
-$analyst = array_merge($member, [
-    'users.read',
-    'databases.read',
-    'collections.read',
-    'buckets.read',
-    'execution.read',
-    'targets.read',
-    'subscribers.read',
-    'assistant.read',
-    'functions.read',
-    'platforms.read',
-    'keys.read',
-    'webhooks.read',
-    'rules.read',
-    'migrations.read',
-    'vcs.read',
-    'providers.read',
-    'messages.read',
-    'topics.read'
-]);
-
-$editor = array_merge($analyst, [
+$admins = [
+    'global',
+    'graphql',
+    'sessions.write',
+    'teams.read',
+    'teams.write',
+    'documents.read',
     'documents.write',
+    'files.read',
     'files.write',
-    'execution.write',
-    'targets.write',
-    'subscribers.write',
-]);
-
-$developer = array_merge($editor, [
-    'projects.write',
+    'buckets.read',
     'buckets.write',
+    'users.read',
     'users.write',
+    'databases.read',
     'databases.write',
+    'collections.read',
     'collections.write',
+    'platforms.read',
     'platforms.write',
+    'keys.read',
     'keys.write',
+    'webhooks.read',
     'webhooks.write',
+    'locale.read',
+    'avatars.read',
+    'health.read',
+    'functions.read',
     'functions.write',
+    'execution.read',
+    'execution.write',
+    'rules.read',
     'rules.write',
+    'migrations.read',
     'migrations.write',
+    'vcs.read',
     'vcs.write',
+    'targets.read',
     'targets.write',
     'providers.write',
+    'providers.read',
     'messages.write',
+    'messages.read',
     'topics.write',
-]);
-
-$owner = array_merge($developer, [
-    'billing.read',
-    'billing.write'
-]);
-
-$billing = array_merge($member, [
-    'billing.read',
-    'billing.write',
-]);
+    'topics.read',
+    'subscribers.write',
+    'subscribers.read'
+];
 
 return [
-    Auth::USER_ROLE_APPS => [
-        'label' => 'Applications',
-        'scopes' => $apps,
-    ],
     Auth::USER_ROLE_GUESTS => [
         'label' => 'Guests',
-        'scopes' => $guests,
+        'scopes' => [
+            'global',
+            'public',
+            'home',
+            'console',
+            'graphql',
+            'sessions.write',
+            'documents.read',
+            'documents.write',
+            'files.read',
+            'files.write',
+            'locale.read',
+            'avatars.read',
+            'execution.write',
+        ],
     ],
     Auth::USER_ROLE_USERS => [
         'label' => 'Users',
-        'scopes' => $member,
+        'scopes' => \array_merge($member),
+    ],
+    Auth::USER_ROLE_ADMIN => [
+        'label' => 'Admin',
+        'scopes' => \array_merge($admins),
     ],
     Auth::USER_ROLE_DEVELOPER => [
         'label' => 'Developer',
-        'scopes' => $developer,
-    ],
-    Auth::USER_ROLE_EDITOR => [
-        'label' => 'Editor',
-        'scopes' => $editor,
-    ],
-    Auth::USER_ROLE_ANALYST => [
-        'label' => 'Analyst',
-        'scopes' => $analyst,
-    ],
-    Auth::USER_ROLE_BILLING => [
-        'label' => 'Billing',
-        'scopes' => $billing,
+        'scopes' => \array_merge($admins),
     ],
     Auth::USER_ROLE_OWNER => [
         'label' => 'Owner',
-        'scopes' => $owner,
-    ]
+        'scopes' => \array_merge($member, $admins),
+    ],
+    Auth::USER_ROLE_APPS => [
+        'label' => 'Applications',
+        'scopes' => ['global', 'health.read', 'graphql'],
+    ],
 ];
