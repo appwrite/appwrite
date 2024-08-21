@@ -18,4 +18,4 @@ const result = await projects.updateWebhook(
     '<HTTP_PASS>' // httpPass (optional)
 );
 
-console.log(response);
+console.log(result);

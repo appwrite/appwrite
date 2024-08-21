@@ -11,7 +11,6 @@ Account account = new Account(client);
 
 account.deleteMfaAuthenticator(
     AuthenticatorType.TOTP, // type 
-    "<OTP>", // otp 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

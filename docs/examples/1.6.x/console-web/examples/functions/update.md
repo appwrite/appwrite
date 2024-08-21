@@ -23,7 +23,8 @@ const result = await functions.update(
     '<PROVIDER_REPOSITORY_ID>', // providerRepositoryId (optional)
     '<PROVIDER_BRANCH>', // providerBranch (optional)
     false, // providerSilentMode (optional)
-    '<PROVIDER_ROOT_DIRECTORY>' // providerRootDirectory (optional)
+    '<PROVIDER_ROOT_DIRECTORY>', // providerRootDirectory (optional)
+    '' // specification (optional)
 );
 
-console.log(response);
+console.log(result);

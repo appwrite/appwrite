@@ -11,4 +11,4 @@ const result = await projects.deletePlatform(
     '<PLATFORM_ID>' // platformId
 );
 
-console.log(response);
+console.log(result);

@@ -17,4 +17,4 @@ const result = await projects.updateEmailTemplate(
     'email@example.com' // replyTo (optional)
 );
 
-console.log(response);
+console.log(result);

@@ -8,4 +8,4 @@ const account = new Account(client);
 
 const result = await account.createPhoneVerification();
 
-console.log(response);
+console.log(result);

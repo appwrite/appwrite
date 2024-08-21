@@ -11,4 +11,4 @@ const result = await storage.getFile(
     '<FILE_ID>' // fileId
 );
 
-console.log(response);
+console.log(result);

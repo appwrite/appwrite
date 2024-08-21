@@ -12,4 +12,4 @@ const result = await messaging.updateTopic(
     ["any"] // subscribe (optional)
 );
 
-console.log(response);
+console.log(result);

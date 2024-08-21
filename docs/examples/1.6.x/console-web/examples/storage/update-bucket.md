@@ -19,4 +19,4 @@ const result = await storage.updateBucket(
     false // antivirus (optional)
 );
 
-console.log(response);
+console.log(result);

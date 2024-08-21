@@ -10,4 +10,4 @@ const result = await assistant.chat(
     '<PROMPT>' // prompt
 );
 
-console.log(response);
+console.log(result);

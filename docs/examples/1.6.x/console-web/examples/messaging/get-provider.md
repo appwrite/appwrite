@@ -10,4 +10,4 @@ const result = await messaging.getProvider(
     '<PROVIDER_ID>' // providerId
 );
 
-console.log(response);
+console.log(result);

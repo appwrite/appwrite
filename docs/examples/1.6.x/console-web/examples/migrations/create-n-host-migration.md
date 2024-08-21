@@ -17,4 +17,4 @@ const result = await migrations.createNHostMigration(
     null // port (optional)
 );
 
-console.log(response);
+console.log(result);

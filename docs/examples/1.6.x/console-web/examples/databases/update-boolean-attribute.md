@@ -14,4 +14,4 @@ const result = await databases.updateBooleanAttribute(
     false // default
 );
 
-console.log(response);
+console.log(result);

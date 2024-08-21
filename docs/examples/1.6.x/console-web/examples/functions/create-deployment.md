@@ -14,4 +14,4 @@ const result = await functions.createDeployment(
     '<COMMANDS>' // commands (optional)
 );
 
-console.log(response);
+console.log(result);

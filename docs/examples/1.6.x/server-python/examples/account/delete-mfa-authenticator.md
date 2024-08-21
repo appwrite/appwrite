@@ -9,6 +9,5 @@ client.set_session('') # The user session to authenticate with
 account = Account(client)
 
 result = account.delete_mfa_authenticator(
-    type = AuthenticatorType.TOTP,
-    otp = '<OTP>'
+    type = AuthenticatorType.TOTP
 )

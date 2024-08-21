@@ -12,4 +12,4 @@ const result = await teams.create(
     [] // roles (optional)
 );
 
-console.log(response);
+console.log(result);

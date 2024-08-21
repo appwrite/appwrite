@@ -8,4 +8,4 @@ const health = new Health(client);
 
 const result = await health.getStorage();
 
-console.log(response);
+console.log(result);

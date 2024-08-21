@@ -14,4 +14,4 @@ const result = await databases.updateDocument(
     ["read("any")"] // permissions (optional)
 );
 
-console.log(response);
+console.log(result);

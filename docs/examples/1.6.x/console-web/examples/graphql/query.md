@@ -10,4 +10,4 @@ const result = await graphql.query(
     {} // query
 );
 
-console.log(response);
+console.log(result);

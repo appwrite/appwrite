@@ -11,4 +11,4 @@ const result = await users.deleteSession(
     '<SESSION_ID>' // sessionId
 );
 
-console.log(response);
+console.log(result);

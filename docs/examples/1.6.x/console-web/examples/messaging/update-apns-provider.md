@@ -17,4 +17,4 @@ const result = await messaging.updateApnsProvider(
     false // sandbox (optional)
 );
 
-console.log(response);
+console.log(result);

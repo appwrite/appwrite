@@ -10,4 +10,4 @@ const result = await account.deleteIdentity(
     '<IDENTITY_ID>' // identityId
 );
 
-console.log(response);
+console.log(result);

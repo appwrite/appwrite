@@ -11,4 +11,4 @@ const result = await projects.updateApiStatusAll(
     false // status
 );
 
-console.log(response);
+console.log(result);

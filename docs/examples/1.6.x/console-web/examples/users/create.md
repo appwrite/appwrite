@@ -14,4 +14,4 @@ const result = await users.create(
     '<NAME>' // name (optional)
 );
 
-console.log(response);
+console.log(result);

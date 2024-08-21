@@ -12,4 +12,4 @@ const result = await projects.updateAuthStatus(
     false // status
 );
 
-console.log(response);
+console.log(result);

@@ -11,6 +11,5 @@ val client = Client()
 val account = Account(client)
 
 val response = account.deleteMfaAuthenticator(
-    type =  AuthenticatorType.TOTP,
-    otp = "<OTP>"
+    type =  AuthenticatorType.TOTP
 )

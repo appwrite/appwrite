@@ -10,4 +10,4 @@ const result = await messaging.deleteTopic(
     '<TOPIC_ID>' // topicId
 );
 
-console.log(response);
+console.log(result);

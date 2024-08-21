@@ -11,4 +11,4 @@ const result = await functions.getDeployment(
     '<DEPLOYMENT_ID>' // deploymentId
 );
 
-console.log(response);
+console.log(result);

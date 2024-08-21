@@ -11,4 +11,4 @@ const result = await users.deleteMfaAuthenticator(
     AuthenticatorType.Totp // type
 );
 
-console.log(response);
+console.log(result);

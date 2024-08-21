@@ -21,4 +21,4 @@ const result = await messaging.createEmail(
     '' // scheduledAt (optional)
 );
 
-console.log(response);
+console.log(result);

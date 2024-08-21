@@ -12,4 +12,4 @@ const result = await account.createEmailToken(
     false // phrase (optional)
 );
 
-console.log(response);
+console.log(result);

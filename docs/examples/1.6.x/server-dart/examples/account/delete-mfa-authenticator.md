@@ -9,5 +9,4 @@ Account account = Account(client);
 
 await account.deleteMfaAuthenticator(
     type: AuthenticatorType.totp,
-    otp: '<OTP>',
 );

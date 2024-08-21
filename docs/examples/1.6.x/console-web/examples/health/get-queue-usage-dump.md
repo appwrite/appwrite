@@ -10,4 +10,4 @@ const result = await health.getQueueUsageDump(
     null // threshold (optional)
 );
 
-console.log(response);
+console.log(result);

@@ -16,7 +16,6 @@ func main() {
     service := account.NewAccount(client)
     response, error := service.DeleteMfaAuthenticator(
         "totp",
-        "<OTP>",
     )
 
     if error != nil {

@@ -8,4 +8,4 @@ const locale = new Locale(client);
 
 const result = await locale.listCountriesEU();
 
-console.log(response);
+console.log(result);

@@ -15,4 +15,4 @@ const result = await databases.createCollection(
     false // enabled (optional)
 );
 
-console.log(response);
+console.log(result);

@@ -10,4 +10,4 @@ const result = await projects.listWebhooks(
     '<PROJECT_ID>' // projectId
 );
 
-console.log(response);
+console.log(result);

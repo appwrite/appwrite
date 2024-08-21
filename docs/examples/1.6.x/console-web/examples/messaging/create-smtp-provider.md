@@ -23,4 +23,4 @@ const result = await messaging.createSmtpProvider(
     false // enabled (optional)
 );
 
-console.log(response);
+console.log(result);

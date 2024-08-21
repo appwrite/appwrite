@@ -12,6 +12,5 @@ $client = (new Client())
 $account = new Account($client);
 
 $result = $account->deleteMfaAuthenticator(
-    type: AuthenticatorType::TOTP(),
-    otp: '<OTP>'
+    type: AuthenticatorType::TOTP()
 );

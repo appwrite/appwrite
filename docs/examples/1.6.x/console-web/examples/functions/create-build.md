@@ -12,4 +12,4 @@ const result = await functions.createBuild(
     '<BUILD_ID>' // buildId (optional)
 );
 
-console.log(response);
+console.log(result);

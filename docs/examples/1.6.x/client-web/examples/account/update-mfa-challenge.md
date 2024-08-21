@@ -11,4 +11,4 @@ const result = await account.updateMfaChallenge(
     '<OTP>' // otp
 );
 
-console.log(response);
+console.log(result);

@@ -14,4 +14,4 @@ const result = await databases.updateUrlAttribute(
     'https://example.com' // default
 );
 
-console.log(response);
+console.log(result);

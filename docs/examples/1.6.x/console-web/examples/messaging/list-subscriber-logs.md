@@ -11,4 +11,4 @@ const result = await messaging.listSubscriberLogs(
     [] // queries (optional)
 );
 
-console.log(response);
+console.log(result);

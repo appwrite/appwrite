@@ -12,4 +12,4 @@ const result = await projects.createJWT(
     0 // duration (optional)
 );
 
-console.log(response);
+console.log(result);

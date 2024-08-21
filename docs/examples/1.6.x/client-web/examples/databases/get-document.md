@@ -13,4 +13,4 @@ const result = await databases.getDocument(
     [] // queries (optional)
 );
 
-console.log(response);
+console.log(result);

@@ -11,4 +11,4 @@ const result = await account.updatePassword(
     'password' // oldPassword (optional)
 );
 
-console.log(response);
+console.log(result);

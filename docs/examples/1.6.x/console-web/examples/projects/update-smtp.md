@@ -19,4 +19,4 @@ const result = await projects.updateSmtp(
     SMTPSecure.Tls // secure (optional)
 );
 
-console.log(response);
+console.log(result);

@@ -14,4 +14,4 @@ const result = await databases.updateIpAttribute(
     '' // default
 );
 
-console.log(response);
+console.log(result);

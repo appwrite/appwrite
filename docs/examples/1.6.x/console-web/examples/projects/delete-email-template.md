@@ -12,4 +12,4 @@ const result = await projects.deleteEmailTemplate(
     EmailTemplateLocale.Af // locale
 );
 
-console.log(response);
+console.log(result);

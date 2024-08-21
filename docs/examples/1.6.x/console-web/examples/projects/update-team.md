@@ -11,4 +11,4 @@ const result = await projects.updateTeam(
     '<TEAM_ID>' // teamId
 );
 
-console.log(response);
+console.log(result);

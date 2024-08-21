@@ -10,4 +10,4 @@ const result = await account.createMfaChallenge(
     AuthenticationFactor.Email // factor
 );
 
-console.log(response);
+console.log(result);

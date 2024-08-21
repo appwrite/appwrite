@@ -11,6 +11,5 @@ Client client = new Client()
 Account account = new Account(client);
 
 await account.DeleteMfaAuthenticator(
-    type: AuthenticatorType.Totp,
-    otp: "<OTP>"
+    type: AuthenticatorType.Totp
 );

@@ -16,7 +16,8 @@ mutation {
         providerRepositoryId: "<PROVIDER_REPOSITORY_ID>",
         providerBranch: "<PROVIDER_BRANCH>",
         providerSilentMode: false,
-        providerRootDirectory: "<PROVIDER_ROOT_DIRECTORY>"
+        providerRootDirectory: "<PROVIDER_ROOT_DIRECTORY>",
+        specification: ""
     ) {
         _id
         _createdAt
@@ -49,5 +50,6 @@ mutation {
         providerBranch
         providerRootDirectory
         providerSilentMode
+        specification
     }
 }

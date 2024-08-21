@@ -8,6 +8,5 @@ const client = new Client()
 const account = new Account(client);
 
 const response = await account.deleteMfaAuthenticator(
-    AuthenticatorType.Totp, // type
-    '<OTP>' // otp
+    AuthenticatorType.Totp // type
 );

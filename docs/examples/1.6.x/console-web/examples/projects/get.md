@@ -10,4 +10,4 @@ const result = await projects.get(
     '<PROJECT_ID>' // projectId
 );
 
-console.log(response);
+console.log(result);

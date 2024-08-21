@@ -11,4 +11,4 @@ const result = await account.updateEmail(
     'password' // password
 );
 
-console.log(response);
+console.log(result);

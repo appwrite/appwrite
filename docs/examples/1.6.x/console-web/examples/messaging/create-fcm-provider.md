@@ -13,4 +13,4 @@ const result = await messaging.createFcmProvider(
     false // enabled (optional)
 );
 
-console.log(response);
+console.log(result);

@@ -12,4 +12,4 @@ const result = await functions.listExecutions(
     '<SEARCH>' // search (optional)
 );
 
-console.log(response);
+console.log(result);

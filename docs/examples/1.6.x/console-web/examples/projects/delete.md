@@ -10,4 +10,4 @@ const result = await projects.delete(
     '<PROJECT_ID>' // projectId
 );
 
-console.log(response);
+console.log(result);

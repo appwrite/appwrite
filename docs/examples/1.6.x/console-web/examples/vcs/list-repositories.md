@@ -11,4 +11,4 @@ const result = await vcs.listRepositories(
     '<SEARCH>' // search (optional)
 );
 
-console.log(response);
+console.log(result);
