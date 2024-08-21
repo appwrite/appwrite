@@ -27,6 +27,7 @@ functions.update(
     "<PROVIDER_BRANCH>", // providerBranch (optional)
     false, // providerSilentMode (optional)
     "<PROVIDER_ROOT_DIRECTORY>", // providerRootDirectory (optional)
+    "", // specification (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

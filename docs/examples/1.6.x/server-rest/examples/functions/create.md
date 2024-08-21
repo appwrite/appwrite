@@ -2,8 +2,8 @@ POST /v1/functions HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
 X-Appwrite-Response-Format: 1.6.0
-X-Appwrite-Project: <YOUR_PROJECT_ID>
-X-Appwrite-Key: <YOUR_API_KEY>
+X-Appwrite-Project: &lt;YOUR_PROJECT_ID&gt;
+X-Appwrite-Key: &lt;YOUR_API_KEY&gt;
 
 {
   "functionId": "<FUNCTION_ID>",
@@ -26,5 +26,6 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "templateRepository": "<TEMPLATE_REPOSITORY>",
   "templateOwner": "<TEMPLATE_OWNER>",
   "templateRootDirectory": "<TEMPLATE_ROOT_DIRECTORY>",
-  "templateVersion": "<TEMPLATE_VERSION>"
+  "templateVersion": "<TEMPLATE_VERSION>",
+  "specification": 
 }

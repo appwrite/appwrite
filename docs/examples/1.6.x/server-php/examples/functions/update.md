@@ -27,5 +27,6 @@ $result = $functions->update(
     providerRepositoryId: '<PROVIDER_REPOSITORY_ID>', // optional
     providerBranch: '<PROVIDER_BRANCH>', // optional
     providerSilentMode: false, // optional
-    providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>' // optional
+    providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>', // optional
+    specification: '' // optional
 );

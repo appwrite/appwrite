@@ -10,8 +10,8 @@ func main() {
     client := client.NewClient()
 
     client.SetEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
-    client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
-    client.SetKey("<YOUR_API_KEY>") // Your secret API key
+    client.SetProject("") // Your project ID
+    client.SetKey("") // Your secret API key
 
     service := functions.NewFunctions(client)
     response, error := service.Create(
@@ -36,6 +36,7 @@ func main() {
         functions.WithCreateTemplateOwner("<TEMPLATE_OWNER>"),
         functions.WithCreateTemplateRootDirectory("<TEMPLATE_ROOT_DIRECTORY>"),
         functions.WithCreateTemplateVersion("<TEMPLATE_VERSION>"),
+        functions.WithCreateSpecification(""),
     )
 
     if error != nil {

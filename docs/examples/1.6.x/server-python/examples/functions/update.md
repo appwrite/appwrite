@@ -24,5 +24,6 @@ result = functions.update(
     provider_repository_id = '<PROVIDER_REPOSITORY_ID>', # optional
     provider_branch = '<PROVIDER_BRANCH>', # optional
     provider_silent_mode = False, # optional
-    provider_root_directory = '<PROVIDER_ROOT_DIRECTORY>' # optional
+    provider_root_directory = '<PROVIDER_ROOT_DIRECTORY>', # optional
+    specification = '' # optional
 )

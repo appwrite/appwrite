@@ -2,8 +2,8 @@ POST /v1/functions/{functionId}/deployments HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: multipart/form-data; boundary="cec8e8123c05ba25"
 X-Appwrite-Response-Format: 1.6.0
-X-Appwrite-Project: <YOUR_PROJECT_ID>
-X-Appwrite-Key: <YOUR_API_KEY>
+X-Appwrite-Project: &lt;YOUR_PROJECT_ID&gt;
+X-Appwrite-Key: &lt;YOUR_API_KEY&gt;
 Content-Length: *Length of your entity body in bytes*
 
 --cec8e8123c05ba25
