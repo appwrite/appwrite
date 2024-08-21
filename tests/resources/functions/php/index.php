@@ -12,6 +12,8 @@ return function ($context) {
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => \getenv('APPWRITE_FUNCTION_RUNTIME_VERSION') ?: '',
         'APPWRITE_REGION' => \getenv('APPWRITE_REGION') ?: '',
         'UNICODE_TEST' => "êä",
-        'GLOBAL_VARIABLE' => \getenv('GLOBAL_VARIABLE') ?: ''
+        'GLOBAL_VARIABLE' => \getenv('GLOBAL_VARIABLE') ?: '',
+        'APPWRITE_FUNCTION_CPUS' => \getenv('APPWRITE_FUNCTION_CPUS') ?: '',
+        'APPWRITE_FUNCTION_MEMORY' => \getenv('APPWRITE_FUNCTION_MEMORY') ?: '',
     ], \intval($statusCode));
 };
