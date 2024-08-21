@@ -321,7 +321,7 @@ return [
             [
                 'key' => 'ruby',
                 'name' => 'Ruby',
-                'version' => '12.0.0-rc.2',
+                'version' => '12.0.0-rc.3',
                 'url' => 'https://github.com/appwrite/sdk-for-ruby',
                 'package' => 'https://rubygems.org/gems/appwrite',
                 'enabled' => true,
