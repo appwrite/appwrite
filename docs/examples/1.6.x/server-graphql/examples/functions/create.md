@@ -20,7 +20,7 @@ mutation {
         templateRepository: "<TEMPLATE_REPOSITORY>",
         templateOwner: "<TEMPLATE_OWNER>",
         templateRootDirectory: "<TEMPLATE_ROOT_DIRECTORY>",
-        templateBranch: "<TEMPLATE_BRANCH>"
+        templateVersion: "<TEMPLATE_VERSION>"
     ) {
         _id
         _createdAt
