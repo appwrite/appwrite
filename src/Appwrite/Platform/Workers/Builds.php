@@ -511,6 +511,8 @@ class Builds extends Action
                 return;
             }
 
+            $isCanceled = false;
+
             Co::join([
                 Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, $cpus, $memory, &$err) {
                     try {
@@ -535,18 +537,28 @@ class Builds extends Action
                         $err = $error;
                     }
                 }),
-                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
+                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err, &$isCanceled) {
                     try {
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
-                            callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $allEvents, $project) {
+                            callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $allEvents, $project, &$isCanceled) {
+                                if($isCanceled) {
+                                    return;
+                                }
+
                                 // If we have response or error from concurrent coroutine, we already have latest logs
                                 if ($response === null && $err === null) {
                                     $build = $dbForProject->getDocument('builds', $build->getId());
 
                                     if ($build->isEmpty()) {
                                         throw new \Exception('Build not found', 404);
+                                    }
+
+                                    if ($build->getAttribute('status') === 'canceled') {
+                                        $isCanceled = true;
+                                        Console::info('Ignoring realtime logs because build has been canceled');
+                                        return;
                                     }
 
                                     $logs = \mb_substr($logs, 0, null, 'UTF-8'); // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
@@ -607,6 +619,8 @@ class Builds extends Action
             $build->setAttribute('size', $response['size']);
             $build->setAttribute('logs', $response['output']);
 
+            $build = $dbForProject->updateDocument('builds', $buildId, $build);
+
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
@@ -648,12 +662,12 @@ class Builds extends Action
             $build->setAttribute('status', 'failed');
             $build->setAttribute('logs', $th->getMessage());
 
+            $build = $dbForProject->updateDocument('builds', $buildId, $build);
+
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
         } finally {
-            $build = $dbForProject->updateDocument('builds', $buildId, $build);
-
             /**
              * Send realtime Event
              */

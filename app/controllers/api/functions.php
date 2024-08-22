@@ -1682,8 +1682,17 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
             ]));
         }
 
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-        $deleteBuild = $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+        $dbForProject->purgeCachedDocument('deployments', $deployment->getId());
+
+        try {
+            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+        } catch (\Throwable $th) {
+            // Don't throw if the deployment doesn't exist
+            if ($th->getCode() !== 404) {
+                throw $th;
+            }
+        }
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

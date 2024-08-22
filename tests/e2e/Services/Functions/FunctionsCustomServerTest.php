@@ -514,13 +514,20 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertEquals(1, $deployments['body']['total']);
         $this->assertNotEmpty($deployments['body']['deployments'][0]['$id']);
-        $this->assertGreaterThan(0, $deployments['body']['deployments'][0]['size']);
+        $this->assertEquals(0, $deployments['body']['deployments'][0]['size']);
 
         $deploymentId = $deployments['body']['deployments'][0]['$id'];
 
         // Wait for deployment build to finish
         // Deployment is automatically activated
         $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId);
+
+        $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+        $this->assertGreaterThan(0, $deployments['body']['size']);
 
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, array_merge([
             'content-type' => 'application/json',
@@ -689,19 +696,12 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $cancel['headers']['status-code']);
         $this->assertEquals('canceled', $cancel['body']['status']);
 
-        // Confirm the deployment is canceled
-        $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
         /**
          * Build worker still runs the build.
-         * 15s sleep gives worker enough time to finish build.
+         * 30s sleep gives worker enough time to finish build.
          * After build finished, it should still be canceled, not ready.
          */
-        \sleep(15);
+        \sleep(30);
         $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
