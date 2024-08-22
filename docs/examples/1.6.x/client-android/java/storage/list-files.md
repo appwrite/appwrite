@@ -4,7 +4,7 @@ import io.appwrite.services.Storage;
 
 Client client = new Client(context)
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
-    .setProject("&lt;YOUR_PROJECT_ID&gt;"); // Your project ID
+    .setProject("<YOUR_PROJECT_ID>"); // Your project ID
 
 Storage storage = new Storage(client);
 

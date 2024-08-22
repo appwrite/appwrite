@@ -10,13 +10,12 @@ func main() {
     client := client.NewClient()
 
     client.SetEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
-    client.SetProject("") // Your project ID
+    client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
     client.SetSession("") // The user session to authenticate with
 
     service := account.NewAccount(client)
     response, error := service.DeleteMfaAuthenticator(
         "totp",
-        "<OTP>",
     )
 
     if error != nil {
