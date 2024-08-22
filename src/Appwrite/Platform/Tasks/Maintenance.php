@@ -60,7 +60,7 @@ class Maintenance extends Action
     }
 
     /**
-     * Overridable method for Cloud, Please do not delete
+     * Hook to allow sub-classes to extend project-level maintenance functionality.
      */
     protected function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly): void
     {
