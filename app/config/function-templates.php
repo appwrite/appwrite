@@ -15,7 +15,7 @@ const TEMPLATE_RUNTIMES = [
     ],
     'GO' => [
         'name' => 'go',
-        'versions' => ['1.22']
+        'versions' => ['1.23']
     ],
     'PHP' => [
         'name' => 'php',
