@@ -11,11 +11,8 @@ use Utopia\Validator;
  */
 class Headers extends Validator
 {
-    protected bool $allowEmpty;
-
-    public function __construct(bool $allowEmpty = true)
+    public function __construct(protected bool $allowEmpty = true, protected int $maxKeys = 100, protected int $maxSize = 16384)
     {
-        $this->allowEmpty = $allowEmpty;
     }
 
     /**
@@ -27,7 +24,7 @@ class Headers extends Validator
      */
     public function getDescription(): string
     {
-        return 'Invalid header format. Header keys can only contain alphanumeric characters, underscores, and hyphens. Header keys cannot start with "x-appwrite-" prefix.';
+        return 'Invalid headers: Alphanumeric characters or hyphens only, cannot start with "x-appwrite", maximum ' . $this->maxKeys . ' keys, and total size ' . $this->maxSize . '.';
     }
 
     /**
@@ -47,34 +44,41 @@ class Headers extends Validator
             return false;
         }
 
-        if (\is_array($value)) {
-            foreach ($value as $key => $val) {
-                $length = \strlen($key);
-                // Reject non-string keys
-                if (!\is_string($key) || $length === 0) {
-                    return false;
-                }
+        if(\count($value) > $this->maxKeys) {
+            return false;
+        }
 
-                // Check first and last character
-                if (!ctype_alnum($key[0]) || !ctype_alnum($key[$length - 1])) {
-                    return false;
-                }
+        $size = 0;
+        foreach ($value as $key => $val) {
+            $length = \strlen($key);
+            // Reject non-string keys
+            if (!\is_string($key) || $length === 0) {
+                return false;
+            }
 
-                // Check middle characters
-                for ($i = 1; $i < $length - 1; $i++) {
-                    if (!ctype_alnum($key[$i]) && $key[$i] !== '-') {
-                        return false;
-                    }
-                }
+            $size += $length + \strlen($val);
+            if($size >= $this->maxSize) {
+                return false;
+            }
 
-                // Check for x-appwrite- prefix
-                if (str_starts_with($key, 'x-appwrite-')) {
+            // Check first and last character
+            if (!ctype_alnum($key[0]) || !ctype_alnum($key[$length - 1])) {
+                return false;
+            }
+
+            // Check middle characters
+            for ($i = 1; $i < $length - 1; $i++) {
+                if (!ctype_alnum($key[$i]) && $key[$i] !== '-') {
                     return false;
                 }
             }
-            return true;
+
+            // Check for x-appwrite- prefix
+            if (str_starts_with($key, 'x-appwrite-')) {
+                return false;
+            }
         }
-        return false;
+        return true;
     }
 
     /**
