@@ -2,8 +2,8 @@ import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('&lt;YOUR_PROJECT_ID&gt;') // Your project ID
-    .setKey('&lt;YOUR_API_KEY&gt;'); // Your secret API key
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
 
 Functions functions = Functions(client);
 
@@ -28,5 +28,6 @@ Func result = await functions.create(
     templateRepository: '<TEMPLATE_REPOSITORY>', // (optional)
     templateOwner: '<TEMPLATE_OWNER>', // (optional)
     templateRootDirectory: '<TEMPLATE_ROOT_DIRECTORY>', // (optional)
-    templateBranch: '<TEMPLATE_BRANCH>', // (optional)
+    templateVersion: '<TEMPLATE_VERSION>', // (optional)
+    specification: '', // (optional)
 );

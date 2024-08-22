@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Functions\Specification;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
@@ -454,8 +455,8 @@ class FunctionsCustomServerTest extends Scope
         $entrypoint = null;
         $rootDirectory = null;
         $commands = null;
-        foreach($template['body']['runtimes'] as $runtime) {
-            if($runtime["name"] !== $runtimeName) {
+        foreach ($template['body']['runtimes'] as $runtime) {
+            if ($runtime["name"] !== $runtimeName) {
                 continue;
             }
 
@@ -1314,6 +1315,99 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testGetExecution
      */
+    #[Retry(count: 2)]
+    public function testUpdateSpecs($data): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response1 = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test1',
+            'events' => [
+                'users.*.update.name',
+                'users.*.update.email',
+            ],
+            'timeout' => 15,
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'specification' => Specification::S_1VCPU_1GB,
+        ]);
+
+        $this->assertEquals(200, $response1['headers']['status-code']);
+        $this->assertNotEmpty($response1['body']['$id']);
+        $this->assertEquals(Specification::S_1VCPU_1GB, $response1['body']['specification']);
+
+        // Test Execution
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $output = json_decode($execution['body']['responseBody'], true);
+
+        $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
+        $this->assertEquals(1024, $output['APPWRITE_FUNCTION_MEMORY']);
+
+        $response2 = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test1',
+            'events' => [
+                'users.*.update.name',
+                'users.*.update.email',
+            ],
+            'timeout' => 15,
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'specification' => Specification::S_1VCPU_512MB,
+        ]);
+
+        $this->assertEquals(200, $response2['headers']['status-code']);
+        $this->assertNotEmpty($response2['body']['$id']);
+        $this->assertEquals(Specification::S_1VCPU_512MB, $response2['body']['specification']);
+
+        // Test Execution
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $output = json_decode($execution['body']['responseBody'], true);
+
+        $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
+        $this->assertEquals(512, $output['APPWRITE_FUNCTION_MEMORY']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response3 = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test1',
+            'events' => [
+                'users.*.update.name',
+                'users.*.update.email',
+            ],
+            'timeout' => 15,
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'specification' => 's-2vcpu-512mb', // Invalid specification
+        ]);
+
+        $this->assertEquals(400, $response3['headers']['status-code']);
+        $this->assertStringStartsWith('Invalid `specification` param: Specification must be one of:', $response3['body']['message']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetExecution
+     */
     public function testDeleteDeployment($data): array
     {
         /**
@@ -2064,8 +2158,33 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        $this->assertNotEmpty($execution['body']['responseBody']);
         $this->assertGreaterThan(0, $execution['body']['duration']);
+        $this->assertNotEmpty($execution['body']['responseBody']);
+        $this->assertStringContainsString("total", $execution['body']['responseBody']);
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true
+        ]);
+
+        $this->assertEquals(202, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+
+        \sleep(10);
+
+        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $execution['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+        $this->assertGreaterThan(0, $execution['body']['duration']);
+        $this->assertNotEmpty($execution['body']['logs']);
+        $this->assertStringContainsString("total", $execution['body']['logs']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
@@ -2412,6 +2531,32 @@ class FunctionsCustomServerTest extends Scope
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testCreateFunctionWithResponseFormatHeader()
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.5.0', // add response format header
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => 15,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $response['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
