@@ -2743,17 +2743,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('response')
-    ->inject('request')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('mode')
-    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Request $request, Database $dbForProject, Document $user, Event $queueForEvents, string $mode) {
-
-        if ($request->getHeader('x-appwrite-preserve-dates') === 'true') {
-            $dbForProject->setPreserveDates(true);
-        }
-
+    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode) {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {

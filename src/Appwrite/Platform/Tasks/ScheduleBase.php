@@ -59,10 +59,6 @@ abstract class ScheduleBase extends Action
         $getSchedule = function (Document $schedule) use ($dbForConsole, $getProjectDB): array {
             $project = $dbForConsole->getDocument('projects', $schedule->getAttribute('projectId'));
 
-            var_dump('===== $getSchedule getCollectionId = ');
-            var_dump(static::getCollectionId());
-            var_dump('===== $getSchedule getCollectionId = ');
-
             $resource = $getProjectDB($project)->getDocument(
                 static::getCollectionId(),
                 $schedule->getAttribute('resourceId')
@@ -105,10 +101,7 @@ abstract class ScheduleBase extends Action
 
             foreach ($results as $document) {
                 try {
-                    var_dump('=== ScheduleBase start');
-                    var_dump($getSchedule($document)['resource']);
-                    var_dump('=== ScheduleBase end');
-                    //todo: use a unique key as InternalId or add projectId
+                    //todo: add projectId to be unique $this->schedules[$document['resourceId']]['projectId']
                     $this->schedules[$document['resourceId']] = $getSchedule($document);
                 } catch (\Throwable $th) {
                     $collectionId = static::getCollectionId();

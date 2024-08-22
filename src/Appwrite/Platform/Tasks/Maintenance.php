@@ -64,8 +64,6 @@ class Maintenance extends Action
      */
     protected function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly): void
     {
-        var_dump("Appwrite notifyProjects");
-
         $this->notifyDeleteTargets($queueForDeletes);
         $this->notifyDeleteExecutionLogs($queueForDeletes);
         $this->notifyDeleteAbuseLogs($queueForDeletes);
