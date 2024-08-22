@@ -873,7 +873,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.6.5
+    image: openruntimes/executor:0.6.7
     restart: unless-stopped
     networks:
       - appwrite
@@ -923,7 +923,7 @@ services:
     hostname: proxy
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/proxy:0.5.4
+    image: openruntimes/proxy:0.5.5
     networks:
       - appwrite
       - runtimes
