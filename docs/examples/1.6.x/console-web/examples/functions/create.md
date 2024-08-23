@@ -2,7 +2,7 @@ import { Client, Functions,  } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('&lt;YOUR_PROJECT_ID&gt;'); // Your project ID
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
 
 const functions = new Functions(client);
 
@@ -27,7 +27,8 @@ const result = await functions.create(
     '<TEMPLATE_REPOSITORY>', // templateRepository (optional)
     '<TEMPLATE_OWNER>', // templateOwner (optional)
     '<TEMPLATE_ROOT_DIRECTORY>', // templateRootDirectory (optional)
-    '<TEMPLATE_VERSION>' // templateVersion (optional)
+    '<TEMPLATE_VERSION>', // templateVersion (optional)
+    '' // specification (optional)
 );
 
 console.log(result);

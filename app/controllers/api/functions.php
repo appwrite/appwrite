@@ -1426,7 +1426,8 @@ App::get('/v1/functions/:functionId/deployments')
             $result->setAttribute('status', $build->getAttribute('status', 'processing'));
             $result->setAttribute('buildLogs', $build->getAttribute('logs', ''));
             $result->setAttribute('buildTime', $build->getAttribute('duration', 0));
-            $result->setAttribute('size', $result->getAttribute('size', 0) + $build->getAttribute('size', 0));
+            $result->setAttribute('buildSize', $build->getAttribute('size', 0));
+            $result->setAttribute('size', $result->getAttribute('size', 0));
         }
 
         $response->dynamic(new Document([
@@ -1472,7 +1473,8 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         $deployment->setAttribute('status', $build->getAttribute('status', 'waiting'));
         $deployment->setAttribute('buildLogs', $build->getAttribute('logs', ''));
         $deployment->setAttribute('buildTime', $build->getAttribute('duration', 0));
-        $deployment->setAttribute('size', $deployment->getAttribute('size', 0) + $build->getAttribute('size', 0));
+        $deployment->setAttribute('buildSize', $build->getAttribute('size', 0));
+        $deployment->setAttribute('size', $deployment->getAttribute('size', 0));
 
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
@@ -1680,8 +1682,17 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
             ]));
         }
 
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-        $deleteBuild = $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+        $dbForProject->purgeCachedDocument('deployments', $deployment->getId());
+
+        try {
+            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+        } catch (\Throwable $th) {
+            // Don't throw if the deployment doesn't exist
+            if ($th->getCode() !== 404) {
+                throw $th;
+            }
+        }
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

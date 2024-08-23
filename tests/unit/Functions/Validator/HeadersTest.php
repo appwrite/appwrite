@@ -104,5 +104,23 @@ class HeadersTest extends TestCase
 
         $headers = 'string';
         $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [ ];
+        $this->assertTrue($this->object->isValid($headers));
+
+        $headers = [];
+        for($i = 0; $i < 100; $i++) {
+            $headers['key-' . $i] = 'value_' . $i;
+        }
+        $this->assertTrue($this->object->isValid($headers));
+
+        $headers['key-oversized'] = bin2hex(random_bytes(100000));
+        $this->assertFalse($this->object->isValid($headers));
+
+        unset($headers['key-oversized']);
+        $this->assertTrue($this->object->isValid($headers));
+
+        $headers['key-101'] = 'value_101';
+        $this->assertFalse($this->object->isValid($headers));
     }
 }

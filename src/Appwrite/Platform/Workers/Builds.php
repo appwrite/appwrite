@@ -244,13 +244,7 @@ class Builds extends Action
                         $tmpTemplateDirectory .= '/';
                     }
 
-                    $directorySize = $localDevice->getDirectorySize($tmpTemplateDirectory);
-                    $functionsSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
-                    if ($directorySize > $functionsSizeLimit) {
-                        throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
-                    }
-
-                    $tarParamDirectory = \escapeshellarg('/tmp/builds/' . $buildId . '-template' . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory));
+                    $tarParamDirectory = \escapeshellarg($tmpTemplateDirectory . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory));
                     Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
 
                     $source = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
@@ -262,8 +256,9 @@ class Builds extends Action
 
                     Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
 
+                    $directorySize = $deviceForFunctions->getFileSize($source);
                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source));
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
                 }
             } elseif ($isNewBuild && $isVcsEnabled) {
                 // VCS and VCS+Temaplte
@@ -516,6 +511,8 @@ class Builds extends Action
                 return;
             }
 
+            $isCanceled = false;
+
             Co::join([
                 Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, $cpus, $memory, &$err) {
                     try {
@@ -540,18 +537,28 @@ class Builds extends Action
                         $err = $error;
                     }
                 }),
-                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
+                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err, &$isCanceled) {
                     try {
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
-                            callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $allEvents, $project) {
+                            callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $allEvents, $project, &$isCanceled) {
+                                if($isCanceled) {
+                                    return;
+                                }
+
                                 // If we have response or error from concurrent coroutine, we already have latest logs
                                 if ($response === null && $err === null) {
                                     $build = $dbForProject->getDocument('builds', $build->getId());
 
                                     if ($build->isEmpty()) {
                                         throw new \Exception('Build not found', 404);
+                                    }
+
+                                    if ($build->getAttribute('status') === 'canceled') {
+                                        $isCanceled = true;
+                                        Console::info('Ignoring realtime logs because build has been canceled');
+                                        return;
                                     }
 
                                     $logs = \mb_substr($logs, 0, null, 'UTF-8'); // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
@@ -586,11 +593,12 @@ class Builds extends Action
                 }),
             ]);
 
+            if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
+                Console::info('Build has been canceled');
+                return;
+            }
+
             if ($err) {
-                if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
-                    Console::info('Build has been canceled');
-                    return;
-                }
                 throw $err;
             }
 
@@ -610,6 +618,8 @@ class Builds extends Action
             $build->setAttribute('path', $response['path']);
             $build->setAttribute('size', $response['size']);
             $build->setAttribute('logs', $response['output']);
+
+            $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
@@ -652,12 +662,12 @@ class Builds extends Action
             $build->setAttribute('status', 'failed');
             $build->setAttribute('logs', $th->getMessage());
 
+            $build = $dbForProject->updateDocument('builds', $buildId, $build);
+
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
         } finally {
-            $build = $dbForProject->updateDocument('builds', $buildId, $build);
-
             /**
              * Send realtime Event
              */
