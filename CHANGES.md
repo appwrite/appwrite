@@ -1,3 +1,15 @@
+# Version 1.5.10
+
+## What's Changed
+
+### Notable changes
+
+* Bump console to version 4.3.30 in [#8520](https://github.com/appwrite/appwrite/pull/8520)
+
+### Fixes
+
+* Fix migration stuck at "Starting Data Migration [...]" in [#8519](https://github.com/appwrite/appwrite/pull/8519)
+
 # Version 1.5.9
 
 ## What's Changed

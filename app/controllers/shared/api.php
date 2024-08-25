@@ -16,7 +16,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -556,10 +556,11 @@ App::shutdown()
             /**
              * Trigger functions.
              */
-            $queueForFunctions
-                ->from($queueForEvents)
-                ->trigger();
-
+            if (!$queueForEvents->isPaused()) {
+                $queueForFunctions
+                    ->from($queueForEvents)
+                    ->trigger();
+            }
             /**
              * Trigger webhooks.
              */

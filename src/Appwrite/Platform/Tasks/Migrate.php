@@ -43,8 +43,8 @@ class Migrate extends Action
     private function clearProjectsCache(Document $project)
     {
         try {
+            $iterator = null;
             do {
-                $iterator = null;
                 $pattern = "default-cache-_{$project->getInternalId()}:*";
                 $keys = $this->redis->scan($iterator, $pattern, 1000);
                 if ($keys !== false) {
