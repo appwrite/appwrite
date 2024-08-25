@@ -130,22 +130,4 @@ return [ // List of publicly visible scopes
     'assistant.read' => [
         'description' => 'Access to read the Assistant service',
     ],
-    'policies.write' => [
-        'description' => 'Access to create, update, and delete your backups',
-    ],
-    'policies.read' => [
-        'description' => 'Access to read the backups service',
-    ],
-    'archives.read' => [
-        'description' => 'Access to read the backups service',
-    ],
-    'archives.write' => [
-        'description' => 'Access to create, update, and delete your archive',
-    ],
-    'restorations.read' => [
-        'description' => 'Access to read your restorations',
-    ],
-    'restorations.write' => [
-        'description' => 'Access to create, update, and delete your restoration',
-    ],
 ];
