@@ -755,10 +755,10 @@ App::error()
             $providerName = System::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
             $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
 
-            try { 
+            try {
                 $loggingProvider = new DSN($providerConfig ?? '');
                 $providerName = $loggingProvider->getScheme();
-                
+
                 if (!empty($providerName) && $providerName === 'sentry') {
                     $key = $loggingProvider->getPassword();
                     $projectId = $loggingProvider->getUser() ?? '';
