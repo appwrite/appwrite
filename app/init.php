@@ -761,8 +761,9 @@ $register->set('logger', function () {
             default => ['key' => $loggingProvider->getHost()],
         };
         var_dump("Here1");
-    } catch (Throwable) {
+    } catch (Throwable $th) {
         // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
+        Console::warning('Using deprecated logging configuration. Please update your configuration to use DSN format.' . $th->getMessage());
         $configChunks = \explode(";", $providerConfig);
 
         $providerConfig = match ($providerName) {
