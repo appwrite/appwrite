@@ -750,6 +750,7 @@ $register->set('logger', function () {
     $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
     $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
+    var_dump($providerConfig);
     try {
         $loggingProvider = new DSN($providerConfig ?? '');
 
@@ -759,6 +760,7 @@ $register->set('logger', function () {
             'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
             default => ['key' => $loggingProvider->getHost()],
         };
+        var_dump("Here1");
     } catch (Throwable) {
         // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
         $configChunks = \explode(";", $providerConfig);
@@ -768,7 +770,10 @@ $register->set('logger', function () {
             'logowl' => ['ticket' => $configChunks[0] ?? '', 'host' => ''],
             default => ['key' => $providerConfig],
         };
+        var_dump("Here2");
     }
+
+    var_dump($providerConfig);
 
     if (empty($providerName) || empty($providerConfig)) {
         return;
