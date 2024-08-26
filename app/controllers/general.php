@@ -32,6 +32,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
+use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
@@ -754,16 +755,24 @@ App::error()
             $providerName = System::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
             $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
 
-            if (!(empty($providerName) || empty($providerConfig))) {
-                if (!Logger::hasProvider($providerName)) {
-                    throw new Exception("Logging provider not supported. Logging is disabled");
-                }
+            try {
+                $loggingProvider = new DSN($providerConfig ?? '');
+                $providerName = $loggingProvider->getScheme();
 
-                $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
-                $adapter = new $classname($providerConfig);
-                $logger = new Logger($adapter);
-                $logger->setSample(0.04);
-                $publish = true;
+                if (!empty($providerName) && $providerName === 'sentry') {
+                    $key = $loggingProvider->getPassword();
+                    $projectId = $loggingProvider->getUser() ?? '';
+                    $host = 'https://' . $loggingProvider->getHost();
+
+                    $adapter = new Sentry($projectId, $key, $host);
+                    $logger = new Logger($adapter);
+                    $logger->setSample(0.04);
+                    $publish = true;
+                } else {
+                    throw new \Exception('Invalid experimental logging provider');
+                }
+            } catch (\Throwable $th) {
+                Console::warning('Failed to initialize logging provider: ' . $th->getMessage());
             }
         }
 
