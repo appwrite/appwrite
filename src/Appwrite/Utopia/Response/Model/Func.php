@@ -87,7 +87,7 @@ class Func extends Model
             ])
             ->addRule('schedule', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function execution schedult in CRON format.',
+                'description' => 'Function execution schedule in CRON format.',
                 'default' => '',
                 'example' => '5 4 * * *',
             ])
