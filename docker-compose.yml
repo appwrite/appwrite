@@ -83,7 +83,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
-      # - ~/.ssh:/root/.ssh
+      - ~/.ssh:/root/.ssh
     depends_on:
       - mariadb
       - redis
