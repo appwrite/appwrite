@@ -184,8 +184,12 @@ class Usage extends Action
                     $deployments = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS)));
                     $deploymentsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE)));
                     $builds = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS)));
+                    $buildsSuccess = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS)));
+                    $buildsFailed = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_FAILED)));
                     $buildsStorage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE)));
                     $buildsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE)));
+                    $buildsComputeSuccess = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS)));
+                    $buildsComputeFailed = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED)));
                     $executions = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS)));
                     $executionsCompute = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE)));
 
@@ -210,6 +214,20 @@ class Usage extends Action
                         ];
                     }
 
+                    if (!empty($buildsSuccess['value'])) {
+                        $metrics[] = [
+                            'key' => METRIC_BUILDS_SUCCESS,
+                            'value' => ($buildsSuccess['value'] * -1),
+                        ];
+                    }
+
+                    if (!empty($buildsFailed['value'])) {
+                        $metrics[] = [
+                            'key' => METRIC_BUILDS_FAILED,
+                            'value' => ($buildsFailed['value'] * -1),
+                        ];
+                    }
+
                     if (!empty($buildsStorage['value'])) {
                         $metrics[] = [
                             'key' => METRIC_BUILDS_STORAGE,
@@ -221,6 +239,20 @@ class Usage extends Action
                         $metrics[] = [
                             'key' => METRIC_BUILDS_COMPUTE,
                             'value' => ($buildsCompute['value'] * -1),
+                        ];
+                    }
+
+                    if (!empty($buildsComputeSuccess['value'])) {
+                        $metrics[] = [
+                            'key' => METRIC_BUILDS_COMPUTE_SUCCESS,
+                            'value' => ($buildsComputeSuccess['value'] * -1),
+                        ];
+                    }
+
+                    if (!empty($buildsComputeFailed['value'])) {
+                        $metrics[] = [
+                            'key' => METRIC_BUILDS_COMPUTE_FAILED,
+                            'value' => ($buildsComputeFailed['value'] * -1),
                         ];
                     }
 
