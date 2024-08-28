@@ -3,6 +3,7 @@
 namespace Executor;
 
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Utopia\Fetch\BodyMultipart;
 use Exception;
 use Utopia\System\System;
 
@@ -24,10 +25,6 @@ class Executor
 
     protected array $headers;
 
-    protected int $cpus;
-
-    protected int $memory;
-
     public function __construct(string $endpoint)
     {
         if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
@@ -35,8 +32,6 @@ class Executor
         }
 
         $this->endpoint = $endpoint;
-        $this->cpus = \intval(System::getEnv('_APP_FUNCTIONS_CPUS', '1'));
-        $this->memory = \intval(System::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
         $this->headers = [
             'content-type' => 'application/json',
             'authorization' => 'Bearer ' . System::getEnv('_APP_EXECUTOR_SECRET', ''),
@@ -65,6 +60,8 @@ class Executor
         string $source,
         string $image,
         string $version,
+        float $cpus,
+        int $memory,
         bool $remove = false,
         string $entrypoint = '',
         string $destination = '',
@@ -74,6 +71,12 @@ class Executor
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
         $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+
+        // Remove after migration
+        if ($version == 'v3') {
+            $version = 'v4';
+        }
+
         $params = [
             'runtimeId' => $runtimeId,
             'source' => $source,
@@ -83,8 +86,8 @@ class Executor
             'variables' => $variables,
             'remove' => $remove,
             'command' => $command,
-            'cpus' => $this->cpus,
-            'memory' => $this->memory,
+            'cpus' => $cpus,
+            'memory' => $memory,
             'version' => $version,
             'timeout' => $timeout,
         ];
@@ -161,6 +164,7 @@ class Executor
      * @param string $source
      * @param string $entrypoint
      * @param string $runtimeEntrypoint
+     * @param bool $logging
      *
      * @return array
      */
@@ -177,7 +181,10 @@ class Executor
         string $path,
         string $method,
         array $headers,
+        float $cpus,
+        int $memory,
         string $runtimeEntrypoint = null,
+        bool $logging,
         int $requestTimeout = null
     ) {
         if (empty($headers['host'])) {
@@ -185,11 +192,16 @@ class Executor
         }
 
         $runtimeId = "$projectId-$deploymentId";
-        $route = '/runtimes/' . $runtimeId . '/execution';
+        $route = '/runtimes/' . $runtimeId . '/executions';
+
+        // Remove after migration
+        if ($version == 'v3') {
+            $version = 'v4';
+        }
+
         $params = [
             'runtimeId' => $runtimeId,
             'variables' => $variables,
-            'body' => $body,
             'timeout' => $timeout,
             'path' => $path,
             'method' => $method,
@@ -197,11 +209,17 @@ class Executor
             'image' => $image,
             'source' => $source,
             'entrypoint' => $entrypoint,
-            'cpus' => $this->cpus,
-            'memory' => $this->memory,
+            'cpus' => $cpus,
+            'memory' => $memory,
             'version' => $version,
             'runtimeEntrypoint' => $runtimeEntrypoint,
+            'logging' => $logging,
+            'restartPolicy' => 'always' // Once utopia/orchestration has it, use DockerAPI::ALWAYS (0.13+)
         ];
+
+        if(!empty($body)) {
+            $params['body'] = $body;
+        }
 
         // Safety timeout. Executor has timeout, and open runtime has soft timeout.
         // This one shouldn't really happen, but prevents from unexpected networking behaviours.
@@ -209,13 +227,18 @@ class Executor
             $requestTimeout = $timeout + 15;
         }
 
-        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $requestTimeout);
+        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data' ], $params, true, $requestTimeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
             $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
             throw new \Exception($message, $status);
         }
+
+        $response['body']['headers'] = \json_decode($response['body']['headers'] ?? '{}', true);
+        $response['body']['statusCode'] = \intval($response['body']['statusCode'] ?? 500);
+        $response['body']['duration'] = \floatval($response['body']['duration'] ?? 0);
+        $response['body']['startTime'] = \floatval($response['body']['startTime'] ?? \microtime(true));
 
         return $response['body'];
     }
@@ -248,7 +271,13 @@ class Executor
                 break;
 
             case 'multipart/form-data':
-                $query = $this->flatten($params);
+                $multipart = new BodyMultipart();
+                foreach ($params as $key => $value) {
+                    $multipart->setPart($key, $value);
+                }
+
+                $headers['content-type'] = $multipart->exportHeader();
+                $query = $multipart->exportBody();
                 break;
 
             default:
@@ -315,7 +344,16 @@ class Executor
         $curlErrorMessage = curl_error($ch);
 
         if ($decode) {
-            switch (substr($responseType, 0, strpos($responseType, ';'))) {
+            $strpos = strpos($responseType, ';');
+            $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
+            switch (substr($responseType, 0, $strpos)) {
+                case 'multipart/form-data':
+                    $boundary = \explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '';
+                    $multipartResponse = new BodyMultipart($boundary);
+                    $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
+
+                    $responseBody = $multipartResponse->getParts();
+                    break;
                 case 'application/json':
                     $json = json_decode($responseBody, true);
 

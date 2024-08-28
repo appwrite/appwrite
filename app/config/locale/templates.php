@@ -9,6 +9,8 @@ return [
         'mfaChallenge',
         'mfaEnabled',
         'mfaDisabled',
+        'sessionAlert',
+        'otpSession'
     ],
     'sms' => [
         'verification',
