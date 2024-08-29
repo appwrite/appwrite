@@ -344,6 +344,10 @@ class Swagger2 extends Format
                         $consumes = ['multipart/form-data'];
                         $node['type'] = 'file';
                         break;
+                    case 'Appwrite\Functions\Validator\Payload':
+                        $consumes = ['multipart/form-data'];
+                        $node['type'] = 'payload';
+                        break;
                     case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
