@@ -3670,7 +3670,7 @@ App::patch('/v1/account/mfa')
             // Appwrite Theming for Console
             if ($project->getInternalId() === 'console') {
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl');
-                $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-altered.tpl');
+                $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-altered-console.tpl');
 
                 $body
                     ->setParam('{{buttonText}}', $locale->getText("emails.{$type}.buttonText"))
@@ -3681,7 +3681,7 @@ App::patch('/v1/account/mfa')
 
                 $message->setParam('{{body}}', $body->render(), escapeHtml: false);
             } else {
-                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-altered-client.tpl');
 
                 $message->setParam('{{body}}', $locale->getText("emails.{$type}.body"), escapeHtml: false);
             }
