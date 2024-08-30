@@ -3402,6 +3402,27 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertEquals(10, strlen($document['body']['string']));
+
+        // Try create document with string that is too large
+        $newDoc = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]),
+            [
+                'documentId' => 'unique()',
+                'data' => [
+                    'string' => str_repeat('a', 11)
+                ],
+                "permissions" => ["read(\"any\")"]
+            ]
+        );
+
+        $this->assertEquals(400, $newDoc['headers']['status-code']);
+        $this->assertEquals(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $newDoc['body']['type']);
     }
 
     /**

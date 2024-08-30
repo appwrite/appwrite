@@ -27,6 +27,7 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -364,14 +365,18 @@ function updateAttribute(
             $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
         }
     } else {
-        $dbForProject->updateAttribute(
-            collection: $collectionId,
-            id: $key,
-            required: $required,
-            default: $default,
-            formatOptions: $options ?? null,
-            size: $size ?? null,
-        );
+        try {
+            $dbForProject->updateAttribute(
+                collection: $collectionId,
+                id: $key,
+                required: $required,
+                default: $default,
+                formatOptions: $options ?? null,
+                size: $size ?? null,
+            );
+        } catch (TruncateException $e) {
+            throw new Exception(Exception::ATTRIBUTE_INVALID_RESIZE);
+        }
     }
 
     $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
@@ -1149,19 +1154,15 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             $filters[] = 'encrypt';
         }
 
-        try {
-            $attribute = createAttribute($databaseId, $collectionId, new Document([
-                'key' => $key,
-                'type' => Database::VAR_STRING,
-                'size' => $size,
-                'required' => $required,
-                'default' => $default,
-                'array' => $array,
-                'filters' => $filters,
-            ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
-        } catch (DatabaseException $e) {
-            var_dump($e);
-        }
+        $attribute = createAttribute($databaseId, $collectionId, new Document([
+            'key' => $key,
+            'type' => Database::VAR_STRING,
+            'size' => $size,
+            'required' => $required,
+            'default' => $default,
+            'array' => $array,
+            'filters' => $filters,
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
 
 
         $response
@@ -1877,25 +1878,17 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?int $size, Response $response, Database $dbForProject, Event $queueForEvents) {
 
-        try {
-            $attribute = updateAttribute(
-                databaseId: $databaseId,
-                collectionId: $collectionId,
-                key: $key,
-                dbForProject: $dbForProject,
-                queueForEvents: $queueForEvents,
-                type: Database::VAR_STRING,
-                default: $default,
-                required: $required,
-                size: $size
-            );
-        } catch (DatabaseException $e) {
-            if ($e->getMessage() === "Resize would result in data truncation") {
-                throw new Exception(Exception::ATTRIBUTE_INVALID_RESIZE);
-            } else {
-                throw $e;
-            }
-        }
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            queueForEvents: $queueForEvents,
+            type: Database::VAR_STRING,
+            default: $default,
+            required: $required,
+            size: $size
+        );
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
