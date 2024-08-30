@@ -2445,6 +2445,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(19, count($response['body']));
         $this->assertEquals('24h', $response['body']['range']);
+        $this->assertEquals(1, $response['body']['executionsTotal']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
