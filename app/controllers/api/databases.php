@@ -20,6 +20,7 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -234,7 +235,8 @@ function updateAttribute(
     int|float $min = null,
     int|float $max = null,
     array $elements = null,
-    array $options = []
+    array $options = [],
+    int $size = null
 ): Document {
     $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -279,6 +281,10 @@ function updateAttribute(
     $attribute
         ->setAttribute('default', $default)
         ->setAttribute('required', $required);
+
+    if (!empty($size)) {
+        $attribute->setAttribute('size', $size);
+    }
 
     $formatOptions = $attribute->getAttribute('formatOptions');
 
@@ -363,7 +369,8 @@ function updateAttribute(
             id: $key,
             required: $required,
             default: $default,
-            formatOptions: $options ?? null
+            formatOptions: $options ?? null,
+            size: $size ?? null,
         );
     }
 
@@ -1142,15 +1149,20 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             $filters[] = 'encrypt';
         }
 
-        $attribute = createAttribute($databaseId, $collectionId, new Document([
-            'key' => $key,
-            'type' => Database::VAR_STRING,
-            'size' => $size,
-            'required' => $required,
-            'default' => $default,
-            'array' => $array,
-            'filters' => $filters,
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        try {
+            $attribute = createAttribute($databaseId, $collectionId, new Document([
+                'key' => $key,
+                'type' => Database::VAR_STRING,
+                'size' => $size,
+                'required' => $required,
+                'default' => $default,
+                'array' => $array,
+                'filters' => $filters,
+            ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        } catch (DatabaseException $e) {
+            var_dump($e);
+        }
+
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -1859,21 +1871,31 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('size', null, new Integer(), 'Maximum size of the string attribute.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?int $size, Response $response, Database $dbForProject, Event $queueForEvents) {
 
-        $attribute = updateAttribute(
-            databaseId: $databaseId,
-            collectionId: $collectionId,
-            key: $key,
-            dbForProject: $dbForProject,
-            queueForEvents: $queueForEvents,
-            type: Database::VAR_STRING,
-            default: $default,
-            required: $required
-        );
+        try {
+            $attribute = updateAttribute(
+                databaseId: $databaseId,
+                collectionId: $collectionId,
+                key: $key,
+                dbForProject: $dbForProject,
+                queueForEvents: $queueForEvents,
+                type: Database::VAR_STRING,
+                default: $default,
+                required: $required,
+                size: $size
+            );
+        } catch (DatabaseException $e) {
+            if ($e->getMessage() === "Resize would result in data truncation") {
+                throw new Exception(Exception::ATTRIBUTE_INVALID_RESIZE);
+            } else {
+                throw $e;
+            }
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
