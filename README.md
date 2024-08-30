@@ -134,6 +134,12 @@ Choose from one of the providers below:
           <br /><sub><b>Akamai Compute</b></sub></a>    
       </a>
     </td>
+    <td align="center" width="100" height="100">
+      <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
+        <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
+          <br /><sub><b>AWS Marketplace</b></sub></a>    
+      </a>
+    </td>
   </tr>
 </table>
 
