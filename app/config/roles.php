@@ -75,7 +75,13 @@ $admins = [
     'topics.write',
     'topics.read',
     'subscribers.write',
-    'subscribers.read'
+    'subscribers.read',
+    'policies.write',
+    'policies.read',
+    'archives.read',
+    'archives.write',
+    'restorations.read',
+    'restorations.write',
 ];
 
 return [
