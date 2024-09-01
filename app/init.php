@@ -142,6 +142,9 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 const APP_HOSTNAME_INTERNAL = 'appwrite';
+const APP_PLATFORM_SERVER = 'server';
+const APP_PLATFORM_CLIENT = 'client';
+const APP_PLATFORM_CONSOLE = 'console';
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
