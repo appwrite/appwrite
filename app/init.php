@@ -36,10 +36,12 @@ use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Hooks\Hooks;
+use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
@@ -1457,9 +1459,16 @@ App::setResource('deviceForBuilds', function ($project, $connectionString) {
     return getDevice(APP_STORAGE_BUILDS.'/app-'.$project->getId(), $connectionString);
 }, ['project', 'connectionString']);
 
+App::setResource('realtimeConnection', fn($pools) =>  $pools->get('pubsub')->pop()->getResource()
+, ['pools']);
+
 App::setResource('connectionString', function () {
     return System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 });
+
+Realtime::setRedis(
+    $register->get('pools')->get('pubsub')->pop()->getResource()
+);
 
 
 function getDevice(string $root, string $connectionString = ''): Device

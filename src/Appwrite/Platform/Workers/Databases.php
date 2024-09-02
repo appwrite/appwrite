@@ -195,14 +195,6 @@ class Databases extends Action
                 );
             }
         } finally {
-            var_dump([
-                'database'=> $database,
-                'collection'=> $collection,
-                'attribute'=> $attribute,
-                'database'=> $database,
-                'events'=> $events,
-
-            ]);
             $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
         }
 
