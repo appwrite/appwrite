@@ -1,4 +1,4 @@
-> Our Appwrite Init event has concluded. You can check out all the new and upcoming features [on our Init website](https://appwrite.io/init) 🚀
+> Appwrite Init is here! You can check out all the new and upcoming features [on our Init website](https://appwrite.io/init) 🚀
 
 <br />
 <p align="center">
@@ -132,6 +132,12 @@ Choose from one of the providers below:
       <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
         <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
           <br /><sub><b>Akamai Compute</b></sub></a>    
+      </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
+        <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
+          <br /><sub><b>AWS Marketplace</b></sub></a>    
       </a>
     </td>
   </tr>
