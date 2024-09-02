@@ -860,7 +860,7 @@ class UsageTest extends Scope
             '/functions/' . $functionId . '/usage?range=30d',
             $this->getConsoleHeaders()
         );
-        
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(19, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
@@ -880,7 +880,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        $projectMetrics = $response['body'];        
+        $projectMetrics = $response['body'];
 
         // Create custom domain execution
         $proxyClient = new Client();
@@ -893,7 +893,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        sleep(self::WAIT);
+        sleep(self::WAIT + 20);
 
         // Compare new values with old values
         $response = $this->client->call(
@@ -901,7 +901,7 @@ class UsageTest extends Scope
             '/functions/' . $functionId . '/usage?range=30d',
             $this->getConsoleHeaders()
         );
-        
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(19, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
