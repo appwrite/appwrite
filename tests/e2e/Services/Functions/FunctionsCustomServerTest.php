@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Functions;
 use Appwrite\Functions\Specification;
 use Appwrite\Tests\Retry;
 use CURLFile;
+use PHPUnit\Framework\ExpectationFailedException;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -2435,17 +2436,31 @@ class FunctionsCustomServerTest extends Scope
         // Await Aggregation
         sleep(App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
 
-        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), [
-            'range' => '24h'
-        ]);
+        $tries = 0;
+        while (true) {
+            try {
+                $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()), [
+                    'range' => '24h'
+                ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(19, count($response['body']));
-        $this->assertEquals('24h', $response['body']['range']);
-        $this->assertEquals(1, $response['body']['executionsTotal']);
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertEquals(19, count($response['body']));
+                $this->assertEquals('24h', $response['body']['range']);
+                $this->assertEquals(1, $response['body']['executionsTotal']);
+
+                break;
+            } catch (ExpectationFailedException $th) {
+                if ($tries >= 5) {
+                    throw $th;
+                } else {
+                    $tries++;
+                    sleep(5);
+                }
+            }
+        }
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
