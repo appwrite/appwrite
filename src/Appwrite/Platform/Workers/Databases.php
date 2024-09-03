@@ -82,8 +82,8 @@ class Databases extends Action
         $log->addTag('databaseId', $database->getId());
 
         match (\strval($type)) {
-            DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $project, $dbForProject, $realtimeConnection),
-            DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $project, $dbForProject, $realtimeConnection),
+            DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $project, $dbForProject),
+            DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $project, $dbForProject),
             DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject, $realtimeConnection),
             DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject, $realtimeConnection),
             DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject, $realtimeConnection),
@@ -112,7 +112,7 @@ class Databases extends Action
         if ($attribute->isEmpty()) {
             throw new Exception('Missing attribute');
         }
-
+         var_dump("innnn");
         $projectId = $project->getId();
 
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].update', [
