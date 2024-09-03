@@ -15,7 +15,7 @@ class HTTPTest extends Scope
     public function setUp(): void
     {
         parent::setUp();
-        $this->client->setEndpoint('http://localhost');
+        $this->client->setEndpoint('http://traefik');
     }
 
     public function testOptions()
@@ -131,7 +131,6 @@ class HTTPTest extends Scope
                 'content-type' => 'application/json',
             ], json_decode(file_get_contents($directory . $file), true));
 
-            $response['body'] = json_decode($response['body'], true);
             $this->assertEquals(200, $response['headers']['status-code']);
             // looks like recent change in the validator
             $this->assertTrue(empty($response['body']['schemaValidationMessages']));
@@ -163,11 +162,11 @@ class HTTPTest extends Scope
 
     public function testDefaultOAuth2()
     {
-        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/success', $this->getHeaders());
+        $response = $this->client->call(Client::METHOD_GET, '/console/auth/oauth2/success', $this->getHeaders());
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/failure', $this->getHeaders());
+        $response = $this->client->call(Client::METHOD_GET, '/console/auth/oauth2/failure', $this->getHeaders());
 
         $this->assertEquals(200, $response['headers']['status-code']);
     }

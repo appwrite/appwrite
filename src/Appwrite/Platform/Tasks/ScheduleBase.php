@@ -101,7 +101,7 @@ abstract class ScheduleBase extends Action
 
             foreach ($results as $document) {
                 try {
-                    //todo: add projectId to be unique $this->schedules[$document['resourceId']]['projectId']
+                    // TODO: Add projectId to be unique $this->schedules[$document['resourceId']]['projectId']
                     $this->schedules[$document['resourceId']] = $getSchedule($document);
                 } catch (\Throwable $th) {
                     $collectionId = static::getCollectionId();

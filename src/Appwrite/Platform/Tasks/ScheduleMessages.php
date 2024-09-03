@@ -40,7 +40,7 @@ class ScheduleMessages extends ScheduleBase
                 continue;
             }
 
-            \go(function () use ($now, $schedule, $pools, $dbForConsole) {
+            \go(function () use ($schedule, $pools, $dbForConsole) {
                 $queue = $pools->get('queue')->pop();
                 $connection = $queue->getResource();
                 $queueForMessaging = new Messaging($connection);

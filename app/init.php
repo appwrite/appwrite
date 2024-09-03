@@ -33,6 +33,7 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\Specification;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Hooks\Hooks;
@@ -62,6 +63,10 @@ use Utopia\Database\Validator\Structure;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
+use Utopia\Logger\Adapter\AppSignal;
+use Utopia\Logger\Adapter\LogOwl;
+use Utopia\Logger\Adapter\Raygun;
+use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
@@ -109,11 +114,12 @@ const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1_000_000;
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
-const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
-const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
+const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
+const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
+const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4330;
-const APP_VERSION_STABLE = '1.5.10';
+const APP_CACHE_BUSTER = 4318;
+const APP_VERSION_STABLE = '1.6.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -142,6 +148,9 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 const APP_HOSTNAME_INTERNAL = 'appwrite';
+const APP_FUNCTION_SPECIFICATION_DEFAULT = Specification::S_05VCPU_512MB;
+const APP_FUNCTION_CPUS_DEFAULT = 0.5;
+const APP_FUNCTION_MEMORY_DEFAULT = 512;
 const APP_PLATFORM_SERVER = 'server';
 const APP_PLATFORM_CLIENT = 'client';
 const APP_PLATFORM_CONSOLE = 'console';
@@ -170,7 +179,7 @@ const DELETE_TYPE_PROJECTS = 'projects';
 const DELETE_TYPE_FUNCTIONS = 'functions';
 const DELETE_TYPE_DEPLOYMENTS = 'deployments';
 const DELETE_TYPE_USERS = 'users';
-const DELETE_TYPE_TEAMS = 'teams';
+const DELETE_TYPE_TEAM_PROJECTS = 'teams_projects';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
@@ -211,6 +220,9 @@ const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 const MESSAGE_TYPE_EMAIL = 'email';
 const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
+// API key types
+const API_KEY_STANDARD = 'standard';
+const API_KEY_DYNAMIC = 'dynamic';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
@@ -232,12 +244,20 @@ const METRIC_FUNCTIONS  = 'functions';
 const METRIC_DEPLOYMENTS  = 'deployments';
 const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
 const METRIC_BUILDS  = 'builds';
+const METRIC_BUILDS_SUCCESS  = 'builds.success';
+const METRIC_BUILDS_FAILED  = 'builds.failed';
 const METRIC_BUILDS_STORAGE  = 'builds.storage';
 const METRIC_BUILDS_COMPUTE  = 'builds.compute';
+const METRIC_BUILDS_COMPUTE_SUCCESS  = 'builds.compute.success';
+const METRIC_BUILDS_COMPUTE_FAILED  = 'builds.compute.failed';
 const METRIC_BUILDS_MB_SECONDS = 'builds.mbSeconds';
 const METRIC_FUNCTION_ID_BUILDS  = '{functionInternalId}.builds';
+const METRIC_FUNCTION_ID_BUILDS_SUCCESS  = '{functionInternalId}.builds.success';
+const METRIC_FUNCTION_ID_BUILDS_FAILED  = '{functionInternalId}.builds.failed';
 const METRIC_FUNCTION_ID_BUILDS_STORAGE = '{functionInternalId}.builds.storage';
 const METRIC_FUNCTION_ID_BUILDS_COMPUTE  = '{functionInternalId}.builds.compute';
+const METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS  = '{functionInternalId}.builds.compute.success';
+const METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED  = '{functionInternalId}.builds.compute.failed';
 const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
 const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
 const METRIC_FUNCTION_ID_BUILDS_MB_SECONDS = '{functionInternalId}.builds.mbSeconds';
@@ -294,6 +314,8 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
+Config::load('runtime-specifications', __DIR__ . '/config/runtimes/specifications.php');
+Config::load('function-templates', __DIR__ . '/config/function-templates.php');
 
 /**
  * New DB Filters
@@ -348,8 +370,7 @@ Database::addFilter(
         if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
             $attribute
                 ->setAttribute('min', $formatOptions['min'])
-                ->setAttribute('max', $formatOptions['max'])
-            ;
+                ->setAttribute('max', $formatOptions['max']);
         }
 
         return $value;
@@ -732,6 +753,27 @@ $register->set('logger', function () {
     $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
     $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
+    try {
+        $loggingProvider = new DSN($providerConfig ?? '');
+
+        $providerName = $loggingProvider->getScheme();
+        $providerConfig = match ($providerName) {
+            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
+            'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
+            default => ['key' => $loggingProvider->getHost()],
+        };
+    } catch (Throwable $th) {
+        // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
+        Console::warning('Using deprecated logging configuration. Please update your configuration to use DSN format.' . $th->getMessage());
+        $configChunks = \explode(";", $providerConfig);
+
+        $providerConfig = match ($providerName) {
+            'sentry' => [ 'key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
+            'logowl' => ['ticket' => $configChunks[0] ?? '', 'host' => ''],
+            default => ['key' => $providerConfig],
+        };
+    }
+
     if (empty($providerName) || empty($providerConfig)) {
         return;
     }
@@ -740,20 +782,26 @@ $register->set('logger', function () {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
-    // Old Sentry Format conversion. Fallback until the old syntax is completely deprecated.
-    if (str_contains($providerConfig, ';') && strtolower($providerName) == 'sentry') {
-        $configChunks = \explode(";", $providerConfig);
-
-        $sentryKey = $configChunks[0];
-        $projectId = $configChunks[1];
-
-        $providerConfig = 'https://' . $sentryKey . '@sentry.io/' . $projectId;
+    try {
+        $adapter = match ($providerName) {
+            'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
+            'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
+            'raygun' => new Raygun($providerConfig['key']),
+            'appsignal' => new AppSignal($providerConfig['key']),
+            default => null
+        };
+    } catch (Throwable $th) {
+        $adapter = null;
     }
 
-    $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
-    $adapter = new $classname($providerConfig);
+    if($adapter === null) {
+        Console::error("Logging provider not supported. Logging is disabled");
+        return;
+    }
+
     return new Logger($adapter);
 });
+
 $register->set('pools', function () {
     $group = new Group();
 
@@ -973,7 +1021,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-02.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-08.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
@@ -1208,7 +1256,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 
         try {
             $payload = $jwt->decode($authJWT);
@@ -1217,14 +1265,15 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         $jwtUserId = $payload['userId'] ?? '';
-        $jwtSessionId = $payload['sessionId'] ?? '';
-
-        if ($jwtUserId && $jwtSessionId) {
+        if (!empty($jwtUserId)) {
             $user = $dbForProject->getDocument('users', $jwtUserId);
         }
 
-        if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-            $user = new Document([]);
+        $jwtSessionId = $payload['sessionId'] ?? '';
+        if(!empty($jwtSessionId)) {
+            if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+                $user = new Document([]);
+            }
         }
     }
 
@@ -1297,9 +1346,11 @@ App::setResource('console', function () {
         'legalAddress' => '',
         'legalTaxId' => '',
         'auths' => [
+            'mockNumbers' => [],
             'invites' => System::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
             'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
+            'sessionAlerts' => System::getEnv('_APP_CONSOLE_SESSION_ALERTS', 'disabled') === 'enabled'
         ],
         'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],

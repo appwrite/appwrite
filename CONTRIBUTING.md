@@ -553,6 +553,12 @@ To run end-2-end tests for a specific service use:
 docker compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
 ```
 
+To run one specific test:
+
+```bash
+docker compose exec appwrite vendor/bin/phpunit --filter [FunctionName]
+```
+
 ## Benchmarking
 
 You can use WRK Docker image to benchmark the server performance. Benchmarking is extremely useful when you want to compare how the server behaves before and after a change has been applied. Replace [APPWRITE_HOSTNAME_OR_IP] with your Appwrite server hostname or IP. Note that localhost is not accessible from inside the WRK container.

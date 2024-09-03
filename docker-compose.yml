@@ -40,6 +40,7 @@ services:
     networks:
       - gateway
       - appwrite
+      - runtimes
 
   appwrite:
     container_name: appwrite
@@ -51,7 +52,7 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
-    ports: 
+    ports:
       - 9501:80
     networks:
       - appwrite
@@ -97,10 +98,12 @@ services:
       - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
+      - _APP_CONSOLE_SESSION_ALERTS
       - _APP_CONSOLE_WHITELIST_IPS
       - _APP_CONSOLE_HOSTNAMES
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_SYSTEM_TEAM_EMAIL
       - _APP_EMAIL_SECURITY
       - _APP_SYSTEM_RESPONSE_FORMAT
       - _APP_OPTIONS_ABUSE
@@ -160,7 +163,6 @@ services:
       - _APP_FUNCTIONS_RUNTIMES
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
@@ -190,6 +192,28 @@ services:
       - _APP_EXPERIMENT_LOGGING_PROVIDER
       - _APP_EXPERIMENT_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
+
+  appwrite-console:
+    <<: *x-logging
+    container_name: appwrite-console
+    image: appwrite/console:5.0.4
+    restart: unless-stopped
+    networks:
+      - appwrite
+    labels:
+      - "traefik.enable=true"
+      - "traefik.constraint-label-stack=appwrite"
+      - "traefik.docker.network=appwrite"
+      - "traefik.http.services.appwrite_console.loadbalancer.server.port=80"
+      #ws
+      - traefik.http.routers.appwrite_console_http.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_console_http.rule=PathPrefix(`/console`)
+      - traefik.http.routers.appwrite_console_http.service=appwrite_console
+      # wss
+      - traefik.http.routers.appwrite_console_https.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_console_https.rule=PathPrefix(`/console`)
+      - traefik.http.routers.appwrite_console_https.service=appwrite_console
+      - traefik.http.routers.appwrite_console_https.tls=true
 
   appwrite-realtime:
     entrypoint: realtime
@@ -237,7 +261,6 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_USAGE_STATS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
 
@@ -267,7 +290,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
 
@@ -299,7 +321,6 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
       - _APP_DATABASE_SHARED_TABLES
@@ -356,7 +377,6 @@ services:
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -388,7 +408,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_WORKERS_NUM
       - _APP_QUEUE_NAME
@@ -424,7 +443,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
@@ -492,7 +510,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
 
@@ -514,6 +531,8 @@ services:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DOMAIN
+      - _APP_OPTIONS_FORCE_HTTPS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -565,7 +584,6 @@ services:
       - _APP_SMTP_SECURE
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
@@ -598,7 +616,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
@@ -656,7 +673,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
@@ -727,7 +743,6 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_USAGE_STATS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
       - _APP_DATABASE_SHARED_TABLES
@@ -759,7 +774,6 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_USAGE_STATS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
       - _APP_DATABASE_SHARED_TABLES
@@ -791,6 +805,33 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
+
+  appwrite-task-scheduler-executions:
+    entrypoint: schedule-executions
+    <<: *x-logging
+    container_name: appwrite-task-scheduler-executions
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
 
   appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
@@ -833,7 +874,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.5.7
+    image: openruntimes/executor:0.6.7
     restart: unless-stopped
     networks:
       - appwrite
@@ -854,8 +895,7 @@ services:
       - OPR_EXECUTOR_ENV=$_APP_ENV
       - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_EXECUTOR_RUNTIME_VERSIONS=v2,v3
-      - OPR_EXECUTOR_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
+      - OPR_EXECUTOR_RUNTIME_VERSIONS=v2,v4
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
       - OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY=$_APP_STORAGE_S3_ACCESS_KEY
@@ -884,7 +924,7 @@ services:
     hostname: proxy
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/proxy:0.3.1
+    image: openruntimes/proxy:0.5.5
     networks:
       - appwrite
       - runtimes
@@ -893,7 +933,6 @@ services:
       - OPR_PROXY_ENV=$_APP_ENV
       - OPR_PROXY_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
       - OPR_PROXY_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_PROXY_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_PROXY_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_PROXY_ALGORITHM=random
       - OPR_PROXY_EXECUTORS=exc1
