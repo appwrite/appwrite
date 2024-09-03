@@ -1,4 +1,4 @@
-> Appwrite Init is here! You can check out all the new and upcoming features [on our Init website](https://appwrite.io/init) 🚀
+> Appwrite Init has concluded! You can check out all the latest announcements [on our Init website](https://appwrite.io/init) 🚀
 
 <br />
 <p align="center">
