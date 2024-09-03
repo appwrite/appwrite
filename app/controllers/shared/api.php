@@ -299,17 +299,6 @@ App::init()
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
-            // $adminRoles = array_filter($adminRoles, function ($role) use ($project) {
-            //     return str_contains($role, $project->getId()) || str_contains($role, 'projects/all') || str_contains($role, 'owner');
-            // });
-
-            // if (empty($adminRoles)) {
-            //     throw new Exception(Exception::USER_UNAUTHORIZED);
-            // }
-
-            var_dump("####### ADMIN ROLES #######");
-            var_dump($adminRoles);
-
             foreach ($adminRoles as $role) {
                 $scopes = \array_merge($scopes, $roles[$role]['scopes']);
             }
