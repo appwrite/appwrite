@@ -5,6 +5,7 @@ namespace Appwrite\Event;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
+use Utopia\System\System;
 
 class Certificate extends Event
 {
@@ -77,6 +78,7 @@ class Certificate extends Event
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
+            'sourceRegion' =>  System::getEnv('_APP_REGION', 'default'),
             'project' => $this->project,
             'domain' => $this->domain,
             'skipRenewCheck' => $this->skipRenewCheck

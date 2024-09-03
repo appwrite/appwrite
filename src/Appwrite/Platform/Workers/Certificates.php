@@ -10,6 +10,7 @@ use Appwrite\Network\Validator\CNAME;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
 use Exception;
+use phpDocumentor\Reflection\Types\Callable_;
 use Throwable;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -30,7 +31,11 @@ use Utopia\System\System;
 
 class Certificates extends Action
 {
-    protected \Redis $realtimeConnection;
+
+    /**
+     * @var mixed|string
+     */
+    protected string $sourceRegion;
 
     public static function getName(): string
     {
@@ -51,7 +56,7 @@ class Certificates extends Action
             ->inject('queueForFunctions')
             ->inject('log')
             ->inject('realtimeConnection')
-            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, \Redis $realtimeConnection) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
+            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, Callable $realtimeConnection) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $realtimeConnection));
     }
 
     /**
@@ -65,7 +70,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, \Redis $realtimeConnection): void
+    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, Callable $realtimeConnection): void
     {
 
         $payload = $message->getPayload() ?? [];
@@ -74,15 +79,14 @@ class Certificates extends Action
             throw new Exception('Missing payload');
         }
 
-        $this->realtimeConnection = $realtimeConnection;
-
         $document = new Document($payload['domain'] ?? []);
         $domain   = new Domain($document->getAttribute('domain', ''));
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
+        $this->sourceRegion = $payload['sourceRegion'] ?? 'default';
 
         $log->addTag('domain', $domain->get());
 
-        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $skipRenewCheck);
+        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $realtimeConnection, $skipRenewCheck);
     }
 
     /**
@@ -96,7 +100,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    protected function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, bool $skipRenewCheck = false): void
+    protected function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, Callable $realtimeConnection, bool $skipRenewCheck = false): void
     {
 
         /**
@@ -200,7 +204,7 @@ class Certificates extends Action
             $certificate->setAttribute('updated', DateTime::now());
 
             // Save all changes we made to certificate document into database
-            $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForConsole, $queueForEvents, $queueForFunctions);
+            $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForConsole, $queueForEvents, $queueForFunctions, $realtimeConnection);
         }
     }
 
@@ -219,7 +223,7 @@ class Certificates extends Action
      * @throws Conflict
      * @throws Structure
      */
-    protected function saveCertificateDocument(string $domain, Document $certificate, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions): void
+    protected function saveCertificateDocument(string $domain, Document $certificate, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Callable $realtimeConnection): void
     {
         // Check if update or insert required
         $certificateDocument = $dbForConsole->findOne('certificates', [Query::equal('domain', [$domain])]);
@@ -233,7 +237,7 @@ class Certificates extends Action
         }
 
         $certificateId = $certificate->getId();
-        $this->updateDomainDocuments($certificateId, $domain, $success, $dbForConsole, $queueForEvents, $queueForFunctions);
+        $this->updateDomainDocuments($certificateId, $domain, $success, $dbForConsole, $queueForEvents, $queueForFunctions, $realtimeConnection);
     }
 
     /**
@@ -483,7 +487,7 @@ class Certificates extends Action
      *
      * @return void
      */
-    protected function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions): void
+    protected function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Callable $realtimeConnection): void
     {
 
         $rule = $dbForConsole->findOne('rules', [
@@ -533,7 +537,7 @@ class Certificates extends Action
                 project: $project
             );
             Realtime::send(
-                redis: $this->realtimeConnection,
+                redis: $realtimeConnection($this->sourceRegion),
                 projectId: 'console',
                 payload: $rule->getArrayCopy(),
                 events: $allEvents,
@@ -541,7 +545,7 @@ class Certificates extends Action
                 roles: $target['roles']
             );
             Realtime::send(
-                redis: $this->realtimeConnection,
+                redis: $realtimeConnection($this->sourceRegion),
                 projectId: $project->getId(),
                 payload: $rule->getArrayCopy(),
                 events: $allEvents,

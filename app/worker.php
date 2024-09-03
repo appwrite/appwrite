@@ -275,9 +275,11 @@ Server::setResource('deviceForCache', function (Document $project, $connectionSt
     return getDevice(APP_STORAGE_CACHE.'/app-'.$project->getId(), $connectionString);
 }, ['project', 'connectionString']);
 
-Server::setResource('realtimeConnection', fn($pools) =>  $pools->get('pubsub')->pop()->getResource()
-, ['pools']);
-
+Server::setResource('realtimeConnection',function ($pools) {
+    return function () use ($pools)  {
+        return $pools->get('pubsub')->pop()->getResource();
+    };
+}, ['pools']);
 
 $pools = $register->get('pools');
 $platform = new Appwrite();

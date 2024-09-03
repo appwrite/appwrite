@@ -142,7 +142,6 @@ class Realtime extends Adapter
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
-
         $redis->publish('realtime', json_encode([
             'project' => $projectId,
             'roles' => $roles,

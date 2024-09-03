@@ -9,6 +9,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Executor\Executor;
+use phpDocumentor\Reflection\Types\Callable_;
 use Swoole\Coroutine as Co;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -31,7 +32,11 @@ use Utopia\VCS\Adapter\Git\GitHub;
 
 class Builds extends Action
 {
-    protected \Redis $realtimeConnection;
+
+    /**
+     * @var mixed|string
+     */
+    protected string $sourceRegion;
 
     public static function getName(): string
     {
@@ -55,7 +60,7 @@ class Builds extends Action
             ->inject('deviceForFunctions')
             ->inject('log')
             ->inject('realtimeConnection')
-            ->callback(fn ($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log, \Redis $realtimeConnection) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log, $realtimeConnection));
+            ->callback(fn ($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log, Callable $realtimeConnection) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log, $realtimeConnection));
     }
 
     /**
@@ -71,7 +76,7 @@ class Builds extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log, \Redis $realtimeConnection): void
+    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log, Callable $realtimeConnection): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -79,13 +84,12 @@ class Builds extends Action
             throw new \Exception('Missing payload');
         }
 
-        $this->realtimeConnection = $realtimeConnection;
-
         $type = $payload['type'] ?? '';
         $project = new Document($payload['project'] ?? []);
         $resource = new Document($payload['resource'] ?? []);
         $deployment = new Document($payload['deployment'] ?? []);
         $template = new Document($payload['template'] ?? []);
+        $this->sourceRegion = $payload['sourceRegion'] ?? 'default';
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
@@ -95,7 +99,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
+                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template, $log, $realtimeConnection);
                 break;
 
             default:
@@ -120,7 +124,7 @@ class Builds extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Log $log, Callable $realtimeConnection): void
     {
         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
@@ -306,7 +310,7 @@ class Builds extends Action
                         project: $project
                     );
                     Realtime::send(
-                        redis: $this->realtimeConnection,
+                        redis: $realtimeConnection($this->sourceRegion),
                         projectId: 'console',
                         payload: $build->getArrayCopy(),
                         events: $allEvents,
@@ -387,7 +391,7 @@ class Builds extends Action
             );
 
             Realtime::send(
-                redis: $this->realtimeConnection,
+                redis: $realtimeConnection($this->sourceRegion),
                 projectId: 'console',
                 payload: $build->getArrayCopy(),
                 events: $allEvents,
@@ -444,12 +448,12 @@ class Builds extends Action
                         $err = $error;
                     }
                 }),
-                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
+                Co\go(function () use ($realtimeConnection, $executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
                     try {
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
-                            callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
+                            callback: function ($logs) use ($realtimeConnection, &$response, &$build, $dbForProject, $allEvents, $project) {
                                 if ($response === null) {
                                     $build = $dbForProject->getDocument('builds', $build->getId());
 
@@ -472,7 +476,7 @@ class Builds extends Action
                                         project: $project
                                     );
                                     Realtime::send(
-                                        redis: $this->realtimeConnection,
+                                        redis: $realtimeConnection($this->sourceRegion),
                                         projectId: 'console',
                                         payload: $build->getArrayCopy(),
                                         events: $allEvents,
@@ -553,7 +557,7 @@ class Builds extends Action
                 project: $project
             );
             Realtime::send(
-                redis: $this->realtimeConnection,
+                redis: $realtimeConnection($this->sourceRegion),
                 projectId: 'console',
                 payload: $build->getArrayCopy(),
                 events: $allEvents,

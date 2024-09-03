@@ -56,7 +56,6 @@ class Event
     protected ?Document $project = null;
     protected ?Document $user = null;
     protected bool $paused = false;
-    protected string $region = '';
 
     /**
      * @param Connection $connection
@@ -64,14 +63,8 @@ class Event
      */
     public function __construct(protected Connection $connection)
     {
-        $this->region = System::getEnv('_APP_REGION', 'default');
     }
 
-
-    public function getRegion(): string
-    {
-        return $this->region;
-    }
 
     /**
      * Set queue used for this event.
@@ -295,6 +288,11 @@ class Event
         return $this->params;
     }
 
+    public function getSourceRegion(): string
+    {
+        return System::getEnv('_APP_REGION', 'default');
+    }
+
     /**
      * Execute Event.
      *
@@ -308,8 +306,8 @@ class Event
         }
 
         $client = new Client($this->queue, $this->connection);
-
         return $client->enqueue([
+            'sourceRegion' =>  $this->getSourceRegion(),
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,

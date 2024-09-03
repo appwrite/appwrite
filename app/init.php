@@ -1463,10 +1463,11 @@ App::setResource('connectionString', function () {
     return System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 });
 
-App::setResource('realtimeConnection',
-    fn($pools) =>  $pools->get('pubsub')->pop()->getResource()
-, ['pools']);
-
+App::setResource('realtimeConnection',function ($pools) {
+    return function () use ($pools)  {
+        return $pools->get('pubsub')->pop()->getResource();
+    };
+}, ['pools']);
 
 function getDevice(string $root, string $connectionString = ''): Device
 {
