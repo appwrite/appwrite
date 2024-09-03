@@ -64,7 +64,7 @@ class Event
      */
     public function __construct(protected Connection $connection)
     {
-        $region = System::getEnv('_APP_REGION', 'default');
+        $this->region = System::getEnv('_APP_REGION', 'default');
     }
 
 
