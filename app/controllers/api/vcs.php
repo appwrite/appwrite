@@ -263,7 +263,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 };
 
 App::get('/v1/vcs/github/authorize')
-    ->desc('Install GitHub App')
+    ->desc('Install GitHub app')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('sdk.namespace', 'vcs')
@@ -305,7 +305,7 @@ App::get('/v1/vcs/github/authorize')
     });
 
 App::get('/v1/vcs/github/callback')
-    ->desc('Capture installation and authorization from GitHub App')
+    ->desc('Capture installation and authorization from GitHub app')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -536,7 +536,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
-    ->desc('List Repositories')
+    ->desc('List repositories')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('sdk.namespace', 'vcs')
@@ -780,7 +780,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
-    ->desc('List Repository Branches')
+    ->desc('List repository branches')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('sdk.namespace', 'vcs')
@@ -829,7 +829,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     });
 
 App::post('/v1/vcs/github/events')
-    ->desc('Create Event')
+    ->desc('Create event')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->inject('gitHub')
@@ -1057,7 +1057,7 @@ App::get('/v1/vcs/installations/:installationId')
     });
 
 App::delete('/v1/vcs/installations/:installationId')
-    ->desc('Delete Installation')
+    ->desc('Delete installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
     ->label('sdk.namespace', 'vcs')
