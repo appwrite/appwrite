@@ -88,7 +88,7 @@ $logError
                 $log->addExtra('file', $error->getFile());
                 $log->addExtra('line', $error->getLine());
                 $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('trace', $error->getTraceAsString());
+                $log->addExtra('trace', $error->getTraceAsString());
 
                 $log->setAction($action);
 

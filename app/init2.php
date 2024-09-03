@@ -221,7 +221,7 @@ $global->set('logger', function () {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
-    try{
+    try {
         $adapter = match ($providerName) {
             'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
             'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),

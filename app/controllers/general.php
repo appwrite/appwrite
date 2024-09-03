@@ -33,7 +33,6 @@ use Utopia\Http\Route;
 use Utopia\Http\Validator\Hostname;
 use Utopia\Http\Validator\Text;
 use Utopia\Locale\Locale;
-use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;

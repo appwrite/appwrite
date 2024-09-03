@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Migration\Migration;
 use Redis;
 use Utopia\App;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -38,8 +37,8 @@ class Migrate extends Action
             ->inject('authorization')
             ->inject('console')
             ->callback(function ($version, $dbForConsole, $getProjectDB, Registry $register, Authorization $authorization, Document $console) {
-                \Co\run(function () use ($version, $dbForConsole, $getProjectDB, $register, Authorization $authorization, Document $console) {
-                    $this->action($version, $dbForConsole, $getProjectDB, $register, Authorization $authorization, Document $console);
+                \Co\run(function () use ($version, $dbForConsole, $getProjectDB, $register, $authorization, $console) {
+                    $this->action($version, $dbForConsole, $getProjectDB, $register, $authorization, $console);
                 });
             });
     }
@@ -47,7 +46,16 @@ class Migrate extends Action
     private function clearProjectsCache(Document $project)
     {
         try {
-            $cache->purge("cache-_{$project->getInternalId()}:*");
+            $iterator = null;
+            do {
+                $pattern = "default-cache-_{$project->getInternalId()}:*";
+                $keys = $this->redis->scan($iterator, $pattern, 1000);
+                if ($keys !== false) {
+                    foreach ($keys as $key) {
+                        $this->redis->del($key);
+                    }
+                }
+            } while ($iterator > 0);
         } catch (\Throwable $th) {
             Console::error('Failed to clear project ("' . $project->getId() . '") cache with error: ' . $th->getMessage());
         }

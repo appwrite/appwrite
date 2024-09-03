@@ -2,9 +2,6 @@
 
 namespace Appwrite\Utopia\Response;
 
-use Appwrite\Utopia\Fetch\BodyMultipart;
-use Appwrite\Utopia\Response\Filter;
-use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Account;
 use Appwrite\Utopia\Response\Model\AlgoArgon2;
 use Appwrite\Utopia\Response\Model\AlgoBcrypt;
@@ -109,11 +106,8 @@ use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
-use JsonException;
-use Swoole\Http\Response as SwooleHTTPResponse;
+
 // Keep last
-use Utopia\Database\Document;
-use Utopia\Swoole\Response as SwooleResponse;
 
 class Models
 {

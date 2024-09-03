@@ -16,8 +16,6 @@ use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\Database\TimeLimit;
-use Utopia\Cache\Adapter\Sharding;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
