@@ -137,7 +137,7 @@ if (!function_exists("getCache")) {
 }
 
 if (!function_exists("getPubSub")) {
-    function getPubSub(): Cache
+    function getPubSub(): \Redis
     {
         global $register;
 
