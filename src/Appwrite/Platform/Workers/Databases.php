@@ -632,7 +632,12 @@ class Databases extends Action
         callable $realtimeConnection
     ): void {
 
-        var_dump($realtimeConnection($this->sourceRegion));
+        var_dump([
+            'sourceRegion' => $this->sourceRegion,
+            'redis' => $realtimeConnection($this->sourceRegion),
+            'projectId' => 'console',
+            'payload'  => $attribute->getArrayCopy()
+        ]);
 
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern
