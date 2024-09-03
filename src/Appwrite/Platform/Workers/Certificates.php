@@ -536,6 +536,17 @@ class Certificates extends Action
                 payload: $rule,
                 project: $project
             );
+
+            var_dump([
+                'redis' => $realtimeConnection($this->sourceRegion),
+                'projectId' => 'console',
+                'payload' =>  $rule->getArrayCopy(),
+                'events' =>  $allEvents,
+                'channels' =>  $target['channels'],
+                'roles' =>  $target['roles'],
+            ]);
+
+
             Realtime::send(
                 redis: $realtimeConnection($this->sourceRegion),
                 projectId: 'console',
