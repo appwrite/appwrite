@@ -2,7 +2,9 @@
 
 namespace Appwrite\Utopia\Response;
 
-use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Fetch\BodyMultipart;
+use Appwrite\Utopia\Response\Filter;
+use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Account;
 use Appwrite\Utopia\Response\Model\AlgoArgon2;
 use Appwrite\Utopia\Response\Model\AlgoBcrypt;
@@ -82,6 +84,7 @@ use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Session;
+use Appwrite\Utopia\Response\Model\Specification;
 use Appwrite\Utopia\Response\Model\Subscriber;
 use Appwrite\Utopia\Response\Model\Target;
 use Appwrite\Utopia\Response\Model\Team;
@@ -106,6 +109,11 @@ use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
+use JsonException;
+use Swoole\Http\Response as SwooleHTTPResponse;
+// Keep last
+use Utopia\Database\Document;
+use Utopia\Swoole\Response as SwooleResponse;
 
 class Models
 {
@@ -160,6 +168,7 @@ class Models
         self::setModel(new BaseList('Target list', Response::MODEL_TARGET_LIST, 'targets', Response::MODEL_TARGET));
         self::setModel(new BaseList('Migrations List', Response::MODEL_MIGRATION_LIST, 'migrations', Response::MODEL_MIGRATION));
         self::setModel(new BaseList('Migrations Firebase Projects List', Response::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', Response::MODEL_MIGRATION_FIREBASE_PROJECT));
+        self::setModel(new BaseList('Specifications List', Response::MODEL_SPECIFICATION_LIST, 'specifications', Response::MODEL_SPECIFICATION));
         self::setModel(new BaseList('VCS Content List', Response::MODEL_VCS_CONTENT_LIST, 'contents', Response::MODEL_VCS_CONTENT));
         // Entities
         self::setModel(new Database());
@@ -242,6 +251,7 @@ class Models
         self::setModel(new UsageFunction());
         self::setModel(new UsageProject());
         self::setModel(new Headers());
+        self::setModel(new Specification());
         self::setModel(new Rule());
         self::setModel(new TemplateSMS());
         self::setModel(new TemplateEmail());

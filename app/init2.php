@@ -202,6 +202,7 @@ $global->set('logger', function () {
             default => ['key' => $loggingProvider->getHost()],
         };
     } catch (Throwable) {
+        Console::warning('Using deprecated logging configuration. Please update your configuration to use DSN format.' . $th->getMessage());
         // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
         $configChunks = \explode(";", $providerConfig);
 
@@ -220,13 +221,23 @@ $global->set('logger', function () {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
-    $adapter = match ($providerName) {
-        'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
-        'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
-        'raygun' => new Raygun($providerConfig['key']),
-        'appsignal' => new AppSignal($providerConfig['key']),
-        default => throw new Exception('Provider "' . $providerName . '" not supported.')
-    };
+    try{
+        $adapter = match ($providerName) {
+            'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
+            'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
+            'raygun' => new Raygun($providerConfig['key']),
+            'appsignal' => new AppSignal($providerConfig['key']),
+            default => null
+        };
+    } catch (Throwable $th) {
+        $adapter = null;
+    }
+
+    if($adapter === null) {
+        Console::error("Logging provider not supported. Logging is disabled");
+        return;
+    }
+
     $logger = new Logger($adapter);
     $logger->setSample(0.4);
     return $logger;
@@ -236,7 +247,7 @@ $global->set('geodb', function () {
     /**
      * @disregard P1009 Undefined type
      */
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-08.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-09.mmdb');
 });
 
 $global->set('hooks', function () {

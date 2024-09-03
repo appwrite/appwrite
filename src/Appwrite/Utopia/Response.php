@@ -9,15 +9,14 @@ use JsonException;
 use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
 use Utopia\Database\Document;
-use Utopia\Http\Adapter\Swoole\Response as HttpResponse;
-
+use Utopia\Swoole\Response as SwooleResponse;
 // Keep last
 
 /**
  * @method int getStatusCode()
  * @method Response setStatusCode(int $code = 200)
  */
-class Response extends HttpResponse
+class Response extends SwooleResponse
 {
     // General
     public const MODEL_NONE = 'none';
