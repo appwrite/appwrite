@@ -36,20 +36,6 @@ class Realtime extends Adapter
      */
     public array $subscriptions = [];
 
-    private static ?\Redis $redis = null;
-
-    public static function setRedis($redis): void
-    {
-        self::$redis = $redis;
-    }
-
-    /**
-     * @return \Redis|null
-     */
-    public static function getRedis(): ?\Redis
-    {
-        return self::$redis;
-    }
 
     /**
      * Adds a subscription.
