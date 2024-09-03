@@ -112,7 +112,7 @@ class Databases extends Action
         if ($attribute->isEmpty()) {
             throw new Exception('Missing attribute');
         }
-         var_dump("innnn");
+
         $projectId = $project->getId();
 
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].update', [
@@ -631,13 +631,6 @@ class Databases extends Action
         array $events,
         callable $realtimeConnection
     ): void {
-
-        var_dump([
-            'sourceRegion' => $this->sourceRegion,
-            'redis' => $realtimeConnection($this->sourceRegion),
-            'projectId' => 'console',
-            'payload'  => $attribute->getArrayCopy()
-        ]);
 
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern
