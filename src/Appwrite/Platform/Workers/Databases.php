@@ -638,7 +638,7 @@ class Databases extends Action
             payload: $attribute,
             project: $project,
         );
-
+        var_dump('sourceRegion='.$this->sourceRegion);
         Realtime::send(
             redis: $realtimeConnection($this->sourceRegion),
             projectId: 'console',
