@@ -274,7 +274,7 @@ class Specs extends Action
 
                 $specs = new Specification($formatInstance);
                 $endpoint = System::getEnv('_APP_HOME', '[HOSTNAME]');
-                $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $email = System::getEnv('_APP_SYSTEM_TEAM_EMAIL', APP_EMAIL_TEAM);
 
                 $formatInstance
                     ->setParam('name', APP_NAME)

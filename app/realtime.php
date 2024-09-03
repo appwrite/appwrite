@@ -15,7 +15,9 @@ use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\Database as TimeLimit;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
+use Utopia\Cache\Adapter\Sharding;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -89,7 +91,6 @@ $logError = function (Throwable $error, string $action) use ($global) {
         $log->addExtra('file', $error->getFile());
         $log->addExtra('line', $error->getLine());
         $log->addExtra('trace', $error->getTraceAsString());
-        $log->addExtra('detailedTrace', $error->getTrace());
 
         $log->setAction($action);
 
@@ -308,8 +309,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
                         $user = $database->getDocument('users', $userId);
 
                         $roles = Auth::getRoles($user, $authorization);
+                        $channels = $realtime->connections[$connection]['channels'];
 
-                        $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
+                        $realtime->unsubscribe($connection);
+                        $realtime->subscribe($projectId, $connection, $roles, $channels);
                         //TODO NOW $global->get('pools')->reclaim();
                     }
                 }

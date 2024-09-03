@@ -1,1 +1,0 @@
-Get a Deployment's contents by its unique ID. This endpoint supports range requests for partial or streaming file download.

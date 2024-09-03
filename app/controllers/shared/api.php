@@ -19,7 +19,7 @@ use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\Database as TimeLimit;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -507,7 +507,12 @@ Http::init()
                     ->setContentType($cacheLog->getAttribute('mimeType'))
                     ->send($data);
             } else {
-                $response->addHeader('X-Appwrite-Cache', 'miss');
+                $response
+                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->addHeader('Expires', 0)
+                    ->addHeader('X-Appwrite-Cache', 'miss')
+                ;
             }
         }
     });

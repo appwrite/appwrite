@@ -2,8 +2,12 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
 use Exception;
+use JsonException;
+use Swoole\Http\Response as SwooleHTTPResponse;
+// Keep last
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Response as HttpResponse;
 
@@ -151,6 +155,8 @@ class Response extends HttpResponse
     public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     public const MODEL_HEADERS = 'headers';
+    public const MODEL_SPECIFICATION = 'specification';
+    public const MODEL_SPECIFICATION_LIST = 'specificationList';
     public const MODEL_TEMPLATE_FUNCTION = 'templateFunction';
     public const MODEL_TEMPLATE_FUNCTION_LIST = 'templateFunctionList';
     public const MODEL_TEMPLATE_RUNTIME = 'templateRuntime';
@@ -232,6 +238,7 @@ class Response extends HttpResponse
      */
     public const CONTENT_TYPE_YAML = 'application/x-yaml';
     public const CONTENT_TYPE_NULL = 'null';
+    public const CONTENT_TYPE_MULTIPART = 'multipart/form-data';
 
     public function applyFilters(array $data, string $model): array
     {
@@ -259,7 +266,11 @@ class Response extends HttpResponse
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
-                $this->json(!empty($output) ? $output : new \stdClass());
+                try {
+                    $this->json(!empty($output) ? $output : new \stdClass());
+                } catch (JsonException $e) {
+                    throw new Exception('Failed to parse response: ' . $e->getMessage(), 400);
+                }
                 break;
 
             case self::CONTENT_TYPE_YAML:
@@ -267,6 +278,10 @@ class Response extends HttpResponse
                 break;
 
             case self::CONTENT_TYPE_NULL:
+                break;
+
+            case self::CONTENT_TYPE_MULTIPART:
+                $this->multipart(!empty($output) ? $output : new \stdClass());
                 break;
 
             default:
@@ -398,6 +413,50 @@ class Response extends HttpResponse
         $this
             ->setContentType(Response::CONTENT_TYPE_YAML)
             ->send(\yaml_emit($data, YAML_UTF8_ENCODING));
+    }
+
+    /**
+     * Multipart
+     *
+     * This helper is for sending multipart/form-data HTTP response.
+     * It sets relevant content type header ('multipart/form-data') and convert a PHP array ($data) to valid Multipart using BodyMultipart
+     *
+     * @param array $data
+     *
+     * @return void
+     */
+    public function multipart(array $data): void
+    {
+        $multipart = new BodyMultipart();
+        foreach ($data as $key => $value) {
+            $multipart->setPart($key, $value);
+        }
+
+        $this
+            ->setContentType($multipart->exportHeader())
+            ->send($multipart->exportBody());
+    }
+
+    /**
+     * JSON
+     *
+     * This helper is for sending JSON HTTP response.
+     * It sets relevant content type header ('application/json') and convert a PHP array ($data) to valid JSON using native json_encode
+     *
+     * @see http://en.wikipedia.org/wiki/JSON
+     *
+     * @param  mixed  $data
+     * @return void
+     */
+    public function json($data): void
+    {
+        if (!is_array($data) && !$data instanceof \stdClass) {
+            throw new \Exception('Response body is not a valid JSON object.');
+        }
+
+        $this
+            ->setContentType(Response::CONTENT_TYPE_JSON, self::CHARSET_UTF8)
+            ->send(\json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
     }
 
     /**

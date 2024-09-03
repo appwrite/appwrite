@@ -98,9 +98,9 @@ class TemplateFunction extends Model
                 'default' => '',
                 'example' => 'appwrite',
             ])
-            ->addRule('providerBranch', [
+            ->addRule('providerVersion', [
                 'type' => self::TYPE_STRING,
-                'description' => 'VCS (Version Control System) branch name',
+                'description' => 'VCS (Version Control System) branch version (tag).',
                 'default' => '',
                 'example' => 'main',
             ])
@@ -110,6 +110,13 @@ class TemplateFunction extends Model
                 'default' => [],
                 'example' => [],
                 'array' => true
+            ])
+            ->addRule('scopes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function scopes.',
+                'default' => [],
+                'example' => 'users.read',
+                'array' => true,
             ]);
     }
 

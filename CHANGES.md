@@ -1,3 +1,86 @@
+# Version 1.5.10
+
+## What's Changed
+
+### Notable changes
+
+* Bump console to version 4.3.30 in [#8520](https://github.com/appwrite/appwrite/pull/8520)
+
+### Fixes
+
+* Fix migration stuck at "Starting Data Migration [...]" in [#8519](https://github.com/appwrite/appwrite/pull/8519)
+
+# Version 1.5.9
+
+## What's Changed
+
+### Notable changes
+
+* Add Darija (Moroccan Arabic) translation file in [7501](https://github.com/appwrite/appwrite/pull/7501)
+* Bump console to version 4.3.29 in [8504](https://github.com/appwrite/appwrite/pull/8504)
+
+### Fixes
+
+* Fix domain check in [8472](https://github.com/appwrite/appwrite/pull/8472)
+* Fix "API must be called in the coroutine" in [8495](https://github.com/appwrite/appwrite/pull/8495)
+* Bump executor version from 0.5.5 to 0.5.7 in [8502](https://github.com/appwrite/appwrite/pull/8502)
+
+### Miscellaneous
+* Add profiler for debugging in [8397](https://github.com/appwrite/appwrite/pull/8397)
+* Document APIs that don't support redirects in [8233](https://github.com/appwrite/appwrite/pull/8233)
+
+# Version 1.5.8
+
+## What's Changed
+
+### Notable changes
+
+* Support Twilio messaging service SID in [8222](https://github.com/appwrite/appwrite/pull/8222)
+* Improve cache performance in [8230](https://github.com/appwrite/appwrite/pull/8230)
+* Add hk in translations in [8179](https://github.com/appwrite/appwrite/pull/8179)
+* Update pwd abuse in [8255](https://github.com/appwrite/appwrite/pull/8255)
+* Remove detailed trace in [8374](https://github.com/appwrite/appwrite/pull/8374)
+* Remove relationship attributes from realtime event payloads in [8381](https://github.com/appwrite/appwrite/pull/8381)
+* Sanitize URLs in emails in [8415](https://github.com/appwrite/appwrite/pull/8415)
+* Bump console to version 4.3.27 in [8482](https://github.com/appwrite/appwrite/pull/8482)
+
+### Fixes
+
+* Ensure usage is counted for errors in [8120](https://github.com/appwrite/appwrite/pull/8120)
+* Fix MFA for OAuth2 only accounts in [8245](https://github.com/appwrite/appwrite/pull/8245)
+* Delete Expired Targets Per Project in [8239](https://github.com/appwrite/appwrite/pull/8239)
+* Don't set the target field if the existing target document is false in [8236](https://github.com/appwrite/appwrite/pull/8236)
+* Disable validation for project DBs during migration in [8298](https://github.com/appwrite/appwrite/pull/8298)
+* Add `default` to Collection Attributes in Migration in [8271](https://github.com/appwrite/appwrite/pull/8271)
+* Fix Create bucket endpoint validator for maximum file size in [8275](https://github.com/appwrite/appwrite/pull/8275)
+* Disable validation for subquery to prevent error in [8297](https://github.com/appwrite/appwrite/pull/8297)
+* Fix 'Missing required attribute "expire"' on `users.createSession()` in [8308](https://github.com/appwrite/appwrite/pull/8308)
+* Fix certificate emails in [8292](https://github.com/appwrite/appwrite/pull/8292)
+* Fix browser-cached deleted file in [8264](https://github.com/appwrite/appwrite/pull/8264)
+* Fix migration of firebase users [8377](https://github.com/appwrite/appwrite/pull/8377)
+* Fix `path` for vcs function deployments in [8408](https://github.com/appwrite/appwrite/pull/8408)
+* Fix calculations in [8431](https://github.com/appwrite/appwrite/pull/8431)
+* Fix bugs with migrations in [8442](https://github.com/appwrite/appwrite/pull/8442)
+* Fix queueForUsage not triggering for domain executions in [8463](https://github.com/appwrite/appwrite/pull/8463)
+* Fix realtime permission change in [8416](https://github.com/appwrite/appwrite/pull/8416)
+
+### Miscellaneous
+
+* Bump base image from 0.9.0 to 0.9.1 in [8238](https://github.com/appwrite/appwrite/pull/8238)
+* Use latest Platform and add Core module in [7936](https://github.com/appwrite/appwrite/pull/7936)
+* Add Test to Validate Headers aren't Overridden in [8228](https://github.com/appwrite/appwrite/pull/8228)
+* Fix hyperlink in storage docs in [8269](https://github.com/appwrite/appwrite/pull/8269)
+* Update cache & database in [8285](https://github.com/appwrite/appwrite/pull/8285)
+* Fix flaky certificate test in [8316](https://github.com/appwrite/appwrite/pull/8316)
+* Fix flaky function test in [8317](https://github.com/appwrite/appwrite/pull/8317)
+* Update account API reference in [8305](https://github.com/appwrite/appwrite/pull/8305)
+* Update functions API reference in [8346](https://github.com/appwrite/appwrite/pull/8346)
+* Implement deploymentsStorage metric for projects API in [8258](https://github.com/appwrite/appwrite/pull/8258)
+* Add new audit events in [8424](https://github.com/appwrite/appwrite/pull/8424)
+* Move mbSeconds into 1.5.x in [8449](https://github.com/appwrite/appwrite/pull/8449)
+* Clean projects cache while migrating in [8395](https://github.com/appwrite/appwrite/pull/8395)
+* Use git tags for function template in [8445](https://github.com/appwrite/appwrite/pull/8445)
+
 # Version 1.5.7
 ## What's Changed
 

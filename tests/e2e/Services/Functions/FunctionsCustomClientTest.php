@@ -9,7 +9,6 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Config\Config;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
@@ -195,10 +194,6 @@ class FunctionsCustomClientTest extends Scope
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
-            'events' => [
-                'users.*.create',
-                'users.*.delete',
-            ],
             'timeout' => 10,
         ]);
 
@@ -217,66 +212,51 @@ class FunctionsCustomClientTest extends Scope
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
             'activate' => true
         ]);
-
         $deploymentId = $deployment['body']['$id'] ?? '';
-
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId);
-
-        $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], []);
-
-        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, true);
 
         // Schedule execution for the future
         \date_default_timezone_set('UTC');
-        $futureTime = (new \DateTime())->add(new \DateInterval('PT10S'))->format('Y-m-d H:i:s');
-        $futureTimeIso = DateTime::formatTz($futureTime);
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT2M'));
+        $futureTime->setTime($futureTime->format('H'), $futureTime->format('i'), 0, 0);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'async' => true,
-            'scheduledAt' => $futureTime,
+            'scheduledAt' =>  $futureTime->format(\DateTime::ATOM),
             'path' => '/custom',
-            'method' => 'GET',
-            'body' => 'hello',
-            'headers' => [
-                'content-type' => 'application/plain',
-            ],
+            'method' => 'GET'
         ]);
 
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertEquals('scheduled', $execution['body']['status']);
-        $this->assertEquals($futureTimeIso, $execution['body']['scheduledAt']);
 
         $executionId = $execution['body']['$id'];
 
-        // List executions and ensure it has schedule date
-        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
+        sleep(60 + 60 + 15); // up to 1 minute round up, 1 minute schedule postpone, 15s cold start safety
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertGreaterThan(0, \count($response['body']['executions']));
-        $recentExecution = $response['body']['executions'][0];
-        $this->assertEquals($executionId, $recentExecution['$id']);
-        $this->assertEquals($futureTimeIso, $recentExecution['scheduledAt']);
+        $start = \microtime(true);
+        while (true) {
+            $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions/' . $executionId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
 
-        sleep(20);
+            if ($execution['body']['status'] === 'completed') {
+                break;
+            }
 
-        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/executions/' . $executionId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
+            if (\microtime(true) - $start > 10) {
+                $this->fail('Scheduled execution did not complete with status ' . $execution['body']['status'] . ': ' . \json_encode($execution));
+            }
+
+            usleep(500000); // 0.5 seconds
+        }
 
         $this->assertEquals(200, $execution['headers']['status-code']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
@@ -284,18 +264,51 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('/custom', $execution['body']['requestPath']);
         $this->assertEquals('GET', $execution['body']['requestMethod']);
         $this->assertGreaterThan(0, $execution['body']['duration']);
-        $this->assertEquals($futureTimeIso, $execution['body']['scheduledAt']);
 
         /* Test for FAILURE */
 
         // Schedule synchronous execution
-
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'async' => false,
-            'scheduledAt' => $futureTime,
+            'scheduledAt' => $futureTime->format(\DateTime::ATOM),
+        ]);
+
+        $this->assertEquals(400, $execution['headers']['status-code']);
+
+        // Execution with seconds precision
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true,
+            'scheduledAt' => (new \DateTime("2100-12-08 16:12:02"))->format(\DateTime::ATOM)
+        ]);
+
+        $this->assertEquals(400, $execution['headers']['status-code']);
+
+        // Execution with milliseconds precision
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true,
+            'scheduledAt' => (new \DateTime("2100-12-08 16:12:02.255"))->format(\DateTime::ATOM)
+        ]);
+
+        $this->assertEquals(400, $execution['headers']['status-code']);
+
+        // Execution too soon
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT1M'));
+        $futureTime->setTime($futureTime->format('H'), $futureTime->format('i'), 0, 0);
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true,
+            'scheduledAt' => $futureTime->format(\DateTime::ATOM),
         ]);
 
         $this->assertEquals(400, $execution['headers']['status-code']);
@@ -870,6 +883,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(200, $templates['headers']['status-code']);
         $this->assertGreaterThan(0, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
+
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
         $this->assertArrayHasKey('useCases', $templates['body']['templates'][0]);
         for ($i = 0; $i < 25; $i++) {
@@ -881,6 +895,9 @@ class FunctionsCustomClientTest extends Scope
             $this->assertEquals($expectedTemplates[$i]['vcsProvider'], $templates['body']['templates'][$i]['vcsProvider']);
             $this->assertEquals($expectedTemplates[$i]['runtimes'], $templates['body']['templates'][$i]['runtimes']);
             $this->assertEquals($expectedTemplates[$i]['variables'], $templates['body']['templates'][$i]['variables']);
+            if (array_key_exists('scopes', $expectedTemplates[$i])) {
+                $this->assertEquals($expectedTemplates[$i]['scopes'], $templates['body']['templates'][$i]['scopes']);
+            }
         }
 
         $templates_offset = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([

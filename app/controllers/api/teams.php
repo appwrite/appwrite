@@ -11,6 +11,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
+use Appwrite\Platform\Workers\Deletes;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Memberships;
@@ -340,10 +341,12 @@ Http::delete('/v1/teams/:teamId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
+    ->inject('getProjectDB')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
     ->inject('queueForDeletes')
-    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->inject('queueForEvents')
+    ->inject('project')
+    ->action(function (string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Document $project) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -355,9 +358,14 @@ Http::delete('/v1/teams/:teamId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($team);
+        $deletes = new Deletes();
+        $deletes->deleteMemberships($getProjectDB, $team, $project);
+
+        if ($project->getId() === 'console') {
+            $queueForDeletes
+                ->setType(DELETE_TYPE_TEAM_PROJECTS)
+                ->setDocument($team);
+        }
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
@@ -404,6 +412,7 @@ Http::post('/v1/teams/:teamId/memberships')
         $isAPIKey = Auth::isAppUser($authorization->getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
 
+        $url = htmlentities($url);
         if (empty($url)) {
             if (!$isAPIKey && !$isPrivilegedUser) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'URL is required');
@@ -671,6 +680,7 @@ Http::post('/v1/teams/:teamId/memberships')
         }
 
         $queueForEvents
+            ->setParam('userId', $invitee->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
         ;
@@ -905,6 +915,7 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId')
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents
+            ->setParam('userId', $profile->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
@@ -1032,6 +1043,7 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
         $queueForEvents
+            ->setParam('userId', $user->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
         ;
@@ -1114,6 +1126,7 @@ Http::delete('/v1/teams/:teamId/memberships/:membershipId')
         }
 
         $queueForEvents
+            ->setParam('userId', $user->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
             ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP))

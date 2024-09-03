@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Migration\Migration;
+use Redis;
+use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -12,9 +14,12 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Validator\Text;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
+use Utopia\System\System;
 
 class Migrate extends Action
 {
+    protected Redis $redis;
+
     public static function getName(): string
     {
         return 'migrate';
@@ -32,10 +37,14 @@ class Migrate extends Action
             ->inject('register')
             ->inject('authorization')
             ->inject('console')
-            ->callback(fn ($version, $cache, $dbForConsole, $getProjectDB, Registry $register, Authorization $authorization, Document $console) => $this->action($version, $cache, $dbForConsole, $getProjectDB, $register, $authorization, $console));
+            ->callback(function ($version, $dbForConsole, $getProjectDB, Registry $register, Authorization $authorization, Document $console) {
+                \Co\run(function () use ($version, $dbForConsole, $getProjectDB, $register, Authorization $authorization, Document $console) {
+                    $this->action($version, $dbForConsole, $getProjectDB, $register, Authorization $authorization, Document $console);
+                });
+            });
     }
 
-    private function clearProjectsCache(Cache $cache, Document $project)
+    private function clearProjectsCache(Document $project)
     {
         try {
             $cache->purge("cache-_{$project->getInternalId()}:*");
@@ -44,7 +53,7 @@ class Migrate extends Action
         }
     }
 
-    public function action(string $version, Cache $cache, Database $dbForConsole, callable $getProjectDB, Registry $register, Authorization $auth, Document $console)
+    public function action(string $version, Database $dbForConsole, callable $getProjectDB, Registry $register, Authorization $auth, Document $console)
     {
         $auth->disable();
         if (!array_key_exists($version, Migration::$versions)) {
@@ -53,6 +62,14 @@ class Migrate extends Action
             return;
         }
 
+        $this->redis = new Redis();
+        $this->redis->connect(
+            System::getEnv('_APP_REDIS_HOST', null),
+            System::getEnv('_APP_REDIS_PORT', 6379),
+            3,
+            null,
+            10
+        );
 
         Console::success('Starting Data Migration to version ' . $version);
 
@@ -85,7 +102,7 @@ class Migrate extends Action
                     continue;
                 }
 
-                $this->clearProjectsCache($cache, $project);
+                $this->clearProjectsCache($project);
 
                 try {
                     // TODO: Iterate through all project DBs
@@ -101,7 +118,7 @@ class Migrate extends Action
                     throw $th;
                 }
 
-                $this->clearProjectsCache($cache, $project);
+                $this->clearProjectsCache($project);
             }
 
             $sum = \count($projects);

@@ -500,7 +500,7 @@ class WebhooksCustomServerTest extends Scope
             'activate' => true
         ]);
 
-        $id = $data['functionId'] ?? '';
+        $functionId = $data['functionId'] ?? '';
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         $this->assertEquals($deployment['headers']['status-code'], 202);
@@ -522,7 +522,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
 
-        sleep(5);
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId);
 
         return array_merge($data, ['deploymentId' => $deploymentId]);
     }

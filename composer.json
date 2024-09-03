@@ -15,6 +15,7 @@
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/pint --test",
         "format": "vendor/bin/pint",
+        "bench": "vendor/bin/phpbench run --report=benchmark"
         "check": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit 1G app src tests"
     },
     "autoload": {
@@ -44,7 +45,7 @@
         "ext-openssl": "*",
         "ext-zlib": "*",
         "ext-sockets": "*",
-        "appwrite/php-runtimes": "0.14.*",
+        "appwrite/php-runtimes": "0.15.*",
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/abuse": "dev-feat-framework-v2 as 0.39.99",
         "utopia-php/analytics": "dev-feat-framework-v2 as 0.10.99",
@@ -71,8 +72,8 @@
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "dev-feat-framework-v2-v2 as 0.18.99",
         "utopia-php/system": "0.8.*",
-        "utopia-php/vcs": "0.7.*",
-        "utopia-php/websocket": "0.2.*",
+        "utopia-php/vcs": "0.8.*",
+        "utopia-php/websocket": "0.1.*",
         "matomo/device-detector": "6.1.*",
         "dragonmantank/cron-expression": "3.3.2",
         "phpmailer/phpmailer": "6.9.1",
@@ -89,6 +90,7 @@
         "swoole/ide-helper": "5.1.2",
         "textalk/websocket": "1.5.7",
         "laravel/pint": "^1.14",
+        "phpbench/phpbench": "^1.2",
         "phpstan/phpstan": "1.8.*"
     },
     "provide": {
