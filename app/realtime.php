@@ -13,7 +13,7 @@ use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -380,8 +380,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $user = $database->getDocument('users', $userId);
 
                         $roles = Auth::getRoles($user);
+                        $channels = $realtime->connections[$connection]['channels'];
 
-                        $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
+                        $realtime->unsubscribe($connection);
+                        $realtime->subscribe($projectId, $connection, $roles, $channels);
 
                         $register->get('pools')->reclaim();
                     }
