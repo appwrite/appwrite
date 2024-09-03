@@ -1459,16 +1459,13 @@ App::setResource('deviceForBuilds', function ($project, $connectionString) {
     return getDevice(APP_STORAGE_BUILDS.'/app-'.$project->getId(), $connectionString);
 }, ['project', 'connectionString']);
 
-App::setResource('realtimeConnection', fn($pools) =>  $pools->get('pubsub')->pop()->getResource()
-, ['pools']);
-
 App::setResource('connectionString', function () {
     return System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 });
 
-Realtime::setRedis(
-    $register->get('pools')->get('pubsub')->pop()->getResource()
-);
+App::setResource('realtimeConnection',
+    fn($pools) =>  $pools->get('pubsub')->pop()->getResource()
+, ['pools']);
 
 
 function getDevice(string $root, string $connectionString = ''): Device

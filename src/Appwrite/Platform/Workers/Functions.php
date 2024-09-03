@@ -27,6 +27,9 @@ use Utopia\System\System;
 
 class Functions extends Action
 {
+
+    protected \Redis $realtimeConnection;
+
     public static function getName(): string
     {
         return 'functions';
@@ -46,7 +49,8 @@ class Functions extends Action
             ->inject('queueForEvents')
             ->inject('queueForUsage')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+            ->inject('realtimeConnection')
+            ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, \Redis $realtimeConnection) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log, $realtimeConnection));
     }
 
     /**
@@ -62,13 +66,15 @@ class Functions extends Action
      * @throws \Utopia\Database\Exception
      * @throws Conflict
      */
-    public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log): void
+    public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, \Redis $realtimeConnection): void
     {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
+
+        $this->realtimeConnection = $realtimeConnection;
 
         $payload = $message->getPayload() ?? [];
 
@@ -545,6 +551,7 @@ class Functions extends Action
             payload: $execution
         );
         Realtime::send(
+            redis: $this->realtimeConnection,
             projectId: 'console',
             payload: $execution->getArrayCopy(),
             events: $allEvents,
@@ -552,6 +559,7 @@ class Functions extends Action
             roles: $target['roles']
         );
         Realtime::send(
+            redis: $this->realtimeConnection,
             projectId: $project->getId(),
             payload: $execution->getArrayCopy(),
             events: $allEvents,

@@ -33,6 +33,8 @@ class Migrations extends Action
     private ?Database $dbForProject = null;
     private ?Database $dbForConsole = null;
 
+    protected \Redis $realtimeConnection;
+
     public static function getName(): string
     {
         return 'migrations';
@@ -49,7 +51,8 @@ class Migrations extends Action
             ->inject('dbForProject')
             ->inject('dbForConsole')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $log));
+            ->inject('realtimeConnection')
+            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log, \Redis $realtimeConnection) => $this->action($message, $dbForProject, $dbForConsole, $log, $realtimeConnection));
     }
 
     /**
@@ -60,13 +63,15 @@ class Migrations extends Action
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log): void
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log, Redis $realtimeConnection): void
     {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
+
+        $this->realtimeConnection = $realtimeConnection;
 
         $events    = $payload['events'] ?? [];
         $project   = new Document($payload['project'] ?? []);
@@ -148,6 +153,7 @@ class Migrations extends Action
         );
 
         Realtime::send(
+            redis: $this->realtimeConnection,
             projectId: 'console',
             payload: $migration->getArrayCopy(),
             events: $allEvents,
@@ -156,6 +162,7 @@ class Migrations extends Action
         );
 
         Realtime::send(
+            redis: $this->realtimeConnection,
             projectId: $project->getId(),
             payload: $migration->getArrayCopy(),
             events: $allEvents,

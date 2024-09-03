@@ -7,8 +7,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
-use Utopia\Pools\Connection;
-use Utopia\System\System;
 
 class Realtime extends Adapter
 {
@@ -139,6 +137,7 @@ class Realtime extends Adapter
 
     /**
      * Sends an event to the Realtime Server
+     * @param \Redis $redis
      * @param string $projectId
      * @param array $payload
      * @param array $events
@@ -148,16 +147,17 @@ class Realtime extends Adapter
      * @return void
      * @throws \RedisException
      */
-    public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
+    public static function send(\Redis $redis, string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
         if (empty($channels) || empty($roles) || empty($projectId)) {
             return;
         }
+
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
 
-         self::getRedis()->publish('realtime', json_encode([
+        $redis->publish('realtime', json_encode([
             'project' => $projectId,
             'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,

@@ -21,6 +21,8 @@ use Utopia\Queue\Message;
 
 class Databases extends Action
 {
+    protected \Redis $realtimeConnection;
+
     public static function getName(): string
     {
         return 'databases';
@@ -37,7 +39,8 @@ class Databases extends Action
             ->inject('dbForConsole')
             ->inject('dbForProject')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForConsole, Database $dbForProject, Log $log) => $this->action($message, $dbForConsole, $dbForProject, $log));
+            ->inject('realtimeConnection')
+            ->callback(fn (Message $message, Database $dbForConsole, Database $dbForProject, Log $log, \Redis $realtimeConnection) => $this->action($message, $dbForConsole, $dbForProject, $log, $realtimeConnection));
     }
 
     /**
@@ -48,13 +51,18 @@ class Databases extends Action
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Database $dbForConsole, Database $dbForProject, Log $log): void
+    public function action(Message $message, Database $dbForConsole, Database $dbForProject, Log $log, \Redis $realtimeConnection): void
     {
+
+
+
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
             throw new \Exception('Missing payload');
         }
+
+        $this->realtimeConnection = $realtimeConnection;
 
         $type = $payload['type'];
         $project = new Document($payload['project']);
@@ -618,7 +626,7 @@ class Databases extends Action
         Document $attribute,
         Document $project,
         string $projectId,
-        array $events
+        array $events,
     ): void {
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern
@@ -627,6 +635,7 @@ class Databases extends Action
             project: $project,
         );
         Realtime::send(
+            redis: $this->realtimeConnection,
             projectId: 'console',
             payload: $attribute->getArrayCopy(),
             events: $events,

@@ -30,6 +30,8 @@ use Utopia\System\System;
 
 class Certificates extends Action
 {
+    protected \Redis $realtimeConnection;
+
     public static function getName(): string
     {
         return 'certificates';
@@ -48,7 +50,8 @@ class Certificates extends Action
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
+            ->inject('realtimeConnection')
+            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, \Redis $realtimeConnection) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
     }
 
     /**
@@ -62,7 +65,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log): void
+    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, \Redis $realtimeConnection): void
     {
 
         $payload = $message->getPayload() ?? [];
@@ -70,6 +73,8 @@ class Certificates extends Action
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
+
+        $this->realtimeConnection = $realtimeConnection;
 
         $document = new Document($payload['domain'] ?? []);
         $domain   = new Domain($document->getAttribute('domain', ''));
@@ -528,6 +533,7 @@ class Certificates extends Action
                 project: $project
             );
             Realtime::send(
+                redis: $this->realtimeConnection,
                 projectId: 'console',
                 payload: $rule->getArrayCopy(),
                 events: $allEvents,
@@ -535,6 +541,7 @@ class Certificates extends Action
                 roles: $target['roles']
             );
             Realtime::send(
+                redis: $this->realtimeConnection,
                 projectId: $project->getId(),
                 payload: $rule->getArrayCopy(),
                 events: $allEvents,

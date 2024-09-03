@@ -31,6 +31,8 @@ use Utopia\VCS\Adapter\Git\GitHub;
 
 class Builds extends Action
 {
+    protected \Redis $realtimeConnection;
+
     public static function getName(): string
     {
         return 'builds';
@@ -52,7 +54,8 @@ class Builds extends Action
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('log')
-            ->callback(fn ($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
+            ->inject('realtimeConnection')
+            ->callback(fn ($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log, \Redis $realtimeConnection) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log, $realtimeConnection));
     }
 
     /**
@@ -68,13 +71,15 @@ class Builds extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log): void
+    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log, \Redis $realtimeConnection): void
     {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
             throw new \Exception('Missing payload');
         }
+
+        $this->realtimeConnection = $realtimeConnection;
 
         $type = $payload['type'] ?? '';
         $project = new Document($payload['project'] ?? []);
@@ -98,7 +103,7 @@ class Builds extends Action
         }
     }
 
-    /**
+     /**
      * @param Device $deviceForFunctions
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
@@ -301,6 +306,7 @@ class Builds extends Action
                         project: $project
                     );
                     Realtime::send(
+                        redis: $this->realtimeConnection,
                         projectId: 'console',
                         payload: $build->getArrayCopy(),
                         events: $allEvents,
@@ -381,6 +387,7 @@ class Builds extends Action
             );
 
             Realtime::send(
+                redis: $this->realtimeConnection,
                 projectId: 'console',
                 payload: $build->getArrayCopy(),
                 events: $allEvents,
@@ -465,6 +472,7 @@ class Builds extends Action
                                         project: $project
                                     );
                                     Realtime::send(
+                                        redis: $this->realtimeConnection,
                                         projectId: 'console',
                                         payload: $build->getArrayCopy(),
                                         events: $allEvents,
@@ -545,6 +553,7 @@ class Builds extends Action
                 project: $project
             );
             Realtime::send(
+                redis: $this->realtimeConnection,
                 projectId: 'console',
                 payload: $build->getArrayCopy(),
                 events: $allEvents,
