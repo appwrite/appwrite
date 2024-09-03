@@ -362,7 +362,7 @@ App::patch('/v1/projects/:projectId')
     });
 
 App::patch('/v1/projects/:projectId/team')
-    ->desc('Update Project Team')
+    ->desc('Update project team')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
