@@ -6,6 +6,7 @@ use InvalidArgumentException;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
+use Utopia\System\System;
 
 class Event
 {
@@ -55,6 +56,7 @@ class Event
     protected ?Document $project = null;
     protected ?Document $user = null;
     protected bool $paused = false;
+    protected string $region = '';
 
     /**
      * @param Connection $connection
@@ -62,6 +64,13 @@ class Event
      */
     public function __construct(protected Connection $connection)
     {
+        $region = System::getEnv('_APP_REGION', 'default');
+    }
+
+
+    public function getRegion(): string
+    {
+        return $this->region;
     }
 
     /**
