@@ -2859,12 +2859,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "8739b09cf9cfcbf761a22e8474ecc00422614e79"
+                "reference": "3efa907981745056b6a3481bdb0372885571c442"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/8739b09cf9cfcbf761a22e8474ecc00422614e79",
-                "reference": "8739b09cf9cfcbf761a22e8474ecc00422614e79",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/3efa907981745056b6a3481bdb0372885571c442",
+                "reference": "3efa907981745056b6a3481bdb0372885571c442",
                 "shasum": ""
             },
             "require": {
@@ -2901,7 +2901,7 @@
                 "issues": "https://github.com/utopia-php/vcs/issues",
                 "source": "https://github.com/utopia-php/vcs/tree/feat-di"
             },
-            "time": "2024-09-04T18:59:56+00:00"
+            "time": "2024-09-04T21:22:50+00:00"
         },
         {
             "name": "utopia-php/view",
