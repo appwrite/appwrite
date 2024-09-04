@@ -10,9 +10,6 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait TeamsBase
 {
-    /**
-     * @group testing
-     */
     public function testCreateTeam(): array
     {
         /**
