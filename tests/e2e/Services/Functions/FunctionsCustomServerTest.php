@@ -1072,7 +1072,7 @@ class FunctionsCustomServerTest extends Scope
 
         $found = false;
         foreach ($response['body']['deployments'] as $deployment) {
-            if($deployment['$id'] === $deploymentId) {
+            if ($deployment['$id'] === $deploymentId) {
                 $found = true;
                 $this->assertEquals($deploymentSize, $deployment['size']);
                 break;
