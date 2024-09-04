@@ -2858,19 +2858,20 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "5995ae714550d3a386b4585e4d4fde1b3637919c"
+                "reference": "8739b09cf9cfcbf761a22e8474ecc00422614e79"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/5995ae714550d3a386b4585e4d4fde1b3637919c",
-                "reference": "5995ae714550d3a386b4585e4d4fde1b3637919c",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/8739b09cf9cfcbf761a22e8474ecc00422614e79",
+                "reference": "8739b09cf9cfcbf761a22e8474ecc00422614e79",
                 "shasum": ""
             },
             "require": {
                 "adhocore/jwt": "^1.1",
                 "php": ">=8.0",
                 "utopia-php/cache": "0.10.*",
-                "utopia-php/framework": "1.0.*"
+                "utopia-php/framework": "1.0.*",
+                "utopia-php/system": "0.8.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2899,7 +2900,7 @@
                 "issues": "https://github.com/utopia-php/vcs/issues",
                 "source": "https://github.com/utopia-php/vcs/tree/feat-di"
             },
-            "time": "2024-09-04T18:24:08+00:00"
+            "time": "2024-09-04T18:59:56+00:00"
         },
         {
             "name": "utopia-php/view",
