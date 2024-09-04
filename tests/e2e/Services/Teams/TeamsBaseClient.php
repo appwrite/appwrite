@@ -203,7 +203,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()), [
             'email' => $email,
             'name' => $name,
-            'roles' => ['admin', 'editor'],
+            'roles' => ['admin', 'developer'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
@@ -255,7 +255,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'userId' => 'abcdefdg',
-            'roles' => ['admin', 'editor'],
+            'roles' => ['admin', 'developer'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
@@ -270,7 +270,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'userId' => $userId,
-            'roles' => ['admin', 'editor'],
+            'roles' => ['admin', 'developer'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
@@ -301,7 +301,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()), [
             'email' => $email,
             'name' => 'Friend User',
-            'roles' => ['admin', 'editor'],
+            'roles' => ['admin', 'developer'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
@@ -313,7 +313,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()), [
             'email' => 'dasdkaskdjaskdjasjkd',
             'name' => $name,
-            'roles' => ['admin', 'editor'],
+            'roles' => ['admin', 'developer'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
@@ -337,7 +337,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()), [
             'email' => $email,
             'name' => $name,
-            'roles' => ['admin', 'editor'],
+            'roles' => ['admin', 'developer'],
             'url' => 'http://example.com/join-us#title' // bad url
         ]);
 
