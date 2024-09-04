@@ -508,7 +508,7 @@ Http::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         $vcsContents = [];
         foreach ($contents as $content) {
             $isDirectory = false;
-            if($content['type'] === GitHub::CONTENTS_DIRECTORY) {
+            if ($content['type'] === GitHub::CONTENTS_DIRECTORY) {
                 $isDirectory = true;
             }
 

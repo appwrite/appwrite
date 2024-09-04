@@ -209,14 +209,14 @@ Http::init()
             }
 
             // Remove after migration
-            if(!\str_contains($apiKey, '_')) {
+            if (!\str_contains($apiKey, '_')) {
                 $keyType = API_KEY_STANDARD;
                 $authKey = $apiKey;
             } else {
                 [ $keyType, $authKey ] = \explode('_', $apiKey, 2);
             }
 
-            if($keyType === API_KEY_DYNAMIC) {
+            if ($keyType === API_KEY_DYNAMIC) {
                 // Dynamic key
 
                 $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
@@ -246,7 +246,7 @@ Http::init()
                     $authorization->addRole(Auth::USER_ROLE_APPS);
                     $authorization->setDefaultStatus(false);  // Cancel security segmentation for API keys.
                 }
-            } elseif($keyType === API_KEY_STANDARD) {
+            } elseif ($keyType === API_KEY_STANDARD) {
                 // No underline means no prefix. Backwards compatibility.
                 // Regular key
 

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Functions\Validator;
 
-use Utopia\Validator;
+use Utopia\Http\Validator;
 
 /**
  * Headers.
@@ -44,7 +44,7 @@ class Headers extends Validator
             return false;
         }
 
-        if(\count($value) > $this->maxKeys) {
+        if (\count($value) > $this->maxKeys) {
             return false;
         }
 
@@ -57,7 +57,7 @@ class Headers extends Validator
             }
 
             $size += $length + \strlen($val);
-            if($size >= $this->maxSize) {
+            if ($size >= $this->maxSize) {
                 return false;
             }
 

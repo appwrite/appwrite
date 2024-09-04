@@ -4,7 +4,6 @@ use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-
 use Utopia\System\System;
 
 Database::addFilter(

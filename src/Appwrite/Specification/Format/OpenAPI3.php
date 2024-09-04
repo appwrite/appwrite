@@ -240,7 +240,7 @@ class OpenAPI3 extends Format
             if ($route->getLabel('sdk.response.code', 500) === 204) {
                 $labelCode = (string)$route->getLabel('sdk.response.code', '500');
                 $temp['responses'][$labelCode]['description'] = 'No content';
-                if(isset($temp['responses'][$labelCode]['schema'])) {
+                if (isset($temp['responses'][$labelCode]['schema'])) {
                     unset($temp['responses'][$labelCode]['schema']);
                 }
             }
@@ -274,7 +274,7 @@ class OpenAPI3 extends Format
             foreach ($route->getParams() as $name => $param) { // Set params
                 $injections = [];
 
-                if(isset($param['injections'])) {
+                if (isset($param['injections'])) {
                     $injections = array_map(fn ($injection) => $this->http->getContainer()->get($injection), $param['injections']);
                 }
 

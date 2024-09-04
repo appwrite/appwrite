@@ -43,9 +43,11 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
+use Utopia\Http\Validator\AnyOf;
 use Utopia\Http\Validator\ArrayList;
 use Utopia\Http\Validator\Assoc;
 use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\Nullable;
 use Utopia\Http\Validator\Range;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
@@ -55,8 +57,6 @@ use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
 use Utopia\System\System;
-use Utopia\Validator\AnyOf;
-use Utopia\Validator\Nullable;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -173,8 +173,8 @@ Http::post('/v1/functions')
     ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
         $plan,
         Config::getParam('runtime-specifications', []),
-        App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
-        App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
+        System::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
+        System::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
     ), 'Runtime specification for the function and builds.', true, ['plan'])
     ->inject('request')
     ->inject('response')
@@ -299,7 +299,7 @@ Http::post('/v1/functions')
         if (!empty($providerRepositoryId)) {
             // Deploy VCS
             $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
-        } elseif(!$template->isEmpty()) {
+        } elseif (!$template->isEmpty()) {
             // Deploy non-VCS from template
             $deploymentId = ID::unique();
             $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -785,8 +785,8 @@ Http::put('/v1/functions/:functionId')
     ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
         $plan,
         Config::getParam('runtime-specifications', []),
-        App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
-        App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
+        System::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
+        System::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
     ), 'Runtime specification for the function and builds.', true, ['plan'])
     ->inject('request')
     ->inject('response')
@@ -900,7 +900,7 @@ Http::put('/v1/functions/:functionId')
 
         // Enforce Cold Start if spec limits change.
         if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deployment'))) {
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
             try {
                 $executor->deleteRuntime($project->getId(), $function->getAttribute('deployment'));
             } catch (\Throwable $th) {
@@ -1590,7 +1590,7 @@ Http::post('/v1/functions/:functionId/deployments/:deploymentId/build')
         }
 
         $path = $deployment->getAttribute('path');
-        if(empty($path) || !$deviceForFunctions->exists($path)) {
+        if (empty($path) || !$deviceForFunctions->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -1697,7 +1697,7 @@ Http::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
         $dbForProject->purgeCachedDocument('deployments', $deployment->getId());
 
         try {
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
             $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
         } catch (\Throwable $th) {
             // Don't throw if the deployment doesn't exist
@@ -1747,7 +1747,7 @@ Http::post('/v1/functions/:functionId/executions')
     ->inject('authentication')
     ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForConsole, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, Authorization $authorization, Authentication $authentication) {
 
-        if(!$async && !is_null($scheduledAt)) {
+        if (!$async && !is_null($scheduledAt)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Scheduled executions must run asynchronously. Set scheduledAt to a future date, or set async to true.');
         }
 
@@ -1878,7 +1878,7 @@ Http::post('/v1/functions/:functionId/executions')
 
         $status = $async ? 'waiting' : 'processing';
 
-        if(!is_null($scheduledAt)) {
+        if (!is_null($scheduledAt)) {
             $status = 'scheduled';
         }
 
@@ -1909,7 +1909,7 @@ Http::post('/v1/functions/:functionId/executions')
 
         if ($async) {
 
-            if(is_null($scheduledAt)) {
+            if (is_null($scheduledAt)) {
                 $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
                 $queueForFunctions
                     ->setType('http')
@@ -2087,7 +2087,7 @@ Http::post('/v1/functions/:functionId/executions')
 
         $acceptTypes = \explode(', ', $request->getHeader('accept'));
         foreach ($acceptTypes as $acceptType) {
-            if(\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
+            if (\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
                 $response->setContentType(Response::CONTENT_TYPE_JSON);
                 break;
             } elseif (\str_starts_with($acceptType, 'multipart/form-data') || \str_starts_with($acceptType, 'multipart/*')) {

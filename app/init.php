@@ -84,11 +84,11 @@
 //use Utopia\Storage\Device\Wasabi;
 //use Utopia\Storage\Storage;
 //use Utopia\System\System;
-//use Utopia\Validator\Hostname;
-//use Utopia\Validator\IP;
-//use Utopia\Validator\Range;
-//use Utopia\Validator\URL;
-//use Utopia\Validator\WhiteList;
+//use Utopia\Http\Validator\Hostname;
+//use Utopia\Http\Validator\IP;
+//use Utopia\Http\Validator\Range;
+//use Utopia\Http\Validator\URL;
+//use Utopia\Http\Validator\WhiteList;
 //use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 //
 //const APP_NAME = 'Appwrite';

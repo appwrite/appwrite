@@ -35,7 +35,7 @@ use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\Database as TimeLimit;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\Cache\Adapter\Redis as CacheRedis;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -201,7 +201,7 @@ $global->set('logger', function () {
             'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
             default => ['key' => $loggingProvider->getHost()],
         };
-    } catch (Throwable) {
+    } catch (Throwable $th) {
         Console::warning('Using deprecated logging configuration. Please update your configuration to use DSN format.' . $th->getMessage());
         // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
         $configChunks = \explode(";", $providerConfig);
@@ -233,7 +233,7 @@ $global->set('logger', function () {
         $adapter = null;
     }
 
-    if($adapter === null) {
+    if ($adapter === null) {
         Console::error("Logging provider not supported. Logging is disabled");
         return;
     }
@@ -647,7 +647,7 @@ $user
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if(!empty($jwtSessionId)) {
+            if (!empty($jwtSessionId)) {
                 if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
                     $user = new Document([]);
                 }

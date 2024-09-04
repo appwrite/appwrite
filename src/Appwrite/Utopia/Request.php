@@ -134,7 +134,7 @@ class Request extends HttpRequest
      */
     public function getHeaders(): array
     {
-        if($this->headers !== null) {
+        if ($this->headers !== null) {
             return $this->headers;
         }
 

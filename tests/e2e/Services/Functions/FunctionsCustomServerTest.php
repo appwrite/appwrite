@@ -10,12 +10,12 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -1072,7 +1072,7 @@ class FunctionsCustomServerTest extends Scope
 
         $found = false;
         foreach ($response['body']['deployments'] as $deployment) {
-            if($deployment['$id'] === $deploymentId) {
+            if ($deployment['$id'] === $deploymentId) {
                 $found = true;
                 $this->assertEquals($deploymentSize, $deployment['size']);
                 break;
@@ -2434,7 +2434,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($cookie, $response['body']);
 
         // Await Aggregation
-        sleep(App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
+        sleep(System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
 
         $tries = 0;
         while (true) {

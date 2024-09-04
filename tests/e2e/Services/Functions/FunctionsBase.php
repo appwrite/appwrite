@@ -33,7 +33,7 @@ trait FunctionsBase
             \sleep(1);
         }
 
-        if($checkForSuccess) {
+        if ($checkForSuccess) {
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
         }

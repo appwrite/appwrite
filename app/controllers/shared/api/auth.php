@@ -55,7 +55,7 @@ Http::init()
             return;
         }
 
-        if(str_contains($route->getPath(), '/v1/graphql')) { // Skip for graphQL recursive call
+        if (str_contains($route->getPath(), '/v1/graphql')) { // Skip for graphQL recursive call
             return;
         }
 

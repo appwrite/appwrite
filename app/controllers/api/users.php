@@ -140,7 +140,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                if($existingTarget) {
+                if ($existingTarget) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
@@ -164,7 +164,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$phone]),
                 ]);
-                if($existingTarget) {
+                if ($existingTarget) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
@@ -2125,7 +2125,7 @@ Http::post('/v1/users/:userId/jwts')
         $sessions = $user->getAttribute('sessions', []);
         $session = new Document();
 
-        if($sessionId === 'recent') {
+        if ($sessionId === 'recent') {
             // Get most recent
             $session = \count($sessions) > 0 ? $sessions[\count($sessions) - 1] : new Document();
         } else {

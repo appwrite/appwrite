@@ -272,7 +272,7 @@ class Swagger2 extends Format
             foreach ($parameters as $name => $param) { // Set params
                 $injections = [];
 
-                if(isset($param['injections'])) {
+                if (isset($param['injections'])) {
                     $injections = array_map(fn ($injection) => $this->http->getContainer()->get($injection), $param['injections']);
                 }
 
@@ -293,13 +293,13 @@ class Swagger2 extends Format
                 }
 
                 $validatorClass = (!empty($validator)) ? \get_class($validator) : '';
-                if($validatorClass === 'Utopia\Validator\AnyOf') {
+                if ($validatorClass === 'Utopia\Http\Validator\AnyOf') {
                     $validator = $param['validator']->getValidators()[0];
                     $validatorClass = \get_class($validator);
                 }
 
                 switch ($validatorClass) {
-                    case 'Utopia\Validator\Text':
+                    case 'Utopia\Http\Validator\Text':
                     case 'Utopia\Database\Validator\UID':
                         $node['type'] = $validator->getType();
                         $node['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';

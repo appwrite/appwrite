@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response;
 
+use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Account;
 use Appwrite\Utopia\Response\Model\AlgoArgon2;
 use Appwrite\Utopia\Response\Model\AlgoBcrypt;

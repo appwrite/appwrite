@@ -275,8 +275,6 @@ Http::get('/v1/project/usage')
             'filesStorageTotal' => $total[METRIC_FILES_STORAGE],
             'functionsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE] + $total[METRIC_BUILDS_STORAGE],
             'executionsBreakdown' => $executionsBreakdown,
-            'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
-            'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown,
             'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
             'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
