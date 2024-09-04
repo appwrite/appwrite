@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ce1482681baac6626ac7c23f29a8afaa",
+    "content-hash": "4c170232ed9a57c4b5d5e98f8955e452",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1533,12 +1533,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "b61bcec3f72027cfe128c20a70b200c1630d2ad3"
+                "reference": "adc098f3a188755c487b2409e5f2897bb60ee6f3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/b61bcec3f72027cfe128c20a70b200c1630d2ad3",
-                "reference": "b61bcec3f72027cfe128c20a70b200c1630d2ad3",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/adc098f3a188755c487b2409e5f2897bb60ee6f3",
+                "reference": "adc098f3a188755c487b2409e5f2897bb60ee6f3",
                 "shasum": ""
             },
             "require": {
@@ -1572,7 +1572,7 @@
                 "issues": "https://github.com/utopia-php/audit/issues",
                 "source": "https://github.com/utopia-php/audit/tree/feat-framework-v2"
             },
-            "time": "2024-08-09T20:52:52+00:00"
+            "time": "2024-09-04T19:29:05+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2357,12 +2357,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/orchestration.git",
-                "reference": "df65de2132d61b0d862d5812cfab515aca4739cd"
+                "reference": "430d83aa3df5c2fca285245b29ed0d470421ada2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/df65de2132d61b0d862d5812cfab515aca4739cd",
-                "reference": "df65de2132d61b0d862d5812cfab515aca4739cd",
+                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/430d83aa3df5c2fca285245b29ed0d470421ada2",
+                "reference": "430d83aa3df5c2fca285245b29ed0d470421ada2",
                 "shasum": ""
             },
             "require": {
@@ -2399,7 +2399,7 @@
                 "issues": "https://github.com/utopia-php/orchestration/issues",
                 "source": "https://github.com/utopia-php/orchestration/tree/feat-framework-v2"
             },
-            "time": "2024-08-09T20:55:49+00:00"
+            "time": "2024-09-04T19:33:56+00:00"
         },
         {
             "name": "utopia-php/platform",
@@ -2407,12 +2407,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "c64b8efb3448b4ed1868c8e80bdb1c5a8407f7e5"
+                "reference": "b09988fcbfd6378a44afa3e27468e17023eb359c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/c64b8efb3448b4ed1868c8e80bdb1c5a8407f7e5",
-                "reference": "c64b8efb3448b4ed1868c8e80bdb1c5a8407f7e5",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/b09988fcbfd6378a44afa3e27468e17023eb359c",
+                "reference": "b09988fcbfd6378a44afa3e27468e17023eb359c",
                 "shasum": ""
             },
             "require": {
@@ -2421,7 +2421,8 @@
                 "php": ">=8.0",
                 "utopia-php/cli": "1.0.*",
                 "utopia-php/framework": "1.0.*",
-                "utopia-php/queue": "dev-feat-coroutine-and-di"
+                "utopia-php/queue": "dev-feat-coroutine-and-di",
+                "utopia-php/servers": "0.1.0"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2449,7 +2450,7 @@
                 "issues": "https://github.com/utopia-php/platform/issues",
                 "source": "https://github.com/utopia-php/platform/tree/feat-framework-v2"
             },
-            "time": "2024-09-04T18:20:34+00:00"
+            "time": "2024-09-04T20:19:09+00:00"
         },
         {
             "name": "utopia-php/pools",

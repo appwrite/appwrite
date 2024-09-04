@@ -476,7 +476,6 @@ class FunctionsCustomServerTest extends Scope
          * and ensure variable works as expected in execution.
          */
         $this->assertEmpty($template['body']['variables']);
-
         // Create function using settings from template.
         // Deployment is automatically created from template inside endpoint
         $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
@@ -504,7 +503,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($function['body']['$id']);
 
         $functionId = $function['body']['$id'];
-
         // List deployments so we can await deployment build
         $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', [
             'content-type' => 'application/json',

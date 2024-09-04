@@ -56,7 +56,7 @@
         "utopia-php/database": "1.0.*",
         "utopia-php/domains": "dev-feat-framework-v2 as 0.5.99",
         "utopia-php/dsn": "0.2.*",
-        "utopia-php/framework": "1.0.0-RC2",
+        "utopia-php/framework": "1.0.*",
         "utopia-php/fetch": "0.2.*",
         "utopia-php/image": "0.6.*",
         "utopia-php/locale": "0.4.*",
