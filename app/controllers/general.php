@@ -32,6 +32,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
+use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
@@ -133,6 +134,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
@@ -266,6 +268,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
         ]);
@@ -290,6 +294,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
+                cpus: $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+                memory: $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
                 logging: $function->getAttribute('logging', true),
                 requestTimeout: 30
             );
@@ -324,13 +330,22 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 throw $th;
             }
         } finally {
+            $fileSize = 0;
+            $file = $request->getFiles('file');
+            if (!empty($file)) {
+                $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+            }
+
             $queueForUsage
+                ->addMetric(METRIC_NETWORK_REQUESTS, 1)
+                ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
+                ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize())
                 ->addMetric(METRIC_EXECUTIONS, 1)
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(512 * $execution->getAttribute('duration', 0)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(512 * $execution->getAttribute('duration', 0)))
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
                 ->setProject($project)
                 ->trigger()
             ;
@@ -749,16 +764,24 @@ App::error()
             $providerName = System::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
             $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
 
-            if (!(empty($providerName) || empty($providerConfig))) {
-                if (!Logger::hasProvider($providerName)) {
-                    throw new Exception("Logging provider not supported. Logging is disabled");
-                }
+            try {
+                $loggingProvider = new DSN($providerConfig ?? '');
+                $providerName = $loggingProvider->getScheme();
 
-                $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
-                $adapter = new $classname($providerConfig);
-                $logger = new Logger($adapter);
-                $logger->setSample(0.04);
-                $publish = true;
+                if (!empty($providerName) && $providerName === 'sentry') {
+                    $key = $loggingProvider->getPassword();
+                    $projectId = $loggingProvider->getUser() ?? '';
+                    $host = 'https://' . $loggingProvider->getHost();
+
+                    $adapter = new Sentry($projectId, $key, $host);
+                    $logger = new Logger($adapter);
+                    $logger->setSample(0.04);
+                    $publish = true;
+                } else {
+                    throw new \Exception('Invalid experimental logging provider');
+                }
+            } catch (\Throwable $th) {
+                Console::warning('Failed to initialize logging provider: ' . $th->getMessage());
             }
         }
 

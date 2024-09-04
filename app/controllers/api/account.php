@@ -177,12 +177,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
     });
 
-    $sendAlert = (match ($verifiedToken->getAttribute('type')) {
-        Auth::TOKEN_TYPE_MAGIC_URL,
-        Auth::TOKEN_TYPE_EMAIL => false,
-        default => true
-    });
-
     $session = new Document(array_merge(
         [
             '$id' => ID::unique(),
@@ -210,7 +204,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             Permission::delete(Role::user($user->getId())),
         ]));
 
-    $dbForProject->purgeCachedDocument('users', $user->getId());
     Authorization::skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
@@ -229,12 +222,22 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
-    if (($project->getAttribute('auths', [])['sessionAlerts'] ?? false) && $sendAlert) {
-        if ($dbForProject->count('sessions', [
-            Query::equal('userId', [$user->getId()]),
-        ]) !== 1) {
-            sendSessionAlert($locale, $user, $project, $session, $queueForMails);
-        }
+    $isAllowedTokenType = match ($verifiedToken->getAttribute('type')) {
+        Auth::TOKEN_TYPE_MAGIC_URL,
+        Auth::TOKEN_TYPE_EMAIL => false,
+        default => true
+    };
+
+    $hasUserEmail = $user->getAttribute('email', false) !== false;
+
+    $isSessionAlertsEnabled = $project->getAttribute('auths', [])['sessionAlerts'] ?? false;
+
+    $isNotFirstSession = $dbForProject->count('sessions', [
+        Query::equal('userId', [$user->getId()]),
+    ]) !== 1;
+
+    if ($isAllowedTokenType && $hasUserEmail && $isSessionAlertsEnabled && $isNotFirstSession) {
+        sendSessionAlert($locale, $user, $project, $session, $queueForMails);
     }
 
     $queueForEvents
@@ -389,7 +392,7 @@ App::post('/v1/account')
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                if($existingTarget) {
+                if ($existingTarget) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }

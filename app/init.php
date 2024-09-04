@@ -33,6 +33,7 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\Specification;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Hooks\Hooks;
@@ -117,7 +118,7 @@ const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4315;
+const APP_CACHE_BUSTER = 4318;
 const APP_VERSION_STABLE = '1.6.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -147,6 +148,9 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 const APP_HOSTNAME_INTERNAL = 'appwrite';
+const APP_FUNCTION_SPECIFICATION_DEFAULT = Specification::S_05VCPU_512MB;
+const APP_FUNCTION_CPUS_DEFAULT = 0.5;
+const APP_FUNCTION_MEMORY_DEFAULT = 512;
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
@@ -307,6 +311,7 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
+Config::load('runtime-specifications', __DIR__ . '/config/runtimes/specifications.php');
 Config::load('function-templates', __DIR__ . '/config/function-templates.php');
 
 /**
@@ -754,8 +759,9 @@ $register->set('logger', function () {
             'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
             default => ['key' => $loggingProvider->getHost()],
         };
-    } catch (Throwable) {
+    } catch (Throwable $th) {
         // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
+        Console::warning('Using deprecated logging configuration. Please update your configuration to use DSN format.' . $th->getMessage());
         $configChunks = \explode(";", $providerConfig);
 
         $providerConfig = match ($providerName) {
@@ -785,7 +791,7 @@ $register->set('logger', function () {
         $adapter = null;
     }
 
-    if($adapter === null) {
+    if ($adapter === null) {
         Console::error("Logging provider not supported. Logging is disabled");
         return;
     }
@@ -1012,7 +1018,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-08.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-09.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
@@ -1261,7 +1267,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         $jwtSessionId = $payload['sessionId'] ?? '';
-        if(!empty($jwtSessionId)) {
+        if (!empty($jwtSessionId)) {
             if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
                 $user = new Document([]);
             }

@@ -16,7 +16,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\Abuse\Adapters\Database as AbuseDatabase;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
@@ -209,7 +209,7 @@ App::post('/v1/projects')
         $audit = new Audit($dbForProject);
         $audit->setup();
 
-        $abuse = new AbuseDatabase('', 0, 1, $dbForProject);
+        $abuse = new TimeLimit('', 0, 1, $dbForProject);
         $abuse->setup();
 
         /** @var array $collections */
@@ -1444,7 +1444,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PLATFORM)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS,  Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY], true), 'Platform type.')
+    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS,  Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY, Origin::CLIENT_TYPE_REACT_NATIVE_IOS, Origin::CLIENT_TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)

@@ -30,5 +30,6 @@ mutation {
         logs
         errors
         duration
+        scheduledAt
     }
 }

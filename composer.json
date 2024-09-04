@@ -13,7 +13,8 @@
     "scripts": {
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/pint --test",
-        "format": "vendor/bin/pint"
+        "format": "vendor/bin/pint",
+        "bench": "vendor/bin/phpbench run --report=benchmark"
     },
     "autoload": {
         "psr-4": {
@@ -42,15 +43,15 @@
         "ext-openssl": "*",
         "ext-zlib": "*",
         "ext-sockets": "*",
-        "appwrite/php-runtimes": "0.14.*",
+        "appwrite/php-runtimes": "0.15.*",
         "appwrite/php-clamav": "2.0.*",
-        "utopia-php/abuse": "0.40.*",
+        "utopia-php/abuse": "0.43.0",
         "utopia-php/analytics": "0.10.*",
-        "utopia-php/audit": "0.41.*",
+        "utopia-php/audit": "0.43.0",
         "utopia-php/cache": "0.10.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.51.*",
+        "utopia-php/database": "0.53.*",
         "utopia-php/domains": "0.5.*",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "0.33.*",
@@ -86,7 +87,8 @@
         "phpunit/phpunit": "9.5.20",
         "swoole/ide-helper": "5.1.2",
         "textalk/websocket": "1.5.7",
-        "laravel/pint": "^1.14"
+        "laravel/pint": "^1.14",
+        "phpbench/phpbench": "^1.2"
     },
     "provide": {
         "ext-phpiredis": "*"

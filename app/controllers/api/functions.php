@@ -11,6 +11,8 @@ use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
+use Appwrite\Functions\Validator\Payload;
+use Appwrite\Functions\Validator\RuntimeSpecification;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Task\Validator\Cron;
@@ -166,6 +168,12 @@ App::post('/v1/functions')
     ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true)
     ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true)
     ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true)
+    ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
+        $plan,
+        Config::getParam('runtime-specifications', []),
+        App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
+        App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
+    ), 'Runtime specification for the function and builds.', true, ['plan'])
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -175,7 +183,7 @@ App::post('/v1/functions')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
@@ -236,6 +244,7 @@ App::post('/v1/functions')
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
+            'specification' => $specification
         ]));
 
         $schedule = Authorization::skip(
@@ -287,7 +296,7 @@ App::post('/v1/functions')
         if (!empty($providerRepositoryId)) {
             // Deploy VCS
             $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
-        } elseif(!$template->isEmpty()) {
+        } elseif (!$template->isEmpty()) {
             // Deploy non-VCS from template
             $deploymentId = ID::unique();
             $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -472,6 +481,42 @@ App::get('/v1/functions/runtimes')
             'total' => count($allowed),
             'runtimes' => $allowed
         ]), Response::MODEL_RUNTIME_LIST);
+    });
+
+App::get('/v1/functions/specifications')
+    ->groups(['api', 'functions'])
+    ->desc('List available function runtime specifications')
+    ->label('scope', 'functions.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'listSpecifications')
+    ->label('sdk.description', '/docs/references/functions/list-specifications.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SPECIFICATION_LIST)
+    ->inject('response')
+    ->inject('plan')
+    ->action(function (Response $response, array $plan) {
+        $allRuntimeSpecs = Config::getParam('runtime-specifications', []);
+
+        $runtimeSpecs = [];
+        foreach ($allRuntimeSpecs as $spec) {
+            $spec['enabled'] = true;
+
+            if (array_key_exists('runtimeSpecifications', $plan)) {
+                $spec['enabled'] = in_array($spec['slug'], $plan['runtimeSpecifications']);
+            }
+
+            // Only add specs that are within the limits set by environment variables
+            if ($spec['cpus'] <= System::getEnv('_APP_FUNCTIONS_CPUS', 1) && $spec['memory'] <= System::getEnv('_APP_FUNCTIONS_MEMORY', 512)) {
+                $runtimeSpecs[] = $spec;
+            }
+        }
+
+        $response->dynamic(new Document([
+            'specifications' => $runtimeSpecs,
+            'total' => count($runtimeSpecs)
+        ]), Response::MODEL_SPECIFICATION_LIST);
     });
 
 App::get('/v1/functions/:functionId')
@@ -732,6 +777,12 @@ App::put('/v1/functions/:functionId')
     ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
     ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
     ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
+    ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
+        $plan,
+        Config::getParam('runtime-specifications', []),
+        App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
+        App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
+    ), 'Runtime specification for the function and builds.', true, ['plan'])
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -740,9 +791,8 @@ App::put('/v1/functions/:functionId')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
-
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -840,6 +890,21 @@ App::put('/v1/functions/:functionId')
             $live = false;
         }
 
+        $spec = Config::getParam('runtime-specifications')[$specification] ?? [];
+
+        // Enforce Cold Start if spec limits change.
+        if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deployment'))) {
+            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            try {
+                $executor->deleteRuntime($project->getId(), $function->getAttribute('deployment'));
+            } catch (\Throwable $th) {
+                // Don't throw if the deployment doesn't exist
+                if ($th->getCode() !== 404) {
+                    throw $th;
+                }
+            }
+        }
+
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
@@ -861,6 +926,7 @@ App::put('/v1/functions/:functionId')
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
+            'specification' => $specification,
             'search' => implode(' ', [$functionId, $name, $runtime]),
         ])));
 
@@ -886,7 +952,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->groups(['api', 'functions'])
     ->desc('Download deployment')
     ->label('scope', 'functions.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getDeploymentDownload')
     ->label('sdk.description', '/docs/references/functions/get-deployment-download.md')
@@ -1086,6 +1152,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createDeployment')
+    ->label('sdk.methodType', 'upload')
     ->label('sdk.description', '/docs/references/functions/create-deployment.md')
     ->label('sdk.packaging', true)
     ->label('sdk.request.type', 'multipart/form-data')
@@ -1361,7 +1428,8 @@ App::get('/v1/functions/:functionId/deployments')
             $result->setAttribute('status', $build->getAttribute('status', 'processing'));
             $result->setAttribute('buildLogs', $build->getAttribute('logs', ''));
             $result->setAttribute('buildTime', $build->getAttribute('duration', 0));
-            $result->setAttribute('size', $result->getAttribute('size', 0) + $build->getAttribute('size', 0));
+            $result->setAttribute('buildSize', $build->getAttribute('size', 0));
+            $result->setAttribute('size', $result->getAttribute('size', 0));
         }
 
         $response->dynamic(new Document([
@@ -1407,7 +1475,8 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         $deployment->setAttribute('status', $build->getAttribute('status', 'waiting'));
         $deployment->setAttribute('buildLogs', $build->getAttribute('logs', ''));
         $deployment->setAttribute('buildTime', $build->getAttribute('duration', 0));
-        $deployment->setAttribute('size', $deployment->getAttribute('size', 0) + $build->getAttribute('size', 0));
+        $deployment->setAttribute('buildSize', $build->getAttribute('size', 0));
+        $deployment->setAttribute('size', $deployment->getAttribute('size', 0));
 
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
@@ -1512,7 +1581,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
         }
 
         $path = $deployment->getAttribute('path');
-        if(empty($path) || !$deviceForFunctions->exists($path)) {
+        if (empty($path) || !$deviceForFunctions->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -1615,8 +1684,17 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
             ]));
         }
 
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-        $deleteBuild = $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+        $dbForProject->purgeCachedDocument('deployments', $deployment->getId());
+
+        try {
+            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+        } catch (\Throwable $th) {
+            // Don't throw if the deployment doesn't exist
+            if ($th->getCode() !== 404) {
+                throw $th;
+            }
+        }
 
         $queueForEvents
             ->setParam('functionId', $function->getId())
@@ -1637,9 +1715,9 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_MULTIPART)
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
-    ->label('sdk.request.type', Response::CONTENT_TYPE_MULTIPART)
+    ->label('sdk.request.type', Response::CONTENT_TYPE_JSON)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
+    ->param('body', '', new Payload(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
@@ -1657,7 +1735,7 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('geodb')
     ->action(function (string $functionId, string $body, bool $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForConsole, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
 
-        if(!$async && !is_null($scheduledAt)) {
+        if (!$async && !is_null($scheduledAt)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Scheduled executions must run asynchronously. Set scheduledAt to a future date, or set async to true.');
         }
 
@@ -1695,6 +1773,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
@@ -1789,7 +1868,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $status = $async ? 'waiting' : 'processing';
 
-        if(!is_null($scheduledAt)) {
+        if (!is_null($scheduledAt)) {
             $status = 'scheduled';
         }
 
@@ -1819,7 +1898,7 @@ App::post('/v1/functions/:functionId/executions')
             ->setContext('function', $function);
 
         if ($async) {
-            if(is_null($scheduledAt)) {
+            if (is_null($scheduledAt)) {
                 $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
                 $queueForFunctions
                     ->setType('http')
@@ -1906,6 +1985,8 @@ App::post('/v1/functions/:functionId/executions')
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
         ]);
@@ -1930,6 +2011,8 @@ App::post('/v1/functions/:functionId/executions')
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
+                cpus: $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+                memory: $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
                 logging: $function->getAttribute('logging', true),
                 requestTimeout: 30
             );
@@ -1968,8 +2051,8 @@ App::post('/v1/functions/:functionId/executions')
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(512 * $execution->getAttribute('duration', 0)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(512 * $execution->getAttribute('duration', 0)))
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
             ;
 
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
@@ -1994,7 +2077,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $acceptTypes = \explode(', ', $request->getHeader('accept'));
         foreach ($acceptTypes as $acceptType) {
-            if(\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
+            if (\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
                 $response->setContentType(Response::CONTENT_TYPE_JSON);
                 break;
             } elseif (\str_starts_with($acceptType, 'multipart/form-data') || \str_starts_with($acceptType, 'multipart/*')) {
@@ -2451,6 +2534,7 @@ App::get('/v1/functions/templates')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listTemplates')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.description', '/docs/references/functions/list-templates.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -2487,6 +2571,7 @@ App::get('/v1/functions/templates/:templateId')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getTemplate')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.description', '/docs/references/functions/get-template.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)

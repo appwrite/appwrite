@@ -25,10 +25,6 @@ class Executor
 
     protected array $headers;
 
-    protected int $cpus;
-
-    protected int $memory;
-
     public function __construct(string $endpoint)
     {
         if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
@@ -36,8 +32,6 @@ class Executor
         }
 
         $this->endpoint = $endpoint;
-        $this->cpus = \intval(System::getEnv('_APP_FUNCTIONS_CPUS', '1'));
-        $this->memory = \intval(System::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
         $this->headers = [
             'content-type' => 'application/json',
             'authorization' => 'Bearer ' . System::getEnv('_APP_EXECUTOR_SECRET', ''),
@@ -66,6 +60,8 @@ class Executor
         string $source,
         string $image,
         string $version,
+        float $cpus,
+        int $memory,
         bool $remove = false,
         string $entrypoint = '',
         string $destination = '',
@@ -90,8 +86,8 @@ class Executor
             'variables' => $variables,
             'remove' => $remove,
             'command' => $command,
-            'cpus' => $this->cpus,
-            'memory' => $this->memory,
+            'cpus' => $cpus,
+            'memory' => $memory,
             'version' => $version,
             'timeout' => $timeout,
         ];
@@ -185,6 +181,8 @@ class Executor
         string $path,
         string $method,
         array $headers,
+        float $cpus,
+        int $memory,
         string $runtimeEntrypoint = null,
         bool $logging,
         int $requestTimeout = null
@@ -211,15 +209,15 @@ class Executor
             'image' => $image,
             'source' => $source,
             'entrypoint' => $entrypoint,
-            'cpus' => $this->cpus,
-            'memory' => $this->memory,
+            'cpus' => $cpus,
+            'memory' => $memory,
             'version' => $version,
             'runtimeEntrypoint' => $runtimeEntrypoint,
             'logging' => $logging,
             'restartPolicy' => 'always' // Once utopia/orchestration has it, use DockerAPI::ALWAYS (0.13+)
         ];
 
-        if(!empty($body)) {
+        if (!empty($body)) {
             $params['body'] = $body;
         }
 

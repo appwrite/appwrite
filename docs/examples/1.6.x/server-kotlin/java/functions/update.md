@@ -4,8 +4,8 @@ import io.appwrite.services.Functions;
 
 Client client = new Client()
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
-    .setProject("&lt;YOUR_PROJECT_ID&gt;") // Your project ID
-    .setKey("&lt;YOUR_API_KEY&gt;"); // Your secret API key
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
 
 Functions functions = new Functions(client);
 
@@ -27,6 +27,7 @@ functions.update(
     "<PROVIDER_BRANCH>", // providerBranch (optional)
     false, // providerSilentMode (optional)
     "<PROVIDER_ROOT_DIRECTORY>", // providerRootDirectory (optional)
+    "", // specification (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
