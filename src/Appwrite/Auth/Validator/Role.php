@@ -6,7 +6,6 @@ use Utopia\Validator;
 
 class Role extends Validator
 {
-
     /**
      * @var string
      */

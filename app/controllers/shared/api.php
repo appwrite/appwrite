@@ -302,7 +302,7 @@ App::init()
             foreach ($adminRoles as $role) {
                 $scopes = \array_merge($scopes, $roles[$role]['scopes']);
             }
-            
+
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         }
 
