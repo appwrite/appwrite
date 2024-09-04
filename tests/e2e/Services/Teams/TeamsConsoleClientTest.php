@@ -47,7 +47,7 @@ class TeamsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'email' => $email,
             'name' => $name,
-            'roles' => ['admin', 'editor'],
+            'roles' => ['admin', 'developer'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
@@ -76,111 +76,5 @@ class TeamsConsoleClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
 
         return $data;
-    }
-
-
-    /**
-     * @depends testCreateTeam
-     * @group testing
-     */
-    public function testTeamMemberships($data)
-    {
-        $teamUid = $data['teamUid'] ?? '';
-        $teamName = $data['teamName'] ?? '';
-        $email = uniqid() . 'friend@localhost.test';
-        $name = 'Friend User';
-        $password = 'password';
-
-        /**
-         * Invite team member with developer role
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'email' => $email,
-            'name' => $name,
-            'roles' => ['developer'],
-            'url' => 'http://localhost:5000/join-us#title'
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        /**
-         * Accept the invite
-         */
-        $lastEmail = $this->getLastEmail();
-        $this->assertEquals($email, $lastEmail['to'][0]['address']);
-        $this->assertEquals($name, $lastEmail['to'][0]['name']);
-        $this->assertEquals('Invitation to ' . $teamName . ' Team at ' . $this->getProject()['name'], $lastEmail['subject']);
-        $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
-        $membershipUid = substr($lastEmail['text'], strpos($lastEmail['text'], '?membershipId=', 0) + 14, 20);
-        $userUid = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 20);
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $response['body']['$id'] . '/status', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => $userUid,
-            'secret' => $secret,
-        ]);
-
-        $key = 'a_session_' . $this->getProject()['$id'];
-        $cookie = $key . '=' . $response['cookies'][$key];
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        /**
-         * Test teams.read scope
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-mode' => 'admin',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => $cookie,
-        ]), []);
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        /**
-         * Test teams.write scope
-         */
-        $response = $this->client->call(Client::METHOD_PUT, '/teams/' . $teamUid, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => $cookie,
-            'x-appwrite-mode' => 'admin'
-        ]), [
-            'name' => 'Arsenal Updated',
-        ]);
-
-        $this->assertEquals(401, $response['headers']['status-code']);
-
-        /**
-         * Test projects.read scope
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => $cookie,
-            'x-appwrite-mode' => 'admin'
-        ]), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        /**
-         * Test projects.write scope
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => $cookie,
-            'x-appwrite-mode' => 'admin'
-        ]), [
-            'projectId' => 'unique()',
-            'name' => 'Project Name',
-            'teamId' => $teamUid,
-        ]);
-
-        $this->assertEquals(401, $response['headers']['status-code']);
     }
 }

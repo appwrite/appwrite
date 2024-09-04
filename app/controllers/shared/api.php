@@ -277,8 +277,10 @@ App::init()
         /**
          * Admin User Authentication
          */
-        elseif (($project->getId() === 'console' && !$team->isEmpty() && !$user->isEmpty()) || (!$user->isEmpty() && $mode === APP_MODE_ADMIN)) {
+        elseif (($project->getId() === 'console' && !$team->isEmpty() && !$user->isEmpty()) || ($project->getId() !== 'console' && !$user->isEmpty() && $mode === APP_MODE_ADMIN)) {
             $teamId = $team->getId();
+            var_dump($team->getArrayCopy());
+            var_dump($project->getId());
             $adminRoles = [];
             $memberships = $user->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
@@ -287,6 +289,8 @@ App::init()
                     break;
                 }
             }
+            var_dump($memberships);
+            var_dump($adminRoles);
 
             if (empty($adminRoles)) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
