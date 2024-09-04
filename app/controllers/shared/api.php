@@ -277,7 +277,7 @@ App::init()
         /**
          * Admin User Authentication
          */
-        elseif (!$team->isEmpty()) {
+        elseif (($project->getId() === 'console' && !$team->isEmpty()) || $mode === APP_MODE_ADMIN) {
             if ($user->isEmpty()) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
