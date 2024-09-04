@@ -160,8 +160,10 @@ App::init()
     ->inject('session')
     ->inject('servers')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Database $dbForConsole, Document $project, Document $user, ?Document $session, array $servers, string $mode) {
+    ->inject('team')
+    ->action(function (App $utopia, Request $request, Database $dbForConsole, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
         $route = $utopia->getRoute();
+        $path = $route->getPath();
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -276,16 +278,12 @@ App::init()
         /**
          * Admin User Authentication
          */
-        elseif (APP_MODE_ADMIN === $mode) {
+        elseif (!$team->isEmpty()) {
             if ($user->isEmpty()) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
-            $teamId = $project->getAttribute('teamId', null);
-            if (empty($teamId)) {
-                throw new Exception(Exception::USER_UNAUTHORIZED, 'APP_MODE : admin is not allowed for the console project');
-            }
-
+            $teamId = $team->getId();
             $adminRoles = [];
             $memberships = $user->getAttribute('memberships', []);
             foreach ($memberships as $membership) {

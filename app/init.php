@@ -41,6 +41,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
@@ -1753,3 +1754,31 @@ App::setResource('requestTimestamp', function ($request) {
 App::setResource('plan', function (array $plan = []) {
     return [];
 });
+
+
+App::setResource('team', function (Document $project, Database $dbForConsole, App $utopia, Request $request) {
+    $teamInternalId = '';
+    if ($project->getId() !== 'console') {
+        $teamInternalId = $project->getAttribute('teamInternalId');
+    } else {
+        $route = $utopia->match($request);
+        $path = $route->getPath();
+        if (str_starts_with($path, '/v1/projects/:projectId')) {
+            $uri = $request->getURI();
+            $pid = explode('/', $uri)[3];
+            $p = $dbForConsole->getDocument('projects', $pid);
+            $teamInternalId = $p->getAttribute('teamInternalId', '');
+        }
+    }
+
+    $team = Authorization::skip(function () use ($dbForConsole, $teamInternalId) {
+        return $dbForConsole->findOne('teams', [
+            Query::equal('$internalId', [$teamInternalId]),
+        ]);
+    });
+
+    if (!$team) {
+        $team = new Document([]);
+    }
+    return $team;
+}, ['project', 'dbForConsole', 'utopia', 'request']);
