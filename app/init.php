@@ -1759,7 +1759,7 @@ App::setResource('plan', function (array $plan = []) {
 App::setResource('team', function (Document $project, Database $dbForConsole, App $utopia, Request $request) {
     $teamInternalId = '';
     if ($project->getId() !== 'console') {
-        $teamInternalId = $project->getAttribute('teamInternalId');
+        $teamInternalId = $project->getAttribute('teamInternalId', '');
     } else {
         $route = $utopia->match($request);
         $path = $route->getPath();
