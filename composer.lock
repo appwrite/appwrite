@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4c170232ed9a57c4b5d5e98f8955e452",
+    "content-hash": "b6b09570c47171378f66e61a71b943c6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1813,20 +1813,7 @@
                     "Tests\\E2E\\": "tests/e2e"
                 }
             },
-            "scripts": {
-                "lint": [
-                    "vendor/bin/pint --test"
-                ],
-                "format": [
-                    "vendor/bin/pint"
-                ],
-                "check": [
-                    "vendor/bin/phpstan analyse -c phpstan.neon"
-                ],
-                "test": [
-                    "vendor/bin/phpunit --configuration phpunit.xml"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1838,8 +1825,8 @@
                 "upf"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/di/tree/0.1.0",
-                "issues": "https://github.com/utopia-php/di/issues"
+                "issues": "https://github.com/utopia-php/di/issues",
+                "source": "https://github.com/utopia-php/di/tree/0.1.0"
             },
             "time": "2024-08-08T14:35:19+00:00"
         },
@@ -2700,25 +2687,7 @@
                     "Utopia\\Servers\\": "src/Servers"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\E2E\\": "tests/Servers/Unit"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "phpunit"
-                ],
-                "analyse": [
-                    "vendor/bin/phpstan analyse"
-                ],
-                "format": [
-                    "vendor/bin/pint"
-                ],
-                "lint": [
-                    "vendor/bin/pint --test"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2737,8 +2706,8 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/servers/tree/0.1.0",
-                "issues": "https://github.com/utopia-php/servers/issues"
+                "issues": "https://github.com/utopia-php/servers/issues",
+                "source": "https://github.com/utopia-php/servers/tree/0.1.0"
             },
             "time": "2024-08-08T14:31:39+00:00"
         },
