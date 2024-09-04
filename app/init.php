@@ -1766,7 +1766,7 @@ App::setResource('team', function (Document $project, Database $dbForConsole, Ap
         if (str_starts_with($path, '/v1/projects/:projectId')) {
             $uri = $request->getURI();
             $pid = explode('/', $uri)[3];
-            $p = $dbForConsole->getDocument('projects', $pid);
+            $p = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $pid));
             $teamInternalId = $p->getAttribute('teamInternalId', '');
         }
     }
