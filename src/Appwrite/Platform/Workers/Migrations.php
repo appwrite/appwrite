@@ -332,22 +332,22 @@ class Migrations extends Action
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
                     /** @var $sourceErrors $error */
-                    var_dump($error->getPrevious()->getMessage());
-                    var_dump($error->getPrevious()->getLine());
-                    var_dump($error->getPrevious()->getFile());
-                    var_dump($error->getLine());
-                    var_dump($error->getFile());
-                    $errorMessages[] = "Error occurred while fetching '{$error->getResourceName()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
+                    $message = "Error occurred while fetching '{$error->getResourceName()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
+                    if($error->getPrevious()){
+                        $message .= " Message: ".$error->getPrevious()->getLine() . " File: ".$error->getPrevious()->getFile() . " Line: ".$error->getPrevious()->getLine();
+                    }
+
+                    $errorMessages[] = $message;
                 }
                 foreach ($destinationErrors as $error) {
-                    Console::error($error->getPrevious()->getMessage());
-                    Console::error($error->getPrevious()->getTraceAsString());
-                    Console::error("Message: " . $error->getMessage());
-                    Console::error("File: " . $error->getFile());
-                    Console::error("Line: " . $error->getLine());
+                    $message = "Error occurred while pushing '{$error->getResourceName()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
+
+                    if($error->getPrevious()){
+                        $message .= " Message: ".$error->getPrevious()->getLine() . " File: ".$error->getPrevious()->getFile() . " Line: ".$error->getPrevious()->getLine();
+                    }
 
                     /** @var MigrationException $error */
-                    $errorMessages[] = "Error occurred while pushing '{$error->getResourceName()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
+                    $errorMessages[] = $message;
                 }
 
                 $migration->setAttribute('errors', $errorMessages);
