@@ -48,6 +48,7 @@ $admins = [
     'collections.write',
     'platforms.read',
     'platforms.write',
+    'projects.write',
     'keys.read',
     'keys.write',
     'webhooks.read',
