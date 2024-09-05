@@ -229,6 +229,7 @@ function updateAttribute(
     Database $dbForProject,
     Event $queueForEvents,
     string $type,
+    int $size = null,
     string $filter = null,
     string|bool|int|float $default = null,
     bool $required = null,
@@ -236,8 +237,7 @@ function updateAttribute(
     int|float $max = null,
     array $elements = null,
     array $options = [],
-    int $size = null
-    string $newKey = null
+    string $newKey = null,
 ): Document {
     $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -352,8 +352,8 @@ function updateAttribute(
         $dbForProject->updateRelationship(
             collection: $collectionId,
             id: $key,
-            onDelete: $primaryDocumentOptions['onDelete'],
             newKey: $newKey,
+            onDelete: $primaryDocumentOptions['onDelete'],
         );
 
         if ($primaryDocumentOptions['twoWay']) {
@@ -376,13 +376,13 @@ function updateAttribute(
             $dbForProject->updateAttribute(
                 collection: $collectionId,
                 id: $key,
+                size: $size,
                 required: $required,
                 default: $default,
                 formatOptions: $options ?? null,
-                size: $size ?? null,
                 newKey: $newKey ?? null
             );
-        } catch (TruncateException $e) {
+        } catch (TruncateException) {
             throw new Exception(Exception::ATTRIBUTE_INVALID_RESIZE);
         }
     }
@@ -1889,9 +1889,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
-    ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->param('size', null, new Integer(), 'Maximum size of the string attribute.', true)
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, ?int $size, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->param('newKey', null, new Key(), 'New attribute key.', true)
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?int $size, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $attribute = updateAttribute(
             databaseId: $databaseId,
@@ -1900,9 +1900,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
             type: Database::VAR_STRING,
+            size: $size,
             default: $default,
             required: $required,
-            size: $size
             newKey: $newKey
         );
 
