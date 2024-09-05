@@ -260,9 +260,7 @@ class Functions extends Action
             'search' => implode(' ', [$function->getId(), $executionId]),
         ]);
 
-        if ($function->getAttribute('logging')) {
-            $execution = $dbForProject->createDocument('executions', $execution);
-        }
+        $execution = $dbForProject->createDocument('executions', $execution);
 
         if ($execution->isEmpty()) {
             throw new Exception('Failed to create execution');

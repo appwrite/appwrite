@@ -350,10 +350,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 ->trigger()
             ;
 
-            if ($function->getAttribute('logging')) {
-                /** @var Document $execution */
-                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-            }
+            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
         $execution->setAttribute('logs', '');
