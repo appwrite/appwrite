@@ -568,6 +568,36 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertStringContainsString("Total users: " . $totalusers, $execution['body']['logs']);
 
+        // Execute function again but async
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'path' => '/ping',
+            'async' => true
+        ]);
+
+        $this->assertEquals(202, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+        $this->assertEquals('waiting', $execution['body']['status']);
+        $executionId = $execution['body']['$id'];
+
+        // Wait for async execuntion to finish
+        sleep(5);
+
+        // Ensure execution was successful
+        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertEquals("completed", $execution['body']['status']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+        $this->assertEmpty($execution['body']['responseBody']);
+        $this->assertEmpty($execution['body']['errors']);
+        $this->assertStringContainsString("Total users: " . $totalusers, $execution['body']['logs']);
+
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
