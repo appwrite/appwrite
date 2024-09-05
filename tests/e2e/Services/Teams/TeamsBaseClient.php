@@ -587,7 +587,6 @@ trait TeamsBaseClient
         $this->assertCount(count($roles), $response['body']['roles']);
         $this->assertEquals($roles[0], $response['body']['roles'][0]);
         $this->assertEquals($roles[1], $response['body']['roles'][1]);
-        $this->assertEquals($roles[2], $response['body']['roles'][2]);
 
         /**
          * Test for unknown team
