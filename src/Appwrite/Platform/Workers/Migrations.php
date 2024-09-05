@@ -334,7 +334,7 @@ class Migrations extends Action
                     /** @var $sourceErrors $error */
                     $message = "Error occurred while fetching '{$error->getResourceName()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
                     if($error->getPrevious()){
-                        $message .= " Message: ".$error->getPrevious()->getLine() . " File: ".$error->getPrevious()->getFile() . " Line: ".$error->getPrevious()->getLine();
+                        $message .= " Message: ".$error->getPrevious()->getMessage() . " File: ".$error->getPrevious()->getFile() . " Line: ".$error->getPrevious()->getLine();
                     }
 
                     $errorMessages[] = $message;
@@ -343,7 +343,7 @@ class Migrations extends Action
                     $message = "Error occurred while pushing '{$error->getResourceName()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
 
                     if($error->getPrevious()){
-                        $message .= " Message: ".$error->getPrevious()->getLine() . " File: ".$error->getPrevious()->getFile() . " Line: ".$error->getPrevious()->getLine();
+                        $message .= " Message: ".$error->getPrevious()->getMessage() . " File: ".$error->getPrevious()->getFile() . " Line: ".$error->getPrevious()->getLine();
                     }
 
                     /** @var MigrationException $error */
