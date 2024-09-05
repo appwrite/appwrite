@@ -736,6 +736,7 @@ Http::error()
             Console::error('[Error] Line: ' . $line);
         }
         switch ($class) {
+            case 'Utopia\Servers\Exception':
             case 'Utopia\Http\Exception':
                 $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
                 switch ($code) {
@@ -786,24 +787,26 @@ Http::error()
             $providerName = System::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
             $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
 
-            try {
-                $loggingProvider = new DSN($providerConfig ?? '');
-                $providerName = $loggingProvider->getScheme();
+            if (!(empty($providerName) || empty($providerConfig))) {
+                try {
+                    $loggingProvider = new DSN($providerConfig);
+                    $providerName = $loggingProvider->getScheme();
 
-                if (!empty($providerName) && $providerName === 'sentry') {
-                    $key = $loggingProvider->getPassword();
-                    $projectId = $loggingProvider->getUser() ?? '';
-                    $host = 'https://' . $loggingProvider->getHost();
+                    if (!empty($providerName) && $providerName === 'sentry') {
+                        $key = $loggingProvider->getPassword();
+                        $projectId = $loggingProvider->getUser() ?? '';
+                        $host = 'https://' . $loggingProvider->getHost();
 
-                    $adapter = new Sentry($projectId, $key, $host);
-                    $logger = new Logger($adapter);
-                    $logger->setSample(0.04);
-                    $publish = true;
-                } else {
-                    throw new \Exception('Invalid experimental logging provider');
+                        $adapter = new Sentry($projectId, $key, $host);
+                        $logger = new Logger($adapter);
+                        $logger->setSample(0.04);
+                        $publish = true;
+                    } else {
+                        throw new \Exception('Invalid experimental logging provider');
+                    }
+                } catch (\Throwable $th) {
+                    Console::warning('Failed to initialize logging provider: ' . $th->getMessage());
                 }
-            } catch (\Throwable $th) {
-                Console::warning('Failed to initialize logging provider: ' . $th->getMessage());
             }
         }
 
