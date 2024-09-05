@@ -292,6 +292,7 @@ App::init()
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
+            $scopes = []; // reset scope if admin
             foreach ($adminRoles as $role) {
                 $scopes = \array_merge($scopes, $roles[$role]['scopes']);
             }
