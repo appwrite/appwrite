@@ -1026,10 +1026,6 @@ Http::wildcard()
         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });
 
-foreach (Config::getParam('services', []) as $service) {
-    //include_once $service['controller'];
-}
-
 include_once 'mock.php';
 include_once 'shared/api.php';
 include_once 'shared/api/auth.php';

@@ -138,7 +138,7 @@ $server->onStart(function () use ($stats, $container, $containerId, &$statsDocum
                 sleep(DATABASE_RECONNECT_SLEEP);
             }
         } while (true);
-        //   TODO NOW     $registry->get('pools')->reclaim();
+        ($container->get('connections'))->reclaim();
     });
 
     /**
@@ -166,7 +166,8 @@ $server->onStart(function () use ($stats, $container, $containerId, &$statsDocum
             } catch (Throwable $th) {
                 call_user_func($logError, $th, "updateWorkerDocument");
             } finally {
-                // TODO NOW  $registry->get('pools')->reclaim();
+                ($container->get('connections'))->reclaim();
+                $container->refresh('dbForConsole');
             }
         });
     }
@@ -231,7 +232,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
                         'data' => $event['data']
                     ]));
                 }
-                // TODO NOW $registry->get('pools')->reclaim();
+                ($container->get('connections'))->reclaim();
+                $container->refresh('dbForConsole');
             }
         }
         /**
@@ -311,7 +313,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
 
                         $realtime->unsubscribe($connection);
                         $realtime->subscribe($projectId, $connection, $roles, $channels);
-                        //TODO NOW $registry->get('pools')->reclaim();
                     }
                 }
 
@@ -343,8 +344,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
             sleep(DATABASE_RECONNECT_SLEEP);
             continue;
         } finally {
-            //$registry->get('pools')->reclaim();
-            // TODO eldad add connections reclaim
+            ($container->get('connections'))->reclaim();
+            $container->refresh('dbForConsole');
         }
     }
 
@@ -369,7 +370,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     Console::info("Connection open (user: {$connection})");
 
     try {
-        $dbForConsole = $container->get('dbForConsole');
 
         /** @var Document $project */
         $project = $container->refresh('project')->get('project');
@@ -586,7 +586,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $co
             $server->close($connection, $th->getCode());
         }
     } finally {
-        //       TODO NOW $registry->get('pools')->reclaim();
+        ($container->get('connections'))->reclaim();
+        $container->refresh('dbForConsole');
     }
 });
 
