@@ -332,6 +332,11 @@ class Migrations extends Action
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
                     /** @var $sourceErrors $error */
+                    var_dump($error->getPrevious()->getMessage());
+                    var_dump($error->getPrevious()->getLine());
+                    var_dump($error->getPrevious()->getFile());
+                    var_dump($error->getLine());
+                    var_dump($error->getFile());
                     $errorMessages[] = "Error occurred while fetching '{$error->getResourceName()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
                 }
                 foreach ($destinationErrors as $error) {
