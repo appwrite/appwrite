@@ -18,12 +18,12 @@ use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 
-global $global, $container;
+global $registry, $container;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 /**
- * @var Registry $global
+ * @var Registry $registry
  * @var Container $container
  */
 $context = new Dependency();
@@ -39,8 +39,8 @@ $context
 
 $register
     ->setName('register')
-    ->setCallback(function () use (&$global): Registry {
-        return $global;
+    ->setCallback(function () use (&$registry): Registry {
+        return $registry;
     });
 
 $queueForFunctions

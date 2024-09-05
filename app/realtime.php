@@ -36,10 +36,10 @@ use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
 /**
- * @var Registry $global
+ * @var Registry $registry
  * @var Container $container
  */
-global $global, $container;
+global $registry, $container;
 
 
 require_once __DIR__ . '/init.php';
@@ -70,8 +70,8 @@ $adapter
 
 $server = new Server($adapter);
 
-$logError = function (Throwable $error, string $action) use ($global) {
-    $logger = $global->get('logger');
+$logError = function (Throwable $error, string $action) use ($registry) {
+    $logger = $registry->get('logger');
 
     if ($logger && !$error instanceof Exception) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
@@ -138,7 +138,7 @@ $server->onStart(function () use ($stats, $container, $containerId, &$statsDocum
                 sleep(DATABASE_RECONNECT_SLEEP);
             }
         } while (true);
-        //   TODO NOW     $global->get('pools')->reclaim();
+        //   TODO NOW     $registry->get('pools')->reclaim();
     });
 
     /**
@@ -166,7 +166,7 @@ $server->onStart(function () use ($stats, $container, $containerId, &$statsDocum
             } catch (Throwable $th) {
                 call_user_func($logError, $th, "updateWorkerDocument");
             } finally {
-                // TODO NOW  $global->get('pools')->reclaim();
+                // TODO NOW  $registry->get('pools')->reclaim();
             }
         });
     }
@@ -231,7 +231,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
                         'data' => $event['data']
                     ]));
                 }
-                // TODO NOW $global->get('pools')->reclaim();
+                // TODO NOW $registry->get('pools')->reclaim();
             }
         }
         /**
@@ -311,7 +311,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
 
                         $realtime->unsubscribe($connection);
                         $realtime->subscribe($projectId, $connection, $roles, $channels);
-                        //TODO NOW $global->get('pools')->reclaim();
+                        //TODO NOW $registry->get('pools')->reclaim();
                     }
                 }
 
@@ -343,7 +343,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
             sleep(DATABASE_RECONNECT_SLEEP);
             continue;
         } finally {
-            //$global->get('pools')->reclaim();
+            //$registry->get('pools')->reclaim();
             // TODO eldad add connections reclaim
         }
     }
@@ -586,7 +586,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $co
             $server->close($connection, $th->getCode());
         }
     } finally {
-        //       TODO NOW $global->get('pools')->reclaim();
+        //       TODO NOW $registry->get('pools')->reclaim();
     }
 });
 

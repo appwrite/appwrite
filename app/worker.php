@@ -21,7 +21,7 @@ use Utopia\Queue\Worker;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 
-global $global, $container;
+global $registry, $container;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
@@ -37,7 +37,7 @@ $deviceForLocalFiles = new Dependency();
 
 $register
     ->setName('register')
-    ->setCallback(fn () => $global);
+    ->setCallback(fn () => $registry);
 
 $project
     ->setName('project')

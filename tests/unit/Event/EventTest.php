@@ -67,8 +67,8 @@ class EventTest extends TestCase
         $this->assertEquals('eventValue2', $this->object->getParam('eventKey2'));
         $this->assertEquals(null, $this->object->getParam('eventKey3'));
 
-        global $global;
-        $pools = $global->get('pools');
+        global $registry;
+        $pools = $registry->get('pools');
         $dsn = $pools['pools-queue-queue']['dsn'];
         $queue =  new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
 

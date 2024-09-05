@@ -91,7 +91,7 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
-global $http, $container, $global;
+global $http, $container, $registry;
 
 Http::setMode(System::getEnv('_APP_ENV', Http::MODE_TYPE_PRODUCTION));
 
@@ -185,9 +185,9 @@ function getDevice($root): Device
 }
 
 $container = new Container();
-$global = new Registry();
+$registry = new Registry();
 
-$global->set('logger', function () {
+$registry->set('logger', function () {
     // Register error logger
     $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
     $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
@@ -243,18 +243,18 @@ $global->set('logger', function () {
     return $logger;
 });
 
-$global->set('geodb', function () {
+$registry->set('geodb', function () {
     /**
      * @disregard P1009 Undefined type
      */
     return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-09.mmdb');
 });
 
-$global->set('hooks', function () {
+$registry->set('hooks', function () {
     return new Hooks();
 });
 
-$global->set(
+$registry->set(
     'pools',
     (function () {
         $fallbackForDB = 'db_main=' . URL::unparse([
@@ -398,7 +398,7 @@ $global->set(
     })()
 );
 
-$global->set('smtp', function () {
+$registry->set('smtp', function () {
     $mail = new PHPMailer(true);
 
     $mail->isSMTP();
@@ -427,11 +427,11 @@ $global->set('smtp', function () {
     return $mail;
 });
 
-$global->set('promiseAdapter', function () {
+$registry->set('promiseAdapter', function () {
     return new Swoole();
 });
 
-$global->set('db', function () {
+$registry->set('db', function () {
     // This is usually for our workers or CLI commands scope
     $dbHost = System::getEnv('_APP_DB_HOST', '');
     $dbPort = System::getEnv('_APP_DB_PORT', '');
@@ -885,8 +885,8 @@ $authentication
 
 $registry
     ->setName('registry')
-    ->setCallback(function () use (&$global): Registry {
-        return $global;
+    ->setCallback(function () use (&$registry): Registry {
+        return $registry;
     });
 
 $pools
@@ -1229,8 +1229,8 @@ $getProjectDB
 
 $promiseAdapter
     ->setName('promiseAdapter')
-    ->setCallback(function () use ($global) {
-        return $global->get('promiseAdapter');
+    ->setCallback(function () use ($registry) {
+        return $registry->get('promiseAdapter');
     });
 
 $schemaVariable
