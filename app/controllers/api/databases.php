@@ -389,10 +389,14 @@ function updateAttribute(
 
     if (!empty($newKey) && $key !== $newKey) {
         // Delete attribute and recreate since we can't modify IDs
-        $dbForProject->deleteDocument('attributes', $attribute->getId());
-        $attribute->setAttribute('$id', ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $newKey));
-        $attribute->setAttribute('key', $newKey);
-        $attribute = $dbForProject->createDocument('attributes', $attribute);
+        $attribute
+            ->setAttribute('$id', ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $newKey))
+            ->setAttribute('key', $newKey);
+
+        $attribute = $dbForProject->withTransaction(function () use ($dbForProject, $attribute) {
+            $dbForProject->deleteDocument('attributes', $attribute->getId());
+            return $dbForProject->createDocument('attributes', $attribute);
+        });
     } else {
         $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
     }
