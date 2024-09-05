@@ -307,7 +307,7 @@ $registry->set(
         ];
 
         $pools = [];
-        $poolSize = (int)System::getEnv('_APP_POOL_CLIENTS', 64);
+        $poolSize = (int)System::getEnv('_APP_POOL_SIZE', 64);
 
         foreach ($connections as $key => $connection) {
             $dsns = $connection['dsns'] ?? '';

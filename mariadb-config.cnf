@@ -1,2 +1,0 @@
-[mysqld]
-max_connections=1024

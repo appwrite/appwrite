@@ -731,9 +731,8 @@ Http::error()
             Console::error('[Error] File: ' . $file);
             Console::error('[Error] Line: ' . $line);
         }
-
         switch ($class) {
-            case 'Utopia\Servers\Exception':
+            case 'Utopia\Http\Exception':
                 $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
                 switch ($code) {
                     case 400:
@@ -958,7 +957,7 @@ Http::get('/humans.txt')
     ->inject('geodb')
     ->inject('route')
     ->inject('authorization')
-    ->action(function (Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, ?Route $route, Authorization $authorization) {
+    ->action(function (Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Route $route, Authorization $authorization) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -966,9 +965,6 @@ Http::get('/humans.txt')
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
-            if (is_null($route)) {
-                $route = new Route($request->getMethod(), $request->getURI());
-            }
             router($dbForConsole, $getProjectDB, $request, $response, $route, $queueForEvents, $queueForUsage, $geodb, $authorization);
         }
     });
