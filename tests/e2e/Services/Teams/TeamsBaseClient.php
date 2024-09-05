@@ -161,7 +161,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['userEmail']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
-        $this->assertCount(2, $response['body']['roles']);
+        $this->assertCount(1, $response['body']['roles']);
         $this->assertEquals(false, (new DatetimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
 
@@ -214,7 +214,7 @@ trait TeamsBaseClient
         $this->assertEquals($email, $response['body']['userEmail']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
-        $this->assertCount(2, $response['body']['roles']);
+        $this->assertCount(1, $response['body']['roles']);
         $this->assertEquals(false, (new DatetimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
 
@@ -281,7 +281,7 @@ trait TeamsBaseClient
         $this->assertEquals($secondEmail, $response['body']['userEmail']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
-        $this->assertCount(2, $response['body']['roles']);
+        $this->assertCount(1, $response['body']['roles']);
         $this->assertEquals(false, (new DateTimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
 
@@ -413,7 +413,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['teamId']);
-        $this->assertCount(2, $response['body']['roles']);
+        $this->assertCount(1, $response['body']['roles']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['joined']));
         $this->assertEquals(true, $response['body']['confirm']);
         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
