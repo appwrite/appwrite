@@ -42,7 +42,7 @@ use Utopia\WebSocket\Server;
 global $global, $container;
 
 
-require_once __DIR__ . '/init2.php';
+require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 

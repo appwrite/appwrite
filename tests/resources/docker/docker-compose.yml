@@ -324,7 +324,7 @@ services:
       - MYSQL_USER=user
       - MYSQL_PASSWORD=password
       - MARIADB_AUTO_UPGRADE=1
-    command: 'mysqld --innodb-flush-method=fsync'
+    command: 'mysqld --innodb-flush-method=fsync --max_connections=5000'
 
   maildev:
     image: djfarrelly/maildev

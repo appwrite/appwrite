@@ -11,7 +11,7 @@ use Utopia\Queue;
 use Utopia\Queue\Client;
 use Utopia\System\System;
 
-require_once __DIR__ . '/../../../app/init2.php';
+require_once __DIR__ . '/../../../app/init.php';
 
 class EventTest extends TestCase
 {

@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/init2.php';
+require_once __DIR__ . '/init.php';
 
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
