@@ -504,7 +504,7 @@ $console = new Dependency();
 $project = new Dependency();
 $clients = new Dependency();
 $servers = new Dependency();
-$registry = new Dependency();
+$register = new Dependency();
 $connections = new Dependency();
 $localeCodes = new Dependency();
 $getProjectDB = new Dependency();
@@ -883,7 +883,7 @@ $authentication
         return new Authentication();
     });
 
-$registry
+$register
     ->setName('registry')
     ->setCallback(function () use (&$registry): Registry {
         return $registry;
@@ -1350,7 +1350,7 @@ $container->set($console);
 $container->set($project);
 $container->set($clients);
 $container->set($servers);
-$container->set($registry);
+$container->set($register);
 $container->set($connections);
 $container->set($localeCodes);
 $container->set($dbForProject);
