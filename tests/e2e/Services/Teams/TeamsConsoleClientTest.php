@@ -47,7 +47,7 @@ class TeamsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'email' => $email,
             'name' => $name,
-            'roles' => ['admin', 'developer'],
+            'roles' => ['developer'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
