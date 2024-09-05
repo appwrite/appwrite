@@ -1895,6 +1895,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->param('size', null, new Integer(), 'Maximum size of the string attribute.', true)
     ->param('newKey', null, new Key(), 'New attribute key.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?int $size, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $attribute = updateAttribute(
