@@ -55,7 +55,7 @@ Http::init()
             return;
         }
 
-        if ($route->getLabel('sdk.namespace','') === 'graphql') { // Skip for graphQL recursive call
+        if ($route->getLabel('sdk.namespace', '') === 'graphql') { // Skip for graphQL recursive call
             return;
         }
 
