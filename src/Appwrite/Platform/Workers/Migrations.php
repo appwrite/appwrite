@@ -340,11 +340,12 @@ class Migrations extends Action
                     $errorMessages[] = "Error occurred while fetching '{$error->getResourceName()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
                 }
                 foreach ($destinationErrors as $error) {
-                    var_dump($error->getPrevious()->getMessage());
-                    var_dump($error->getPrevious()->getLine());
-                    var_dump($error->getPrevious()->getFile());
-                    var_dump($error->getLine());
-                    var_dump($error->getFile());
+                    Console::error($error->getPrevious()->getMessage());
+                    Console::error($error->getPrevious()->getTraceAsString());
+                    Console::error("Message: " . $error->getMessage());
+                    Console::error("File: " . $error->getFile());
+                    Console::error("Line: " . $error->getLine());
+
                     /** @var MigrationException $error */
                     $errorMessages[] = "Error occurred while pushing '{$error->getResourceName()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
                 }
@@ -360,8 +361,6 @@ class Migrations extends Action
             $migration->setAttribute('stage', 'finished');
             $log->addBreadcrumb(new Breadcrumb('debug', 'migration', "Migration hit stage 'finished' and succeeded", \microtime(true)));
         } catch (\Throwable $th) {
-
-            Console::error($th->getMessage());
             Console::error($th->getMessage());
             Console::error($th->getTraceAsString());
 
