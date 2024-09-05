@@ -33,6 +33,7 @@ use Utopia\Http\Route;
 use Utopia\Http\Validator\Hostname;
 use Utopia\Http\Validator\Text;
 use Utopia\Locale\Locale;
+use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
@@ -95,8 +96,8 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
     $type = $rule->getAttribute('resourceType');
 
     if ($type === 'function') {
-        $utopia->getRoute()?->label('sdk.namespace', 'functions');
-        $utopia->getRoute()?->label('sdk.method', 'createExecution');
+        $route->label('sdk.namespace', 'functions');
+        $route->label('sdk.method', 'createExecution');
 
         if (System::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https') {
