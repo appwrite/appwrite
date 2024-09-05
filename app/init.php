@@ -646,13 +646,13 @@ $user
                 $user = $dbForProject->getDocument('users', $jwtUserId);
             }
 
-            $jwtSessionId = $payload['sessionId'] ?? '';
-            if (!empty($jwtSessionId)) {
-                if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-                    $user = new Document([]);
-                }
+        $jwtSessionId = $payload['sessionId'] ?? '';
+        if (!empty($jwtSessionId)) {
+            if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+                $user = new Document([]);
             }
         }
+    }
 
         // Adds logs to database queries
         $dbForProject->setMetadata('user', $user->getId());

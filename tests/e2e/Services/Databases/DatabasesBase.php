@@ -1593,6 +1593,7 @@ trait DatabasesBase
             $this->assertEquals($response['body']['$permissions'], $document['$permissions']);
             $this->assertEquals($response['body']['birthDay'], $document['birthDay']);
             $this->assertFalse(array_key_exists('$internalId', $response['body']));
+            $this->assertFalse(array_key_exists('$tenant', $response['body']));
         }
     }
 

@@ -95,6 +95,9 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
     $type = $rule->getAttribute('resourceType');
 
     if ($type === 'function') {
+        $utopia->getRoute()?->label('sdk.namespace', 'functions');
+        $utopia->getRoute()?->label('sdk.method', 'createExecution');
+
         if (System::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https') {
                 if ($request->getMethod() !== Request::METHOD_GET) {
