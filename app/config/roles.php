@@ -17,7 +17,6 @@ $member = [
     'files.read',
     'files.write',
     'projects.read',
-    'projects.write',
     'locale.read',
     'avatars.read',
     'execution.read',
