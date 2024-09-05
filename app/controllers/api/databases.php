@@ -26,6 +26,7 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -234,7 +235,8 @@ function updateAttribute(
     int|float $min = null,
     int|float $max = null,
     array $elements = null,
-    array $options = []
+    array $options = [],
+    int $size = null
 ): Document {
     $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -279,6 +281,10 @@ function updateAttribute(
     $attribute
         ->setAttribute('default', $default)
         ->setAttribute('required', $required);
+
+    if (!empty($size)) {
+        $attribute->setAttribute('size', $size);
+    }
 
     $formatOptions = $attribute->getAttribute('formatOptions');
 
@@ -358,13 +364,18 @@ function updateAttribute(
             $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
         }
     } else {
-        $dbForProject->updateAttribute(
-            collection: $collectionId,
-            id: $key,
-            required: $required,
-            default: $default,
-            formatOptions: $options ?? null
-        );
+        try {
+            $dbForProject->updateAttribute(
+                collection: $collectionId,
+                id: $key,
+                required: $required,
+                default: $default,
+                formatOptions: $options ?? null,
+                size: $size ?? null,
+            );
+        } catch (TruncateException $e) {
+            throw new Exception(Exception::ATTRIBUTE_INVALID_RESIZE);
+        }
     }
 
     $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
@@ -1152,6 +1163,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             'filters' => $filters,
         ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
 
+
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
@@ -1859,10 +1871,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('size', null, new Integer(), 'Maximum size of the string attribute.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?int $size, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $attribute = updateAttribute(
             databaseId: $databaseId,
@@ -1872,7 +1885,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
             queueForEvents: $queueForEvents,
             type: Database::VAR_STRING,
             default: $default,
-            required: $required
+            required: $required,
+            size: $size
         );
 
         $response

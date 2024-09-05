@@ -392,7 +392,7 @@ App::post('/v1/account')
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                if($existingTarget) {
+                if ($existingTarget) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }

@@ -3245,6 +3245,189 @@ class DatabasesCustomServerTest extends Scope
     /**
      * @depends testAttributeUpdate
      */
+    public function testAttributeUpdateStringResize(array $data)
+    {
+        $key = 'string';
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+
+        $document = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]),
+            [
+                'documentId' => 'unique()',
+                'data' => [
+                    'string' => 'string'
+                ],
+                "permissions" => ["read(\"any\")"]
+            ]
+        );
+
+        // Test Resize Up
+        $attribute = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string/' . $key, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'size' => 2048,
+            'default' => '',
+            'required' => false
+        ]);
+
+        $this->assertEquals(200, $attribute['headers']['status-code']);
+        $this->assertEquals(2048, $attribute['body']['size']);
+
+        // Test create new document with new size
+        $newDoc = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]),
+            [
+                'documentId' => 'unique()',
+                'data' => [
+                    'string' => str_repeat('a', 2048)
+                ],
+                "permissions" => ["read(\"any\")"]
+            ]
+        );
+
+        $this->assertEquals(201, $newDoc['headers']['status-code']);
+        $this->assertEquals(2048, strlen($newDoc['body']['string']));
+
+        // Test update document with new size
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => str_repeat('a', 2048)
+            ]
+        ]);
+
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals(2048, strlen($document['body']['string']));
+
+        // Test Exception on resize down with data that is too large
+        $attribute = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string/' . $key, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'size' => 10,
+            'default' => '',
+            'required' => false
+        ]);
+
+        $this->assertEquals(400, $attribute['headers']['status-code']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_INVALID_RESIZE, $attribute['body']['type']);
+
+        // original documents to original size, remove new document
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => 'string'
+            ]
+        ]);
+
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals('string', $document['body']['string']);
+
+        $deleteDoc = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $newDoc['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(204, $deleteDoc['headers']['status-code']);
+
+
+        // Test Resize Down
+        $attribute = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string/' . $key, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'size' => 10,
+            'default' => '',
+            'required' => false
+        ]);
+
+        $this->assertEquals(200, $attribute['headers']['status-code']);
+        $this->assertEquals(10, $attribute['body']['size']);
+
+        // Test create new document with new size
+        $newDoc = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]),
+            [
+                'documentId' => 'unique()',
+                'data' => [
+                    'string' => str_repeat('a', 10)
+                ],
+                "permissions" => ["read(\"any\")"]
+            ]
+        );
+
+        $this->assertEquals(201, $newDoc['headers']['status-code']);
+        $this->assertEquals(10, strlen($newDoc['body']['string']));
+
+        // Test update document with new size
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'string' => str_repeat('a', 10)
+            ]
+        ]);
+
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals(10, strlen($document['body']['string']));
+
+        // Try create document with string that is too large
+        $newDoc = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]),
+            [
+                'documentId' => 'unique()',
+                'data' => [
+                    'string' => str_repeat('a', 11)
+                ],
+                "permissions" => ["read(\"any\")"]
+            ]
+        );
+
+        $this->assertEquals(400, $newDoc['headers']['status-code']);
+        $this->assertEquals(AppwriteException::DOCUMENT_INVALID_STRUCTURE, $newDoc['body']['type']);
+    }
+
+    /**
+     * @depends testAttributeUpdate
+     */
     public function testAttributeUpdateNotFound(array $data)
     {
         $databaseId = $data['databaseId'];

@@ -669,7 +669,7 @@ class Messaging extends Action
 
     private function getLocalDevice($project): Local
     {
-        if($this->localDevice === null) {
+        if ($this->localDevice === null) {
             $this->localDevice = new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
         }
 
