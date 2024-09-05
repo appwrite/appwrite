@@ -546,7 +546,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => '',
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return ['projectId' => $projectId];
     }
