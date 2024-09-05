@@ -780,6 +780,31 @@ Http::error()
         } else {
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
+        if ($error->getCode() >= 400 && $error->getCode() < 500) {
+            // Register error logger
+            $providerName = System::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
+            $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
+
+            try {
+                $loggingProvider = new DSN($providerConfig ?? '');
+                $providerName = $loggingProvider->getScheme();
+
+                if (!empty($providerName) && $providerName === 'sentry') {
+                    $key = $loggingProvider->getPassword();
+                    $projectId = $loggingProvider->getUser() ?? '';
+                    $host = 'https://' . $loggingProvider->getHost();
+
+                    $adapter = new Sentry($projectId, $key, $host);
+                    $logger = new Logger($adapter);
+                    $logger->setSample(0.04);
+                    $publish = true;
+                } else {
+                    throw new \Exception('Invalid experimental logging provider');
+                }
+            } catch (\Throwable $th) {
+                Console::warning('Failed to initialize logging provider: ' . $th->getMessage());
+            }
+        }
 
         if ($publish && $project->getId() !== 'console') {
             if (!Auth::isPrivilegedUser($authorization->getRoles())) {
