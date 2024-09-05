@@ -3,6 +3,7 @@
 namespace Tests\Unit\Utopia;
 
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Models;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
@@ -18,9 +19,9 @@ class ResponseTest extends TestCase
     public function setUp(): void
     {
         $this->response = new Response(new UtopiaSwooleResponse(new SwooleResponse()));
-        Response\Models::setModel(new Single());
-        Response\Models::setModel(new Lists());
-        Response\Models::setModel(new Nested());
+        Models::setModel(new Single());
+        Models::setModel(new Lists());
+        Models::setModel(new Nested());
     }
 
     public function testFilters(): void

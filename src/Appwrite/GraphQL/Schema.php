@@ -3,7 +3,7 @@
 namespace Appwrite\GraphQL;
 
 use Appwrite\GraphQL\Types\Mapper;
-use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Models;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema as GQLSchema;
@@ -98,7 +98,7 @@ class Schema
      */
     protected function api(Http $http, Request $request, UtopiaHttpResponse $response, Container $container, callable $complexity): array
     {
-        Mapper::init(Response\Models::getModels());
+        Mapper::init(Models::getModels());
 
         $mapper = new Mapper();
 

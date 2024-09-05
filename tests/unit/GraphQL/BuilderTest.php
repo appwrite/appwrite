@@ -4,6 +4,7 @@ namespace Tests\Unit\GraphQL;
 
 use Appwrite\GraphQL\Types\Mapper;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Models;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\Http\Adapter\Swoole\Response as UtopiaSwooleResponse;
@@ -14,9 +15,9 @@ class BuilderTest extends TestCase
 
     public function setUp(): void
     {
-        Response\Models::init();
+        Models::init();
         $this->response = new Response(new UtopiaSwooleResponse(new SwooleResponse()));
-        Mapper::init(Response\Models::getModels());
+        Mapper::init(Models::getModels());
     }
 
     /**
@@ -24,7 +25,7 @@ class BuilderTest extends TestCase
      */
     public function testCreateTypeMapping()
     {
-        $model = Response\Models::getModel(Response::MODEL_COLLECTION);
+        $model = Models::getModel(Response::MODEL_COLLECTION);
         $type = Mapper::model(\ucfirst($model->getType()));
         $this->assertEquals('Collection', $type->name);
     }

@@ -4,6 +4,7 @@ namespace Appwrite\Utopia;
 
 use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
+use Appwrite\Utopia\Response\Models;
 use Exception;
 use JsonException;
 // Keep last
@@ -306,7 +307,7 @@ class Response extends HttpResponse
     public function output(Document $document, string $model): array
     {
         $data       = clone $document;
-        $model      = Response\Models::getModel($model);
+        $model      = Models::getModel($model);
         $output     = [];
 
         $data = $model->filter($data);
@@ -336,7 +337,7 @@ class Response extends HttpResponse
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
                                 $condition = false;
-                                foreach (Response\Models::getModel($type)->conditions as $attribute => $val) {
+                                foreach (Models::getModel($type)->conditions as $attribute => $val) {
                                     $condition = $item->getAttribute($attribute) === $val;
                                     if (!$condition) {
                                         break;
@@ -351,7 +352,7 @@ class Response extends HttpResponse
                             $ruleType = $rule['type'];
                         }
 
-                        if (!array_key_exists($ruleType, Response\Models::getModels())) {
+                        if (!array_key_exists($ruleType, Models::getModels())) {
                             throw new Exception('Missing model for rule: ' . $ruleType);
                         }
 

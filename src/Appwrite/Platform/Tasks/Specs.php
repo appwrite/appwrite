@@ -6,6 +6,7 @@ use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Models;
 use Exception;
 use Swoole\Http\Request as SwooleHttpRequest;
 use Swoole\Http\Response as SwooleHttpResponse;
@@ -256,7 +257,7 @@ class Specs extends Action
                 ];
             }
 
-            $models = Response\Models::getModels();
+            $models = Models::getModels();
 
             foreach ($models as $key => $value) {
                 if ($platform !== APP_PLATFORM_CONSOLE && !$value->isPublic()) {
