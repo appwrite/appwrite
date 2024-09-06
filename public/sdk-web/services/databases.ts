@@ -36,9 +36,7 @@ export class Databases extends Service {
             let path = '/databases/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
             let payload: Payload = {};
 
-            if (typeof queries !== 'undefined') {
-                payload['queries'] = queries;
-            }
+            Service.populatePayload(payload, { queries });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('get', uri, {
@@ -82,17 +80,7 @@ export class Databases extends Service {
             let path = '/databases/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
             let payload: Payload = {};
 
-            if (typeof documentId !== 'undefined') {
-                payload['documentId'] = documentId;
-            }
-
-            if (typeof data !== 'undefined') {
-                payload['data'] = data;
-            }
-
-            if (typeof permissions !== 'undefined') {
-                payload['permissions'] = permissions;
-            }
+            Service.populatePayload(payload, { documentId, data, permissions });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('post', uri, {
@@ -164,13 +152,7 @@ export class Databases extends Service {
             let path = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
             let payload: Payload = {};
 
-            if (typeof data !== 'undefined') {
-                payload['data'] = data;
-            }
-
-            if (typeof permissions !== 'undefined') {
-                payload['permissions'] = permissions;
-            }
+            Service.populatePayload(payload, { data, permissions });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('patch', uri, {

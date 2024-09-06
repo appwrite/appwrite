@@ -61,21 +61,7 @@ export class Account extends Service {
             let path = '/account';
             let payload: Payload = {};
 
-            if (typeof userId !== 'undefined') {
-                payload['userId'] = userId;
-            }
-
-            if (typeof email !== 'undefined') {
-                payload['email'] = email;
-            }
-
-            if (typeof password !== 'undefined') {
-                payload['password'] = password;
-            }
-
-            if (typeof name !== 'undefined') {
-                payload['name'] = name;
-            }
+            Service.populatePayload(payload, { userId, email, password, name });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('post', uri, {
@@ -112,13 +98,7 @@ export class Account extends Service {
             let path = '/account/email';
             let payload: Payload = {};
 
-            if (typeof email !== 'undefined') {
-                payload['email'] = email;
-            }
-
-            if (typeof password !== 'undefined') {
-                payload['password'] = password;
-            }
+            Service.populatePayload(payload, { email, password });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('patch', uri, {
@@ -162,9 +142,7 @@ export class Account extends Service {
             let path = '/account/logs';
             let payload: Payload = {};
 
-            if (typeof queries !== 'undefined') {
-                payload['queries'] = queries;
-            }
+            Service.populatePayload(payload, { queries });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('get', uri, {
@@ -189,9 +167,7 @@ export class Account extends Service {
             let path = '/account/name';
             let payload: Payload = {};
 
-            if (typeof name !== 'undefined') {
-                payload['name'] = name;
-            }
+            Service.populatePayload(payload, { name });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('patch', uri, {
@@ -219,13 +195,7 @@ export class Account extends Service {
             let path = '/account/password';
             let payload: Payload = {};
 
-            if (typeof password !== 'undefined') {
-                payload['password'] = password;
-            }
-
-            if (typeof oldPassword !== 'undefined') {
-                payload['oldPassword'] = oldPassword;
-            }
+            Service.populatePayload(payload, { password, oldPassword });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('patch', uri, {
@@ -259,13 +229,7 @@ export class Account extends Service {
             let path = '/account/phone';
             let payload: Payload = {};
 
-            if (typeof phone !== 'undefined') {
-                payload['phone'] = phone;
-            }
-
-            if (typeof password !== 'undefined') {
-                payload['password'] = password;
-            }
+            Service.populatePayload(payload, { phone, password });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('patch', uri, {
@@ -310,9 +274,7 @@ export class Account extends Service {
             let path = '/account/prefs';
             let payload: Payload = {};
 
-            if (typeof prefs !== 'undefined') {
-                payload['prefs'] = prefs;
-            }
+            Service.populatePayload(payload, { prefs });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('patch', uri, {
@@ -349,13 +311,7 @@ export class Account extends Service {
             let path = '/account/recovery';
             let payload: Payload = {};
 
-            if (typeof email !== 'undefined') {
-                payload['email'] = email;
-            }
-
-            if (typeof url !== 'undefined') {
-                payload['url'] = url;
-            }
+            Service.populatePayload(payload, { email, url });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('post', uri, {
@@ -403,21 +359,9 @@ export class Account extends Service {
             let path = '/account/recovery';
             let payload: Payload = {};
 
-            if (typeof userId !== 'undefined') {
-                payload['userId'] = userId;
-            }
+            Service.populatePayload(payload, { userId, secret });
 
-            if (typeof secret !== 'undefined') {
-                payload['secret'] = secret;
-            }
-
-            if (typeof password !== 'undefined') {
-                payload['password'] = password;
-            }
-
-            if (typeof passwordAgain !== 'undefined') {
-                payload['passwordAgain'] = passwordAgain;
-            }
+            Service.populatePayload(payload, { password, passwordAgain });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('put', uri, {
@@ -509,13 +453,7 @@ export class Account extends Service {
             let path = '/account/sessions/email';
             let payload: Payload = {};
 
-            if (typeof email !== 'undefined') {
-                payload['email'] = email;
-            }
-
-            if (typeof password !== 'undefined') {
-                payload['password'] = password;
-            }
+            Service.populatePayload(payload, { email, password });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('post', uri, {
@@ -556,17 +494,7 @@ export class Account extends Service {
             let path = '/account/sessions/magic-url';
             let payload: Payload = {};
 
-            if (typeof userId !== 'undefined') {
-                payload['userId'] = userId;
-            }
-
-            if (typeof email !== 'undefined') {
-                payload['email'] = email;
-            }
-
-            if (typeof url !== 'undefined') {
-                payload['url'] = url;
-            }
+            Service.populatePayload(payload, { userId, email, url });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('post', uri, {
@@ -606,13 +534,7 @@ export class Account extends Service {
             let path = '/account/sessions/magic-url';
             let payload: Payload = {};
 
-            if (typeof userId !== 'undefined') {
-                payload['userId'] = userId;
-            }
-
-            if (typeof secret !== 'undefined') {
-                payload['secret'] = secret;
-            }
+            Service.populatePayload(payload, { userId, secret });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('put', uri, {
@@ -651,17 +573,7 @@ export class Account extends Service {
             let path = '/account/sessions/oauth2/{provider}'.replace('{provider}', provider);
             let payload: Payload = {};
 
-            if (typeof success !== 'undefined') {
-                payload['success'] = success;
-            }
-
-            if (typeof failure !== 'undefined') {
-                payload['failure'] = failure;
-            }
-
-            if (typeof scopes !== 'undefined') {
-                payload['scopes'] = scopes;
-            }
+            Service.populatePayload(payload, { success, failure, scopes });
 
             const uri = new URL(this.client.config.endpoint + path);
             payload['project'] = this.client.config.project;
@@ -704,13 +616,7 @@ export class Account extends Service {
             let path = '/account/sessions/phone';
             let payload: Payload = {};
 
-            if (typeof userId !== 'undefined') {
-                payload['userId'] = userId;
-            }
-
-            if (typeof phone !== 'undefined') {
-                payload['phone'] = phone;
-            }
+            Service.populatePayload(payload, { userId, phone });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('post', uri, {
@@ -744,13 +650,7 @@ export class Account extends Service {
             let path = '/account/sessions/phone';
             let payload: Payload = {};
 
-            if (typeof userId !== 'undefined') {
-                payload['userId'] = userId;
-            }
-
-            if (typeof secret !== 'undefined') {
-                payload['secret'] = secret;
-            }
+            Service.populatePayload(payload, { userId, secret });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('put', uri, {
@@ -884,9 +784,7 @@ export class Account extends Service {
             let path = '/account/verification';
             let payload: Payload = {};
 
-            if (typeof url !== 'undefined') {
-                payload['url'] = url;
-            }
+            Service.populatePayload(payload, { url });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('post', uri, {
@@ -919,13 +817,7 @@ export class Account extends Service {
             let path = '/account/verification';
             let payload: Payload = {};
 
-            if (typeof userId !== 'undefined') {
-                payload['userId'] = userId;
-            }
-
-            if (typeof secret !== 'undefined') {
-                payload['secret'] = secret;
-            }
+            Service.populatePayload(payload, { userId, secret });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('put', uri, {
@@ -981,13 +873,7 @@ export class Account extends Service {
             let path = '/account/verification/phone';
             let payload: Payload = {};
 
-            if (typeof userId !== 'undefined') {
-                payload['userId'] = userId;
-            }
-
-            if (typeof secret !== 'undefined') {
-                payload['secret'] = secret;
-            }
+            Service.populatePayload(payload, { userId, secret });
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('put', uri, {

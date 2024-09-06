@@ -42,7 +42,7 @@ export class Service {
      * const payload: Payload = {};
      * const values = { key1: 'value1', key2: 'value2' };
      * 
-     * Service.populatePayload(payload, values);
+     * Service.Service.populatePayload(payload, values);
      * console.log(payload); // { key1: 'value1', key2: 'value2' }
      * 
      * @throws {TypeError} - If the payload is not an object
