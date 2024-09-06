@@ -507,6 +507,7 @@ $servers = new Dependency();
 $register = new Dependency();
 $connections = new Dependency();
 $localeCodes = new Dependency();
+$getConsoleDB = new Dependency();
 $getProjectDB = new Dependency();
 $dbForProject = new Dependency();
 $dbForConsole = new Dependency();
@@ -820,32 +821,11 @@ $dbForProject
 
 $dbForConsole
     ->setName('dbForConsole')
-    ->inject('pools')
-    ->inject('cache')
-    ->inject('authorization')
+    ->inject('getConsoleDB')
     ->inject('connections')
-    ->setCallback(function (array $pools, Cache $cache, Authorization $authorization, Connections $connections): Database {
-        $pool = $pools['pools-console-console']['pool'];
-        $dsn = $pools['pools-console-console']['dsn'];
-        $connection = $pool->get();
+    ->setCallback(function (callable $getConsoleDB, Connections $connections): Database {
+        [$connection,$pool, $database] = $getConsoleDB();
         $connections->add($connection, $pool);
-
-        $adapter = match ($dsn->getScheme()) {
-            'mariadb' => new MariaDB($connection),
-            'mysql' => new MySQL($connection),
-            default => null
-        };
-
-        $adapter->setDatabase($dsn->getPath());
-
-        $database = new Database($adapter, $cache);
-        $database->setAuthorization($authorization);
-
-        $database
-            ->setNamespace('_console')
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', 'console')
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
         return $database;
     });
@@ -1153,6 +1133,38 @@ $requestTimestamp
         }
         return $requestTimestamp;
     });
+$getConsoleDB
+    ->setName('getConsoleDB')
+    ->inject('pools')
+    ->inject('cache')
+    ->inject('authorization')
+    ->inject('connections')
+    ->setCallback(function (array $pools, Cache $cache, Authorization $authorization) {
+        return function () use ($pools, $cache, $authorization): array {
+            $pool = $pools['pools-console-console']['pool'];
+            $dsn = $pools['pools-console-console']['dsn'];
+            $connection = $pool->get();
+
+            $adapter = match ($dsn->getScheme()) {
+                'mariadb' => new MariaDB($connection),
+                'mysql' => new MySQL($connection),
+                default => null
+            };
+
+            $adapter->setDatabase($dsn->getPath());
+
+            $database = new Database($adapter, $cache);
+            $database->setAuthorization($authorization);
+
+            $database
+                ->setNamespace('_console')
+                ->setMetadata('host', \gethostname())
+                ->setMetadata('project', 'console')
+                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+
+            return [$connection, $pool, $database];
+        };
+    });
 
 $getProjectDB
     ->setName('getProjectDB')
@@ -1355,6 +1367,7 @@ $container->set($connections);
 $container->set($localeCodes);
 $container->set($dbForProject);
 $container->set($dbForConsole);
+$container->set($getConsoleDB);
 $container->set($getProjectDB);
 $container->set($queueForUsage);
 $container->set($queueForMails);
