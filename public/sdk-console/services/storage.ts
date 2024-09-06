@@ -24,9 +24,7 @@ export class Storage extends Service {
          * @returns {Promise}
          */
         async listFiles(bucketId: string, queries?: string[], search?: string): Promise<Models.FileList> {
-            if (typeof bucketId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "bucketId"');
-            }
+            Service.validateRequiredParameters({ bucketId });
 
             let path = '/storage/buckets/{bucketId}/files'.replace('{bucketId}', bucketId);
             let payload: Payload = {};
@@ -75,17 +73,7 @@ export class Storage extends Service {
          * @returns {Promise}
          */
         async createFile(bucketId: string, fileId: string, file: File, permissions?: string[], onProgress = (progress: UploadProgress) => {}): Promise<Models.File> {
-            if (typeof bucketId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "bucketId"');
-            }
-
-            if (typeof fileId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "fileId"');
-            }
-
-            if (typeof file === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "file"');
-            }
+            Service.validateRequiredParameters({ bucketId, fileId, file });
 
             let path = '/storage/buckets/{bucketId}/files'.replace('{bucketId}', bucketId);
             let payload: Payload = {};
@@ -178,13 +166,7 @@ export class Storage extends Service {
          * @returns {Promise}
          */
         async getFile(bucketId: string, fileId: string): Promise<Models.File> {
-            if (typeof bucketId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "bucketId"');
-            }
-
-            if (typeof fileId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "fileId"');
-            }
+            Service.validateRequiredParameters({ bucketId, fileId });
 
             let path = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
             let payload: Payload = {};
@@ -208,13 +190,7 @@ export class Storage extends Service {
          * @returns {Promise}
          */
         async updateFile(bucketId: string, fileId: string, permissions?: string[]): Promise<Models.File> {
-            if (typeof bucketId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "bucketId"');
-            }
-
-            if (typeof fileId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "fileId"');
-            }
+            Service.validateRequiredParameters({ bucketId, fileId });
 
             let path = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
             let payload: Payload = {};
@@ -241,13 +217,7 @@ export class Storage extends Service {
          * @returns {Promise}
          */
         async deleteFile(bucketId: string, fileId: string): Promise<{}> {
-            if (typeof bucketId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "bucketId"');
-            }
-
-            if (typeof fileId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "fileId"');
-            }
+            Service.validateRequiredParameters({ bucketId, fileId });
 
             let path = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
             let payload: Payload = {};
@@ -271,13 +241,7 @@ export class Storage extends Service {
          * @returns {URL}
          */
         getFileDownload(bucketId: string, fileId: string): URL {
-            if (typeof bucketId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "bucketId"');
-            }
-
-            if (typeof fileId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "fileId"');
-            }
+            Service.validateRequiredParameters({ bucketId, fileId });
 
             let path = '/storage/buckets/{bucketId}/files/{fileId}/download'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
             let payload: Payload = {};
@@ -318,13 +282,7 @@ export class Storage extends Service {
          * @returns {URL}
          */
         getFilePreview(bucketId: string, fileId: string, width?: number, height?: number, gravity?: string, quality?: number, borderWidth?: number, borderColor?: string, borderRadius?: number, opacity?: number, rotation?: number, background?: string, output?: string): URL {
-            if (typeof bucketId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "bucketId"');
-            }
-
-            if (typeof fileId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "fileId"');
-            }
+            Service.validateRequiredParameters({ bucketId, fileId });
 
             let path = '/storage/buckets/{bucketId}/files/{fileId}/preview'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
             let payload: Payload = {};
@@ -396,13 +354,7 @@ export class Storage extends Service {
          * @returns {URL}
          */
         getFileView(bucketId: string, fileId: string): URL {
-            if (typeof bucketId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "bucketId"');
-            }
-
-            if (typeof fileId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "fileId"');
-            }
+            Service.validateRequiredParameters({ bucketId, fileId });
 
             let path = '/storage/buckets/{bucketId}/files/{fileId}/view'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
             let payload: Payload = {};

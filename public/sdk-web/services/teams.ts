@@ -56,14 +56,7 @@ export class Teams extends Service {
          * @returns {Promise}
          */
         async create(teamId: string, name: string, roles?: string[]): Promise<Models.Team> {
-            if (typeof teamId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "teamId"');
-            }
-
-            if (typeof name === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "name"');
-            }
-
+            Service.validateRequiredParameters({ teamId, name });
             let path = '/teams';
             let payload: Payload = {};
 
@@ -95,9 +88,7 @@ export class Teams extends Service {
          * @returns {Promise}
          */
         async get(teamId: string): Promise<Models.Team> {
-            if (typeof teamId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "teamId"');
-            }
+            Service.validateRequiredParameters({ teamId });
 
             let path = '/teams/{teamId}'.replace('{teamId}', teamId);
             let payload: Payload = {};
@@ -120,13 +111,7 @@ export class Teams extends Service {
          * @returns {Promise}
          */
         async update(teamId: string, name: string): Promise<Models.Team> {
-            if (typeof teamId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "teamId"');
-            }
-
-            if (typeof name === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "name"');
-            }
+            Service.validateRequiredParameters({ teamId, name });
 
             let path = '/teams/{teamId}'.replace('{teamId}', teamId);
             let payload: Payload = {};
@@ -152,9 +137,7 @@ export class Teams extends Service {
          * @returns {Promise}
          */
         async delete(teamId: string): Promise<{}> {
-            if (typeof teamId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "teamId"');
-            }
+            Service.validateRequiredParameters({ teamId });
 
             let path = '/teams/{teamId}'.replace('{teamId}', teamId);
             let payload: Payload = {};
@@ -178,9 +161,7 @@ export class Teams extends Service {
          * @returns {Promise}
          */
         async listMemberships(teamId: string, queries?: string[], search?: string): Promise<Models.MembershipList> {
-            if (typeof teamId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "teamId"');
-            }
+            Service.validateRequiredParameters({ teamId });
 
             let path = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
             let payload: Payload = {};
@@ -227,21 +208,7 @@ export class Teams extends Service {
          * @returns {Promise}
          */
         async createMembership(teamId: string, email: string, roles: string[], url: string, name?: string): Promise<Models.Membership> {
-            if (typeof teamId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "teamId"');
-            }
-
-            if (typeof email === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "email"');
-            }
-
-            if (typeof roles === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "roles"');
-            }
-
-            if (typeof url === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "url"');
-            }
+            Service.validateRequiredParameters({ teamId, email, roles, url });
 
             let path = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
             let payload: Payload = {};
@@ -280,13 +247,7 @@ export class Teams extends Service {
          * @returns {Promise}
          */
         async getMembership(teamId: string, membershipId: string): Promise<Models.MembershipList> {
-            if (typeof teamId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "teamId"');
-            }
-
-            if (typeof membershipId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "membershipId"');
-            }
+            Service.validateRequiredParameters({ teamId, membershipId });
 
             let path = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
             let payload: Payload = {};
@@ -311,17 +272,7 @@ export class Teams extends Service {
          * @returns {Promise}
          */
         async updateMembershipRoles(teamId: string, membershipId: string, roles: string[]): Promise<Models.Membership> {
-            if (typeof teamId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "teamId"');
-            }
-
-            if (typeof membershipId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "membershipId"');
-            }
-
-            if (typeof roles === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "roles"');
-            }
+            Service.validateRequiredParameters({ teamId, membershipId, roles });
 
             let path = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
             let payload: Payload = {};
@@ -349,13 +300,7 @@ export class Teams extends Service {
          * @returns {Promise}
          */
         async deleteMembership(teamId: string, membershipId: string): Promise<{}> {
-            if (typeof teamId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "teamId"');
-            }
-
-            if (typeof membershipId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "membershipId"');
-            }
+            Service.validateRequiredParameters({ teamId, membershipId });
 
             let path = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
             let payload: Payload = {};
@@ -385,21 +330,7 @@ export class Teams extends Service {
          * @returns {Promise}
          */
         async updateMembershipStatus(teamId: string, membershipId: string, userId: string, secret: string): Promise<Models.Membership> {
-            if (typeof teamId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "teamId"');
-            }
-
-            if (typeof membershipId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "membershipId"');
-            }
-
-            if (typeof userId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "userId"');
-            }
-
-            if (typeof secret === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "secret"');
-            }
+            Service.validateRequiredParameters({ teamId, membershipId, userId, secret });
 
             let path = '/teams/{teamId}/memberships/{membershipId}/status'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
             let payload: Payload = {};
