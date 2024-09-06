@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
 use Swoole\Coroutine as Co;
-use Utopia\Database\Database;
 use Utopia\Queue\Connection\Redis;
 
 class ScheduleExecutions extends ScheduleBase
@@ -22,8 +21,11 @@ class ScheduleExecutions extends ScheduleBase
         return 'execution';
     }
 
-    protected function enqueueResources(array $pools, Database $dbForConsole): void
+    protected function enqueueResources(array $pools, callable $getConsoleDB): void
     {
+        [$connection,$pool, $dbForConsole] = $getConsoleDB();
+        $this->connections->add($connection, $pool);
+
         $pool = $pools['pools-queue-queue']['pool'];
         $connection = $pool->get();
         $this->connections->add($connection, $pool);
@@ -50,7 +52,7 @@ class ScheduleExecutions extends ScheduleBase
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
 
 
-            \go(function () use ($queueForFunctions, $schedule, $delay) {
+            \go(function () use ($queueForFunctions, $schedule, $delay, $dbForConsole) {
                 Co::sleep($delay);
 
                 $queueForFunctions
@@ -65,12 +67,12 @@ class ScheduleExecutions extends ScheduleBase
                     ->setBody($schedule['data']['body'] ?? '')
                     ->setProject($schedule['project'])
                     ->trigger();
-            });
 
-            $dbForConsole->deleteDocument(
-                'schedules',
-                $schedule['$id'],
-            );
+                $dbForConsole->deleteDocument(
+                    'schedules',
+                    $schedule['$id'],
+                );
+            });
 
             unset($this->schedules[$schedule['resourceId']]);
         }

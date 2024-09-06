@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Event\Func;
 use Cron\CronExpression;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Queue\Connection\Redis;
 
@@ -26,7 +25,7 @@ class ScheduleFunctions extends ScheduleBase
         return 'function';
     }
 
-    protected function enqueueResources(array $pools, Database $dbForConsole): void
+    protected function enqueueResources(array $pools, callable $getConsoleDB): void
     {
         $timerStart = \microtime(true);
         $time = DateTime::now();

@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Messaging;
-use Utopia\Database\Database;
 use Utopia\Queue\Connection\Redis;
 
 class ScheduleMessages extends ScheduleBase
@@ -21,8 +20,11 @@ class ScheduleMessages extends ScheduleBase
         return 'message';
     }
 
-    protected function enqueueResources(array $pools, Database $dbForConsole): void
+    protected function enqueueResources(array $pools, callable $getConsoleDB): void
     {
+        [$connection,$pool, $dbForConsole] = $getConsoleDB();
+        $this->connections->add($connection, $pool);
+
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
                 continue;
@@ -57,8 +59,6 @@ class ScheduleMessages extends ScheduleBase
                 );
 
                 $this->connections->reclaim();
-                // $queue->reclaim(); // TODO: Do in try/catch/finally, or add to connectons resource
-
                 unset($this->schedules[$schedule['resourceId']]);
             });
         }
