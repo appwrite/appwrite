@@ -46,7 +46,10 @@ class ScheduleExecutions extends ScheduleBase
             }
 
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
-
+            $schedule['data'] = $dbForConsole->getDocument(
+                'schedules',
+                $schedule['$id'],
+            )->getAttribute('data');
 
             \go(function () use ($queueForFunctions, $schedule, $delay) {
                 Co::sleep($delay);
