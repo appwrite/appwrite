@@ -1920,7 +1920,7 @@ App::post('/v1/functions/:functionId/executions')
                     'path' => $path,
                     'method' => $method,
                     'body' => $body,
-                    'jwt' => $jwt,
+                    'userId' => $user->getId()
                 ];
 
                 $schedule = $dbForConsole->createDocument('schedules', new Document([

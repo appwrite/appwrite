@@ -1,6 +1,18 @@
 <?php
 
 return function ($context) {
+    $context->log('body-is-' . ($context->req->body ?? ''));
+    $context->log('custom-header-is-' . ($context->req->headers['x-custom-header'] ?? ''));
+    $context->log('method-is-' . \strtolower($context->req->method ?? ''));
+    $context->log('path-is-' . ($context->req->path ?? ''));
+    $context->log('user-is-' . $context->req->headers['x-appwrite-user-id'] ?? '');
+
+    if (empty($context->req->headers['x-appwrite-user-jwt'] ?? '')) {
+        $context->log('jwt-is-invalid');
+    } else {
+        $context->log('jwt-is-valid');
+    }
+
     $statusCode = $context->req->query['code'] ?? '200';
 
     return $context->res->json([

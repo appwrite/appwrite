@@ -228,16 +228,21 @@ class FunctionsCustomClientTest extends Scope
         ], $this->getHeaders()), [
             'async' => true,
             'scheduledAt' =>  $futureTime->format(\DateTime::ATOM),
-            'path' => '/custom',
-            'method' => 'GET'
+            'path' => '/custom-path',
+            'method' => 'PATCH',
+            'body' => 'custom-body',
+            'headers' => [
+                'x-custom-header' => 'custom-value'
+            ]
         ]);
 
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertEquals('scheduled', $execution['body']['status']);
+        $this->assertEquals('PATCH', $execution['body']['requestMethod']);
+        $this->assertEquals('/custom-path', $execution['body']['requestPath']);
+        $this->assertCount(0, $execution['body']['requestHeaders']);
 
         $executionId = $execution['body']['$id'];
-
-        sleep(60 + 60 + 15); // up to 1 minute round up, 1 minute schedule postpone, 15s cold start safety
 
         $start = \microtime(true);
         while (true) {
@@ -251,7 +256,8 @@ class FunctionsCustomClientTest extends Scope
                 break;
             }
 
-            if (\microtime(true) - $start > 10) {
+            $timeout = 60 + 60 + 15; // up to 1 minute round up, 1 minute schedule postpone, 15s cold start safety
+            if (\microtime(true) - $start > $timeout) {
                 $this->fail('Scheduled execution did not complete with status ' . $execution['body']['status'] . ': ' . \json_encode($execution));
             }
 
@@ -261,8 +267,14 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(200, $execution['headers']['status-code']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertEquals('/custom', $execution['body']['requestPath']);
-        $this->assertEquals('GET', $execution['body']['requestMethod']);
+        $this->assertEquals('/custom-path', $execution['body']['requestPath']);
+        $this->assertEquals('PATCH', $execution['body']['requestMethod']);
+        $this->assertStringContainsString('body-is-custom-body', $execution['body']['logs']);
+        $this->assertStringContainsString('custom-header-is-custom-value', $execution['body']['logs']);
+        $this->assertStringContainsString('method-is-patch', $execution['body']['logs']);
+        $this->assertStringContainsString('path-is-/custom-path', $execution['body']['logs']);
+        $this->assertStringContainsString('user-is-' . $this->getUser()['$id'], $execution['body']['logs']);
+        $this->assertStringContainsString('jwt-is-valid', $execution['body']['logs']);
         $this->assertGreaterThan(0, $execution['body']['duration']);
 
         /* Test for FAILURE */
