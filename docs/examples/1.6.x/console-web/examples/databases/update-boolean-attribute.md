@@ -11,7 +11,8 @@ const result = await databases.updateBooleanAttribute(
     '<COLLECTION_ID>', // collectionId
     '', // key
     false, // required
-    false // default
+    false, // default
+    '' // newKey (optional)
 );
 
 console.log(result);

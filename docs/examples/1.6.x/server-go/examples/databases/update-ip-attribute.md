@@ -20,6 +20,7 @@ func main() {
         "",
         false,
         "",
+        databases.WithUpdateIpAttributeNewKey(""),
     )
 
     if error != nil {

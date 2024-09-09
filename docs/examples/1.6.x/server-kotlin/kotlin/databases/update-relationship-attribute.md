@@ -13,5 +13,6 @@ val response = databases.updateRelationshipAttribute(
     databaseId = "<DATABASE_ID>",
     collectionId = "<COLLECTION_ID>",
     key = "",
-    onDelete = "cascade" // optional
+    onDelete = "cascade", // optional
+    newKey = "" // optional
 )

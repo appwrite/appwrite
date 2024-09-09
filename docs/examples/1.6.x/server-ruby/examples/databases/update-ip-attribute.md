@@ -14,5 +14,6 @@ result = databases.update_ip_attribute(
     collection_id: '<COLLECTION_ID>',
     key: '',
     required: false,
-    default: ''
+    default: '',
+    new_key: '' # optional
 )

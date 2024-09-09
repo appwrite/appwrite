@@ -15,6 +15,7 @@ databases.updateIpAttribute(
     "", // key
     false, // required
     "", // default
+    "", // newKey (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

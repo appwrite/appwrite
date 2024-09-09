@@ -14,5 +14,6 @@ AttributeUrl result = await databases.UpdateUrlAttribute(
     collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
-    default: "https://example.com"
+    default: "https://example.com",
+    newKey: "" // optional
 );

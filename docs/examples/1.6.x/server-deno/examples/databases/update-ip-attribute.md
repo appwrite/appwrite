@@ -12,5 +12,6 @@ const response = await databases.updateIpAttribute(
     '<COLLECTION_ID>', // collectionId
     '', // key
     false, // required
-    '' // default
+    '', // default
+    '' // newKey (optional)
 );

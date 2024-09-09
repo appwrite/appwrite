@@ -13,4 +13,5 @@ AttributeDatetime result = await databases.updateDatetimeAttribute(
     key: '',
     xrequired: false,
     xdefault: '',
+    newKey: '', // (optional)
 );

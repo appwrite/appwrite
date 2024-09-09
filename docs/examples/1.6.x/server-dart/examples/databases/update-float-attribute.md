@@ -15,4 +15,5 @@ AttributeFloat result = await databases.updateFloatAttribute(
     min: 0,
     max: 0,
     xdefault: 0,
+    newKey: '', // (optional)
 );

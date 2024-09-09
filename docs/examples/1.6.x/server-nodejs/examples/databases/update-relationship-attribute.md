@@ -11,5 +11,6 @@ const result = await databases.updateRelationshipAttribute(
     '<DATABASE_ID>', // databaseId
     '<COLLECTION_ID>', // collectionId
     '', // key
-    sdk.RelationMutate.Cascade // onDelete (optional)
+    sdk.RelationMutate.Cascade, // onDelete (optional)
+    '' // newKey (optional)
 );
