@@ -1076,7 +1076,8 @@ trait UsersBase
             'status' => false,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 500);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['status'], false);
 
         // Verify session deletion and block status
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
@@ -1086,6 +1087,7 @@ trait UsersBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals($response['body']['status'], false);
+        $this->assertEmpty($response['body']['sessions']);
 
         // Test: Reactivate user
         $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
