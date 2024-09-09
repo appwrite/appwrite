@@ -243,7 +243,11 @@ class Realtime extends Adapter
      * @param string $event
      * @param Document $payload
      * @param Document|null $project
+     * @param Document|null $database
+     * @param Document|null $collection
+     * @param Document|null $bucket
      * @return array
+     * @throws \Exception
      */
     public static function fromPayload(string $event, Document $payload, Document $project = null, Document $database = null, Document $collection = null, Document $bucket = null): array
     {
