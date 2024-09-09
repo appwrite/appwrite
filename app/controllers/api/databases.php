@@ -20,10 +20,12 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
@@ -399,7 +401,7 @@ function updateAttribute(
 
         try {
             $attribute = $dbForProject->createDocument('attributes', $attribute);
-        } catch (\Throwable) {
+        } catch (DatabaseException|PDOException) {
             $attribute = $dbForProject->createDocument('attributes', $original);
         }
     } else {

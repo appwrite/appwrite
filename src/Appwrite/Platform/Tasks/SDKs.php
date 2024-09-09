@@ -252,9 +252,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $gitUrl = $language['gitUrl'];
                 $gitBranch = $language['gitBranch'];
 
-                // TEMPORARY
-                $gitBranch = '1.6.x';
-
                 if (!$production) {
                     $gitUrl = 'git@github.com:aw-tests/' . $language['gitRepoName'] . '.git';
                 }
