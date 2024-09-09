@@ -12,6 +12,7 @@ let attributeEmail = try await databases.updateEmailAttribute(
     collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
-    default: "email@example.com"
+    default: "email@example.com",
+    newKey: "" // optional
 )
 

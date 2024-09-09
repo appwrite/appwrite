@@ -15,6 +15,7 @@ databases.updateBooleanAttribute(
     "", // key
     false, // required
     false, // default
+    "", // newKey (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

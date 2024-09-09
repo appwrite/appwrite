@@ -15,6 +15,7 @@ databases.updateUrlAttribute(
     "", // key
     false, // required
     "https://example.com", // default
+    "", // newKey (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

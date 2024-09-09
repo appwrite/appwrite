@@ -13,5 +13,6 @@ result = databases.update_relationship_attribute(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     key: '',
-    on_delete: RelationMutate::CASCADE # optional
+    on_delete: RelationMutate::CASCADE, # optional
+    new_key: '' # optional
 )

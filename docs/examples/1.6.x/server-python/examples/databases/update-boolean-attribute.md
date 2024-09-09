@@ -12,5 +12,6 @@ result = databases.update_boolean_attribute(
     collection_id = '<COLLECTION_ID>',
     key = '',
     required = False,
-    default = False
+    default = False,
+    new_key = '' # optional
 )

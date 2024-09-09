@@ -13,4 +13,5 @@ AttributeUrl result = await databases.updateUrlAttribute(
     key: '',
     xrequired: false,
     xdefault: 'https://example.com',
+    newKey: '', // (optional)
 );

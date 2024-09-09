@@ -15,6 +15,8 @@ databases.updateStringAttribute(
     "", // key
     false, // required
     "<DEFAULT>", // default
+    0, // size (optional)
+    "", // newKey (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
