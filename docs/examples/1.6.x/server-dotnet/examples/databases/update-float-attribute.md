@@ -16,5 +16,6 @@ AttributeFloat result = await databases.UpdateFloatAttribute(
     required: false,
     min: 0,
     max: 0,
-    default: 0
+    default: 0,
+    newKey: "" // optional
 );

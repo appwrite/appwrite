@@ -15,5 +15,6 @@ AttributeEnum result = await databases.UpdateEnumAttribute(
     key: "",
     elements: new List<string>(),
     required: false,
-    default: "<DEFAULT>"
+    default: "<DEFAULT>",
+    newKey: "" // optional
 );

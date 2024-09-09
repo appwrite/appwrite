@@ -14,5 +14,7 @@ result = databases.update_string_attribute(
     collection_id: '<COLLECTION_ID>',
     key: '',
     required: false,
-    default: '<DEFAULT>'
+    default: '<DEFAULT>',
+    size: null, # optional
+    new_key: '' # optional
 )

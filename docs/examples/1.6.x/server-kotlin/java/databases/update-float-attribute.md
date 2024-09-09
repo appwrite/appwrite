@@ -17,6 +17,7 @@ databases.updateFloatAttribute(
     0, // min
     0, // max
     0, // default
+    "", // newKey (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

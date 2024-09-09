@@ -12,6 +12,7 @@ let attributeUrl = try await databases.updateUrlAttribute(
     collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
-    default: "https://example.com"
+    default: "https://example.com",
+    newKey: "" // optional
 )
 

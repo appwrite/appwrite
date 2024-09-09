@@ -14,5 +14,6 @@ AttributeBoolean result = await databases.UpdateBooleanAttribute(
     collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
-    default: false
+    default: false,
+    newKey: "" // optional
 );
