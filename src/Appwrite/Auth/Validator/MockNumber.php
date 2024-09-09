@@ -52,6 +52,7 @@ class MockNumber extends Validator
             return false;
         }
 
+        $this->message = '';
         return true;
     }
 
