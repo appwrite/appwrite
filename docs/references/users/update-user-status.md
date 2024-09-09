@@ -1,1 +1,1 @@
-Update the user status by its unique ID. This endpoint now includes functionality to delete all active sessions when a user is blocked, resolving issues when a different user attempts to sign in on the same device.
+Update the user status by its unique ID. This endpoint deletes all active sessions when a user is blocked, resolving issues when a different user attempts to sign in on the same device.

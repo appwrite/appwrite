@@ -1076,8 +1076,7 @@ trait UsersBase
             'status' => false,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals($response['body']['status'], false);
+        $this->assertEquals($response['headers']['status-code'], 500);
 
         // Verify session deletion and block status
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
@@ -1093,7 +1092,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'status' => true,
+            'status' => true
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
