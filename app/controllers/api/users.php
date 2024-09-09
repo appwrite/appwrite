@@ -986,17 +986,34 @@ App::patch('/v1/users/:userId/status')
 
         // If the user is being blocked, delete all their sessions
         if (!$status) {
+            // $sessions = $user->getAttribute('sessions', []);
+
+            // foreach ($sessions as $session) {
+            //     $dbForProject->deleteDocument('sessions', $session->getId());
+            // }
+
+            // $dbForProject->deleteCachedDocument('users', $user->getId());
+
+            // $queueForEvents
+            //     ->setParam('userId', $user->getId())
+            //     ->setPayload($response->output($user, Response::MODEL_USER));
+
+
             $sessions = $user->getAttribute('sessions', []);
 
-            foreach ($sessions as $session) {
+            foreach ($sessions as $key => $session) {
+                /** @var Document $session */
                 $dbForProject->deleteDocument('sessions', $session->getId());
+                //TODO: fix this
             }
 
-            $dbForProject->deleteCachedDocument('users', $user->getId());
+            $dbForProject->purgeCachedDocument('users', $user->getId());
 
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setPayload($response->output($user, Response::MODEL_USER));
+
+            $response->noContent();
         }
 
         $queueForEvents
