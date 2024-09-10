@@ -675,6 +675,7 @@ $image = $this->getParam('image', '');
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-usage-dump
     <<: *x-logging
+    restart: unless-stopped
     container_name: appwrite-worker-usage-dump
     networks:
       - appwrite
