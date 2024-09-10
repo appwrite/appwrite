@@ -60,7 +60,7 @@
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.6.*",
         "utopia-php/messaging": "0.12.*",
-        "utopia-php/migration": "dev-preserveDates as 0.6.0",
+        "utopia-php/migration": "0.6.0",
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "0.7.*",
         "utopia-php/pools": "0.5.*",

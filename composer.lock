@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6991849c4c8e911d1d7bf602cf43497a",
+    "content-hash": "b6046c157219fbaaad4e2cb6309ff8be",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1211,20 +1211,20 @@
         },
         {
             "name": "symfony/polyfill-php80",
-            "version": "v1.30.0",
+            "version": "v1.31.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php80.git",
-                "reference": "77fa7995ac1b21ab60769b7323d600a991a90433"
+                "reference": "60328e362d4c2c802a54fcbf04f9d3fb892b4cf8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/77fa7995ac1b21ab60769b7323d600a991a90433",
-                "reference": "77fa7995ac1b21ab60769b7323d600a991a90433",
+                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/60328e362d4c2c802a54fcbf04f9d3fb892b4cf8",
+                "reference": "60328e362d4c2c802a54fcbf04f9d3fb892b4cf8",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1"
+                "php": ">=7.2"
             },
             "type": "library",
             "extra": {
@@ -1271,7 +1271,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php80/tree/v1.30.0"
+                "source": "https://github.com/symfony/polyfill-php80/tree/v1.31.0"
             },
             "funding": [
                 {
@@ -1287,7 +1287,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-05-31T15:07:36+00:00"
+            "time": "2024-09-09T11:45:10+00:00"
         },
         {
             "name": "thecodingmachine/safe",
@@ -2608,16 +2608,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.18.4",
+            "version": "0.18.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "94ab8758fabcefee5c5fa723616e45719833f922"
+                "reference": "7d355c5e3ccc8ecebc0266f8ddd30088a43be919"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/94ab8758fabcefee5c5fa723616e45719833f922",
-                "reference": "94ab8758fabcefee5c5fa723616e45719833f922",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/7d355c5e3ccc8ecebc0266f8ddd30088a43be919",
+                "reference": "7d355c5e3ccc8ecebc0266f8ddd30088a43be919",
                 "shasum": ""
             },
             "require": {
@@ -2657,9 +2657,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.18.4"
+                "source": "https://github.com/utopia-php/storage/tree/0.18.5"
             },
-            "time": "2024-04-02T08:24:09+00:00"
+            "time": "2024-09-04T08:57:27+00:00"
         },
         {
             "name": "utopia-php/swoole",
