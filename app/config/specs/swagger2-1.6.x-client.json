@@ -868,7 +868,7 @@
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-challenge.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
-                    "rate-key": "url:{url},token:{param-token}",
+                    "rate-key": "url:{url},userId:{userId}",
                     "scope": "account",
                     "platforms": [
                         "server",
@@ -942,7 +942,7 @@
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-challenge.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
-                    "rate-key": "userId:{param-userId}",
+                    "rate-key": "url:{url},challengeId:{param-challengeId}",
                     "scope": "account",
                     "platforms": [
                         "client",

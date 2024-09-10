@@ -916,7 +916,7 @@
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-challenge.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
-                    "rate-key": "url:{url},token:{param-token}",
+                    "rate-key": "url:{url},userId:{userId}",
                     "scope": "account",
                     "platforms": [
                         "server",
@@ -990,7 +990,7 @@
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-challenge.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
-                    "rate-key": "userId:{param-userId}",
+                    "rate-key": "url:{url},challengeId:{param-challengeId}",
                     "scope": "account",
                     "platforms": [
                         "client",
@@ -5913,6 +5913,12 @@
                                     "default": null,
                                     "x-example": false,
                                     "x-nullable": true
+                                },
+                                "newKey": {
+                                    "type": "string",
+                                    "description": "New attribute key.",
+                                    "default": null,
+                                    "x-example": null
                                 }
                             },
                             "required": [
@@ -6123,6 +6129,12 @@
                                     "default": null,
                                     "x-example": null,
                                     "x-nullable": true
+                                },
+                                "newKey": {
+                                    "type": "string",
+                                    "description": "New attribute key.",
+                                    "default": null,
+                                    "x-example": null
                                 }
                             },
                             "required": [
@@ -6333,6 +6345,12 @@
                                     "default": null,
                                     "x-example": "email@example.com",
                                     "x-nullable": true
+                                },
+                                "newKey": {
+                                    "type": "string",
+                                    "description": "New attribute key.",
+                                    "default": null,
+                                    "x-example": null
                                 }
                             },
                             "required": [
@@ -6562,6 +6580,12 @@
                                     "default": null,
                                     "x-example": "<DEFAULT>",
                                     "x-nullable": true
+                                },
+                                "newKey": {
+                                    "type": "string",
+                                    "description": "New attribute key.",
+                                    "default": null,
+                                    "x-example": null
                                 }
                             },
                             "required": [
@@ -6797,6 +6821,12 @@
                                     "default": null,
                                     "x-example": null,
                                     "x-nullable": true
+                                },
+                                "newKey": {
+                                    "type": "string",
+                                    "description": "New attribute key.",
+                                    "default": null,
+                                    "x-example": null
                                 }
                             },
                             "required": [
@@ -7033,6 +7063,12 @@
                                     "default": null,
                                     "x-example": null,
                                     "x-nullable": true
+                                },
+                                "newKey": {
+                                    "type": "string",
+                                    "description": "New attribute key.",
+                                    "default": null,
+                                    "x-example": null
                                 }
                             },
                             "required": [
@@ -7245,6 +7281,12 @@
                                     "default": null,
                                     "x-example": null,
                                     "x-nullable": true
+                                },
+                                "newKey": {
+                                    "type": "string",
+                                    "description": "New attribute key.",
+                                    "default": null,
+                                    "x-example": null
                                 }
                             },
                             "required": [
@@ -7603,6 +7645,18 @@
                                     "default": null,
                                     "x-example": "<DEFAULT>",
                                     "x-nullable": true
+                                },
+                                "size": {
+                                    "type": "integer",
+                                    "description": "Maximum size of the string attribute.",
+                                    "default": null,
+                                    "x-example": null
+                                },
+                                "newKey": {
+                                    "type": "string",
+                                    "description": "New attribute key.",
+                                    "default": null,
+                                    "x-example": null
                                 }
                             },
                             "required": [
@@ -7813,6 +7867,12 @@
                                     "default": null,
                                     "x-example": "https:\/\/example.com",
                                     "x-nullable": true
+                                },
+                                "newKey": {
+                                    "type": "string",
+                                    "description": "New attribute key.",
+                                    "default": null,
+                                    "x-example": null
                                 }
                             },
                             "required": [
@@ -8095,6 +8155,12 @@
                                     ],
                                     "x-enum-name": "RelationMutate",
                                     "x-enum-keys": []
+                                },
+                                "newKey": {
+                                    "type": "string",
+                                    "description": "New attribute key.",
+                                    "default": null,
+                                    "x-example": null
                                 }
                             }
                         }
