@@ -1742,16 +1742,16 @@
     },
     {
       "name": "utopia-php/framework",
-      "version": "0.33.8",
+      "version": "0.33.6",
       "source": {
         "type": "git",
         "url": "https://github.com/utopia-php/http.git",
-        "reference": "a7f577540a25cb90896fef2b64767bf8d700f3c5"
+        "reference": "8fe57da0cecd57e3b17cd395b4a666a24f4c07a6"
       },
       "dist": {
         "type": "zip",
-        "url": "https://api.github.com/repos/utopia-php/http/zipball/a7f577540a25cb90896fef2b64767bf8d700f3c5",
-        "reference": "a7f577540a25cb90896fef2b64767bf8d700f3c5",
+        "url": "https://api.github.com/repos/utopia-php/http/zipball/8fe57da0cecd57e3b17cd395b4a666a24f4c07a6",
+        "reference": "8fe57da0cecd57e3b17cd395b4a666a24f4c07a6",
         "shasum": ""
       },
       "require": {
@@ -1775,9 +1775,9 @@
       "keywords": ["framework", "php", "upf"],
       "support": {
         "issues": "https://github.com/utopia-php/http/issues",
-        "source": "https://github.com/utopia-php/http/tree/0.33.8"
+        "source": "https://github.com/utopia-php/http/tree/0.33.6"
       },
-      "time": "2024-08-15T14:10:09+00:00"
+      "time": "2024-03-21T18:10:57+00:00"
     },
     {
       "name": "utopia-php/image",
@@ -2488,16 +2488,16 @@
     },
     {
       "name": "utopia-php/vcs",
-      "version": "0.8.2",
+      "version": "0.8.1",
       "source": {
         "type": "git",
         "url": "https://github.com/utopia-php/vcs.git",
-        "reference": "eb9b7eade1a46a4f660e0d5a6304f7fa26ec9d18"
+        "reference": "3084aa93d24ed1e70f01e75f4318fc0d07f12596"
       },
       "dist": {
         "type": "zip",
-        "url": "https://api.github.com/repos/utopia-php/vcs/zipball/eb9b7eade1a46a4f660e0d5a6304f7fa26ec9d18",
-        "reference": "eb9b7eade1a46a4f660e0d5a6304f7fa26ec9d18",
+        "url": "https://api.github.com/repos/utopia-php/vcs/zipball/3084aa93d24ed1e70f01e75f4318fc0d07f12596",
+        "reference": "3084aa93d24ed1e70f01e75f4318fc0d07f12596",
         "shasum": ""
       },
       "require": {
@@ -2524,9 +2524,9 @@
       "keywords": ["framework", "php", "utopia", "vcs"],
       "support": {
         "issues": "https://github.com/utopia-php/vcs/issues",
-        "source": "https://github.com/utopia-php/vcs/tree/0.8.2"
+        "source": "https://github.com/utopia-php/vcs/tree/0.8.1"
       },
-      "time": "2024-08-13T14:36:30+00:00"
+      "time": "2024-07-29T20:49:09+00:00"
     },
     {
       "name": "utopia-php/websocket",
@@ -2853,16 +2853,16 @@
     },
     {
       "name": "laravel/pint",
-      "version": "v1.17.2",
+      "version": "v1.17.0",
       "source": {
         "type": "git",
         "url": "https://github.com/laravel/pint.git",
-        "reference": "e8a88130a25e3f9d4d5785e6a1afca98268ab110"
+        "reference": "4dba80c1de4b81dc4c4fb10ea6f4781495eb29f5"
       },
       "dist": {
         "type": "zip",
-        "url": "https://api.github.com/repos/laravel/pint/zipball/e8a88130a25e3f9d4d5785e6a1afca98268ab110",
-        "reference": "e8a88130a25e3f9d4d5785e6a1afca98268ab110",
+        "url": "https://api.github.com/repos/laravel/pint/zipball/4dba80c1de4b81dc4c4fb10ea6f4781495eb29f5",
+        "reference": "4dba80c1de4b81dc4c4fb10ea6f4781495eb29f5",
         "shasum": ""
       },
       "require": {
@@ -2873,13 +2873,13 @@
         "php": "^8.1.0"
       },
       "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.61.1",
-        "illuminate/view": "^10.48.18",
-        "larastan/larastan": "^2.9.8",
+        "friendsofphp/php-cs-fixer": "^3.59.3",
+        "illuminate/view": "^10.48.12",
+        "larastan/larastan": "^2.9.7",
         "laravel-zero/framework": "^10.4.0",
         "mockery/mockery": "^1.6.12",
         "nunomaduro/termwind": "^1.15.1",
-        "pestphp/pest": "^2.35.0"
+        "pestphp/pest": "^2.34.8"
       },
       "bin": ["builds/pint"],
       "type": "project",
@@ -2905,7 +2905,7 @@
         "issues": "https://github.com/laravel/pint/issues",
         "source": "https://github.com/laravel/pint"
       },
-      "time": "2024-08-06T15:11:54+00:00"
+      "time": "2024-07-23T16:40:20+00:00"
     },
     {
       "name": "matthiasmullie/minify",
