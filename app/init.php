@@ -223,8 +223,8 @@ const API_KEY_DYNAMIC = 'dynamic';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
-const METRIC_MESSAGES  = 'messages';
-const METRIC_MESSAGES_COUNTRY_CODE  = '{countryCode}.messages';
+const METRIC_AUTH_METHOD_PHONE  = 'auth.method.phone';
+const METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE  = METRIC_AUTH_METHOD_PHONE . '.{countryCode}';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';

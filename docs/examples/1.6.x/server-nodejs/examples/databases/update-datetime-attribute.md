@@ -12,5 +12,6 @@ const result = await databases.updateDatetimeAttribute(
     '<COLLECTION_ID>', // collectionId
     '', // key
     false, // required
-    '' // default
+    '', // default
+    '' // newKey (optional)
 );

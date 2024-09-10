@@ -7,5 +7,6 @@ X-Appwrite-Key: <YOUR_API_KEY>
 
 {
   "required": false,
-  "default": "email@example.com"
+  "default": "email@example.com",
+  "newKey": 
 }

@@ -4,7 +4,8 @@ mutation {
         collectionId: "<COLLECTION_ID>",
         key: "",
         required: false,
-        default: "https://example.com"
+        default: "https://example.com",
+        newKey: ""
     ) {
         key
         type

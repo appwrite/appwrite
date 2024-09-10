@@ -13,6 +13,7 @@ let attributeEnum = try await databases.updateEnumAttribute(
     key: "",
     elements: [],
     required: false,
-    default: "<DEFAULT>"
+    default: "<DEFAULT>",
+    newKey: "" // optional
 )
 

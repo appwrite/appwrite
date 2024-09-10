@@ -5,7 +5,8 @@ mutation {
         key: "",
         elements: [],
         required: false,
-        default: "<DEFAULT>"
+        default: "<DEFAULT>",
+        newKey: ""
     ) {
         key
         type

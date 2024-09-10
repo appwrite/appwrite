@@ -16,5 +16,6 @@ AttributeInteger result = await databases.UpdateIntegerAttribute(
     required: false,
     min: 0,
     max: 0,
-    default: 0
+    default: 0,
+    newKey: "" // optional
 );

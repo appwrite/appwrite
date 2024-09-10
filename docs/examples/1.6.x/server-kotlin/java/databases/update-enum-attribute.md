@@ -16,6 +16,7 @@ databases.updateEnumAttribute(
     listOf(), // elements
     false, // required
     "<DEFAULT>", // default
+    "", // newKey (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
