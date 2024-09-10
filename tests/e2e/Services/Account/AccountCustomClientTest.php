@@ -1306,6 +1306,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
+        // Block user if status is false
         $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $id . '/status', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1314,7 +1315,17 @@ class AccountCustomClientTest extends Scope
             'status' => false,
         ]);
 
+        $this->assertEquals(500, $response['headers']['status-code']);
+
+        // Verify block status
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $id, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
         $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(false, $response['body']['status']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',

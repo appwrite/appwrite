@@ -308,15 +308,23 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $id . '/status', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'status' => false,
         ]);
 
-        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['headers']['status-code'], 500);
         $this->assertNotEmpty($user['body']['$id']);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['status'], false);
 
         $webhook = $this->getLastRequest();
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
