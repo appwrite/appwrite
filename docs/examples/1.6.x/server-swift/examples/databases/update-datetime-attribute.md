@@ -12,6 +12,7 @@ let attributeDatetime = try await databases.updateDatetimeAttribute(
     collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
-    default: ""
+    default: "",
+    newKey: "" // optional
 )
 

@@ -14,5 +14,6 @@ $result = $databases->updateRelationshipAttribute(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     key: '',
-    onDelete: RelationMutate::CASCADE() // optional
+    onDelete: RelationMutate::CASCADE(), // optional
+    newKey: '' // optional
 );

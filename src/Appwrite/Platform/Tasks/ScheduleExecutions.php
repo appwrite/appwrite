@@ -36,7 +36,7 @@ class ScheduleExecutions extends ScheduleBase
                     $schedule['$id'],
                 );
 
-                unset($this->schedules[$schedule['resourceId']]);
+                unset($this->schedules[$schedule['$internalId']]);
                 continue;
             }
 
@@ -74,7 +74,7 @@ class ScheduleExecutions extends ScheduleBase
                 $schedule['$id'],
             );
 
-            unset($this->schedules[$schedule['resourceId']]);
+            unset($this->schedules[$schedule['$internalId']]);
         }
 
         $queue->reclaim();

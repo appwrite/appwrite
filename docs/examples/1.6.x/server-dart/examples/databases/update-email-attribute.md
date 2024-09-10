@@ -13,4 +13,5 @@ AttributeEmail result = await databases.updateEmailAttribute(
     key: '',
     xrequired: false,
     xdefault: 'email@example.com',
+    newKey: '', // (optional)
 );

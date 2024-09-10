@@ -14,6 +14,7 @@ databases.updateRelationshipAttribute(
     "<COLLECTION_ID>", // collectionId
     "", // key
     RelationMutate.CASCADE, // onDelete (optional)
+    "", // newKey (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

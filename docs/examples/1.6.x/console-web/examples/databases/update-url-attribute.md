@@ -11,7 +11,8 @@ const result = await databases.updateUrlAttribute(
     '<COLLECTION_ID>', // collectionId
     '', // key
     false, // required
-    'https://example.com' // default
+    'https://example.com', // default
+    '' // newKey (optional)
 );
 
 console.log(result);

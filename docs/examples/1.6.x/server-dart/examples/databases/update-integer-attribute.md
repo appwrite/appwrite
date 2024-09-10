@@ -15,4 +15,5 @@ AttributeInteger result = await databases.updateIntegerAttribute(
     min: 0,
     max: 0,
     xdefault: 0,
+    newKey: '', // (optional)
 );

@@ -21,6 +21,7 @@ func main() {
         []interface{}{},
         false,
         "<DEFAULT>",
+        databases.WithUpdateEnumAttributeNewKey(""),
     )
 
     if error != nil {

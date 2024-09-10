@@ -20,6 +20,8 @@ func main() {
         "",
         false,
         "<DEFAULT>",
+        databases.WithUpdateStringAttributeSize(0),
+        databases.WithUpdateStringAttributeNewKey(""),
     )
 
     if error != nil {

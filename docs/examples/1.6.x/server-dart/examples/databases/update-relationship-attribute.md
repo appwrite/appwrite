@@ -12,4 +12,5 @@ AttributeRelationship result = await databases.updateRelationshipAttribute(
     collectionId: '<COLLECTION_ID>',
     key: '',
     onDelete: RelationMutate.cascade, // (optional)
+    newKey: '', // (optional)
 );
