@@ -248,6 +248,8 @@ const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 
+const METRIC_MESSAGES = 'messages';
+
 $register = new Registry();
 
 App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
@@ -1339,7 +1341,9 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+    if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
@@ -1392,7 +1396,9 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+            if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
