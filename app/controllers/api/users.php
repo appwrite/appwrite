@@ -984,6 +984,17 @@ App::patch('/v1/users/:userId/status')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
 
+        // If the user is being blocked, delete all their sessions
+        if (!$status) {
+            $sessions = $user->getAttribute('sessions', []);
+
+            foreach ($sessions as $session) {
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }
+
+            $dbForProject->deleteCachedDocument('users', $user->getId());
+        }
+
         $queueForEvents
             ->setParam('userId', $user->getId());
 

@@ -1,1 +1,1 @@
-Update the user status by its unique ID. Use this endpoint as an alternative to deleting a user if you want to keep user's ID reserved.
+Update the user status by its unique ID. This endpoint deletes all active sessions when a user is blocked, resolving issues when a different user attempts to sign in on the same device.
