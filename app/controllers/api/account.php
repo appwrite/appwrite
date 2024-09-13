@@ -514,7 +514,7 @@ App::get('/v1/account/sessions/:sessionId')
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            ? Auth::$sessionId
             : $sessionId;
 
         foreach ($sessions as $session) {/** @var Document $session */
