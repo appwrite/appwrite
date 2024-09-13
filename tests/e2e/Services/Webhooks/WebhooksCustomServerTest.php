@@ -305,9 +305,7 @@ class WebhooksCustomServerTest extends Scope
     {
         $id = $data['userId'];
 
-        /**
-         * Test for SUCCESS
-         */
+        // Block user if status is false
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -317,6 +315,7 @@ class WebhooksCustomServerTest extends Scope
 
         $this->assertEquals($user['headers']['status-code'], 500);
 
+        // Verify block status
         $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -324,6 +323,18 @@ class WebhooksCustomServerTest extends Scope
 
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertEquals($user['body']['status'], false);
+        $this->assertNotEmpty($user['body']['$id']);
+
+        // Reactivate user
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'status' => true,
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['status'], true);
         $this->assertNotEmpty($user['body']['$id']);
 
         $webhook = $this->getLastRequest();
@@ -334,21 +345,21 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        // $this->assertStringContainsString('users.*.update.status', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('users.*.update.status', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        // $this->assertStringContainsString("users.{$id}.update.status", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.{$id}.update.status", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        // $this->assertNotEmpty($webhook['data']['$id']);
-        // $this->assertEquals($webhook['data']['name'], $data['name']);
-        // $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['registration']));
-        // $this->assertEquals($webhook['data']['status'], false);
-        // $this->assertEquals($webhook['data']['email'], $data['email']);
-        // $this->assertEquals($webhook['data']['emailVerification'], false);
-        // $this->assertEquals($webhook['data']['prefs']['a'], 'b');
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals($webhook['data']['name'], $data['name']);
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['registration']));
+        $this->assertEquals($webhook['data']['status'], true);
+        $this->assertEquals($webhook['data']['email'], $data['email']);
+        $this->assertEquals($webhook['data']['emailVerification'], false);
+        $this->assertEquals($webhook['data']['prefs']['a'], 'b');
 
         return $data;
     }
@@ -387,7 +398,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $data['name']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['registration']));
-        $this->assertEquals($webhook['data']['status'], false);
+        $this->assertEquals($webhook['data']['status'], true);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs']['a'], 'b');
