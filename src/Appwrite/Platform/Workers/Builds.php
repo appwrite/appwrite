@@ -220,7 +220,7 @@ class Builds extends Action
 
                 $cloneVersion = $branchName;
                 $cloneType = GitHub::CLONE_TYPE_BRANCH;
-                if(!empty($commitHash)) {
+                if (!empty($commitHash)) {
                     $cloneVersion = $commitHash;
                     $cloneType = GitHub::CLONE_TYPE_COMMIT;
                 }
@@ -250,7 +250,7 @@ class Builds extends Action
                     $tmpTemplateDirectory = '/tmp/builds/' . \escapeshellcmd($buildId) . '/template';
 
                     $cloneType = GitHub::CLONE_TYPE_BRANCH;
-                    if(\str_starts_with($templateBranch, '0.1.')) { // Temporary fix for 1.5. In future versions this only support tag names
+                    if (\str_starts_with($templateBranch, '0.1.')) { // Temporary fix for 1.5. In future versions this only support tag names
                         $cloneType = GitHub::CLONE_TYPE_TAG;
                     }
 
