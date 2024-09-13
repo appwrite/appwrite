@@ -753,7 +753,7 @@ $image = $this->getParam('image', '');
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.5.7
+    image: openruntimes/executor:0.5.8
     networks:
       - appwrite
       - runtimes
