@@ -13,6 +13,8 @@ return function ($context) {
         $context->log('jwt-is-valid');
     }
 
+    $context->error('error-log-works');
+
     $statusCode = $context->req->query['code'] ?? '200';
 
     return $context->res->json([

@@ -164,7 +164,8 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals($executions['body']['executions'][1]['status'], 'completed');
         $this->assertEquals($executions['body']['executions'][1]['responseStatusCode'], 200);
         $this->assertEquals($executions['body']['executions'][1]['responseBody'], '');
-        $this->assertEquals($executions['body']['executions'][1]['logs'], '');
+        $this->assertNotEmpty($executions['body']['executions'][1]['logs'], '');
+        $this->assertNotEmpty($executions['body']['executions'][1]['errors'], '');
         $this->assertGreaterThan(0, $executions['body']['executions'][1]['duration']);
 
         // Cleanup : Delete function
