@@ -6,6 +6,8 @@ require_once __DIR__ . '/controllers/general.php';
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
+use Appwrite\Event\UsageDump;
+use Appwrite\Event\UsageInfinity;
 use Appwrite\Platform\Appwrite;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -20,6 +22,7 @@ use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
+use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 
@@ -164,6 +167,9 @@ CLI::setResource('queueForDeletes', function (Connection $queue) {
 }, ['queue']);
 CLI::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
+}, ['queue']);
+CLI::setResource('queueForUsageInfinity', function (Connection $queue) {
+    return new UsageInfinity($queue);
 }, ['queue']);
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {

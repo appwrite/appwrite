@@ -715,6 +715,38 @@ services:
       - _APP_MAINTENANCE_DELAY
       - _APP_DATABASE_SHARED_TABLES
 
+  appwrite-infinity-usage-scheduler:
+    entrypoint: infinity-scheduler
+    <<: *x-logging
+    container_name: appwrite-infinity-usage-scheduler
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_DOMAIN
+      - _APP_DOMAIN_TARGET
+      - _APP_DOMAIN_FUNCTIONS
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_USAGE_INF_TIME
+      - _APP_USAGE_INF_INTERVAL
+
   appwrite-worker-usage:
     entrypoint: worker-usage
     <<: *x-logging
@@ -750,6 +782,37 @@ services:
     entrypoint: worker-usage-dump
     <<: *x-logging
     container_name: appwrite-worker-usage-dump
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_USAGE_STATS
+      - _APP_LOGGING_CONFIG
+      - _APP_USAGE_AGGREGATION_INTERVAL
+      - _APP_DATABASE_SHARED_TABLES
+
+  appwrite-worker-usage-infinity:
+    entrypoint: worker-usage-infinity
+    <<: *x-logging
+    container_name: appwrite-worker-usage-infinity
     image: appwrite-dev
     networks:
       - appwrite

@@ -14,11 +14,13 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
+use Appwrite\Event\UsageInfinity;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -202,6 +204,10 @@ Server::setResource('queueForUsage', function (Connection $queue) {
 
 Server::setResource('queueForUsageDump', function (Connection $queue) {
     return new UsageDump($queue);
+}, ['queue']);
+
+Server::setResource('queueForUsageInfinity', function (Connection $queue) {
+    return new UsageInfinity($queue);
 }, ['queue']);
 
 Server::setResource('queue', function (Group $pools) {

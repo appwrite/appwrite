@@ -30,6 +30,9 @@ class Event
     public const USAGE_DUMP_QUEUE_NAME = 'v1-usage-dump';
     public const USAGE_DUMP_CLASS_NAME = 'UsageDumpV1';
 
+    public const USAGE_INFINITY_QUEUE_NAME = 'v1-usage-infinity';
+    public const USAGE_INFINITY_CLASS_NAME = 'UsageInfinityV1';
+
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 

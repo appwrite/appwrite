@@ -17,6 +17,7 @@ use Appwrite\Platform\Tasks\SSL;
 use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
+use Appwrite\Platform\Tasks\InfinityUsageScheduler;
 use Utopia\Platform\Service;
 
 class Tasks extends Service
@@ -40,6 +41,7 @@ class Tasks extends Service
             ->addAction(Upgrade::getName(), new Upgrade())
             ->addAction(Vars::getName(), new Vars())
             ->addAction(Version::getName(), new Version())
+            ->addAction(InfinityUsageScheduler::getName(), new InfinityUsageScheduler())
         ;
     }
 }
