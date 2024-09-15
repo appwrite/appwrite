@@ -89,6 +89,10 @@ use Utopia\Validator\Range;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
+use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Utopia\Request;
+
+
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -1390,8 +1394,8 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
-        $database
+    $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+    if (in_array($dsn->getHost(), $sharedTablesKeys)) {        $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
             ->setNamespace($dsn->getParam('namespace'));
@@ -1443,8 +1447,8 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
-                $database
+            $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+            if (in_array($dsn->getHost(), $sharedTablesKeys)) {                $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
                     ->setNamespace($dsn->getParam('namespace'));
@@ -1494,23 +1498,33 @@ App::setResource('deviceForLocal', function () {
     return new Local();
 });
 
-App::setResource('deviceForFiles', function ($project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
+App::setResource('deviceForFiles', function ($project, $connectionString) {
+    return getDevice(APP_STORAGE_UPLOADS.'/app-'.$project->getId(), $connectionString);
+}, ['project', 'connectionString']);
 
-App::setResource('deviceForFunctions', function ($project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-}, ['project']);
+App::setResource('deviceForFunctions', function ($project, $connectionString) {
+    return getDevice(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId(), $connectionString);
+}, ['project', 'connectionString']);
 
-App::setResource('deviceForBuilds', function ($project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-}, ['project']);
+App::setResource('deviceForBuilds', function ($project, $connectionString) {
+    return getDevice(APP_STORAGE_BUILDS.'/app-'.$project->getId(), $connectionString);
+}, ['project', 'connectionString']);
 
-function getDevice($root): Device
+App::setResource('connectionString', function () {
+    return System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+});
+
+App::setResource('realtimeConnection',function ($pools) {
+    return function () use ($pools)  {
+        return $pools->get('pubsub')->pop()->getResource();
+    };
+}, ['pools']);
+
+
+function getDevice(string $root, string $connectionString = ''): Device
 {
-    $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
-    if (!empty($connection)) {
+    if (! empty($connectionString)) {
         $acl = 'private';
         $device = Storage::DEVICE_LOCAL;
         $accessKey = '';
@@ -1519,7 +1533,7 @@ function getDevice($root): Device
         $region = '';
 
         try {
-            $dsn = new DSN($connection);
+            $dsn = new DSN($connectionString);
             $device = $dsn->getScheme();
             $accessKey = $dsn->getUser() ?? '';
             $accessSecret = $dsn->getPassword() ?? '';

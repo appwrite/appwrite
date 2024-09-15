@@ -92,8 +92,8 @@ if (!function_exists("getProjectDB")) {
 
         $database = new Database($adapter, getCache());
 
-        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
-            $database
+        $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        if (in_array($dsn->getHost(), $sharedTablesKeys)) {            $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
                 ->setNamespace($dsn->getParam('namespace'));
@@ -132,6 +132,16 @@ if (!function_exists("getCache")) {
         }
 
         return new Cache(new Sharding($adapters));
+    }
+}
+
+if (!function_exists("getPubSub")) {
+    function getPubSub(): \Redis
+    {
+        global $register;
+
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        return $pools->get('pubsub')->pop()->getResource();
     }
 }
 
@@ -354,7 +364,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
             $start = time();
 
-            $redis = $register->get('pools')->get('pubsub')->pop()->getResource(); /** @var Redis $redis */
+            $redis = getPubSub(); /** @var \Redis $redis */
             $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
             if ($redis->ping(true)) {

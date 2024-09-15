@@ -590,7 +590,8 @@ App::shutdown()
     ->inject('queueForFunctions')
     ->inject('mode')
     ->inject('dbForConsole')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
+    ->inject('realtimeConnection')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole, callable $realtimeConnection) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -636,6 +637,7 @@ App::shutdown()
                 );
 
                 Realtime::send(
+                    redis: $realtimeConnection($queueForEvents->getSourceRegion()),
                     projectId: $target['projectId'] ?? $project->getId(),
                     payload: $queueForEvents->getRealtimePayload(),
                     events: $allEvents,

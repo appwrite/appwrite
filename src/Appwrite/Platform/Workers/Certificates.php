@@ -30,6 +30,11 @@ use Utopia\System\System;
 
 class Certificates extends Action
 {
+    /**
+     * @var mixed|string
+     */
+    protected string $sourceRegion;
+
     public static function getName(): string
     {
         return 'certificates';
@@ -48,7 +53,8 @@ class Certificates extends Action
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
+            ->inject('realtimeConnection')
+            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, Callable $realtimeConnection) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $realtimeConnection));
     }
 
     /**
@@ -58,11 +64,12 @@ class Certificates extends Action
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
      * @param Log $log
+     * @param callable $realtimeConnection
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log): void
+    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, Callable $realtimeConnection): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -74,9 +81,9 @@ class Certificates extends Action
         $domain   = new Domain($document->getAttribute('domain', ''));
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
 
+        $this->sourceRegion = $payload['sourceRegion'] ?? 'default';
         $log->addTag('domain', $domain->get());
-
-        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $skipRenewCheck);
+        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log,$realtimeConnection, $skipRenewCheck);
     }
 
     /**
@@ -85,12 +92,17 @@ class Certificates extends Action
      * @param Mail $queueForMails
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
+     * @param Log $log
+     * @param callable $realtimeConnection
      * @param bool $skipRenewCheck
      * @return void
+     * @throws Authorization
+     * @throws Conflict
+     * @throws Structure
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, bool $skipRenewCheck = false): void
+    protected function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, Callable $realtimeConnection, bool $skipRenewCheck = false): void
     {
         /**
          * 1. Read arguments and validate domain
@@ -193,7 +205,7 @@ class Certificates extends Action
             $certificate->setAttribute('updated', DateTime::now());
 
             // Save all changes we made to certificate document into database
-            $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForConsole, $queueForEvents, $queueForFunctions);
+            $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForConsole, $queueForEvents, $queueForFunctions, $realtimeConnection);
         }
     }
 
@@ -212,7 +224,7 @@ class Certificates extends Action
      * @throws Conflict
      * @throws Structure
      */
-    private function saveCertificateDocument(string $domain, Document $certificate, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions): void
+    protected function saveCertificateDocument(string $domain, Document $certificate, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Callable $realtimeConnection): void
     {
         // Check if update or insert required
         $certificateDocument = $dbForConsole->findOne('certificates', [Query::equal('domain', [$domain])]);
@@ -226,7 +238,7 @@ class Certificates extends Action
         }
 
         $certificateId = $certificate->getId();
-        $this->updateDomainDocuments($certificateId, $domain, $success, $dbForConsole, $queueForEvents, $queueForFunctions);
+        $this->updateDomainDocuments($certificateId, $domain, $success, $dbForConsole, $queueForEvents, $queueForFunctions, $realtimeConnection);
     }
 
     /**
@@ -234,7 +246,7 @@ class Certificates extends Action
      *
      * @return null|string Returns main domain. If null, there is no main domain yet.
      */
-    private function getMainDomain(): ?string
+    protected function getMainDomain(): ?string
     {
         $envDomain = System::getEnv('_APP_DOMAIN', '');
         if (!empty($envDomain) && $envDomain !== 'localhost') {
@@ -255,7 +267,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Domain $domain, bool $isMainDomain, Log $log): void
+    protected function validateDomain(Domain $domain, bool $isMainDomain, Log $log): void
     {
         if (empty($domain->get())) {
             throw new Exception('Missing certificate domain.');
@@ -299,7 +311,7 @@ class Certificates extends Action
      * @return bool True, if certificate needs to be renewed
      * @throws Exception
      */
-    private function isRenewRequired(string $domain, Log $log): bool
+    protected function isRenewRequired(string $domain, Log $log): bool
     {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         if (\file_exists($certPath)) {
@@ -333,7 +345,7 @@ class Certificates extends Action
      * @return array Named array with keys 'stdout' and 'stderr', both string
      * @throws Exception
      */
-    private function issueCertificate(string $folder, string $domain, string $email): array
+    protected function issueCertificate(string $folder, string $domain, string $email): array
     {
         $stdout = '';
         $stderr = '';
@@ -363,7 +375,7 @@ class Certificates extends Action
      * @return string
      * @throws \Utopia\Database\Exception
      */
-    private function getRenewDate(string $domain): string
+    protected function getRenewDate(string $domain): string
     {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         $certData = openssl_x509_parse(file_get_contents($certPath));
@@ -381,7 +393,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function applyCertificateFiles(string $folder, string $domain, array $letsEncryptData): void
+    protected function applyCertificateFiles(string $folder, string $domain, array $letsEncryptData): void
     {
 
         // Prepare folder in storage for domain
@@ -432,7 +444,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function notifyError(string $domain, string $errorMessage, int $attempt, Mail $queueForMails): void
+    protected function notifyError(string $domain, string $errorMessage, int $attempt, Mail $queueForMails): void
     {
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
@@ -475,7 +487,7 @@ class Certificates extends Action
      *
      * @return void
      */
-    private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions): void
+    protected function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Callable $realtimeConnection): void
     {
 
         $rule = $dbForConsole->findOne('rules', [
@@ -525,6 +537,7 @@ class Certificates extends Action
                 project: $project
             );
             Realtime::send(
+                redis: $realtimeConnection($this->sourceRegion),
                 projectId: 'console',
                 payload: $rule->getArrayCopy(),
                 events: $allEvents,
@@ -532,6 +545,7 @@ class Certificates extends Action
                 roles: $target['roles']
             );
             Realtime::send(
+                redis: $realtimeConnection($this->sourceRegion),
                 projectId: $project->getId(),
                 payload: $rule->getArrayCopy(),
                 events: $allEvents,

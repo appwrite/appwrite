@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db_15:
+    image: mysql:8.0.36-debian
+    container_name: mysql_db_15
+    environment:
+      MYSQL_ROOT_PASSWORD: lJVYGNZTOTF4VsGSnz5CWoVp
+      MYSQL_DATABASE: appwrite
+      MYSQL_USER: appwrite_user
+      MYSQL_PASSWORD: Fy8i367HpJd8EB1VGos3vsf
+    volumes:
+      - /mnt/db-15:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - mysql_network
+
+  db_16:
+    image: mysql:8.0.36-debian
+    container_name: mysql_db_16
+    environment:
+      MYSQL_ROOT_PASSWORD: d1RNc7NsnsQ8I1OQd0eeLWr0
+      MYSQL_DATABASE: appwrite
+      MYSQL_USER: appwrite_user
+      MYSQL_PASSWORD: KlQ4NMyl46YPumqSA8CUOLjO
+    volumes:
+      - /mnt/db-16:/var/lib/mysql
+    ports:
+      - "3308:3306"
+    networks:
+      - mysql_network
+
+networks:
+  mysql_network:
+    driver: bridge

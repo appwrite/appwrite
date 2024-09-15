@@ -121,6 +121,7 @@ class Database extends Event
 
         try {
             $result = $client->enqueue([
+                'sourceRegion' =>  System::getEnv('_APP_REGION', 'default'),
                 'project' => $this->project,
                 'user' => $this->user,
                 'type' => $this->type,
