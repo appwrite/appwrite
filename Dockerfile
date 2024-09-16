@@ -1,4 +1,4 @@
-FROM composer:2.0 as composer
+FROM composer:2.0 AS composer
 
 ARG TESTING=false
 ENV TESTING=$TESTING
@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:0.9.2 as final
+FROM appwrite/base:0.9.2 AS final
 
 LABEL maintainer="team@appwrite.io"
 
