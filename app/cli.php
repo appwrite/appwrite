@@ -1,15 +1,16 @@
 <?php
 
 require_once __DIR__ . '/init.php';
-require_once __DIR__ . '/controllers/general.php';
 
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Runtimes\Runtimes;
 use Swoole\Runtime;
 use Utopia\CLI\Adapters\Swoole as SwooleCLI;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Dependency;
 use Utopia\Logger\Log;
@@ -21,6 +22,12 @@ use Utopia\System\System;
 global $registry, $container;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
+// overwriting runtimes to be architectur agnostic for CLI
+Config::setParam('runtimes', (new Runtimes('v4'))->getAll(supported: false));
+
+// require controllers after overwriting runtimes
+require_once __DIR__ . '/controllers/general.php';
 
 /**
  * @var Registry $registry
