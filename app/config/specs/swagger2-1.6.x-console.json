@@ -9573,9 +9573,6 @@
                                         "python-3.11",
                                         "python-3.12",
                                         "python-ml-3.11",
-                                        "deno-1.21",
-                                        "deno-1.24",
-                                        "deno-1.35",
                                         "deno-1.40",
                                         "dart-2.15",
                                         "dart-2.16",
@@ -10240,9 +10237,6 @@
                                         "python-3.11",
                                         "python-3.12",
                                         "python-ml-3.11",
-                                        "deno-1.21",
-                                        "deno-1.24",
-                                        "deno-1.35",
                                         "deno-1.40",
                                         "dart-2.15",
                                         "dart-2.16",
@@ -37933,9 +37927,15 @@
                     "x-example": 0,
                     "format": "int32"
                 },
-                "functionsStorageTotal": {
+                "buildsStorageTotal": {
                     "type": "integer",
-                    "description": "Total aggregated sum of functions storage size (in bytes).",
+                    "description": "Total aggregated sum of builds storage size (in bytes).",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "deploymentsStorageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of deployments storage size (in bytes).",
                     "x-example": 0,
                     "format": "int32"
                 },
@@ -38045,7 +38045,8 @@
                 "databasesTotal",
                 "usersTotal",
                 "filesStorageTotal",
-                "functionsStorageTotal",
+                "buildsStorageTotal",
+                "deploymentsStorageTotal",
                 "bucketsTotal",
                 "executionsMbSecondsTotal",
                 "buildsMbSecondsTotal",

@@ -474,7 +474,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(9, count($response['body']));
+        $this->assertEquals(8, count($response['body']));
         $this->assertNotEmpty($response['body']);
         $this->assertIsArray($response['body']['requests']);
         $this->assertIsArray($response['body']['network']);
@@ -484,8 +484,8 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertIsNumeric($response['body']['bucketsTotal']);
         $this->assertIsNumeric($response['body']['usersTotal']);
         $this->assertIsNumeric($response['body']['filesStorageTotal']);
-        $this->assertIsNumeric($response['body']['buildsStorageTotal']);
-        $this->assertIsNumeric($response['body']['deploymentsStorageTotal']);
+        $this->assertIsNumeric($response['body']['deploymentStorageTotal']);
+
 
         /**
          * Test for FAILURE
