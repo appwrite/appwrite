@@ -34,14 +34,12 @@ abstract class ScheduleBase extends Action
         $this->connections = new Connections();
         $type = static::getSupportedResource();
 
-        go(function () use ($type) {
-            $this
-                ->desc("Execute {$type}s scheduled in Appwrite")
-                ->inject('pools')
-                ->inject('getConsoleDB')
-                ->inject('getProjectDB')
-                ->callback(fn (array $pools, callable $getConsoleDB, callable $getProjectDB) => $this->action($pools, $getConsoleDB, $getProjectDB));
-        });
+        $this
+            ->desc("Execute {$type}s scheduled in Appwrite")
+            ->inject('pools')
+            ->inject('getConsoleDB')
+            ->inject('getProjectDB')
+            ->callback(fn (array $pools, callable $getConsoleDB, callable $getProjectDB) => $this->action($pools, $getConsoleDB, $getProjectDB));
     }
 
     /**
