@@ -37384,6 +37384,18 @@
                         "x-example": 0,
                         "format": "int32"
                     },
+                    "buildsStorageTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of builds storage size (in bytes).",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "deploymentsStorageTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of deployments storage size (in bytes).",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
                     "bucketsTotal": {
                         "type": "integer",
                         "description": "Total aggregated number of buckets.",
@@ -37482,6 +37494,8 @@
                     "usersTotal",
                     "filesStorageTotal",
                     "functionsStorageTotal",
+                    "buildsStorageTotal",
+                    "deploymentsStorageTotal",
                     "bucketsTotal",
                     "executionsMbSecondsTotal",
                     "buildsMbSecondsTotal",
