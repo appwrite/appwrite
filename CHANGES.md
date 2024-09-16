@@ -1,3 +1,10 @@
+# Version 1.5.11
+
+## What's Changed
+
+## Security
+- Bump executor to 0.5.10 [#8661](https://github.com/appwrite/appwrite/pull/8661)
+
 # Version 1.5.10
 
 ## What's Changed
