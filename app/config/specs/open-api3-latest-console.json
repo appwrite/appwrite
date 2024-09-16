@@ -37378,6 +37378,12 @@
                         "x-example": 0,
                         "format": "int32"
                     },
+                    "functionsStorageTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of functions storage size (in bytes).",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
                     "buildsStorageTotal": {
                         "type": "integer",
                         "description": "Total aggregated sum of builds storage size (in bytes).",
@@ -37487,6 +37493,7 @@
                     "databasesTotal",
                     "usersTotal",
                     "filesStorageTotal",
+                    "functionsStorageTotal",
                     "buildsStorageTotal",
                     "deploymentsStorageTotal",
                     "bucketsTotal",
