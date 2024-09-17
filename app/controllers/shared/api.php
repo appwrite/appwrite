@@ -602,10 +602,11 @@ App::shutdown()
             /**
              * Trigger functions.
              */
-            $queueForFunctions
-                ->from($queueForEvents)
-                ->trigger();
-
+            if (!$queueForEvents->isPaused()) {
+                $queueForFunctions
+                    ->from($queueForEvents)
+                    ->trigger();
+            }
             /**
              * Trigger webhooks.
              */

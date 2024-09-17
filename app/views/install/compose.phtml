@@ -676,6 +676,7 @@ $image = $this->getParam('image', '');
     entrypoint: worker-usage-dump
     <<: *x-logging
     container_name: appwrite-worker-usage-dump
+    restart: unless-stopped
     networks:
       - appwrite
     depends_on:
