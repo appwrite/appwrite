@@ -101,7 +101,7 @@ class Messaging extends Action
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project);
+                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $queueForUsage);
                 break;
             default:
                 throw new \Exception('Unknown message type: ' . $type);
@@ -113,6 +113,7 @@ class Messaging extends Action
         Document $message,
         Device $deviceForFiles,
         Document $project,
+        Usage $queueForUsage
     ): void {
         $topicIds = $message->getAttribute('topics', []);
         $targetIds = $message->getAttribute('targets', []);
@@ -218,8 +219,8 @@ class Messaging extends Action
         /**
          * @var array<array> $results
          */
-        $results = batch(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project) {
-            return function () use ($providerId, $identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project) {
+        $results = batch(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $queueForUsage) {
+            return function () use ($providerId, $identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $queueForUsage) {
                 if (\array_key_exists($providerId, $providers)) {
                     $provider = $providers[$providerId];
                 } else {
@@ -246,8 +247,8 @@ class Messaging extends Action
                     $adapter->getMaxMessagesPerRequest()
                 );
 
-                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $project) {
-                    return function () use ($batch, $message, $provider, $adapter, $dbForProject, $deviceForFiles, $project) {
+                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $queueForUsage) {
+                    return function () use ($batch, $message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $queueForUsage) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
                         $messageData = clone $message;
@@ -286,6 +287,20 @@ class Messaging extends Action
                         } catch (\Throwable $e) {
                             $deliveryErrors[] = 'Failed sending to targets with error: ' . $e->getMessage();
                         } finally {
+
+                            $queueForUsage
+                                ->setProject($project)
+                                ->addMetric(METRIC_MESSAGES, ($deliveredTotal + $deliveryErrors))
+                                ->addMetric(METRIC_MESSAGES_SENT, $deliveredTotal)
+                                ->addMetric(METRIC_MESSAGES_FAILED, $deliveryErrors)
+                                ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE), ($deliveredTotal + $deliveryErrors))
+                                ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_SENT), $deliveredTotal)
+                                ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_FAILED), $deliveryErrors)
+                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $this->getSmsAdapter($provider)], METRIC_MESSAGES_TYPE_PROVIDER), ($deliveredTotal + $deliveryErrors))
+                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $this->getSmsAdapter($provider)], METRIC_MESSAGES_TYPE_PROVIDER_SENT), $deliveredTotal)
+                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $this->getSmsAdapter($provider)], METRIC_MESSAGES_TYPE_PROVIDER_FAILED), $deliveryErrors)
+                                ->trigger();
+
                             return [
                                 'deliveredTotal' => $deliveredTotal,
                                 'deliveryErrors' => $deliveryErrors,
@@ -317,6 +332,7 @@ class Messaging extends Action
         } else {
             $message->setAttribute('status', MessageStatus::SENT);
         }
+
 
         $message->removeAttribute('to');
 
