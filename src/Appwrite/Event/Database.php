@@ -108,12 +108,19 @@ class Database extends Event
      */
     public function trigger(): string|bool
     {
+
+        var_dump('database=');
+        var_dump($this->getProject()->getAttribute('database'));
+
         try {
             $dsn = new DSN($this->getProject()->getAttribute('database'));
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
             $dsn = new DSN('mysql://' . $this->getProject()->getAttribute('database'));
         }
+
+        var_dump('$dsn->getHost()=');
+        var_dump($dsn->getHost());
 
         $this->setQueue($dsn->getHost());
 
