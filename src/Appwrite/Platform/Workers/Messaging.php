@@ -296,9 +296,9 @@ class Messaging extends Action
                                 ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE), ($deliveredTotal + $errorTotal))
                                 ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_SENT), $deliveredTotal)
                                 ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_FAILED), $errorTotal)
-                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $this->getSmsAdapter($provider)], METRIC_MESSAGES_TYPE_PROVIDER), ($deliveredTotal + $errorTotal))
-                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $this->getSmsAdapter($provider)], METRIC_MESSAGES_TYPE_PROVIDER_SENT), $deliveredTotal)
-                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $this->getSmsAdapter($provider)], METRIC_MESSAGES_TYPE_PROVIDER_FAILED), $errorTotal)
+                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER), ($deliveredTotal + $errorTotal))
+                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_SENT), $deliveredTotal)
+                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_FAILED), $errorTotal)
                                 ->trigger();
 
                             return [
