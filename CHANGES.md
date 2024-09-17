@@ -1,3 +1,9 @@
+# Version 1.6.0
+
+## What's Changed
+
+### Notable changes
+
 # Version 1.5.10
 
 ## What's Changed
