@@ -205,7 +205,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
         $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
     }
-
+     var_dump($queueForDatabase);
     $queueForDatabase
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setDatabase($db)
