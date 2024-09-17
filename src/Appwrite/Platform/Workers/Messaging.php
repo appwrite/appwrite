@@ -101,7 +101,7 @@ class Messaging extends Action
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project);
+                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $queueForUsage);
                 break;
             default:
                 throw new \Exception('Unknown message type: ' . $type);
