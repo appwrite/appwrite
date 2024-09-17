@@ -109,7 +109,7 @@ class HeadersTest extends TestCase
         $this->assertTrue($this->object->isValid($headers));
 
         $headers = [];
-        for($i = 0; $i < 100; $i++) {
+        for ($i = 0; $i < 100; $i++) {
             $headers['key-' . $i] = 'value_' . $i;
         }
         $this->assertTrue($this->object->isValid($headers));

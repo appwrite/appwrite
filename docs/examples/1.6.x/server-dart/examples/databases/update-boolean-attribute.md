@@ -13,4 +13,5 @@ AttributeBoolean result = await databases.updateBooleanAttribute(
     key: '',
     xrequired: false,
     xdefault: false,
+    newKey: '', // (optional)
 );

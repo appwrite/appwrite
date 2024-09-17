@@ -14,5 +14,6 @@ AttributeDatetime result = await databases.UpdateDatetimeAttribute(
     collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
-    default: ""
+    default: "",
+    newKey: "" // optional
 );

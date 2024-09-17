@@ -13,5 +13,6 @@ result = databases.update_enum_attribute(
     key = '',
     elements = [],
     required = False,
-    default = '<DEFAULT>'
+    default = '<DEFAULT>',
+    new_key = '' # optional
 )

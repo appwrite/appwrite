@@ -12,5 +12,6 @@ result = databases.update_url_attribute(
     collection_id = '<COLLECTION_ID>',
     key = '',
     required = False,
-    default = 'https://example.com'
+    default = 'https://example.com',
+    new_key = '' # optional
 )

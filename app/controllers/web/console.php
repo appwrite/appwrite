@@ -32,8 +32,9 @@ App::get('/')
     ->action(function (Request $request, Response $response) {
         $url = parse_url($request->getURI());
         $target = "/console{$url['path']}";
-        if ($url['query'] ?? false) {
-            $target .= "?{$url['query']}";
+        $params = $request->getParams();
+        if (!empty($params)) {
+            $target .= "?" . \http_build_query($params);
         }
         if ($url['fragment'] ?? false) {
             $target .= "#{$url['fragment']}";

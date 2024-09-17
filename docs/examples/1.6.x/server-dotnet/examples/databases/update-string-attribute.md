@@ -14,5 +14,7 @@ AttributeString result = await databases.UpdateStringAttribute(
     collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
-    default: "<DEFAULT>"
+    default: "<DEFAULT>",
+    size: 0, // optional
+    newKey: "" // optional
 );

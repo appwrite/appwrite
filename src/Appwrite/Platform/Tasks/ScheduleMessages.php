@@ -53,7 +53,7 @@ class ScheduleMessages extends ScheduleBase
 
                 $queue->reclaim();
 
-                unset($this->schedules[$schedule['resourceId']]);
+                unset($this->schedules[$schedule['$internalId']]);
             });
         }
     }

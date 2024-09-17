@@ -15,5 +15,6 @@ val response = databases.updateEnumAttribute(
     key = "",
     elements = listOf(),
     required = false,
-    default = "<DEFAULT>"
+    default = "<DEFAULT>",
+    newKey = "" // optional
 )

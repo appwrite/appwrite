@@ -7,5 +7,6 @@ X-Appwrite-Key: <YOUR_API_KEY>
 
 {
   "required": false,
-  "default": "https://example.com"
+  "default": "https://example.com",
+  "newKey": 
 }
