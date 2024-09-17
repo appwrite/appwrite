@@ -289,10 +289,16 @@ class Messaging extends Action
                         } finally {
 
                             $queueForUsage
-                                ->addMetric(METRIC_MESSAGES, 1)
-                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $this->getSmsAdapter($provider)], METRIC_MESSAGES_SENT), $deliveredTotal)
-                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $this->getSmsAdapter($provider)], METRIC_MESSAGES_FAILED), $deliveryErrors)
                                 ->setProject($project)
+                                ->addMetric(METRIC_MESSAGES,($deliveredTotal+$deliveryErrors))
+                                ->addMetric(METRIC_MESSAGES_SENT, $deliveredTotal)
+                                ->addMetric(METRIC_MESSAGES_FAILED, $deliveryErrors)
+                                ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE), ($deliveredTotal+$deliveryErrors))
+                                ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_SENT), $deliveredTotal)
+                                ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_FAILED), $deliveryErrors)
+                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $this->getSmsAdapter($provider)], METRIC_MESSAGES_TYPE_PROVIDER), ($deliveredTotal+$deliveryErrors))
+                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $this->getSmsAdapter($provider)], METRIC_MESSAGES_TYPE_PROVIDER_SENT), $deliveredTotal)
+                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $this->getSmsAdapter($provider)], METRIC_MESSAGES_TYPE_PROVIDER_FAILED), $deliveryErrors)
                                 ->trigger();
 
                             return [
