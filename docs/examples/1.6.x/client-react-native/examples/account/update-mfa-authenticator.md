@@ -2,7 +2,7 @@ import { Client, Account, AuthenticatorType } from "react-native-appwrite";
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('&lt;YOUR_PROJECT_ID&gt;'); // Your project ID
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
 
 const account = new Account(client);
 
@@ -11,4 +11,4 @@ const result = await account.updateMfaAuthenticator(
     '<OTP>' // otp
 );
 
-console.log(response);
+console.log(result);

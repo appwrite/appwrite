@@ -16,6 +16,7 @@ class V18 extends Filter
             Response::MODEL_FUNCTION => $this->parseFunction($content),
             Response::MODEL_EXECUTION => $this->parseExecution($content),
             Response::MODEL_PROJECT => $this->parseProject($content),
+            Response::MODEL_RUNTIME => $this->parseRuntime($content),
             default => $parsedResponse,
         };
 
@@ -24,6 +25,12 @@ class V18 extends Filter
 
     protected function parseExecution(array $content)
     {
+        if (!empty($content['status']) && !empty($content['statusCode'])) {
+            if ($content['status'] === 'completed' && $content['statusCode'] >= 400 && $content['statusCode'] < 500) {
+                $content['status'] = 'failed';
+            }
+        }
+
         unset($content['scheduledAt']);
         return $content;
     }
@@ -31,6 +38,7 @@ class V18 extends Filter
     protected function parseFunction(array $content)
     {
         unset($content['scopes']);
+        unset($content['specification']);
         return $content;
     }
 
@@ -38,6 +46,12 @@ class V18 extends Filter
     {
         unset($content['authMockNumbers']);
         unset($content['authSessionAlerts']);
+        return $content;
+    }
+
+    protected function parseRuntime(array $content)
+    {
+        unset($content['key']);
         return $content;
     }
 }

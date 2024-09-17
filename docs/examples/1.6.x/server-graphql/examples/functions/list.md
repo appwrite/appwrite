@@ -36,6 +36,7 @@ query {
             providerBranch
             providerRootDirectory
             providerSilentMode
+            specification
         }
     }
 }

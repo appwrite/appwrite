@@ -452,10 +452,10 @@ class Messaging extends Action
                     $countryCode = $adapter->getCountryCode($message['to'][0] ?? '');
                     if (!empty($countryCode)) {
                         $queueForUsage
-                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_MESSAGES_COUNTRY_CODE), 1);
+                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
                     $queueForUsage
-                        ->addMetric(METRIC_MESSAGES, 1)
+                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
                         ->setProject($project)
                         ->trigger();
                 } catch (\Throwable $th) {
@@ -669,7 +669,7 @@ class Messaging extends Action
 
     private function getLocalDevice($project): Local
     {
-        if($this->localDevice === null) {
+        if ($this->localDevice === null) {
             $this->localDevice = new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
         }
 

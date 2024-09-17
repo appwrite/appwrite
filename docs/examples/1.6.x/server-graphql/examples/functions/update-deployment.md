@@ -34,5 +34,6 @@ mutation {
         providerBranch
         providerRootDirectory
         providerSilentMode
+        specification
     }
 }

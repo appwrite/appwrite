@@ -18,7 +18,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -207,14 +207,14 @@ App::init()
             }
 
             // Remove after migration
-            if(!\str_contains($apiKey, '_')) {
+            if (!\str_contains($apiKey, '_')) {
                 $keyType = API_KEY_STANDARD;
                 $authKey = $apiKey;
             } else {
                 [ $keyType, $authKey ] = \explode('_', $apiKey, 2);
             }
 
-            if($keyType === API_KEY_DYNAMIC) {
+            if ($keyType === API_KEY_DYNAMIC) {
                 // Dynamic key
 
                 $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
@@ -244,7 +244,7 @@ App::init()
                     Authorization::setRole(Auth::USER_ROLE_APPS);
                     Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
                 }
-            } elseif($keyType === API_KEY_STANDARD) {
+            } elseif ($keyType === API_KEY_STANDARD) {
                 // No underline means no prefix. Backwards compatibility.
                 // Regular key
 
@@ -508,7 +508,12 @@ App::init()
                     ->setContentType($cacheLog->getAttribute('mimeType'))
                     ->send($data);
             } else {
-                $response->addHeader('X-Appwrite-Cache', 'miss');
+                $response
+                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->addHeader('Expires', 0)
+                    ->addHeader('X-Appwrite-Cache', 'miss')
+                ;
             }
         }
     });

@@ -103,6 +103,7 @@ services:
       - _APP_CONSOLE_HOSTNAMES
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_SYSTEM_TEAM_EMAIL
       - _APP_EMAIL_SECURITY
       - _APP_SYSTEM_RESPONSE_FORMAT
       - _APP_OPTIONS_ABUSE
@@ -195,7 +196,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:5.0.0-rc.11
+    image: appwrite/console:5.0.11
     restart: unless-stopped
     networks:
       - appwrite
@@ -873,7 +874,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.6.5
+    image: openruntimes/executor:0.6.7
     restart: unless-stopped
     networks:
       - appwrite
@@ -923,7 +924,7 @@ services:
     hostname: proxy
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/proxy:0.3.1
+    image: openruntimes/proxy:0.5.5
     networks:
       - appwrite
       - runtimes

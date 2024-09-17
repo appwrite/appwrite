@@ -96,7 +96,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $commentStatus = $isAuthorized ? 'waiting' : 'failed';
 
-            $authorizeUrl = $request->getProtocol() . '://' . $request->getHostname() . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
+            $authorizeUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
             $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
 
@@ -509,7 +509,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $vcsContents = [];
         foreach ($contents as $content) {
             $isDirectory = false;
-            if($content['type'] === GitHub::CONTENTS_DIRECTORY) {
+            if ($content['type'] === GitHub::CONTENTS_DIRECTORY) {
                 $isDirectory = true;
             }
 

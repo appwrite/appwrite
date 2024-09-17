@@ -10,7 +10,7 @@ func main() {
     client := client.NewClient()
 
     client.SetEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
-    client.SetProject("") // Your project ID
+    client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
 
     service := account.NewAccount(client)
     response, error := service.Create(

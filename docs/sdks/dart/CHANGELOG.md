@@ -1,3 +1,28 @@
+## 12.0.0
+
+* Support for Appwrite 1.6
+* Added `key` attribute to `Runtime` response model.
+* Added `buildSize` attribute to `Deployments` response model.
+* Added `scheduledAt` attribute to `Executions` response model.
+* Added `scopes` attribute to `Functions` response model.
+* Added `specifications` attribute to `Functions` response model.
+* Added new response model for `Specifications`.
+* Added new response model for `Builds`.
+* Added `createJWT()` : Enables creating a JWT using the `userId`.
+* Added `listSpecifications()`: Enables listing available runtime specifications.
+* Added `deleteExecution()` : Enables deleting executions.
+* Added `updateDeploymentBuild()`: Enables cancelling a deployment.
+* Added `scheduledAt` parameter to `createExecution()`: Enables creating a delayed execution
+* Breaking changes:
+  * Removed `otp` parameter from `deleteMFAAuthenticator`.
+  * Added `scopes` parameter for create/update function.
+  * Renamed `templateBranch` to `templateVersion`  in `createFunction()`.
+  * Renamed `downloadDeployment()` to `getDeploymentDownload()`
+
+You can find the new syntax for breaking changes in the [Appwrite API references](https://appwrite.io/docs/references). Select version `1.6.x`.
+
+**Please note: This version is compatible with Appwrite 1.6 and later only. If you do not update your Appwrite SDK, old SDKs will not break your app. Appwrite APIs are backwards compatible.**
+
 ## 11.0.3
 
 * Minor bugfixes

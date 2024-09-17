@@ -131,7 +131,6 @@ class HTTPTest extends Scope
                 'content-type' => 'application/json',
             ], json_decode(file_get_contents($directory . $file), true));
 
-            $response['body'] = json_decode($response['body'], true);
             $this->assertEquals(200, $response['headers']['status-code']);
             // looks like recent change in the validator
             $this->assertTrue(empty($response['body']['schemaValidationMessages']));
@@ -216,5 +215,18 @@ class HTTPTest extends Scope
         ]);
 
         $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+    }
+
+    public function testConsoleRedirect()
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        $endpoint = '/invite?membershipId=123&userId=asdf';
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint);
+
+        $this->assertEquals('/console' . $endpoint, $response['headers']['location']);
     }
 }

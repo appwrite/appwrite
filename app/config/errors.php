@@ -699,6 +699,11 @@ return [
         'description' => 'The relationship value is invalid.',
         'code' => 400,
     ],
+    Exception::ATTRIBUTE_INVALID_RESIZE => [
+        'name' => Exception::ATTRIBUTE_INVALID_RESIZE,
+        'description' => "Existing data is too large for new size, truncate your existing data then try again.",
+        'code' => 400,
+    ],
 
     /** Indexes */
     Exception::INDEX_NOT_FOUND => [

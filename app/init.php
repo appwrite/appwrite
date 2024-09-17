@@ -33,6 +33,7 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\Specification;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Hooks\Hooks;
@@ -117,7 +118,7 @@ const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4314;
+const APP_CACHE_BUSTER = 4318;
 const APP_VERSION_STABLE = '1.6.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -147,6 +148,9 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 const APP_HOSTNAME_INTERNAL = 'appwrite';
+const APP_FUNCTION_SPECIFICATION_DEFAULT = Specification::S_05VCPU_512MB;
+const APP_FUNCTION_CPUS_DEFAULT = 0.5;
+const APP_FUNCTION_MEMORY_DEFAULT = 512;
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
@@ -172,7 +176,7 @@ const DELETE_TYPE_PROJECTS = 'projects';
 const DELETE_TYPE_FUNCTIONS = 'functions';
 const DELETE_TYPE_DEPLOYMENTS = 'deployments';
 const DELETE_TYPE_USERS = 'users';
-const DELETE_TYPE_TEAMS = 'teams';
+const DELETE_TYPE_TEAM_PROJECTS = 'teams_projects';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
@@ -219,8 +223,8 @@ const API_KEY_DYNAMIC = 'dynamic';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
-const METRIC_MESSAGES  = 'messages';
-const METRIC_MESSAGES_COUNTRY_CODE  = '{countryCode}.messages';
+const METRIC_AUTH_METHOD_PHONE  = 'auth.method.phone';
+const METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE  = METRIC_AUTH_METHOD_PHONE . '.{countryCode}';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
@@ -243,6 +247,7 @@ const METRIC_BUILDS_STORAGE  = 'builds.storage';
 const METRIC_BUILDS_COMPUTE  = 'builds.compute';
 const METRIC_BUILDS_COMPUTE_SUCCESS  = 'builds.compute.success';
 const METRIC_BUILDS_COMPUTE_FAILED  = 'builds.compute.failed';
+const METRIC_BUILDS_MB_SECONDS = 'builds.mbSeconds';
 const METRIC_FUNCTION_ID_BUILDS  = '{functionInternalId}.builds';
 const METRIC_FUNCTION_ID_BUILDS_SUCCESS  = '{functionInternalId}.builds.success';
 const METRIC_FUNCTION_ID_BUILDS_FAILED  = '{functionInternalId}.builds.failed';
@@ -252,10 +257,13 @@ const METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS  = '{functionInternalId}.builds.
 const METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED  = '{functionInternalId}.builds.compute.failed';
 const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
 const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
+const METRIC_FUNCTION_ID_BUILDS_MB_SECONDS = '{functionInternalId}.builds.mbSeconds';
 const METRIC_EXECUTIONS  = 'executions';
 const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
+const METRIC_EXECUTIONS_MB_SECONDS = 'executions.mbSeconds';
 const METRIC_FUNCTION_ID_EXECUTIONS  = '{functionInternalId}.executions';
 const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE  = '{functionInternalId}.executions.compute';
+const METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS = '{functionInternalId}.executions.mbSeconds';
 const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
@@ -303,6 +311,7 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
+Config::load('runtime-specifications', __DIR__ . '/config/runtimes/specifications.php');
 Config::load('function-templates', __DIR__ . '/config/function-templates.php');
 
 /**
@@ -746,12 +755,13 @@ $register->set('logger', function () {
 
         $providerName = $loggingProvider->getScheme();
         $providerConfig = match ($providerName) {
-            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
+            'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
             'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
             default => ['key' => $loggingProvider->getHost()],
         };
-    } catch (Throwable) {
+    } catch (Throwable $th) {
         // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
+        Console::warning('Using deprecated logging configuration. Please update your configuration to use DSN format.' . $th->getMessage());
         $configChunks = \explode(";", $providerConfig);
 
         $providerConfig = match ($providerName) {
@@ -769,13 +779,22 @@ $register->set('logger', function () {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
-    $adapter = match ($providerName) {
-        'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
-        'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
-        'raygun' => new Raygun($providerConfig['key']),
-        'appsignal' => new AppSignal($providerConfig['key']),
-        default => throw new Exception('Provider "' . $providerName . '" not supported.')
-    };
+    try {
+        $adapter = match ($providerName) {
+            'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
+            'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
+            'raygun' => new Raygun($providerConfig['key']),
+            'appsignal' => new AppSignal($providerConfig['key']),
+            default => null
+        };
+    } catch (Throwable $th) {
+        $adapter = null;
+    }
+
+    if ($adapter === null) {
+        Console::error("Logging provider not supported. Logging is disabled");
+        return;
+    }
 
     return new Logger($adapter);
 });
@@ -999,7 +1018,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-08.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-09.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
@@ -1248,7 +1267,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         $jwtSessionId = $payload['sessionId'] ?? '';
-        if(!empty($jwtSessionId)) {
+        if (!empty($jwtSessionId)) {
             if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
                 $user = new Document([]);
             }
