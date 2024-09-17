@@ -14,4 +14,5 @@ AttributeEnum result = await databases.updateEnumAttribute(
     elements: [],
     xrequired: false,
     xdefault: '<DEFAULT>',
+    newKey: '', // (optional)
 );

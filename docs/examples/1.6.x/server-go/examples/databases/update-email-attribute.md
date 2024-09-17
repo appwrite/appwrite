@@ -20,6 +20,7 @@ func main() {
         "",
         false,
         "email@example.com",
+        databases.WithUpdateEmailAttributeNewKey(""),
     )
 
     if error != nil {

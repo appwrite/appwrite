@@ -273,6 +273,8 @@ App::get('/v1/project/usage')
             'bucketsTotal' => $total[METRIC_BUCKETS],
             'filesStorageTotal' => $total[METRIC_FILES_STORAGE],
             'functionsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE] + $total[METRIC_BUILDS_STORAGE],
+            'buildsStorageTotal' => $total[METRIC_BUILDS_STORAGE],
+            'deploymentsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE],
             'executionsBreakdown' => $executionsBreakdown,
             'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
             'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,

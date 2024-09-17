@@ -14,5 +14,6 @@ result = databases.update_integer_attribute(
     required = False,
     min = None,
     max = None,
-    default = None
+    default = None,
+    new_key = '' # optional
 )

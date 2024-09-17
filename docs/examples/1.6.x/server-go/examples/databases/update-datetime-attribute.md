@@ -20,6 +20,7 @@ func main() {
         "",
         false,
         "",
+        databases.WithUpdateDatetimeAttributeNewKey(""),
     )
 
     if error != nil {

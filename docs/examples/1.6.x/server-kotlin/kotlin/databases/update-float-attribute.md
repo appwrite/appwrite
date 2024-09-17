@@ -16,5 +16,6 @@ val response = databases.updateFloatAttribute(
     required = false,
     min = 0,
     max = 0,
-    default = 0
+    default = 0,
+    newKey = "" // optional
 )

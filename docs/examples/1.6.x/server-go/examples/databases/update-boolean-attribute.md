@@ -20,6 +20,7 @@ func main() {
         "",
         false,
         false,
+        databases.WithUpdateBooleanAttributeNewKey(""),
     )
 
     if error != nil {

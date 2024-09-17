@@ -22,6 +22,7 @@ func main() {
         0,
         0,
         0,
+        databases.WithUpdateIntegerAttributeNewKey(""),
     )
 
     if error != nil {

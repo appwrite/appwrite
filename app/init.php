@@ -224,8 +224,8 @@ const API_KEY_DYNAMIC = 'dynamic';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
-const METRIC_MESSAGES  = 'messages';
-const METRIC_MESSAGES_COUNTRY_CODE  = '{countryCode}.messages';
+const METRIC_AUTH_METHOD_PHONE  = 'auth.method.phone';
+const METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE  = METRIC_AUTH_METHOD_PHONE . '.{countryCode}';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
@@ -792,7 +792,7 @@ $register->set('logger', function () {
         $adapter = null;
     }
 
-    if($adapter === null) {
+    if ($adapter === null) {
         Console::error("Logging provider not supported. Logging is disabled");
         return;
     }
@@ -1019,7 +1019,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-08.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-09.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
@@ -1268,7 +1268,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         $jwtSessionId = $payload['sessionId'] ?? '';
-        if(!empty($jwtSessionId)) {
+        if (!empty($jwtSessionId)) {
             if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
                 $user = new Document([]);
             }
