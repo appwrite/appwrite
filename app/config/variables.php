@@ -193,7 +193,7 @@ return [
                 'introduction' => '1.5.1',
                 'default' => '',
                 'required' => true,
-                'question' => '',
+                'question' => 'Enter an email that will be used when registering for SSL certificates',
                 'filter' => ''
             ],
             [
