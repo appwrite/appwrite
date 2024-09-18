@@ -2,11 +2,14 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Tests\Async;
 use Tests\E2E\Client;
 use Utopia\CLI\Console;
 
 trait FunctionsBase
 {
+    use Async;
+
     protected string $stdout = '';
     protected string $stderr = '';
 
@@ -15,29 +18,23 @@ trait FunctionsBase
         Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
     }
 
-    protected function awaitDeploymentIsBuilt($functionId, $deploymentId, $checkForSuccess = true): void
+    protected function assertDeployment($functionId, $deploymentId, $allowFailure = false)
     {
-        while (true) {
+        $this->assertEventually(function () use ($functionId, $deploymentId, $allowFailure) {
             $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
 
-            if (
-                $deployment['headers']['status-code'] >= 400
-                || \in_array($deployment['body']['status'], ['ready', 'failed'])
-            ) {
-                break;
+            $status = $deployment['body']['status'];
+
+            if ($allowFailure && $status === 'failed') {
+                $this->fail('Deployment failed: ' . json_encode($deployment['body']['buildStderr']));
             }
 
-            \sleep(1);
-        }
-
-        if ($checkForSuccess) {
-            $this->assertEquals(200, $deployment['headers']['status-code']);
-            $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
-        }
+            $this->assertEquals('ready', $status);
+        }, 180000, 3000);
     }
 
     // /**

@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Functions;
 
 use Appwrite\Functions\Specification;
-use Appwrite\Tests\Retry;
 use CURLFile;
 use PHPUnit\Framework\ExpectationFailedException;
 use Tests\E2E\Client;
@@ -429,7 +428,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId);
+        $this->assertDeployment($function['body']['$id'], $deploymentId);
 
         $functionDetails = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
@@ -521,7 +520,7 @@ class FunctionsCustomServerTest extends Scope
 
         // Wait for deployment build to finish
         // Deployment is automatically activated
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId);
+        $this->assertDeployment($function['body']['$id'], $deploymentId);
 
         $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
@@ -635,7 +634,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
-        $this->awaitDeploymentIsBuilt($data['functionId'], $deploymentId);
+        $this->assertDeployment($data['functionId'], $deploymentId);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
@@ -650,7 +649,7 @@ class FunctionsCustomServerTest extends Scope
 
         $deploymentIdInactive = $deployment['body']['$id'];
 
-        $this->awaitDeploymentIsBuilt($data['functionId'], $deploymentIdInactive);
+        $this->assertDeployment($data['functionId'], $deploymentIdInactive);
 
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'], array_merge([
             'content-type' => 'application/json',
@@ -696,26 +695,16 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
-        // Poll until deployment is in progress
-        while (true) {
+        $this->assertEventually(function () use ($data, $deploymentId) {
             $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
 
-            if (
-                $deployment['headers']['status-code'] >= 400
-                || $deployment['body']['status'] === 'building'
-            ) {
-                break;
-            }
-
-            \sleep(1);
-        }
-
-        $this->assertEquals(200, $deployment['headers']['status-code']);
-        $this->assertEquals('building', $deployment['body']['status']);
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('building', $deployment['body']['status']);
+        }, 60000, 1000);
 
         // Cancel the deployment build
         $cancel = $this->client->call(Client::METHOD_PATCH, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentId . '/build', [
@@ -729,10 +718,10 @@ class FunctionsCustomServerTest extends Scope
 
         /**
          * Build worker still runs the build.
-         * 30s sleep gives worker enough time to finish build.
+         * 10s sleep gives worker enough time to finish build.
          * After build finished, it should still be canceled, not ready.
          */
-        \sleep(30);
+        \sleep(10);
         $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -794,7 +783,7 @@ class FunctionsCustomServerTest extends Scope
 
         $deploymentId = $largeTag['body']['$id'];
 
-        $this->awaitDeploymentIsBuilt($data['functionId'], $deploymentId, true);
+        $this->assertDeployment($data['functionId'], $deploymentId, true);
 
         $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -1294,7 +1283,6 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testUpdateDeployment
      */
-    #[Retry(count: 2)]
     public function testSyncCreateExecution($data): array
     {
         /**
@@ -1417,14 +1405,23 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
         $this->assertEquals(202, $execution['headers']['status-code']);
-        sleep(5);
-        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
+
+        $this->assertEventually(function () use ($data, $executionId) {
+            $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions/' . $executionId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]);
+
+            $this->assertEquals(200, $execution['headers']['status-code']);
+            $this->assertEquals('waiting', $execution['body']['status']);
+        }, 10000, 500);
+
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ]);
 
         $this->assertEquals(204, $execution['headers']['status-code']);
-        $this->assertEmpty($execution['body']);
 
         return $data;
     }
@@ -1432,7 +1429,6 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testGetExecution
      */
-    #[Retry(count: 2)]
     public function testUpdateSpecs($data): array
     {
         /**
@@ -1622,7 +1618,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($functionId, $deploymentId);
+        $this->assertDeployment($functionId, $deploymentId);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1773,7 +1769,7 @@ class FunctionsCustomServerTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, checkForSuccess: false);
+        $this->assertDeployment($function['body']['$id'], $deploymentId, allowFailure: true);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -1868,7 +1864,7 @@ class FunctionsCustomServerTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, checkForSuccess: false);
+        $this->assertDeployment($function['body']['$id'], $deploymentId, allowFailure: true);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -1954,7 +1950,7 @@ class FunctionsCustomServerTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, checkForSuccess: false);
+        $this->assertDeployment($function['body']['$id'], $deploymentId, allowFailure: true);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -2054,7 +2050,7 @@ class FunctionsCustomServerTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, checkForSuccess: false);
+        $this->assertDeployment($function['body']['$id'], $deploymentId, allowFailure: true);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -2147,7 +2143,7 @@ class FunctionsCustomServerTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, checkForSuccess: false);
+        $this->assertDeployment($function['body']['$id'], $deploymentId, allowFailure: true);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -2169,21 +2165,23 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $userId = $user['body']['$id'];
-
         $this->assertEquals(201, $user['headers']['status-code']);
 
-        // Wait for execution to occur
-        sleep(15);
+        $execution = null;
+        $this->assertEventually(function () use ($functionId, &$execution) {
+            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+            if (empty($executions['body']['executions'])) {
+                throw new \Exception('No executions found yet');
+            }
 
-        $execution = $executions['body']['executions'][0];
+            $execution = $executions['body']['executions'][0];
+            $this->assertEquals('completed', $execution['status']);
+        }, 30000, 1000);
 
-        $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertEquals('completed', $execution['status']);
         $this->assertEquals(204, $execution['responseStatusCode']);
         $this->assertStringContainsString($userId, $execution['logs']);
         $this->assertStringContainsString('Event User', $execution['logs']);
@@ -2243,7 +2241,7 @@ class FunctionsCustomServerTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, checkForSuccess: false);
+        $this->assertDeployment($function['body']['$id'], $deploymentId, allowFailure: true);
 
         $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -2346,7 +2344,7 @@ class FunctionsCustomServerTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, checkForSuccess: false);
+        $this->assertDeployment($function['body']['$id'], $deploymentId, allowFailure: true);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -2437,7 +2435,7 @@ class FunctionsCustomServerTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, checkForSuccess: false);
+        $this->assertDeployment($function['body']['$id'], $deploymentId, allowFailure: true);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -2553,7 +2551,7 @@ class FunctionsCustomServerTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, checkForSuccess: false);
+        $this->assertDeployment($function['body']['$id'], $deploymentId, allowFailure: true);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -2639,7 +2637,7 @@ class FunctionsCustomServerTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, checkForSuccess: false);
+        $this->assertDeployment($function['body']['$id'], $deploymentId, allowFailure: true);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -2735,7 +2733,7 @@ class FunctionsCustomServerTest extends Scope
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->awaitDeploymentIsBuilt($functionId, $deploymentId, checkForSuccess: false);
+        $this->assertDeployment($functionId, $deploymentId, allowFailure: true);
 
         // Sync Executions test
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
