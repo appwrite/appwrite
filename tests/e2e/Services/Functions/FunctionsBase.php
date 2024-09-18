@@ -17,6 +17,8 @@ trait FunctionsBase
 
     protected function awaitDeploymentIsBuilt($functionId, $deploymentId, $checkForSuccess = true): void
     {
+        $startTime = time();
+        $maxWaitTime = 15;
         while (true) {
             $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
                 'content-type' => 'application/json',
@@ -31,6 +33,10 @@ trait FunctionsBase
                 break;
             }
 
+            if (time() - $startTime > $maxWaitTime) {
+                break;
+            }
+
             \sleep(1);
         }
 
@@ -42,6 +48,8 @@ trait FunctionsBase
 
     protected function awaitExecutionIsComplete($functionId, $executionId): void
     {
+        $startTime = time();
+        $maxWaitTime = 15;
         while (true) {
             $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, [
                 'content-type' => 'application/json',
@@ -49,12 +57,14 @@ trait FunctionsBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
 
-            var_dump($execution['body']);
-
             if (
                 $execution['headers']['status-code'] >= 400
                 || \in_array($execution['body']['status'], ['completed', 'failed'])
             ) {
+                break;
+            }
+
+            if (time() - $startTime > $maxWaitTime) {
                 break;
             }
 

@@ -912,7 +912,26 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Wait 20 seconds, ensure non-valid session
-        \sleep(20);
+        $startTime = time();
+        $maxWaitTime = 20;
+
+        while (true) {
+            $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'Cookie' => $sessionCookie,
+            ]));
+
+            if ($response['headers']['status-code'] === 401) {
+                break;
+            }
+
+            if (time() - $startTime > $maxWaitTime) {
+                break;
+            }
+
+            sleep(1);
+        }
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'content-type' => 'application/json',
@@ -3025,7 +3044,26 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
 
         // Ensure JWT key expires
-        \sleep(10);
+        $startTime = time();
+        $maxWaitTime = 10;
+
+        while (true) {
+            $response = $this->client->call(Client::METHOD_GET, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $id,
+                'x-appwrite-key' => $jwt,
+            ]);
+
+            if ($response['headers']['status-code'] === 401) {
+                break;
+            }
+
+            if (time() - $startTime > $maxWaitTime) {
+                break;
+            }
+
+            sleep(1);
+        }
 
         $response = $this->client->call(Client::METHOD_GET, '/users', [
             'content-type' => 'application/json',
