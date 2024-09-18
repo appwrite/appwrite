@@ -34,7 +34,7 @@ trait FunctionsBase
             }
 
             $this->assertEquals('ready', $status);
-        }, 180000, 3000);
+        }, 180000, 1000);
     }
 
     // /**
