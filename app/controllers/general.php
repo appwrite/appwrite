@@ -520,7 +520,7 @@ Http::init()
                     $mainDomain = $envDomain;
                 } else {
                     $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
-                    $mainDomain = ($domainDocument !== false && !$domainDocument->isEmpty()) ? $domainDocument->getAttribute('domain') : $domain->get();
+                    $mainDomain = (!empty($domainDocument) && !$domainDocument->isEmpty()) ? $domainDocument->getAttribute('domain') : $domain->get();
                 }
 
                 if ($mainDomain !== $domain->get()) {
@@ -530,7 +530,7 @@ Http::init()
                         Query::equal('domain', [$domain->get()])
                     ]);
 
-                    if ($domainDocument === false || $domainDocument->isEmpty()) {
+                    if (empty($domainDocument) || $domainDocument->isEmpty()) {
                         $domainDocument = new Document([
                             'domain' => $domain->get(),
                             'resourceType' => 'api',
