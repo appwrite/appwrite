@@ -140,7 +140,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                if ($existingTarget) {
+                if ($existingTarget !== false && !$existingTarget->isEmpty()) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
@@ -164,7 +164,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$phone]),
                 ]);
-                if ($existingTarget) {
+                if ($existingTarget !== false && !$existingTarget->isEmpty()) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
