@@ -458,7 +458,7 @@ class FunctionsCustomClientTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(5);
+        $this->awaitExecutionIsComplete($functionId, $executionId);
 
         $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, [
             'content-type' => 'application/json',

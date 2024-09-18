@@ -429,7 +429,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId);
+        $this->awaitDeploymentIsBuilt($function['body']['$id'], $deploymentId, true);
 
         $functionDetails = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
@@ -583,7 +583,7 @@ class FunctionsCustomServerTest extends Scope
         $executionId = $execution['body']['$id'];
 
         // Wait for async execuntion to finish
-        sleep(5);
+        $this->awaitExecutionIsComplete($functionId, $executionId);
 
         // Ensure execution was successful
         $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
@@ -1635,7 +1635,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $execution['headers']['status-code']);
 
-        sleep(20);
+        $this->awaitExecutionIsComplete($functionId, $executionId);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1878,7 +1878,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
 
         // Wait a little for activation to finish
-        sleep(5);
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId, true);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1964,7 +1964,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
 
         // Wait a little for activation to finish
-        sleep(5);
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId, true);
 
         $bytes = pack('C*', ...[0, 20, 255]);
 
@@ -2110,7 +2110,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertArrayHasKey('supports', $runtime);
     }
 
-
     public function testEventTrigger()
     {
         $timeout = 15;
@@ -2157,7 +2156,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
 
         // Wait a little for activation to finish
-        sleep(5);
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId, true);
 
         // Create user to trigger event
         $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
@@ -2173,7 +2172,25 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $user['headers']['status-code']);
 
         // Wait for execution to occur
-        sleep(15);
+        while (true) {
+            $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $execution['headers']['status-code'] >= 400
+                || (
+                    isset($execution['body']['executions'][0])
+                    && \in_array($execution['body']['executions'][0]['status'], ['completed', 'failed'])
+                )
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -2263,7 +2280,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
 
         // Wait a little for activation to finish
-        sleep(5);
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId, true);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -2289,7 +2306,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
 
-        \sleep(10);
+        $this->awaitExecutionIsComplete($functionId, $execution['body']['$id']);
 
         $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $execution['body']['$id'], array_merge([
             'content-type' => 'application/json',
@@ -2356,7 +2373,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
 
         // Wait a little for activation to finish
-        sleep(5);
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId, true);
 
         $cookie = 'cookieName=cookieValue; cookie2=value2; cookie3=value=3; cookie4=val:ue4; cookie5=value5';
 
@@ -2447,7 +2464,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
 
         // Wait a little for activation to finish
-        sleep(5);
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId, true);
 
         $cookie = 'cookieName=cookieValue; cookie2=value2; cookie3=value=3; cookie4=val:ue4; cookie5=value5';
 
@@ -2563,7 +2580,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
 
         // Wait a little for activation to finish
-        sleep(5);
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId, true);
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
@@ -2649,7 +2666,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
 
         // Wait a little for activation to finish
-        sleep(5);
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId, true);
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
@@ -2762,7 +2779,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'];
 
-        sleep(5);
+        $this->awaitExecutionIsComplete($functionId, $executionId);
 
         $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',

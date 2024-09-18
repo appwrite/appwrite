@@ -40,6 +40,32 @@ trait FunctionsBase
         }
     }
 
+    protected function awaitExecutionIsComplete($functionId, $executionId): void
+    {
+        while (true) {
+            $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            var_dump($execution['body']);
+
+            if (
+                $execution['headers']['status-code'] >= 400
+                || \in_array($execution['body']['status'], ['completed', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        // assert that execution status is completed or failed
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertContains($execution['body']['status'], ['completed', 'failed'], \json_encode($execution['body']));
+    }
+
     // /**
     //  * @depends testCreateTeam
     //  */
