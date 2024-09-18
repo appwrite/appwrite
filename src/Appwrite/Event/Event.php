@@ -110,6 +110,8 @@ class Event
         return $this->event;
     }
 
+
+
     public function getSourceRegion(): string
     {
         return System::getEnv('_APP_REGION', 'default');

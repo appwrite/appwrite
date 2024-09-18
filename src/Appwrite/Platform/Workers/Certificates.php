@@ -80,8 +80,8 @@ class Certificates extends Action
         $document = new Document($payload['domain'] ?? []);
         $domain   = new Domain($document->getAttribute('domain', ''));
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
-
         $this->sourceRegion = $payload['sourceRegion'] ?? 'default';
+
         $log->addTag('domain', $domain->get());
         $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log,$realtimeConnection, $skipRenewCheck);
     }

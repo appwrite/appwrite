@@ -90,8 +90,8 @@ class Builds extends Action
         $resource = new Document($payload['resource'] ?? []);
         $deployment = new Document($payload['deployment'] ?? []);
         $template = new Document($payload['template'] ?? []);
-
         $this->sourceRegion = $payload['sourceRegion'] ?? 'default';
+
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
 

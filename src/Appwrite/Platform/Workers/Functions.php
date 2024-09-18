@@ -101,7 +101,6 @@ class Functions extends Action
 
         $this->sourceRegion = $payload['sourceRegion'] ?? 'default';
 
-
         if ($function->isEmpty() && !empty($functionId)) {
             $function = $dbForProject->getDocument('functions', $functionId);
         }

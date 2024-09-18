@@ -73,8 +73,8 @@ class Databases extends Action
         $collection = new Document($payload['collection'] ?? []);
         $document = new Document($payload['document'] ?? []);
         $database = new Document($payload['database'] ?? []);
-
         $this->sourceRegion = $payload['sourceRegion'] ?? 'default';
+
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
 

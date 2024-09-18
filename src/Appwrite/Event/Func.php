@@ -220,6 +220,7 @@ class Func extends Event
         $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
 
         return $client->enqueue([
+            'sourceRegion' =>  $this->getSourceRegion(),
             'project' => $this->project,
             'user' => $this->user,
             'function' => $this->function,
