@@ -57,6 +57,10 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         ])
     )[0] ?? null;
 
+    var_dump(System::getEnv('_APP_DOMAIN_FUNCTIONS', ''));
+    var_dump($host);
+    var_dump(APP_HOSTNAME_INTERNAL);
+
     if ($route === null) {
         if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
