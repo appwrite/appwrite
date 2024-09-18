@@ -64,7 +64,8 @@ abstract class ScheduleBase extends Action
 
             $collectionId = match ($schedule->getAttribute('resourceType')) {
                 'function' => 'functions',
-                'message' => 'messages'
+                'message' => 'messages',
+                'execution' => 'executions'
             };
 
             $resource = $getProjectDB($project)->getDocument(
@@ -73,6 +74,7 @@ abstract class ScheduleBase extends Action
             );
 
             return [
+                '$internalId' => $schedule->getInternalId(),
                 '$id' => $schedule->getId(),
                 'resourceId' => $schedule->getAttribute('resourceId'),
                 'schedule' => $schedule->getAttribute('schedule'),
@@ -109,11 +111,12 @@ abstract class ScheduleBase extends Action
 
             foreach ($results as $document) {
                 try {
-                    $this->schedules[$document['resourceId']] = $getSchedule($document);
+                    $this->schedules[$document->getInternalId()] = $getSchedule($document);
                 } catch (\Throwable $th) {
                     $collectionId = match ($document->getAttribute('resourceType')) {
                         'function' => 'functions',
-                        'message' => 'messages'
+                        'message' => 'messages',
+                        'execution' => 'executions'
                     };
 
                     Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");
@@ -170,10 +173,10 @@ abstract class ScheduleBase extends Action
 
                         if (!$document['active']) {
                             Console::info("Removing: {$document['resourceId']}");
-                            unset($this->schedules[$document['resourceId']]);
+                            unset($this->schedules[$document->getInternalId()]);
                         } elseif ($new !== $org) {
                             Console::info("Updating: {$document['resourceId']}");
-                            $this->schedules[$document['resourceId']] = $getSchedule($document);
+                            $this->schedules[$document->getInternalId()] = $getSchedule($document);
                         }
                     }
 
