@@ -219,7 +219,7 @@ class Executor
             'restartPolicy' => 'always' // Once utopia/orchestration has it, use DockerAPI::ALWAYS (0.13+)
         ];
 
-        if(!empty($body)) {
+        if (!empty($body)) {
             $params['body'] = $body;
         }
 

@@ -785,7 +785,7 @@ $register->set('logger', function () {
         $adapter = null;
     }
 
-    if($adapter === null) {
+    if ($adapter === null) {
         Console::error("Logging provider not supported. Logging is disabled");
         return;
     }
@@ -1261,7 +1261,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         $jwtSessionId = $payload['sessionId'] ?? '';
-        if(!empty($jwtSessionId)) {
+        if (!empty($jwtSessionId)) {
             if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
                 $user = new Document([]);
             }

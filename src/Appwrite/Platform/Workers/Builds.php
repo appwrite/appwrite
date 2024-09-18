@@ -207,7 +207,7 @@ class Builds extends Action
         }
 
         try {
-            if($isNewBuild && !$isVcsEnabled) {
+            if ($isNewBuild && !$isVcsEnabled) {
                 // Non-vcs+Template
 
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
@@ -283,7 +283,7 @@ class Builds extends Action
 
                 $cloneVersion = $branchName;
                 $cloneType = GitHub::CLONE_TYPE_BRANCH;
-                if(!empty($commitHash)) {
+                if (!empty($commitHash)) {
                     $cloneVersion = $commitHash;
                     $cloneType = GitHub::CLONE_TYPE_COMMIT;
                 }
