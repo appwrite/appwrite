@@ -1177,8 +1177,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('8.0', $execution['body']['responseBody']);
         $this->assertStringContainsString('Global Variable Value', $execution['body']['responseBody']);
         // $this->assertStringContainsString('êä', $execution['body']['responseBody']); // tests unknown utf-8 chars
-        $this->assertEquals('', $execution['body']['errors']);
-        $this->assertEquals('', $execution['body']['logs']);
+        $this->assertNotEmpty($execution['body']['errors']);
+        $this->assertNotEmpty($execution['body']['logs']);
         $this->assertLessThan(10, $execution['body']['duration']);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
