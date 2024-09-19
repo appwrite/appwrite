@@ -1,3 +1,17 @@
+## 13.0.0
+
+* Fixed realtime reconnection issues
+* Support for Appwrite 1.6
+* Update dependencies
+* Added `scheduledAt` attribute to `Execution` response model
+* Added `scheduledAt` parameter to `createExecution()`: Enables creating a delayed execution
+* Breaking changes:
+  * Removed `otp` parameter from `deleteMFAAuthenticator`.
+
+You can find the new syntax for breaking changes in the [Appwrite API references](https://appwrite.io/docs/references). Select version `1.6.x`.
+
+**Please note: This version is compatible with Appwrite 1.6 and later only. If you do not update your Appwrite SDK, old SDKs will not break your app. Appwrite APIs are backwards compatible.**
+
 ## 12.0.4
 
 * Fixed concurrent modification error when closing realtime socket

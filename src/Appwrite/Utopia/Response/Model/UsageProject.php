@@ -46,6 +46,18 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('functionsStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of functions storage size (in bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('buildsStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of builds storage size (in bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('deploymentsStorageTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated sum of deployments storage size (in bytes).',
@@ -55,6 +67,18 @@ class UsageProject extends Model
             ->addRule('bucketsTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of buckets.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('executionsMbSecondsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of function executions mbSeconds.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('buildsMbSecondsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of function builds mbSeconds.',
                 'default' => 0,
                 'example' => 0,
             ])
@@ -107,9 +131,23 @@ class UsageProject extends Model
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('deploymentsStorageBreakdown', [
+            ->addRule('executionsMbSecondsBreakdown', [
                 'type' => Response::MODEL_METRIC_BREAKDOWN,
-                'description' => 'Aggregated breakdown in totals of deployments storage size (in bytes).',
+                'description' => 'Aggregated breakdown in totals of execution mbSeconds by functions.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('buildsMbSecondsBreakdown', [
+                'type' => Response::MODEL_METRIC_BREAKDOWN,
+                'description' => 'Aggregated breakdown in totals of build mbSeconds by functions.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('functionsStorageBreakdown', [
+                'type' => Response::MODEL_METRIC_BREAKDOWN,
+                'description' => 'Aggregated breakdown in totals of functions storage size (in bytes).',
                 'default' => [],
                 'example' => [],
                 'array' => true

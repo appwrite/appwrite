@@ -9,7 +9,7 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Http\Server;
 use Swoole\Process;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
@@ -56,8 +56,6 @@ $http->on(Constant::EVENT_BEFORE_RELOAD, function ($server, $workerId) {
 $http->on(Constant::EVENT_AFTER_RELOAD, function ($server, $workerId) {
     Console::success('Reload completed...');
 });
-
-Files::load(__DIR__ . '/../console');
 
 include __DIR__ . '/controllers/general.php';
 

@@ -46,6 +46,12 @@ class UsageFunction extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('buildsMbSecondsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of function builds mbSeconds.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('executionsTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total  aggregated number of function executions.',
@@ -55,6 +61,12 @@ class UsageFunction extends Model
             ->addRule('executionsTimeTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated sum of function  executions compute time.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('executionsMbSecondsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of function executions mbSeconds.',
                 'default' => 0,
                 'example' => 0,
             ])
@@ -93,6 +105,13 @@ class UsageFunction extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('buildsMbSeconds', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of function builds mbSeconds per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
             ->addRule('executions', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of function executions per period.',
@@ -100,10 +119,16 @@ class UsageFunction extends Model
                 'example' => [],
                 'array' => true
             ])
-
             ->addRule('executionsTime', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of function executions compute time per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('executionsMbSeconds', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of function mbSeconds per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
