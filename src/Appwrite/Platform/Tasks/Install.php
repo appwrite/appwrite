@@ -8,9 +8,9 @@ use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\Text;
 use Utopia\Platform\Action;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Text;
 
 class Install extends Action
 {
@@ -213,8 +213,7 @@ class Install extends Action
         }
 
         $env = '';
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         foreach ($input as $key => $value) {
             if ($value) {
@@ -225,13 +224,13 @@ class Install extends Action
         $exit = 0;
         if (!$noStart) {
             Console::log("Running \"docker compose up -d --remove-orphans --renew-anon-volumes\"");
-            $exit = Console::execute("$env docker compose --project-directory $this->path up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
+            $exit = Console::execute("$env docker compose --project-directory $this->path up -d --remove-orphans --renew-anon-volumes", '', $output);
         }
 
         if ($exit !== 0) {
             $message = 'Failed to install Appwrite dockers';
             Console::error($message);
-            Console::error($stderr);
+            Console::error($output);
             Console::exit($exit);
         } else {
             $message = 'Appwrite installed successfully';

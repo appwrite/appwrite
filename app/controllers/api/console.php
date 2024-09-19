@@ -2,12 +2,12 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
-use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\Text;
 use Utopia\System\System;
-use Utopia\Validator\Text;
 
-App::init()
+Http::init()
     ->groups(['console'])
     ->inject('project')
     ->action(function (Document $project) {
@@ -17,7 +17,7 @@ App::init()
     });
 
 
-App::get('/v1/console/variables')
+Http::get('/v1/console/variables')
     ->desc('Get variables')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -56,7 +56,7 @@ App::get('/v1/console/variables')
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);
     });
 
-App::post('/v1/console/assistant')
+Http::post('/v1/console/assistant')
     ->desc('Ask Query')
     ->groups(['api', 'assistant'])
     ->label('scope', 'assistant.read')
