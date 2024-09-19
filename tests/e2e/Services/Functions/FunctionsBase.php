@@ -141,18 +141,20 @@ trait FunctionsBase
         return $executions;
     }
 
-    protected function packageFunction(string $folder = 'php'): CURLFile
+    protected function packageFunction(string $function = 'php'): CURLFile
     {
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
+        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
+        $tarPath = "$folderPath/code.tar.gz";
 
-        if (!file_exists($code)) {
-            Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->output);
+        if (!file_exists($tarPath)) {
+            Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->output);
         }
-        if (filesize($code) > 1024 * 1024 * 5) {
+
+        if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
 
-        return new CURLFile($code, 'application/x-gzip', \basename($code));
+        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
     }
 
     protected function createDeployment(
