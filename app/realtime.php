@@ -273,10 +273,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
             $start = time();
 
             $pools = $container->get('pools');
+            $pool = $pools['pools-pubsub-pubsub']['pool'];
+
             /** @var Connections $connections */
             $connections = $container->get('connections');
-
-            $pool = $pools['pools-pubsub-pubsub']['pool'];
             $connection = $pool->get();
             $connections->add($connection, $pool);
 
@@ -301,12 +301,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                        $consoleDatabase = $container->get('dbForConsole');
+                        $dbForConsole = $container->get('dbForConsole');
 
-                        $project = $authorization->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
-                        $database = $container->get('getProjectDB')($project);
+                        $project = $authorization->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+                        $dbForProject = $container->get('getProjectDB')($project);
 
-                        $user = $database->getDocument('users', $userId);
+                        $user = $dbForProject->getDocument('users', $userId);
 
                         $roles = Auth::getRoles($user, $authorization);
                         $channels = $realtime->connections[$connection]['channels'];

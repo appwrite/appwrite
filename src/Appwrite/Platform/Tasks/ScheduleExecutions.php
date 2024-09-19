@@ -26,11 +26,11 @@ class ScheduleExecutions extends ScheduleBase
         [$connection,$pool, $dbForConsole] = $getConsoleDB();
         $this->connections->add($connection, $pool);
 
-        $pool = $pools['pools-queue-queue']['pool'];
-        $connection = $pool->get();
-        $this->connections->add($connection, $pool);
+        $queuePool = $pools['pools-queue-queue']['pool'];
+        $queueConnection = $queuePool->get();
+        $this->connections->add($queueConnection, $queuePool);
 
-        $queueForFunctions = new Func(new Redis($connection));
+        $queueForFunctions = new Func(new Redis($queueConnection));
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
 
         foreach ($this->schedules as $schedule) {
