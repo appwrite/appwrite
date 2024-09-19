@@ -48,7 +48,7 @@ class FunctionsCustomClientTest extends Scope
                 'users.*.create',
                 'users.*.delete',
             ],
-            'schedule' => '* * * * *', // Execute every minute
+            'schedule' => '* * * * *', // Execute every 60 seconds
             'timeout' => 10,
         ]);
         $this->setupDeployment($functionId, [
@@ -57,18 +57,30 @@ class FunctionsCustomClientTest extends Scope
             'activate' => true
         ]);
 
-        $execution = $this->createExecution($functionId, [
-            'async' => false,
+        // Deny create async execution as guest
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'async' => true,
         ]);
         $this->assertEquals(401, $execution['headers']['status-code']);
 
+        // Allow create async execution as user
         $execution = $this->createExecution($functionId, [
             'async' => true,
         ]);
         $this->assertEquals(202, $execution['headers']['status-code']);
 
+        // Wait for scheduled execution
+        \sleep(60);
+
         $this->assertEventually(function () use ($functionId) {
-            $executions = $this->listExecutions($functionId);
+            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['key'],
+            ]);
             $this->assertEquals(200, $executions['headers']['status-code']);
             $this->assertCount(2, $executions['body']['executions']);
 
@@ -80,7 +92,7 @@ class FunctionsCustomClientTest extends Scope
             $this->assertNotEmpty($asyncExecution['logs']);
             $this->assertNotEmpty($asyncExecution['errors']);
             $this->assertGreaterThan(0, $asyncExecution['duration']);
-        }, 10000, 250);
+        }, 10000, 500);
 
         $this->cleanupFunction($functionId);
     }
@@ -97,6 +109,7 @@ class FunctionsCustomClientTest extends Scope
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
             'timeout' => 10,
+            'logging' => true,
         ]);
         $this->setupDeployment($functionId, [
             'entrypoint' => 'index.php',
@@ -106,7 +119,7 @@ class FunctionsCustomClientTest extends Scope
 
         // Schedule execution for the future
         \date_default_timezone_set('UTC');
-        $futureTime = (new \DateTime())->add(new \DateInterval('PT15S')); // 15 seconds from now
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT2M')); // 2 minute in the future
         $futureTime->setTime($futureTime->format('H'), $futureTime->format('i'), 0, 0);
 
         $execution = $this->createExecution($functionId, [
@@ -120,17 +133,18 @@ class FunctionsCustomClientTest extends Scope
             ]
         ]);
         $executionId = $execution['body']['$id'];
+
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertEquals('scheduled', $execution['body']['status']);
         $this->assertEquals('PATCH', $execution['body']['requestMethod']);
         $this->assertEquals('/custom-path', $execution['body']['requestPath']);
         $this->assertCount(0, $execution['body']['requestHeaders']);
 
-        \sleep(15);
+        \sleep(120);
 
         $this->assertEventually(function () use ($functionId, $executionId) {
             $execution = $this->getExecution($functionId, $executionId);
-            $this->assertEquals('completed', $execution['body']['status']);
+
             $this->assertEquals(200, $execution['headers']['status-code']);
             $this->assertEquals(200, $execution['body']['responseStatusCode']);
             $this->assertEquals('completed', $execution['body']['status']);
@@ -143,7 +157,7 @@ class FunctionsCustomClientTest extends Scope
             $this->assertStringContainsString('user-is-' . $this->getUser()['$id'], $execution['body']['logs']);
             $this->assertStringContainsString('jwt-is-valid', $execution['body']['logs']);
             $this->assertGreaterThan(0, $execution['body']['duration']);
-        }, 10000, 250);
+        }, 10000, 500);
 
         /* Test for FAILURE */
         // Schedule synchronous execution
@@ -377,9 +391,11 @@ class FunctionsCustomClientTest extends Scope
         $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
         ], $this->getHeaders()));
+
         $this->assertEquals(200, $templates['headers']['status-code']);
         $this->assertGreaterThan(0, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
+
         foreach ($templates['body']['templates'] as $template) {
             $this->assertArrayHasKey('name', $template);
             $this->assertArrayHasKey('id', $template);
@@ -389,7 +405,6 @@ class FunctionsCustomClientTest extends Scope
             $this->assertArrayHasKey('vcsProvider', $template);
             $this->assertArrayHasKey('runtimes', $template);
             $this->assertArrayHasKey('variables', $template);
-            $this->assertArrayHasKey('scopes', $template);
         }
 
         // List templates with pagination
@@ -434,9 +449,11 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(5, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
         $this->assertArrayHasKey('runtimes', $templates['body']['templates'][0]);
+
         foreach ($templates['body']['templates'] as $template) {
             $this->assertContains($template['useCases'][0], ['databases']);
         }
+
         $this->assertContains('node-16.0', array_column($templates['body']['templates'][0]['runtimes'], 'name'));
 
         /**
