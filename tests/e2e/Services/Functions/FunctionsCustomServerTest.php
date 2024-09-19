@@ -35,7 +35,6 @@ class FunctionsCustomServerTest extends Scope
                 'buckets.*.create',
                 'buckets.*.delete',
             ],
-            'schedule' => '0 0 1 1 *',
             'timeout' => 10,
         ]);
 
@@ -53,7 +52,7 @@ class FunctionsCustomServerTest extends Scope
             'buckets.*.create',
             'buckets.*.delete',
         ], $function['body']['events']);
-        $this->assertEquals('0 0 1 1 *', $function['body']['schedule']);
+        $this->assertEmpty($function['body']['schedule']);
         $this->assertEquals(10, $function['body']['timeout']);
 
         $variable = $this->createVariable($functionId, [
@@ -156,7 +155,7 @@ class FunctionsCustomServerTest extends Scope
         /**
          * Test pagination
          */
-        $functionId = $this->setupFunction([
+        $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test 2',
             'runtime' => 'php-8.0',
@@ -165,7 +164,6 @@ class FunctionsCustomServerTest extends Scope
                 'buckets.*.create',
                 'buckets.*.delete',
             ],
-            'schedule' => '0 0 1 1 *',
             'timeout' => 10,
         ]);
 
@@ -816,7 +814,7 @@ class FunctionsCustomServerTest extends Scope
 
         $matchingDeployment = array_filter(
             $deployments['body']['deployments'],
-            fn ($deployment) => $deployment['$id'] === $deploymentId
+            fn($deployment) => $deployment['$id'] === $deploymentId
         );
 
         $this->assertNotEmpty($matchingDeployment, "Deployment with ID {$deploymentId} not found");
@@ -1078,35 +1076,7 @@ class FunctionsCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testGetExecution
-     */
-    public function testDeleteScheduledExecution($data): array
-    {
-        $futureTime = (new \DateTime())->add(new \DateInterval('PT10H'));
-        $futureTime->setTime($futureTime->format('H'), $futureTime->format('i'), 0, 0);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'async' => true,
-            'scheduledAt' => $futureTime->format('Y-m-d H:i:s'),
-        ]);
-
-        $executionId = $execution['body']['$id'] ?? '';
-
-        $this->assertEquals(202, $execution['headers']['status-code']);
-
-        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]);
-
-        $this->assertEquals(204, $execution['headers']['status-code']);
-
-        return $data;
-    }
 
     /**
      * @depends testGetExecution

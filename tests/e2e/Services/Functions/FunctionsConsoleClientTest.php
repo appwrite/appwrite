@@ -30,8 +30,10 @@ class FunctionsConsoleClientTest extends Scope
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,
         ]);
-        $functionId = $function['body']['$id'];
+
         $this->assertEquals(201, $function['headers']['status-code']);
+
+        $functionId = $function['body']['$id'];
 
         $function2 = $this->createFunction([
             'functionId' => ID::unique(),
@@ -40,6 +42,7 @@ class FunctionsConsoleClientTest extends Scope
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
         ]);
+
         $this->assertEquals(400, $function2['headers']['status-code']);
 
         return [
@@ -110,8 +113,10 @@ class FunctionsConsoleClientTest extends Scope
                 'value' => 'TESTINGVALUE'
             ]
         );
-        $variableId = $variable['body']['$id'];
+
         $this->assertEquals(201, $variable['headers']['status-code']);
+
+        $variableId = $variable['body']['$id'];
 
         /**
          * Test for FAILURE
@@ -124,6 +129,7 @@ class FunctionsConsoleClientTest extends Scope
                 'value' => 'ANOTHERTESTINGVALUE'
             ]
         );
+
         $this->assertEquals(409, $variable['headers']['status-code']);
 
         // Test for invalid key
@@ -134,6 +140,7 @@ class FunctionsConsoleClientTest extends Scope
                 'value' => 'TESTINGVALUE'
             ]
         );
+
         $this->assertEquals(400, $variable['headers']['status-code']);
 
         // Test for invalid value
@@ -144,6 +151,7 @@ class FunctionsConsoleClientTest extends Scope
                 'value' => str_repeat("#", 8193),
             ]
         );
+
         $this->assertEquals(400, $variable['headers']['status-code']);
 
         return array_merge(
