@@ -113,6 +113,7 @@ jobs:
             Console,
             Databases,
             Functions,
+            FunctionsScheduler,
             GraphQL,
             Health,
             Locale,
