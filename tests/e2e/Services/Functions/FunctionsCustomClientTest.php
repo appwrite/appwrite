@@ -15,7 +15,7 @@ class FunctionsCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
-    public function testCreate()
+    public function testCreateFunction()
     {
         /**
          * Test for FAILURE
@@ -80,7 +80,7 @@ class FunctionsCustomClientTest extends Scope
             $this->assertNotEmpty($asyncExecution['logs']);
             $this->assertNotEmpty($asyncExecution['errors']);
             $this->assertGreaterThan(0, $asyncExecution['duration']);
-        }, 100000, 250);
+        }, 10000, 250);
 
         $this->cleanupFunction($functionId);
     }
@@ -106,7 +106,7 @@ class FunctionsCustomClientTest extends Scope
 
         // Schedule execution for the future
         \date_default_timezone_set('UTC');
-        $futureTime = (new \DateTime())->add(new \DateInterval('PT30S')); // 30 seconds from now
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT15S')); // 15 seconds from now
         $futureTime->setTime($futureTime->format('H'), $futureTime->format('i'), 0, 0);
 
         $execution = $this->createExecution($functionId, [
@@ -126,6 +126,8 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('/custom-path', $execution['body']['requestPath']);
         $this->assertCount(0, $execution['body']['requestHeaders']);
 
+        \sleep(15);
+
         $this->assertEventually(function () use ($functionId, $executionId) {
             $execution = $this->getExecution($functionId, $executionId);
             $this->assertEquals('completed', $execution['body']['status']);
@@ -141,7 +143,7 @@ class FunctionsCustomClientTest extends Scope
             $this->assertStringContainsString('user-is-' . $this->getUser()['$id'], $execution['body']['logs']);
             $this->assertStringContainsString('jwt-is-valid', $execution['body']['logs']);
             $this->assertGreaterThan(0, $execution['body']['duration']);
-        }, 40000, 2500);
+        }, 10000, 250);
 
         /* Test for FAILURE */
         // Schedule synchronous execution

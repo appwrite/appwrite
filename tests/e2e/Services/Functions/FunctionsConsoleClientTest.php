@@ -105,8 +105,10 @@ class FunctionsConsoleClientTest extends Scope
          */
         $variable = $this->createVariable(
             $data['functionId'],
-            'APP_TEST',
-            'TESTINGVALUE'
+            [
+                'key' => 'APP_TEST',
+                'value' => 'TESTINGVALUE'
+            ]
         );
         $variableId = $variable['body']['$id'];
         $this->assertEquals(201, $variable['headers']['status-code']);
@@ -117,24 +119,30 @@ class FunctionsConsoleClientTest extends Scope
         // Test for duplicate key
         $variable = $this->createVariable(
             $data['functionId'],
-            'APP_TEST',
-            'ANOTHER_TESTINGVALUE'
+            [
+                'key' => 'APP_TEST',
+                'value' => 'ANOTHERTESTINGVALUE'
+            ]
         );
         $this->assertEquals(409, $variable['headers']['status-code']);
 
         // Test for invalid key
         $variable = $this->createVariable(
             $data['functionId'],
-            str_repeat("A", 256),
-            'TESTINGVALUE'
+            [
+                'key' => str_repeat("A", 256),
+                'value' => 'TESTINGVALUE'
+            ]
         );
         $this->assertEquals(400, $variable['headers']['status-code']);
 
         // Test for invalid value
         $variable = $this->createVariable(
             $data['functionId'],
-            'LONGKEY',
-            str_repeat("#", 8193)
+            [
+                'key' => 'LONGKEY',
+                'value' => str_repeat("#", 8193),
+            ]
         );
         $this->assertEquals(400, $variable['headers']['status-code']);
 
