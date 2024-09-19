@@ -680,6 +680,7 @@ services:
     entrypoint: worker-usage-dump
     <<: *x-logging
     container_name: appwrite-worker-usage-dump
+    restart: unless-stopped
     networks:
       - appwrite
     depends_on:
@@ -793,7 +794,7 @@ services:
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.6.7
+    image: openruntimes/executor:0.6.11
     networks:
       - appwrite
       - runtimes

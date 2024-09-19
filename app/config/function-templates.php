@@ -82,7 +82,7 @@ return [
         'providerOwner' => 'appwrite',
         'providerVersion' => '0.2.*',
         'variables' => [],
-        'scopes' => ["users.read"]
+        'scopes' => ['users.read']
     ],
     [
         'icon' => 'icon-upstash',
@@ -125,7 +125,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-redis',
@@ -167,7 +168,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-neo4j',
@@ -217,7 +219,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-mongodb',
@@ -253,7 +256,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-neon',
@@ -320,7 +324,8 @@ return [
                 'required' => true,
                 'type' => 'text'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-open-ai',
@@ -380,7 +385,8 @@ return [
                 'required' => false,
                 'type' => 'number'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-discord',
@@ -442,7 +448,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-perspective-api',
@@ -476,7 +483,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-pangea',
@@ -523,7 +531,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-document',
@@ -543,7 +552,8 @@ return [
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
         'providerVersion' => '0.2.*',
-        'variables' => []
+        'variables' => [],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-github',
@@ -586,7 +596,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-bookmark',
@@ -637,7 +648,7 @@ return [
                 'type' => 'url'
             ]
         ],
-        'scopes' => ["databases.read", "databases.write", "collections.write", "attributes.write", "documents.read", "documents.write"]
+        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
     ],
     [
         'icon' => 'icon-algolia',
@@ -718,7 +729,7 @@ return [
                 'type' => 'password'
             ],
         ],
-        'scopes' => ["databases.read", "collections.read", "documents.read"]
+        'scopes' => ['databases.read', 'collections.read', 'documents.read']
     ],
     [
         'icon' => 'icon-meilisearch',
@@ -811,7 +822,7 @@ return [
                 'type' => 'text'
             ],
         ],
-        'scopes' => ["databases.read", "collections.read", "documents.read"]
+        'scopes' => ['databases.read', 'collections.read', 'documents.read']
     ],
     [
         'icon' => 'icon-vonage',
@@ -896,7 +907,8 @@ return [
                 'required' => true,
                 'type' => 'phone'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-bell',
@@ -951,7 +963,8 @@ return [
                 'required' => true,
                 'type' => 'url'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-mail',
@@ -1033,7 +1046,8 @@ return [
                 'required' => false,
                 'type' => 'text'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-stripe',
@@ -1074,7 +1088,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        'scopes' => ["users.read", "sessions.write", "users.write"]
+        'scopes' => ['users.read', 'sessions.write', 'users.write']
     ],
     [
         'icon' => 'icon-stripe',
@@ -1131,7 +1145,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        'scopes' => ["databases.read", "databases.write", "collections.write", "attributes.write", "documents.read", "documents.write"]
+        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
     ],
     [
         'icon' => 'icon-chat',
@@ -1164,7 +1178,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-translate',
@@ -1197,7 +1212,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-eye',
@@ -1255,7 +1271,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        'scopes' => ["databases.read", "databases.write", "collections.read", "collections.write", "attributes.write", "documents.read", "documents.write", "buckets.read", "buckets.write", "files.read"]
+        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.write', 'documents.read', 'documents.write', 'buckets.read', 'buckets.write', 'files.read']
     ],
     [
         'icon' => 'icon-eye',
@@ -1313,7 +1329,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        "scopes" => ["databases.read", "databases.write", "collections.read", "collections.write", "attributes.write", "documents.read", "documents.write", "buckets.read", "buckets.write", "files.read"]
+        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.write', 'documents.read', 'documents.write', 'buckets.read', 'buckets.write', 'files.read']
     ],
     [
         'icon' => 'icon-text',
@@ -1371,7 +1387,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        "scopes" => ["databases.read", "databases.write", "collections.read", "collections.write", "attributes.write", "documents.read", "documents.write", "buckets.read", "buckets.write", "files.read"]
+        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.write', 'documents.read', 'documents.write', 'buckets.read', 'buckets.write', 'files.read']
     ],
     [
         'icon' => 'icon-chat',
@@ -1429,7 +1445,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        "scopes" => ["buckets.read", "buckets.write", "files.read", "files.write"]
+        'scopes' => ['buckets.read', 'buckets.write', 'files.read', 'files.write']
     ],
     [
         'icon' => 'icon-chip',
@@ -1463,7 +1479,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-chip',
@@ -1505,7 +1522,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        "scopes" => ["buckets.write", "files.read", "files.write"]
+        'scopes' => ['buckets.write', 'files.read', 'files.write']
     ],
     [
         'icon' => 'icon-chip',
@@ -1579,7 +1596,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-document-search',
@@ -1642,7 +1660,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        "scopes" => ["databases.read", "collections.read", "documents.read"]
+        'scopes' => ['databases.read', 'collections.read', 'documents.read']
     ],
     [
         'icon' => 'icon-chip',
@@ -1705,7 +1723,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        "scopes" => ["databases.read", "collections.read", "documents.read"]
+        'scopes' => ['databases.read', 'collections.read', 'documents.read']
     ],
     [
         'icon' => 'icon-chat',
@@ -1760,7 +1778,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        "scopes" => ["buckets.read", "buckets.write", "files.read", "files.write"]
+        'scopes' => ['buckets.read', 'buckets.write', 'files.read', 'files.write']
     ],
     [
         'icon' => 'icon-chip',
@@ -1801,7 +1819,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        "scopes" => ["buckets.read", "buckets.write", "files.read", "files.write"]
+        'scopes' => ['buckets.read', 'buckets.write', 'files.read', 'files.write']
     ],
     [
         'icon' => 'icon-chip',
@@ -1841,7 +1859,8 @@ return [
                 'required' => false,
                 'type' => 'number'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-music-note',
@@ -1883,7 +1902,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        "scopes" => ["buckets.read", "buckets.write", "files.read", "files.write"]
+        'scopes' => ['buckets.read', 'buckets.write', 'files.read', 'files.write']
     ],
     [
         'icon' => 'icon-chip',
@@ -1917,7 +1936,8 @@ return [
                 'required' => true,
                 'type' => 'password'
             ]
-        ]
+        ],
+        'scopes' => []
     ],
     [
         'icon' => 'icon-currency-dollar',
@@ -1972,7 +1992,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        "scopes" => ["users.read", "users.write"]
+        'scopes' => ['users.read', 'users.write']
     ],
     [
         'icon' => 'icon-currency-dollar',
@@ -2043,6 +2063,6 @@ return [
                 'type' => 'text'
             ]
         ],
-        "scopes" => ["users.read", "users.write"]
+        'scopes' => ['users.read', 'users.write']
     ]
 ];
