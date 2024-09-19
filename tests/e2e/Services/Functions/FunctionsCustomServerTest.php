@@ -775,7 +775,7 @@ class FunctionsCustomServerTest extends Scope
 
         $matchingDeployment = array_filter(
             $deployments['body']['deployments'],
-            fn($deployment) => $deployment['$id'] === $deploymentId
+            fn ($deployment) => $deployment['$id'] === $deploymentId
         );
 
         $this->assertNotEmpty($matchingDeployment, "Deployment with ID {$deploymentId} not found");

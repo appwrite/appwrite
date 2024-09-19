@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
+use CURLFile;
 use Utopia\CLI\Console;
 
 trait Base
@@ -2493,11 +2494,21 @@ trait Base
     }
 
     // Function-related methods
-    protected string $stdout = '';
-    protected string $stderr = '';
+    protected string $output = '';
 
-    protected function packageCode($folder): void
+    protected function packageFunction(string $function = 'php'): CURLFile
     {
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout);
+        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
+        $tarPath = "$folderPath/code.tar.gz";
+
+        if (!file_exists($tarPath)) {
+            Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->output);
+        }
+
+        if (filesize($tarPath) > 1024 * 1024 * 5) {
+            throw new \Exception('Code package is too large. Use the chunked upload method instead.');
+        }
+
+        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
     }
 }
