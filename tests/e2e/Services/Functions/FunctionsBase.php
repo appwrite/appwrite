@@ -146,7 +146,7 @@ trait FunctionsBase
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
 
         if (!file_exists($code)) {
-            Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+            Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->output, $this->output);
         }
         if (filesize($code) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
