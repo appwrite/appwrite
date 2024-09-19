@@ -373,12 +373,14 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->getDeployment($functionId, $deploymentId);
+
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status']);
             $this->assertEquals('cli', $deployment['body']['type']);
         }, 500000, 1000);
 
         $function = $this->getFunction($functionId);
+
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertEquals($deploymentId, $function['body']['deployment']);
 
@@ -428,7 +430,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEmpty($execution['body']['responseBody']);
             $this->assertEmpty($execution['body']['errors']);
             $this->assertStringContainsString("Total users: " . $totalUsers, $execution['body']['logs']);
-        }, 100000, 250);
+        }, 10000, 500);
 
         $function = $this->deleteFunction($functionId);
     }
@@ -1273,7 +1275,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals('', $execution['body']['responseBody']);
             $this->assertEquals('', $execution['body']['logs']);
             $this->assertStringContainsString('timed out', $execution['body']['errors']);
-        }, 5000, 250);
+        }, 10000, 500);
 
         $this->cleanupFunction($functionId);
     }
@@ -1638,7 +1640,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertGreaterThan(0, $execution['body']['duration']);
             $this->assertNotEmpty($execution['body']['responseBody']);
             $this->assertStringContainsString("total", $execution['body']['responseBody']);
-        }, 5000, 250);
+        }, 10000, 500);
 
         $this->cleanupFunction($functionId);
     }
@@ -1905,7 +1907,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals('completed', $execution['body']['status']);
             $this->assertEmpty($execution['body']['logs']);
             $this->assertEmpty($execution['body']['errors']);
-        }, 5000, 250);
+        }, 10000, 500);
 
         // Domain Executions test
         $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([

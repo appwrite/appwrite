@@ -244,7 +244,7 @@ class FunctionsCustomClientTest extends Scope
             $execution = $this->getExecution($functionId, $executionId);
             $this->assertEquals('completed', $execution['body']['status']);
             $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        }, 10000, 250);
+        }, 10000, 500);
 
         return [
             'functionId' => $functionId
