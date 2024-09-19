@@ -13,4 +13,5 @@ AttributeIp result = await databases.updateIpAttribute(
     key: '',
     xrequired: false,
     xdefault: '',
+    newKey: '', // (optional)
 );

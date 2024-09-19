@@ -12,5 +12,6 @@ result = databases.update_email_attribute(
     collection_id = '<COLLECTION_ID>',
     key = '',
     required = False,
-    default = 'email@example.com'
+    default = 'email@example.com',
+    new_key = '' # optional
 )

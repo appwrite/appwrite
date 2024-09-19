@@ -41,7 +41,7 @@ class ScheduleExecutions extends ScheduleBase
                     $schedule['$id'],
                 );
 
-                unset($this->schedules[$schedule['resourceId']]);
+                unset($this->schedules[$schedule['$internalId']]);
                 continue;
             }
 
@@ -50,23 +50,27 @@ class ScheduleExecutions extends ScheduleBase
                 continue;
             }
 
+            $data = $dbForConsole->getDocument(
+                'schedules',
+                $schedule['$id'],
+            )->getAttribute('data', []);
+
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
 
-
-            \go(function () use ($queueForFunctions, $schedule, $delay) {
+            \go(function () use ($queueForFunctions, $schedule, $delay, $data) {
                 Co::sleep($delay);
 
-                $queueForFunctions
-                    ->setType('schedule')
+                $queueForFunctions->setType('schedule')
                     // Set functionId instead of function as we don't have $dbForProject
                     // TODO: Refactor to use function instead of functionId
                     ->setFunctionId($schedule['resource']['functionId'])
                     ->setExecution($schedule['resource'])
-                    ->setMethod($schedule['data']['method'] ?? 'POST')
-                    ->setPath($schedule['data']['path'] ?? '/')
-                    ->setHeaders($schedule['data']['headers'] ?? [])
-                    ->setBody($schedule['data']['body'] ?? '')
+                    ->setMethod($data['method'] ?? 'POST')
+                    ->setPath($data['path'] ?? '/')
+                    ->setHeaders($data['headers'] ?? [])
+                    ->setBody($data['body'] ?? '')
                     ->setProject($schedule['project'])
+                    ->setUserId($data['userId'] ?? '')
                     ->trigger();
             });
 
@@ -75,7 +79,7 @@ class ScheduleExecutions extends ScheduleBase
                 $schedule['$id'],
             );
 
-            unset($this->schedules[$schedule['resourceId']]);
+            unset($this->schedules[$schedule['$internalId']]);
         }
 
         $queue->reclaim();

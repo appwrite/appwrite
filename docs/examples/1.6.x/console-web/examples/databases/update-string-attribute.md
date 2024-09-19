@@ -11,7 +11,9 @@ const result = await databases.updateStringAttribute(
     '<COLLECTION_ID>', // collectionId
     '', // key
     false, // required
-    '<DEFAULT>' // default
+    '<DEFAULT>', // default
+    null, // size (optional)
+    '' // newKey (optional)
 );
 
 console.log(result);

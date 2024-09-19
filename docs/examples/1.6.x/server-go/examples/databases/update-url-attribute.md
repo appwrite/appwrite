@@ -20,6 +20,7 @@ func main() {
         "",
         false,
         "https://example.com",
+        databases.WithUpdateUrlAttributeNewKey(""),
     )
 
     if error != nil {

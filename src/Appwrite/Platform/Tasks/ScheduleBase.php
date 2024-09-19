@@ -65,6 +65,7 @@ abstract class ScheduleBase extends Action
             );
 
             return [
+                '$internalId' => $schedule->getInternalId(),
                 '$id' => $schedule->getId(),
                 'resourceId' => $schedule->getAttribute('resourceId'),
                 'schedule' => $schedule->getAttribute('schedule'),
@@ -101,8 +102,7 @@ abstract class ScheduleBase extends Action
 
             foreach ($results as $document) {
                 try {
-                    // TODO: Add projectId to be unique $this->schedules[$document['resourceId']]['projectId']
-                    $this->schedules[$document['resourceId']] = $getSchedule($document);
+                    $this->schedules[$document->getInternalId()] = $getSchedule($document);
                 } catch (\Throwable $th) {
                     $collectionId = static::getCollectionId();
                     Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");
@@ -151,8 +151,7 @@ abstract class ScheduleBase extends Action
                     $total = $total + $sum;
 
                     foreach ($results as $document) {
-                        // todo: change resourceId to Internal id or add projectId as second nested key
-                        $localDocument = $this->schedules[$document['resourceId']] ?? null;
+                        $localDocument = $schedules[$document['resourceId']] ?? null;
 
                         // Check if resource has been updated since last sync
                         $org = $localDocument !== null ? \strtotime($localDocument['resourceUpdatedAt']) : null;
@@ -160,10 +159,10 @@ abstract class ScheduleBase extends Action
 
                         if (!$document['active']) {
                             Console::info("Removing: {$document['resourceId']}");
-                            unset($this->schedules[$document['resourceId']]);
+                            unset($this->schedules[$document->getInternalId()]);
                         } elseif ($new !== $org) {
                             Console::info("Updating: {$document['resourceId']}");
-                            $this->schedules[$document['resourceId']] = $getSchedule($document);
+                            $this->schedules[$document->getInternalId()] = $getSchedule($document);
                         }
                     }
 

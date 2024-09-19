@@ -16,5 +16,6 @@ result = databases.update_float_attribute(
     required: false,
     min: null,
     max: null,
-    default: null
+    default: null,
+    new_key: '' # optional
 )
