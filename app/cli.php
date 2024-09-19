@@ -7,21 +7,21 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
-use Utopia\Cache\Adapter\Sharding;
-use Utopia\Cache\Cache;
-use Utopia\CLI\CLI;
+use Swoole\Runtime;
+use Utopia\CLI\Adapters\Swoole as SwooleCLI;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\DSN\DSN;
+use Utopia\DI\Dependency;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
-use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
+
+global $registry, $container;
+
+Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 // overwriting runtimes to be architectur agnostic for CLI
 Config::setParam('runtimes', (new Runtimes('v4'))->getAll(supported: false));
@@ -29,187 +29,107 @@ Config::setParam('runtimes', (new Runtimes('v4'))->getAll(supported: false));
 // require controllers after overwriting runtimes
 require_once __DIR__ . '/controllers/general.php';
 
-Authorization::disable();
+/**
+ * @var Registry $registry
+ * @var Container $container
+ */
+$context = new Dependency();
+$register = new Dependency();
+$logError = new Dependency();
+$queueForDeletes = new Dependency();
+$queueForFunctions = new Dependency();
+$queueForCertificates = new Dependency();
 
-CLI::setResource('register', fn () => $register);
+$context
+    ->setName('context')
+    ->setCallback(fn () => $container);
 
-CLI::setResource('cache', function ($pools) {
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
+$register
+    ->setName('register')
+    ->setCallback(function () use (&$registry): Registry {
+        return $registry;
+    });
 
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource()
-        ;
-    }
+$queueForFunctions
+    ->setName('queueForFunctions')
+    ->inject('queue')
+    ->setCallback(function (Connection $queue) {
+        return new Func($queue);
+    });
 
-    return new Cache(new Sharding($adapters));
-}, ['pools']);
 
-CLI::setResource('pools', function (Registry $register) {
-    return $register->get('pools');
-}, ['register']);
+$queueForDeletes
+    ->setName('queueForDeletes')
+    ->inject('queue')
+    ->setCallback(function (Connection $queue) {
+        return new Delete($queue);
+    });
 
-CLI::setResource('dbForConsole', function ($pools, $cache) {
-    $sleep = 3;
-    $maxAttempts = 5;
-    $attempts = 0;
-    $ready = false;
+$queueForCertificates
+    ->setName('queueForCertificates')
+    ->inject('queue')
+    ->setCallback(function (Connection $queue) {
+        return new Certificate($queue);
+    });
 
-    do {
-        $attempts++;
-        try {
-            // Prepare database connection
-            $dbAdapter = $pools
-                ->get('console')
-                ->pop()
-                ->getResource();
+$logError
+    ->setName('logError')
+    ->inject('register')
+    ->setCallback(function (Registry $register) {
+        return function (Throwable $error, string $namespace, string $action) use ($register) {
+            $logger = $register->get('logger');
 
-            $dbForConsole = new Database($dbAdapter, $cache);
+            if ($logger) {
+                $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
-            $dbForConsole
-                ->setNamespace('_console')
-                ->setMetadata('host', \gethostname())
-                ->setMetadata('project', 'console');
+                $log = new Log();
+                $log->setNamespace($namespace);
+                $log->setServer(\gethostname());
+                $log->setVersion($version);
+                $log->setType(Log::TYPE_ERROR);
+                $log->setMessage($error->getMessage());
 
-            // Ensure tables exist
-            $collections = Config::getParam('collections', [])['console'];
-            $last = \array_key_last($collections);
+                $log->addTag('code', $error->getCode());
+                $log->addTag('verboseType', get_class($error));
 
-            if (!($dbForConsole->exists($dbForConsole->getDatabase(), $last))) { /** TODO cache ready variable using registry */
-                throw new Exception('Tables not ready yet.');
+                $log->addExtra('file', $error->getFile());
+                $log->addExtra('line', $error->getLine());
+                $log->addExtra('trace', $error->getTraceAsString());
+                $log->addExtra('trace', $error->getTraceAsString());
+
+                $log->setAction($action);
+
+                $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+
+                $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+                $responseCode = $logger->addLog($log);
+                Console::info('Usage stats log pushed with status code: ' . $responseCode);
             }
 
-            $ready = true;
-        } catch (\Throwable $err) {
-            Console::warning($err->getMessage());
-            $pools->get('console')->reclaim();
-            sleep($sleep);
-        }
-    } while ($attempts < $maxAttempts && !$ready);
+            Console::warning("Failed: {$error->getMessage()}");
+            Console::warning($error->getTraceAsString());
+        };
+    });
 
-    if (!$ready) {
-        throw new Exception("Console is not ready yet. Please try again later.");
-    }
-
-    return $dbForConsole;
-}, ['pools', 'cache']);
-
-CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
-    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
-
-    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForConsole;
-        }
-
-        try {
-            $dsn = new DSN($project->getAttribute('database'));
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-        }
-
-        if (isset($databases[$dsn->getHost()])) {
-            $database = $databases[$dsn->getHost()];
-
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
-                $database
-                    ->setSharedTables(true)
-                    ->setTenant($project->getInternalId())
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $database
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
-            }
-
-            return $database;
-        }
-
-        $dbAdapter = $pools
-            ->get($dsn->getHost())
-            ->pop()
-            ->getResource();
-
-        $database = new Database($dbAdapter, $cache);
-
-        $databases[$dsn->getHost()] = $database;
-
-        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
-            $database
-                ->setSharedTables(true)
-                ->setTenant($project->getInternalId())
-                ->setNamespace($dsn->getParam('namespace'));
-        } else {
-            $database
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getInternalId());
-        }
-
-        $database
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', $project->getId());
-
-        return $database;
-    };
-}, ['pools', 'dbForConsole', 'cache']);
-
-CLI::setResource('queue', function (Group $pools) {
-    return $pools->get('queue')->pop()->getResource();
-}, ['pools']);
-CLI::setResource('queueForFunctions', function (Connection $queue) {
-    return new Func($queue);
-}, ['queue']);
-CLI::setResource('queueForDeletes', function (Connection $queue) {
-    return new Delete($queue);
-}, ['queue']);
-CLI::setResource('queueForCertificates', function (Connection $queue) {
-    return new Certificate($queue);
-}, ['queue']);
-CLI::setResource('logError', function (Registry $register) {
-    return function (Throwable $error, string $namespace, string $action) use ($register) {
-        $logger = $register->get('logger');
-
-        if ($logger) {
-            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-            $log = new Log();
-            $log->setNamespace($namespace);
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-
-            $log->addTag('code', $error->getCode());
-            $log->addTag('verboseType', get_class($error));
-
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-
-            $log->setAction($action);
-
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            $responseCode = $logger->addLog($log);
-            Console::info('Usage stats log pushed with status code: ' . $responseCode);
-        }
-
-        Console::warning("Failed: {$error->getMessage()}");
-        Console::warning($error->getTraceAsString());
-    };
-}, ['register']);
+$container->set($context);
+$container->set($logError);
+$container->set($register);
+$container->set($queueForDeletes);
+$container->set($queueForFunctions);
+$container->set($queueForCertificates);
 
 $platform = new Appwrite();
-$platform->init(Service::TYPE_TASK);
+$platform->init(Service::TYPE_TASK, ['adapter' => new SwooleCLI(1)]);
 
 $cli = $platform->getCli();
+
+$cli
+    ->init()
+    ->inject('authorization')
+    ->action(function (Authorization $authorization) {
+        $authorization->disable();
+    });
 
 $cli
     ->error()
@@ -218,4 +138,6 @@ $cli
         Console::error($error->getMessage());
     });
 
-$cli->run();
+$cli
+    ->setContainer($container)
+    ->run();
