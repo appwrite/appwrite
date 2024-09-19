@@ -86,6 +86,11 @@ abstract class Migration
         '1.5.5'  => 'V20',
         '1.5.6'  => 'V20',
         '1.5.7'  => 'V20',
+        '1.5.8'  => 'V20',
+        '1.5.9'  => 'V20',
+        '1.5.10' => 'V20',
+        '1.5.11' => 'V20',
+        '1.6.0' => 'V21',
     ];
 
     /**
@@ -170,29 +175,27 @@ abstract class Migration
 
             Console::log('Migrating Collection ' . $collection['$id'] . ':');
 
-            \Co\run(function (array $collection, callable $callback) {
-                foreach ($this->documentsIterator($collection['$id']) as $document) {
-                    go(function (Document $document, callable $callback) {
-                        if (empty($document->getId()) || empty($document->getCollection())) {
-                            return;
-                        }
+            foreach ($this->documentsIterator($collection['$id']) as $document) {
+                go(function (Document $document, callable $callback) {
+                    if (empty($document->getId()) || empty($document->getCollection())) {
+                        return;
+                    }
 
-                        $old = $document->getArrayCopy();
-                        $new = call_user_func($callback, $document);
+                    $old = $document->getArrayCopy();
+                    $new = call_user_func($callback, $document);
 
-                        if (is_null($new) || $new->getArrayCopy() == $old) {
-                            return;
-                        }
+                    if (is_null($new) || $new->getArrayCopy() == $old) {
+                        return;
+                    }
 
-                        try {
-                            $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
-                        } catch (\Throwable $th) {
-                            Console::error('Failed to update document: ' . $th->getMessage());
-                            return;
-                        }
-                    }, $document, $callback);
-                }
-            }, $collection, $callback);
+                    try {
+                        $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
+                    } catch (\Throwable $th) {
+                        Console::error('Failed to update document: ' . $th->getMessage());
+                        return;
+                    }
+                }, $document, $callback);
+            }
         }
     }
 
