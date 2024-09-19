@@ -3,21 +3,17 @@
 namespace Tests\E2E\Services\Functions;
 
 use Appwrite\Functions\Specification;
-use CURLFile;
-use PHPUnit\Framework\ExpectationFailedException;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-
-use function PHPSTORM_META\map;
+use Utopia\System\System;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -1651,7 +1647,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($cookie, $response['body']);
 
         // Await Aggregation
-        sleep(App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
+        sleep(System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
 
         $this->assertEventually(function () use ($functionId) {
             $response = $this->getFunctionUsage($functionId, [

@@ -10,10 +10,10 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Validator\Text;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
-use Utopia\Validator\Text;
 
 class Migrate extends Action
 {
@@ -30,12 +30,15 @@ class Migrate extends Action
             ->desc('Migrate Appwrite to new version')
             /** @TODO APP_VERSION_STABLE needs to be defined */
             ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
+            ->inject('cache')
             ->inject('dbForConsole')
             ->inject('getProjectDB')
             ->inject('register')
-            ->callback(function ($version, $dbForConsole, $getProjectDB, Registry $register) {
-                \Co\run(function () use ($version, $dbForConsole, $getProjectDB, $register) {
-                    $this->action($version, $dbForConsole, $getProjectDB, $register);
+            ->inject('authorization')
+            ->inject('console')
+            ->callback(function ($version, $dbForConsole, $getProjectDB, Registry $register, Authorization $authorization, Document $console) {
+                \Co\run(function () use ($version, $dbForConsole, $getProjectDB, $register, $authorization, $console) {
+                    $this->action($version, $dbForConsole, $getProjectDB, $register, $authorization, $console);
                 });
             });
     }
@@ -58,13 +61,12 @@ class Migrate extends Action
         }
     }
 
-    public function action(string $version, Database $dbForConsole, callable $getProjectDB, Registry $register)
+    public function action(string $version, Database $dbForConsole, callable $getProjectDB, Registry $register, Authorization $auth, Document $console)
     {
-        Authorization::disable();
+        $auth->disable();
         if (!array_key_exists($version, Migration::$versions)) {
             Console::error("Version {$version} not found.");
             Console::exit(1);
-
             return;
         }
 
@@ -77,11 +79,7 @@ class Migrate extends Action
             10
         );
 
-        $app = new App('UTC');
-
         Console::success('Starting Data Migration to version ' . $version);
-
-        $console = $app->getResource('console');
 
         $limit = 30;
         $sum = 30;
@@ -101,7 +99,7 @@ class Migrate extends Action
 
         $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
         /** @var Migration $migration */
-        $migration = new $class();
+        $migration = new $class($auth, );
 
         while (!empty($projects)) {
             foreach ($projects as $project) {

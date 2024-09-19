@@ -11,8 +11,7 @@ trait FunctionsBase
 {
     use Async;
 
-    protected string $stdout = '';
-    protected string $stderr = '';
+    protected string $output = '';
 
     protected function setupFunction(mixed $params): string
     {
@@ -21,9 +20,11 @@ trait FunctionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), $params);
+
         $this->assertEquals($function['headers']['status-code'], 201, 'Setup function failed with status code: ' . $function['headers']['status-code'] . ' and response: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
 
         $functionId = $function['body']['$id'];
+
         return $functionId;
     }
 

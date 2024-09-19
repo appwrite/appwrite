@@ -2,8 +2,8 @@
 
 namespace Appwrite\Network\Validator;
 
-use Utopia\Validator;
-use Utopia\Validator\Hostname;
+use Utopia\Http\Validator;
+use Utopia\Http\Validator\Hostname;
 
 class Origin extends Validator
 {
