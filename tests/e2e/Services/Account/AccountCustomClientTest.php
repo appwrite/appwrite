@@ -1339,92 +1339,104 @@ class AccountCustomClientTest extends Scope
         return [];
     }
 
-    public function testNewUserIsNotBlocked(): array
-    {
-        $email = uniqid() . 'user@localhost.test';
-        $password = 'password';
-        $name = 'User Name (blocked)';
-
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
-        ]);
-
-        $id = $response['body']['$id'];
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'email' => $email,
-            'password' => $password,
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        $sessionId = $response['body']['$id'];
-        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
-
-        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $id . '/status', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'status' => false,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
-
-        $this->assertEquals(401, $response['headers']['status-code']);
-
-
-        $email1 = uniqid() . 'user@localhost.test';
-        $password1 = 'password1';
-        $name1 = 'New User Name ';
-
-        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => ID::unique(),
-            'email' => $email1,
-            'password' => $password1,
-            'name' => $name1,
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        return [];
-    }
+      // A test case that verifies when a user is blocked, a new user can still logged in successfully.
+      public function testNewUserIsNotBlocked(): array
+      {
+          $email = uniqid() . 'user@localhost.test';
+          $password = 'password';
+          $name = 'User Name (blocked)';
+  
+          /**
+           * Test for SUCCESS
+           */
+  
+          // The response is checked to ensure that the user creation was successful (status code 201)
+          $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+              'origin' => 'http://localhost',
+              'content-type' => 'application/json',
+              'x-appwrite-project' => $this->getProject()['$id'],
+          ]), [
+              'userId' => ID::unique(),
+              'email' => $email,
+              'password' => $password,
+              'name' => $name,
+          ]);
+  
+          $id = $response['body']['$id'];
+  
+          $this->assertEquals(201, $response['headers']['status-code']);
+  
+          // The login response is checked to ensure success (201), 
+          // and the session ID and session cookie are stored for future requests.
+          $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+              'origin' => 'http://localhost',
+              'content-type' => 'application/json',
+              'x-appwrite-project' => $this->getProject()['$id'],
+          ]), [
+              'email' => $email,
+              'password' => $password,
+          ]);
+  
+          $this->assertEquals(201, $response['headers']['status-code']);
+  
+          $sessionId = $response['body']['$id'];
+          $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+          
+          // response confirming that the user is authenticated and active, checks that the status code is 200.
+          $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+              'origin' => 'http://localhost',
+              'content-type' => 'application/json',
+              'x-appwrite-project' => $this->getProject()['$id'],
+              'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+          ]));
+  
+          $this->assertEquals(200, $response['headers']['status-code']);
+  
+          // The response is checked to ensure the user is blocked and the operation was successful (200)
+          $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $id . '/status', [
+              'content-type' => 'application/json',
+              'x-appwrite-project' => $this->getProject()['$id'],
+              'x-appwrite-key' => $this->getProject()['apiKey'],
+          ], [
+              'status' => false,
+          ]);
+  
+          $this->assertEquals(200, $response['headers']['status-code']);
+  
+          //The test tries to access the user's account again after blocking them.
+          // It expects a 401 Unauthorized response, indicating that 
+          // the user is no longer able to access their account.
+          $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+              'origin' => 'http://localhost',
+              'content-type' => 'application/json',
+              'x-appwrite-project' => $this->getProject()['$id'],
+              'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+          ]));
+  
+          $this->assertEquals(401, $response['headers']['status-code']);
+  
+          // Test to ensure that a new user they are able to log in.
+          // The response is checked for success (201)
+  
+          $email1 = uniqid() . 'user@localhost.test';
+          $password1 = 'password1';
+          $name1 = 'New User Name ';
+  
+          $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+              'origin' => 'http://localhost',
+              'content-type' => 'application/json',
+              'x-appwrite-project' => $this->getProject()['$id'],
+          ]), [
+              'userId' => ID::unique(),
+              'email' => $email1,
+              'password' => $password1,
+              'name' => $name1,
+          ]);
+  
+          $this->assertEquals(201, $response['headers']['status-code']);
+  
+          return [];
+      }  
 
     public function testSelfBlockedAccount(): array
     {
