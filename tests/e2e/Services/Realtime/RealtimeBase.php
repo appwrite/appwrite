@@ -2,8 +2,6 @@
 
 namespace Tests\E2E\Services\Realtime;
 
-use CURLFile;
-use Utopia\CLI\Console;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 
@@ -72,24 +70,5 @@ trait RealtimeBase
         \usleep(250000); // 250ms
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
-    }
-
-    // Function-related methods
-    protected string $output = '';
-
-    protected function packageFunction(string $function = 'php'): CURLFile
-    {
-        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
-        $tarPath = "$folderPath/code.tar.gz";
-
-        if (!file_exists($tarPath)) {
-            Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->output);
-        }
-
-        if (filesize($tarPath) > 1024 * 1024 * 5) {
-            throw new \Exception('Code package is too large. Use the chunked upload method instead.');
-        }
-
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
     }
 }

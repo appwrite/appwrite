@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -14,6 +15,7 @@ use WebSocket\ConnectionException;
 
 class RealtimeCustomClientTest extends Scope
 {
+    use FunctionsBase;
     use RealtimeBase;
     use ProjectCustom;
     use SideClient;

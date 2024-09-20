@@ -176,25 +176,25 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($functions['body']['functions'][0]['name'], 'Test');
         $this->assertEquals($functions['body']['functions'][1]['name'], 'Test 2');
 
-        $functions = $this->listFunctions([
+        $functions1 = $this->listFunctions([
             'queries' => [
                 Query::cursorAfter(new Document(['$id' => $functions['body']['functions'][0]['$id']]))->toString(),
             ],
         ]);
 
-        $this->assertEquals($functions['headers']['status-code'], 200);
-        $this->assertCount(1, $functions['body']['functions']);
-        $this->assertEquals($functions['body']['functions'][0]['name'], 'Test 2');
+        $this->assertEquals($functions1['headers']['status-code'], 200);
+        $this->assertCount(1, $functions1['body']['functions']);
+        $this->assertEquals($functions1['body']['functions'][0]['name'], 'Test 2');
 
-        $functions = $this->listFunctions([
+        $functions2 = $this->listFunctions([
             'queries' => [
                 Query::cursorBefore(new Document(['$id' => $functions['body']['functions'][1]['$id']]))->toString(),
             ],
         ]);
 
-        $this->assertEquals($functions['headers']['status-code'], 200);
-        $this->assertCount(1, $functions['body']['functions']);
-        $this->assertEquals($functions['body']['functions'][0]['name'], 'Test');
+        $this->assertEquals($functions2['headers']['status-code'], 200);
+        $this->assertCount(1, $functions2['body']['functions']);
+        $this->assertEquals($functions2['body']['functions'][0]['name'], 'Test');
 
         /**
          * Test for FAILURE
@@ -285,7 +285,7 @@ class FunctionsCustomServerTest extends Scope
     {
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
-            'name' => 'test-cli-deployment',
+            'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
@@ -297,12 +297,12 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 10,
         ]);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
             'x-sdk-language' => 'cli',
-        ], $this->getHeaders()), [
+        ], [
             'entrypoint' => 'index.php',
             'code' => $this->packageFunction('php'),
             'activate' => true
@@ -314,6 +314,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->getDeployment($functionId, $deploymentId);
+
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status']);
             $this->assertEquals('cli', $deployment['body']['type']);
@@ -1212,6 +1213,7 @@ class FunctionsCustomServerTest extends Scope
     public function testExecutionTimeout()
     {
         $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
             'name' => 'timeout-php-8.0',
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
