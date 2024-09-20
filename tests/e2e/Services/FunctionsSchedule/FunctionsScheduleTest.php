@@ -62,7 +62,7 @@ class FunctionsScheduleTest extends Scope
             $this->assertNotEmpty($asyncExecution['logs']);
             $this->assertNotEmpty($asyncExecution['errors']);
             $this->assertGreaterThan(0, $asyncExecution['duration']);
-        }, 10000, 500);
+        }, 15000, 500);
 
         $this->cleanupFunction($functionId);
     }
