@@ -454,30 +454,34 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
-        $deploymentId = $deployment['body']['$id'] ?? '';
+        $deploymentIdActive = $deployment['body']['$id'] ?? '';
+
+        $this->assertEventually(function () use ($functionId, $deploymentIdActive) {
+            $deployment = $this->getDeployment($functionId, $deploymentIdActive);
+
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 50000, 500);
 
         $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('php'),
             'activate' => false
         ]);
 
-        $deploymentIdInactive = $deployment['body']['$id'];
-
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
 
-        $this->assertEventually(function () use ($functionId, $deploymentId, $deploymentIdInactive) {
-            $deployment = $this->getDeployment($functionId, $deploymentId);
-            $this->assertEquals('ready', $deployment['body']['status']);
+        $deploymentIdInactive = $deployment['body']['$id'] ?? '';
 
+        $this->assertEventually(function () use ($functionId, $deploymentIdInactive) {
             $deployment = $this->getDeployment($functionId, $deploymentIdInactive);
+
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 500000, 1000);
+        }, 50000, 500);
 
         $function = $this->getFunction($functionId);
 
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($deploymentId, $function['body']['deployment']);
+        $this->assertEquals($deploymentIdActive, $function['body']['deployment']);
         $this->assertNotEquals($deploymentIdInactive, $function['body']['deployment']);
 
         $deployment = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/deployments/' . $deploymentIdInactive, array_merge([
@@ -487,7 +491,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(204, $deployment['headers']['status-code']);
 
-        return array_merge($data, ['deploymentId' => $deploymentId]);
+        return array_merge($data, ['deploymentId' => $deploymentIdActive]);
     }
 
     /**
@@ -1222,7 +1226,7 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 5, // Should timeout after 5 seconds
         ]);
         $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('timeout'),
             'activate' => true,
         ]);
 
@@ -1562,7 +1566,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test PHP Scopes executions',
-            'commands' => 'composer update --no-interaction --ignore-platform-reqs --optimize-autoloader --prefer-dist --no-dev',
+            'commands' => 'sh setup.sh && composer install',
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
             'scopes' => ['users.read'],
@@ -1571,7 +1575,6 @@ class FunctionsCustomServerTest extends Scope
 
         $deploymentId = $this->setupDeployment($functionId, [
             'entrypoint' => 'index.php',
-            'commands' => 'sh setup.sh && composer install',
             'code' => $this->packageFunction('php-scopes'),
             'activate' => true,
         ]);
