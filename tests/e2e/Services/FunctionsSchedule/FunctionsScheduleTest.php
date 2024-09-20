@@ -6,14 +6,14 @@ use Appwrite\ID;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
-use Tests\E2E\Scopes\SideClient;
+use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\Role;
 
 class FunctionsScheduleTest extends Scope
 {
     use FunctionsBase;
     use ProjectCustom;
-    use SideClient;
+    use SideServer;
 
     public function testCreateScheduledExecution()
     {
@@ -92,16 +92,27 @@ class FunctionsScheduleTest extends Scope
         $futureTime = (new \DateTime())->add(new \DateInterval('PT2M')); // 2 minute in the future
         $futureTime->setTime($futureTime->format('H'), $futureTime->format('i'), 0, 0);
 
-        $execution = $this->createExecution($functionId, [
-            'async' => true,
-            'scheduledAt' => $futureTime->format(\DateTime::ATOM),
-            'path' => '/custom-path',
-            'method' => 'PATCH',
-            'body' => 'custom-body',
-            'headers' => [
-                'x-custom-header' => 'custom-value'
+
+        $execution = $this->client->call(
+            Client::METHOD_POST,
+            '/functions/' . $functionId . '/executions',
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->getUser()['session'],
+            ],
+            [
+                'async' => true,
+                'scheduledAt' => $futureTime->format(\DateTime::ATOM),
+                'path' => '/custom-path',
+                'method' => 'PATCH',
+                'body' => 'custom-body',
+                'headers' => [
+                    'x-custom-header' => 'custom-value'
+                ]
             ]
-        ]);
+        );
         $executionId = $execution['body']['$id'];
 
         $this->assertEquals(202, $execution['headers']['status-code']);
