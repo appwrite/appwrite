@@ -898,8 +898,6 @@ class FunctionsCustomServerTest extends Scope
          */
         $executions = $this->listExecutions($data['functionId']);
 
-        fwrite(STDERR, print_r(json_encode($executions, JSON_PRETTY_PRINT), true));
-
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals(1, $executions['body']['total']);
         $this->assertIsArray($executions['body']['executions']);
