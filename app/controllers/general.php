@@ -349,15 +349,10 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
             }
 
             $outboundSize = 0;
-            $outboundSize += \strlen($body);
-            $outboundSize += \strlen(\implode(\array_keys($execution['responseHeaders'])));
-            $outboundSize += \strlen(\implode(\array_values($execution['responseHeaders'])));
-            $outboundSize += \count($execution['responseHeaders']) * 2; // Headers separator (\n) and key-value separator (:)
+            $outboundSize += \strlen($executionResponse['body'] ?? '');
+            $outboundSize += \strlen(\implode("\n", array_map(fn($header) => \implode(":", \array_values($header)), $execution['responseHeaders'])));
 
             $queueForUsage
-                ->addMetric(METRIC_NETWORK_REQUESTS, 1)
-                ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
-                ->addMetric(METRIC_NETWORK_OUTBOUND, $outboundSize)
                 ->addMetric(METRIC_EXECUTIONS, 1)
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
