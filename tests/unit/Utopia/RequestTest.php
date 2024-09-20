@@ -7,8 +7,7 @@ use PHPUnit\Framework\TestCase;
 use Swoole\Http\Request as SwooleRequest;
 use Tests\Unit\Utopia\Request\Filters\First;
 use Tests\Unit\Utopia\Request\Filters\Second;
-use Utopia\Http\Adapter\Swoole\Request as UtopiaSwooleRequest;
-use Utopia\Http\Route;
+use Utopia\Route;
 
 class RequestTest extends TestCase
 {
@@ -16,7 +15,7 @@ class RequestTest extends TestCase
 
     public function setUp(): void
     {
-        $this->request = new Request(new UtopiaSwooleRequest(new SwooleRequest()));
+        $this->request = new Request(new SwooleRequest());
     }
 
     public function testFilters(): void
@@ -37,7 +36,7 @@ class RequestTest extends TestCase
         // set test header to prevent header populaten inside the request class
         $this->request->addHeader('EXAMPLE', 'VALUE');
         $this->request->setRoute($route);
-        $this->request->setQuery([
+        $this->request->setQueryString([
             'initial' => true,
             'first' => false
         ]);

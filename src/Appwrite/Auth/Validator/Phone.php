@@ -2,7 +2,7 @@
 
 namespace Appwrite\Auth\Validator;
 
-use Utopia\Http\Validator;
+use Utopia\Validator;
 
 /**
  * Phone.

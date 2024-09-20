@@ -2,6 +2,7 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
+use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -12,11 +13,10 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Http;
-use Utopia\Http\Validator\Text;
-use Utopia\Http\Validator\WhiteList;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
-Http::get('/v1/project/usage')
+App::get('/v1/project/usage')
     ->desc('Get project usage stats')
     ->groups(['api', 'usage'])
     ->label('scope', 'projects.read')
@@ -31,8 +31,7 @@ Http::get('/v1/project/usage')
     ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('authorization')
-    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject, Authorization $authorization) {
+    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject) {
         $stats = $total = $usage = [];
         $format = 'Y-m-d 00:00:00';
         $firstDay = (new DateTime($startDate))->format($format);
@@ -77,7 +76,7 @@ Http::get('/v1/project/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        $authorization->skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
             foreach ($metrics['total'] as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -277,6 +276,8 @@ Http::get('/v1/project/usage')
             'buildsStorageTotal' => $total[METRIC_BUILDS_STORAGE],
             'deploymentsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE],
             'executionsBreakdown' => $executionsBreakdown,
+            'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
+            'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown,
             'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
             'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
@@ -286,7 +287,7 @@ Http::get('/v1/project/usage')
 
 
 // Variables
-Http::post('/v1/project/variables')
+App::post('/v1/project/variables')
     ->desc('Create Variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
@@ -341,7 +342,7 @@ Http::post('/v1/project/variables')
             ->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-Http::get('/v1/project/variables')
+App::get('/v1/project/variables')
     ->desc('List Variables')
     ->groups(['api'])
     ->label('scope', 'projects.read')
@@ -366,7 +367,7 @@ Http::get('/v1/project/variables')
         ]), Response::MODEL_VARIABLE_LIST);
     });
 
-Http::get('/v1/project/variables/:variableId')
+App::get('/v1/project/variables/:variableId')
     ->desc('Get Variable')
     ->groups(['api'])
     ->label('scope', 'projects.read')
@@ -390,7 +391,7 @@ Http::get('/v1/project/variables/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-Http::put('/v1/project/variables/:variableId')
+App::put('/v1/project/variables/:variableId')
     ->desc('Update Variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
@@ -436,7 +437,7 @@ Http::put('/v1/project/variables/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-Http::delete('/v1/project/variables/:variableId')
+App::delete('/v1/project/variables/:variableId')
     ->desc('Delete Variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')

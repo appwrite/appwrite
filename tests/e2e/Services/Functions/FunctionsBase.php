@@ -7,11 +7,12 @@ use Utopia\CLI\Console;
 
 trait FunctionsBase
 {
-    protected string $output = '';
+    protected string $stdout = '';
+    protected string $stderr = '';
 
     protected function packageCode($folder)
     {
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->output);
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
     }
 
     protected function awaitDeploymentIsBuilt($functionId, $deploymentId, $checkForSuccess = true): void

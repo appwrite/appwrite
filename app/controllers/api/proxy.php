@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Utopia\Database\Validator\Queries\Rules;
 use Appwrite\Utopia\Response;
+use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
@@ -14,14 +15,13 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
-use Utopia\Http\Http;
-use Utopia\Http\Validator\Domain as ValidatorDomain;
-use Utopia\Http\Validator\Text;
-use Utopia\Http\Validator\WhiteList;
 use Utopia\Logger\Log;
 use Utopia\System\System;
+use Utopia\Validator\Domain as ValidatorDomain;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
-Http::post('/v1/proxy/rules')
+App::post('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
     ->desc('Create Rule')
     ->label('scope', 'rules.write')
@@ -147,7 +147,7 @@ Http::post('/v1/proxy/rules')
             ->dynamic($rule, Response::MODEL_PROXY_RULE);
     });
 
-Http::get('/v1/proxy/rules')
+App::get('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
     ->desc('List Rules')
     ->label('scope', 'rules.read')
@@ -210,7 +210,7 @@ Http::get('/v1/proxy/rules')
         ]), Response::MODEL_PROXY_RULE_LIST);
     });
 
-Http::get('/v1/proxy/rules/:ruleId')
+App::get('/v1/proxy/rules/:ruleId')
     ->groups(['api', 'proxy'])
     ->desc('Get Rule')
     ->label('scope', 'rules.read')
@@ -239,7 +239,7 @@ Http::get('/v1/proxy/rules/:ruleId')
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
     });
 
-Http::delete('/v1/proxy/rules/:ruleId')
+App::delete('/v1/proxy/rules/:ruleId')
     ->groups(['api', 'proxy'])
     ->desc('Delete Rule')
     ->label('scope', 'rules.write')
@@ -276,7 +276,7 @@ Http::delete('/v1/proxy/rules/:ruleId')
         $response->noContent();
     });
 
-Http::patch('/v1/proxy/rules/:ruleId/verification')
+App::patch('/v1/proxy/rules/:ruleId/verification')
     ->desc('Update Rule Verification Status')
     ->groups(['api', 'proxy'])
     ->label('scope', 'rules.write')

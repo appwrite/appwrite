@@ -3,17 +3,13 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\ClamAV\Network;
-use Appwrite\Utopia\Queue\Connections;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Adapter\MySQL;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
-use Utopia\Http\Http;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
-use Utopia\Queue\Connection\Redis;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
@@ -31,11 +27,10 @@ class Doctor extends Action
         $this
             ->desc('Validate server health')
             ->inject('register')
-            ->inject('connections')
-            ->callback(fn (Registry $register, Connections $connections) => $this->action($register, $connections));
+            ->callback(fn (Registry $register) => $this->action($register));
     }
 
-    public function action(Registry $register, Connections $connections): void
+    public function action(Registry $register): void
     {
         Console::log("  __   ____  ____  _  _  ____  __  ____  ____     __  __  
  / _\ (  _ \(  _ \/ )( \(  _ \(  )(_  _)(  __)   (  )/  \ 
@@ -130,73 +125,17 @@ class Doctor extends Action
             //throw $th;
         }
 
-        /** @var array $pools */
-        $pools = $register->get('pools');
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
 
         $configs = [
-            'Console.DB' => [
-                'prefix' => 'console',
-                'databases' => Config::getParam('pools-console')
-            ],
-            'Database.DB' => [
-                'prefix' => 'database',
-                'databases' => Config::getParam('pools-database')
-            ],
+            'Console.DB' => Config::getParam('pools-console'),
+            'Projects.DB' => Config::getParam('pools-database'),
         ];
 
-
         foreach ($configs as $key => $config) {
-            foreach ($config['databases'] as $database) {
+            foreach ($config as $database) {
                 try {
-                    $pool = $pools['pools-' . $config['prefix'] . '-' . $database]['pool'];
-                    $dsn = $pools['pools-' . $config['prefix'] . '-' . $database]['dsn'];
-
-                    $connection = $pool->get();
-                    $connections->add($connection, $pool);
-                    $adapter = match ($dsn->getScheme()) {
-                        'mariadb' => new MariaDB($connection),
-                        'mysql' => new MySQL($connection),
-                        default => null
-                    };
-                    $adapter->setDatabase($dsn->getPath());
-
-
-                    if ($adapter->ping()) {
-                        Console::success('🟢 ' . str_pad("$key({$database})", 50, '.') . 'connected');
-                    } else {
-                        Console::error('🔴 ' . str_pad("$key({$database})", 47, '.') . 'disconnected');
-                    }
-                } catch (\Throwable $th) {
-                    Console::error('🔴 ' . str_pad("{$key}.({$database})", 47, '.') . 'disconnected');
-                }
-            }
-        }
-
-        /** @var array $pools */
-        $pools = $register->get('pools');
-        $configs = [
-            'Cache' => [
-                'prefix' => 'cache',
-                'databases' => Config::getParam('pools-cache')
-            ],
-            'Queue' => [
-                'prefix' => 'queue',
-                'databases' => Config::getParam('pools-queue')
-            ],
-            'PubSub' => [
-                'prefix' => 'pubsub',
-                'databases' => Config::getParam('pools-pubsub')
-            ],
-        ];
-        foreach ($configs as $key => $config) {
-            foreach ($config['databases'] as $database) {
-                try {
-                    $pool = $pools['pools-' . $config['prefix'] . '-' . $database]['pool'];
-                    $dsn = $pools['pools-' . $config['prefix'] . '-' . $database]['dsn'];
-                    $connection = $pool->get();
-                    $connections->add($connection, $pool);
-
-                    $adapter =  new Redis($dsn->getHost(), $dsn->getPort());
+                    $adapter = $pools->get($database)->pop()->getResource();
 
                     if ($adapter->ping()) {
                         Console::success('🟢 ' . str_pad("{$key}({$database})", 50, '.') . 'connected');
@@ -204,7 +143,30 @@ class Doctor extends Action
                         Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
                     }
                 } catch (\Throwable $th) {
-                    Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
+                    Console::error('🔴 ' . str_pad("{$key}.({$database})", 47, '.') . 'disconnected');
+                }
+            }
+        }
+
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        $configs = [
+            'Cache' => Config::getParam('pools-cache'),
+            'Queue' => Config::getParam('pools-queue'),
+            'PubSub' => Config::getParam('pools-pubsub'),
+        ];
+
+        foreach ($configs as $key => $config) {
+            foreach ($config as $pool) {
+                try {
+                    $adapter = $pools->get($pool)->pop()->getResource();
+
+                    if ($adapter->ping()) {
+                        Console::success('🟢 ' . str_pad("{$key}({$pool})", 50, '.') . 'connected');
+                    } else {
+                        Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
+                    }
+                } catch (\Throwable $th) {
+                    Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
                 }
             }
         }
@@ -296,7 +258,7 @@ class Doctor extends Action
         }
 
         try {
-            if (Http::isProduction()) {
+            if (App::isProduction()) {
                 Console::log('');
                 $version = \json_decode(@\file_get_contents(System::getEnv('_APP_HOME', 'http://localhost') . '/version'), true);
 
