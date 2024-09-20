@@ -463,7 +463,7 @@ class FunctionsCustomServerTest extends Scope
 
         $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('php'),
-            'activate' => 'false'
+            'activate' => false
         ]);
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
@@ -502,7 +502,7 @@ class FunctionsCustomServerTest extends Scope
 
         $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('php'),
-            'activate' => 'false'
+            'activate' => false
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
