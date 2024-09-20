@@ -101,7 +101,7 @@ trait FunctionsBase
         return $deployment;
     }
 
-    protected function getExecution($functionId, $executionId)
+    protected function getExecution(string $functionId, $executionId): mixed
     {
         $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
@@ -111,7 +111,7 @@ trait FunctionsBase
         return $execution;
     }
 
-    protected function listFunctions($params = [])
+    protected function listFunctions(mixed $params = []): mixed
     {
         $functions = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
             'content-type' => 'application/json',
@@ -121,7 +121,7 @@ trait FunctionsBase
         return $functions;
     }
 
-    protected function listDeployments($functionId, $params = [])
+    protected function listDeployments(string $functionId, $params = []): mixed
     {
         $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'application/json',
@@ -131,7 +131,7 @@ trait FunctionsBase
         return $deployments;
     }
 
-    protected function listExecutions($functionId, $params = [])
+    protected function listExecutions(string $functionId, mixed $params = []): mixed
     {
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -157,10 +157,8 @@ trait FunctionsBase
         return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
     }
 
-    protected function createDeployment(
-        string $functionId,
-        mixed $params
-    ) {
+    protected function createDeployment(string $functionId, mixed $params = []): mixed
+    {
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -189,7 +187,7 @@ trait FunctionsBase
         return $template;
     }
 
-    protected function createExecution(string $functionId, mixed $params = [])
+    protected function createExecution(string $functionId, mixed $params = []): mixed
     {
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -199,7 +197,7 @@ trait FunctionsBase
         return $execution;
     }
 
-    protected function deleteFunction($functionId)
+    protected function deleteFunction(string $functionId): mixed
     {
         $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',

@@ -6,14 +6,14 @@ use Appwrite\ID;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
-use Tests\E2E\Scopes\SideServer;
+use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\Role;
 
 class FunctionsScheduleTest extends Scope
 {
     use FunctionsBase;
     use ProjectCustom;
-    use SideServer;
+    use SideClient;
 
     public function testCreateScheduledExecution()
     {
@@ -47,7 +47,7 @@ class FunctionsScheduleTest extends Scope
             $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['key'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
 
             $this->assertEquals(200, $executions['headers']['status-code']);

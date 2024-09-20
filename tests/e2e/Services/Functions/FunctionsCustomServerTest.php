@@ -144,7 +144,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($functions['body']['functions'][0]['$id'], $data['functionId']);
 
         // Test search runtime
-        $functions = $this->listExecutions([
+        $functions = $this->listFunctions([
             'search' => 'php-8.0'
         ]);
 
@@ -490,7 +490,7 @@ class FunctionsCustomServerTest extends Scope
     }
 
     /**
-     * @depends testUpdate
+     * @depends testUpdateFunction
      */
     public function testCancelDeploymentBuild($data): void
     {
@@ -538,7 +538,7 @@ class FunctionsCustomServerTest extends Scope
     }
 
     /**
-     * @depends testUpdate
+     * @depends testUpdateFunction
      */
     public function testCreateDeploymentLarge($data): array
     {
@@ -814,7 +814,7 @@ class FunctionsCustomServerTest extends Scope
 
         $matchingDeployment = array_filter(
             $deployments['body']['deployments'],
-            fn ($deployment) => $deployment['$id'] === $deploymentId
+            fn($deployment) => $deployment['$id'] === $deploymentId
         );
 
         $this->assertNotEmpty($matchingDeployment, "Deployment with ID {$deploymentId} not found");
@@ -1273,7 +1273,7 @@ class FunctionsCustomServerTest extends Scope
      * @param string $entrypoint
      *
      * @dataProvider provideCustomExecutions
-     * @depends      testTimeout
+     * @depends      testExecutionTimeout
      */
     public function testCreateCustomExecution(string $folder, string $name, string $entrypoint, string $runtimeName, string $runtimeVersion)
     {
@@ -1743,6 +1743,7 @@ class FunctionsCustomServerTest extends Scope
         $this->setupDeployment($functionId, [
             'entrypoint' => 'index.php',
             'code' => $this->packageFunction('php-binary-response'),
+            'activate' => true
         ]);
 
         $proxyClient = new Client();

@@ -113,6 +113,7 @@ jobs:
             Console,
             Databases,
             Functions,
+            FunctionsSchedule,
             GraphQL,
             Health,
             Locale,
@@ -141,7 +142,7 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
-          sleep 25
+          sleep 10
 
       - name: Run ${{matrix.service}} Tests
         run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.service}} --debug
