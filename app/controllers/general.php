@@ -348,10 +348,16 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
                 $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
             }
 
+            $outboundSize = 0;
+            $outboundSize += \strlen($body);
+            $outboundSize += \strlen(\implode(\array_keys($execution['responseHeaders'])));
+            $outboundSize += \strlen(\implode(\array_values($execution['responseHeaders'])));
+            $outboundSize += \count($execution['responseHeaders']) * 2; // Headers separator (\n) and key-value separator (:)
+
             $queueForUsage
                 ->addMetric(METRIC_NETWORK_REQUESTS, 1)
                 ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
-                ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize())
+                ->addMetric(METRIC_NETWORK_OUTBOUND, $outboundSize)
                 ->addMetric(METRIC_EXECUTIONS, 1)
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
@@ -385,14 +391,19 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
                 $contentType = $header['value'];
             }
 
+            if (\strtolower($header['name']) === 'content-length') {
+                continue;
+            }
+
             $response->setHeader($header['name'], $header['value']);
         }
 
         $response
             ->setContentType($contentType)
             ->setStatusCode($execution['responseStatusCode'] ?? 200)
-            ->send($body);
+            ->swoole->end($body);
 
+        $route?->label('proxied', true);
         return true;
     } elseif ($type === 'api') {
         $route?->label('error', '');
@@ -1065,7 +1076,12 @@ Http::get('/.well-known/acme-challenge/*')
 Http::wildcard()
     ->groups(['api'])
     ->label('scope', 'global')
-    ->action(function () {
+    ->inject('route')
+    ->action(function (Route $route) {
+        if($route->getLabel('proxied', false) === true) {
+            return;
+        }
+
         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });
 
