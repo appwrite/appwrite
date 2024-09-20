@@ -486,10 +486,11 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $output = '';
+        $stderr = '';
+        $stdout = '';
         $folder = 'timeout';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $output);
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',

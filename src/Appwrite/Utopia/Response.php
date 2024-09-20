@@ -4,20 +4,122 @@ namespace Appwrite\Utopia;
 
 use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
-use Appwrite\Utopia\Response\Models;
+use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Model\Account;
+use Appwrite\Utopia\Response\Model\AlgoArgon2;
+use Appwrite\Utopia\Response\Model\AlgoBcrypt;
+use Appwrite\Utopia\Response\Model\AlgoMd5;
+use Appwrite\Utopia\Response\Model\AlgoPhpass;
+use Appwrite\Utopia\Response\Model\AlgoScrypt;
+use Appwrite\Utopia\Response\Model\AlgoScryptModified;
+use Appwrite\Utopia\Response\Model\AlgoSha;
+use Appwrite\Utopia\Response\Model\Any;
+use Appwrite\Utopia\Response\Model\Attribute;
+use Appwrite\Utopia\Response\Model\AttributeBoolean;
+use Appwrite\Utopia\Response\Model\AttributeDatetime;
+use Appwrite\Utopia\Response\Model\AttributeEmail;
+use Appwrite\Utopia\Response\Model\AttributeEnum;
+use Appwrite\Utopia\Response\Model\AttributeFloat;
+use Appwrite\Utopia\Response\Model\AttributeInteger;
+use Appwrite\Utopia\Response\Model\AttributeIP;
+use Appwrite\Utopia\Response\Model\AttributeList;
+use Appwrite\Utopia\Response\Model\AttributeRelationship;
+use Appwrite\Utopia\Response\Model\AttributeString;
+use Appwrite\Utopia\Response\Model\AttributeURL;
+use Appwrite\Utopia\Response\Model\AuthProvider;
+use Appwrite\Utopia\Response\Model\BaseList;
+use Appwrite\Utopia\Response\Model\Branch;
+use Appwrite\Utopia\Response\Model\Bucket;
+use Appwrite\Utopia\Response\Model\Build;
+use Appwrite\Utopia\Response\Model\Collection;
+use Appwrite\Utopia\Response\Model\ConsoleVariables;
+use Appwrite\Utopia\Response\Model\Continent;
+use Appwrite\Utopia\Response\Model\Country;
+use Appwrite\Utopia\Response\Model\Currency;
+use Appwrite\Utopia\Response\Model\Database;
+use Appwrite\Utopia\Response\Model\Deployment;
+use Appwrite\Utopia\Response\Model\Detection;
+use Appwrite\Utopia\Response\Model\Document as ModelDocument;
+use Appwrite\Utopia\Response\Model\Error;
+use Appwrite\Utopia\Response\Model\ErrorDev;
+use Appwrite\Utopia\Response\Model\Execution;
+use Appwrite\Utopia\Response\Model\File;
+use Appwrite\Utopia\Response\Model\Func;
+use Appwrite\Utopia\Response\Model\Headers;
+use Appwrite\Utopia\Response\Model\HealthAntivirus;
+use Appwrite\Utopia\Response\Model\HealthCertificate;
+use Appwrite\Utopia\Response\Model\HealthQueue;
+use Appwrite\Utopia\Response\Model\HealthStatus;
+use Appwrite\Utopia\Response\Model\HealthTime;
+use Appwrite\Utopia\Response\Model\HealthVersion;
+use Appwrite\Utopia\Response\Model\Identity;
+use Appwrite\Utopia\Response\Model\Index;
+use Appwrite\Utopia\Response\Model\Installation;
+use Appwrite\Utopia\Response\Model\JWT;
+use Appwrite\Utopia\Response\Model\Key;
+use Appwrite\Utopia\Response\Model\Language;
+use Appwrite\Utopia\Response\Model\Locale;
+use Appwrite\Utopia\Response\Model\LocaleCode;
+use Appwrite\Utopia\Response\Model\Log;
+use Appwrite\Utopia\Response\Model\Membership;
+use Appwrite\Utopia\Response\Model\Message;
+use Appwrite\Utopia\Response\Model\Metric;
+use Appwrite\Utopia\Response\Model\MetricBreakdown;
+use Appwrite\Utopia\Response\Model\MFAChallenge;
+use Appwrite\Utopia\Response\Model\MFAFactors;
+use Appwrite\Utopia\Response\Model\MFARecoveryCodes;
+use Appwrite\Utopia\Response\Model\MFAType;
+use Appwrite\Utopia\Response\Model\Migration;
+use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
+use Appwrite\Utopia\Response\Model\MigrationReport;
+use Appwrite\Utopia\Response\Model\Mock;
+use Appwrite\Utopia\Response\Model\MockNumber;
+use Appwrite\Utopia\Response\Model\None;
+use Appwrite\Utopia\Response\Model\Phone;
+use Appwrite\Utopia\Response\Model\Platform;
+use Appwrite\Utopia\Response\Model\Preferences;
+use Appwrite\Utopia\Response\Model\Project;
+use Appwrite\Utopia\Response\Model\Provider;
+use Appwrite\Utopia\Response\Model\ProviderRepository;
+use Appwrite\Utopia\Response\Model\Rule;
+use Appwrite\Utopia\Response\Model\Runtime;
+use Appwrite\Utopia\Response\Model\Session;
+use Appwrite\Utopia\Response\Model\Specification;
+use Appwrite\Utopia\Response\Model\Subscriber;
+use Appwrite\Utopia\Response\Model\Target;
+use Appwrite\Utopia\Response\Model\Team;
+use Appwrite\Utopia\Response\Model\TemplateEmail;
+use Appwrite\Utopia\Response\Model\TemplateFunction;
+use Appwrite\Utopia\Response\Model\TemplateRuntime;
+use Appwrite\Utopia\Response\Model\TemplateSMS;
+use Appwrite\Utopia\Response\Model\TemplateVariable;
+use Appwrite\Utopia\Response\Model\Token;
+use Appwrite\Utopia\Response\Model\Topic;
+use Appwrite\Utopia\Response\Model\UsageBuckets;
+use Appwrite\Utopia\Response\Model\UsageCollection;
+use Appwrite\Utopia\Response\Model\UsageDatabase;
+use Appwrite\Utopia\Response\Model\UsageDatabases;
+use Appwrite\Utopia\Response\Model\UsageFunction;
+use Appwrite\Utopia\Response\Model\UsageFunctions;
+use Appwrite\Utopia\Response\Model\UsageProject;
+use Appwrite\Utopia\Response\Model\UsageStorage;
+use Appwrite\Utopia\Response\Model\UsageUsers;
+use Appwrite\Utopia\Response\Model\User;
+use Appwrite\Utopia\Response\Model\Variable;
+use Appwrite\Utopia\Response\Model\VcsContent;
+use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 use JsonException;
+use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
 use Utopia\Database\Document;
-use Utopia\Http\Adapter\Swoole\Response as HttpResponse;
-
-// Keep last
+use Utopia\Swoole\Response as SwooleResponse;
 
 /**
  * @method int getStatusCode()
  * @method Response setStatusCode(int $code = 200)
  */
-class Response extends HttpResponse
+class Response extends SwooleResponse
 {
     // General
     public const MODEL_NONE = 'none';
@@ -228,9 +330,162 @@ class Response extends HttpResponse
      *
      * @param float $time
      */
-    public function __construct(HttpResponse $response)
+    public function __construct(SwooleHTTPResponse $response)
     {
-        parent::__construct($response->swoole);
+        $this
+            // General
+            ->setModel(new None())
+            ->setModel(new Any())
+            ->setModel(new Error())
+            ->setModel(new ErrorDev())
+            // Lists
+            ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
+            ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
+            ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
+            ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
+            ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
+            ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
+            ->setModel(new BaseList('Identities List', self::MODEL_IDENTITY_LIST, 'identities', self::MODEL_IDENTITY))
+            ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG))
+            ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
+            ->setModel(new BaseList('Buckets List', self::MODEL_BUCKET_LIST, 'buckets', self::MODEL_BUCKET))
+            ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
+            ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
+            ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
+            ->setModel(new BaseList('Function Templates List', self::MODEL_TEMPLATE_FUNCTION_LIST, 'templates', self::MODEL_TEMPLATE_FUNCTION))
+            ->setModel(new BaseList('Installations List', self::MODEL_INSTALLATION_LIST, 'installations', self::MODEL_INSTALLATION))
+            ->setModel(new BaseList('Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_LIST, 'providerRepositories', self::MODEL_PROVIDER_REPOSITORY))
+            ->setModel(new BaseList('Branches List', self::MODEL_BRANCH_LIST, 'branches', self::MODEL_BRANCH))
+            ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
+            ->setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
+            ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
+            ->setModel(new BaseList('Builds List', self::MODEL_BUILD_LIST, 'builds', self::MODEL_BUILD)) // Not used anywhere yet
+            ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
+            ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
+            ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
+            ->setModel(new BaseList('Auth Providers List', self::MODEL_AUTH_PROVIDER_LIST, 'platforms', self::MODEL_AUTH_PROVIDER, true, false))
+            ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
+            ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
+            ->setModel(new BaseList('Continents List', self::MODEL_CONTINENT_LIST, 'continents', self::MODEL_CONTINENT))
+            ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
+            ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
+            ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
+            ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
+            ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
+            ->setModel(new BaseList('Status List', self::MODEL_HEALTH_STATUS_LIST, 'statuses', self::MODEL_HEALTH_STATUS))
+            ->setModel(new BaseList('Rule List', self::MODEL_PROXY_RULE_LIST, 'rules', self::MODEL_PROXY_RULE))
+            ->setModel(new BaseList('Locale codes list', self::MODEL_LOCALE_CODE_LIST, 'localeCodes', self::MODEL_LOCALE_CODE))
+            ->setModel(new BaseList('Provider list', self::MODEL_PROVIDER_LIST, 'providers', self::MODEL_PROVIDER))
+            ->setModel(new BaseList('Message list', self::MODEL_MESSAGE_LIST, 'messages', self::MODEL_MESSAGE))
+            ->setModel(new BaseList('Topic list', self::MODEL_TOPIC_LIST, 'topics', self::MODEL_TOPIC))
+            ->setModel(new BaseList('Subscriber list', self::MODEL_SUBSCRIBER_LIST, 'subscribers', self::MODEL_SUBSCRIBER))
+            ->setModel(new BaseList('Target list', self::MODEL_TARGET_LIST, 'targets', self::MODEL_TARGET))
+            ->setModel(new BaseList('Migrations List', self::MODEL_MIGRATION_LIST, 'migrations', self::MODEL_MIGRATION))
+            ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', self::MODEL_MIGRATION_FIREBASE_PROJECT))
+            ->setModel(new BaseList('Specifications List', self::MODEL_SPECIFICATION_LIST, 'specifications', self::MODEL_SPECIFICATION))
+            ->setModel(new BaseList('VCS Content List', self::MODEL_VCS_CONTENT_LIST, 'contents', self::MODEL_VCS_CONTENT))
+            // Entities
+            ->setModel(new Database())
+            ->setModel(new Collection())
+            ->setModel(new Attribute())
+            ->setModel(new AttributeList())
+            ->setModel(new AttributeString())
+            ->setModel(new AttributeInteger())
+            ->setModel(new AttributeFloat())
+            ->setModel(new AttributeBoolean())
+            ->setModel(new AttributeEmail())
+            ->setModel(new AttributeEnum())
+            ->setModel(new AttributeIP())
+            ->setModel(new AttributeURL())
+            ->setModel(new AttributeDatetime())
+            ->setModel(new AttributeRelationship())
+            ->setModel(new Index())
+            ->setModel(new ModelDocument())
+            ->setModel(new Log())
+            ->setModel(new User())
+            ->setModel(new AlgoMd5())
+            ->setModel(new AlgoSha())
+            ->setModel(new AlgoPhpass())
+            ->setModel(new AlgoBcrypt())
+            ->setModel(new AlgoScrypt())
+            ->setModel(new AlgoScryptModified())
+            ->setModel(new AlgoArgon2())
+            ->setModel(new Account())
+            ->setModel(new Preferences())
+            ->setModel(new Session())
+            ->setModel(new Identity())
+            ->setModel(new Token())
+            ->setModel(new JWT())
+            ->setModel(new Locale())
+            ->setModel(new LocaleCode())
+            ->setModel(new File())
+            ->setModel(new Bucket())
+            ->setModel(new Team())
+            ->setModel(new Membership())
+            ->setModel(new Func())
+            ->setModel(new TemplateFunction())
+            ->setModel(new TemplateRuntime())
+            ->setModel(new TemplateVariable())
+            ->setModel(new Installation())
+            ->setModel(new ProviderRepository())
+            ->setModel(new Detection())
+            ->setModel(new VcsContent())
+            ->setModel(new Branch())
+            ->setModel(new Runtime())
+            ->setModel(new Deployment())
+            ->setModel(new Execution())
+            ->setModel(new Build())
+            ->setModel(new Project())
+            ->setModel(new Webhook())
+            ->setModel(new Key())
+            ->setModel(new MockNumber())
+            ->setModel(new AuthProvider())
+            ->setModel(new Platform())
+            ->setModel(new Variable())
+            ->setModel(new Country())
+            ->setModel(new Continent())
+            ->setModel(new Language())
+            ->setModel(new Currency())
+            ->setModel(new Phone())
+            ->setModel(new HealthAntivirus())
+            ->setModel(new HealthQueue())
+            ->setModel(new HealthStatus())
+            ->setModel(new HealthCertificate())
+            ->setModel(new HealthTime())
+            ->setModel(new HealthVersion())
+            ->setModel(new Metric())
+            ->setModel(new MetricBreakdown())
+            ->setModel(new UsageDatabases())
+            ->setModel(new UsageDatabase())
+            ->setModel(new UsageCollection())
+            ->setModel(new UsageUsers())
+            ->setModel(new UsageStorage())
+            ->setModel(new UsageBuckets())
+            ->setModel(new UsageFunctions())
+            ->setModel(new UsageFunction())
+            ->setModel(new UsageProject())
+            ->setModel(new Headers())
+            ->setModel(new Specification())
+            ->setModel(new Rule())
+            ->setModel(new TemplateSMS())
+            ->setModel(new TemplateEmail())
+            ->setModel(new ConsoleVariables())
+            ->setModel(new MFAChallenge())
+            ->setModel(new MFARecoveryCodes())
+            ->setModel(new MFAType())
+            ->setModel(new MFAFactors())
+            ->setModel(new Provider())
+            ->setModel(new Message())
+            ->setModel(new Topic())
+            ->setModel(new Subscriber())
+            ->setModel(new Target())
+            ->setModel(new Migration())
+            ->setModel(new MigrationReport())
+            ->setModel(new MigrationFirebaseProject())
+            // Tests (keep last)
+            ->setModel(new Mock());
+
+        parent::__construct($response);
     }
 
     /**
@@ -239,6 +494,49 @@ class Response extends HttpResponse
     public const CONTENT_TYPE_YAML = 'application/x-yaml';
     public const CONTENT_TYPE_NULL = 'null';
     public const CONTENT_TYPE_MULTIPART = 'multipart/form-data';
+
+    /**
+     * List of defined output objects
+     */
+    protected $models = [];
+
+    /**
+     * Set Model Object
+     *
+     * @return self
+     */
+    public function setModel(Model $instance)
+    {
+        $this->models[$instance->getType()] = $instance;
+
+        return $this;
+    }
+
+    /**
+     * Get Model Object
+     *
+     * @param string $key
+     * @return Model
+     * @throws Exception
+     */
+    public function getModel(string $key): Model
+    {
+        if (!isset($this->models[$key])) {
+            throw new Exception('Undefined model: ' . $key);
+        }
+
+        return $this->models[$key];
+    }
+
+    /**
+     * Get Models List
+     *
+     * @return Model[]
+     */
+    public function getModels(): array
+    {
+        return $this->models;
+    }
 
     public function applyFilters(array $data, string $model): array
     {
@@ -307,7 +605,7 @@ class Response extends HttpResponse
     public function output(Document $document, string $model): array
     {
         $data       = clone $document;
-        $model      = Models::getModel($model);
+        $model      = $this->getModel($model);
         $output     = [];
 
         $data = $model->filter($data);
@@ -337,7 +635,7 @@ class Response extends HttpResponse
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
                                 $condition = false;
-                                foreach (Models::getModel($type)->conditions as $attribute => $val) {
+                                foreach ($this->getModel($type)->conditions as $attribute => $val) {
                                     $condition = $item->getAttribute($attribute) === $val;
                                     if (!$condition) {
                                         break;
@@ -352,7 +650,7 @@ class Response extends HttpResponse
                             $ruleType = $rule['type'];
                         }
 
-                        if (!array_key_exists($ruleType, Models::getModels())) {
+                        if (!array_key_exists($ruleType, $this->models)) {
                             throw new Exception('Missing model for rule: ' . $ruleType);
                         }
 

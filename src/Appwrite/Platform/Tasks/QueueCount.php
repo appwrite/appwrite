@@ -3,11 +3,11 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\CLI\Console;
-use Utopia\Http\Validator\Text;
-use Utopia\Http\Validator\WhiteList;
 use Utopia\Platform\Action;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class QueueCount extends Action
 {

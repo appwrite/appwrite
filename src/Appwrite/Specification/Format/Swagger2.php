@@ -7,10 +7,10 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Http\Validator;
-use Utopia\Http\Validator\ArrayList;
-use Utopia\Http\Validator\Nullable;
-use Utopia\Http\Validator\Range;
+use Utopia\Validator;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
 
 class Swagger2 extends Format
 {
@@ -270,10 +270,8 @@ class Swagger2 extends Format
             );
 
             foreach ($parameters as $name => $param) { // Set params
-                $injections = array_map(fn ($injection) => $this->http->getContainer()->get($injection), $param['injections'] ?? []);
-
                 /** @var Validator $validator */
-                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $injections) : $param['validator'];
+                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['injections'])) : $param['validator'];
 
                 $node = [
                     'name' => $name,
@@ -289,18 +287,18 @@ class Swagger2 extends Format
                 }
 
                 $validatorClass = (!empty($validator)) ? \get_class($validator) : '';
-                if ($validatorClass === 'Utopia\Http\Validator\AnyOf') {
+                if ($validatorClass === 'Utopia\Validator\AnyOf') {
                     $validator = $param['validator']->getValidators()[0];
                     $validatorClass = \get_class($validator);
                 }
 
                 switch ($validatorClass) {
-                    case 'Utopia\Http\Validator\Text':
+                    case 'Utopia\Validator\Text':
                     case 'Utopia\Database\Validator\UID':
                         $node['type'] = $validator->getType();
                         $node['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
-                    case 'Utopia\Http\Validator\Boolean':
+                    case 'Utopia\Validator\Boolean':
                         $node['type'] = $validator->getType();
                         $node['x-example'] = false;
                         break;
@@ -321,13 +319,13 @@ class Swagger2 extends Format
                         $node['format'] = 'email';
                         $node['x-example'] = 'email@example.com';
                         break;
-                    case 'Utopia\Http\Validator\Host':
-                    case 'Utopia\Http\Validator\URL':
+                    case 'Utopia\Validator\Host':
+                    case 'Utopia\Validator\URL':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';
                         break;
-                    case 'Utopia\Http\Validator\ArrayList':
+                    case 'Utopia\Validator\ArrayList':
                         /** @var ArrayList $validator */
                         $node['type'] = 'array';
                         $node['collectionFormat'] = 'multi';
@@ -335,9 +333,9 @@ class Swagger2 extends Format
                             'type' => $validator->getValidator()->getType(),
                         ];
                         break;
-                    case 'Utopia\Http\Validator\JSON':
-                    case 'Utopia\Http\Validator\Mock':
-                    case 'Utopia\Http\Validator\Assoc':
+                    case 'Utopia\Validator\JSON':
+                    case 'Utopia\Validator\Mock':
+                    case 'Utopia\Validator\Assoc':
                         $node['type'] = 'object';
                         $node['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['x-example'] = '{}';
@@ -408,26 +406,26 @@ class Swagger2 extends Format
                         $node['format'] = 'phone';
                         $node['x-example'] = '+12065550100';
                         break;
-                    case 'Utopia\Http\Validator\Range':
+                    case 'Utopia\Validator\Range':
                         /** @var Range $validator */
                         $node['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();
                         $node['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
                         $node['x-example'] = $validator->getMin();
                         break;
-                    case 'Utopia\Http\Validator\Numeric':
-                    case 'Utopia\Http\Validator\Integer':
+                    case 'Utopia\Validator\Numeric':
+                    case 'Utopia\Validator\Integer':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'int32';
                         break;
-                    case 'Utopia\Http\Validator\FloatValidator':
+                    case 'Utopia\Validator\FloatValidator':
                         $node['type'] = 'number';
                         $node['format'] = 'float';
                         break;
-                    case 'Utopia\Http\Validator\Length':
+                    case 'Utopia\Validator\Length':
                         $node['type'] = $validator->getType();
                         break;
-                    case 'Utopia\Http\Validator\WhiteList':
-                        /** @var \Utopia\Http\Validator\WhiteList $validator */
+                    case 'Utopia\Validator\WhiteList':
+                        /** @var \Utopia\Validator\WhiteList $validator */
                         $node['type'] = $validator->getType();
                         $node['x-example'] = $validator->getList()[0];
 
