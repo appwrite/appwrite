@@ -44,7 +44,7 @@ trait FunctionsBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
-            $this->assertEquals('ready', $deployment['body']['status']);
+            $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         }, 50000, 500);
 
         return $deploymentId;
