@@ -2685,6 +2685,27 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
+        // get function with 1.5.0 response format
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $response['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.5.0', // add response format header
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertArrayNotHasKey('scopes', $function['body']);
+        $this->assertArrayNotHasKey('specification', $function['body']);
+
+        // get function without response format header
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $response['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertArrayHasKey('scopes', $function['body']);
+        $this->assertArrayHasKey('specification', $function['body']);
+
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $response['body']['$id'], [
             'content-type' => 'application/json',
