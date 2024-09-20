@@ -604,9 +604,9 @@ Http::get('/v1/cards/cloud')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->inject('authorization')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $authorization) use ($getUserGitHub) {
-        $user = $authorization->skip(fn () => $dbForConsole->getDocument('users', $userId));
+    ->inject('auth')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $auth) use ($getUserGitHub) {
+        $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -617,7 +617,7 @@ Http::get('/v1/cards/cloud')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger, $authorization);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger, $auth);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
@@ -812,9 +812,9 @@ Http::get('/v1/cards/cloud-back')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->inject('authorization')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $authorization) use ($getUserGitHub) {
-        $user = $authorization->skip(fn () => $dbForConsole->getDocument('users', $userId));
+    ->inject('auth')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $auth) use ($getUserGitHub) {
+        $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -824,7 +824,7 @@ Http::get('/v1/cards/cloud-back')
             $userId = $user->getId();
             $email = $user->getAttribute('email', '');
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger, $authorization);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger, $auth);
             $githubId = $gitHub['id'] ?? '';
 
             $isHero = \array_key_exists($email, $heroes);
@@ -891,9 +891,9 @@ Http::get('/v1/cards/cloud-og')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->inject('authorization')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $authorization) use ($getUserGitHub) {
-        $user = $authorization->skip(fn () => $dbForConsole->getDocument('users', $userId));
+    ->inject('auth')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $auth) use ($getUserGitHub) {
+        $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -908,7 +908,7 @@ Http::get('/v1/cards/cloud-og')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger, $authorization);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger, $auth);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
