@@ -276,8 +276,7 @@ App::init()
         }
         /**
          * Admin User Authentication
-         */
-        elseif (($project->getId() === 'console' && !$team->isEmpty() && !$user->isEmpty()) || ($project->getId() !== 'console' && !$user->isEmpty() && $mode === APP_MODE_ADMIN)) {
+         */ elseif (($project->getId() === 'console' && !$team->isEmpty() && !$user->isEmpty()) || ($project->getId() !== 'console' && !$user->isEmpty() && $mode === APP_MODE_ADMIN)) {
             $teamId = $team->getId();
             $adminRoles = [];
             $memberships = $user->getAttribute('memberships', []);

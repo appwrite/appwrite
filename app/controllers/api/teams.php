@@ -396,7 +396,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('roles', [], function (Document $project) {
-        if($project->getId() === 'console') {
+        if ($project->getId() === 'console') {
             ;
             $roles = array_keys(Config::getParam('roles', []));
             array_filter($roles, function ($role) {
@@ -880,7 +880,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->param('roles', [], function (Document $project) {
-        if($project->getId() === 'console') {
+        if ($project->getId() === 'console') {
             ;
             $roles = array_keys(Config::getParam('roles', []));
             array_filter($roles, function ($role) {
