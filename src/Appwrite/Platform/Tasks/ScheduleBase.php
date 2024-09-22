@@ -158,10 +158,10 @@ abstract class ScheduleBase extends Action
                         $new = \strtotime($document['resourceUpdatedAt']);
 
                         if (!$document['active']) {
-                            Console::info("Removing: {$document['resourceType']}-{$document['resourceId']}");
+                            Console::info("Removing: {$document['resourceType']}:{$document['resourceId']}");
                             unset($this->schedules[$document->getInternalId()]);
                         } elseif ($new !== $org) {
-                            Console::info("Updating: {$document['resourceType']}-{$document['resourceId']}");
+                            Console::info("Updating: {$document['resourceType']}:{$document['resourceId']}");
                             $this->schedules[$document->getInternalId()] = $getSchedule($document);
                         }
                     }
