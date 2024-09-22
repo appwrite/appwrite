@@ -223,6 +223,7 @@ class Func extends Event
             'sourceRegion' =>  $this->getSourceRegion(),
             'project' => $this->project,
             'user' => $this->user,
+            'userId' => $this->userId,
             'function' => $this->function,
             'functionId' => $this->functionId,
             'execution' => $this->execution,

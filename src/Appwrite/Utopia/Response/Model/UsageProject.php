@@ -46,6 +46,18 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('buildsStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of builds storage size (in bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('deploymentsStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of deployments storage size (in bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('bucketsTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of buckets.',

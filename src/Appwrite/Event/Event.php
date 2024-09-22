@@ -55,6 +55,7 @@ class Event
     protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
+    protected ?string $userId = null;
     protected bool $paused = false;
 
     /**
@@ -154,6 +155,18 @@ class Event
     }
 
     /**
+     * Set user ID for this event.
+     *
+     * @return self
+     */
+    public function setUserId(string $userId): self
+    {
+        $this->userId = $userId;
+
+        return $this;
+    }
+
+    /**
      * Get user responsible for triggering this event.
      *
      * @return ?Document
@@ -161,6 +174,14 @@ class Event
     public function getUser(): ?Document
     {
         return $this->user;
+    }
+
+    /**
+     * Get user responsible for triggering this event.
+     */
+    public function getUserId(): ?string
+    {
+        return $this->userId;
     }
 
     /**
@@ -312,6 +333,7 @@ class Event
             'sourceRegion' =>  $this->getSourceRegion(),
             'project' => $this->project,
             'user' => $this->user,
+            'userId' => $this->userId,
             'payload' => $this->payload,
             'context' => $this->context,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
