@@ -151,7 +151,7 @@ abstract class ScheduleBase extends Action
                     $total = $total + $sum;
 
                     foreach ($results as $document) {
-                        $localDocument = $this->schedules[$document['resourceId']] ?? null;
+                        $localDocument = $this->schedules[$document->getInternalId()] ?? null;
 
                         // Check if resource has been updated since last sync
                         $org = $localDocument !== null ? \strtotime($localDocument['resourceUpdatedAt']) : null;
