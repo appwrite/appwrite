@@ -2,12 +2,15 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\CLI\Console;
 
 trait FunctionsBase
 {
+    use Async;
+
     protected string $stdout = '';
     protected string $stderr = '';
 
