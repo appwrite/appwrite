@@ -2,7 +2,7 @@
 
 namespace Appwrite\Network\Validator;
 
-use Utopia\Http\Validator;
+use Utopia\Validator;
 
 class CNAME extends Validator
 {

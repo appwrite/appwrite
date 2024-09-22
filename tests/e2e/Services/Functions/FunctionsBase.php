@@ -2,16 +2,14 @@
 
 namespace Tests\E2E\Services\Functions;
 
-use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\CLI\Console;
 
 trait FunctionsBase
 {
-    use Async;
-
-    protected string $output = '';
+    protected string $stdout = '';
+    protected string $stderr = '';
 
     protected function setupFunction(mixed $params): string
     {
@@ -147,7 +145,7 @@ trait FunctionsBase
         $tarPath = "$folderPath/code.tar.gz";
 
         if (!file_exists($tarPath)) {
-            Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->output);
+            Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
         }
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {

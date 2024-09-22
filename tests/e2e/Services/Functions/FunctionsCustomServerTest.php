@@ -553,7 +553,7 @@ class FunctionsCustomServerTest extends Scope
 
         $folder = 'php-large';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->output);
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
 
         $chunkSize = 5 * 1024 * 1024;
         $handle = @fopen($code, "rb");
@@ -1674,7 +1674,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($cookie, $response['body']);
 
-        // Wait for usage to be aggregated
+        // Await Aggregation
         sleep(System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
 
         $this->assertEventually(function () use ($functionId) {

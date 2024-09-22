@@ -2,7 +2,7 @@
 
 namespace Appwrite\Functions\Validator;
 
-use Utopia\Http\Validator\Text;
+use Utopia\Validator\Text;
 
 class Payload extends Text
 {

@@ -2,8 +2,8 @@
 
 namespace Appwrite\Auth\Validator;
 
-use Utopia\Http\Validator;
-use Utopia\Http\Validator\Text;
+use Utopia\Validator;
+use Utopia\Validator\Text;
 
 /**
  * MockNumber.
@@ -52,7 +52,6 @@ class MockNumber extends Validator
             return false;
         }
 
-        $this->message = '';
         return true;
     }
 
