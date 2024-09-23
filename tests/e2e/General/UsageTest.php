@@ -590,6 +590,166 @@ class UsageTest extends Scope
         return $data;
     }
 
+    public function testDatabaseStoragePrepare(): array
+    {
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/databases',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ], $this->getHeaders()),
+            [
+                'databaseId' => 'unique()',
+                'name' => 'dbStorageStats',
+            ]
+        );
+
+        $this->assertNotEmpty($response['body']['$id']);
+        $databaseId = $response['body']['$id'];
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ], $this->getHeaders()),
+            [
+                'collectionId' => 'unique()',
+                'name' => 'collectionStorageStats',
+                'documentSecurity' => false,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+            ]
+        );
+
+        $this->assertNotEmpty($response['body']['$id']);
+        $collectionId = $response['body']['$id'];
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes' . '/string',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ], $this->getHeaders()),
+            [
+                'key' => 'data',
+                'size' => 100000,
+                'required' => true,
+            ]
+        );
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+        ];
+    }
+
+    /** @depends testDatabaseStoragePrepare */
+    #[Retry(count: 1)]
+    public function testDatabaseStorageStatsCreateDocument(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+
+        $originalProjectMetrics = $this->client->call(
+            Client::METHOD_GET,
+            '/project/usage',
+            $this->getConsoleHeaders(),
+            [
+                'period' => '1d',
+                'startDate' => self::getToday(),
+                'endDate' => self::getTomorrow(),
+            ]
+        );
+
+        $this->assertEquals(200, $originalProjectMetrics['headers']['status-code']);
+        $this->assertArrayHasKey('databasesStorageTotal', $originalProjectMetrics['body']);
+
+        $originalProjectMetrics = $originalProjectMetrics['body'];
+
+        $originalDatabaseMetrics = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/' . $databaseId . '/usage?range=30d',
+            $this->getConsoleHeaders()
+        );
+
+        $this->assertEquals(200, $originalDatabaseMetrics['headers']['status-code']);
+        $this->assertArrayHasKey('storageTotal', $originalDatabaseMetrics['body']);
+        $originalDatabaseMetrics = $originalDatabaseMetrics['body'];
+
+        // Create documents
+        for ($i = 0; $i < 100; $i++) {
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+                [
+                    'documentId' => 'unique()',
+                    'data' => ['data' => str_repeat('a', 10000)],
+                ]
+            );
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+        }
+
+        sleep(self::WAIT);
+
+        for ($i = 0; $i < 3; $i++) {
+            try {
+                $newProjectMetrics = $this->client->call(
+                    Client::METHOD_GET,
+                    '/project/usage',
+                    $this->getConsoleHeaders(),
+                    [
+                        'period' => '1d',
+                        'startDate' => self::getToday(),
+                        'endDate' => self::getTomorrow(),
+                    ]
+                );
+        
+                $this->assertEquals(200, $newProjectMetrics['headers']['status-code']);
+                $this->assertArrayHasKey('databasesStorageTotal', $newProjectMetrics['body']);
+                $this->assertGreaterThan($originalProjectMetrics['databasesStorageTotal'], $newProjectMetrics['body']['databasesStorageTotal']);
+        
+                $newProjectMetrics = $newProjectMetrics['body'];
+        
+                $newDatabaseMetrics = $this->client->call(
+                    Client::METHOD_GET,
+                    '/databases/' . $databaseId . '/usage?range=30d',
+                    $this->getConsoleHeaders()
+                );
+        
+                $this->assertEquals(200, $newDatabaseMetrics['headers']['status-code']);
+                $this->assertArrayHasKey('storageTotal', $newDatabaseMetrics['body']);
+                $this->assertGreaterThan($originalDatabaseMetrics['storageTotal'], $newDatabaseMetrics['body']['storageTotal']);
+
+                $newDatabaseMetrics = $newDatabaseMetrics['body'];
+
+                return [
+                    'databaseId' => $databaseId,
+                    'collectionId' => $collectionId,
+                    'currentProjectMetrics' => $newProjectMetrics,
+                    'currentDatabaseMetrics' => $newDatabaseMetrics,
+                ];
+            } catch (ExpectationFailedException $e) {
+                if ($i === 2) {
+                    throw $e;
+                }
+                sleep(self::WAIT);
+                continue;
+            }
+        }
+    }
 
     /** @depends testDatabaseStats */
     public function testPrepareFunctionsStats(array $data): array

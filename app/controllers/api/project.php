@@ -225,23 +225,6 @@ App::get('/v1/project/usage')
             ];
         }, $dbForProject->find('functions'));
 
-        $databasesStorageBreakdown = array_map(function ($database) use ($dbForProject) {
-            $id = $database->getId();
-            $name = $database->getAttribute('name');
-            $metric = str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE);
-
-            $value = $dbForProject->findOne('stats', [
-                Query::equal('metric', [$metric]),
-                Query::equal('period', ['inf'])
-            ]);
-
-            return [
-                'resourceId' => $id,
-                'name' => $name,
-                'value' => $value['value'] ?? 0,
-            ];
-        }, $dbForProject->find('databases'));
-
         $executionsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');

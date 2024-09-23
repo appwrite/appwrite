@@ -71,7 +71,7 @@ class UsageDump extends Action
                         continue;
                     }
 
-                    if (str_ends_with($key, '.db_storage')) {
+                    if (str_ends_with($key, '.db_storage') && $value === 1) {
                         $this->handleDBStorageCalculation($key, $dbForProject);
                         return;
                     }
@@ -117,6 +117,9 @@ class UsageDump extends Action
     private function handleDBStorageCalculation(string $key, Database $dbForProject): void
     {
         $data = explode('.', $key);
+        $start = microtime(true);
+
+        var_dump('Calculating DB Storage for ' . $key);
 
         $updateMetric = function (Database $dbForProject, int $value, string $key, string $period, string|null $time) {
             $id = \md5("{$time}_{$period}_{$key}");
@@ -176,6 +179,8 @@ class UsageDump extends Action
                         break;
                     }
 
+                    var_dump('Calculated collection level, diff was ' . $diff . ' for ' . $key);
+
                     // Update Collection
                     $updateMetric($dbForProject, $diff, $key, $period, $time);
 
@@ -187,7 +192,7 @@ class UsageDump extends Action
                     $projectKey = 'db_storage';
                     $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
                     break;
-                    // Database Level
+                // Database Level
                 case 2:
                     $databaseInternalId = $data[0];
                     $collections = $dbForProject->find('database_' . $databaseInternalId);
@@ -197,6 +202,12 @@ class UsageDump extends Action
                     }
 
                     $diff = $value - $previousValue;
+
+                    if ($diff === 0) {
+                        break;
+                    }
+
+                    var_dump('Calculated database level, diff was ' . $diff . ' for ' . $key);
 
                     // Update Database
                     $databaseKey = $data[0] . '.db_storage';
@@ -222,11 +233,17 @@ class UsageDump extends Action
 
                     $diff = $value - $previousValue;
 
+                    var_dump('Calculated project level, diff was ' . $diff . ' for ' . $key);
+
                     // Update Project
                     $projectKey = 'db_storage';
                     $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
                     break;
             }
         }
+
+        $end = microtime(true);
+
+        console::log('[' . DateTime::now() . '] DB Storage Calculation [' . $key . '] took ' . (($end - $start) * 1000) . ' milliseconds');
     }
 }
