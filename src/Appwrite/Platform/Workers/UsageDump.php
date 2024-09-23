@@ -71,7 +71,7 @@ class UsageDump extends Action
                         continue;
                     }
 
-                    if (str_ends_with($key, '.db_storage') && $value === 1) {
+                    if (str_contains($key, 'databases.storage') && $value === 1) {
                         $this->handleDBStorageCalculation($key, $dbForProject);
                         return;
                     }
@@ -119,8 +119,6 @@ class UsageDump extends Action
         $data = explode('.', $key);
         $start = microtime(true);
 
-        var_dump('Calculating DB Storage for ' . $key);
-
         $updateMetric = function (Database $dbForProject, int $value, string $key, string $period, string|null $time) {
             $id = \md5("{$time}_{$period}_{$key}");
 
@@ -157,6 +155,7 @@ class UsageDump extends Action
             $id = \md5("{$time}_{$period}_{$key}");
 
             $value = 0;
+            $diskValue = 0;
             $previousValue = 0;
             try {
                 $previousValue = ($dbForProject->getDocument('stats', $id))->getAttribute('value', 0);
@@ -171,26 +170,29 @@ class UsageDump extends Action
                     $collectionInternalId = $data[1];
 
                     $value = $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collectionInternalId);
+                    $diskValue = $dbForProject->getSizeOfCollectionOnDisk('database_'.$databaseInternalId.'_collection_'.$collectionInternalId);
 
                     // Compare with previous value
                     $diff = $value - $previousValue;
+                    $diskDiff = $diskValue - $previousValue;
 
-                    if ($diff === 0) {
+                    if ($diff === 0 && $diskDiff === 0) {
                         break;
                     }
 
-                    var_dump('Calculated collection level, diff was ' . $diff . ' for ' . $key);
-
                     // Update Collection
                     $updateMetric($dbForProject, $diff, $key, $period, $time);
+                    $updateMetric($dbForProject, $diskDiff, $key . '_disk', $period, $time);
 
                     // Update Database
-                    $databaseKey = $data[0] . '.db_storage';
+                    $databaseKey = $data[0] . '.databases.storage';
                     $updateMetric($dbForProject, $diff, $databaseKey, $period, $time);
+                    $updateMetric($dbForProject, $diskDiff, $databaseKey . '_disk', $period, $time);
 
                     // Update Project
-                    $projectKey = 'db_storage';
+                    $projectKey = 'databases.storage';
                     $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
+                    $updateMetric($dbForProject, $diskDiff, $projectKey . '_disk', $period, $time);
                     break;
                     // Database Level
                 case 2:
@@ -199,23 +201,25 @@ class UsageDump extends Action
 
                     foreach ($collections as $collection) {
                         $value += $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collection->getInternalId());
+                        $diskValue += $dbForProject->getSizeOfCollectionOnDisk('database_'.$databaseInternalId.'_collection_'.$collection->getInternalId());
                     }
 
                     $diff = $value - $previousValue;
+                    $diskDiff = $diskValue - $previousValue;
 
-                    if ($diff === 0) {
+                    if ($diff === 0 && $diskDiff === 0) {
                         break;
                     }
 
-                    var_dump('Calculated database level, diff was ' . $diff . ' for ' . $key);
-
                     // Update Database
-                    $databaseKey = $data[0] . '.db_storage';
+                    $databaseKey = $data[0] . '.databases.storage';
                     $updateMetric($dbForProject, $diff, $databaseKey, $period, $time);
+                    $updateMetric($dbForProject, $diskDiff, $databaseKey . '_disk', $period, $time);
 
                     // Update Project
-                    $projectKey = 'db_storage';
+                    $projectKey = 'databases.storage';
                     $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
+                    $updateMetric($dbForProject, $diskDiff, $projectKey . '_disk', $period, $time);
                     break;
                     // Project Level
                 case 1:
@@ -228,16 +232,17 @@ class UsageDump extends Action
 
                         foreach ($collections as $collection) {
                             $value += $dbForProject->getSizeOfCollection('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId());
+                            $diskValue += $dbForProject->getSizeOfCollectionOnDisk('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId());
                         }
                     }
 
                     $diff = $value - $previousValue;
-
-                    var_dump('Calculated project level, diff was ' . $diff . ' for ' . $key);
+                    $diskDiff = $diskValue - $previousValue;
 
                     // Update Project
-                    $projectKey = 'db_storage';
+                    $projectKey = 'databases.storage';
                     $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
+                    $updateMetric($dbForProject, $diskDiff, $projectKey . '_disk', $period, $time);
                     break;
             }
         }
