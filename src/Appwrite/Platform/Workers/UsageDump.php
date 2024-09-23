@@ -192,7 +192,7 @@ class UsageDump extends Action
                     $projectKey = 'db_storage';
                     $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
                     break;
-                // Database Level
+                    // Database Level
                 case 2:
                     $databaseInternalId = $data[0];
                     $collections = $dbForProject->find('database_' . $databaseInternalId);

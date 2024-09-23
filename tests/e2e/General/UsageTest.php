@@ -716,19 +716,19 @@ class UsageTest extends Scope
                         'endDate' => self::getTomorrow(),
                     ]
                 );
-        
+
                 $this->assertEquals(200, $newProjectMetrics['headers']['status-code']);
                 $this->assertArrayHasKey('databasesStorageTotal', $newProjectMetrics['body']);
                 $this->assertGreaterThan($originalProjectMetrics['databasesStorageTotal'], $newProjectMetrics['body']['databasesStorageTotal']);
-        
+
                 $newProjectMetrics = $newProjectMetrics['body'];
-        
+
                 $newDatabaseMetrics = $this->client->call(
                     Client::METHOD_GET,
                     '/databases/' . $databaseId . '/usage?range=30d',
                     $this->getConsoleHeaders()
                 );
-        
+
                 $this->assertEquals(200, $newDatabaseMetrics['headers']['status-code']);
                 $this->assertArrayHasKey('storageTotal', $newDatabaseMetrics['body']);
                 $this->assertGreaterThan($originalDatabaseMetrics['storageTotal'], $newDatabaseMetrics['body']['storageTotal']);
