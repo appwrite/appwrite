@@ -12,6 +12,10 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\System\System;
 
+const METRIC_COLLECTION_LEVEL_STORAGE = 4;
+const METRIC_DATABASE_LEVEL_STORAGE = 3;
+const METRIC_PROJECT_LEVEL_STORAGE = 2;
+
 class UsageDump extends Action
 {
     protected array $stats = [];
@@ -71,8 +75,8 @@ class UsageDump extends Action
                         continue;
                     }
 
-                    if (str_contains($key, 'databases.storage') && $value === 1) {
-                        $this->handleDBStorageCalculation($key, $dbForProject);
+                    if (str_contains($key, METRIC_DATABASES_STORAGE)) {
+                        $this->handleDatabaseStorage($key, $dbForProject);
                         return;
                     }
 
@@ -114,7 +118,7 @@ class UsageDump extends Action
         }
     }
 
-    private function handleDBStorageCalculation(string $key, Database $dbForProject): void
+    private function handleDatabaseStorage(string $key, Database $dbForProject): void
     {
         $data = explode('.', $key);
         $start = microtime(true);
@@ -165,7 +169,7 @@ class UsageDump extends Action
 
             switch (count($data)) {
                 // Collection Level
-                case 3:
+                case METRIC_COLLECTION_LEVEL_STORAGE:
                     $databaseInternalId = $data[0];
                     $collectionInternalId = $data[1];
 
@@ -185,17 +189,17 @@ class UsageDump extends Action
                     $updateMetric($dbForProject, $diskDiff, $key . '_disk', $period, $time);
 
                     // Update Database
-                    $databaseKey = $data[0] . '.databases.storage';
+                    $databaseKey = str_replace(['{databaseInternalId}'], [$data[0]], METRIC_DATABASE_ID_STORAGE);
                     $updateMetric($dbForProject, $diff, $databaseKey, $period, $time);
                     $updateMetric($dbForProject, $diskDiff, $databaseKey . '_disk', $period, $time);
 
                     // Update Project
-                    $projectKey = 'databases.storage';
+                    $projectKey = METRIC_DATABASES_STORAGE;
                     $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
                     $updateMetric($dbForProject, $diskDiff, $projectKey . '_disk', $period, $time);
                     break;
                     // Database Level
-                case 2:
+                case METRIC_DATABASE_LEVEL_STORAGE:
                     $databaseInternalId = $data[0];
                     $collections = $dbForProject->find('database_' . $databaseInternalId);
 
@@ -212,17 +216,17 @@ class UsageDump extends Action
                     }
 
                     // Update Database
-                    $databaseKey = $data[0] . '.databases.storage';
+                    $databaseKey = str_replace(['{databaseInternalId}'], [$data[0]], METRIC_DATABASE_ID_STORAGE);
                     $updateMetric($dbForProject, $diff, $databaseKey, $period, $time);
                     $updateMetric($dbForProject, $diskDiff, $databaseKey . '_disk', $period, $time);
 
                     // Update Project
-                    $projectKey = 'databases.storage';
+                    $projectKey = METRIC_DATABASES_STORAGE;
                     $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
                     $updateMetric($dbForProject, $diskDiff, $projectKey . '_disk', $period, $time);
                     break;
                     // Project Level
-                case 1:
+                case METRIC_PROJECT_LEVEL_STORAGE:
                     // Get all project databases
                     $databases = $dbForProject->find('database');
 
@@ -240,7 +244,7 @@ class UsageDump extends Action
                     $diskDiff = $diskValue - $previousValue;
 
                     // Update Project
-                    $projectKey = 'databases.storage';
+                    $projectKey = METRIC_DATABASES_STORAGE;
                     $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
                     $updateMetric($dbForProject, $diskDiff, $projectKey . '_disk', $period, $time);
                     break;
