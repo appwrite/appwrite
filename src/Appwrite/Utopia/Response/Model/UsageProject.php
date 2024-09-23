@@ -126,7 +126,7 @@ class UsageProject extends Model
             ])
             ->addRule('databasesStorageBreakdown', [
                 'type' => Response::MODEL_METRIC_BREAKDOWN,
-                'description' => 'Aggregated breakdown in totals of usage by databases.',
+                'description' => 'An array of the aggregated breakdown of storage usage by databases.',
                 'default' => [],
                 'example' => [],
                 'array' => true

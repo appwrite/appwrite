@@ -63,7 +63,7 @@ class UsageDatabases extends Model
             ])
             ->addRule('storage', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of databases storage in bytes per period.',
+                'description' => 'An array of the aggregated number of databases storage in bytes per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
