@@ -178,8 +178,15 @@ class UsageDump extends Action
                     $databaseInternalId = $data[0];
                     $collectionInternalId = $data[1];
 
-                    $value = $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collectionInternalId);
-                    $diskValue = $dbForProject->getSizeOfCollectionOnDisk('database_'.$databaseInternalId.'_collection_'.$collectionInternalId);
+                    try {
+                        $value = $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collectionInternalId);
+                        $diskValue = $dbForProject->getSizeOfCollectionOnDisk('database_'.$databaseInternalId.'_collection_'.$collectionInternalId);
+                    } catch (\Exception $e) {
+                        // Collection not found
+                        if ($e->getMessage() !== 'Collection not found') {
+                            throw $e;
+                        }
+                    }
 
                     // Compare with previous value
                     $diff = $value - $previousValue;
@@ -210,8 +217,15 @@ class UsageDump extends Action
                     $collections = $dbForProject->find('database_' . $databaseInternalId);
 
                     foreach ($collections as $collection) {
-                        $value += $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collection->getInternalId());
-                        $diskValue += $dbForProject->getSizeOfCollectionOnDisk('database_'.$databaseInternalId.'_collection_'.$collection->getInternalId());
+                        try {
+                            $value += $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collection->getInternalId());
+                            $diskValue += $dbForProject->getSizeOfCollectionOnDisk('database_'.$databaseInternalId.'_collection_'.$collection->getInternalId());   
+                        } catch (\Exception $e) {
+                            // Collection not found
+                            if ($e->getMessage() !== 'Collection not found') {
+                                throw $e;
+                            }
+                        }
                     }
 
                     $diff = $value - $previousValue;
@@ -242,8 +256,15 @@ class UsageDump extends Action
                         $collections = $dbForProject->find('database_' . $database->getInternalId());
 
                         foreach ($collections as $collection) {
-                            $value += $dbForProject->getSizeOfCollection('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId());
-                            $diskValue += $dbForProject->getSizeOfCollectionOnDisk('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId());
+                            try {
+                                $value += $dbForProject->getSizeOfCollection('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId());
+                                $diskValue += $dbForProject->getSizeOfCollectionOnDisk('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId());
+                            } catch (\Exception $e) {
+                                // Collection not found
+                                if ($e->getMessage() !== 'Collection not found') {
+                                    throw $e;
+                                }
+                            }
                         }
                     }
 
