@@ -214,12 +214,21 @@ class UsageDump extends Action
                 case METRIC_DATABASE_LEVEL_STORAGE:
                     Console::log('[' . DateTime::now() . '] Database Level Storage Calculation [' . $key . ']');
                     $databaseInternalId = $data[0];
-                    $collections = $dbForProject->find('database_' . $databaseInternalId);
+
+                    $collections = [];
+                    try {
+                        $collections = $dbForProject->find('database_' . $databaseInternalId);
+                    } catch (\Exception $e) {
+                        // Database not found
+                        if ($e->getMessage() !== 'Collection not found') {
+                            throw $e;
+                        }
+                    }
 
                     foreach ($collections as $collection) {
                         try {
                             $value += $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collection->getInternalId());
-                            $diskValue += $dbForProject->getSizeOfCollectionOnDisk('database_'.$databaseInternalId.'_collection_'.$collection->getInternalId());   
+                            $diskValue += $dbForProject->getSizeOfCollectionOnDisk('database_'.$databaseInternalId.'_collection_'.$collection->getInternalId());
                         } catch (\Exception $e) {
                             // Collection not found
                             if ($e->getMessage() !== 'Collection not found') {
