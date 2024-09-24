@@ -1,5 +1,9 @@
 <?php
 
+const APP_PLATFORM_SERVER = 'server';
+const APP_PLATFORM_CLIENT = 'client';
+const APP_PLATFORM_CONSOLE = 'console';
+
 return [
     APP_PLATFORM_CLIENT => [
         'key' => APP_PLATFORM_CLIENT,
