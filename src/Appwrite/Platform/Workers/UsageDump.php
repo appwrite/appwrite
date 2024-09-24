@@ -76,7 +76,11 @@ class UsageDump extends Action
                     }
 
                     if (str_contains($key, METRIC_DATABASES_STORAGE)) {
-                        $this->handleDatabaseStorage($key, $dbForProject);
+                        try {
+                            $this->handleDatabaseStorage($key, $dbForProject);
+                        } catch (\Exception $e) {
+                            console::error('[' . DateTime::now() . '] failed to calculate database storage for key [' . $key . '] ' . $e->getMessage());
+                        }
                         continue;
                     }
 
@@ -170,6 +174,7 @@ class UsageDump extends Action
             switch (count($data)) {
                 // Collection Level
                 case METRIC_COLLECTION_LEVEL_STORAGE:
+                    Console::log('[' . DateTime::now() . '] Collection Level Storage Calculation [' . $key . ']');
                     $databaseInternalId = $data[0];
                     $collectionInternalId = $data[1];
 
@@ -200,6 +205,7 @@ class UsageDump extends Action
                     break;
                     // Database Level
                 case METRIC_DATABASE_LEVEL_STORAGE:
+                    Console::log('[' . DateTime::now() . '] Database Level Storage Calculation [' . $key . ']');
                     $databaseInternalId = $data[0];
                     $collections = $dbForProject->find('database_' . $databaseInternalId);
 
@@ -227,6 +233,7 @@ class UsageDump extends Action
                     break;
                     // Project Level
                 case METRIC_PROJECT_LEVEL_STORAGE:
+                    Console::log('[' . DateTime::now() . '] Project Level Storage Calculation [' . $key . ']');
                     // Get all project databases
                     $databases = $dbForProject->find('database');
 
