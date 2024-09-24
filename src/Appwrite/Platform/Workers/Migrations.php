@@ -287,7 +287,6 @@ class Migrations extends Action
 
             $migration->setAttribute('stage', 'processing');
             $migration->setAttribute('status', 'processing');
-            $log->addBreadcrumb(new Breadcrumb('debug', 'migration', "Migration hit stage 'processing'", \microtime(true)));
             $this->updateMigrationDocument($migration, $projectDocument);
 
             $log->addTag('type', $migration->getAttribute('source'));
@@ -304,7 +303,6 @@ class Migrations extends Action
 
             /** Start Transfer */
             $migration->setAttribute('stage', 'migrating');
-            $log->addBreadcrumb(new Breadcrumb('debug', 'migration', "Migration hit stage 'migrating'", \microtime(true)));
             $this->updateMigrationDocument($migration, $projectDocument);
 
             $transfer->run(
@@ -327,7 +325,6 @@ class Migrations extends Action
             if (! empty($sourceErrors) || ! empty($destinationErrors)) {
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
-                $log->addBreadcrumb(new Breadcrumb('debug', 'migration', "Migration hit stage 'finished' and failed", \microtime(true)));
 
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
@@ -359,7 +356,6 @@ class Migrations extends Action
 
             $migration->setAttribute('status', 'completed');
             $migration->setAttribute('stage', 'finished');
-            $log->addBreadcrumb(new Breadcrumb('debug', 'migration', "Migration hit stage 'finished' and succeeded", \microtime(true)));
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
             Console::error($th->getTraceAsString());
