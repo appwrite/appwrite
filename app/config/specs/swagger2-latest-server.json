@@ -24166,6 +24166,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "size": {
                     "type": "integer",
                     "description": "Attribute size.",
@@ -24185,6 +24195,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "size"
             ]
         },
@@ -24223,6 +24235,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "min": {
                     "type": "integer",
                     "description": "Minimum value to enforce for new documents.",
@@ -24250,7 +24272,9 @@
                 "type",
                 "status",
                 "error",
-                "required"
+                "required",
+                "$createdAt",
+                "$updatedAt"
             ]
         },
         "attributeFloat": {
@@ -24288,6 +24312,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "min": {
                     "type": "number",
                     "description": "Minimum value to enforce for new documents.",
@@ -24315,7 +24349,9 @@
                 "type",
                 "status",
                 "error",
-                "required"
+                "required",
+                "$createdAt",
+                "$updatedAt"
             ]
         },
         "attributeBoolean": {
@@ -24353,6 +24389,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "default": {
                     "type": "boolean",
                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
@@ -24365,7 +24411,9 @@
                 "type",
                 "status",
                 "error",
-                "required"
+                "required",
+                "$createdAt",
+                "$updatedAt"
             ]
         },
         "attributeEmail": {
@@ -24403,6 +24451,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "format": {
                     "type": "string",
                     "description": "String format.",
@@ -24421,6 +24479,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "format"
             ]
         },
@@ -24459,6 +24519,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "elements": {
                     "type": "array",
                     "description": "Array of elements in enumerated type.",
@@ -24485,6 +24555,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "elements",
                 "format"
             ]
@@ -24524,6 +24596,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "format": {
                     "type": "string",
                     "description": "String format.",
@@ -24542,6 +24624,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "format"
             ]
         },
@@ -24580,6 +24664,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "format": {
                     "type": "string",
                     "description": "String format.",
@@ -24598,6 +24692,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "format"
             ]
         },
@@ -24636,6 +24732,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "format": {
                     "type": "string",
                     "description": "ISO 8601 format.",
@@ -24654,6 +24760,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "format"
             ]
         },
@@ -24692,6 +24800,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "relatedCollection": {
                     "type": "string",
                     "description": "The ID of the related collection.",
@@ -24729,6 +24847,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "relatedCollection",
                 "relationType",
                 "twoWay",
@@ -24777,6 +24897,16 @@
                     },
                     "x-example": [],
                     "x-nullable": true
+                },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Index creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Index update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
                 }
             },
             "required": [
@@ -24784,7 +24914,9 @@
                 "type",
                 "status",
                 "error",
-                "attributes"
+                "attributes",
+                "$createdAt",
+                "$updatedAt"
             ]
         },
         "document": {
