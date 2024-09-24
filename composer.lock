@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5d5649d7e5859da94b2dbe9deecea556",
+    "content-hash": "7066d9ca32e7a1a60614effdc4701970",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1723,16 +1723,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-0.35.x-add-collection-size-data",
+            "version": "0.53.5-rc1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "f3133eaa41534497eeaf807f1d3501aad1606e2e"
+                "reference": "689ba22063bf46def385da8695ba7a921e81e38d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/f3133eaa41534497eeaf807f1d3501aad1606e2e",
-                "reference": "f3133eaa41534497eeaf807f1d3501aad1606e2e",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/689ba22063bf46def385da8695ba7a921e81e38d",
+                "reference": "689ba22063bf46def385da8695ba7a921e81e38d",
                 "shasum": ""
             },
             "require": {
@@ -1803,10 +1803,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/0.35.x-add-collection-size-data",
+                "source": "https://github.com/utopia-php/database/tree/0.53.5-rc1",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2024-09-23T11:38:14+00:00"
+            "time": "2024-09-24T08:43:10+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -7024,17 +7024,10 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-0.35.x-add-collection-size-data",
-            "alias": "0.53.3",
-            "alias_normalized": "0.53.3.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/database": 20
+        "utopia-php/database": 5
     },
     "prefer-stable": false,
     "prefer-lowest": false,
