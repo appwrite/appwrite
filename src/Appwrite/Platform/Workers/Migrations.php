@@ -396,7 +396,7 @@ class Migrations extends Action
 
             $this->updateMigrationDocument($migration, $projectDocument);
 
-            if ($migration->getAttribute('status', '') == 'failed') {
+            if ($migration->getAttribute('status', '') === 'failed') {
                 $destination->error();
                 $source->error();
 
