@@ -1120,6 +1120,15 @@ return [
         'description' => '',
         'variables' => [
             [
+                'name' => '_APP_ASSISTANT_HOST',
+                'description' => 'Host and port of the assistant container.',
+                'introduction' => '1.6.0',
+                'default' => 'http://appwrite-assistant:3003',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_ASSISTANT_OPENAI_API_KEY',
                 'description' => 'OpenAI API key. You can find it in your OpenAI application settings.',
                 'introduction' => '1.4.0',
