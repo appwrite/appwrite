@@ -37305,7 +37305,7 @@
                 },
                 "storage": {
                     "type": "array",
-                    "description": "Aggregated number of databases storage in bytes per period.",
+                    "description": "An array of the aggregated number of databases storage in bytes per period.",
                     "items": {
                         "type": "object",
                         "$ref": "#\/definitions\/metric"
@@ -38065,7 +38065,7 @@
                 },
                 "databasesStorageBreakdown": {
                     "type": "array",
-                    "description": "Aggregated breakdown in totals of usage by databases.",
+                    "description": "An array of the aggregated breakdown of storage usage by databases.",
                     "items": {
                         "type": "object",
                         "$ref": "#\/definitions\/metricBreakdown"
