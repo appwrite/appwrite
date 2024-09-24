@@ -77,7 +77,7 @@ class UsageDump extends Action
 
                     if (str_contains($key, METRIC_DATABASES_STORAGE)) {
                         $this->handleDatabaseStorage($key, $dbForProject);
-                        return;
+                        continue;
                     }
 
                     foreach ($this->periods as $period => $format) {
