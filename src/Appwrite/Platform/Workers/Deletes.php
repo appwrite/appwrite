@@ -496,13 +496,16 @@ class Deletes extends Action
             Audit::COLLECTION,
             TimeLimit::COLLECTION,
         ];
-var_dump($projectCollectionIds);
+
         $limit = \count($projectCollectionIds) + 25;
 
         while (true) {
             $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
+
+                var_dump($collection->getId());
+
                 if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
                     $dbForProject->deleteCollection($collection->getId());
                 } else {
