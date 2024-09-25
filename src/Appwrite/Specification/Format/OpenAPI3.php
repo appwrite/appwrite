@@ -576,6 +576,10 @@ class OpenAPI3 extends Format
                         $type = 'boolean';
                         break;
 
+                    case 'payload':
+                        $type = 'payload';
+                        break;
+
                     default:
                         $type = 'object';
                         $rule['type'] = ($rule['type']) ? $rule['type'] : 'none';

@@ -11,6 +11,7 @@ abstract class Model
     public const TYPE_FLOAT = 'double';
     public const TYPE_BOOLEAN = 'boolean';
     public const TYPE_JSON = 'json';
+    public const TYPE_PAYLOAD = 'payload';
     public const TYPE_DATETIME = 'datetime';
     public const TYPE_DATETIME_EXAMPLE = '2020-10-15T06:38:00.000+00:00';
     public const TYPE_RELATIONSHIP = 'relationship';
