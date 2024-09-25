@@ -40,6 +40,18 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('functionsStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of functions storage size (in bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('buildsStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of builds storage size (in bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('deploymentsStorageTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated sum of deployments storage size (in bytes).',
@@ -120,9 +132,9 @@ class UsageProject extends Model
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('deploymentsStorageBreakdown', [
+            ->addRule('functionsStorageBreakdown', [
                 'type' => Response::MODEL_METRIC_BREAKDOWN,
-                'description' => 'Aggregated breakdown in totals of deployments storage size (in bytes).',
+                'description' => 'Aggregated breakdown in totals of functions storage size (in bytes).',
                 'default' => [],
                 'example' => [],
                 'array' => true
