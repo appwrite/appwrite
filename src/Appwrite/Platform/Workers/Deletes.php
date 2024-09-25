@@ -480,6 +480,7 @@ class Deletes extends Action
     private function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
     {
         $projectInternalId = $document->getInternalId();
+        $projectId = $document->getId();
 
         try {
             $dsn = new DSN($document->getAttribute('database', 'console'));
@@ -557,9 +558,9 @@ class Deletes extends Action
             Query::equal('projectInternalId', [$projectInternalId]),
         ], $dbForConsole);
 
-        // Delete Schedules
+        // Delete Schedules (No projectInternalId in this collection)
         $this->deleteByGroup('schedules', [
-            Query::equal('projectInternalId', [$projectInternalId]),
+            Query::equal('projectId', [$projectId]),
         ], $dbForConsole);
 
         // Delete metadata table
