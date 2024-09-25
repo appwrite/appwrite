@@ -557,6 +557,11 @@ class Deletes extends Action
             Query::equal('projectInternalId', [$projectInternalId]),
         ], $dbForConsole);
 
+        // Delete Schedules
+        $this->deleteByGroup('schedules', [
+            Query::equal('projectInternalId', [$projectInternalId]),
+        ], $dbForConsole);
+
         // Delete metadata table
         if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
             $dbForProject->deleteCollection('_metadata');
