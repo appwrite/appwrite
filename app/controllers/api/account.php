@@ -1502,6 +1502,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $queueForEvents
                         ->setEvent('users.[userId].create')
                         ->setParam('userId', $user->getId())
+                        ->setPayload($response->output($user, Response::MODEL_ACCOUNT))
                         ->trigger();
 
                 } catch (Duplicate) {
