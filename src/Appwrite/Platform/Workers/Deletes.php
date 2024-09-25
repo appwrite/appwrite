@@ -507,7 +507,13 @@ class Deletes extends Action
                 var_dump($collection->getId());
 
                 if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
+                    var_dump('start ' . $collection->getId());
+
                     $dbForProject->deleteCollection($collection->getId());
+
+                    var_dump('finish ' . $collection->getId());
+                    var_dump('');
+
                 } else {
                     $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                 }
