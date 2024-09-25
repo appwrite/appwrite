@@ -1498,6 +1498,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $email,
                     ]));
+
+                    $queueForEvents
+                        ->setEvent('users.[userId].create')
+                        ->setParam('userId', $user->getId())
+                        ->trigger();
+
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
