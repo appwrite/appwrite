@@ -125,11 +125,11 @@ trait StorageBase
 
         /**
          * Failure
-         * Test for Chunk above 10MB
+         * Test for Chunk above 20MB
          */
         $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
         $totalSize = \filesize($source);
-        $chunkSize = 12 * 1024 * 1024;
+        $chunkSize = 22 * 1024 * 1024;
         $handle = @fopen($source, "rb");
         $fileId = 'unique()';
         $mimeType = mime_content_type($source);
