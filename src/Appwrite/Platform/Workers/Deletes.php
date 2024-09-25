@@ -496,7 +496,7 @@ class Deletes extends Action
             Audit::COLLECTION,
             TimeLimit::COLLECTION,
         ];
-
+        var_dump($projectCollectionIds);
         $limit = \count($projectCollectionIds) + 25;
 
         while (true) {
