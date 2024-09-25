@@ -496,7 +496,7 @@ class Deletes extends Action
             Audit::COLLECTION,
             TimeLimit::COLLECTION,
         ];
-
+var_dump($projectCollectionIds);
         $limit = \count($projectCollectionIds) + 25;
 
         while (true) {
@@ -559,6 +559,7 @@ class Deletes extends Action
         ], $dbForConsole);
 
         // Delete Schedules (No projectInternalId in this collection)
+        var_dump("deleting schedules projectId = " . $projectId);
         $this->deleteByGroup('schedules', [
             Query::equal('projectId', [$projectId]),
         ], $dbForConsole);
