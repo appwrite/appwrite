@@ -1,10 +1,10 @@
 <?php
 
 use Appwrite\Utopia\Response;
+use Utopia\App;
 use Utopia\Config\Config;
-use Utopia\Http\Http;
 
-Http::get('/versions')
+App::get('/versions')
     ->desc('Get Version')
     ->groups(['home', 'web'])
     ->label('scope', 'public')

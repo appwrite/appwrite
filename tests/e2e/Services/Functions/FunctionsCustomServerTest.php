@@ -10,12 +10,12 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\System\System;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -476,6 +476,7 @@ class FunctionsCustomServerTest extends Scope
          * and ensure variable works as expected in execution.
          */
         $this->assertEmpty($template['body']['variables']);
+
         // Create function using settings from template.
         // Deployment is automatically created from template inside endpoint
         $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
@@ -503,6 +504,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($function['body']['$id']);
 
         $functionId = $function['body']['$id'];
+
         // List deployments so we can await deployment build
         $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', [
             'content-type' => 'application/json',
@@ -2462,7 +2464,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($cookie, $response['body']);
 
         // Await Aggregation
-        sleep(System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
+        sleep(App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
 
         $tries = 0;
         while (true) {

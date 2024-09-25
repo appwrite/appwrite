@@ -6,12 +6,9 @@ use Appwrite\GraphQL\Exception as GQLException;
 use Appwrite\Promises\Swoole;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\DI\Container;
+use Utopia\App;
 use Utopia\Exception;
-use Utopia\Http\Http;
-use Utopia\Http\Request as UtopiaHttpRequest;
-use Utopia\Http\Response as UtopiaHttpResponse;
-use Utopia\Http\Route;
+use Utopia\Route;
 use Utopia\System\System;
 
 class Resolvers
@@ -19,21 +16,24 @@ class Resolvers
     /**
      * Create a resolver for a given API {@see Route}.
      *
-     * @param Http $http
+     * @param App $utopia
      * @param ?Route $route
      * @return callable
      */
-    public function api(
-        Http $http,
+    public static function api(
+        App $utopia,
         ?Route $route,
-        UtopiaHttpRequest $request,
-        UtopiaHttpResponse $response,
-        Container $container,
     ): callable {
-        $resolver = $this;
+        return static fn ($type, $args, $context, $info) => new Swoole(
+            function (callable $resolve, callable $reject) use ($utopia, $route, $args, $context, $info) {
+                /** @var App $utopia */
+                /** @var Response $response */
+                /** @var Request $request */
 
-        return fn ($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $route, $args, $context, $container, $info, $request, $response, $resolver) {
+                $utopia = $utopia->getResource('utopia:graphql', true);
+                $request = $utopia->getResource('request', true);
+                $response = $utopia->getResource('response', true);
+
                 $path = $route->getPath();
                 foreach ($args as $key => $value) {
                     if (\str_contains($path, '/:' . $key)) {
@@ -46,13 +46,14 @@ class Resolvers
 
                 switch ($route->getMethod()) {
                     case 'GET':
-                        $request->setQuery($args);
+                        $request->setQueryString($args);
                         break;
                     default:
                         $request->setPayload($args);
                         break;
                 }
-                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
+
+                self::resolve($utopia, $request, $response, $resolve, $reject);
             }
         );
     }
@@ -60,20 +61,20 @@ class Resolvers
     /**
      * Create a resolver for a document in a specified database and collection with a specific method type.
      *
-     * @param Http $http
+     * @param App $utopia
      * @param string $databaseId
      * @param string $collectionId
      * @param string $methodType
      * @return callable
      */
-    public function document(
-        Http $http,
+    public static function document(
+        App $utopia,
         string $databaseId,
         string $collectionId,
         string $methodType,
     ): callable {
         return [self::class, 'document' . \ucfirst($methodType)](
-            $http,
+            $utopia,
             $databaseId,
             $collectionId
         );
@@ -82,28 +83,28 @@ class Resolvers
     /**
      * Create a resolver for getting a document in a specified database and collection.
      *
-     * @param Http $http
+     * @param App $utopia
      * @param string $databaseId
      * @param string $collectionId
      * @param callable $url
      * @return callable
      */
-    public function documentGet(
-        Http $http,
+    public static function documentGet(
+        App $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
-        UtopiaHttpRequest $request,
-        UtopiaHttpResponse $response,
-        Container $container,
     ): callable {
-        $resolver = $this;
-        return fn ($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $type, $args, $container, $request, $response, $resolver) {
+        return static fn ($type, $args, $context, $info) => new Swoole(
+            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $type, $args) {
+                $utopia = $utopia->getResource('utopia:graphql', true);
+                $request = $utopia->getResource('request', true);
+                $response = $utopia->getResource('response', true);
+
                 $request->setMethod('GET');
                 $request->setURI($url($databaseId, $collectionId, $args));
 
-                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
+                self::resolve($utopia, $request, $response, $resolve, $reject);
             }
         );
     }
@@ -111,35 +112,35 @@ class Resolvers
     /**
      * Create a resolver for listing documents in a specified database and collection.
      *
-     * @param Http $http
+     * @param App $utopia
      * @param string $databaseId
      * @param string $collectionId
      * @param callable $url
      * @param callable $params
      * @return callable
      */
-    public function documentList(
-        Http $http,
+    public static function documentList(
+        App $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
         callable $params,
-        UtopiaHttpRequest $request,
-        UtopiaHttpResponse $response,
-        Container $container,
     ): callable {
-        $resolver = $this;
-        return fn ($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container, $request, $response, $resolver) {
+        return static fn ($type, $args, $context, $info) => new Swoole(
+            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $type, $args) {
+                $utopia = $utopia->getResource('utopia:graphql', true);
+                $request = $utopia->getResource('request', true);
+                $response = $utopia->getResource('response', true);
+
                 $request->setMethod('GET');
                 $request->setURI($url($databaseId, $collectionId, $args));
-                $request->setQuery($params($databaseId, $collectionId, $args));
+                $request->setQueryString($params($databaseId, $collectionId, $args));
 
                 $beforeResolve = function ($payload) {
                     return $payload['documents'];
                 };
 
-                $resolver->resolve($http, $request, $response, $container, $resolve, $reject, $beforeResolve);
+                self::resolve($utopia, $request, $response, $resolve, $reject, $beforeResolve);
             }
         );
     }
@@ -147,31 +148,31 @@ class Resolvers
     /**
      * Create a resolver for creating a document in a specified database and collection.
      *
-     * @param Http $http
+     * @param App $utopia
      * @param string $databaseId
      * @param string $collectionId
      * @param callable $url
      * @param callable $params
      * @return callable
      */
-    public function documentCreate(
-        Http $http,
+    public static function documentCreate(
+        App $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
         callable $params,
-        UtopiaHttpRequest $request,
-        UtopiaHttpResponse $response,
-        Container $container,
     ): callable {
-        $resolver = $this;
-        return fn ($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container, $request, $response, $resolver) {
+        return static fn ($type, $args, $context, $info) => new Swoole(
+            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $type, $args) {
+                $utopia = $utopia->getResource('utopia:graphql', true);
+                $request = $utopia->getResource('request', true);
+                $response = $utopia->getResource('response', true);
+
                 $request->setMethod('POST');
                 $request->setURI($url($databaseId, $collectionId, $args));
                 $request->setPayload($params($databaseId, $collectionId, $args));
 
-                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
+                self::resolve($utopia, $request, $response, $resolve, $reject);
             }
         );
     }
@@ -179,31 +180,31 @@ class Resolvers
     /**
      * Create a resolver for updating a document in a specified database and collection.
      *
-     * @param Http $http
+     * @param App $utopia
      * @param string $databaseId
      * @param string $collectionId
      * @param callable $url
      * @param callable $params
      * @return callable
      */
-    public function documentUpdate(
-        Http $http,
+    public static function documentUpdate(
+        App $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
         callable $params,
-        UtopiaHttpRequest $request,
-        UtopiaHttpResponse $response,
-        Container $container,
     ): callable {
-        $resolver = $this;
-        return fn ($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $params, $type, $args, $container, $request, $response, $resolver) {
+        return static fn ($type, $args, $context, $info) => new Swoole(
+            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $type, $args) {
+                $utopia = $utopia->getResource('utopia:graphql', true);
+                $request = $utopia->getResource('request', true);
+                $response = $utopia->getResource('response', true);
+
                 $request->setMethod('PATCH');
                 $request->setURI($url($databaseId, $collectionId, $args));
                 $request->setPayload($params($databaseId, $collectionId, $args));
 
-                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
+                self::resolve($utopia, $request, $response, $resolve, $reject);
             }
         );
     }
@@ -211,34 +212,34 @@ class Resolvers
     /**
      * Create a resolver for deleting a document in a specified database and collection.
      *
-     * @param Http $http
+     * @param App $utopia
      * @param string $databaseId
      * @param string $collectionId
      * @param callable $url
      * @return callable
      */
-    public function documentDelete(
-        Http $http,
+    public static function documentDelete(
+        App $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
-        UtopiaHttpRequest $request,
-        UtopiaHttpResponse $response,
-        Container $container,
     ): callable {
-        $resolver = $this;
-        return fn ($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($http, $databaseId, $collectionId, $url, $type, $args, $container, $request, $response, $resolver) {
+        return static fn ($type, $args, $context, $info) => new Swoole(
+            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $type, $args) {
+                $utopia = $utopia->getResource('utopia:graphql', true);
+                $request = $utopia->getResource('request', true);
+                $response = $utopia->getResource('response', true);
+
                 $request->setMethod('DELETE');
                 $request->setURI($url($databaseId, $collectionId, $args));
 
-                $resolver->resolve($http, $request, $response, $container, $resolve, $reject);
+                self::resolve($utopia, $request, $response, $resolve, $reject);
             }
         );
     }
 
     /**
-     * @param Http $http
+     * @param App $utopia
      * @param Request $request
      * @param Response $response
      * @param callable $resolve
@@ -248,11 +249,10 @@ class Resolvers
      * @return void
      * @throws Exception
      */
-    private function resolve(
-        Http $http,
+    private static function resolve(
+        App $utopia,
         Request $request,
         Response $response,
-        Container $context,
         callable $resolve,
         callable $reject,
         ?callable $beforeResolve = null,
@@ -263,16 +263,14 @@ class Resolvers
             $request->removeHeader('content-type');
         }
 
+        $request = clone $request;
+        $utopia->setResource('request', static fn () => $request);
         $response->setContentType(Response::CONTENT_TYPE_NULL);
 
         try {
-            $context
-                ->refresh('cache')
-                ->refresh('dbForProject')
-                ->refresh('dbForConsole')
-                ->refresh('getProjectDb');
+            $route = $utopia->match($request, fresh: true);
 
-            $http->run(clone $context);
+            $utopia->execute($route, $request, $response);
         } catch (\Throwable $e) {
             if ($beforeReject) {
                 $e = $beforeReject($e);
@@ -287,12 +285,10 @@ class Resolvers
             if ($beforeReject) {
                 $payload = $beforeReject($payload);
             }
-            $reject(
-                new GQLException(
-                    message: $payload['message'],
-                    code: $response->getStatusCode()
-                )
-            );
+            $reject(new GQLException(
+                message: $payload['message'],
+                code: $response->getStatusCode()
+            ));
             return;
         }
 

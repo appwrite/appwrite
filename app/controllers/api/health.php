@@ -3,19 +3,12 @@
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Response;
+use Utopia\App;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Document;
 use Utopia\Domains\Validator\PublicDomain;
-use Utopia\Http\Http;
-use Utopia\Http\Validator\Domain;
-use Utopia\Http\Validator\Integer;
-use Utopia\Http\Validator\Multiple;
-use Utopia\Http\Validator\Text;
-use Utopia\Http\Validator\WhiteList;
+use Utopia\Pools\Group;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
@@ -23,8 +16,13 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
+use Utopia\Validator\Domain;
+use Utopia\Validator\Integer;
+use Utopia\Validator\Multiple;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
-Http::get('/v1/health')
+App::get('/v1/health')
     ->desc('Get HTTP')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -47,7 +45,7 @@ Http::get('/v1/health')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
-Http::get('/v1/health/version')
+App::get('/v1/health/version')
     ->desc('Get version')
     ->groups(['api', 'health'])
     ->label('scope', 'public')
@@ -59,7 +57,7 @@ Http::get('/v1/health/version')
         $response->dynamic(new Document([ 'version' => APP_VERSION_STABLE ]), Response::MODEL_HEALTH_VERSION);
     });
 
-Http::get('/v1/health/db')
+App::get('/v1/health/db')
     ->desc('Get DB')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -72,34 +70,21 @@ Http::get('/v1/health/db')
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->inject('pools')
-    ->inject('connections')
-    ->action(function (Response $response, array $pools, Connections $connections) {
+    ->action(function (Response $response, Group $pools) {
 
         $output = [];
 
         $configs = [
-            'console' => Config::getParam('pools-console'),
-            'database' => Config::getParam('pools-database'),
+            'Console.DB' => Config::getParam('pools-console'),
+            'Projects.DB' => Config::getParam('pools-database'),
         ];
 
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
-                $checkStart = \microtime(true);
-
                 try {
+                    $adapter = $pools->get($database)->pop()->getResource();
 
-                    $pool = $pools['pools-'.$key.'-'.$database]['pool'];
-                    $dsn = $pools['pools-'.$key.'-'.$database]['dsn'];
-
-                    $connection = $pool->get();
-                    $connections->add($connection, $pool);
-                    $adapter = match ($dsn->getScheme()) {
-                        'mariadb' => new MariaDB($connection),
-                        'mysql' => new MySQL($connection),
-                        default => null
-                    };
-                    $adapter->setDatabase($dsn->getPath());
-
+                    $checkStart = \microtime(true);
 
                     if ($adapter->ping()) {
                         $output[] = new Document([
@@ -126,7 +111,7 @@ Http::get('/v1/health/db')
         ]), Response::MODEL_HEALTH_STATUS_LIST);
     });
 
-Http::get('/v1/health/cache')
+App::get('/v1/health/cache')
     ->desc('Get cache')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -139,8 +124,7 @@ Http::get('/v1/health/cache')
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->inject('pools')
-    ->inject('connections')
-    ->action(function (Response $response, array $pools, Connections $connections) {
+    ->action(function (Response $response, Group $pools) {
 
         $output = [];
 
@@ -150,142 +134,8 @@ Http::get('/v1/health/cache')
 
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
-                $checkStart = \microtime(true);
                 try {
-                    $pool = $pools['pools-cache-' . $database]['pool'];
-                    $dsn = $pools['pools-cache-' . $database]['dsn'];
-                    $connection = $pool->get();
-                    $connections->add($connection, $pool);
-
-                    $adapter =  new Connection\Redis($dsn->getHost(), $dsn->getPort());
-
-
-                    if ($adapter->ping()) {
-                        $output[] = new Document([
-                            'name' => $key . " ($database)",
-                            'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                        ]);
-                    } else {
-                        $output[] = new Document([
-                            'name' => $key . " ($database)",
-                            'status' => 'fail',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                        ]);
-                    }
-                } catch (\Throwable $th) {
-                    $output[] = new Document([
-                        'name' => $key . " ($database)",
-                        'status' => 'fail',
-                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                    ]);
-                } finally {
-                    $connections->reclaim();
-                }
-            }
-        }
-
-        $response->dynamic(new Document([
-            'statuses' => $output,
-            'total' => count($output),
-        ]), Response::MODEL_HEALTH_STATUS_LIST);
-    });
-
-Http::get('/v1/health/queue')
-    ->desc('Get queue')
-    ->groups(['api', 'health'])
-    ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueue')
-    ->label('sdk.description', '/docs/references/health/get-queue.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
-    ->inject('response')
-    ->inject('pools')
-    ->inject('connections')
-    ->action(function (Response $response, array $pools, Connections $connections) {
-
-        $output = [];
-
-        $configs = [
-            'Queue' => Config::getParam('pools-queue'),
-        ];
-
-        foreach ($configs as $key => $config) {
-            $checkStart = \microtime(true);
-
-            foreach ($config as $database) {
-                try {
-                    $pool = $pools['pools-queue-' . $database]['pool'];
-                    $dsn = $pools['pools-queue-' . $database]['dsn'];
-                    $connection = $pool->get();
-                    $connections->add($connection, $pool);
-
-                    $adapter =  new Connection\Redis($dsn->getHost(), $dsn->getPort());
-                    if ($adapter->ping()) {
-                        $output[] = new Document([
-                            'name' => $key . " ($database)",
-                            'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                        ]);
-                    } else {
-                        $output[] = new Document([
-                            'name' => $key . " ($database)",
-                            'status' => 'fail',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                        ]);
-                    }
-                } catch (\Throwable $th) {
-                    $output[] = new Document([
-                        'name' => $key . " ($database)",
-                        'status' => 'fail',
-                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                    ]);
-                } finally {
-                    $connections->reclaim();
-                }
-            }
-        }
-
-        $response->dynamic(new Document([
-            'statuses' => $output,
-            'total' => count($output),
-        ]), Response::MODEL_HEALTH_STATUS_LIST);
-    });
-
-Http::get('/v1/health/pubsub')
-    ->desc('Get pubsub')
-    ->groups(['api', 'health'])
-    ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getPubSub')
-    ->label('sdk.description', '/docs/references/health/get-pubsub.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
-    ->inject('response')
-    ->inject('pools')
-    ->inject('connections')
-    ->action(function (Response $response, array $pools, Connections $connections) {
-
-        $output = [];
-
-        $configs = [
-            'PubSub' => Config::getParam('pools-pubsub'),
-        ];
-
-        foreach ($configs as $key => $config) {
-            foreach ($config as $database) {
-                try {
-                    $pool = $pools['pools-pubsub-' . $database]['pool'];
-
-                    $connection = $pool->get();
-                    $connections->add($connection, $pool);
-
-                    $adapter =  new Connection\Redis($connection);
+                    $adapter = $pools->get($database)->pop()->getResource();
 
                     $checkStart = \microtime(true);
 
@@ -308,8 +158,6 @@ Http::get('/v1/health/pubsub')
                         'status' => 'fail',
                         'ping' => \round((\microtime(true) - $checkStart) / 1000)
                     ]);
-                } finally {
-                    $connections->reclaim();
                 }
             }
         }
@@ -320,7 +168,121 @@ Http::get('/v1/health/pubsub')
         ]), Response::MODEL_HEALTH_STATUS_LIST);
     });
 
-Http::get('/v1/health/time')
+App::get('/v1/health/queue')
+    ->desc('Get queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueue')
+    ->label('sdk.description', '/docs/references/health/get-queue.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->inject('response')
+    ->inject('pools')
+    ->action(function (Response $response, Group $pools) {
+
+        $output = [];
+
+        $configs = [
+            'Queue' => Config::getParam('pools-queue'),
+        ];
+
+        foreach ($configs as $key => $config) {
+            foreach ($config as $database) {
+                try {
+                    $adapter = $pools->get($database)->pop()->getResource();
+
+                    $checkStart = \microtime(true);
+
+                    if ($adapter->ping()) {
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'pass',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    } else {
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'fail',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    }
+                } catch (\Throwable $th) {
+                    $output[] = new Document([
+                        'name' => $key . " ($database)",
+                        'status' => 'fail',
+                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                    ]);
+                }
+            }
+        }
+
+        $response->dynamic(new Document([
+            'statuses' => $output,
+            'total' => count($output),
+        ]), Response::MODEL_HEALTH_STATUS_LIST);
+    });
+
+App::get('/v1/health/pubsub')
+    ->desc('Get pubsub')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getPubSub')
+    ->label('sdk.description', '/docs/references/health/get-pubsub.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->inject('response')
+    ->inject('pools')
+    ->action(function (Response $response, Group $pools) {
+
+        $output = [];
+
+        $configs = [
+            'PubSub' => Config::getParam('pools-pubsub'),
+        ];
+
+        foreach ($configs as $key => $config) {
+            foreach ($config as $database) {
+                try {
+                    $adapter = $pools->get($database)->pop()->getResource();
+
+                    $checkStart = \microtime(true);
+
+                    if ($adapter->ping()) {
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'pass',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    } else {
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'fail',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    }
+                } catch (\Throwable $th) {
+                    $output[] = new Document([
+                        'name' => $key . " ($database)",
+                        'status' => 'fail',
+                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                    ]);
+                }
+            }
+        }
+
+        $response->dynamic(new Document([
+            'statuses' => $output,
+            'total' => count($output),
+        ]), Response::MODEL_HEALTH_STATUS_LIST);
+    });
+
+App::get('/v1/health/time')
     ->desc('Get time')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -377,7 +339,7 @@ Http::get('/v1/health/time')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_TIME);
     });
 
-Http::get('/v1/health/queue/webhooks')
+App::get('/v1/health/queue/webhooks')
     ->desc('Get webhooks queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -404,7 +366,7 @@ Http::get('/v1/health/queue/webhooks')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-Http::get('/v1/health/queue/logs')
+App::get('/v1/health/queue/logs')
     ->desc('Get logs queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -431,7 +393,7 @@ Http::get('/v1/health/queue/logs')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-Http::get('/v1/health/certificate')
+App::get('/v1/health/certificate')
     ->desc('Get the SSL certificate for a domain')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -481,7 +443,7 @@ Http::get('/v1/health/certificate')
         ]), Response::MODEL_HEALTH_CERTIFICATE);
     }, ['response']);
 
-Http::get('/v1/health/queue/certificates')
+App::get('/v1/health/queue/certificates')
     ->desc('Get certificates queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -508,7 +470,7 @@ Http::get('/v1/health/queue/certificates')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-Http::get('/v1/health/queue/builds')
+App::get('/v1/health/queue/builds')
     ->desc('Get builds queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -535,7 +497,7 @@ Http::get('/v1/health/queue/builds')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-Http::get('/v1/health/queue/databases')
+App::get('/v1/health/queue/databases')
     ->desc('Get databases queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -563,7 +525,7 @@ Http::get('/v1/health/queue/databases')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-Http::get('/v1/health/queue/deletes')
+App::get('/v1/health/queue/deletes')
     ->desc('Get deletes queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -590,7 +552,7 @@ Http::get('/v1/health/queue/deletes')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-Http::get('/v1/health/queue/mails')
+App::get('/v1/health/queue/mails')
     ->desc('Get mails queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -617,7 +579,7 @@ Http::get('/v1/health/queue/mails')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-Http::get('/v1/health/queue/messaging')
+App::get('/v1/health/queue/messaging')
     ->desc('Get messaging queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -644,7 +606,7 @@ Http::get('/v1/health/queue/messaging')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-Http::get('/v1/health/queue/migrations')
+App::get('/v1/health/queue/migrations')
     ->desc('Get migrations queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -671,7 +633,7 @@ Http::get('/v1/health/queue/migrations')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-Http::get('/v1/health/queue/functions')
+App::get('/v1/health/queue/functions')
     ->desc('Get functions queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -698,7 +660,7 @@ Http::get('/v1/health/queue/functions')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-Http::get('/v1/health/queue/usage')
+App::get('/v1/health/queue/usage')
     ->desc('Get usage queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -725,7 +687,7 @@ Http::get('/v1/health/queue/usage')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     });
 
-Http::get('/v1/health/queue/usage-dump')
+App::get('/v1/health/queue/usage-dump')
     ->desc('Get usage dump queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -752,7 +714,7 @@ Http::get('/v1/health/queue/usage-dump')
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     });
 
-Http::get('/v1/health/storage/local')
+App::get('/v1/health/storage/local')
     ->desc('Get local storage')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -795,7 +757,7 @@ Http::get('/v1/health/storage/local')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
-Http::get('/v1/health/storage')
+App::get('/v1/health/storage')
     ->desc('Get storage')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -836,7 +798,7 @@ Http::get('/v1/health/storage')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
-Http::get('/v1/health/anti-virus')
+App::get('/v1/health/anti-virus')
     ->desc('Get antivirus')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -875,7 +837,7 @@ Http::get('/v1/health/anti-virus')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_ANTIVIRUS);
     });
 
-Http::get('/v1/health/queue/failed/:name')
+App::get('/v1/health/queue/failed/:name')
     ->desc('Get number of failed queue jobs')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -916,7 +878,7 @@ Http::get('/v1/health/queue/failed/:name')
         $response->dynamic(new Document([ 'size' => $failed ]), Response::MODEL_HEALTH_QUEUE);
     });
 
-Http::get('/v1/health/stats') // Currently only used internally
+App::get('/v1/health/stats') // Currently only used internally
 ->desc('Get system stats')
     ->groups(['api', 'health'])
     ->label('scope', 'root')

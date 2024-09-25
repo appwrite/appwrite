@@ -8,13 +8,10 @@ use Exception;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
-use Utopia\DI\Container;
-use Utopia\Http\Adapter\Swoole\Response as UtopiaSwooleResponse;
-use Utopia\Http\Http;
-use Utopia\Http\Request;
-use Utopia\Http\Route;
-use Utopia\Http\Validator;
-use Utopia\Http\Validator\Nullable;
+use Utopia\App;
+use Utopia\Route;
+use Utopia\Validator;
+use Utopia\Validator\Nullable;
 
 class Mapper
 {
@@ -77,15 +74,12 @@ class Mapper
         return self::$args[$key] ?? [];
     }
 
-    public function route(
-        Http $http,
+    public static function route(
+        App $utopia,
         Route $route,
-        Request $request,
-        UtopiaSwooleResponse $response,
-        Container $container,
         callable $complexity
     ): iterable {
-        foreach (static::$blacklist as $blacklist) {
+        foreach (self::$blacklist as $blacklist) {
             if (\str_starts_with($route->getPath(), $blacklist)) {
                 return;
             }
@@ -107,7 +101,7 @@ class Mapper
                     $list = true;
                 }
                 $parameterType = Mapper::param(
-                    $container,
+                    $utopia,
                     $parameter['validator'],
                     !$parameter['optional'],
                     $parameter['injections']
@@ -122,7 +116,7 @@ class Mapper
                 'type' => $type,
                 'description' => $description,
                 'args' => $params,
-                'resolve' => (new Resolvers())->api($http, $route, $request, $response, $container)
+                'resolve' => Resolvers::api($utopia, $route)
             ];
 
             if ($list) {
@@ -211,7 +205,7 @@ class Mapper
     /**
      * Map a {@see Route} parameter to a GraphQL Type
      *
-     * @param Container $container
+     * @param App $utopia
      * @param Validator|callable $validator
      * @param bool $required
      * @param array $injections
@@ -219,13 +213,13 @@ class Mapper
      * @throws Exception
      */
     public static function param(
-        Container $container,
+        App $utopia,
         Validator|callable $validator,
         bool $required,
         array $injections
     ): Type {
         $validator = \is_callable($validator)
-            ? \call_user_func_array($validator, array_map(fn ($injection) => $container->get($injection), $injections))
+            ? \call_user_func_array($validator, $utopia->getResources($injections))
             : $validator;
 
         $isNullable = $validator instanceof Nullable;
@@ -238,20 +232,20 @@ class Mapper
             case 'Appwrite\Network\Validator\CNAME':
             case 'Appwrite\Task\Validator\Cron':
             case 'Appwrite\Utopia\Database\Validator\CustomId':
-            case 'Utopia\Http\Validator\Domain':
+            case 'Utopia\Validator\Domain':
             case 'Appwrite\Network\Validator\Email':
             case 'Appwrite\Event\Validator\Event':
             case 'Appwrite\Event\Validator\FunctionEvent':
-            case 'Utopia\Http\Validator\HexColor':
-            case 'Utopia\Http\Validator\Host':
-            case 'Utopia\Http\Validator\IP':
+            case 'Utopia\Validator\HexColor':
+            case 'Utopia\Validator\Host':
+            case 'Utopia\Validator\IP':
             case 'Utopia\Database\Validator\Key':
-            case 'Utopia\Http\Validator\Origin':
+            case 'Utopia\Validator\Origin':
             case 'Appwrite\Auth\Validator\Password':
-            case 'Utopia\Http\Validator\Text':
+            case 'Utopia\Validator\Text':
             case 'Utopia\Database\Validator\UID':
-            case 'Utopia\Http\Validator\URL':
-            case 'Utopia\Http\Validator\WhiteList':
+            case 'Utopia\Validator\URL':
+            case 'Utopia\Validator\WhiteList':
             default:
                 $type = Type::string();
                 break;
@@ -279,29 +273,29 @@ class Mapper
             case 'Appwrite\Utopia\Database\Validator\Queries\Variables':
                 $type = Type::listOf(Type::string());
                 break;
-            case 'Utopia\Http\Validator\Boolean':
+            case 'Utopia\Validator\Boolean':
                 $type = Type::boolean();
                 break;
-            case 'Utopia\Http\Validator\ArrayList':
+            case 'Utopia\Validator\ArrayList':
                 $type = Type::listOf(self::param(
-                    $container,
+                    $utopia,
                     $validator->getValidator(),
                     $required,
                     $injections
                 ));
                 break;
-            case 'Utopia\Http\Validator\Integer':
-            case 'Utopia\Http\Validator\Numeric':
-            case 'Utopia\Http\Validator\Range':
+            case 'Utopia\Validator\Integer':
+            case 'Utopia\Validator\Numeric':
+            case 'Utopia\Validator\Range':
                 $type = Type::int();
                 break;
-            case 'Utopia\Http\Validator\FloatValidator':
+            case 'Utopia\Validator\FloatValidator':
                 $type = Type::float();
                 break;
-            case 'Utopia\Http\Validator\Assoc':
+            case 'Utopia\Validator\Assoc':
                 $type = Types::assoc();
                 break;
-            case 'Utopia\Http\Validator\JSON':
+            case 'Utopia\Validator\JSON':
                 $type = Types::json();
                 break;
             case 'Utopia\Storage\Validator\File':

@@ -254,7 +254,7 @@ return [
                 'name' => '_APP_WORKER_PER_CORE',
                 'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
                 'introduction' => '0.13.0',
-                'default' => 2,
+                'default' => 6,
                 'required' => false,
                 'question' => '',
                 'filter' => ''
