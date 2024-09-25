@@ -2497,14 +2497,12 @@ trait Base
     protected string $stdout = '';
     protected string $stderr = '';
 
-    protected function packageFunction(string $function = 'php'): CURLFile
+    protected function packageFunction(string $function): CURLFile
     {
         $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
         $tarPath = "$folderPath/code.tar.gz";
 
-        if (!file_exists($tarPath)) {
-            Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
-        }
+        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');

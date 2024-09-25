@@ -303,8 +303,6 @@ class Client
 
             if (is_array($value)) {
                 $output += $this->flatten($value, $finalKey); // @todo: handle name collision here if needed
-            } elseif (is_bool($value)) {
-                $output[$finalKey] = $value ? 'true' : 'false';
             } else {
                 $output[$finalKey] = $value;
             }

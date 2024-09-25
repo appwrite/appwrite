@@ -6,13 +6,8 @@ use PHPUnit\Framework\Constraint\Constraint;
 
 final class Eventually extends Constraint
 {
-    private int $timeoutMs;
-    private int $waitMs;
-
-    public function __construct(int $timeoutMs, int $waitMs)
+    public function __construct(private int $timeoutMs, private int $waitMs)
     {
-        $this->timeoutMs = $timeoutMs;
-        $this->waitMs = $waitMs;
     }
 
     public function evaluate(mixed $probe, string $description = '', bool $returnResult = false): ?bool

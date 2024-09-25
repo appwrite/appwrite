@@ -142,14 +142,12 @@ trait FunctionsBase
         return $executions;
     }
 
-    protected function packageFunction(string $function = 'php'): CURLFile
+    protected function packageFunction(string $function): CURLFile
     {
         $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
         $tarPath = "$folderPath/code.tar.gz";
 
-        if (!file_exists($tarPath)) {
-            Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
-        }
+        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
@@ -200,11 +198,10 @@ trait FunctionsBase
 
     protected function deleteFunction(string $functionId): mixed
     {
-        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
+        ], $this->getHeaders()));
 
         return $function;
     }
