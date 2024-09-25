@@ -2669,8 +2669,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
-    public function testCreateFunctionWithResponseFormatHeader()
+    public function testResponseFilters()
     {
+        // create function with 1.5.0 response format
         $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2684,8 +2685,10 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertArrayNotHasKey('scopes', $response['body']);
+        $this->assertArrayNotHasKey('specification', $response['body']);
 
-        // get function with 1.5.0 response format
+        // get function with 1.5.0 response format header
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $response['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
