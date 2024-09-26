@@ -498,6 +498,7 @@ class Deletes extends Action
         ];
 
         $limit = \count($projectCollectionIds) + 25;
+        $junctions = [];
 
         while (true) {
             $collections = $dbForProject->listCollections($limit);
@@ -515,7 +516,6 @@ class Deletes extends Action
                         $attribute->getAttribute('options')['relationType'] === Database::RELATION_MANY_TO_MANY
                 );
 
-                $junctions = [];
                 foreach ($relationships as $relationship) {
                     $relatedCollection = $relationship->getAttribute('options')['relatedCollection'];
                     var_dump("many2many");
@@ -524,10 +524,11 @@ class Deletes extends Action
                     var_dump($relatedCollection->getInternalId());
                     var_dump($relationship);
                     $x = "_{$relatedCollection->getInternalId()}_{$collection->getInternalId()}";
+                    $junctions[] = "_{$relatedCollection->getInternalId()}_{$collection->getInternalId()}";
                     var_dump($x);
                 }
 
-                $junctions = [];
+                var_dump($junctions);
 
                 if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
                     $dbForProject->deleteCollection($collection->getId());
