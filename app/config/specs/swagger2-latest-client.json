@@ -9589,13 +9589,9 @@
                     "format": "int32"
                 },
                 "responseBody": {
-                    "type": "object",
+                    "type": "payload",
                     "description": "HTTP response body. This will return empty unless execution is created as synchronous.",
-                    "x-example": "",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/payload"
-                    }
+                    "x-example": ""
                 },
                 "responseHeaders": {
                     "type": "array",

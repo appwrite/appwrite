@@ -25964,12 +25964,9 @@
                         "format": "int32"
                     },
                     "responseBody": {
-                        "type": "object",
+                        "type": "string",
                         "description": "HTTP response body. This will return empty unless execution is created as synchronous.",
-                        "x-example": "",
-                        "items": {
-                            "$ref": "#\/components\/schemas\/payload"
-                        }
+                        "x-example": ""
                     },
                     "responseHeaders": {
                         "type": "array",
