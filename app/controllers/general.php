@@ -863,8 +863,12 @@ App::error()
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $responseCode = $logger->addLog($log);
-            Console::info('Log pushed with status code: ' . $responseCode);
+            try {
+                $responseCode = $logger->addLog($log);
+                Console::info('Log pushed with status code: ' . $responseCode);
+            } catch (Throwable $th) {
+                Console::error('Error pushing log: ' . $th->getMessage())
+            }
         }
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */
