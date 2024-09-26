@@ -504,7 +504,6 @@ class Deletes extends Action
             $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
-
                 /**
                  * Ignore junction tables;
                  */
