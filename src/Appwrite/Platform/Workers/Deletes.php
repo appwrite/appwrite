@@ -503,6 +503,25 @@ class Deletes extends Action
             $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
+
+                /**
+                 * Ignore junction tables;
+                 */
+                $relationships = \array_filter(
+                    $collection->getAttribute('attributes', []),
+                    fn ($attribute) =>
+                        $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP &&
+                        $attribute->getAttribute('options')['side'] === Database::RELATION_SIDE_PARENT &&
+                        $attribute->getAttribute('options')['relationType'] === Database::RELATION_MANY_TO_MANY
+                );
+
+                $junctions = [];
+                foreach ($relationships as $relationship) {
+                    var_dump("many2many");
+                    var_dump($collection->getInternalId());
+                    var_dump($relationship);
+                }
+
                 if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
                     $dbForProject->deleteCollection($collection->getId());
                 } else {
