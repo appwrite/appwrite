@@ -251,6 +251,7 @@ class Response extends SwooleResponse
     public const MODEL_RUNTIME_LIST = 'runtimeList';
     public const MODEL_DEPLOYMENT = 'deployment';
     public const MODEL_DEPLOYMENT_LIST = 'deploymentList';
+    public const MODEL_PAYLOAD = 'payload';
     public const MODEL_EXECUTION = 'execution';
     public const MODEL_EXECUTION_LIST = 'executionList';
     public const MODEL_BUILD = 'build';

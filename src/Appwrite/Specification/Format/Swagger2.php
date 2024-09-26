@@ -585,10 +585,6 @@ class Swagger2 extends Format
                         $type = 'boolean';
                         break;
 
-                    case 'payload':
-                        $type = 'payload';
-                        break;
-
                     default:
                         $type = 'object';
                         $rule['type'] = ($rule['type']) ?: 'none';
