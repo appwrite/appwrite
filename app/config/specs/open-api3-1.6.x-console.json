@@ -278,7 +278,7 @@
         },
         "\/account\/identities": {
             "get": {
-                "summary": "List Identities",
+                "summary": "List identities",
                 "operationId": "accountListIdentities",
                 "tags": [
                     "account"
@@ -591,7 +591,7 @@
         },
         "\/account\/mfa\/authenticators\/{type}": {
             "post": {
-                "summary": "Create Authenticator",
+                "summary": "Create authenticator",
                 "operationId": "accountCreateMfaAuthenticator",
                 "tags": [
                     "account"
@@ -658,7 +658,7 @@
                 ]
             },
             "put": {
-                "summary": "Verify Authenticator",
+                "summary": "Verify authenticator",
                 "operationId": "accountUpdateMfaAuthenticator",
                 "tags": [
                     "account"
@@ -744,7 +744,7 @@
                 }
             },
             "delete": {
-                "summary": "Delete Authenticator",
+                "summary": "Delete authenticator",
                 "operationId": "accountDeleteMfaAuthenticator",
                 "tags": [
                     "account"
@@ -806,7 +806,7 @@
         },
         "\/account\/mfa\/challenge": {
             "post": {
-                "summary": "Create MFA Challenge",
+                "summary": "Create MFA challenge",
                 "operationId": "accountCreateMfaChallenge",
                 "tags": [
                     "account"
@@ -882,7 +882,7 @@
                 }
             },
             "put": {
-                "summary": "Create MFA Challenge (confirmation)",
+                "summary": "Create MFA challenge (confirmation)",
                 "operationId": "accountUpdateMfaChallenge",
                 "tags": [
                     "account"
@@ -959,7 +959,7 @@
         },
         "\/account\/mfa\/factors": {
             "get": {
-                "summary": "List Factors",
+                "summary": "List factors",
                 "operationId": "accountListMfaFactors",
                 "tags": [
                     "account"
@@ -1011,7 +1011,7 @@
         },
         "\/account\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA Recovery Codes",
+                "summary": "Get MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
                 "tags": [
                     "account"
@@ -1061,7 +1061,7 @@
                 ]
             },
             "post": {
-                "summary": "Create MFA Recovery Codes",
+                "summary": "Create MFA recovery codes",
                 "operationId": "accountCreateMfaRecoveryCodes",
                 "tags": [
                     "account"
@@ -1111,7 +1111,7 @@
                 ]
             },
             "patch": {
-                "summary": "Regenerate MFA Recovery Codes",
+                "summary": "Regenerate MFA recovery codes",
                 "operationId": "accountUpdateMfaRecoveryCodes",
                 "tags": [
                     "account"
@@ -4452,7 +4452,7 @@
         },
         "\/console\/assistant": {
             "post": {
-                "summary": "Ask Query",
+                "summary": "Ask query",
                 "operationId": "assistantChat",
                 "tags": [
                     "assistant"
@@ -13257,7 +13257,7 @@
         },
         "\/locale\/codes": {
             "get": {
-                "summary": "List Locale Codes",
+                "summary": "List locale codes",
                 "operationId": "localeListCodes",
                 "tags": [
                     "locale"
@@ -18060,7 +18060,7 @@
         },
         "\/migrations": {
             "get": {
-                "summary": "List Migrations",
+                "summary": "List migrations",
                 "operationId": "migrationsList",
                 "tags": [
                     "migrations"
@@ -18136,7 +18136,7 @@
         },
         "\/migrations\/appwrite": {
             "post": {
-                "summary": "Migrate Appwrite Data",
+                "summary": "Migrate Appwrite data",
                 "operationId": "migrationsCreateAppwriteMigration",
                 "tags": [
                     "migrations"
@@ -18226,7 +18226,7 @@
         },
         "\/migrations\/appwrite\/report": {
             "get": {
-                "summary": "Generate a report on Appwrite Data",
+                "summary": "Generate a report on Appwrite data",
                 "operationId": "migrationsGetAppwriteReport",
                 "tags": [
                     "migrations"
@@ -18321,7 +18321,7 @@
         },
         "\/migrations\/firebase": {
             "post": {
-                "summary": "Migrate Firebase Data (Service Account)",
+                "summary": "Migrate Firebase data (Service Account)",
                 "operationId": "migrationsCreateFirebaseMigration",
                 "tags": [
                     "migrations"
@@ -18399,7 +18399,7 @@
         },
         "\/migrations\/firebase\/deauthorize": {
             "get": {
-                "summary": "Revoke Appwrite's authorization to access Firebase Projects",
+                "summary": "Revoke Appwrite's authorization to access Firebase projects",
                 "operationId": "migrationsDeleteFirebaseAuth",
                 "tags": [
                     "migrations"
@@ -18442,7 +18442,7 @@
         },
         "\/migrations\/firebase\/oauth": {
             "post": {
-                "summary": "Migrate Firebase Data (OAuth)",
+                "summary": "Migrate Firebase data (OAuth)",
                 "operationId": "migrationsCreateFirebaseOAuthMigration",
                 "tags": [
                     "migrations"
@@ -18520,7 +18520,7 @@
         },
         "\/migrations\/firebase\/projects": {
             "get": {
-                "summary": "List Firebase Projects",
+                "summary": "List Firebase projects",
                 "operationId": "migrationsListFirebaseProjects",
                 "tags": [
                     "migrations"
@@ -18570,7 +18570,7 @@
         },
         "\/migrations\/firebase\/report": {
             "get": {
-                "summary": "Generate a report on Firebase Data",
+                "summary": "Generate a report on Firebase data",
                 "operationId": "migrationsGetFirebaseReport",
                 "tags": [
                     "migrations"
@@ -18644,7 +18644,7 @@
         },
         "\/migrations\/firebase\/report\/oauth": {
             "get": {
-                "summary": "Generate a report on Firebase Data using OAuth",
+                "summary": "Generate a report on Firebase data using OAuth",
                 "operationId": "migrationsGetFirebaseReportOAuth",
                 "tags": [
                     "migrations"
@@ -18718,7 +18718,7 @@
         },
         "\/migrations\/nhost": {
             "post": {
-                "summary": "Migrate NHost Data",
+                "summary": "Migrate NHost data",
                 "operationId": "migrationsCreateNHostMigration",
                 "tags": [
                     "migrations"
@@ -18966,7 +18966,7 @@
         },
         "\/migrations\/supabase": {
             "post": {
-                "summary": "Migrate Supabase Data",
+                "summary": "Migrate Supabase data",
                 "operationId": "migrationsCreateSupabaseMigration",
                 "tags": [
                     "migrations"
@@ -19199,7 +19199,7 @@
         },
         "\/migrations\/{migrationId}": {
             "get": {
-                "summary": "Get Migration",
+                "summary": "Get migration",
                 "operationId": "migrationsGet",
                 "tags": [
                     "migrations"
@@ -19259,7 +19259,7 @@
                 ]
             },
             "patch": {
-                "summary": "Retry Migration",
+                "summary": "Retry migration",
                 "operationId": "migrationsRetry",
                 "tags": [
                     "migrations"
@@ -19319,7 +19319,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Migration",
+                "summary": "Delete migration",
                 "operationId": "migrationsDelete",
                 "tags": [
                     "migrations"
@@ -19464,7 +19464,7 @@
         },
         "\/project\/variables": {
             "get": {
-                "summary": "List Variables",
+                "summary": "List variables",
                 "operationId": "projectListVariables",
                 "tags": [
                     "project"
@@ -19512,7 +19512,7 @@
                 ]
             },
             "post": {
-                "summary": "Create Variable",
+                "summary": "Create variable",
                 "operationId": "projectCreateVariable",
                 "tags": [
                     "project"
@@ -19587,7 +19587,7 @@
         },
         "\/project\/variables\/{variableId}": {
             "get": {
-                "summary": "Get Variable",
+                "summary": "Get variable",
                 "operationId": "projectGetVariable",
                 "tags": [
                     "project"
@@ -19647,7 +19647,7 @@
                 ]
             },
             "put": {
-                "summary": "Update Variable",
+                "summary": "Update variable",
                 "operationId": "projectUpdateVariable",
                 "tags": [
                     "project"
@@ -19731,7 +19731,7 @@
                 }
             },
             "delete": {
-                "summary": "Delete Variable",
+                "summary": "Delete variable",
                 "operationId": "projectDeleteVariable",
                 "tags": [
                     "project"
@@ -24640,7 +24640,7 @@
         },
         "\/proxy\/rules": {
             "get": {
-                "summary": "List Rules",
+                "summary": "List rules",
                 "operationId": "proxyListRules",
                 "tags": [
                     "proxy"
@@ -24714,7 +24714,7 @@
                 ]
             },
             "post": {
-                "summary": "Create Rule",
+                "summary": "Create rule",
                 "operationId": "proxyCreateRule",
                 "tags": [
                     "proxy"
@@ -24800,7 +24800,7 @@
         },
         "\/proxy\/rules\/{ruleId}": {
             "get": {
-                "summary": "Get Rule",
+                "summary": "Get rule",
                 "operationId": "proxyGetRule",
                 "tags": [
                     "proxy"
@@ -24860,7 +24860,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Rule",
+                "summary": "Delete rule",
                 "operationId": "proxyDeleteRule",
                 "tags": [
                     "proxy"
@@ -24915,7 +24915,7 @@
         },
         "\/proxy\/rules\/{ruleId}\/verification": {
             "patch": {
-                "summary": "Update Rule Verification Status",
+                "summary": "Update rule verification status",
                 "operationId": "proxyUpdateRuleVerification",
                 "tags": [
                     "proxy"
@@ -25791,7 +25791,7 @@
                 }
             },
             "delete": {
-                "summary": "Delete File",
+                "summary": "Delete file",
                 "operationId": "storageDeleteFile",
                 "tags": [
                     "storage"
@@ -27842,7 +27842,7 @@
         },
         "\/users\/identities": {
             "get": {
-                "summary": "List Identities",
+                "summary": "List identities",
                 "operationId": "usersListIdentities",
                 "tags": [
                     "users"
@@ -29141,7 +29141,7 @@
         },
         "\/users\/{userId}\/mfa\/authenticators\/{type}": {
             "delete": {
-                "summary": "Delete Authenticator",
+                "summary": "Delete authenticator",
                 "operationId": "usersDeleteMfaAuthenticator",
                 "tags": [
                     "users"
@@ -29219,7 +29219,7 @@
         },
         "\/users\/{userId}\/mfa\/factors": {
             "get": {
-                "summary": "List Factors",
+                "summary": "List factors",
                 "operationId": "usersListMfaFactors",
                 "tags": [
                     "users"
@@ -29282,7 +29282,7 @@
         },
         "\/users\/{userId}\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA Recovery Codes",
+                "summary": "Get MFA recovery codes",
                 "operationId": "usersGetMfaRecoveryCodes",
                 "tags": [
                     "users"
@@ -29343,7 +29343,7 @@
                 ]
             },
             "put": {
-                "summary": "Regenerate MFA Recovery Codes",
+                "summary": "Regenerate MFA recovery codes",
                 "operationId": "usersUpdateMfaRecoveryCodes",
                 "tags": [
                     "users"
@@ -29404,7 +29404,7 @@
                 ]
             },
             "patch": {
-                "summary": "Create MFA Recovery Codes",
+                "summary": "Create MFA recovery codes",
                 "operationId": "usersCreateMfaRecoveryCodes",
                 "tags": [
                     "users"
@@ -30182,7 +30182,7 @@
         },
         "\/users\/{userId}\/targets": {
             "get": {
-                "summary": "List User Targets",
+                "summary": "List user targets",
                 "operationId": "usersListTargets",
                 "tags": [
                     "users"
@@ -30257,7 +30257,7 @@
                 ]
             },
             "post": {
-                "summary": "Create User Target",
+                "summary": "Create user target",
                 "operationId": "usersCreateTarget",
                 "tags": [
                     "users"
@@ -30369,7 +30369,7 @@
         },
         "\/users\/{userId}\/targets\/{targetId}": {
             "get": {
-                "summary": "Get User Target",
+                "summary": "Get user target",
                 "operationId": "usersGetTarget",
                 "tags": [
                     "users"
@@ -30441,7 +30441,7 @@
                 ]
             },
             "patch": {
-                "summary": "Update User target",
+                "summary": "Update user target",
                 "operationId": "usersUpdateTarget",
                 "tags": [
                     "users"
@@ -30854,7 +30854,7 @@
         },
         "\/vcs\/github\/installations\/{installationId}\/providerRepositories": {
             "get": {
-                "summary": "List Repositories",
+                "summary": "List repositories",
                 "operationId": "vcsListRepositories",
                 "tags": [
                     "vcs"
@@ -31084,7 +31084,7 @@
         },
         "\/vcs\/github\/installations\/{installationId}\/providerRepositories\/{providerRepositoryId}\/branches": {
             "get": {
-                "summary": "List Repository Branches",
+                "summary": "List repository branches",
                 "operationId": "vcsListRepositoryBranches",
                 "tags": [
                     "vcs"
@@ -31547,7 +31547,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Installation",
+                "summary": "Delete installation",
                 "operationId": "vcsDeleteInstallation",
                 "tags": [
                     "vcs"
@@ -35587,9 +35587,12 @@
                         "format": "int32"
                     },
                     "responseBody": {
-                        "type": "payload",
+                        "type": "object",
                         "description": "HTTP response body. This will return empty unless execution is created as synchronous.",
-                        "x-example": ""
+                        "x-example": "",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/payload"
+                        }
                     },
                     "responseHeaders": {
                         "type": "array",

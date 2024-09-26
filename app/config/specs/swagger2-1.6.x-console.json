@@ -348,7 +348,7 @@
         },
         "\/account\/identities": {
             "get": {
-                "summary": "List Identities",
+                "summary": "List identities",
                 "operationId": "accountListIdentities",
                 "consumes": [
                     "application\/json"
@@ -670,7 +670,7 @@
         },
         "\/account\/mfa\/authenticators\/{type}": {
             "post": {
-                "summary": "Create Authenticator",
+                "summary": "Create authenticator",
                 "operationId": "accountCreateMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -737,7 +737,7 @@
                 ]
             },
             "put": {
-                "summary": "Verify Authenticator",
+                "summary": "Verify authenticator",
                 "operationId": "accountUpdateMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -822,7 +822,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Authenticator",
+                "summary": "Delete authenticator",
                 "operationId": "accountDeleteMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -886,7 +886,7 @@
         },
         "\/account\/mfa\/challenge": {
             "post": {
-                "summary": "Create MFA Challenge",
+                "summary": "Create MFA challenge",
                 "operationId": "accountCreateMfaChallenge",
                 "consumes": [
                     "application\/json"
@@ -965,7 +965,7 @@
                 ]
             },
             "put": {
-                "summary": "Create MFA Challenge (confirmation)",
+                "summary": "Create MFA challenge (confirmation)",
                 "operationId": "accountUpdateMfaChallenge",
                 "consumes": [
                     "application\/json"
@@ -1041,7 +1041,7 @@
         },
         "\/account\/mfa\/factors": {
             "get": {
-                "summary": "List Factors",
+                "summary": "List factors",
                 "operationId": "accountListMfaFactors",
                 "consumes": [
                     "application\/json"
@@ -1095,7 +1095,7 @@
         },
         "\/account\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA Recovery Codes",
+                "summary": "Get MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1147,7 +1147,7 @@
                 ]
             },
             "post": {
-                "summary": "Create MFA Recovery Codes",
+                "summary": "Create MFA recovery codes",
                 "operationId": "accountCreateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1199,7 +1199,7 @@
                 ]
             },
             "patch": {
-                "summary": "Regenerate MFA Recovery Codes",
+                "summary": "Regenerate MFA recovery codes",
                 "operationId": "accountUpdateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -4637,7 +4637,7 @@
         },
         "\/console\/assistant": {
             "post": {
-                "summary": "Ask Query",
+                "summary": "Ask query",
                 "operationId": "assistantChat",
                 "consumes": [
                     "application\/json"
@@ -13464,7 +13464,7 @@
         },
         "\/locale\/codes": {
             "get": {
-                "summary": "List Locale Codes",
+                "summary": "List locale codes",
                 "operationId": "localeListCodes",
                 "consumes": [
                     "application\/json"
@@ -18494,7 +18494,7 @@
         },
         "\/migrations": {
             "get": {
-                "summary": "List Migrations",
+                "summary": "List migrations",
                 "operationId": "migrationsList",
                 "consumes": [
                     "application\/json"
@@ -18569,7 +18569,7 @@
         },
         "\/migrations\/appwrite": {
             "post": {
-                "summary": "Migrate Appwrite Data",
+                "summary": "Migrate Appwrite data",
                 "operationId": "migrationsCreateAppwriteMigration",
                 "consumes": [
                     "application\/json"
@@ -18665,7 +18665,7 @@
         },
         "\/migrations\/appwrite\/report": {
             "get": {
-                "summary": "Generate a report on Appwrite Data",
+                "summary": "Generate a report on Appwrite data",
                 "operationId": "migrationsGetAppwriteReport",
                 "consumes": [
                     "application\/json"
@@ -18755,7 +18755,7 @@
         },
         "\/migrations\/firebase": {
             "post": {
-                "summary": "Migrate Firebase Data (Service Account)",
+                "summary": "Migrate Firebase data (Service Account)",
                 "operationId": "migrationsCreateFirebaseMigration",
                 "consumes": [
                     "application\/json"
@@ -18837,7 +18837,7 @@
         },
         "\/migrations\/firebase\/deauthorize": {
             "get": {
-                "summary": "Revoke Appwrite's authorization to access Firebase Projects",
+                "summary": "Revoke Appwrite's authorization to access Firebase projects",
                 "operationId": "migrationsDeleteFirebaseAuth",
                 "consumes": [
                     "application\/json"
@@ -18889,7 +18889,7 @@
         },
         "\/migrations\/firebase\/oauth": {
             "post": {
-                "summary": "Migrate Firebase Data (OAuth)",
+                "summary": "Migrate Firebase data (OAuth)",
                 "operationId": "migrationsCreateFirebaseOAuthMigration",
                 "consumes": [
                     "application\/json"
@@ -18971,7 +18971,7 @@
         },
         "\/migrations\/firebase\/projects": {
             "get": {
-                "summary": "List Firebase Projects",
+                "summary": "List Firebase projects",
                 "operationId": "migrationsListFirebaseProjects",
                 "consumes": [
                     "application\/json"
@@ -19023,7 +19023,7 @@
         },
         "\/migrations\/firebase\/report": {
             "get": {
-                "summary": "Generate a report on Firebase Data",
+                "summary": "Generate a report on Firebase data",
                 "operationId": "migrationsGetFirebaseReport",
                 "consumes": [
                     "application\/json"
@@ -19096,7 +19096,7 @@
         },
         "\/migrations\/firebase\/report\/oauth": {
             "get": {
-                "summary": "Generate a report on Firebase Data using OAuth",
+                "summary": "Generate a report on Firebase data using OAuth",
                 "operationId": "migrationsGetFirebaseReportOAuth",
                 "consumes": [
                     "application\/json"
@@ -19169,7 +19169,7 @@
         },
         "\/migrations\/nhost": {
             "post": {
-                "summary": "Migrate NHost Data",
+                "summary": "Migrate NHost data",
                 "operationId": "migrationsCreateNHostMigration",
                 "consumes": [
                     "application\/json"
@@ -19414,7 +19414,7 @@
         },
         "\/migrations\/supabase": {
             "post": {
-                "summary": "Migrate Supabase Data",
+                "summary": "Migrate Supabase data",
                 "operationId": "migrationsCreateSupabaseMigration",
                 "consumes": [
                     "application\/json"
@@ -19645,7 +19645,7 @@
         },
         "\/migrations\/{migrationId}": {
             "get": {
-                "summary": "Get Migration",
+                "summary": "Get migration",
                 "operationId": "migrationsGet",
                 "consumes": [
                     "application\/json"
@@ -19705,7 +19705,7 @@
                 ]
             },
             "patch": {
-                "summary": "Retry Migration",
+                "summary": "Retry migration",
                 "operationId": "migrationsRetry",
                 "consumes": [
                     "application\/json"
@@ -19765,7 +19765,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Migration",
+                "summary": "Delete migration",
                 "operationId": "migrationsDelete",
                 "consumes": [
                     "application\/json"
@@ -19908,7 +19908,7 @@
         },
         "\/project\/variables": {
             "get": {
-                "summary": "List Variables",
+                "summary": "List variables",
                 "operationId": "projectListVariables",
                 "consumes": [
                     "application\/json"
@@ -19958,7 +19958,7 @@
                 ]
             },
             "post": {
-                "summary": "Create Variable",
+                "summary": "Create variable",
                 "operationId": "projectCreateVariable",
                 "consumes": [
                     "application\/json"
@@ -20037,7 +20037,7 @@
         },
         "\/project\/variables\/{variableId}": {
             "get": {
-                "summary": "Get Variable",
+                "summary": "Get variable",
                 "operationId": "projectGetVariable",
                 "consumes": [
                     "application\/json"
@@ -20097,7 +20097,7 @@
                 ]
             },
             "put": {
-                "summary": "Update Variable",
+                "summary": "Update variable",
                 "operationId": "projectUpdateVariable",
                 "consumes": [
                     "application\/json"
@@ -20181,7 +20181,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Variable",
+                "summary": "Delete variable",
                 "operationId": "projectDeleteVariable",
                 "consumes": [
                     "application\/json"
@@ -25101,7 +25101,7 @@
         },
         "\/proxy\/rules": {
             "get": {
-                "summary": "List Rules",
+                "summary": "List rules",
                 "operationId": "proxyListRules",
                 "consumes": [
                     "application\/json"
@@ -25174,7 +25174,7 @@
                 ]
             },
             "post": {
-                "summary": "Create Rule",
+                "summary": "Create rule",
                 "operationId": "proxyCreateRule",
                 "consumes": [
                     "application\/json"
@@ -25265,7 +25265,7 @@
         },
         "\/proxy\/rules\/{ruleId}": {
             "get": {
-                "summary": "Get Rule",
+                "summary": "Get rule",
                 "operationId": "proxyGetRule",
                 "consumes": [
                     "application\/json"
@@ -25325,7 +25325,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Rule",
+                "summary": "Delete rule",
                 "operationId": "proxyDeleteRule",
                 "consumes": [
                     "application\/json"
@@ -25382,7 +25382,7 @@
         },
         "\/proxy\/rules\/{ruleId}\/verification": {
             "patch": {
-                "summary": "Update Rule Verification Status",
+                "summary": "Update rule verification status",
                 "operationId": "proxyUpdateRuleVerification",
                 "consumes": [
                     "application\/json"
@@ -26265,7 +26265,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete File",
+                "summary": "Delete file",
                 "operationId": "storageDeleteFile",
                 "consumes": [
                     "application\/json"
@@ -28324,7 +28324,7 @@
         },
         "\/users\/identities": {
             "get": {
-                "summary": "List Identities",
+                "summary": "List identities",
                 "operationId": "usersListIdentities",
                 "consumes": [
                     "application\/json"
@@ -29661,7 +29661,7 @@
         },
         "\/users\/{userId}\/mfa\/authenticators\/{type}": {
             "delete": {
-                "summary": "Delete Authenticator",
+                "summary": "Delete authenticator",
                 "operationId": "usersDeleteMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -29737,7 +29737,7 @@
         },
         "\/users\/{userId}\/mfa\/factors": {
             "get": {
-                "summary": "List Factors",
+                "summary": "List factors",
                 "operationId": "usersListMfaFactors",
                 "consumes": [
                     "application\/json"
@@ -29800,7 +29800,7 @@
         },
         "\/users\/{userId}\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA Recovery Codes",
+                "summary": "Get MFA recovery codes",
                 "operationId": "usersGetMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -29861,7 +29861,7 @@
                 ]
             },
             "put": {
-                "summary": "Regenerate MFA Recovery Codes",
+                "summary": "Regenerate MFA recovery codes",
                 "operationId": "usersUpdateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -29922,7 +29922,7 @@
                 ]
             },
             "patch": {
-                "summary": "Create MFA Recovery Codes",
+                "summary": "Create MFA recovery codes",
                 "operationId": "usersCreateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -30697,7 +30697,7 @@
         },
         "\/users\/{userId}\/targets": {
             "get": {
-                "summary": "List User Targets",
+                "summary": "List user targets",
                 "operationId": "usersListTargets",
                 "consumes": [
                     "application\/json"
@@ -30771,7 +30771,7 @@
                 ]
             },
             "post": {
-                "summary": "Create User Target",
+                "summary": "Create user target",
                 "operationId": "usersCreateTarget",
                 "consumes": [
                     "application\/json"
@@ -30886,7 +30886,7 @@
         },
         "\/users\/{userId}\/targets\/{targetId}": {
             "get": {
-                "summary": "Get User Target",
+                "summary": "Get user target",
                 "operationId": "usersGetTarget",
                 "consumes": [
                     "application\/json"
@@ -30956,7 +30956,7 @@
                 ]
             },
             "patch": {
-                "summary": "Update User target",
+                "summary": "Update user target",
                 "operationId": "usersUpdateTarget",
                 "consumes": [
                     "application\/json"
@@ -31368,7 +31368,7 @@
         },
         "\/vcs\/github\/installations\/{installationId}\/providerRepositories": {
             "get": {
-                "summary": "List Repositories",
+                "summary": "List repositories",
                 "operationId": "vcsListRepositories",
                 "consumes": [
                     "application\/json"
@@ -31594,7 +31594,7 @@
         },
         "\/vcs\/github\/installations\/{installationId}\/providerRepositories\/{providerRepositoryId}\/branches": {
             "get": {
-                "summary": "List Repository Branches",
+                "summary": "List repository branches",
                 "operationId": "vcsListRepositoryBranches",
                 "consumes": [
                     "application\/json"
@@ -32046,7 +32046,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Installation",
+                "summary": "Delete installation",
                 "operationId": "vcsDeleteInstallation",
                 "consumes": [
                     "application\/json"
@@ -36104,9 +36104,13 @@
                     "format": "int32"
                 },
                 "responseBody": {
-                    "type": "payload",
+                    "type": "object",
                     "description": "HTTP response body. This will return empty unless execution is created as synchronous.",
-                    "x-example": ""
+                    "x-example": "",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/payload"
+                    }
                 },
                 "responseHeaders": {
                     "type": "array",
