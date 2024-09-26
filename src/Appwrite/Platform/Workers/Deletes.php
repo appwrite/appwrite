@@ -506,7 +506,7 @@ class Deletes extends Action
                 if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
                     var_dump('start ' . $collection->getId());
 
-                    \Utopia\Database\Validator\Authorization::skip(fn () => $dbForProject->deleteCollection($collection->getId()));
+                    $dbForProject->deleteCollection($collection->getId());
 
                     var_dump('finish ' . $collection->getId());
                     var_dump('');
