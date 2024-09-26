@@ -865,9 +865,9 @@ App::error()
 
             try {
                 $responseCode = $logger->addLog($log);
-                Console::info('Log pushed with status code: ' . $responseCode);
+                Console::info('Error log pushed with status code: ' . $responseCode);
             } catch (Throwable $th) {
-                Console::error('Error pushing log: ' . $th->getMessage())
+                Console::error('Error pushing log: ' . $th->getMessage());
             }
         }
 
