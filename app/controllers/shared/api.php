@@ -95,7 +95,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
             $databaseInternalId = $parts[1] ?? 0;
             $queueForUsage
                 ->addMetric(METRIC_COLLECTIONS, $value) // per project
-                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value) // per database
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value)
             ;
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
