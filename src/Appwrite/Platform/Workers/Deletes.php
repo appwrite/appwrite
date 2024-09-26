@@ -517,10 +517,17 @@ class Deletes extends Action
 
                 $junctions = [];
                 foreach ($relationships as $relationship) {
+                    $relatedCollection = $relationship->getAttribute('options')['relatedCollection'];
                     var_dump("many2many");
+                    var_dump("relatedCollection");
                     var_dump($collection->getInternalId());
+                    var_dump($relatedCollection->getInternalId());
                     var_dump($relationship);
+                    $x = "_{$relatedCollection->getInternalId()}_{$collection->getInternalId()}";
+                    var_dump($x);
                 }
+
+                $junctions = [];
 
                 if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
                     $dbForProject->deleteCollection($collection->getId());
