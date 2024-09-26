@@ -37402,6 +37402,12 @@
                     "x-example": 0,
                     "format": "int32"
                 },
+                "storageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of total databases storage in bytes.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
                 "databases": {
                     "type": "array",
                     "description": "Aggregated number of databases per period.",
@@ -37428,6 +37434,15 @@
                         "$ref": "#\/definitions\/metric"
                     },
                     "x-example": []
+                },
+                "storage": {
+                    "type": "array",
+                    "description": "An array of the aggregated number of databases storage in bytes per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
                 }
             },
             "required": [
@@ -37435,9 +37450,11 @@
                 "databasesTotal",
                 "collectionsTotal",
                 "documentsTotal",
+                "storageTotal",
                 "databases",
                 "collections",
-                "documents"
+                "documents",
+                "storage"
             ]
         },
         "usageDatabase": {
@@ -37461,6 +37478,12 @@
                     "x-example": 0,
                     "format": "int32"
                 },
+                "storageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of total storage used in bytes.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
                 "collections": {
                     "type": "array",
                     "description": "Aggregated  number of collections per period.",
@@ -37478,14 +37501,25 @@
                         "$ref": "#\/definitions\/metric"
                     },
                     "x-example": []
+                },
+                "storage": {
+                    "type": "array",
+                    "description": "Aggregated storage used in bytes per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
                 }
             },
             "required": [
                 "range",
                 "collectionsTotal",
                 "documentsTotal",
+                "storageTotal",
                 "collections",
-                "documents"
+                "documents",
+                "storage"
             ]
         },
         "usageCollection": {
@@ -38053,6 +38087,12 @@
                     "x-example": 0,
                     "format": "int32"
                 },
+                "databasesStorageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of databases storage size (in bytes).",
+                    "x-example": 0,
+                    "format": "int32"
+                },
                 "usersTotal": {
                     "type": "integer",
                     "description": "Total aggregated number of users.",
@@ -38155,6 +38195,15 @@
                     },
                     "x-example": []
                 },
+                "databasesStorageBreakdown": {
+                    "type": "array",
+                    "description": "An array of the aggregated breakdown of storage usage by databases.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metricBreakdown"
+                    },
+                    "x-example": []
+                },
                 "executionsMbSecondsBreakdown": {
                     "type": "array",
                     "description": "Aggregated breakdown in totals of execution mbSeconds by functions.",
@@ -38187,6 +38236,7 @@
                 "executionsTotal",
                 "documentsTotal",
                 "databasesTotal",
+                "databasesStorageTotal",
                 "usersTotal",
                 "filesStorageTotal",
                 "functionsStorageTotal",
@@ -38201,6 +38251,7 @@
                 "executions",
                 "executionsBreakdown",
                 "bucketsBreakdown",
+                "databasesStorageBreakdown",
                 "executionsMbSecondsBreakdown",
                 "buildsMbSecondsBreakdown",
                 "functionsStorageBreakdown"

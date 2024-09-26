@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3a25a9050c489b1a2cb4e320af1586d5",
+    "content-hash": "7066d9ca32e7a1a60614effdc4701970",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -65,16 +65,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "11.1.0",
+            "version": "10.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "1d043f543acdb17b9fdb440b1b2dd208e400bad3"
+                "reference": "da579af70723cfc117b5af84375bdef117e27312"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/1d043f543acdb17b9fdb440b1b2dd208e400bad3",
-                "reference": "1d043f543acdb17b9fdb440b1b2dd208e400bad3",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/da579af70723cfc117b5af84375bdef117e27312",
+                "reference": "da579af70723cfc117b5af84375bdef117e27312",
                 "shasum": ""
             },
             "require": {
@@ -83,8 +83,7 @@
                 "php": ">=7.1.0"
             },
             "require-dev": {
-                "mockery/mockery": "^1.6.6",
-                "phpunit/phpunit": "^10"
+                "phpunit/phpunit": "3.7.35"
             },
             "type": "library",
             "autoload": {
@@ -100,10 +99,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/11.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/10.1.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2024-06-26T07:03:23+00:00"
+            "time": "2023-11-20T09:56:12+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -1724,16 +1723,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.53.4",
+            "version": "0.53.5-rc1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "36a0e89d983afc1368635282e04fa762220a1d2a"
+                "reference": "689ba22063bf46def385da8695ba7a921e81e38d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/36a0e89d983afc1368635282e04fa762220a1d2a",
-                "reference": "36a0e89d983afc1368635282e04fa762220a1d2a",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/689ba22063bf46def385da8695ba7a921e81e38d",
+                "reference": "689ba22063bf46def385da8695ba7a921e81e38d",
                 "shasum": ""
             },
             "require": {
@@ -1760,7 +1759,38 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\E2E\\": "tests/e2e",
+                    "Tests\\Unit\\": "tests/unit"
+                }
+            },
+            "scripts": {
+                "build": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose build"
+                ],
+                "start": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose up -d"
+                ],
+                "test": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 512M"
+                ],
+                "coverage": [
+                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -1773,10 +1803,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.53.4"
+                "source": "https://github.com/utopia-php/database/tree/0.53.5-rc1",
+                "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2024-09-10T10:19:57+00:00"
+            "time": "2024-09-24T08:43:10+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2175,35 +2205,27 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.6.1",
+            "version": "0.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "6a064179dd0a7278bfbaf65d9abdef19d6d2bbe0"
+                "reference": "f18d44d4459f78c292dac9edde856fd156fe497a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/6a064179dd0a7278bfbaf65d9abdef19d6d2bbe0",
-                "reference": "6a064179dd0a7278bfbaf65d9abdef19d6d2bbe0",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f18d44d4459f78c292dac9edde856fd156fe497a",
+                "reference": "f18d44d4459f78c292dac9edde856fd156fe497a",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "11.1.*",
-                "ext-curl": "*",
-                "ext-openssl": "*",
-                "php": "8.3.*",
-                "utopia-php/database": "0.53.*",
-                "utopia-php/dsn": "0.2.*",
-                "utopia-php/framework": "0.33.*",
-                "utopia-php/storage": "0.18.*"
+                "appwrite/appwrite": "10.1.0",
+                "php": "8.*"
             },
             "require-dev": {
-                "ext-pdo": "*",
-                "laravel/pint": "1.17.*",
-                "phpstan/phpstan": "1.11.*",
-                "phpunit/phpunit": "11.2.*",
-                "utopia-php/cli": "0.16.*",
-                "vlucas/phpdotenv": "5.6.*"
+                "laravel/pint": "1.*",
+                "phpunit/phpunit": "9.*",
+                "utopia-php/cli": "^0.18.0",
+                "vlucas/phpdotenv": "5.*"
             },
             "type": "library",
             "autoload": {
@@ -2225,9 +2247,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.1"
+                "source": "https://github.com/utopia-php/migration/tree/0.5.2"
             },
-            "time": "2024-09-24T09:54:09+00:00"
+            "time": "2024-07-22T09:27:07+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -3323,16 +3345,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.18.0",
+            "version": "v1.17.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "eb2bcbd85034c1a508cf409b7ee318eb3137f090"
+                "reference": "9d77be916e145864f10788bb94531d03e1f7b482"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/eb2bcbd85034c1a508cf409b7ee318eb3137f090",
-                "reference": "eb2bcbd85034c1a508cf409b7ee318eb3137f090",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/9d77be916e145864f10788bb94531d03e1f7b482",
+                "reference": "9d77be916e145864f10788bb94531d03e1f7b482",
                 "shasum": ""
             },
             "require": {
@@ -3385,7 +3407,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2024-09-24T15:48:42+00:00"
+            "time": "2024-09-03T15:00:28+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -7004,7 +7026,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 5
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
