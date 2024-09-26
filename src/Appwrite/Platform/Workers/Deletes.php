@@ -496,7 +496,7 @@ class Deletes extends Action
             Audit::COLLECTION,
             TimeLimit::COLLECTION,
         ];
-        var_dump($projectCollectionIds);
+
         $limit = \count($projectCollectionIds) + 25;
 
         while (true) {
@@ -504,16 +504,8 @@ class Deletes extends Action
 
             foreach ($collections as $collection) {
                 if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
-                    var_dump('start ' . $collection->getId());
-
                     $dbForProject->deleteCollection($collection->getId());
-
-                    var_dump('finish ' . $collection->getId());
-                    var_dump('');
-
                 } else {
-
-                    var_dump('deleteByGroup' . $collection->getId());
                     $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                 }
             }
@@ -567,7 +559,6 @@ class Deletes extends Action
         ], $dbForConsole);
 
         // Delete Schedules (No projectInternalId in this collection)
-        var_dump("deleting schedules projectId = " . $projectId);
         $this->deleteByGroup('schedules', [
             Query::equal('projectId', [$projectId]),
         ], $dbForConsole);
