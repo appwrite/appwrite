@@ -582,6 +582,9 @@ class Deletes extends Action
             $this->deleteByGroup('_metadata', [], $dbForProject);
         }
 
+
+        Console::error('deviceForFiles === ' . $deviceForFiles->getRoot());
+
         // Delete all storage directories
         $deviceForFiles->delete($deviceForFiles->getRoot(), true);
         $deviceForFunctions->delete($deviceForFunctions->getRoot(), true);
