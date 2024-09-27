@@ -504,33 +504,19 @@ class Deletes extends Action
             $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
-                /**
-                 * Ignore junction tables;
-                 */
-                $relationships = \array_filter(
-                    $collection->getAttribute('attributes', []),
-                    fn ($attribute) =>
-                        $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP &&
-                        $attribute->getAttribute('options')['side'] === Database::RELATION_SIDE_PARENT &&
-                        $attribute->getAttribute('options')['relationType'] === Database::RELATION_MANY_TO_MANY
-                );
-
-                foreach ($relationships as $relationship) {
-                    $relatedCollection = $relationship->getAttribute('options')['relatedCollection'];
-                    var_dump("many2many");
-                    var_dump("relatedCollection");
-                    var_dump($collection->getInternalId());
-                    var_dump($relatedCollection->getInternalId());
-                    var_dump($relationship);
-                    $x = "_{$relatedCollection->getInternalId()}_{$collection->getInternalId()}";
-                    $junctions[] = "_{$relatedCollection->getInternalId()}_{$collection->getInternalId()}";
-                    var_dump($x);
-                }
-
-                var_dump($junctions);
-
                 if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
-                    $dbForProject->deleteCollection($collection->getId());
+                    try {
+                        $dbForProject->deleteCollection($collection->getId());
+                    } catch (DatabaseException $e) {
+                        Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
+
+                        /**
+                         * Ignore junction tables;
+                         */
+                        if (!preg_match('/^_\d+_\d+$/', $collection->getId())) {
+                            throw $e;
+                        }
+                    }
                 } else {
                     $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                 }
