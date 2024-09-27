@@ -3672,10 +3672,13 @@ App::patch('/v1/account/mfa')
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl');
                 $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-altered-console.tpl');
 
+                $buttonText = $locale->getText("emails.{$type}.buttonText", 'console-'.$locale->default) ?? $locale->getText("emails.{$type}.buttonText");
+                $bodyText = $locale->getText("emails.{$type}.body", 'console-'.$locale->default) ?? $locale->getText("emails.{$type}.body");
+
                 $body
-                    ->setParam('{{buttonText}}', $locale->getText("emails.{$type}.buttonText"))
+                    ->setParam('{{buttonText}}', $buttonText)
                     ->setParam('{{redirect}}', $redirect)
-                    ->setParam('{{body}}', $locale->getText("emails.{$type}.body"), escapeHtml: false)
+                    ->setParam('{{body}}', $bodyText, escapeHtml: false)
                     ->setParam('{{project}}', $project->getAttribute('name'))
                     ->setParam('{{user}}', $user->getAttribute('name'));
 
