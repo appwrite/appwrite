@@ -280,7 +280,7 @@ class Specs extends Action
                 if ($mocks) {
                     $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-mocks-' . $platform . '.json';
 
-                    if (!file_put_contents($path, json_encode($specs->parse()))) {
+                    if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
                         throw new Exception('Failed to save mocks spec file: ' . $path);
                     }
 
@@ -291,7 +291,7 @@ class Specs extends Action
 
                 $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
 
-                if (!file_put_contents($path, json_encode($specs->parse()))) {
+                if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
                     throw new Exception('Failed to save spec file: ' . $path);
                 }
 

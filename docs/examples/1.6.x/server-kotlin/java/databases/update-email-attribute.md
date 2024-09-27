@@ -15,6 +15,7 @@ databases.updateEmailAttribute(
     "", // key
     false, // required
     "email@example.com", // default
+    "", // newKey (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

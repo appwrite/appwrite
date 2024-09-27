@@ -124,7 +124,9 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
-        'dateTime' => DateTime::format(new \DateTime(), 'h:ia MMMM dS'),
+        'date' => (new \DateTime())->format('F j'),
+        'year' => (new \DateTime())->format('YYYY'),
+        'time' => (new \DateTime())->format('H:i:s'),
         'user' => $user->getAttribute('name'),
         'project' => $project->getAttribute('name'),
         'device' => $session->getAttribute('clientName'),
@@ -392,7 +394,7 @@ App::post('/v1/account')
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                if($existingTarget) {
+                if ($existingTarget) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
@@ -4121,7 +4123,7 @@ App::post('/v1/account/mfa/challenge')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MFA_CHALLENGE)
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},token:{param-token}')
+    ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`.')
     ->inject('response')
     ->inject('dbForProject')
@@ -4308,7 +4310,7 @@ App::put('/v1/account/mfa/challenge')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'userId:{param-userId}')
+    ->label('abuse-key', 'url:{url},challengeId:{param-challengeId}')
     ->param('challengeId', '', new Text(256), 'ID of the challenge.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('project')

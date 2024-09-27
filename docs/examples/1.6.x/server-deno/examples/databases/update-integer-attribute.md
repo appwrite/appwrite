@@ -14,5 +14,6 @@ const response = await databases.updateIntegerAttribute(
     false, // required
     null, // min
     null, // max
-    null // default
+    null, // default
+    '' // newKey (optional)
 );

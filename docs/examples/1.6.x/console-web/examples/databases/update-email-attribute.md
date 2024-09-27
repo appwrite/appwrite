@@ -11,7 +11,8 @@ const result = await databases.updateEmailAttribute(
     '<COLLECTION_ID>', // collectionId
     '', // key
     false, // required
-    'email@example.com' // default
+    'email@example.com', // default
+    '' // newKey (optional)
 );
 
 console.log(result);

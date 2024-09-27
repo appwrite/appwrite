@@ -3,7 +3,8 @@ mutation {
         databaseId: "<DATABASE_ID>",
         collectionId: "<COLLECTION_ID>",
         key: "",
-        onDelete: "cascade"
+        onDelete: "cascade",
+        newKey: ""
     ) {
         key
         type

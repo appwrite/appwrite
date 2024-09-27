@@ -95,7 +95,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
             $databaseInternalId = $parts[1] ?? 0;
             $queueForUsage
                 ->addMetric(METRIC_COLLECTIONS, $value) // per project
-                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value) // per database
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value)
             ;
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
@@ -207,14 +207,14 @@ App::init()
             }
 
             // Remove after migration
-            if(!\str_contains($apiKey, '_')) {
+            if (!\str_contains($apiKey, '_')) {
                 $keyType = API_KEY_STANDARD;
                 $authKey = $apiKey;
             } else {
                 [ $keyType, $authKey ] = \explode('_', $apiKey, 2);
             }
 
-            if($keyType === API_KEY_DYNAMIC) {
+            if ($keyType === API_KEY_DYNAMIC) {
                 // Dynamic key
 
                 $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
@@ -244,7 +244,7 @@ App::init()
                     Authorization::setRole(Auth::USER_ROLE_APPS);
                     Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
                 }
-            } elseif($keyType === API_KEY_STANDARD) {
+            } elseif ($keyType === API_KEY_STANDARD) {
                 // No underline means no prefix. Backwards compatibility.
                 // Regular key
 

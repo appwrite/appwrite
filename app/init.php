@@ -223,15 +223,31 @@ const API_KEY_DYNAMIC = 'dynamic';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
-const METRIC_MESSAGES  = 'messages';
-const METRIC_MESSAGES_COUNTRY_CODE  = '{countryCode}.messages';
+
+const METRIC_AUTH_METHOD_PHONE  = 'auth.method.phone';
+const METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE  = METRIC_AUTH_METHOD_PHONE . '.{countryCode}';
+const METRIC_MESSAGES = 'messages';
+const METRIC_MESSAGES_SENT = METRIC_MESSAGES . '.sent';
+const METRIC_MESSAGES_FAILED = METRIC_MESSAGES . '.failed';
+const METRIC_MESSAGES_TYPE = METRIC_MESSAGES . '.{type}';
+const METRIC_MESSAGES_TYPE_SENT  = METRIC_MESSAGES . '.{type}.sent';
+const METRIC_MESSAGES_TYPE_FAILED  = METRIC_MESSAGES . '.{type}.failed';
+const METRIC_MESSAGES_TYPE_PROVIDER = METRIC_MESSAGES . '.{type}.{provider}';
+const METRIC_MESSAGES_TYPE_PROVIDER_SENT  = METRIC_MESSAGES . '.{type}.{provider}.sent';
+const METRIC_MESSAGES_TYPE_PROVIDER_FAILED  = METRIC_MESSAGES . '.{type}.{provider}.failed';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
+const METRIC_DATABASES_STORAGE = 'databases.storage';
+const METRIC_DATABASES_STORAGE_DISK = 'databases.storage_disk';
 const METRIC_DATABASE_ID_COLLECTIONS = '{databaseInternalId}.collections';
+const METRIC_DATABASE_ID_STORAGE = '{databaseInternalId}.databases.storage';
+const METRIC_DATABASE_ID_STORAGE_DISK = '{databaseInternalId}.databases.storage_disk';
 const METRIC_DOCUMENTS = 'documents';
 const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE = '{databaseInternalId}.{collectionInternalId}.databases.storage';
+const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE_DISK = '{databaseInternalId}.{collectionInternalId}.databases.storage_disk';
 const METRIC_BUCKETS = 'buckets';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
@@ -791,7 +807,7 @@ $register->set('logger', function () {
         $adapter = null;
     }
 
-    if($adapter === null) {
+    if ($adapter === null) {
         Console::error("Logging provider not supported. Logging is disabled");
         return;
     }
@@ -1018,7 +1034,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-08.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-09.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
@@ -1272,7 +1288,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         $jwtSessionId = $payload['sessionId'] ?? '';
-        if(!empty($jwtSessionId)) {
+        if (!empty($jwtSessionId)) {
             if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
                 $user = new Document([]);
             }

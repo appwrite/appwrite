@@ -20,7 +20,7 @@
     "emails.magicSession.signature": "{{project}} team",
     "emails.sessionAlert.subject": "Security alert: new session on your {{project}} account",
     "emails.sessionAlert.hello":"Hello {{user}}",
-    "emails.sessionAlert.body": "A new session has been created on your {{b}}{{project}}{{/b}} account, on {{b}}{{dateTime}}{{/b}}.\nHere are the details of the new session: ",
+    "emails.sessionAlert.body": "A new session has been created on your {{b}}{{project}}{{/b}} account, {{b}}on {{date}}, {{year}} at {{time}} UTC{{/b}}.\nHere are the details of the new session: ",
     "emails.sessionAlert.listDevice": "Device: {{b}}{{device}}{{/b}}",
     "emails.sessionAlert.listIpAddress": "IP Address: {{b}}{{ipAddress}}{{/b}}",
     "emails.sessionAlert.listCountry": "Country: {{b}}{{country}}{{/b}}",

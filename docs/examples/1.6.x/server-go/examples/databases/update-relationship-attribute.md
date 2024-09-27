@@ -19,6 +19,7 @@ func main() {
         "<COLLECTION_ID>",
         "",
         databases.WithUpdateRelationshipAttributeOnDelete("cascade"),
+        databases.WithUpdateRelationshipAttributeNewKey(""),
     )
 
     if error != nil {

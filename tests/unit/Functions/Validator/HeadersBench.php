@@ -27,19 +27,19 @@ final class HeadersBench
         yield 'empty' => [ 'value' => [] ];
 
         $value = [];
-        for($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             $value[bin2hex(random_bytes(8))] = bin2hex(random_bytes(8));
         }
         yield 'items_10-size_320' => [ 'value' => $value ];
 
         $value = [];
-        for($i = 0; $i < 100; $i++) {
+        for ($i = 0; $i < 100; $i++) {
             $value[bin2hex(random_bytes(8))] = bin2hex(random_bytes(8));
         }
         yield 'items_100-size_3200' => [ 'value' => $value ];
 
         $value = [];
-        for($i = 0; $i < 100; $i++) {
+        for ($i = 0; $i < 100; $i++) {
             $value[bin2hex(random_bytes(32))] = bin2hex(random_bytes(32));
         }
         yield 'items_100-size_12800' => [ 'value' => $value ];
@@ -53,7 +53,7 @@ final class HeadersBench
     public function benchHeadersValidator(array $data): void
     {
         $assertion = $this->validator->isValid($data['value']);
-        if(!$assertion) {
+        if (!$assertion) {
             exit(1);
         }
     }
