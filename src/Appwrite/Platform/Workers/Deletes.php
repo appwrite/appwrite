@@ -498,25 +498,13 @@ class Deletes extends Action
         ];
 
         $limit = \count($projectCollectionIds) + 25;
-        $junctions = [];
 
         while (true) {
             $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
                 if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
-                    try {
-                        $dbForProject->deleteCollection($collection->getId());
-                    } catch (Throwable $e) {
-                        Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
-
-                        /**
-                         * Ignore junction tables;
-                         */
-                        if (!preg_match('/^_\d+_\d+$/', $collection->getId())) {
-                            throw $e;
-                        }
-                    }
+                    $dbForProject->deleteCollection($collection->getId());
                 } else {
                     $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                 }
@@ -581,9 +569,6 @@ class Deletes extends Action
         } else {
             $this->deleteByGroup('_metadata', [], $dbForProject);
         }
-
-
-        Console::error('deviceForFiles === ' . $deviceForFiles->getRoot());
 
         // Delete all storage directories
         $deviceForFiles->delete($deviceForFiles->getRoot(), true);
