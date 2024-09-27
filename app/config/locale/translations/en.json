@@ -42,7 +42,7 @@
     "emails.mfaChallenge.signature": "{{project}} team",
     "emails.mfaEnabled.subject": "Two-factor authentication is enabled for your {{project}} account",
     "emails.mfaEnabled.hello": "Hello {{user}}",
-    "emails.mfaEnabled.body": "Two-factor authentication has been successfully enabled for your {{project}} account.<br/><br/>Please make sure to store your security codes safely, so you can use them if you lose or can’t access your mobile device. Each recovery code can only be used once, but you can re-generate a new set of 6 codes at any time.",
+    "emails.mfaEnabled.body": "Two-factor authentication has been successfully enabled for your {{project}} account.",
     "emails.mfaEnabled.footer": "If you didn’t enable two-factor authentication, please contact us immediately.",
     "emails.mfaEnabled.thanks": "Thanks",
     "emails.mfaEnabled.signature": "{{project}} team",
