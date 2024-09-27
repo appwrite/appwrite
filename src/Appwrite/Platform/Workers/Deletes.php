@@ -507,7 +507,7 @@ class Deletes extends Action
                 if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
                     try {
                         $dbForProject->deleteCollection($collection->getId());
-                    } catch (DatabaseException $e) {
+                    } catch (Throwable $e) {
                         Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
 
                         /**
