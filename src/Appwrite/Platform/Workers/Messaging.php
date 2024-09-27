@@ -346,32 +346,34 @@ class Messaging extends Action
         $dbForProject->updateDocument('messages', $message->getId(), $message);
 
         // Delete any attachments that were downloaded to local storage
-        if ($provider->getAttribute('type') === MESSAGE_TYPE_EMAIL) {
-            if ($deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
-                return;
-            }
-
-            $data = $message->getAttribute('data');
-            $attachments = $data['attachments'] ?? [];
-
-            foreach ($attachments as $attachment) {
-                $bucketId = $attachment['bucketId'];
-                $fileId = $attachment['fileId'];
-
-                $bucket = $dbForProject->getDocument('buckets', $bucketId);
-                if ($bucket->isEmpty()) {
-                    throw new \Exception('Storage bucket with the requested ID could not be found');
+        foreach ($providers as $provider) {
+            if ($provider->getAttribute('type') === MESSAGE_TYPE_EMAIL) {
+                if ($deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
+                    return;
                 }
 
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-                if ($file->isEmpty()) {
-                    throw new \Exception('Storage file with the requested ID could not be found');
-                }
+                $data = $message->getAttribute('data');
+                $attachments = $data['attachments'] ?? [];
 
-                $path = $file->getAttribute('path', '');
+                foreach ($attachments as $attachment) {
+                    $bucketId = $attachment['bucketId'];
+                    $fileId = $attachment['fileId'];
 
-                if ($this->getLocalDevice($project)->exists($path)) {
-                    $this->getLocalDevice($project)->delete($path);
+                    $bucket = $dbForProject->getDocument('buckets', $bucketId);
+                    if ($bucket->isEmpty()) {
+                        throw new \Exception('Storage bucket with the requested ID could not be found');
+                    }
+
+                    $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                    if ($file->isEmpty()) {
+                        throw new \Exception('Storage file with the requested ID could not be found');
+                    }
+
+                    $path = $file->getAttribute('path', '');
+
+                    if ($this->getLocalDevice($project)->exists($path)) {
+                        $this->getLocalDevice($project)->delete($path);
+                    }
                 }
             }
         }

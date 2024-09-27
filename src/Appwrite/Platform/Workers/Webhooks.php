@@ -202,7 +202,7 @@ class Webhooks extends Action
         $template->setParam('{{webhook}}', $webhook->getAttribute('name'));
         $template->setParam('{{project}}', $project->getAttribute('name'));
         $template->setParam('{{url}}', $webhook->getAttribute('url'));
-        $template->setParam('{{error}}', $curlError ??  'The server returned ' . $statusCode . ' status code');
+        $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
         $template->setParam('{{path}}', "/console/project-$projectId/settings/webhooks/$webhookId");
         $template->setParam('{{attempts}}', $attempts);
 

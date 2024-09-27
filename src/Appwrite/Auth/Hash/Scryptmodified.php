@@ -61,7 +61,10 @@ class Scryptmodified extends Hash
         $saltSeparatorBytes = \base64_decode($options['saltSeparator']);
 
         $password = mb_convert_encoding($password, 'UTF-8');
+
+        // @phpstan-ignore function.notFound
         $derivedKey = \scrypt($password, $saltBytes . $saltSeparatorBytes, 16384, 8, 1, 64);
+
         $derivedKey = \hex2bin($derivedKey);
 
         return $derivedKey;

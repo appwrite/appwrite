@@ -25,6 +25,7 @@ class Scrypt extends Hash
     {
         $options = $this->getOptions();
 
+        // @phpstan-ignore function.notFound
         return \scrypt($password, $options['salt'], $options['costCpu'], $options['costMemory'], $options['costParallel'], $options['length']);
     }
 

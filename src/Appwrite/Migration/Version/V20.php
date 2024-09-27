@@ -453,7 +453,7 @@ class V20 extends Migration
                 Query::equal('period', ['1d']),
             ]);
 
-            $value = $query ?? 0;
+            $value = $query;
             $this->createInfMetric($to, $value);
         }
 

@@ -286,7 +286,7 @@ class Swagger2 extends Format
                     $validator = $validator->getValidator();
                 }
 
-                $validatorClass = (!empty($validator)) ? \get_class($validator) : '';
+                $validatorClass = \get_class($validator);
                 if ($validatorClass === 'Utopia\Validator\AnyOf') {
                     $validator = $param['validator']->getValidators()[0];
                     $validatorClass = \get_class($validator);

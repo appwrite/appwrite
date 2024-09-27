@@ -781,7 +781,7 @@ $register->set('logger', function () {
         };
     }
 
-    if (empty($providerName) || empty($providerConfig)) {
+    if (empty($providerName)) {
         return;
     }
 
@@ -1028,6 +1028,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
+    // @phpstan-ignore class.notFound
     return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-09.mmdb');
 });
 $register->set('passwordsDictionary', function () {

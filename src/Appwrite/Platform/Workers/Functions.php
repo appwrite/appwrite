@@ -442,8 +442,8 @@ class Functions extends Action
         if ($version === 'v2') {
             $vars = \array_merge($vars, [
                 'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
-                'APPWRITE_FUNCTION_DATA' => $body ?? '',
-                'APPWRITE_FUNCTION_EVENT_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_DATA' => $body,
+                'APPWRITE_FUNCTION_EVENT_DATA' => $body,
                 'APPWRITE_FUNCTION_EVENT' => $headers['x-appwrite-event'] ?? '',
                 'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
                 'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
@@ -605,7 +605,7 @@ class Functions extends Action
         );
 
         if (!empty($error)) {
-            throw new Exception($error, $errorCode);
+            throw new Exception($error, $errorCode ?? 0);
         }
     }
 }

@@ -39,6 +39,7 @@ use Utopia\System\System;
 Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
+ // @phpstan-ignore variable.undefined
 Server::setResource('register', fn () => $register);
 
 Server::setResource('dbForConsole', function (Cache $cache, Registry $register) {
@@ -272,7 +273,7 @@ Server::setResource('deviceForCache', function (Document $project) {
     return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 }, ['project']);
 
-
+// @phpstan-ignore variable.undefined
 $pools = $register->get('pools');
 $platform = new Appwrite();
 $args = $platform->getEnv('argv');
