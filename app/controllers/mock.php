@@ -229,6 +229,8 @@ App::get('/v1/mock/github/callback')
             throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
         }
 
+        $installation = new Document();
+
         if (!empty($providerInstallationId)) {
             $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');

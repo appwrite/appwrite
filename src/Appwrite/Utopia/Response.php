@@ -650,7 +650,7 @@ class Response extends SwooleResponse
                             $ruleType = $rule['type'];
                         }
 
-                        if(!isset($ruleType)) {
+                        if (!isset($ruleType)) {
                             continue;
                         }
 

@@ -36,10 +36,11 @@ use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 
+/** @var Utopia\Registry\Registry $register */
+
 Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
- // @phpstan-ignore variable.undefined
 Server::setResource('register', fn () => $register);
 
 Server::setResource('dbForConsole', function (Cache $cache, Registry $register) {
@@ -273,7 +274,6 @@ Server::setResource('deviceForCache', function (Document $project) {
     return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 }, ['project']);
 
-// @phpstan-ignore variable.undefined
 $pools = $register->get('pools');
 $platform = new Appwrite();
 $args = $platform->getEnv('argv');

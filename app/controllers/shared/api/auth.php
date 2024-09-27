@@ -35,6 +35,7 @@ App::init()
     ->inject('request')
     ->inject('project')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (App $utopia, Request $request, Document $project, Reader $geodb) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {

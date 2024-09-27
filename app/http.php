@@ -26,6 +26,8 @@ use Utopia\Pools\Group;
 use Utopia\Swoole\Files;
 use Utopia\System\System;
 
+/** @var Utopia\Registry\Registry $register */
+
 $http = new Server(
     host: "0.0.0.0",
     port: System::getEnv('PORT', 80),
@@ -71,12 +73,12 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         $attempts = 0;
         $max = 10;
         $sleep = 1;
+        $dbForConsole = null;
 
         do {
             try {
                 $attempts++;
                 $dbForConsole = $app->getResource('dbForConsole');
-                /** @var Utopia\Database\Database $dbForConsole */
                 break; // leave the do-while if successful
             } catch (\Throwable $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -86,6 +88,8 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 sleep($sleep);
             }
         } while ($attempts < $max);
+
+        /** @var Utopia\Database\Database $dbForConsole */
 
         Console::success('[Setup] - Server database init started...');
 

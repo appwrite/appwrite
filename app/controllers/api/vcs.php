@@ -82,10 +82,6 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
 
-            if (empty($repositoryName)) {
-                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-            }
-
             $isAuthorized = !$external;
 
             if (!$isAuthorized && !empty($providerPullRequestId)) {

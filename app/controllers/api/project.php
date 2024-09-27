@@ -276,8 +276,6 @@ App::get('/v1/project/usage')
             'buildsStorageTotal' => $total[METRIC_BUILDS_STORAGE],
             'deploymentsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE],
             'executionsBreakdown' => $executionsBreakdown,
-            'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
-            'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown,
             'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
             'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,

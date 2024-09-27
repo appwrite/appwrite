@@ -90,7 +90,7 @@
         "textalk/websocket": "1.5.7",
         "laravel/pint": "^1.14",
         "phpbench/phpbench": "^1.2",
-        "phpstan/phpstan": "1.8.*"
+        "phpstan/phpstan": "1.12.*"
     },
     "provide": {
         "ext-phpiredis": "*"

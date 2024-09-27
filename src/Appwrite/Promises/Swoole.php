@@ -6,11 +6,6 @@ use Swoole\Coroutine\Channel;
 
 class Swoole extends Promise
 {
-    public function __construct(?callable $executor = null)
-    {
-        parent::__construct($executor);
-    }
-
     protected function execute(
         callable $executor,
         callable $resolve,

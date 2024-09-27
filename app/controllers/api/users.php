@@ -775,6 +775,7 @@ App::get('/v1/users/:userId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (string $userId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $user = $dbForProject->getDocument('users', $userId);
@@ -1780,6 +1781,7 @@ App::post('/v1/users/:userId/sessions')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    // @phpstan-ignore class.notFound
     ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
