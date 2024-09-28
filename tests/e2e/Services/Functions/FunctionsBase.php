@@ -17,6 +17,8 @@ trait FunctionsBase
 
     protected function awaitDeploymentIsBuilt($functionId, $deploymentId, $checkForSuccess = true): void
     {
+        $startTime = time();
+        $maxWaitTime = 40;
         while (true) {
             $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
                 'content-type' => 'application/json',
@@ -31,6 +33,10 @@ trait FunctionsBase
                 break;
             }
 
+            if (time() - $startTime > $maxWaitTime) {
+                break;
+            }
+
             \sleep(1);
         }
 
@@ -38,6 +44,36 @@ trait FunctionsBase
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
         }
+    }
+
+    protected function awaitExecutionIsComplete($functionId, $executionId): void
+    {
+        $startTime = time();
+        $maxWaitTime = 20;
+        while (true) {
+            $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $execution['headers']['status-code'] >= 400
+                || \in_array($execution['body']['status'], ['completed', 'failed'])
+            ) {
+                break;
+            }
+
+            if (time() - $startTime > $maxWaitTime) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        // assert that execution status is completed or failed
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertContains($execution['body']['status'], ['completed', 'failed'], \json_encode($execution['body']));
     }
 
     // /**
