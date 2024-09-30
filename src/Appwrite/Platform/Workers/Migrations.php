@@ -393,10 +393,12 @@ class Migrations extends Action
             $this->updateMigrationDocument($migration, $projectDocument);
 
             if ($migration->getAttribute('status', '') === 'failed') {
+                Console::error('Migration('.$migration->getInternalId().':'.$migration->getId().') failed, Project('.$this->project->getInternalId().':'.$this->project->getId().')');
+
                 $destination->error();
                 $source->error();
 
-                throw new Exception('Migration('.$migration->getId().') failed, Project('.$this->project->getId().')');
+                throw new Exception('Migration failed');
             }
         }
     }
