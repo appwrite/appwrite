@@ -300,7 +300,7 @@ class Swagger2 extends Format
                         break;
                 }
 
-                if($class === 'Utopia\Validator\AnyOf') {
+                if ($class === 'Utopia\Validator\AnyOf') {
                     $validator = $param['validator']->getValidators()[0];
                     $class = \get_class($validator);
                 }
