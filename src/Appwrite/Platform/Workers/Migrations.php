@@ -17,7 +17,6 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Logger\Log;
-use Utopia\Logger\Log\Breadcrumb;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
@@ -330,7 +329,7 @@ class Migrations extends Action
                 foreach ($sourceErrors as $error) {
                     /** @var $sourceErrors $error */
                     $message = "Error occurred while fetching '{$error->getResourceName()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
-                    if($error->getPrevious()){
+                    if ($error->getPrevious()) {
                         $message .= " Message: ".$error->getPrevious()->getMessage() . " File: ".$error->getPrevious()->getFile() . " Line: ".$error->getPrevious()->getLine();
                     }
 
@@ -339,7 +338,7 @@ class Migrations extends Action
                 foreach ($destinationErrors as $error) {
                     $message = "Error occurred while pushing '{$error->getResourceName()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
 
-                    if($error->getPrevious()){
+                    if ($error->getPrevious()) {
                         $message .= " Message: ".$error->getPrevious()->getMessage() . " File: ".$error->getPrevious()->getFile() . " Line: ".$error->getPrevious()->getLine();
                     }
 

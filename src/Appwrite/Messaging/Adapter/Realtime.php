@@ -266,6 +266,7 @@ class Realtime extends Adapter
                 break;
             case 'rules':
                 $channels[] = 'console';
+                $channels[] = 'projects.' . $project->getId();
                 $projectId = 'console';
                 $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
@@ -284,6 +285,7 @@ class Realtime extends Adapter
             case 'databases':
                 if (in_array($parts[4] ?? [], ['attributes', 'indexes'])) {
                     $channels[] = 'console';
+                    $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 } elseif (($parts[4] ?? '') === 'documents') {
@@ -323,6 +325,7 @@ class Realtime extends Adapter
                 if ($parts[2] === 'executions') {
                     if (!empty($payload->getRead())) {
                         $channels[] = 'console';
+                        $channels[] = 'projects.' . $project->getId();
                         $channels[] = 'executions';
                         $channels[] = 'executions.' . $payload->getId();
                         $channels[] = 'functions.' . $payload->getAttribute('functionId');
@@ -330,6 +333,7 @@ class Realtime extends Adapter
                     }
                 } elseif ($parts[2] === 'deployments') {
                     $channels[] = 'console';
+                    $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
@@ -337,6 +341,7 @@ class Realtime extends Adapter
                 break;
             case 'migrations':
                 $channels[] = 'console';
+                $channels[] = 'projects.' . $project->getId();
                 $projectId = 'console';
                 $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
