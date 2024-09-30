@@ -396,7 +396,7 @@ class Migrations extends Action
                 $destination->error();
                 $source->error();
 
-                throw new Exception('Migration failed');
+                throw new Exception('Migration('.$migration->getId().') failed, Project('.$this->project->getId().')');
             }
         }
     }
