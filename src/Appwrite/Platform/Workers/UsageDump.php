@@ -171,7 +171,7 @@ class UsageDump extends Action
             }
 
             switch (count($data)) {
-                    // Collection Level
+                // Collection Level
                 case METRIC_COLLECTION_LEVEL_STORAGE:
                     Console::log('[' . DateTime::now() . '] Collection Level Storage Calculation [' . $key . ']');
                     $databaseInternalId = $data[0];
