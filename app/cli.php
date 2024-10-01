@@ -103,12 +103,12 @@ $logError
 
                 $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            try {
-                $responseCode = $logger->addLog($log);
-                Console::info('Error log pushed with status code: ' . $responseCode);
-            } catch (Throwable $th) {
-                Console::error('Error pushing log: ' . $th->getMessage());
-            }
+                try {
+                    $responseCode = $logger->addLog($log);
+                    Console::info('Error log pushed with status code: ' . $responseCode);
+                } catch (Throwable $th) {
+                    Console::error('Error pushing log: ' . $th->getMessage());
+                }
             }
 
             Console::warning("Failed: {$error->getMessage()}");
