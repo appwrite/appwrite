@@ -41,6 +41,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
@@ -1258,13 +1259,13 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user = new Document([]);
     }
 
-    if (APP_MODE_ADMIN === $mode) {
-        if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
-            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
-        } else {
-            $user = new Document([]);
-        }
-    }
+    // if (APP_MODE_ADMIN === $mode) {
+    //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
+    //         Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+    //     } else {
+    //         $user = new Document([]);
+    //     }
+    // }
 
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
@@ -1341,7 +1342,7 @@ App::setResource('console', function () {
         '$collection' => ID::custom('projects'),
         'description' => 'Appwrite core engine',
         'logo' => '',
-        'teamId' => -1,
+        'teamId' => null,
         'webhooks' => [],
         'keys' => [],
         'platforms' => [
@@ -1769,3 +1770,35 @@ App::setResource('requestTimestamp', function ($request) {
 App::setResource('plan', function (array $plan = []) {
     return [];
 });
+
+
+App::setResource('team', function (Document $project, Database $dbForConsole, App $utopia, Request $request) {
+    $teamInternalId = '';
+    if ($project->getId() !== 'console') {
+        $teamInternalId = $project->getAttribute('teamInternalId', '');
+    } else {
+        $route = $utopia->match($request);
+        $path = $route->getPath();
+        if (str_starts_with($path, '/v1/projects/:projectId')) {
+            $uri = $request->getURI();
+            $pid = explode('/', $uri)[3];
+            $p = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $pid));
+            $teamInternalId = $p->getAttribute('teamInternalId', '');
+        } elseif ($path === '/v1/projects') {
+            $teamId = $request->getParam('teamId', '');
+            $team = Authorization::skip(fn () => $dbForConsole->getDocument('teams', $teamId));
+            return $team;
+        }
+    }
+
+    $team = Authorization::skip(function () use ($dbForConsole, $teamInternalId) {
+        return $dbForConsole->findOne('teams', [
+            Query::equal('$internalId', [$teamInternalId]),
+        ]);
+    });
+
+    if (!$team) {
+        $team = new Document([]);
+    }
+    return $team;
+}, ['project', 'dbForConsole', 'utopia', 'request']);

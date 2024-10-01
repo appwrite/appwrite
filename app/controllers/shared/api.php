@@ -160,42 +160,22 @@ App::init()
     ->inject('session')
     ->inject('servers')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Database $dbForConsole, Document $project, Document $user, ?Document $session, array $servers, string $mode) {
+    ->inject('team')
+    ->action(function (App $utopia, Request $request, Database $dbForConsole, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
         $route = $utopia->getRoute();
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        /**
-         * ACL Check
-         */
+        /** Default role */
+        $roles = Config::getParam('roles', []);
         $role = ($user->isEmpty())
             ? Role::guests()->toString()
             : Role::users()->toString();
 
-        // Add user roles
-        $memberships = $user->find('teamId', $project->getAttribute('teamId'), 'memberships');
-
-        if ($memberships) {
-            foreach ($memberships->getAttribute('roles', []) as $memberRole) {
-                switch ($memberRole) {
-                    case 'owner':
-                        $role = Auth::USER_ROLE_OWNER;
-                        break;
-                    case 'admin':
-                        $role = Auth::USER_ROLE_ADMIN;
-                        break;
-                    case 'developer':
-                        $role = Auth::USER_ROLE_DEVELOPER;
-                        break;
-                }
-            }
-        }
-
-        $roles = Config::getParam('roles', []);
-        $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
-        $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
+        /** Allowed Scopes for the role */
+        $scopes = $roles[$role]['scopes'];
 
         $apiKey = $request->getHeader('x-appwrite-key', '');
 
@@ -294,13 +274,38 @@ App::init()
                 }
             }
         }
+        // Admin User Authentication
+        elseif (($project->getId() === 'console' && !$team->isEmpty() && !$user->isEmpty()) || ($project->getId() !== 'console' && !$user->isEmpty() && $mode === APP_MODE_ADMIN)) {
+            $teamId = $team->getId();
+            $adminRoles = [];
+            $memberships = $user->getAttribute('memberships', []);
+            foreach ($memberships as $membership) {
+                if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $teamId) {
+                    $adminRoles = $membership->getAttribute('roles', []);
+                    break;
+                }
+            }
+
+            if (empty($adminRoles)) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
+
+            $scopes = []; // reset scope if admin
+            foreach ($adminRoles as $role) {
+                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+            }
+
+            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+        }
+
+        $scopes = \array_unique($scopes);
 
         Authorization::setRole($role);
-
         foreach (Auth::getRoles($user) as $authRole) {
             Authorization::setRole($authRole);
         }
 
+        /** Do not allow access to disabled services */
         $service = $route->getLabel('sdk.namespace', '');
         if (!empty($service)) {
             if (
@@ -311,14 +316,14 @@ App::init()
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
         }
-        if (!\in_array($scope, $scopes)) {
-            if ($project->isEmpty()) { // Check if permission is denied because project is missing
-                throw new Exception(Exception::PROJECT_NOT_FOUND);
-            }
 
+        /** Do now allow access if scope is not allowed */
+        $scope = $route->getLabel('scope', 'none');
+        if (!\in_array($scope, $scopes)) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
         }
 
+        /** Do not allow access to blocked accounts */
         if (false === $user->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }

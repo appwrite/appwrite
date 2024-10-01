@@ -28,12 +28,13 @@ class TeamsConsoleClientTest extends Scope
         // Create a user account before we create a invite so we can check if the user has permissions when it shouldn't
         $user = $this->client->call(Client::METHOD_POST, '/account', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => 'console'], [
-                'userId' => 'unique()',
-                'email' => $email,
-                'password' => $password,
-                'name' => $name,
-            ], false);
+            'x-appwrite-project' => 'console'
+        ], [
+            'userId' => 'unique()',
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ], false);
 
         $this->assertEquals(201, $user['headers']['status-code']);
 
@@ -46,7 +47,7 @@ class TeamsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'email' => $email,
             'name' => $name,
-            'roles' => ['admin', 'editor'],
+            'roles' => ['developer'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
@@ -73,6 +74,77 @@ class TeamsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(204, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /** @depends testUpdateTeamMembership */
+    public function testUpdateTeamMembershipRoles($data): array
+    {
+        $teamUid = $data['teamUid'] ?? '';
+        $membershipUid = $data['membershipUid'] ?? '';
+        $session = $data['session'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $roles = ['developer'];
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $membershipUid, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertNotEmpty($response['body']['teamId']);
+        $this->assertCount(count($roles), $response['body']['roles']);
+        $this->assertEquals($roles[0], $response['body']['roles'][0]);
+
+        /**
+         * Test for unknown team
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . 'abc' . '/memberships/' . $membershipUid, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        /**
+         * Test for unknown membership ID
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . 'abc', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+
+        /**
+         * Test for when a user other than the owner tries to update membership
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $membershipUid, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('User is not allowed to modify roles', $response['body']['message']);
 
         return $data;
     }
