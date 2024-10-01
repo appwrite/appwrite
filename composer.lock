@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "aeb95e5148f792325e4a96dd246118d2",
+    "content-hash": "1981099f3c47f5536298222ba9b0b994",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1723,7 +1723,7 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.53.5-rc1",
+            "version": "0.53.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
@@ -1773,7 +1773,7 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.53.5-rc1"
+                "source": "https://github.com/utopia-php/database/tree/0.53.5"
             },
             "time": "2024-09-24T08:43:10+00:00"
         },
@@ -6995,9 +6995,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 5
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

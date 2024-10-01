@@ -163,7 +163,6 @@ class UsageDump extends Action
             $id = \md5("{$time}_{$period}_{$key}");
 
             $value = 0;
-            $diskValue = 0;
             $previousValue = 0;
             try {
                 $previousValue = ($dbForProject->getDocument('stats', $id))->getAttribute('value', 0);
@@ -179,8 +178,7 @@ class UsageDump extends Action
                     $collectionInternalId = $data[1];
 
                     try {
-                        $value = $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collectionInternalId);
-                        $diskValue = $dbForProject->getSizeOfCollectionOnDisk('database_'.$databaseInternalId.'_collection_'.$collectionInternalId);
+                        $value = $dbForProject->getSizeOfCollection('database_' . $databaseInternalId . '_collection_' . $collectionInternalId);
                     } catch (\Exception $e) {
                         // Collection not found
                         if ($e->getMessage() !== 'Collection not found') {
@@ -190,25 +188,21 @@ class UsageDump extends Action
 
                     // Compare with previous value
                     $diff = $value - $previousValue;
-                    $diskDiff = $diskValue - $previousValue;
 
-                    if ($diff === 0 && $diskDiff === 0) {
+                    if ($diff === 0) {
                         break;
                     }
 
                     // Update Collection
                     $updateMetric($dbForProject, $diff, $key, $period, $time);
-                    $updateMetric($dbForProject, $diskDiff, $key . '_disk', $period, $time);
 
                     // Update Database
                     $databaseKey = str_replace(['{databaseInternalId}'], [$data[0]], METRIC_DATABASE_ID_STORAGE);
                     $updateMetric($dbForProject, $diff, $databaseKey, $period, $time);
-                    $updateMetric($dbForProject, $diskDiff, $databaseKey . '_disk', $period, $time);
 
                     // Update Project
                     $projectKey = METRIC_DATABASES_STORAGE;
                     $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
-                    $updateMetric($dbForProject, $diskDiff, $projectKey . '_disk', $period, $time);
                     break;
                     // Database Level
                 case METRIC_DATABASE_LEVEL_STORAGE:
@@ -227,8 +221,7 @@ class UsageDump extends Action
 
                     foreach ($collections as $collection) {
                         try {
-                            $value += $dbForProject->getSizeOfCollection('database_'.$databaseInternalId.'_collection_'.$collection->getInternalId());
-                            $diskValue += $dbForProject->getSizeOfCollectionOnDisk('database_'.$databaseInternalId.'_collection_'.$collection->getInternalId());
+                            $value += $dbForProject->getSizeOfCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
                         } catch (\Exception $e) {
                             // Collection not found
                             if ($e->getMessage() !== 'Collection not found') {
@@ -238,21 +231,18 @@ class UsageDump extends Action
                     }
 
                     $diff = $value - $previousValue;
-                    $diskDiff = $diskValue - $previousValue;
 
-                    if ($diff === 0 && $diskDiff === 0) {
+                    if ($diff === 0) {
                         break;
                     }
 
                     // Update Database
                     $databaseKey = str_replace(['{databaseInternalId}'], [$data[0]], METRIC_DATABASE_ID_STORAGE);
                     $updateMetric($dbForProject, $diff, $databaseKey, $period, $time);
-                    $updateMetric($dbForProject, $diskDiff, $databaseKey . '_disk', $period, $time);
 
                     // Update Project
                     $projectKey = METRIC_DATABASES_STORAGE;
                     $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
-                    $updateMetric($dbForProject, $diskDiff, $projectKey . '_disk', $period, $time);
                     break;
                     // Project Level
                 case METRIC_PROJECT_LEVEL_STORAGE:
@@ -266,8 +256,7 @@ class UsageDump extends Action
 
                         foreach ($collections as $collection) {
                             try {
-                                $value += $dbForProject->getSizeOfCollection('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId());
-                                $diskValue += $dbForProject->getSizeOfCollectionOnDisk('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId());
+                                $value += $dbForProject->getSizeOfCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
                             } catch (\Exception $e) {
                                 // Collection not found
                                 if ($e->getMessage() !== 'Collection not found') {
@@ -278,12 +267,10 @@ class UsageDump extends Action
                     }
 
                     $diff = $value - $previousValue;
-                    $diskDiff = $diskValue - $previousValue;
 
                     // Update Project
                     $projectKey = METRIC_DATABASES_STORAGE;
                     $updateMetric($dbForProject, $diff, $projectKey, $period, $time);
-                    $updateMetric($dbForProject, $diskDiff, $projectKey . '_disk', $period, $time);
                     break;
             }
         }
