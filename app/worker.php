@@ -62,7 +62,9 @@ Server::setResource('project', function (Message $message, Database $dbForConsol
         return $project;
     }
 
-    return $dbForConsole->getDocument('projects', $project->getId());
+    return $project;
+
+    //return $dbForConsole->getDocument('projects', $project->getId());
 }, ['message', 'dbForConsole']);
 
 Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForConsole) {
