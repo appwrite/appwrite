@@ -489,11 +489,29 @@ class Messaging extends Action
 
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
-            'twilio' => new Twilio($credentials['accountSid'] ?? 'accountSid', $credentials['authToken'] ?? 'authToken', null, $credentials['messagingServiceSid'] ?? null),
-            'textmagic' => new TextMagic($credentials['username'] ?? 'username', $credentials['apiKey'] ?? 'apiKey'),
-            'telesign' => new Telesign($credentials['customerId'] ?? 'customerId', $credentials['apiKey'] ?? 'apiKey'),
-            'msg91' => new Msg91($credentials['senderId'] ?? 'senderId', $credentials['authKey'] ?? 'authKey', $credentials['templateId'] ?? 'templateId'),
-            'vonage' => new Vonage($credentials['apiKey'] ?? 'apiKey', $credentials['apiSecret'] ?? 'apiSecret'),
+            'twilio' => new Twilio(
+                !empty($credentials['accountSid']) ? $credentials['accountSid'] : 'accountSid',
+                !empty($credentials['authToken']) ? $credentials['authToken'] : 'authToken',
+                null,
+                !empty($credentials['messagingServiceSid']) ? $credentials['messagingServiceSid'] : null
+            ),
+            'textmagic' => new TextMagic(
+                !empty($credentials['username']) ? $credentials['username'] : 'username',
+                !empty($credentials['apiKey']) ? $credentials['apiKey'] : 'apiKey'
+            ),
+            'telesign' => new Telesign(
+                !empty($credentials['customerId']) ? $credentials['customerId'] : 'customerId',
+                !empty($credentials['apiKey']) ? $credentials['apiKey'] : 'apiKey'
+            ),
+            'msg91' => new Msg91(
+                !empty($credentials['senderId']) ? $credentials['senderId'] : 'senderId',
+                !empty($credentials['authKey']) ? $credentials['authKey'] : 'authKey',
+                !empty($credentials['templateId']) ? $credentials['templateId'] : 'templateId'
+            ),
+            'vonage' => new Vonage(
+                !empty($credentials['apiKey']) ? $credentials['apiKey'] : 'apiKey',
+                !empty($credentials['apiSecret']) ? $credentials['apiSecret'] : 'apiSecret'
+            ),
             default => null
         };
     }
@@ -521,24 +539,25 @@ class Messaging extends Action
     {
         $credentials = $provider->getAttribute('credentials', []);
         $options = $provider->getAttribute('options', []);
+        $apiKey = !empty($credentials['apiKey']) ? $credentials['apiKey'] : 'apiKey';
 
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'smtp' => new SMTP(
-                $credentials['host'] ?? 'host',
-                $credentials['port'] ?? 25,
-                $credentials['username'] ?? 'username',
-                $credentials['password'] ?? 'password',
-                $options['encryption'] ?? 'encryption',
-                $options['autoTLS'] ?? false,
-                $options['mailer'] ?? 'mailer',
+                !empty($credentials['host']) ? $credentials['host'] : 'host',
+                !empty($credentials['port']) ? $credentials['port'] : 25,
+                !empty($credentials['username']) ? $credentials['username'] : 'username',
+                !empty($credentials['password']) ? $credentials['password'] : 'password',
+                !empty($options['encryption']) ? $options['encryption'] : 'encryption',
+                !empty($options['autoTLS']) ? $options['autoTLS'] : false,
+                !empty($options['mailer']) ? $options['mailer'] : 'mailer',
             ),
             'mailgun' => new Mailgun(
-                $credentials['apiKey'] ?? 'apiKey',
-                $credentials['domain'] ?? 'domain',
-                $credentials['isEuRegion'] ?? false
+                $apiKey,
+                !empty($credentials['domain']) ? $credentials['domain'] : 'domain',
+                !empty($credentials['isEuRegion']) ?? false
             ),
-            'sendgrid' => new Sendgrid($credentials['apiKey']),
+            'sendgrid' => new Sendgrid($apiKey),
             default => null
         };
     }
