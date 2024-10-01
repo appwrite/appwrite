@@ -489,7 +489,7 @@ class Messaging extends Action
 
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
-            'twilio' => new Twilio($credentials['accountSid'] ?? 'accountSid' , $credentials['authToken'] ?? 'authToken', null, $credentials['messagingServiceSid'] ?? null),
+            'twilio' => new Twilio($credentials['accountSid'] ?? 'accountSid', $credentials['authToken'] ?? 'authToken', null, $credentials['messagingServiceSid'] ?? null),
             'textmagic' => new TextMagic($credentials['username'] ?? 'username', $credentials['apiKey'] ?? 'apiKey'),
             'telesign' => new Telesign($credentials['customerId'] ?? 'customerId', $credentials['apiKey'] ?? 'apiKey'),
             'msg91' => new Msg91($credentials['senderId'] ?? 'senderId', $credentials['authKey'] ?? 'authKey', $credentials['templateId'] ?? 'templateId'),
@@ -526,7 +526,7 @@ class Messaging extends Action
             'mock' => new Mock('username', 'password'),
             'smtp' => new SMTP(
                 $credentials['host'] ?? 'host',
-                $credentials['port'] ?? 25 ,
+                $credentials['port'] ?? 25,
                 $credentials['username'] ?? 'username',
                 $credentials['password'] ?? 'password',
                 $options['encryption'] ?? 'encryption',
