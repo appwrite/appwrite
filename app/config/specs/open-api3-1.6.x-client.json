@@ -9405,7 +9405,7 @@
                     "responseBody": {
                         "type": "string",
                         "description": "HTTP response body. This will return empty unless execution is created as synchronous.",
-                        "x-example": "Developers are awesome."
+                        "x-example": ""
                     },
                     "responseHeaders": {
                         "type": "array",
