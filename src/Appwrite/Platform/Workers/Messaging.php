@@ -489,11 +489,11 @@ class Messaging extends Action
 
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
-            'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken'], null, isset($credentials['messagingServiceSid']) ? $credentials['messagingServiceSid'] : null),
-            'textmagic' => new TextMagic($credentials['username'], $credentials['apiKey']),
-            'telesign' => new Telesign($credentials['customerId'], $credentials['apiKey']),
-            'msg91' => new Msg91($credentials['senderId'], $credentials['authKey'], $credentials['templateId']),
-            'vonage' => new Vonage($credentials['apiKey'], $credentials['apiSecret']),
+            'twilio' => new Twilio($credentials['accountSid'] ?? 'accountSid' , $credentials['authToken'] ?? 'authToken', null, $credentials['messagingServiceSid'] ?? null),
+            'textmagic' => new TextMagic($credentials['username'] ?? 'username', $credentials['apiKey'] ?? 'apiKey'),
+            'telesign' => new Telesign($credentials['customerId'] ?? 'customerId', $credentials['apiKey'] ?? 'apiKey'),
+            'msg91' => new Msg91($credentials['senderId'] ?? 'senderId', $credentials['authKey'] ?? 'authKey', $credentials['templateId'] ?? 'templateId'),
+            'vonage' => new Vonage($credentials['apiKey'] ?? 'apiKey', $credentials['apiSecret'] ?? 'apiSecret'),
             default => null
         };
     }
@@ -506,11 +506,11 @@ class Messaging extends Action
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'apns' => new APNS(
-                $credentials['authKey'],
-                $credentials['authKeyId'],
-                $credentials['teamId'],
-                $credentials['bundleId'],
-                $options['sandbox']
+                $credentials['authKey'] ?? 'authKey',
+                $credentials['authKeyId'] ?? 'authKeyId',
+                $credentials['teamId'] ?? 'teamId',
+                $credentials['bundleId'] ?? 'bundleId',
+                $options['sandbox'] ?? false
             ),
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
             default => null
@@ -525,18 +525,18 @@ class Messaging extends Action
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'smtp' => new SMTP(
-                $credentials['host'],
-                $credentials['port'],
-                $credentials['username'],
-                $credentials['password'],
-                $options['encryption'],
-                $options['autoTLS'],
-                $options['mailer'],
+                $credentials['host'] ?? 'host',
+                $credentials['port'] ?? 25 ,
+                $credentials['username'] ?? 'username',
+                $credentials['password'] ?? 'password',
+                $options['encryption'] ?? 'encryption',
+                $options['autoTLS'] ?? false,
+                $options['mailer'] ?? 'mailer',
             ),
             'mailgun' => new Mailgun(
-                $credentials['apiKey'],
-                $credentials['domain'],
-                $credentials['isEuRegion']
+                $credentials['apiKey'] ?? 'apiKey',
+                $credentials['domain'] ?? 'domain',
+                $credentials['isEuRegion'] ?? false
             ),
             'sendgrid' => new Sendgrid($credentials['apiKey']),
             default => null
