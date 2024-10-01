@@ -58,7 +58,7 @@ Server::setResource('project', function (Message $message) {
     $payload = $message->getPayload() ?? [];
 
     return new Document($payload['project'] ?? []);
-}, ['message', 'dbForConsole']);
+}, ['message']);
 
 Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForConsole) {
     if ($project->isEmpty() || $project->getId() === 'console') {
