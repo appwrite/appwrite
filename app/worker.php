@@ -54,16 +54,11 @@ Server::setResource('dbForConsole', function (Cache $cache, Registry $register) 
     return $adapter;
 }, ['cache', 'register']);
 
-Server::setResource('project', function (Message $message, Database $dbForConsole) {
+Server::setResource('project', function (Message $message) {
     $payload = $message->getPayload() ?? [];
-    $project = new Document($payload['project'] ?? []);
 
-    if ($project->getId() === 'console') {
-        return $project;
-    }
-
-    return $dbForConsole->getDocument('projects', $project->getId());
-}, ['message', 'dbForConsole']);
+    return new Document($payload['project'] ?? []);
+}, ['message']);
 
 Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForConsole) {
     if ($project->isEmpty() || $project->getId() === 'console') {
