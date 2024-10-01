@@ -51,7 +51,7 @@
         "utopia-php/cache": "0.10.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.53.5-rc1",
+        "utopia-php/database": "0.53.5",
         "utopia-php/domains": "0.5.*",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "0.33.*",
@@ -96,12 +96,6 @@
     "config": {
         "platform": {
             "php": "8.3"
-        }
-    },
-    "repositories": {
-        "utopia-php/database": {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/database"
         }
     }
 }
