@@ -3,4 +3,5 @@ appwrite databases updateEmailAttribute \
         --collectionId <COLLECTION_ID> \
         --key '' \
         --required false \
-        --default email@example.com
+        --default email@example.com \
+

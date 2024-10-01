@@ -97,11 +97,5 @@
         "platform": {
             "php": "8.3"
         }
-    },
-    "repositories": {
-        "utopia-php/database": {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/database"
-        }
     }
 }
