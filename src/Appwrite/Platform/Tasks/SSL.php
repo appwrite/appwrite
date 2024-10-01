@@ -5,10 +5,10 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Event\Certificate;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\Hostname;
 use Utopia\Platform\Action;
 use Utopia\System\System;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Hostname;
 
 class SSL extends Action
 {

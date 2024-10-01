@@ -22,6 +22,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -54,14 +55,15 @@ class Deletes extends Action
             ->inject('executionRetention')
             ->inject('auditRetention')
             ->inject('log')
-            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log) => $this->action($message, $dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $abuseRetention, $executionRetention, $auditRetention, $log));
+            ->inject('authorization')
+            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log, ValidatorAuthorization $authorization) => $this->action($message, $dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $abuseRetention, $executionRetention, $auditRetention, $log, $authorization));
     }
 
     /**
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
+    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log, ValidatorAuthorization $auth): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -117,7 +119,7 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_AUDIT:
                 if (!$project->isEmpty()) {
-                    $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
+                    $this->deleteAuditLogs($project, $getProjectDB, $auditRetention, $auth);
                 }
 
                 if (!$document->isEmpty()) {
@@ -125,7 +127,7 @@ class Deletes extends Action
                 }
                 break;
             case DELETE_TYPE_ABUSE:
-                $this->deleteAbuseLogs($project, $getProjectDB, $abuseRetention);
+                $this->deleteAbuseLogs($project, $getProjectDB, $abuseRetention, $auth);
                 break;
             case DELETE_TYPE_REALTIME:
                 $this->deleteRealtimeUsage($dbForConsole, $datetime);
@@ -693,7 +695,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteAbuseLogs(Document $project, callable $getProjectDB, string $abuseRetention): void
+    private function deleteAbuseLogs(Document $project, callable $getProjectDB, string $abuseRetention, ValidatorAuthorization $auth): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -714,7 +716,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteAuditLogs(Document $project, callable $getProjectDB, string $auditRetention): void
+    private function deleteAuditLogs(Document $project, callable $getProjectDB, string $auditRetention, ValidatorAuthorization $auth): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);

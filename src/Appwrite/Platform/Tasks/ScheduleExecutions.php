@@ -4,8 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
 use Swoole\Coroutine as Co;
-use Utopia\Database\Database;
-use Utopia\Pools\Group;
+use Utopia\Queue\Connection\Redis;
 
 class ScheduleExecutions extends ScheduleBase
 {
@@ -22,11 +21,16 @@ class ScheduleExecutions extends ScheduleBase
         return 'execution';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole): void
+    protected function enqueueResources(array $pools, callable $getConsoleDB): void
     {
-        $queue = $pools->get('queue')->pop();
-        $connection = $queue->getResource();
-        $queueForFunctions = new Func($connection);
+        [$connection,$pool, $dbForConsole] = $getConsoleDB();
+        $this->connections->add($connection, $pool);
+
+        $queuePool = $pools['pools-queue-queue']['pool'];
+        $queueConnection = $queuePool->get();
+        $this->connections->add($queueConnection, $queuePool);
+
+        $queueForFunctions = new Func(new Redis($queueConnection));
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
 
         foreach ($this->schedules as $schedule) {
@@ -52,7 +56,7 @@ class ScheduleExecutions extends ScheduleBase
 
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
 
-            \go(function () use ($queueForFunctions, $schedule, $delay, $data) {
+            \go(function () use ($queueForFunctions, $schedule, $delay, $data, $dbForConsole) {
                 Co::sleep($delay);
 
                 $queueForFunctions->setType('schedule')
@@ -67,16 +71,16 @@ class ScheduleExecutions extends ScheduleBase
                     ->setProject($schedule['project'])
                     ->setUserId($data['userId'] ?? '')
                     ->trigger();
-            });
 
-            $dbForConsole->deleteDocument(
-                'schedules',
-                $schedule['$id'],
-            );
+                $dbForConsole->deleteDocument(
+                    'schedules',
+                    $schedule['$id'],
+                );
+            });
 
             unset($this->schedules[$schedule['$internalId']]);
         }
 
-        $queue->reclaim();
+        $this->connections->reclaim();
     }
 }
