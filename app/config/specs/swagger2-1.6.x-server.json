@@ -310,7 +310,7 @@
         },
         "\/account\/identities": {
             "get": {
-                "summary": "List Identities",
+                "summary": "List identities",
                 "operationId": "accountListIdentities",
                 "consumes": [
                     "application\/json"
@@ -640,7 +640,7 @@
         },
         "\/account\/mfa\/authenticators\/{type}": {
             "post": {
-                "summary": "Create Authenticator",
+                "summary": "Create authenticator",
                 "operationId": "accountCreateMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -709,7 +709,7 @@
                 ]
             },
             "put": {
-                "summary": "Verify Authenticator",
+                "summary": "Verify authenticator",
                 "operationId": "accountUpdateMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -796,7 +796,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Authenticator",
+                "summary": "Delete authenticator",
                 "operationId": "accountDeleteMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -862,7 +862,7 @@
         },
         "\/account\/mfa\/challenge": {
             "post": {
-                "summary": "Create MFA Challenge",
+                "summary": "Create MFA challenge",
                 "operationId": "accountCreateMfaChallenge",
                 "consumes": [
                     "application\/json"
@@ -941,7 +941,7 @@
                 ]
             },
             "put": {
-                "summary": "Create MFA Challenge (confirmation)",
+                "summary": "Create MFA challenge (confirmation)",
                 "operationId": "accountUpdateMfaChallenge",
                 "consumes": [
                     "application\/json"
@@ -1019,7 +1019,7 @@
         },
         "\/account\/mfa\/factors": {
             "get": {
-                "summary": "List Factors",
+                "summary": "List factors",
                 "operationId": "accountListMfaFactors",
                 "consumes": [
                     "application\/json"
@@ -1075,7 +1075,7 @@
         },
         "\/account\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA Recovery Codes",
+                "summary": "Get MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1129,7 +1129,7 @@
                 ]
             },
             "post": {
-                "summary": "Create MFA Recovery Codes",
+                "summary": "Create MFA recovery codes",
                 "operationId": "accountCreateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1183,7 +1183,7 @@
                 ]
             },
             "patch": {
-                "summary": "Regenerate MFA Recovery Codes",
+                "summary": "Regenerate MFA recovery codes",
                 "operationId": "accountUpdateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -12312,7 +12312,7 @@
         },
         "\/locale\/codes": {
             "get": {
-                "summary": "List Locale Codes",
+                "summary": "List locale codes",
                 "operationId": "localeListCodes",
                 "consumes": [
                     "application\/json"
@@ -18238,7 +18238,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete File",
+                "summary": "Delete file",
                 "operationId": "storageDeleteFile",
                 "consumes": [
                     "application\/json"
@@ -20105,7 +20105,7 @@
         },
         "\/users\/identities": {
             "get": {
-                "summary": "List Identities",
+                "summary": "List identities",
                 "operationId": "usersListIdentities",
                 "consumes": [
                     "application\/json"
@@ -21383,7 +21383,7 @@
         },
         "\/users\/{userId}\/mfa\/authenticators\/{type}": {
             "delete": {
-                "summary": "Delete Authenticator",
+                "summary": "Delete authenticator",
                 "operationId": "usersDeleteMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -21460,7 +21460,7 @@
         },
         "\/users\/{userId}\/mfa\/factors": {
             "get": {
-                "summary": "List Factors",
+                "summary": "List factors",
                 "operationId": "usersListMfaFactors",
                 "consumes": [
                     "application\/json"
@@ -21524,7 +21524,7 @@
         },
         "\/users\/{userId}\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA Recovery Codes",
+                "summary": "Get MFA recovery codes",
                 "operationId": "usersGetMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -21586,7 +21586,7 @@
                 ]
             },
             "put": {
-                "summary": "Regenerate MFA Recovery Codes",
+                "summary": "Regenerate MFA recovery codes",
                 "operationId": "usersUpdateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -21648,7 +21648,7 @@
                 ]
             },
             "patch": {
-                "summary": "Create MFA Recovery Codes",
+                "summary": "Create MFA recovery codes",
                 "operationId": "usersCreateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -22434,7 +22434,7 @@
         },
         "\/users\/{userId}\/targets": {
             "get": {
-                "summary": "List User Targets",
+                "summary": "List user targets",
                 "operationId": "usersListTargets",
                 "consumes": [
                     "application\/json"
@@ -22509,7 +22509,7 @@
                 ]
             },
             "post": {
-                "summary": "Create User Target",
+                "summary": "Create user target",
                 "operationId": "usersCreateTarget",
                 "consumes": [
                     "application\/json"
@@ -22625,7 +22625,7 @@
         },
         "\/users\/{userId}\/targets\/{targetId}": {
             "get": {
-                "summary": "Get User Target",
+                "summary": "Get user target",
                 "operationId": "usersGetTarget",
                 "consumes": [
                     "application\/json"
@@ -22696,7 +22696,7 @@
                 ]
             },
             "patch": {
-                "summary": "Update User target",
+                "summary": "Update user target",
                 "operationId": "usersUpdateTarget",
                 "consumes": [
                     "application\/json"
