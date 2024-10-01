@@ -38,6 +38,7 @@ use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Http\Request;
 use Utopia\Http\Response;
+use Utopia\Http\Router;
 use Utopia\Http\Validator\Hostname;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
@@ -142,6 +143,7 @@ function getDevice($root): Device
 $log = new Dependency();
 $mode = new Dependency();
 $user = new Dependency();
+$team = new Dependency();
 $plan = new Dependency();
 $pools = new Dependency();
 $geodb = new Dependency();
@@ -186,6 +188,48 @@ $queueForMigrations = new Dependency();
 $deviceForFunctions = new Dependency();
 $passwordsDictionary = new Dependency();
 $queueForCertificates = new Dependency();
+
+
+$team
+    ->setName('team')
+    ->inject('project')
+    ->inject('request')
+    ->inject('dbForConsole')
+    ->inject('authorization')
+    ->setCallback(function (Document $project, Request $request, Database $dbForConsole, Authorization $authorization) {
+        $teamInternalId = '';
+        if ($project->getId() !== 'console') {
+            $teamInternalId = $project->getAttribute('teamInternalId', '');
+        } else {
+            $method = (Http::REQUEST_METHOD_HEAD == $request->getMethod()) ? Http::REQUEST_METHOD_GET : $request->getMethod();
+            $route = Router::match($method, $request->getURI());
+
+            if ($route !== null) {
+                $path = $route->getPath();
+                if (str_starts_with($path, '/v1/projects/:projectId')) {
+                    $uri = $request->getURI();
+                    $pid = explode('/', $uri)[3];
+                    $p = $authorization->skip(fn () => $dbForConsole->getDocument('projects', $pid));
+                    $teamInternalId = $p->getAttribute('teamInternalId', '');
+                } elseif ($path === '/v1/projects') {
+                    $teamId = $request->getParam('teamId', '');
+                    $team = $authorization->skip(fn () => $dbForConsole->getDocument('teams', $teamId));
+                    return $team;
+                }
+            }
+        }
+
+        $team = $authorization->skip(function () use ($dbForConsole, $teamInternalId) {
+            return $dbForConsole->findOne('teams', [
+                Query::equal('$internalId', [$teamInternalId]),
+            ]);
+        });
+
+        if (!$team) {
+            $team = new Document([]);
+        }
+        return $team;
+    });
 
 
 $plan
@@ -277,13 +321,13 @@ $user
             $user = new Document([]);
         }
 
-        if (APP_MODE_ADMIN === $mode) {
-            if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
-                $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
-            } else {
-                $user = new Document([]);
-            }
-        }
+        //        if (APP_MODE_ADMIN === $mode) {
+        //            if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
+        //                $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
+        //            } else {
+        //                $user = new Document([]);
+        //            }
+        //        }
 
         $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
@@ -355,7 +399,7 @@ $console
             '$collection' => ID::custom('projects'),
             'description' => 'Appwrite core engine',
             'logo' => '',
-            'teamId' => -1,
+            'teamId' => null,
             'webhooks' => [],
             'keys' => [],
             'platforms' => [
@@ -1001,6 +1045,7 @@ $schema
 $container->set($log);
 $container->set($mode);
 $container->set($user);
+$container->set($team);
 $container->set($plan);
 $container->set($cache);
 $container->set($pools);
