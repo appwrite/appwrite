@@ -21282,7 +21282,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.read",
+                    "scope": "keys.read",
                     "platforms": [
                         "console"
                     ],
@@ -21342,7 +21342,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.write",
+                    "scope": "keys.write",
                     "platforms": [
                         "console"
                     ],
@@ -21437,7 +21437,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.read",
+                    "scope": "keys.read",
                     "platforms": [
                         "console"
                     ],
@@ -21507,7 +21507,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.write",
+                    "scope": "keys.write",
                     "platforms": [
                         "console"
                     ],
@@ -21603,7 +21603,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.write",
+                    "scope": "keys.write",
                     "platforms": [
                         "console"
                     ],
@@ -21814,7 +21814,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.read",
+                    "scope": "platforms.read",
                     "platforms": [
                         "console"
                     ],
@@ -21874,7 +21874,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.write",
+                    "scope": "platforms.write",
                     "platforms": [
                         "console"
                     ],
@@ -21995,7 +21995,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.read",
+                    "scope": "platforms.read",
                     "platforms": [
                         "console"
                     ],
@@ -22065,7 +22065,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.write",
+                    "scope": "platforms.write",
                     "platforms": [
                         "console"
                     ],
@@ -22162,7 +22162,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.write",
+                    "scope": "platforms.write",
                     "platforms": [
                         "console"
                     ],
