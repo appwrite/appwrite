@@ -493,7 +493,7 @@ class Messaging extends Action
                 $credentials['accountSid'] ?? '',
                 $credentials['authToken'] ?? '',
                 null,
-                !empty($credentials['messagingServiceSid']) ? $credentials['messagingServiceSid'] : null
+                $credentials['messagingServiceSid'] ?? null
             ),
             'textmagic' => new TextMagic(
                 $credentials['username'] ?? '',
