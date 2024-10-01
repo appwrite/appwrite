@@ -503,7 +503,18 @@ class Deletes extends Action
 
             foreach ($collections as $collection) {
                 if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
-                    $dbForProject->deleteCollection($collection->getId());
+                    try {
+                        $dbForProject->deleteCollection($collection->getId());
+                    } catch (Throwable $e) {
+                        Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
+
+                        /**
+                         * Ignore junction tables;
+                         */
+                        if (!preg_match('/^_\d+_\d+$/', $collection->getId())) {
+                            throw $e;
+                        }
+                    }
                 } else {
                     $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                 }
