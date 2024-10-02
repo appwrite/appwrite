@@ -6,7 +6,7 @@ return [ // Accepted outputs files
     'gif' => 'image/gif',
     'png' => 'image/png',
     'webp' => 'image/webp',
-    'heic' => 'image/heic',
-    'heics' => 'image/heic',
+    // 'heic' => 'image/heic',
+    // 'heics' => 'image/heic',
     'avif'  => 'image/avif'
 ];
