@@ -1804,7 +1804,7 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/0.53.5-rc1",
+                "source": "https://github.com/utopia-php/database/tree/0.53.5",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
             "time": "2024-09-24T08:43:10+00:00"
@@ -2206,16 +2206,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.6.1",
+            "version": "0.6.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "6a064179dd0a7278bfbaf65d9abdef19d6d2bbe0"
+                "reference": "e43ef283f1386084e11d1ffe093fb6c6d7a6ce6c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/6a064179dd0a7278bfbaf65d9abdef19d6d2bbe0",
-                "reference": "6a064179dd0a7278bfbaf65d9abdef19d6d2bbe0",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/e43ef283f1386084e11d1ffe093fb6c6d7a6ce6c",
+                "reference": "e43ef283f1386084e11d1ffe093fb6c6d7a6ce6c",
                 "shasum": ""
             },
             "require": {
@@ -2256,9 +2256,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.1"
+                "source": "https://github.com/utopia-php/migration/tree/0.6.4"
             },
-            "time": "2024-09-24T09:54:09+00:00"
+            "time": "2024-10-02T15:16:36+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -3033,16 +3033,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.39.21",
+            "version": "0.39.22",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "9754b190d33aaad56fdb8defc94f90248184c5ac"
+                "reference": "bdbb1607527550e67283ff0533522d1410c2c0df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9754b190d33aaad56fdb8defc94f90248184c5ac",
-                "reference": "9754b190d33aaad56fdb8defc94f90248184c5ac",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/bdbb1607527550e67283ff0533522d1410c2c0df",
+                "reference": "bdbb1607527550e67283ff0533522d1410c2c0df",
                 "shasum": ""
             },
             "require": {
@@ -3078,9 +3078,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.21"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.22"
             },
-            "time": "2024-09-10T08:49:29+00:00"
+            "time": "2024-10-01T16:16:26+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -3604,16 +3604,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.2.0",
+            "version": "v5.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "23c79fbbfb725fb92af9bcf41065c8e9a0d49ddb"
+                "reference": "3abf7425cd284141dc5d8d14a9ee444de3345d1a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/23c79fbbfb725fb92af9bcf41065c8e9a0d49ddb",
-                "reference": "23c79fbbfb725fb92af9bcf41065c8e9a0d49ddb",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/3abf7425cd284141dc5d8d14a9ee444de3345d1a",
+                "reference": "3abf7425cd284141dc5d8d14a9ee444de3345d1a",
                 "shasum": ""
             },
             "require": {
@@ -3656,9 +3656,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.2.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.3.0"
             },
-            "time": "2024-09-15T16:40:33+00:00"
+            "time": "2024-09-29T13:56:26+00:00"
         },
         {
             "name": "phar-io/manifest",
