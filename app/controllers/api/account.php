@@ -254,8 +254,8 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $protocol = $request->getProtocol();
 
     $response
-        ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-        ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+        ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, null)
+        ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, Config::getParam('cookieSamesite'))
         ->setStatusCode(Response::STATUS_CODE_CREATED);
 
     $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
@@ -569,8 +569,8 @@ App::delete('/v1/account/sessions')
 
                 // If current session delete the cookies too
                 $response
-                    ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                    ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+                    ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, null)
+                    ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, Config::getParam('cookieSamesite'));
 
                 // Use current session for events.
                 $queueForEvents
@@ -695,8 +695,8 @@ App::delete('/v1/account/sessions/:sessionId')
                 }
 
                 $response
-                    ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                    ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+                    ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, null)
+                    ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, Config::getParam('cookieSamesite'));
             }
 
             $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -900,8 +900,8 @@ App::post('/v1/account/sessions/email')
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
@@ -1051,8 +1051,8 @@ App::post('/v1/account/sessions/anonymous')
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
@@ -1654,8 +1654,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             $response
-                ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+                ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, null)
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, Config::getParam('cookieSamesite'));
         }
 
         if (isset($sessionUpgrade) && $sessionUpgrade) {
@@ -2947,8 +2947,8 @@ App::patch('/v1/account/status')
 
         $protocol = $request->getProtocol();
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, null)
+            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), Config::getParam('cookieSecure'), true, Config::getParam('cookieSamesite'))
         ;
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);

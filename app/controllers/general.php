@@ -43,6 +43,7 @@ use Utopia\Validator\Text;
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
+Config::setParam('cookieSecure', true);
 
 function router(App $utopia, Database $dbForConsole, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, Usage $queueForUsage, Reader $geodb)
 {
@@ -590,6 +591,11 @@ App::init()
                     : '.' . $request->getHostname()
                 )
         );
+
+        if ($request->getProtocol() === 'http') {
+            Config::setParam('cookieSecure', false);
+            Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_LAX);
+        }
 
         /*
         * Response format
