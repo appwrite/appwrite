@@ -889,10 +889,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' === $output)) { // Fallback webp to jpeg when no browser support
-            $output = 'jpg';
-        }
-
         $inputs = Config::getParam('storage-inputs');
         $outputs = Config::getParam('storage-outputs');
         $fileLogos = Config::getParam('storage-logos');
