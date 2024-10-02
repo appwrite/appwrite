@@ -293,7 +293,7 @@
         },
         "\/account\/identities": {
             "get": {
-                "summary": "List Identities",
+                "summary": "List identities",
                 "operationId": "accountListIdentities",
                 "consumes": [
                     "application\/json"
@@ -619,7 +619,7 @@
         },
         "\/account\/mfa\/authenticators\/{type}": {
             "post": {
-                "summary": "Create Authenticator",
+                "summary": "Create authenticator",
                 "operationId": "accountCreateMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -687,7 +687,7 @@
                 ]
             },
             "put": {
-                "summary": "Verify Authenticator",
+                "summary": "Verify authenticator",
                 "operationId": "accountUpdateMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -773,7 +773,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Authenticator",
+                "summary": "Delete authenticator",
                 "operationId": "accountDeleteMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -838,7 +838,7 @@
         },
         "\/account\/mfa\/challenge": {
             "post": {
-                "summary": "Create MFA Challenge",
+                "summary": "Create MFA challenge",
                 "operationId": "accountCreateMfaChallenge",
                 "consumes": [
                     "application\/json"
@@ -917,7 +917,7 @@
                 ]
             },
             "put": {
-                "summary": "Create MFA Challenge (confirmation)",
+                "summary": "Create MFA challenge (confirmation)",
                 "operationId": "accountUpdateMfaChallenge",
                 "consumes": [
                     "application\/json"
@@ -994,7 +994,7 @@
         },
         "\/account\/mfa\/factors": {
             "get": {
-                "summary": "List Factors",
+                "summary": "List factors",
                 "operationId": "accountListMfaFactors",
                 "consumes": [
                     "application\/json"
@@ -1049,7 +1049,7 @@
         },
         "\/account\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA Recovery Codes",
+                "summary": "Get MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1102,7 +1102,7 @@
                 ]
             },
             "post": {
-                "summary": "Create MFA Recovery Codes",
+                "summary": "Create MFA recovery codes",
                 "operationId": "accountCreateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1155,7 +1155,7 @@
                 ]
             },
             "patch": {
-                "summary": "Regenerate MFA Recovery Codes",
+                "summary": "Regenerate MFA recovery codes",
                 "operationId": "accountUpdateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -5573,7 +5573,7 @@
         },
         "\/locale\/codes": {
             "get": {
-                "summary": "List Locale Codes",
+                "summary": "List locale codes",
                 "operationId": "localeListCodes",
                 "consumes": [
                     "application\/json"
@@ -6476,7 +6476,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete File",
+                "summary": "Delete file",
                 "operationId": "storageDeleteFile",
                 "consumes": [
                     "application\/json"
@@ -9589,9 +9589,9 @@
                     "format": "int32"
                 },
                 "responseBody": {
-                    "type": "string",
+                    "type": "payload",
                     "description": "HTTP response body. This will return empty unless execution is created as synchronous.",
-                    "x-example": "Developers are awesome."
+                    "x-example": ""
                 },
                 "responseHeaders": {
                     "type": "array",
