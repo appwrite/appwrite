@@ -1593,6 +1593,7 @@ trait DatabasesBase
             $this->assertEquals($response['body']['$permissions'], $document['$permissions']);
             $this->assertEquals($response['body']['birthDay'], $document['birthDay']);
             $this->assertFalse(array_key_exists('$internalId', $response['body']));
+            $this->assertFalse(array_key_exists('$tenant', $response['body']));
         }
     }
 
@@ -4754,7 +4755,7 @@ trait DatabasesBase
 
         $this->assertEquals($longtext['headers']['status-code'], 202);
 
-        for ($i = 0; $i < 1; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],

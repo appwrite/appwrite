@@ -69,7 +69,7 @@ App::get('/v1/locale')
     });
 
 App::get('/v1/locale/codes')
-    ->desc('List Locale Codes')
+    ->desc('List locale codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])

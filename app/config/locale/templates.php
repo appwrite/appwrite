@@ -7,7 +7,8 @@ return [
         'recovery',
         'invitation',
         'mfaChallenge',
-        'sessionAlert'
+        'sessionAlert',
+        'otpSession'
     ],
     'sms' => [
         'verification',

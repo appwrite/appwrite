@@ -4,8 +4,8 @@ import io.appwrite.services.Databases
 
 val client = Client()
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
-    .setProject("&lt;YOUR_PROJECT_ID&gt;") // Your project ID
-    .setKey("&lt;YOUR_API_KEY&gt;") // Your secret API key
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
 
 val databases = Databases(client)
 
@@ -13,5 +13,6 @@ val response = databases.updateRelationshipAttribute(
     databaseId = "<DATABASE_ID>",
     collectionId = "<COLLECTION_ID>",
     key = "",
-    onDelete = "cascade" // optional
+    onDelete = "cascade", // optional
+    newKey = "" // optional
 )

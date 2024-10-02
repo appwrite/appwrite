@@ -2,8 +2,8 @@ import Appwrite
 
 let client = Client()
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
-    .setProject("&lt;YOUR_PROJECT_ID&gt;") // Your project ID
-    .setKey("&lt;YOUR_API_KEY&gt;") // Your secret API key
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
 
 let databases = Databases(client)
 
@@ -12,6 +12,8 @@ let attributeString = try await databases.updateStringAttribute(
     collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
-    default: "<DEFAULT>"
+    default: "<DEFAULT>",
+    size: 0, // optional
+    newKey: "" // optional
 )
 

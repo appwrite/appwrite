@@ -3,8 +3,8 @@ from appwrite.enums import
 
 client = Client()
 client.set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
-client.set_project('&lt;YOUR_PROJECT_ID&gt;') # Your project ID
-client.set_key('&lt;YOUR_API_KEY&gt;') # Your secret API key
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
 
 functions = Functions(client)
 
@@ -29,5 +29,6 @@ result = functions.create(
     template_repository = '<TEMPLATE_REPOSITORY>', # optional
     template_owner = '<TEMPLATE_OWNER>', # optional
     template_root_directory = '<TEMPLATE_ROOT_DIRECTORY>', # optional
-    template_branch = '<TEMPLATE_BRANCH>' # optional
+    template_version = '<TEMPLATE_VERSION>', # optional
+    specification = '' # optional
 )

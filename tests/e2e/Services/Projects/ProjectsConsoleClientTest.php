@@ -101,7 +101,7 @@ class ProjectsConsoleClientTest extends Scope
             'region' => 'default'
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return [
             'projectId' => $projectId,
@@ -484,6 +484,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertIsNumeric($response['body']['bucketsTotal']);
         $this->assertIsNumeric($response['body']['usersTotal']);
         $this->assertIsNumeric($response['body']['filesStorageTotal']);
+        $this->assertIsNumeric($response['body']['deploymentStorageTotal']);
 
 
         /**
@@ -545,7 +546,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => '',
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return ['projectId' => $projectId];
     }

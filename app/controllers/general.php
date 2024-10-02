@@ -32,6 +32,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
+use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
@@ -96,6 +97,9 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     $type = $route->getAttribute('resourceType');
 
     if ($type === 'function') {
+        $utopia->getRoute()?->label('sdk.namespace', 'functions');
+        $utopia->getRoute()?->label('sdk.method', 'createExecution');
+
         if (System::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https') {
                 if ($request->getMethod() !== Request::METHOD_GET) {
@@ -133,6 +137,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
@@ -266,8 +271,23 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
+            'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
+            'APPWRITE_VCS_REPOSITORY_ID' => $deployment->getAttribute('providerRepositoryId', ''),
+            'APPWRITE_VCS_REPOSITORY_NAME' => $deployment->getAttribute('providerRepositoryName', ''),
+            'APPWRITE_VCS_REPOSITORY_OWNER' => $deployment->getAttribute('providerRepositoryOwner', ''),
+            'APPWRITE_VCS_REPOSITORY_URL' => $deployment->getAttribute('providerRepositoryUrl', ''),
+            'APPWRITE_VCS_REPOSITORY_BRANCH' => $deployment->getAttribute('providerBranch', ''),
+            'APPWRITE_VCS_REPOSITORY_BRANCH_URL' => $deployment->getAttribute('providerBranchUrl', ''),
+            'APPWRITE_VCS_COMMIT_HASH' => $deployment->getAttribute('providerCommitHash', ''),
+            'APPWRITE_VCS_COMMIT_MESSAGE' => $deployment->getAttribute('providerCommitMessage', ''),
+            'APPWRITE_VCS_COMMIT_URL' => $deployment->getAttribute('providerCommitUrl', ''),
+            'APPWRITE_VCS_COMMIT_AUTHOR_NAME' => $deployment->getAttribute('providerCommitAuthor', ''),
+            'APPWRITE_VCS_COMMIT_AUTHOR_URL' => $deployment->getAttribute('providerCommitAuthorUrl', ''),
+            'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
         ]);
 
         /** Execute function */
@@ -290,6 +310,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
+                cpus: $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+                memory: $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
                 logging: $function->getAttribute('logging', true),
                 requestTimeout: 30
             );
@@ -302,7 +324,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             }
 
             /** Update execution status */
-            $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
+            $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
@@ -324,17 +346,27 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 throw $th;
             }
         } finally {
+            $fileSize = 0;
+            $file = $request->getFiles('file');
+            if (!empty($file)) {
+                $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+            }
+
             $queueForUsage
+                ->addMetric(METRIC_NETWORK_REQUESTS, 1)
+                ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
+                ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize())
                 ->addMetric(METRIC_EXECUTIONS, 1)
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                ->setProject($project)
+                ->trigger()
             ;
 
-            if ($function->getAttribute('logging')) {
-                /** @var Document $execution */
-                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-            }
+            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
         $execution->setAttribute('logs', '');
@@ -745,16 +777,24 @@ App::error()
             $providerName = System::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
             $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
 
-            if (!(empty($providerName) || empty($providerConfig))) {
-                if (!Logger::hasProvider($providerName)) {
-                    throw new Exception("Logging provider not supported. Logging is disabled");
-                }
+            try {
+                $loggingProvider = new DSN($providerConfig ?? '');
+                $providerName = $loggingProvider->getScheme();
 
-                $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
-                $adapter = new $classname($providerConfig);
-                $logger = new Logger($adapter);
-                $logger->setSample(0.04);
-                $publish = true;
+                if (!empty($providerName) && $providerName === 'sentry') {
+                    $key = $loggingProvider->getPassword();
+                    $projectId = $loggingProvider->getUser() ?? '';
+                    $host = 'https://' . $loggingProvider->getHost();
+
+                    $adapter = new Sentry($projectId, $key, $host);
+                    $logger = new Logger($adapter);
+                    $logger->setSample(0.04);
+                    $publish = true;
+                } else {
+                    throw new \Exception('Invalid experimental logging provider');
+                }
+            } catch (\Throwable $th) {
+                Console::warning('Failed to initialize logging provider: ' . $th->getMessage());
             }
         }
 
@@ -815,7 +855,6 @@ App::error()
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
             $log->addExtra('roles', Authorization::getRoles());
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
@@ -824,8 +863,12 @@ App::error()
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $responseCode = $logger->addLog($log);
-            Console::info('Log pushed with status code: ' . $responseCode);
+            try {
+                $responseCode = $logger->addLog($log);
+                Console::info('Error log pushed with status code: ' . $responseCode);
+            } catch (Throwable $th) {
+                Console::error('Error pushing log: ' . $th->getMessage());
+            }
         }
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */

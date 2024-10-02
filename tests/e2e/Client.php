@@ -2,6 +2,7 @@
 
 namespace Tests\E2E;
 
+use Appwrite\Utopia\Fetch\BodyMultipart;
 use Exception;
 
 class Client
@@ -224,18 +225,35 @@ class Client
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if ($decode && substr($responseType, 0, strpos($responseType, ';')) == 'application/json') {
-            $json = json_decode($responseBody, true);
+        if ($decode) {
+            $strpos = strpos($responseType, ';');
+            $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
+            switch (substr($responseType, 0, $strpos)) {
+                case 'multipart/form-data':
+                    $boundary = \explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '';
+                    $multipartResponse = new BodyMultipart($boundary);
+                    $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
 
-            if ($json === null) {
-                throw new Exception('Failed to parse response: ' . $responseBody);
+                    $responseBody = $multipartResponse->getParts();
+                    break;
+                case 'application/json':
+                    if (\is_bool($responseBody)) {
+                        throw new Exception('Response is not a valid JSON.');
+                    }
+
+                    $json = json_decode($responseBody, true);
+
+                    if ($json === null) {
+                        throw new Exception('Failed to parse response: ' . $responseBody);
+                    }
+
+                    $responseBody = $json;
+                    $json = null;
+                    break;
             }
-
-            $responseBody = $json;
-            $json = null;
         }
 
-        if ((curl_errno($ch))) {
+        if ((curl_errno($ch)/* || 200 != $responseStatus*/)) {
             throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
         }
 
@@ -244,7 +262,7 @@ class Client
         $responseHeaders['status-code'] = $responseStatus;
 
         if ($responseStatus === 500) {
-            echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . "\n";
+            echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . '\n';
         }
 
         return [
