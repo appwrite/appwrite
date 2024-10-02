@@ -58,7 +58,7 @@ Server::setResource('project', function (Message $message, Database $dbForConsol
     $payload = $message->getPayload() ?? [];
     $project = new Document($payload['project'] ?? []);
 
-    if ($project->getId() === 'console' || $project->isEmpty() || !empty($project->getInternalId())) {
+    if ($project->getId() === 'console' || $project->isEmpty() || ! empty($project->getInternalId())) {
         return $project;
     }
 
