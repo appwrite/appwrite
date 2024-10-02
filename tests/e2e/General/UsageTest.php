@@ -931,7 +931,7 @@ class UsageTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id']
             ], $this->getHeaders()),
             [
-                'async' => false,
+                'async' => 'false',
             ]
         );
 
@@ -955,7 +955,7 @@ class UsageTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id']
             ], $this->getHeaders()),
             [
-                'async' => false,
+                'async' => 'false',
             ]
         );
 

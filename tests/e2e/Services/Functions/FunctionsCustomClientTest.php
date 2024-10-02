@@ -97,7 +97,7 @@ class FunctionsCustomClientTest extends Scope
 
         $execution = $this->createExecution($functionId, [
             'body' => 'foobar',
-            'async' => false
+            'async' => 'false'
         ]);
         $output = json_decode($execution['body']['responseBody'], true);
         $this->assertEquals(201, $execution['headers']['status-code']);
@@ -208,7 +208,7 @@ class FunctionsCustomClientTest extends Scope
 
         $execution = $this->createExecution($functionId, [
             'body' => 'foobar',
-            // Testing default value, should be 'async' => false
+            // Testing default value, should be 'async' => 'false'
         ]);
         $output = json_decode($execution['body']['responseBody'], true);
         $this->assertEquals(201, $execution['headers']['status-code']);

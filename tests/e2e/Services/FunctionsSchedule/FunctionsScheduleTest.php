@@ -143,7 +143,7 @@ class FunctionsScheduleTest extends Scope
         /* Test for FAILURE */
         // Schedule synchronous execution
         $execution = $this->createExecution($functionId, [
-            'async' => false,
+            'async' => 'false',
             'scheduledAt' =>  $futureTime->format(\DateTime::ATOM),
         ]);
         $this->assertEquals(400, $execution['headers']['status-code']);

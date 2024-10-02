@@ -463,7 +463,7 @@ class FunctionsCustomServerTest extends Scope
 
         $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('php'),
-            'activate' => false
+            'activate' => 'false'
         ]);
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
@@ -502,7 +502,7 @@ class FunctionsCustomServerTest extends Scope
 
         $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('php'),
-            'activate' => false
+            'activate' => 'false'
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -845,7 +845,7 @@ class FunctionsCustomServerTest extends Scope
          * Test for SUCCESS
          */
         $execution = $this->createExecution($data['functionId'], [
-            'async' => false,
+            'async' => 'false',
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
@@ -870,7 +870,7 @@ class FunctionsCustomServerTest extends Scope
         $executionId = $execution['body']['$id'] ?? '';
 
         $execution = $this->createExecution($data['functionId'], [
-            'async' => false,
+            'async' => 'false',
             'path' => '/?code=400'
         ]);
 
@@ -965,7 +965,7 @@ class FunctionsCustomServerTest extends Scope
          * Test for SUCCESS
          */
         $execution = $this->createExecution($data['functionId'], [
-            // Testing default value, should be 'async' => false
+            // Testing default value, should be 'async' => 'false'
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
@@ -1281,7 +1281,7 @@ class FunctionsCustomServerTest extends Scope
 
         $execution = $this->createExecution($functionId, [
             'body' => 'foobar',
-            'async' => false
+            'async' => 'false'
         ]);
 
         $output = json_decode($execution['body']['responseBody'], true);
@@ -1447,7 +1447,7 @@ class FunctionsCustomServerTest extends Scope
 
         $execution = $this->createExecution($functionId, [
             'body' => 'foobar',
-            'async' => false
+            'async' => 'false'
         ]);
 
         $output = json_decode($execution['body']['responseBody'], true);
@@ -1561,7 +1561,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsStringIgnoringCase('"users":', $deployment['body']['buildLogs']);
 
         $execution = $this->createExecution($functionId, [
-            'async' => false,
+            'async' => 'false',
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
@@ -1611,7 +1611,7 @@ class FunctionsCustomServerTest extends Scope
 
         $cookie = 'cookieName=cookieValue; cookie2=value2; cookie3=value=3; cookie4=val:ue4; cookie5=value5';
         $execution = $this->createExecution($functionId, [
-            'async' => false,
+            'async' => 'false',
             'headers' => [
                 'cookie' => $cookie
             ]
