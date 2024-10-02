@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1981099f3c47f5536298222ba9b0b994",
+    "content-hash": "66e31af1f7d0d1617694a1c5a975f887",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1970,21 +1970,21 @@
         },
         {
             "name": "utopia-php/image",
-            "version": "0.6.1",
+            "version": "0.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "2d74c27e69e65a93cf94a16586598a04fe435bf0"
+                "reference": "fcea143edbad524bf871ddbebe801d981f91f181"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/2d74c27e69e65a93cf94a16586598a04fe435bf0",
-                "reference": "2d74c27e69e65a93cf94a16586598a04fe435bf0",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/fcea143edbad524bf871ddbebe801d981f91f181",
+                "reference": "fcea143edbad524bf871ddbebe801d981f91f181",
                 "shasum": ""
             },
             "require": {
                 "ext-imagick": "*",
-                "php": ">=8.0"
+                "php": ">=8.1"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2012,9 +2012,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.6.1"
+                "source": "https://github.com/utopia-php/image/tree/0.7.0"
             },
-            "time": "2024-02-05T13:31:44+00:00"
+            "time": "2024-10-02T05:45:38+00:00"
         },
         {
             "name": "utopia-php/locale",
