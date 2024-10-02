@@ -241,7 +241,7 @@
         },
         "\/account\/identities": {
             "get": {
-                "summary": "List Identities",
+                "summary": "List identities",
                 "operationId": "accountListIdentities",
                 "tags": [
                     "account"
@@ -562,7 +562,7 @@
         },
         "\/account\/mfa\/authenticators\/{type}": {
             "post": {
-                "summary": "Create Authenticator",
+                "summary": "Create authenticator",
                 "operationId": "accountCreateMfaAuthenticator",
                 "tags": [
                     "account"
@@ -631,7 +631,7 @@
                 ]
             },
             "put": {
-                "summary": "Verify Authenticator",
+                "summary": "Verify authenticator",
                 "operationId": "accountUpdateMfaAuthenticator",
                 "tags": [
                     "account"
@@ -719,7 +719,7 @@
                 }
             },
             "delete": {
-                "summary": "Delete Authenticator",
+                "summary": "Delete authenticator",
                 "operationId": "accountDeleteMfaAuthenticator",
                 "tags": [
                     "account"
@@ -783,7 +783,7 @@
         },
         "\/account\/mfa\/challenge": {
             "post": {
-                "summary": "Create MFA Challenge",
+                "summary": "Create MFA challenge",
                 "operationId": "accountCreateMfaChallenge",
                 "tags": [
                     "account"
@@ -859,7 +859,7 @@
                 }
             },
             "put": {
-                "summary": "Create MFA Challenge (confirmation)",
+                "summary": "Create MFA challenge (confirmation)",
                 "operationId": "accountUpdateMfaChallenge",
                 "tags": [
                     "account"
@@ -938,7 +938,7 @@
         },
         "\/account\/mfa\/factors": {
             "get": {
-                "summary": "List Factors",
+                "summary": "List factors",
                 "operationId": "accountListMfaFactors",
                 "tags": [
                     "account"
@@ -992,7 +992,7 @@
         },
         "\/account\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA Recovery Codes",
+                "summary": "Get MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
                 "tags": [
                     "account"
@@ -1044,7 +1044,7 @@
                 ]
             },
             "post": {
-                "summary": "Create MFA Recovery Codes",
+                "summary": "Create MFA recovery codes",
                 "operationId": "accountCreateMfaRecoveryCodes",
                 "tags": [
                     "account"
@@ -1096,7 +1096,7 @@
                 ]
             },
             "patch": {
-                "summary": "Regenerate MFA Recovery Codes",
+                "summary": "Regenerate MFA recovery codes",
                 "operationId": "accountUpdateMfaRecoveryCodes",
                 "tags": [
                     "account"
@@ -12097,7 +12097,7 @@
         },
         "\/locale\/codes": {
             "get": {
-                "summary": "List Locale Codes",
+                "summary": "List locale codes",
                 "operationId": "localeListCodes",
                 "tags": [
                     "locale"
@@ -17789,7 +17789,7 @@
                 }
             },
             "delete": {
-                "summary": "Delete File",
+                "summary": "Delete file",
                 "operationId": "storageDeleteFile",
                 "tags": [
                     "storage"
@@ -19645,7 +19645,7 @@
         },
         "\/users\/identities": {
             "get": {
-                "summary": "List Identities",
+                "summary": "List identities",
                 "operationId": "usersListIdentities",
                 "tags": [
                     "users"
@@ -20885,7 +20885,7 @@
         },
         "\/users\/{userId}\/mfa\/authenticators\/{type}": {
             "delete": {
-                "summary": "Delete Authenticator",
+                "summary": "Delete authenticator",
                 "operationId": "usersDeleteMfaAuthenticator",
                 "tags": [
                     "users"
@@ -20964,7 +20964,7 @@
         },
         "\/users\/{userId}\/mfa\/factors": {
             "get": {
-                "summary": "List Factors",
+                "summary": "List factors",
                 "operationId": "usersListMfaFactors",
                 "tags": [
                     "users"
@@ -21028,7 +21028,7 @@
         },
         "\/users\/{userId}\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA Recovery Codes",
+                "summary": "Get MFA recovery codes",
                 "operationId": "usersGetMfaRecoveryCodes",
                 "tags": [
                     "users"
@@ -21090,7 +21090,7 @@
                 ]
             },
             "put": {
-                "summary": "Regenerate MFA Recovery Codes",
+                "summary": "Regenerate MFA recovery codes",
                 "operationId": "usersUpdateMfaRecoveryCodes",
                 "tags": [
                     "users"
@@ -21152,7 +21152,7 @@
                 ]
             },
             "patch": {
-                "summary": "Create MFA Recovery Codes",
+                "summary": "Create MFA recovery codes",
                 "operationId": "usersCreateMfaRecoveryCodes",
                 "tags": [
                     "users"
@@ -21941,7 +21941,7 @@
         },
         "\/users\/{userId}\/targets": {
             "get": {
-                "summary": "List User Targets",
+                "summary": "List user targets",
                 "operationId": "usersListTargets",
                 "tags": [
                     "users"
@@ -22017,7 +22017,7 @@
                 ]
             },
             "post": {
-                "summary": "Create User Target",
+                "summary": "Create user target",
                 "operationId": "usersCreateTarget",
                 "tags": [
                     "users"
@@ -22130,7 +22130,7 @@
         },
         "\/users\/{userId}\/targets\/{targetId}": {
             "get": {
-                "summary": "Get User Target",
+                "summary": "Get user target",
                 "operationId": "usersGetTarget",
                 "tags": [
                     "users"
@@ -22203,7 +22203,7 @@
                 ]
             },
             "patch": {
-                "summary": "Update User target",
+                "summary": "Update user target",
                 "operationId": "usersUpdateTarget",
                 "tags": [
                     "users"
@@ -25966,7 +25966,7 @@
                     "responseBody": {
                         "type": "string",
                         "description": "HTTP response body. This will return empty unless execution is created as synchronous.",
-                        "x-example": "Developers are awesome."
+                        "x-example": ""
                     },
                     "responseHeaders": {
                         "type": "array",
