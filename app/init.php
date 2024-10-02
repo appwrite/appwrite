@@ -41,6 +41,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Utopia\Fetch\Client;
 use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -1034,6 +1035,7 @@ $register->set('smtp', function () {
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-09.mmdb');
 });
+
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
     $content = explode("\n", $content);
@@ -1621,6 +1623,13 @@ App::setResource('geodb', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
 }, ['register']);
+
+App::setResource('geodbClient', function () {
+    $client = new Client();
+    $client->addHeader('Authorization', 'Bearer ' . System::getEnv('_APP_GEO_SECRET'));
+    $client->setBaseUrl('http://appwrite-geo/v1');
+    return $client;
+});
 
 App::setResource('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */
