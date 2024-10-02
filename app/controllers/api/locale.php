@@ -1,9 +1,7 @@
 <?php
 
-use Appwrite\Utopia\Fetch\Client;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -25,63 +23,10 @@ App::get('/v1/locale')
     ->inject('request')
     ->inject('response')
     ->inject('locale')
-    ->inject('geodb')
-    ->inject('geodbClient')
-    ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb, Client $geodbClient) {
-        $eu = Config::getParam('locale-eu');
-        $currencies = Config::getParam('locale-currencies');
-        $output = [];
-        $ip = $request->getIP();
+    ->inject('geoRecord')
+    ->action(function (Request $request, Response $response, Locale $locale, array $geoRecord) {
         $time = (60 * 60 * 24 * 45); // 45 days cache
-
-        $output['ip'] = $ip;
-        $currency = null;
-
-        try {
-            $record = $geodbClient->fetch("/ips/{$ip}", Client::METHOD_GET);
-            $record = $record->json();
-            $output['countryCode'] = $record['countryCode'];
-            $output['country'] = $locale->getText('countries.' . strtolower($record['countryCode']), $locale->getText('locale.country.unknown'));
-            $output['continent'] = $locale->getText('continents.' . strtolower($record['continentCode']), $locale->getText('locale.country.unknown'));
-            $output['continentCode'] = $record['continentCode'];
-            $output['eu'] = (\in_array($record['countryCode'], $eu)) ? true : false;
-
-            foreach ($currencies as $code => $element) {
-                if (isset($element['locations']) && isset($element['code']) && \in_array($record['countryCode'], $element['locations'])) {
-                    $currency = $element['code'];
-                }
-            }
-
-            $output['currency'] = $currency;
-        } catch (Exception $e) {
-            // Fallback to hosted geodb
-            $record = $geodb->get($ip);
-            if ($record) {
-                $output['countryCode'] = $record['country']['iso_code'];
-                $output['country'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-                $output['continent'] = $locale->getText('continents.' . strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
-                $output['continentCode'] = $record['continent']['code'];
-                $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;
-
-                foreach ($currencies as $code => $element) {
-                    if (isset($element['locations']) && isset($element['code']) && \in_array($record['country']['iso_code'], $element['locations'])) {
-                        $currency = $element['code'];
-                    }
-                }
-
-                $output['currency'] = $currency;
-            }
-        }
-
-        if (!$record) {
-            $output['countryCode'] = '--';
-            $output['country'] = $locale->getText('locale.country.unknown');
-            $output['continent'] = $locale->getText('locale.country.unknown');
-            $output['continentCode'] = '--';
-            $output['eu'] = false;
-            $output['currency'] = $currency;
-        }
-
+        $output = $geoRecord;
         $response
             ->addHeader('Cache-Control', 'public, max-age=' . $time)
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
