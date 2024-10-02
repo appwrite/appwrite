@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1981099f3c47f5536298222ba9b0b994",
+    "content-hash": "66e31af1f7d0d1617694a1c5a975f887",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1970,16 +1970,16 @@
         },
         {
             "name": "utopia-php/image",
-            "version": "dev-feat-avif-support",
+            "version": "0.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "7be404a23399dbb06585f8c78ed61a375a090450"
+                "reference": "fcea143edbad524bf871ddbebe801d981f91f181"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/7be404a23399dbb06585f8c78ed61a375a090450",
-                "reference": "7be404a23399dbb06585f8c78ed61a375a090450",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/fcea143edbad524bf871ddbebe801d981f91f181",
+                "reference": "fcea143edbad524bf871ddbebe801d981f91f181",
                 "shasum": ""
             },
             "require": {
@@ -2012,9 +2012,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/feat-avif-support"
+                "source": "https://github.com/utopia-php/image/tree/0.7.0"
             },
-            "time": "2024-07-29T13:22:58+00:00"
+            "time": "2024-10-02T05:45:38+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -6995,9 +6995,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/image": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
