@@ -6,7 +6,7 @@ return [
     'image/gif',
     'image/png',
     'image/webp',
-    'image/heic',
+    // 'image/heic',
     'image/avif',
 
     // Video Files
