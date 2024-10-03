@@ -36,7 +36,7 @@ abstract class MigrationTest extends TestCase
      */
     public function testMigrationVersions(): void
     {
-        //require_once __DIR__ . '/../../../app/init.php';
+        require_once __DIR__ . '/../../../app/init.php';
 
         foreach (Migration::$versions as $class) {
             $this->assertTrue(class_exists('Appwrite\\Migration\\Version\\' . $class));

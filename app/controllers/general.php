@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../init.php';
+
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
@@ -7,7 +9,6 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
@@ -19,6 +20,8 @@ use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
+use Swoole\Http\Request as SwooleRequest;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -28,35 +31,33 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
-use Utopia\Http\Http;
-use Utopia\Http\Route;
-use Utopia\Http\Validator\Hostname;
-use Utopia\Http\Validator\Text;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
 use Utopia\System\System;
+use Utopia\Validator\Hostname;
+use Utopia\Validator\Text;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(Database $dbForConsole, callable $getProjectDB, Request $request, Response $response, Route $route, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Authorization $auth)
+function router(App $utopia, Database $dbForConsole, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, Usage $queueForUsage, Reader $geodb)
 {
-    $route?->label('error', __DIR__ . '/../views/general/error.phtml');
+    $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
 
     $host = $request->getHostname() ?? '';
 
-    $rule = $auth->skip(
+    $route = Authorization::skip(
         fn () => $dbForConsole->find('rules', [
             Query::equal('domain', [$host]),
             Query::limit(1)
         ])
     )[0] ?? null;
 
-    if ($rule === null) {
+    if ($route === null) {
         if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
         }
@@ -72,12 +73,12 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
         }
 
         // Act as API - no Proxy logic
-        $route?->label('error', '');
+        $utopia->getRoute()?->label('error', '');
         return false;
     }
 
-    $projectId = $rule->getAttribute('projectId');
-    $project = $auth->skip(
+    $projectId = $route->getAttribute('projectId');
+    $project = Authorization::skip(
         fn () => $dbForConsole->getDocument('projects', $projectId)
     );
     if (array_key_exists('proxy', $project->getAttribute('services', []))) {
@@ -88,16 +89,16 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
     }
 
     // Skip Appwrite Router for ACME challenge. Nessessary for certificate generation
-    $path = ($request->getURI() ?? '/');
+    $path = ($swooleRequest->server['request_uri'] ?? '/');
     if (\str_starts_with($path, '/.well-known/acme-challenge')) {
         return false;
     }
 
-    $type = $rule->getAttribute('resourceType');
+    $type = $route->getAttribute('resourceType');
 
     if ($type === 'function') {
-        $route->label('sdk.namespace', 'functions');
-        $route->label('sdk.method', 'createExecution');
+        $utopia->getRoute()?->label('sdk.namespace', 'functions');
+        $utopia->getRoute()?->label('sdk.method', 'createExecution');
 
         if (System::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https') {
@@ -109,25 +110,26 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
             }
         }
 
-        $functionId = $rule->getAttribute('resourceId');
-        $projectId = $rule->getAttribute('projectId');
+        $functionId = $route->getAttribute('resourceId');
+        $projectId = $route->getAttribute('projectId');
 
-        $path = ($request->getURI() ?? '/');
-        $query = ($request->getQueryString() ?? '');
+        $path = ($swooleRequest->server['request_uri'] ?? '/');
+        $query = ($swooleRequest->server['query_string'] ?? '');
         if (!empty($query)) {
             $path .= '?' . $query;
         }
 
-        $body = $request->getRawPayload() ?? '';
-        $method = $request->getMethod();
+
+        $body = $swooleRequest->getContent() ?? '';
+        $method = $swooleRequest->server['request_method'];
 
         $requestHeaders = $request->getHeaders();
 
-        $project = $auth->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+        $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
         $dbForProject = $getProjectDB($project);
 
-        $function = $auth->skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty() || !$function->getAttribute('enabled')) {
             throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
@@ -143,7 +145,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
             throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $deployment = $auth->skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
+        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
@@ -154,7 +156,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
         }
 
         /** Check if build has completed */
-        $build = $auth->skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
         if ($build->isEmpty()) {
             throw new AppwriteException(AppwriteException::BUILD_NOT_FOUND);
         }
@@ -215,7 +217,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
             'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
-            'status' => 'processing', // waiting / processing / completed / failed
+            'status' =>  'processing', // waiting / processing / completed / failed
             'responseStatusCode' => 0,
             'responseHeaders' => [],
             'requestPath' => $path,
@@ -311,6 +313,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
                 cpus: $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
                 memory: $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
                 logging: $function->getAttribute('logging', true),
+                requestTimeout: 30
             );
 
             $headersFiltered = [];
@@ -328,6 +331,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
+
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 
@@ -362,8 +366,7 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
                 ->trigger()
             ;
 
-            /** @var Document $execution */
-            $execution = $auth->skip(fn () => $dbForProject->createDocument('executions', $execution));
+            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
         $execution->setAttribute('logs', '');
@@ -395,15 +398,18 @@ function router(Database $dbForConsole, callable $getProjectDB, Request $request
 
         return true;
     } elseif ($type === 'api') {
-        $route?->label('error', '');
+        $utopia->getRoute()?->label('error', '');
         return false;
     } else {
         throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Unknown resource type ' . $type);
     }
+
+    $utopia->getRoute()?->label('error', '');
+    return false;
 }
 
 /*
-Http::init()
+App::init()
     ->groups(['api'])
     ->inject('project')
     ->inject('mode')
@@ -414,7 +420,7 @@ Http::init()
     });
 */
 
-Http::init()
+App::init()
     ->groups(['database', 'functions', 'storage', 'messaging'])
     ->inject('project')
     ->inject('request')
@@ -427,11 +433,12 @@ Http::init()
         }
     });
 
-Http::init()
+App::init()
     ->groups(['api', 'web'])
+    ->inject('utopia')
+    ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
-    ->inject('route')
     ->inject('console')
     ->inject('project')
     ->inject('dbForConsole')
@@ -443,27 +450,7 @@ Http::init()
     ->inject('queueForUsage')
     ->inject('queueForEvents')
     ->inject('queueForCertificates')
-    ->inject('authorization')
-    ->action(function (
-        Request $request,
-        Response $response,
-        Route $route,
-        Document $console,
-        Document $project,
-        Database $dbForConsole,
-        $getProjectDB,
-        Locale $locale,
-        array $localeCodes,
-        array $clients,
-        /**
-         * @disregard P1009 Undefined type
-         */
-        Reader $geodb,
-        Usage $queueForUsage,
-        Event $queueForEvents,
-        Certificate $queueForCertificates,
-        Authorization $authorization
-    ) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, Usage $queueForUsage, Event $queueForEvents, Certificate $queueForCertificates) {
         /*
         * Appwrite Router
         */
@@ -471,7 +458,7 @@ Http::init()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
-            if (router($dbForConsole, $getProjectDB, $request, $response, $route, $queueForEvents, $queueForUsage, $geodb, $authorization)) {
+            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
                 return;
             }
         }
@@ -479,8 +466,8 @@ Http::init()
         /*
         * Request format
         */
-        //$route = $utopia->getRoute();
-        //Request::setRoute($route);
+        $route = $utopia->getRoute();
+        Request::setRoute($route);
 
         if ($route === null) {
             return $response
@@ -512,7 +499,7 @@ Http::init()
             } elseif (str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
                 Console::warning('Skipping SSL certificates generation on ACME challenge.');
             } else {
-                $authorization->disable();
+                Authorization::disable();
 
                 $envDomain = System::getEnv('_APP_DOMAIN', '');
                 $mainDomain = null;
@@ -551,12 +538,12 @@ Http::init()
                 }
                 $domains[$domain->get()] = true;
 
-                $authorization->reset(); // ensure authorization is re-enabled
+                Authorization::reset(); // ensure authorization is re-enabled
             }
             Config::setParam('domains', $domains);
         }
 
-        $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+        $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
         if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }
@@ -584,7 +571,7 @@ Http::init()
         Config::setParam(
             'domainVerification',
             ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
-            $endDomain->getRegisterable() !== ''
+                $endDomain->getRegisterable() !== ''
         );
 
         $isLocalHost = $request->getHostname() === 'localhost' || $request->getHostname() === 'localhost:' . $request->getPort();
@@ -599,8 +586,8 @@ Http::init()
                 ? null
                 : (
                     $isConsoleProject && $isConsoleRootSession
-                ? '.' . $selfDomain->getRegisterable()
-                : '.' . $request->getHostname()
+                    ? '.' . $selfDomain->getRegisterable()
+                    : '.' . $request->getHostname()
                 )
         );
 
@@ -619,7 +606,7 @@ Http::init()
                 $response->addFilter(new ResponseV18());
             }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
-                $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
+                $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is ". APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
             }
         }
 
@@ -630,9 +617,7 @@ Http::init()
         * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
         */
         if (System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-            if ($request->getProtocol() !== 'https' // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
-                && ($request->getHeader('host') ?? '') !== 'localhost'
-                && ($request->getHeader('host') ?? '') !== APP_HOSTNAME_INTERNAL) {
+            if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== 'localhost' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
                 }
@@ -672,8 +657,9 @@ Http::init()
         }
     });
 
-Http::options()
-    ->inject('route')
+App::options()
+    ->inject('utopia')
+    ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
@@ -681,8 +667,7 @@ Http::options()
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('geodb')
-    ->inject('authorization')
-    ->action(function (Route $route, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Authorization $authorization) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
         /*
         * Appwrite Router
         */
@@ -690,7 +675,7 @@ Http::options()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
-            if (router($dbForConsole, $getProjectDB, $request, $response, $route, $queueForEvents, $queueForUsage, $geodb, $authorization)) {
+            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
                 return;
             }
         }
@@ -707,25 +692,18 @@ Http::options()
             ->noContent();
     });
 
-Http::error()
+App::error()
     ->inject('error')
-    ->inject('user')
-    ->inject('route')
+    ->inject('utopia')
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('logger')
     ->inject('log')
-    ->inject('authorization')
-    ->inject('connections')
     ->inject('queueForUsage')
-    ->action(function (Throwable $error, Document $user, ?Route $route, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Authorization $authorization, Connections $connections, Usage $queueForUsage) {
+    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Usage $queueForUsage) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-        if (is_null($route)) {
-            $route = new Route($request->getMethod(), $request->getURI());
-        }
-
+        $route = $utopia->getRoute();
         $class = \get_class($error);
         $code = $error->getCode();
         $message = $error->getMessage();
@@ -746,9 +724,9 @@ Http::error()
             Console::error('[Error] File: ' . $file);
             Console::error('[Error] Line: ' . $line);
         }
+
         switch ($class) {
-            case 'Utopia\Servers\Exception':
-            case 'Utopia\Http\Exception':
+            case 'Utopia\Exception':
                 $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
                 switch ($code) {
                     case 400:
@@ -793,36 +771,35 @@ Http::error()
         } else {
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
+
         if ($error->getCode() >= 400 && $error->getCode() < 500) {
             // Register error logger
             $providerName = System::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
             $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
 
-            if (!(empty($providerName) || empty($providerConfig))) {
-                try {
-                    $loggingProvider = new DSN($providerConfig);
-                    $providerName = $loggingProvider->getScheme();
+            try {
+                $loggingProvider = new DSN($providerConfig ?? '');
+                $providerName = $loggingProvider->getScheme();
 
-                    if (!empty($providerName) && $providerName === 'sentry') {
-                        $key = $loggingProvider->getPassword();
-                        $projectId = $loggingProvider->getUser() ?? '';
-                        $host = 'https://' . $loggingProvider->getHost();
+                if (!empty($providerName) && $providerName === 'sentry') {
+                    $key = $loggingProvider->getPassword();
+                    $projectId = $loggingProvider->getUser() ?? '';
+                    $host = 'https://' . $loggingProvider->getHost();
 
-                        $adapter = new Sentry($projectId, $key, $host);
-                        $logger = new Logger($adapter);
-                        $logger->setSample(0.04);
-                        $publish = true;
-                    } else {
-                        throw new \Exception('Invalid experimental logging provider');
-                    }
-                } catch (\Throwable $th) {
-                    Console::warning('Failed to initialize logging provider: ' . $th->getMessage());
+                    $adapter = new Sentry($projectId, $key, $host);
+                    $logger = new Logger($adapter);
+                    $logger->setSample(0.04);
+                    $publish = true;
+                } else {
+                    throw new \Exception('Invalid experimental logging provider');
                 }
+            } catch (\Throwable $th) {
+                Console::warning('Failed to initialize logging provider: ' . $th->getMessage());
             }
         }
 
         if ($publish && $project->getId() !== 'console') {
-            if (!Auth::isPrivilegedUser($authorization->getRoles())) {
+            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {
@@ -841,7 +818,14 @@ Http::error()
         }
 
 
-        if ($logger && ($publish || $error->getCode() === 0)) {
+        if ($logger && $publish) {
+            try {
+                /** @var Utopia\Database\Document $user */
+                $user = $utopia->getResource('user');
+            } catch (\Throwable) {
+                // All good, user is optional information for logger
+            }
+
             if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
             }
@@ -871,7 +855,7 @@ Http::error()
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('roles', $authorization->getRoles());
+            $log->addExtra('roles', Authorization::getRoles());
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
             $log->setAction($action);
@@ -879,13 +863,17 @@ Http::error()
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $responseCode = $logger->addLog($log);
-            Console::info('Log pushed with status code: ' . $responseCode);
+            try {
+                $responseCode = $logger->addLog($log);
+                Console::info('Error log pushed with status code: ' . $responseCode);
+            } catch (Throwable $th) {
+                Console::error('Error pushing log: ' . $th->getMessage());
+            }
         }
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */
         if (!($error instanceof AppwriteException)) {
-            $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, (int)$code, $error);
+            $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
         }
 
         switch ($code) { // Don't show 500 errors!
@@ -905,14 +893,14 @@ Http::error()
                 break;
             default:
                 $code = 500; // All other errors get the generic 500 server error status code
-                $message = (Http::getMode() === Http::MODE_TYPE_DEVELOPMENT) ? $message : 'Server Error';
+                $message = 'Server Error';
         }
 
         //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
 
         $type = $error->getType();
 
-        $output = ((Http::isDevelopment())) ? [
+        $output = ((App::isDevelopment())) ? [
             'message' => $message,
             'code' => $code,
             'file' => $file,
@@ -940,7 +928,7 @@ Http::error()
 
             $layout
                 ->setParam('title', $project->getAttribute('name') . ' - Error')
-                ->setParam('development', Http::isDevelopment())
+                ->setParam('development', App::isDevelopment())
                 ->setParam('projectName', $project->getAttribute('name'))
                 ->setParam('projectURL', $project->getAttribute('url'))
                 ->setParam('message', $output['message'] ?? '')
@@ -951,18 +939,18 @@ Http::error()
             $response->html($layout->render());
         }
 
-        $connections->reclaim();
-
         $response->dynamic(
             new Document($output),
-            Http::isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
+            $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
         );
     });
 
-Http::get('/robots.txt')
+App::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('utopia')
+    ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
@@ -970,9 +958,7 @@ Http::get('/robots.txt')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('geodb')
-    ->inject('route')
-    ->inject('authorization')
-    ->action(function (Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, ?Route $route, Authorization $authorization) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -980,17 +966,16 @@ Http::get('/robots.txt')
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
-            if (is_null($route)) {
-                $route = new Route($request->getMethod(), $request->getURI());
-            }
-            router($dbForConsole, $getProjectDB, $request, $response, $route, $queueForEvents, $queueForUsage, $geodb, $authorization);
+            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb);
         }
     });
 
-Http::get('/humans.txt')
+App::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('utopia')
+    ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
@@ -998,9 +983,7 @@ Http::get('/humans.txt')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('geodb')
-    ->inject('route')
-    ->inject('authorization')
-    ->action(function (Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Route $route, Authorization $authorization) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -1008,11 +991,11 @@ Http::get('/humans.txt')
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
-            router($dbForConsole, $getProjectDB, $request, $response, $route, $queueForEvents, $queueForUsage, $geodb, $authorization);
+            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb);
         }
     });
 
-Http::get('/.well-known/acme-challenge/*')
+App::get('/.well-known/acme-challenge/*')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -1062,32 +1045,16 @@ Http::get('/.well-known/acme-challenge/*')
         $response->text($content);
     });
 
-Http::wildcard()
+include_once __DIR__ . '/shared/api.php';
+include_once __DIR__ . '/shared/api/auth.php';
+
+App::wildcard()
     ->groups(['api'])
     ->label('scope', 'global')
     ->action(function () {
         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });
 
-include_once 'mock.php';
-include_once 'shared/api.php';
-include_once 'shared/api/auth.php';
-include_once 'api/account.php';
-include_once 'api/avatars.php';
-include_once 'api/console.php';
-include_once 'api/databases.php';
-include_once 'api/functions.php';
-include_once 'api/graphql.php';
-include_once 'api/health.php';
-include_once 'api/locale.php';
-include_once 'api/messaging.php';
-include_once 'api/migrations.php';
-include_once 'api/project.php';
-include_once 'api/projects.php';
-include_once 'api/proxy.php';
-include_once 'api/storage.php';
-include_once 'api/teams.php';
-include_once 'api/users.php';
-include_once 'api/vcs.php';
-include_once 'web/console.php';
-include_once 'web/home.php';
+foreach (Config::getParam('services', []) as $service) {
+    include_once $service['controller'];
+}

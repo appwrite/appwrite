@@ -11,8 +11,7 @@ $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
-?>
-services:
+?>services:
   traefik:
     image: traefik:2.11
     container_name: appwrite-traefik
@@ -532,6 +531,8 @@ services:
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
       - _APP_LOGGING_CONFIG
+      - _APP_DOMAIN
+      - _APP_OPTIONS_FORCE_HTTPS
 
   appwrite-worker-messaging:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -852,7 +853,7 @@ services:
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
-    command: 'mysqld --innodb-flush-method=fsync --max_connections=5000'
+    command: 'mysqld --innodb-flush-method=fsync'
 
   redis:
     image: redis:7.2.4-alpine

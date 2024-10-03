@@ -2,233 +2,207 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Tests\Async;
+use CURLFile;
 use Tests\E2E\Client;
 use Utopia\CLI\Console;
 
 trait FunctionsBase
 {
-    protected string $output = '';
+    use Async;
 
-    protected function packageCode($folder)
+    protected string $stdout = '';
+    protected string $stderr = '';
+
+    protected function setupFunction(mixed $params): string
     {
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->output);
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $params);
+
+        $this->assertEquals($function['headers']['status-code'], 201, 'Setup function failed with status code: ' . $function['headers']['status-code'] . ' and response: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+
+        $functionId = $function['body']['$id'];
+
+        return $functionId;
     }
 
-    protected function awaitDeploymentIsBuilt($functionId, $deploymentId, $checkForSuccess = true): void
+    protected function setupDeployment(string $functionId, mixed $params): string
     {
-        while (true) {
-            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $params);
+        $this->assertEquals($deployment['headers']['status-code'], 202, 'Setup deployment failed with status code: ' . $deployment['headers']['status-code'] . ' and response: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        $deploymentId = $deployment['body']['$id'] ?? '';
+
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]);
+            ]));
+            $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        }, 50000, 500);
 
-            if (
-                $deployment['headers']['status-code'] >= 400
-                || \in_array($deployment['body']['status'], ['ready', 'failed'])
-            ) {
-                break;
-            }
-
-            \sleep(1);
-        }
-
-        if ($checkForSuccess) {
-            $this->assertEquals(200, $deployment['headers']['status-code']);
-            $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
-        }
+        return $deploymentId;
     }
 
-    // /**
-    //  * @depends testCreateTeam
-    //  */
-    // public function testGetTeam($data):array
-    // {
-    //     $id = $data['teamUid'] ?? '';
+    protected function cleanupFunction(string $functionId): void
+    {
+        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]));
 
-    //     /**
-    //      * Test for SUCCESS
-    //      */
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams/'.$id, array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()));
+        $this->assertEquals($function['headers']['status-code'], 204);
+    }
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertNotEmpty($response['body']['$id']);
-    //     $this->assertEquals('Arsenal', $response['body']['name']);
-    //     $this->assertGreaterThan(-1, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertIsInt($response['body']['dateCreated']);
+    protected function createFunction(mixed $params): mixed
+    {
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
-    //     /**
-    //      * Test for FAILURE
-    //      */
+        return $function;
+    }
 
-    //      return [];
-    // }
+    protected function createVariable(string $functionId, mixed $params): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
-    // /**
-    //  * @depends testCreateTeam
-    //  */
-    // public function testListTeams($data):array
-    // {
-    //     /**
-    //      * Test for SUCCESS
-    //      */
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()));
+        return $variable;
+    }
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertCount(3, $response['body']['teams']);
+    protected function getFunction(string $functionId): mixed
+    {
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
 
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'limit' => 2,
-    //     ]);
+        return $function;
+    }
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertCount(2, $response['body']['teams']);
+    protected function getDeployment(string $functionId, string $deploymentId): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
 
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'offset' => 1,
-    //     ]);
+        return $deployment;
+    }
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertCount(2, $response['body']['teams']);
+    protected function getExecution(string $functionId, $executionId): mixed
+    {
+        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
 
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'search' => 'Manchester',
-    //     ]);
+        return $execution;
+    }
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertCount(1, $response['body']['teams']);
-    //     $this->assertEquals('Manchester United', $response['body']['teams'][0]['name']);
+    protected function listFunctions(mixed $params = []): mixed
+    {
+        $functions = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'search' => 'United',
-    //     ]);
+        return $functions;
+    }
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertCount(1, $response['body']['teams']);
-    //     $this->assertEquals('Manchester United', $response['body']['teams'][0]['name']);
+    protected function listDeployments(string $functionId, $params = []): mixed
+    {
+        $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
-    //     /**
-    //      * Test for FAILURE
-    //      */
+        return $deployments;
+    }
 
-    //      return [];
-    // }
+    protected function listExecutions(string $functionId, mixed $params = []): mixed
+    {
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
-    // public function testUpdateTeam():array
-    // {
-    //     /**
-    //      * Test for SUCCESS
-    //      */
-    //     $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'name' => 'Demo'
-    //     ]);
+        return $executions;
+    }
 
-    //     $this->assertEquals(201, $response['headers']['status-code']);
-    //     $this->assertNotEmpty($response['body']['$id']);
-    //     $this->assertEquals('Demo', $response['body']['name']);
-    //     $this->assertGreaterThan(-1, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertIsInt($response['body']['dateCreated']);
+    protected function packageFunction(string $function): CURLFile
+    {
+        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
+        $tarPath = "$folderPath/code.tar.gz";
 
-    //     $response = $this->client->call(Client::METHOD_PUT, '/teams/'.$response['body']['$id'], array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'name' => 'Demo New'
-    //     ]);
+        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertNotEmpty($response['body']['$id']);
-    //     $this->assertEquals('Demo New', $response['body']['name']);
-    //     $this->assertGreaterThan(-1, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertIsInt($response['body']['dateCreated']);
+        if (filesize($tarPath) > 1024 * 1024 * 5) {
+            throw new \Exception('Code package is too large. Use the chunked upload method instead.');
+        }
 
-    //     /**
-    //      * Test for FAILURE
-    //      */
-    //     $response = $this->client->call(Client::METHOD_PUT, '/teams/'.$response['body']['$id'], array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //     ]);
+        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+    }
 
-    //     $this->assertEquals(400, $response['headers']['status-code']);
+    protected function createDeployment(string $functionId, mixed $params = []): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
-    //     return [];
-    // }
+        return $deployment;
+    }
 
-    // public function testDeleteTeam():array
-    // {
-    //     /**
-    //      * Test for SUCCESS
-    //      */
-    //     $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'name' => 'Demo'
-    //     ]);
+    protected function getFunctionUsage(string $functionId, mixed $params): mixed
+    {
+        $usage = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
-    //     $teamUid = $response['body']['$id'];
+        return $usage;
+    }
 
-    //     $this->assertEquals(201, $response['headers']['status-code']);
-    //     $this->assertNotEmpty($response['body']['$id']);
-    //     $this->assertEquals('Demo', $response['body']['name']);
-    //     $this->assertGreaterThan(-1, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertIsInt($response['body']['dateCreated']);
+    protected function getTemplate(string $templateId)
+    {
+        $template = $this->client->call(Client::METHOD_GET, '/functions/templates/' . $templateId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
 
-    //     $response = $this->client->call(Client::METHOD_DELETE, '/teams/'.$teamUid, array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()));
+        return $template;
+    }
 
-    //     $this->assertEquals(204, $response['headers']['status-code']);
-    //     $this->assertEmpty($response['body']);
+    protected function createExecution(string $functionId, mixed $params = []): mixed
+    {
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
-    //     /**
-    //      * Test for FAILURE
-    //      */
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid, array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()));
+        return $execution;
+    }
 
-    //     $this->assertEquals(404, $response['headers']['status-code']);
+    protected function deleteFunction(string $functionId): mixed
+    {
+        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
 
-    //     return [];
-    // }
+        return $function;
+    }
 }

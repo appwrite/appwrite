@@ -12,7 +12,7 @@ abstract class Promise
 
     private mixed $result;
 
-    final public function __construct(?callable $executor = null)
+    public function __construct(?callable $executor = null)
     {
         if (\is_null($executor)) {
             return;

@@ -14,28 +14,27 @@ use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
+use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Http\Http;
-use Utopia\Http\Validator\JSON;
-use Utopia\Http\Validator\Text;
 use Utopia\System\System;
+use Utopia\Validator\JSON;
+use Utopia\Validator\Text;
 
-Http::init()
+App::init()
     ->groups(['graphql'])
     ->inject('project')
-    ->inject('authorization')
-    ->action(function (Document $project, Authorization $authorization) {
+    ->action(function (Document $project) {
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !(Auth::isPrivilegedUser($authorization->getRoles()) || Auth::isAppUser($authorization->getRoles()))
+            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
     });
 
-Http::get('/v1/graphql')
+App::get('/v1/graphql')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -75,7 +74,7 @@ Http::get('/v1/graphql')
             ->json($output);
     });
 
-Http::post('/v1/graphql/mutation')
+App::post('/v1/graphql/mutation')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -120,7 +119,7 @@ Http::post('/v1/graphql/mutation')
             ->json($output);
     });
 
-Http::post('/v1/graphql')
+App::post('/v1/graphql')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -157,6 +156,7 @@ Http::post('/v1/graphql')
         if (\str_starts_with($type, 'multipart/form-data')) {
             $query = parseMultipart($query, $request);
         }
+
         $output = execute($schema, $promiseAdapter, $query);
 
         $response
@@ -205,7 +205,7 @@ function execute(
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);
     }
-    if (Http::getMode() === Http::MODE_TYPE_PRODUCTION) {
+    if (App::getMode() === App::MODE_TYPE_PRODUCTION) {
         $flags = DebugFlag::NONE;
     }
 
@@ -306,10 +306,9 @@ function processResult($result, $debugFlags): array
     );
 }
 
-Http::shutdown()
+App::shutdown()
     ->groups(['schema'])
     ->inject('project')
-    ->inject('schemaVariable')
-    ->action(function (Document $project, Schema $schemaVariable) {
-        $schemaVariable->setDirty($project->getId());
+    ->action(function (Document $project) {
+        Schema::setDirty($project->getId());
     });
