@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\Services\Realtime;
 
-use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -506,20 +505,14 @@ class RealtimeConsoleClientTest extends Scope
          * Test Create Deployment
          */
 
-        $folder = 'php';
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
-        $this->packageCode($folder);
-
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
-            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'code' => $this->packageFunction('php'),
             'activate' => true
         ]);
-
-        $deploymentId = $deployment['body']['$id'] ?? '';
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
