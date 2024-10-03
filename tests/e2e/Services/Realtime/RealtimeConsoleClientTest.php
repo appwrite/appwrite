@@ -520,9 +520,10 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Create Deployment
          */
+        $projectId = $this->getProject()['$id'];
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
             'code' => $this->packageFunction('php'),
