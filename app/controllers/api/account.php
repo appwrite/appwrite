@@ -3658,8 +3658,32 @@ App::patch('/v1/account/mfa')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->action(function (bool $mfa, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Document $project, Document $session, Locale $locale, Database $dbForProject, Event $queueForEvents, Mail $queueForMails) {
+        $user->setAttribute('mfa', $mfa);
+
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+
+        if ($mfa) {
+            $factors = $session->getAttribute('factors', []);
+            $totp = TOTP::getAuthenticatorFromUser($user);
+            if ($totp !== null && $totp->getAttribute('verified', false)) {
+                $factors[] = Type::TOTP;
+            }
+            if ($user->getAttribute('email', false) && $user->getAttribute('emailVerification', false)) {
+                $factors[] = Type::EMAIL;
+            }
+            if ($user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)) {
+                $factors[] = Type::PHONE;
+            }
+            $factors = \array_unique($factors);
+
+            $session->setAttribute('factors', $factors);
+            $dbForProject->updateDocument('sessions', $session->getId(), $session);
+        }
+
+        $queueForEvents->setParam('userId', $user->getId());
+
         // If MFA Changes then we need to send a email
-        if ($mfa !== $user->getAttribute('mfa')) {
+        if ($mfa !== $user->getAttribute('mfa') && !empty($user->getAttribute('email'))) {
             $domain = $request->getHostname();
             $protocol = $request->getProtocol();
 
@@ -3674,15 +3698,16 @@ App::patch('/v1/account/mfa')
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl');
                 $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-altered-console.tpl');
 
-                $buttonText = $locale->getText("emails.{$type}.buttonText", 'console-'.$locale->default) ?? $locale->getText("emails.{$type}.buttonText");
-                $bodyText = $locale->getText("emails.{$type}.body", 'console-'.$locale->default) ?? $locale->getText("emails.{$type}.body");
+                $consoleLocale = clone $locale;
+                $consoleLocale->default = 'console-' . $locale->default;
+
+                $buttonText = $consoleLocale->getText("emails.{$type}.buttonText", null) ?? $locale->getText("emails.{$type}.buttonText");
+                $bodyText = $consoleLocale->getText("emails.{$type}.body", null) ?? $locale->getText("emails.{$type}.body");
 
                 $body
                     ->setParam('{{buttonText}}', $buttonText)
                     ->setParam('{{redirect}}', $redirect)
-                    ->setParam('{{body}}', $bodyText, escapeHtml: false)
-                    ->setParam('{{project}}', $project->getAttribute('name'))
-                    ->setParam('{{user}}', $user->getAttribute('name'));
+                    ->setParam('{{body}}', $bodyText, escapeHtml: false);
 
                 $message->setParam('{{body}}', $body->render(), escapeHtml: false);
             } else {
@@ -3746,7 +3771,6 @@ App::patch('/v1/account/mfa')
             }
 
             $emailVariables = [
-                'owner' => $user->getAttribute('name'),
                 'direction' => $locale->getText('settings.direction'),
                 'user' => $user->getAttribute('name'),
                 'project' => $project->getAttribute('name')
@@ -3756,35 +3780,11 @@ App::patch('/v1/account/mfa')
                 ->setSubject($subject)
                 ->setBody($body)
                 ->setRecipient($user->getAttribute('email'))
-                ->setName($user->getAttribute('name'))
+                ->setName($user->getAttribute('name'), '')
                 ->setVariables($emailVariables)
                 ->trigger()
             ;
         }
-
-        $user->setAttribute('mfa', $mfa);
-
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
-
-        if ($mfa) {
-            $factors = $session->getAttribute('factors', []);
-            $totp = TOTP::getAuthenticatorFromUser($user);
-            if ($totp !== null && $totp->getAttribute('verified', false)) {
-                $factors[] = Type::TOTP;
-            }
-            if ($user->getAttribute('email', false) && $user->getAttribute('emailVerification', false)) {
-                $factors[] = Type::EMAIL;
-            }
-            if ($user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)) {
-                $factors[] = Type::PHONE;
-            }
-            $factors = \array_unique($factors);
-
-            $session->setAttribute('factors', $factors);
-            $dbForProject->updateDocument('sessions', $session->getId(), $session);
-        }
-
-        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });

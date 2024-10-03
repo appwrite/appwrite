@@ -1069,7 +1069,7 @@ foreach ($locales as $locale) {
 
     $consolePath = __DIR__ . '/config/locale/translations/console/' . \substr($code, 0, 2) . '.json';
     if (file_exists($consolePath)) {
-        Locale::setLanguageFromJSON($code, $consolePath);
+        Locale::setLanguageFromJSON('console-'.$code, $consolePath);
     }
 
     Locale::setLanguageFromJSON($code, $path);
