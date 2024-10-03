@@ -21,6 +21,7 @@ use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
+use Utopia\Migration\Transfer;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Host;
@@ -30,6 +31,43 @@ use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 include_once __DIR__ . '/../shared/api.php';
+
+$triggerMigration = function (Document $migration, array $resources, Migration $queueForMigrations, Database $dbForProject) {
+    $groups = [
+        Transfer::GROUP_AUTH => Transfer::GROUP_AUTH_RESOURCES,
+        Transfer::GROUP_DATABASES => Transfer::GROUP_DATABASES_RESOURCES,
+        Transfer::GROUP_FUNCTIONS => Transfer::GROUP_FUNCTIONS_RESOURCES,
+        Transfer::GROUP_STORAGE => Transfer::GROUP_STORAGE_RESOURCES
+    ];
+
+    foreach ($groups as $group => $groupResources) {
+        $filteredResources = array_intersect(
+            $groupResources,
+            $resources
+        );
+
+        if (!empty($filteredResources)) {
+            $groupDocument = new Document([
+                '$id' => ID::unique(),
+                'status' => 'pending',
+                'migrationId' => $migration->getId(),
+                'migrationInternalId' => $migration->getInternalId(),
+                'group' => $group,
+                'resources' => $filteredResources,
+                'statusCounters' => '',
+                'resourceData' => '',
+                'errors' => []
+            ]);
+
+            $dbForProject->createDocument('migrationsGroup', $groupDocument);
+
+            $queueForMigrations
+                ->setType($group)
+                ->setMigration($groupDocument)
+                ->trigger();
+        }
+    }
+};
 
 App::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
@@ -54,7 +92,7 @@ App::post('/v1/migrations/appwrite')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) use ($triggerMigration) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -73,12 +111,11 @@ App::post('/v1/migrations/appwrite')
 
         $queueForEvents->setParam('migrationId', $migration->getId());
 
-        // Trigger Transfer
         $queueForMigrations
-            ->setMigration($migration)
             ->setProject($project)
-            ->setUser($user)
-            ->trigger();
+            ->setUser($user);
+
+        $triggerMigration($migration, $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -108,7 +145,7 @@ App::post('/v1/migrations/firebase/oauth')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
     ->inject('request')
-    ->action(function (array $resources, string $projectId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations, Request $request) {
+    ->action(function (array $resources, string $projectId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations, Request $request) use ($triggerMigration) {
         $firebase = new OAuth2Firebase(
             System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
             System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
@@ -177,10 +214,10 @@ App::post('/v1/migrations/firebase/oauth')
 
         // Trigger Transfer
         $queueForMigrations
-            ->setMigration($migration)
             ->setProject($project)
-            ->setUser($user)
-            ->trigger();
+            ->setUser($user);
+
+        $triggerMigration($migration, $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -208,7 +245,7 @@ App::post('/v1/migrations/firebase')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) use ($triggerMigration) {
         $serviceAccountData = json_decode($serviceAccount, true);
 
         if (empty($serviceAccountData)) {
@@ -227,7 +264,6 @@ App::post('/v1/migrations/firebase')
             'credentials' => [
                 'serviceAccount' => $serviceAccount,
             ],
-            'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],
@@ -237,10 +273,10 @@ App::post('/v1/migrations/firebase')
 
         // Trigger Transfer
         $queueForMigrations
-            ->setMigration($migration)
             ->setProject($project)
-            ->setUser($user)
-            ->trigger();
+            ->setUser($user);
+
+        $triggerMigration($migration, $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -273,7 +309,7 @@ App::post('/v1/migrations/supabase')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) use ($triggerMigration) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -297,10 +333,10 @@ App::post('/v1/migrations/supabase')
 
         // Trigger Transfer
         $queueForMigrations
-            ->setMigration($migration)
             ->setProject($project)
-            ->setUser($user)
-            ->trigger();
+            ->setUser($user);
+
+        $triggerMigration($migration, $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -334,7 +370,7 @@ App::post('/v1/migrations/nhost')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) use ($triggerMigration) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -359,10 +395,10 @@ App::post('/v1/migrations/nhost')
 
         // Trigger Transfer
         $queueForMigrations
-            ->setMigration($migration)
             ->setProject($project)
-            ->setUser($user)
-            ->trigger();
+            ->setUser($user);
+
+        $triggerMigration($migration, $resources, $queueForMigrations, $dbForProject);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

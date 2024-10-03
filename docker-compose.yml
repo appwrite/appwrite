@@ -660,6 +660,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_WORKERS_NUM=8
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
@@ -674,8 +675,6 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
-      - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
-      - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-task-maintenance:
