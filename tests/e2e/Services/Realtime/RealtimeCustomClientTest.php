@@ -1334,8 +1334,9 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(4, $response['data']['channels']);
+        $this->assertCount(5, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
+        $this->assertContains("projects.{$this->getProject()['$id']}", $response['data']['channels']);
         $this->assertContains('executions', $response['data']['channels']);
         $this->assertContains("executions.{$executionId}", $response['data']['channels']);
         $this->assertContains("functions.{$functionId}", $response['data']['channels']);
@@ -1356,8 +1357,9 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $responseUpdate['type']);
         $this->assertNotEmpty($responseUpdate['data']);
         $this->assertArrayHasKey('timestamp', $responseUpdate['data']);
-        $this->assertCount(4, $responseUpdate['data']['channels']);
+        $this->assertCount(5, $responseUpdate['data']['channels']);
         $this->assertContains('console', $responseUpdate['data']['channels']);
+        $this->assertContains("projects.{$this->getProject()['$id']}", $response['data']['channels']);
         $this->assertContains('executions', $responseUpdate['data']['channels']);
         $this->assertContains("executions.{$executionId}", $responseUpdate['data']['channels']);
         $this->assertContains("functions.{$functionId}", $responseUpdate['data']['channels']);
