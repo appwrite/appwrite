@@ -3658,6 +3658,7 @@ App::patch('/v1/account/mfa')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->action(function (bool $mfa, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Document $project, Document $session, Locale $locale, Database $dbForProject, Event $queueForEvents, Mail $queueForMails) {
+        $mfaAltered = $user->getAttribute('mfa') !== $mfa;
         $user->setAttribute('mfa', $mfa);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
@@ -3683,7 +3684,7 @@ App::patch('/v1/account/mfa')
         $queueForEvents->setParam('userId', $user->getId());
 
         // If MFA Changes then we need to send a email
-        if ($mfa !== $user->getAttribute('mfa') && !empty($user->getAttribute('email'))) {
+        if ($mfaAltered && !empty($user->getAttribute('email'))) {
             $domain = $request->getHostname();
             $protocol = $request->getProtocol();
 
