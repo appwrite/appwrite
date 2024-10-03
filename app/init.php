@@ -41,6 +41,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
@@ -239,15 +240,12 @@ const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
 const METRIC_DATABASES_STORAGE = 'databases.storage';
-const METRIC_DATABASES_STORAGE_DISK = 'databases.storage_disk';
 const METRIC_DATABASE_ID_COLLECTIONS = '{databaseInternalId}.collections';
 const METRIC_DATABASE_ID_STORAGE = '{databaseInternalId}.databases.storage';
-const METRIC_DATABASE_ID_STORAGE_DISK = '{databaseInternalId}.databases.storage_disk';
 const METRIC_DOCUMENTS = 'documents';
 const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE = '{databaseInternalId}.{collectionInternalId}.databases.storage';
-const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE_DISK = '{databaseInternalId}.{collectionInternalId}.databases.storage_disk';
 const METRIC_BUCKETS = 'buckets';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
@@ -1263,13 +1261,13 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user = new Document([]);
     }
 
-    if (APP_MODE_ADMIN === $mode) {
-        if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
-            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
-        } else {
-            $user = new Document([]);
-        }
-    }
+    // if (APP_MODE_ADMIN === $mode) {
+    //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
+    //         Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+    //     } else {
+    //         $user = new Document([]);
+    //     }
+    // }
 
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
@@ -1346,7 +1344,7 @@ App::setResource('console', function () {
         '$collection' => ID::custom('projects'),
         'description' => 'Appwrite core engine',
         'logo' => '',
-        'teamId' => -1,
+        'teamId' => null,
         'webhooks' => [],
         'keys' => [],
         'platforms' => [
@@ -1774,3 +1772,35 @@ App::setResource('requestTimestamp', function ($request) {
 App::setResource('plan', function (array $plan = []) {
     return [];
 });
+
+
+App::setResource('team', function (Document $project, Database $dbForConsole, App $utopia, Request $request) {
+    $teamInternalId = '';
+    if ($project->getId() !== 'console') {
+        $teamInternalId = $project->getAttribute('teamInternalId', '');
+    } else {
+        $route = $utopia->match($request);
+        $path = $route->getPath();
+        if (str_starts_with($path, '/v1/projects/:projectId')) {
+            $uri = $request->getURI();
+            $pid = explode('/', $uri)[3];
+            $p = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $pid));
+            $teamInternalId = $p->getAttribute('teamInternalId', '');
+        } elseif ($path === '/v1/projects') {
+            $teamId = $request->getParam('teamId', '');
+            $team = Authorization::skip(fn () => $dbForConsole->getDocument('teams', $teamId));
+            return $team;
+        }
+    }
+
+    $team = Authorization::skip(function () use ($dbForConsole, $teamInternalId) {
+        return $dbForConsole->findOne('teams', [
+            Query::equal('$internalId', [$teamInternalId]),
+        ]);
+    });
+
+    if (!$team) {
+        $team = new Document([]);
+    }
+    return $team;
+}, ['project', 'dbForConsole', 'utopia', 'request']);

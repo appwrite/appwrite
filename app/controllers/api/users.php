@@ -452,7 +452,7 @@ App::post('/v1/users/scrypt-modified')
     });
 
 App::post('/v1/users/:userId/targets')
-    ->desc('Create User Target')
+    ->desc('Create user target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.create')
     ->label('audits.resource', 'target/response.$id')
@@ -647,7 +647,7 @@ App::get('/v1/users/:userId/prefs')
     });
 
 App::get('/v1/users/:userId/targets/:targetId')
-    ->desc('Get User Target')
+    ->desc('Get user target')
     ->groups(['api', 'users'])
     ->label('scope', 'targets.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
@@ -848,7 +848,7 @@ App::get('/v1/users/:userId/logs')
     });
 
 App::get('/v1/users/:userId/targets')
-    ->desc('List User Targets')
+    ->desc('List user targets')
     ->groups(['api', 'users'])
     ->label('scope', 'targets.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
@@ -903,7 +903,7 @@ App::get('/v1/users/:userId/targets')
     });
 
 App::get('/v1/users/identities')
-    ->desc('List Identities')
+    ->desc('List identities')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -1425,7 +1425,7 @@ App::patch('/v1/users/:userId/prefs')
     });
 
 App::patch('/v1/users/:userId/targets/:targetId')
-    ->desc('Update User target')
+    ->desc('Update user target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.update')
     ->label('audits.resource', 'target/{response.$id}')
@@ -1557,7 +1557,7 @@ App::patch('/v1/users/:userId/mfa')
     });
 
 App::get('/v1/users/:userId/mfa/factors')
-    ->desc('List Factors')
+    ->desc('List factors')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
@@ -1590,7 +1590,7 @@ App::get('/v1/users/:userId/mfa/factors')
     });
 
 App::get('/v1/users/:userId/mfa/recovery-codes')
-    ->desc('Get MFA Recovery Codes')
+    ->desc('Get MFA recovery codes')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
@@ -1625,7 +1625,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
     });
 
 App::patch('/v1/users/:userId/mfa/recovery-codes')
-    ->desc('Create MFA Recovery Codes')
+    ->desc('Create MFA recovery codes')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create.mfa.recovery-codes')
     ->label('scope', 'users.write')
@@ -1671,7 +1671,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
     });
 
 App::put('/v1/users/:userId/mfa/recovery-codes')
-    ->desc('Regenerate MFA Recovery Codes')
+    ->desc('Regenerate MFA recovery codes')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.mfa.recovery-codes')
     ->label('scope', 'users.write')
@@ -1716,7 +1716,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
     });
 
 App::delete('/v1/users/:userId/mfa/authenticators/:type')
-    ->desc('Delete Authenticator')
+    ->desc('Delete authenticator')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete.mfa')
     ->label('scope', 'users.write')

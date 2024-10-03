@@ -309,7 +309,7 @@ App::get('/v1/project/usage')
 
 // Variables
 App::post('/v1/project/variables')
-    ->desc('Create Variable')
+    ->desc('Create variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
     ->label('audits.event', 'variable.create')
@@ -364,7 +364,7 @@ App::post('/v1/project/variables')
     });
 
 App::get('/v1/project/variables')
-    ->desc('List Variables')
+    ->desc('List variables')
     ->groups(['api'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -389,7 +389,7 @@ App::get('/v1/project/variables')
     });
 
 App::get('/v1/project/variables/:variableId')
-    ->desc('Get Variable')
+    ->desc('Get variable')
     ->groups(['api'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -413,7 +413,7 @@ App::get('/v1/project/variables/:variableId')
     });
 
 App::put('/v1/project/variables/:variableId')
-    ->desc('Update Variable')
+    ->desc('Update variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -459,7 +459,7 @@ App::put('/v1/project/variables/:variableId')
     });
 
 App::delete('/v1/project/variables/:variableId')
-    ->desc('Delete Variable')
+    ->desc('Delete variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])

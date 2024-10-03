@@ -3791,7 +3791,7 @@ App::patch('/v1/account/mfa')
     });
 
 App::get('/v1/account/mfa/factors')
-    ->desc('List Factors')
+    ->desc('List factors')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -3823,7 +3823,7 @@ App::get('/v1/account/mfa/factors')
     });
 
 App::post('/v1/account/mfa/authenticators/:type')
-    ->desc('Create Authenticator')
+    ->desc('Create authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'account')
@@ -3895,7 +3895,7 @@ App::post('/v1/account/mfa/authenticators/:type')
     });
 
 App::put('/v1/account/mfa/authenticators/:type')
-    ->desc('Verify Authenticator')
+    ->desc('Verify authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'account')
@@ -3959,7 +3959,7 @@ App::put('/v1/account/mfa/authenticators/:type')
     });
 
 App::post('/v1/account/mfa/recovery-codes')
-    ->desc('Create MFA Recovery Codes')
+    ->desc('Create MFA recovery codes')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'account')
@@ -4001,7 +4001,7 @@ App::post('/v1/account/mfa/recovery-codes')
     });
 
 App::patch('/v1/account/mfa/recovery-codes')
-    ->desc('Regenerate MFA Recovery Codes')
+    ->desc('Regenerate MFA recovery codes')
     ->groups(['api', 'account', 'mfaProtected'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'account')
@@ -4042,7 +4042,7 @@ App::patch('/v1/account/mfa/recovery-codes')
     });
 
 App::get('/v1/account/mfa/recovery-codes')
-    ->desc('Get MFA Recovery Codes')
+    ->desc('Get MFA recovery codes')
     ->groups(['api', 'account', 'mfaProtected'])
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -4072,7 +4072,7 @@ App::get('/v1/account/mfa/recovery-codes')
     });
 
 App::delete('/v1/account/mfa/authenticators/:type')
-    ->desc('Delete Authenticator')
+    ->desc('Delete authenticator')
     ->groups(['api', 'account', 'mfaProtected'])
     ->label('event', 'users.[userId].delete.mfa')
     ->label('scope', 'account')
@@ -4109,7 +4109,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
     });
 
 App::post('/v1/account/mfa/challenge')
-    ->desc('Create MFA Challenge')
+    ->desc('Create MFA challenge')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].challenges.[challengeId].create')
@@ -4297,7 +4297,7 @@ App::post('/v1/account/mfa/challenge')
     });
 
 App::put('/v1/account/mfa/challenge')
-    ->desc('Create MFA Challenge (confirmation)')
+    ->desc('Create MFA challenge (confirmation)')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -4558,7 +4558,7 @@ App::delete('/v1/account/targets/:targetId/push')
         $response->noContent();
     });
 App::get('/v1/account/identities')
-    ->desc('List Identities')
+    ->desc('List identities')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
