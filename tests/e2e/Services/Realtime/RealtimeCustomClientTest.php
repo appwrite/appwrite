@@ -7,7 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\CLI\Console;
+use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -15,6 +15,7 @@ use WebSocket\ConnectionException;
 
 class RealtimeCustomClientTest extends Scope
 {
+    use FunctionsBase;
     use RealtimeBase;
     use ProjectCustom;
     use SideClient;
@@ -1271,20 +1272,13 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals($function['headers']['status-code'], 201);
         $this->assertNotEmpty($function['body']['$id']);
 
-        $folder = 'timeout';
-        $stderr = '';
-        $stdout = '';
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
-
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
-
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'entrypoint' => 'index.php',
-            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'code' => $this->packageFunction('timeout'),
             'activate' => true
         ]);
 
