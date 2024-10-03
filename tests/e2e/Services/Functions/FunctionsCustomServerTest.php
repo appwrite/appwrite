@@ -1819,11 +1819,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertArrayNotHasKey('scopes', $function['body']);
         $this->assertArrayNotHasKey('specification', $function['body']);
 
-        // get function without response format header
-        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $response['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        $function = $this->getFunction($function['body']['$id']);
 
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertArrayHasKey('scopes', $function['body']);
@@ -1835,35 +1831,23 @@ class FunctionsCustomServerTest extends Scope
 
     public function testRequestFilters()
     {
-        // create function
-        $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        $function1Id = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test',
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
             'timeout' => 15,
+            'execute' => ['any']
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $function1Id = $response['body']['$id'];
-
-        // create another function
-        $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        $function2Id = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test2',
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
             'timeout' => 15,
+            'execute' => ['any']
         ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $function2Id = $response['body']['$id'];
 
         // list functions using request filters
         $response = $this->client->call(
