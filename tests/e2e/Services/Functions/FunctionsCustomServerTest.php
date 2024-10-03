@@ -1789,9 +1789,10 @@ class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
-    public function testCreateFunctionWithResponseFormatHeader()
+    public function testResponseFilters()
     {
-        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+        // create function with 1.5.0 response format
+        $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.5.0', // add response format header
@@ -1803,11 +1804,71 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
         ]);
 
-        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertArrayNotHasKey('scopes', $response['body']);
+        $this->assertArrayNotHasKey('specification', $response['body']);
+
+        // get function with 1.5.0 response format header
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $response['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.5.0', // add response format header
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertArrayNotHasKey('scopes', $function['body']);
+        $this->assertArrayNotHasKey('specification', $function['body']);
+
+        $function = $this->getFunction($function['body']['$id']);
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertArrayHasKey('scopes', $function['body']);
+        $this->assertArrayHasKey('specification', $function['body']);
 
         $functionId = $function['body']['$id'] ?? '';
-
         $this->cleanupFunction($functionId);
+    }
+
+    public function testRequestFilters()
+    {
+        $function1Id = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => 15,
+            'execute' => ['any']
+        ]);
+
+        $function2Id = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test2',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => 15,
+            'execute' => ['any']
+        ]);
+
+        // list functions using request filters
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/functions',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.4.0', // Set response format for 1.4 syntax
+            ], $this->getHeaders()),
+            [
+                'queries' => [ 'equal("name", ["Test2"])' ]
+            ]
+        );
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['functions']);
+        $this->assertEquals('Test2', $response['body']['functions'][0]['name']);
+
+        $this->cleanupFunction($function1Id);
+        $this->cleanupFunction($function2Id);
     }
 
     public function testFunctionLogging()
