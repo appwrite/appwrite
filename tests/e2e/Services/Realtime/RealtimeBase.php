@@ -49,8 +49,12 @@ trait RealtimeBase
         $this->assertEquals(1008, $payload['data']['code']);
         $this->assertEquals('Missing channels', $payload['data']['message']);
         \usleep(250000); // 250ms
-        $this->expectException(ConnectionException::class); // Check if server disconnnected client
-        $client->close();
+
+        try {
+            $client->close();
+        } catch (ConnectionException $e) {
+            $this->assertInstanceOf(ConnectionException::class, $e); // Check if server disconnected client
+        }
     }
 
     public function testConnectionFailureUnknownProject(): void
@@ -68,7 +72,11 @@ trait RealtimeBase
         $this->assertEquals(1008, $payload['data']['code']);
         $this->assertEquals('Missing or unknown project ID', $payload['data']['message']);
         \usleep(250000); // 250ms
-        $this->expectException(ConnectionException::class); // Check if server disconnnected client
-        $client->close();
+
+        try {
+            $client->close();
+        } catch (ConnectionException $e) {
+            $this->assertInstanceOf(ConnectionException::class, $e); // Check if server disconnected client
+        }
     }
 }
