@@ -152,6 +152,9 @@ const APP_HOSTNAME_INTERNAL = 'appwrite';
 const APP_FUNCTION_SPECIFICATION_DEFAULT = Specification::S_05VCPU_512MB;
 const APP_FUNCTION_CPUS_DEFAULT = 0.5;
 const APP_FUNCTION_MEMORY_DEFAULT = 512;
+const APP_PLATFORM_SERVER = 'server';
+const APP_PLATFORM_CLIENT = 'client';
+const APP_PLATFORM_CONSOLE = 'console';
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
@@ -1525,9 +1528,9 @@ App::setResource('deviceForBuilds', function ($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
 
-function getDevice($root): Device
+function getDevice(string $root, string $connection = ''): Device
 {
-    $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    $connection = !empty($connection) ? $connection : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
     if (!empty($connection)) {
         $acl = 'private';
