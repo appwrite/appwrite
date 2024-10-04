@@ -142,6 +142,16 @@ return [
         'beta' => false,
         'mock' => false,
     ],
+    'figma' => [
+        'name' => 'Figma',
+        'developers' => 'https://www.figma.com/developers/api',
+        'icon' => 'icon-figma',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'github' => [
         'name' => 'GitHub',
         'developers' => 'https://developer.github.com/',
