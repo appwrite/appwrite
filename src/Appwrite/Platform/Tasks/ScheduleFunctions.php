@@ -27,6 +27,11 @@ class ScheduleFunctions extends ScheduleBase
         return 'function';
     }
 
+    public static function getCollectionId(): string
+    {
+        return 'functions';
+    }
+
     protected function enqueueResources(Connection $queue, Database $dbForConsole): void
     {
         $timerStart = \microtime(true);

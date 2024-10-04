@@ -82,7 +82,7 @@ class Migration extends Event
             'sourceRegion' =>  $this->getSourceRegion(),
             'project' => $this->project,
             'user' => $this->user,
-            'migration' => $this->migration
+            'migration' => $this->migration,
         ]);
     }
 }

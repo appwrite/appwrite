@@ -883,9 +883,6 @@ class UsageTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
 
-        $code = realpath(__DIR__ . '/../../resources/functions') . "/php/code.tar.gz";
-        $this->packageCode('php');
-
         $response = $this->client->call(
             Client::METHOD_POST,
             '/functions/' . $functionId . '/deployments',
@@ -895,8 +892,8 @@ class UsageTest extends Scope
             ], $this->getHeaders()),
             [
                 'entrypoint' => 'index.php',
-                'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
-                'activate' => true
+                'code' => $this->packageFunction('php'),
+                'activate' => true,
             ]
         );
 
@@ -934,7 +931,7 @@ class UsageTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id']
             ], $this->getHeaders()),
             [
-                'async' => false,
+                'async' => 'false',
             ]
         );
 
@@ -958,7 +955,7 @@ class UsageTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id']
             ], $this->getHeaders()),
             [
-                'async' => false,
+                'async' => 'false',
             ]
         );
 

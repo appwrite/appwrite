@@ -599,7 +599,8 @@ class Functions extends Action
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern
             event: $allEvents[0],
-            payload: $execution
+            payload: $execution,
+            project: $project
         );
         Realtime::send(
             redis: $realtimeConnection($this->sourceRegion),

@@ -480,6 +480,7 @@ class Deletes extends Action
     private function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
     {
         $projectInternalId = $document->getInternalId();
+        $projectId = $document->getId();
 
         try {
             $dsn = new DSN($document->getAttribute('database', 'console'));
@@ -504,8 +505,18 @@ class Deletes extends Action
 
             foreach ($collections as $collection) {
                 if (! in_array($dsn->getHost(), $sharedTablesKeys) || !\in_array($collection->getId(), $projectCollectionIds)) {
-                    $dbForProject->deleteCollection($collection->getId());                    $dbForProject->deleteCollection($collection->getId());
-                } else {
+                    try {
+                        $dbForProject->deleteCollection($collection->getId());
+                    } catch (Throwable $e) {
+                        Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
+
+                        /**
+                         * Ignore junction tables;
+                         */
+                        if (!preg_match('/^_\d+_\d+$/', $collection->getId())) {
+                            throw $e;
+                        }
+                    }                } else {
                     $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                 }
             }
@@ -556,6 +567,11 @@ class Deletes extends Action
         // Delete VCS comments
         $this->deleteByGroup('vcsComments', [
             Query::equal('projectInternalId', [$projectInternalId]),
+        ], $dbForConsole);
+
+        // Delete Schedules (No projectInternalId in this collection)
+        $this->deleteByGroup('schedules', [
+            Query::equal('projectId', [$projectId]),
         ], $dbForConsole);
 
         // Delete metadata table
@@ -957,7 +973,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    protected function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
     {
         $count = 0;
         $chunk = 0;
@@ -999,7 +1015,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
     {
         $count = 0;
         $chunk = 0;
