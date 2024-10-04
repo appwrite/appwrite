@@ -4541,6 +4541,28 @@ $consoleCollections = array_merge([
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('pingCount'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => 0,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('pingedAt'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ]
         ],
         'indexes' => [
             [
