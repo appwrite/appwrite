@@ -609,9 +609,9 @@ App::get('/v1/cards/cloud')
 
             $isPlatinum = $user->getInternalId() % 100 === 0;
         } else {
-            $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
+            $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brien Junior' : 'Walter O\'Brien';
             $createdAt = new \DateTime('now');
-            $githubName = $mock === 'normal-no-github' ? '' : ($mock === 'normal-long' ? 'sir-first-walterobrian-junior' : 'walterobrian');
+            $githubName = $mock === 'normal-no-github' ? '' : ($mock === 'normal-long' ? 'sir-first-walterobrien-junior' : 'walterobrien');
             $isHero = $mock === 'hero';
             $isContributor = $mock === 'contributor';
             $isEmployee = \str_starts_with($mock, 'employee');
@@ -900,9 +900,9 @@ App::get('/v1/cards/cloud-og')
         } else {
             $bgVariation = \str_ends_with($mock, '-bg2') ? '2' : (\str_ends_with($mock, '-bg3') ? '3' : '1');
             $cardVariation = \str_ends_with($mock, '-right') ? '2' : (\str_ends_with($mock, '-middle') ? '3' : '1');
-            $name = \str_starts_with($mock, 'normal-long') ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
+            $name = \str_starts_with($mock, 'normal-long') ? 'Sir First Walter O\'Brien Junior' : 'Walter O\'Brien';
             $createdAt = new \DateTime('now');
-            $githubName = $mock === 'normal-no-github' ? '' : (\str_starts_with($mock, 'normal-long') ? 'sir-first-walterobrian-junior' : 'walterobrian');
+            $githubName = $mock === 'normal-no-github' ? '' : (\str_starts_with($mock, 'normal-long') ? 'sir-first-walterobrien-junior' : 'walterobrien');
             $isHero = \str_starts_with($mock, 'hero');
             $isContributor = \str_starts_with($mock, 'contributor');
             $isEmployee = \str_starts_with($mock, 'employee');
