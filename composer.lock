@@ -1624,16 +1624,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.15.0",
+            "version": "0.15.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea"
+                "reference": "d69bbe51a6a94dc4e5bcdd542b5938038b985a65"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
-                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/d69bbe51a6a94dc4e5bcdd542b5938038b985a65",
+                "reference": "d69bbe51a6a94dc4e5bcdd542b5938038b985a65",
                 "shasum": ""
             },
             "require": {
@@ -1667,9 +1667,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.15.0"
+                "source": "https://github.com/utopia-php/cli/tree/0.15.1"
             },
-            "time": "2023-03-01T05:55:14+00:00"
+            "time": "2024-10-04T13:55:36+00:00"
         },
         {
             "name": "utopia-php/config",
