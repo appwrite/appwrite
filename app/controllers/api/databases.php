@@ -3733,10 +3733,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             )
         );
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_AUDIT)
-            ->setDocument($document);
-
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
