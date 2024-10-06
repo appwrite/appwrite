@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Exception;
-use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
