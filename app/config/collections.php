@@ -2413,7 +2413,7 @@ $projectCollections = array_merge([
                 'size' => Database::LENGTH_KEY,
                 'format' => '',
                 'filters' => [],
-                'required' => true,
+                'required' => false,
                 'default' => null,
                 'array' => false,
             ],
