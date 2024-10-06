@@ -1010,9 +1010,6 @@ App::get('/.well-known/acme-challenge/*')
     ->action(function (Request $request, Response $response) {
         $uriChunks = \explode('/', $request->getURI());
         $token = $uriChunks[\count($uriChunks) - 1];
-        var_dump('Appwrite acme-challenge');
-        var_dump($request->getURI());
-        var_dump($token);
         $validator = new Text(100, allowList: [
             ...Text::NUMBERS,
             ...Text::ALPHABET_LOWER,
