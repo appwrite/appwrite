@@ -462,7 +462,7 @@ App::init()
         */
 
 
-        $ctime = time();
+        $ctime = \microtime(true);
         var_dump("[".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - Before general first init hook");
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
@@ -666,7 +666,7 @@ App::init()
             throw new AppwriteException(AppwriteException::GENERAL_UNKNOWN_ORIGIN, $originValidator->getDescription());
         }
 
-        $diff = time() - $ctime;
+        $diff = \microtime(true) - $ctime;
         var_dump("[".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - After general first init hook : " . $diff . " sec");
     });
 
