@@ -1061,18 +1061,7 @@ App::get('/v1/ping')
     ->inject('dbForConsole')
     ->inject('queueForEvents')
     ->action(function (string $projectId, Response $response, Document $project, Database $dbForConsole, Event $queueForEvents) {
-        if (empty($projectId) || $projectId === 'console') {
-            throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
-        }
-
-        Console::log('Ping' . json_encode(['projectId' => $projectId], JSON_PRETTY_PRINT));
-
-        $project = Authorization::skip(function () use ($dbForConsole, $projectId) {
-            return $dbForConsole->getDocument('projects', $projectId);
-        });
-
         if ($project->isEmpty()) {
-            Console::log('Ping' . json_encode($project, JSON_PRETTY_PRINT));
             throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
         }
 
@@ -1081,13 +1070,14 @@ App::get('/v1/ping')
 
         $project
             ->setAttribute('pingCount', $pingCount)
-        ->setAttribute('pingedAt', $pingedAt);
+            ->setAttribute('pingedAt', $pingedAt);
 
         Authorization::skip(function () use ($dbForConsole, $project) {
             $dbForConsole->updateDocument('projects', $project->getId(), $project);
         });
 
         $queueForEvents
+            ->setProject($project)
             ->setParam('projectId', $projectId)
             ->setPayload($response->output($project, Response::MODEL_PROJECT));
 

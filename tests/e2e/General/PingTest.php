@@ -18,25 +18,24 @@ class PingTest extends Scope
          * Test for SUCCESS
          */
         // Without user session
-        $response = $this->client->call(Client::METHOD_GET, '/ping', [], [
-            'projectId' => $this->getProject()['$id'],
+        $response = $this->client->call(Client::METHOD_GET, '/ping', [
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Pong!', $response['body']);
 
         // With user session
-        $response = $this->client->call(Client::METHOD_GET, '/ping', $this->getHeaders(), [
-            'projectId' => $this->getProject()['$id'],
-        ]);
+        $response = $this->client->call(Client::METHOD_GET, '/ping', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Pong!', $response['body']);
 
         // With API key
         $response = $this->client->call(Client::METHOD_GET, '/ping', [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'projectId' => $this->getProject()['$id'],
         ]);
 
         /**
@@ -44,10 +43,8 @@ class PingTest extends Scope
          */
         // Fake project ID
         $response = $this->client->call(Client::METHOD_GET, '/ping', \array_merge([
-            'origin' => 'http://localhost',
-        ]), [
-            'projectId' => 'fake-project-id',
-        ]);
+            'x-appwrite-project' => 'fake-project-id',
+        ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertNotContains('Pong!', $response['body']);
