@@ -463,7 +463,7 @@ App::init()
 
 
         $ctime = \microtime(true);
-        var_dump("[".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - Before general first init hook");
+        var_dump($request->getURI() . " [".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - Before general first init hook");
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
@@ -667,7 +667,7 @@ App::init()
         }
 
         $diff = \microtime(true) - $ctime;
-        var_dump("[".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - After general first init hook : " . $diff . " sec");
+        var_dump($request->getURI() . " [".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - After general first init hook : " . $diff . " sec");
     });
 
 App::options()
