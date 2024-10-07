@@ -490,8 +490,6 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertArrayHasKey('type', $response);
         $this->assertEquals('connected', $response['type']);
 
-        fwrite(STDOUT, 'Project ID: ' . $this->getProject()['$id'] . "\n");
-
         $pong = $this->client->call(Client::METHOD_GET, '/ping', [
             'origin' => 'http://localhost',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -506,7 +504,7 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(1, $response['data']['channels']);
+        $this->assertCount(2, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
         $this->assertContains("projects.{$this->getProject()['$id']}", $response['data']['channels']);
         $this->assertContains("projects.{$this->getProject()['$id']}.ping", $response['data']['events']);

@@ -30,7 +30,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
@@ -1053,14 +1052,13 @@ include_once __DIR__ . '/shared/api/auth.php';
 App::get('/v1/ping')
     ->groups(['api', 'general'])
     ->desc('Test the connection between the Appwrite and the SDK.')
-    ->label('scope', 'public')
+    ->label('scope', 'global')
     ->label('event', 'projects.[projectId].ping')
-    ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
-    ->inject('console')
+    ->inject('project')
     ->inject('dbForConsole')
     ->inject('queueForEvents')
-    ->action(function (string $projectId, Response $response, Document $project, Database $dbForConsole, Event $queueForEvents) {
+    ->action(function (Response $response, Document $project, Database $dbForConsole, Event $queueForEvents) {
         if ($project->isEmpty()) {
             throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
         }
@@ -1077,8 +1075,7 @@ App::get('/v1/ping')
         });
 
         $queueForEvents
-            ->setProject($project)
-            ->setParam('projectId', $projectId)
+            ->setParam('projectId', $project->getId())
             ->setPayload($response->output($project, Response::MODEL_PROJECT));
 
         $response->text('Pong!');

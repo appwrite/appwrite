@@ -38,6 +38,9 @@ class PingTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Pong!', $response['body']);
+
         /**
          * Test for FAILURE
          */
