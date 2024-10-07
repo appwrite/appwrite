@@ -88,7 +88,11 @@ App::post('/v1/projects')
     ->inject('hooks')
     ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForConsole, Cache $cache, Group $pools, Hooks $hooks) {
 
+        $ctime = time();
+        var_dump("[".$region."] - Before getDocument('teams')");
         $team = $dbForConsole->getDocument('teams', $teamId);
+        $diff = time() - $ctime;
+        var_dump("[".$region."] - After getDocument('teams') : " . $diff . " sec");
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
@@ -145,6 +149,8 @@ App::post('/v1/projects')
         }
 
         try {
+            $ctime = time();
+            var_dump("[".$region."] - Before createDocument('projects')");
             $project = $dbForConsole->createDocument('projects', new Document([
                 '$id' => $projectId,
                 '$permissions' => [
@@ -178,6 +184,10 @@ App::post('/v1/projects')
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
             ]));
+
+            $diff = time() - $ctime;
+            var_dump("[".$region."] - After createDocument('projects') : " . $diff . " sec");
+
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
@@ -229,7 +239,12 @@ App::post('/v1/projects')
             }, $collection['indexes']);
 
             try {
+
+                $ctime = time();
+                var_dump("[".$region."] - Before createCollection('".$key."')");
                 $dbForProject->createCollection($key, $attributes, $indexes);
+                $diff = time() - $ctime;
+                var_dump("[".$region."] - After createCollection('".$key."') : " . $diff . " sec");
             } catch (Duplicate) {
                 // Collection already exists
             }
