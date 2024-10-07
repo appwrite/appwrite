@@ -1379,6 +1379,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $email = $oauth2->getUserEmail($accessToken);
 
         // Check if this identity is connected to a different user
+        $sessionUpgrade = false;
         if (!$user->isEmpty()) {
             $userId = $user->getId();
 
@@ -1672,7 +1673,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->addCookie($authentication->getCookieName(), Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
         }
 
-        if (isset($sessionUpgrade) && $sessionUpgrade) {
+        if ($sessionUpgrade) {
             foreach ($user->getAttribute('targets', []) as $target) {
                 if ($target->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
                     continue;
