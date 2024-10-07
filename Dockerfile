@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:0.9.2 AS final
+FROM appwrite/base:0.9.3 AS final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -27,6 +27,8 @@ RUN \
   if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \
   fi
+
+RUN apk add libwebp
 
 WORKDIR /usr/src/code
 

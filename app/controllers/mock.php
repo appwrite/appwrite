@@ -3,7 +3,9 @@
 global $utopia, $request, $response;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -11,15 +13,13 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Http;
-use Utopia\Http\Route;
-use Utopia\Http\Validator\Host;
-use Utopia\Http\Validator\Text;
-use Utopia\Http\Validator\WhiteList;
 use Utopia\System\System;
+use Utopia\Validator\Host;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 
-Http::get('/v1/mock/tests/general/oauth2')
+App::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -35,7 +35,7 @@ Http::get('/v1/mock/tests/general/oauth2')
         $response->redirect($redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
     });
 
-Http::get('/v1/mock/tests/general/oauth2/token')
+App::get('/v1/mock/tests/general/oauth2/token')
     ->desc('OAuth2 Token')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -81,7 +81,7 @@ Http::get('/v1/mock/tests/general/oauth2/token')
         }
     });
 
-Http::get('/v1/mock/tests/general/oauth2/user')
+App::get('/v1/mock/tests/general/oauth2/user')
     ->desc('OAuth2 User')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -101,7 +101,7 @@ Http::get('/v1/mock/tests/general/oauth2/user')
         ]);
     });
 
-Http::get('/v1/mock/tests/general/oauth2/success')
+App::get('/v1/mock/tests/general/oauth2/success')
     ->desc('OAuth2 Success')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -114,7 +114,7 @@ Http::get('/v1/mock/tests/general/oauth2/success')
         ]);
     });
 
-Http::get('/v1/mock/tests/general/oauth2/failure')
+App::get('/v1/mock/tests/general/oauth2/failure')
     ->desc('OAuth2 Failure')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -129,7 +129,7 @@ Http::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
-Http::patch('/v1/mock/functions-v2')
+App::patch('/v1/mock/functions-v2')
     ->desc('Update Function Version to V2 (outdated code syntax)')
     ->groups(['mock', 'api', 'functions'])
     ->label('scope', 'functions.write')
@@ -155,10 +155,10 @@ Http::patch('/v1/mock/functions-v2')
         $response->noContent();
     });
 
-Http::post('/v1/mock/api-key-unprefixed')
+App::post('/v1/mock/api-key-unprefixed')
     ->desc('Create API Key (without standard prefix)')
     ->groups(['mock', 'api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'public')
     ->label('docs', false)
     ->param('projectId', '', new UID(), 'Project ID.')
     ->inject('response')
@@ -204,7 +204,7 @@ Http::post('/v1/mock/api-key-unprefixed')
             ->dynamic($key, Response::MODEL_KEY);
     });
 
-Http::get('/v1/mock/github/callback')
+App::get('/v1/mock/github/callback')
     ->desc('Create installation document using GitHub installation id')
     ->groups(['mock', 'api', 'vcs'])
     ->label('scope', 'public')
@@ -264,13 +264,15 @@ Http::get('/v1/mock/github/callback')
         ]);
     });
 
-Http::shutdown()
+App::shutdown()
     ->groups(['mock'])
-    ->inject('route')
+    ->inject('utopia')
     ->inject('response')
-    ->action(function (Route $route, Response $response) {
+    ->inject('request')
+    ->action(function (App $utopia, Response $response, Request $request) {
 
         $result = [];
+        $route  = $utopia->getRoute();
         $path   = APP_STORAGE_CACHE . '/tests.json';
         $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
 

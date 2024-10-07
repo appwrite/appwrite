@@ -4,7 +4,8 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
 use Swoole\Coroutine as Co;
-use Utopia\Queue\Connection\Redis;
+use Utopia\Database\Database;
+use Utopia\Pools\Group;
 
 class ScheduleExecutions extends ScheduleBase
 {
@@ -21,16 +22,16 @@ class ScheduleExecutions extends ScheduleBase
         return 'execution';
     }
 
-    protected function enqueueResources(array $pools, callable $getConsoleDB): void
+    public static function getCollectionId(): string
     {
-        [$connection,$pool, $dbForConsole] = $getConsoleDB();
-        $this->connections->add($connection, $pool);
+        return 'executions';
+    }
 
-        $pool = $pools['pools-queue-queue']['pool'];
-        $connection = $pool->get();
-        $this->connections->add($connection, $pool);
-
-        $queueForFunctions = new Func(new Redis($connection));
+    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
+    {
+        $queue = $pools->get('queue')->pop();
+        $connection = $queue->getResource();
+        $queueForFunctions = new Func($connection);
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
 
         foreach ($this->schedules as $schedule) {
@@ -49,34 +50,38 @@ class ScheduleExecutions extends ScheduleBase
                 continue;
             }
 
+            $data = $dbForConsole->getDocument(
+                'schedules',
+                $schedule['$id'],
+            )->getAttribute('data', []);
+
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
 
-
-            \go(function () use ($queueForFunctions, $schedule, $delay, $dbForConsole) {
+            \go(function () use ($queueForFunctions, $schedule, $delay, $data) {
                 Co::sleep($delay);
 
-                $queueForFunctions
-                    ->setType('schedule')
+                $queueForFunctions->setType('schedule')
                     // Set functionId instead of function as we don't have $dbForProject
                     // TODO: Refactor to use function instead of functionId
                     ->setFunctionId($schedule['resource']['functionId'])
                     ->setExecution($schedule['resource'])
-                    ->setMethod($schedule['data']['method'] ?? 'POST')
-                    ->setPath($schedule['data']['path'] ?? '/')
-                    ->setHeaders($schedule['data']['headers'] ?? [])
-                    ->setBody($schedule['data']['body'] ?? '')
+                    ->setMethod($data['method'] ?? 'POST')
+                    ->setPath($data['path'] ?? '/')
+                    ->setHeaders($data['headers'] ?? [])
+                    ->setBody($data['body'] ?? '')
                     ->setProject($schedule['project'])
+                    ->setUserId($data['userId'] ?? '')
                     ->trigger();
-
-                $dbForConsole->deleteDocument(
-                    'schedules',
-                    $schedule['$id'],
-                );
             });
+
+            $dbForConsole->deleteDocument(
+                'schedules',
+                $schedule['$id'],
+            );
 
             unset($this->schedules[$schedule['$internalId']]);
         }
 
-        $this->connections->reclaim();
+        $queue->reclaim();
     }
 }

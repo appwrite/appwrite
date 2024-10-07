@@ -11,8 +11,7 @@ $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
-?>
-services:
+?>services:
   traefik:
     image: traefik:2.11
     container_name: appwrite-traefik
@@ -167,7 +166,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:5.0.11
+    image: <?php echo $organization; ?>/console:5.0.12
     restart: unless-stopped
     networks:
       - appwrite
@@ -337,6 +336,9 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
+      - _APP_MAINTENANCE_RETENTION_ABUSE
+      - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_EXECUTION
 
   appwrite-worker-databases:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -529,6 +531,8 @@ services:
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
       - _APP_LOGGING_CONFIG
+      - _APP_DOMAIN
+      - _APP_OPTIONS_FORCE_HTTPS
 
   appwrite-worker-messaging:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -677,6 +681,7 @@ services:
     entrypoint: worker-usage-dump
     <<: *x-logging
     container_name: appwrite-worker-usage-dump
+    restart: unless-stopped
     networks:
       - appwrite
     depends_on:
@@ -790,7 +795,7 @@ services:
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.6.7
+    image: openruntimes/executor:0.6.11
     networks:
       - appwrite
       - runtimes
@@ -848,7 +853,7 @@ services:
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
-    command: 'mysqld --innodb-flush-method=fsync --max_connections=5000'
+    command: 'mysqld --innodb-flush-method=fsync'
 
   redis:
     image: redis:7.2.4-alpine

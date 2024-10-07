@@ -2,7 +2,7 @@
 
 namespace Appwrite\Functions\Validator;
 
-use Utopia\Http\Validator;
+use Utopia\Validator;
 
 /**
  * Headers.

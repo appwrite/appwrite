@@ -5,48 +5,144 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Utopia\Queue\Connections;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Request as SwooleRequest;
-use Swoole\Http\Response as SwooleHttpResponse;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\Database\TimeLimit;
+use Utopia\App;
+use Utopia\Cache\Adapter\Sharding;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\DI\Container;
-use Utopia\DI\Dependency;
-use Utopia\Http\Adapter\Swoole\Request as UtopiaRequest;
-use Utopia\Http\Adapter\Swoole\Response as HttpResponse;
-use Utopia\Http\Adapter\Swoole\Response as UtopiaResponse;
-use Utopia\Http\Http;
+use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
-use Utopia\Pools\Connection;
-use Utopia\Registry\Registry;
 use Utopia\System\System;
 use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
 /**
- * @var Registry $registry
- * @var Container $container
+ * @var \Utopia\Registry\Registry $register
  */
-global $registry, $container;
-
-
 require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-$realtime = new Realtime();
+// Allows overriding
+if (!function_exists('getConsoleDB')) {
+    function getConsoleDB(): Database
+    {
+        global $register;
+
+        /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools');
+
+        $dbAdapter = $pools
+            ->get('console')
+            ->pop()
+            ->getResource()
+        ;
+
+        $database = new Database($dbAdapter, getCache());
+
+        $database
+            ->setNamespace('_console')
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', '_console');
+
+        return $database;
+    }
+}
+
+// Allows overriding
+if (!function_exists('getProjectDB')) {
+    function getProjectDB(Document $project): Database
+    {
+        global $register;
+
+        /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools');
+
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return getConsoleDB();
+        }
+
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
+
+        $adapter = $pools
+            ->get($dsn->getHost())
+            ->pop()
+            ->getResource();
+
+        $database = new Database($adapter, getCache());
+
+        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            $database
+                ->setSharedTables(true)
+                ->setTenant($project->getInternalId())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getInternalId());
+        }
+
+        $database
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId());
+
+        return $database;
+    }
+}
+
+// Allows overriding
+if (!function_exists('getCache')) {
+    function getCache(): Cache
+    {
+        global $register;
+
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+
+        $list = Config::getParam('pools-cache', []);
+        $adapters = [];
+
+        foreach ($list as $value) {
+            $adapters[] = $pools
+                ->get($value)
+                ->pop()
+                ->getResource()
+            ;
+        }
+
+        return new Cache(new Sharding($adapters));
+    }
+}
+
+if (!function_exists('getRealtime')) {
+    function getRealtime(): Realtime
+    {
+        return new Realtime();
+    }
+}
+
+$realtime = getRealtime();
 
 /**
  * Table for statistics across all workers.
@@ -70,8 +166,8 @@ $adapter
 
 $server = new Server($adapter);
 
-$logError = function (Throwable $error, string $action) use ($registry) {
-    $logger = $registry->get('logger');
+$logError = function (Throwable $error, string $action) use ($register) {
+    $logger = $register->get('logger');
 
     if ($logger && !$error instanceof Exception) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
@@ -95,8 +191,12 @@ $logError = function (Throwable $error, string $action) use ($registry) {
         $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
         $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-        $responseCode = $logger->addLog($log);
-        Console::info('Realtime log pushed with status code: ' . $responseCode);
+        try {
+            $responseCode = $logger->addLog($log);
+            Console::info('Error log pushed with status code: ' . $responseCode);
+        } catch (Throwable $th) {
+            Console::error('Error pushing log: ' . $th->getMessage());
+        }
     }
 
     Console::error('[Error] Type: ' . get_class($error));
@@ -107,16 +207,16 @@ $logError = function (Throwable $error, string $action) use ($registry) {
 
 $server->error($logError);
 
-$server->onStart(function () use ($stats, $container, $containerId, &$statsDocument, $logError) {
+$server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
     sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started successfully');
-    $authorization = $container->get('authorization');
+
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($container, $containerId, &$statsDocument) {
+    go(function () use ($register, $containerId, &$statsDocument) {
         $attempts = 0;
-        $database = $container->get('dbForConsole');
+        $database = getConsoleDB();
 
         do {
             try {
@@ -130,15 +230,14 @@ $server->onStart(function () use ($stats, $container, $containerId, &$statsDocum
                     'value' => '{}'
                 ]);
 
-                $authorization = $container->get('authorization');
-                $statsDocument = $authorization->skip(fn () => $database->createDocument('realtime', $document));
+                $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
                 break;
             } catch (Throwable) {
                 Console::warning("Collection not ready. Retrying connection ({$attempts})...");
                 sleep(DATABASE_RECONNECT_SLEEP);
             }
         } while (true);
-        ($container->get('connections'))->reclaim();
+        $register->get('pools')->reclaim();
     });
 
     /**
@@ -146,7 +245,7 @@ $server->onStart(function () use ($stats, $container, $containerId, &$statsDocum
      */
     // TODO: Remove this if check once it doesn't cause issues for cloud
     if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-        Timer::tick(5000, function () use ($container, $stats, &$statsDocument, $logError, $authorization) {
+        Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
             $payload = [];
             foreach ($stats as $projectId => $value) {
                 $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
@@ -156,43 +255,40 @@ $server->onStart(function () use ($stats, $container, $containerId, &$statsDocum
             }
 
             try {
-                $database = $container->get('dbForConsole');
+                $database = getConsoleDB();
 
                 $statsDocument
                     ->setAttribute('timestamp', DateTime::now())
                     ->setAttribute('value', json_encode($payload));
 
-                $authorization->skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+                Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
             } catch (Throwable $th) {
                 call_user_func($logError, $th, "updateWorkerDocument");
             } finally {
-                ($container->get('connections'))->reclaim();
-                $container->refresh('dbForConsole');
+                $register->get('pools')->reclaim();
             }
         });
     }
 });
 
-$server->onWorkerStart(function (int $workerId) use ($server, $container, $stats, $realtime, $logError) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $attempts = 0;
     $start = time();
 
-    $authorization = $container->get('authorization');
-
-    Timer::tick(5000, function () use ($server, $container, $realtime, $stats, $logError, $authorization) {
+    Timer::tick(5000, function () use ($server, $register, $realtime, $stats, $logError) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
         // TODO: Remove this if check once it doesn't cause issues for cloud
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             if ($realtime->hasSubscriber('console', Role::users()->toString(), 'project')) {
-                $database = $container->get('dbForConsole');
+                $database = getConsoleDB();
 
                 $payload = [];
 
-                $list = $authorization->skip(fn () => $database->find('realtime', [
+                $list = Authorization::skip(fn () => $database->find('realtime', [
                     Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
                 ]));
 
@@ -232,8 +328,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
                         'data' => $event['data']
                     ]));
                 }
-                ($container->get('connections'))->reclaim();
-                $container->refresh('dbForConsole');
+
+                $register->get('pools')->reclaim();
             }
         }
         /**
@@ -263,26 +359,13 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
     while ($attempts < 300) {
         try {
             if ($attempts > 0) {
-                Console::error(
-                    'Pub/sub connection lost (lasted ' . (time() - $start) . ' seconds, worker: ' . $workerId . ').
-                    Attempting restart in 5 seconds (attempt #' . $attempts . ')'
-                );
+                Console::error('Pub/sub connection lost (lasted ' . (time() - $start) . ' seconds, worker: ' . $workerId . ').
+                    Attempting restart in 5 seconds (attempt #' . $attempts . ')');
                 sleep(5); // 5 sec delay between connection attempts
             }
-
             $start = time();
 
-            $pools = $container->get('pools');
-            /** @var Connections $connections */
-            $connections = $container->get('connections');
-
-            $pool = $pools['pools-pubsub-pubsub']['pool'];
-            $connection = $pool->get();
-            $connections->add($connection, $pool);
-
-            $redis = $connection;
-
-            /** @var Redis $redis */
+            $redis = $register->get('pools')->get('pubsub')->pop()->getResource(); /** @var Redis $redis */
             $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
             if ($redis->ping(true)) {
@@ -292,7 +375,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $redis->subscribe(['realtime'], function (Redis $redis, string $channel, string $payload) use ($server, $workerId, $stats, $realtime, $authorization, $container) {
+            $redis->subscribe(['realtime'], function (Redis $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
                 $event = json_decode($payload, true);
 
                 if ($event['permissionsChanged'] && isset($event['userId'])) {
@@ -301,24 +384,25 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                        $consoleDatabase = $container->get('dbForConsole');
-
-                        $project = $authorization->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
-                        $database = $container->get('getProjectDB')($project);
+                        $consoleDatabase = getConsoleDB();
+                        $project = Authorization::skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
+                        $database = getProjectDB($project);
 
                         $user = $database->getDocument('users', $userId);
 
-                        $roles = Auth::getRoles($user, $authorization);
+                        $roles = Auth::getRoles($user);
                         $channels = $realtime->connections[$connection]['channels'];
 
                         $realtime->unsubscribe($connection);
                         $realtime->subscribe($projectId, $connection, $roles, $channels);
+
+                        $register->get('pools')->reclaim();
                     }
                 }
 
                 $receivers = $realtime->getSubscribers($event);
 
-                if (Http::isDevelopment() && !empty($receivers)) {
+                if (App::isDevelopment() && !empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
                     Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
                     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
@@ -344,40 +428,30 @@ $server->onWorkerStart(function (int $workerId) use ($server, $container, $stats
             sleep(DATABASE_RECONNECT_SLEEP);
             continue;
         } finally {
-            ($container->get('connections'))->reclaim();
-            $container->refresh('dbForConsole');
+            $register->get('pools')->reclaim();
         }
     }
 
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $container, $stats, &$realtime, $logError) {
-    $authorization = $container->get('authorization');
-
-    $request = new Request(new UtopiaRequest($request));
-    $response = new Response(new UtopiaResponse(new SwooleResponse()));
-
-    $requestInjection = new Dependency();
-    $responseInjection = new Dependency();
-
-    $requestInjection->setName('request')->setCallback(fn () => $request);
-    $responseInjection->setName('response')->setCallback(fn () => $response);
-
-    $container->set($requestInjection);
-    $container->set($responseInjection);
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
+    $app = new App('UTC');
+    $request = new Request($request);
+    $response = new Response(new SwooleResponse());
 
     Console::info("Connection open (user: {$connection})");
 
+    App::setResource('pools', fn () => $register->get('pools'));
+    App::setResource('request', fn () => $request);
+    App::setResource('response', fn () => $response);
+
     try {
-
         /** @var Document $project */
-        $project = $container->refresh('project')->get('project');
-
-        $container->refresh('dbForProject');
+        $project = $app->getResource('project');
 
         /*
-         * Project Check
+         *  Project Check
          */
         if (empty($project->getId())) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing or unknown project ID');
@@ -386,16 +460,15 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         if (
             array_key_exists('realtime', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['realtime']
-            && !(Auth::isPrivilegedUser($authorization->getRoles()) || Auth::isAppUser($authorization->getRoles()))
+            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
 
-        $dbForProject = $container->get('getProjectDB')($project);
-        /** @var Document $console */
-        $console = $container->get('console');
-        /** @var Document $user */
-        $user = $container->refresh('user')->get('user');
+        $dbForProject = getProjectDB($project);
+        $console = $app->getResource('console'); /** @var Document $console */
+        $user = $app->getResource('user'); /** @var Document $user */
+
         /*
          * Abuse Check
          *
@@ -424,8 +497,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 
-        $authorization = $container->get('authorization');
-        $roles = Auth::getRoles($user, $authorization);
+        $roles = Auth::getRoles($user);
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
 
@@ -474,33 +546,25 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $server->send([$connection], json_encode($response));
         $server->close($connection, $code);
 
-        if (Http::isDevelopment()) {
+        if (App::isDevelopment()) {
             Console::error('[Error] Connection Error');
             Console::error('[Error] Code: ' . $response['data']['code']);
             Console::error('[Error] Message: ' . $response['data']['message']);
         }
     } finally {
-        $connections = $container->get('connections');
-        $connections->reclaim();
+        $register->get('pools')->reclaim();
     }
 });
 
-$server->onWorkerStop(function (int $workerId) use ($container) {
-    $connections = $container->get('connections');
-    $connections->reclaim();
-});
-
-$server->onMessage(function (int $connection, string $message) use ($server, $container, $realtime, $containerId) {
+$server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
     try {
-        $response = new Response(new HttpResponse(new SwooleHttpResponse()));
+        $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'];
-        $database = $container->get('dbForConsole');
-        $authorization = $container->get('authorization');
-        $authentication = $container->get('authentication');
+        $database = getConsoleDB();
 
         if ($projectId !== 'console') {
-            $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
-            $database = $container->get('getProjectDB')($project);
+            $project = Authorization::skip(fn () => $database->getDocument('projects', $projectId));
+            $database = getProjectDB($project);
         } else {
             $project = null;
         }
@@ -538,21 +602,20 @@ $server->onMessage(function (int $connection, string $message) use ($server, $co
                 }
 
                 $session = Auth::decodeSession($message['data']['session']);
+                Auth::$unique = $session['id'] ?? '';
+                Auth::$secret = $session['secret'] ?? '';
 
-                $authentication->setUnique($session['id'] ?? '');
-                $authentication->setSecret($session['secret'] ?? '');
-
-                $user = $database->getDocument('users', $authentication->getUnique());
+                $user = $database->getDocument('users', Auth::$unique);
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
-                    || !Auth::sessionVerify($user->getAttribute('sessions', []), $authentication->getSecret()) // Validate user has valid login token
+                    || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret) // Validate user has valid login token
                 ) {
                     // cookie not valid
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
                 }
 
-                $roles = Auth::getRoles($user, $authorization);
+                $roles = Auth::getRoles($user);
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
                 $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
 
@@ -586,8 +649,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $co
             $server->close($connection, $th->getCode());
         }
     } finally {
-        ($container->get('connections'))->reclaim();
-        $container->refresh('dbForConsole');
+        $register->get('pools')->reclaim();
     }
 });
 

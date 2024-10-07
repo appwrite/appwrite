@@ -11,6 +11,7 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
 use Exception;
 use Throwable;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -21,7 +22,6 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
-use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -330,26 +330,30 @@ class Certificates extends Action
      *
      * @param string $folder Folder into which certificates should be generated
      * @param string $domain Domain to generate certificate for
-     * @return string output
+     * @return array Named array with keys 'stdout' and 'stderr', both string
      * @throws Exception
      */
-    private function issueCertificate(string $folder, string $domain, string $email): string
+    private function issueCertificate(string $folder, string $domain, string $email): array
     {
-        $output = '';
+        $stdout = '';
+        $stderr = '';
 
-        $staging = (Http::isProduction()) ? '' : ' --dry-run';
+        $staging = (App::isProduction()) ? '' : ' --dry-run';
         $exit = Console::execute("certbot certonly -v --webroot --noninteractive --agree-tos{$staging}"
             . " --email " . $email
             . " --cert-name " . $folder
             . " -w " . APP_STORAGE_CERTIFICATES
-            . " -d {$domain}", '', $output);
+            . " -d {$domain}", '', $stdout, $stderr);
 
         // Unexpected error, usually 5XX, API limits, ...
         if ($exit !== 0) {
-            throw new Exception('Failed to issue a certificate with message: ' . $output);
+            throw new Exception('Failed to issue a certificate with message: ' . $stderr);
         }
 
-        return $output;
+        return [
+            'stdout' => $stdout,
+            'stderr' => $stderr
+        ];
     }
 
     /**
@@ -377,7 +381,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function applyCertificateFiles(string $folder, string $domain, string $letsEncryptData): void
+    private function applyCertificateFiles(string $folder, string $domain, array $letsEncryptData): void
     {
 
         // Prepare folder in storage for domain
@@ -390,19 +394,19 @@ class Certificates extends Action
 
         // Move generated files
         if (!@\rename('/etc/letsencrypt/live/' . $folder . '/cert.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem')) {
-            throw new Exception('Failed to rename certificate cert.pem. Let\'s Encrypt log: ' . $letsEncryptData);
+            throw new Exception('Failed to rename certificate cert.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $folder . '/chain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/chain.pem')) {
-            throw new Exception('Failed to rename certificate chain.pem. Let\'s Encrypt log: ' . $letsEncryptData);
+            throw new Exception('Failed to rename certificate chain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $folder . '/fullchain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/fullchain.pem')) {
-            throw new Exception('Failed to rename certificate fullchain.pem. Let\'s Encrypt log: ' . $letsEncryptData);
+            throw new Exception('Failed to rename certificate fullchain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $folder . '/privkey.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/privkey.pem')) {
-            throw new Exception('Failed to rename certificate privkey.pem. Let\'s Encrypt log: ' . $letsEncryptData);
+            throw new Exception('Failed to rename certificate privkey.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
         $config = \implode(PHP_EOL, [

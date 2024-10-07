@@ -66,13 +66,9 @@ class EventTest extends TestCase
         $this->assertEquals('eventValue1', $this->object->getParam('eventKey1'));
         $this->assertEquals('eventValue2', $this->object->getParam('eventKey2'));
         $this->assertEquals(null, $this->object->getParam('eventKey3'));
-
-        global $registry;
-        $pools = $registry->get('pools');
-        $dsn = $pools['pools-queue-queue']['dsn'];
-        $queue =  new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
-
-        $client = new Client($this->object->getQueue(), $queue);
+        global $register;
+        $pools = $register->get('pools');
+        $client = new Client($this->object->getQueue(), $pools->get('queue')->pop()->getResource());
         $this->assertEquals($client->getQueueSize(), 1);
     }
 

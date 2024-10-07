@@ -175,9 +175,9 @@ class Func extends Event
      *
      * @return string
      */
-    public function getBody(): string
+    public function getData(): string
     {
-        return $this->body;
+        return $this->data;
     }
 
     /**
@@ -222,6 +222,7 @@ class Func extends Event
         return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
+            'userId' => $this->userId,
             'function' => $this->function,
             'functionId' => $this->functionId,
             'execution' => $this->execution,

@@ -71,12 +71,6 @@ class Functions extends Action
             throw new Exception('Missing payload');
         }
 
-        $payload = $message->getPayload() ?? [];
-
-        if (empty($payload)) {
-            throw new Exception('Missing payload');
-        }
-
         $type = $payload['type'] ?? '';
         $events = $payload['events'] ?? [];
         $data = $payload['body'] ?? '';
@@ -85,9 +79,23 @@ class Functions extends Action
         $function = new Document($payload['function'] ?? []);
         $functionId = $payload['functionId'] ?? '';
         $user = new Document($payload['user'] ?? []);
+        $userId = $payload['userId'] ?? '';
         $method = $payload['method'] ?? 'POST';
         $headers = $payload['headers'] ?? [];
         $path = $payload['path'] ?? '/';
+        $jwt = $payload['jwt'] ?? '';
+
+        if ($user->isEmpty() && !empty($userId)) {
+            $user = $dbForProject->getDocument('users', $userId);
+        }
+
+        if (empty($jwt) && !$user->isEmpty()) {
+            $jwtExpiry = $function->getAttribute('timeout', 900);
+            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+            $jwt = $jwtObj->encode([
+                'userId' => $user->getId(),
+            ]);
+        }
 
         if ($project->getId() === 'console') {
             return;
@@ -157,7 +165,6 @@ class Functions extends Action
          */
         switch ($type) {
             case 'http':
-                $jwt = $payload['jwt'] ?? '';
                 $execution = new Document($payload['execution'] ?? []);
                 $user = new Document($payload['user'] ?? []);
                 $this->execute(
@@ -194,9 +201,9 @@ class Functions extends Action
                     path: $path,
                     method: $method,
                     headers: $headers,
-                    data: null,
-                    user: null,
-                    jwt: null,
+                    data: $data,
+                    user: $user,
+                    jwt: $jwt,
                     event: null,
                     eventData: null,
                     executionId: $execution->getId() ?? null
@@ -580,7 +587,8 @@ class Functions extends Action
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern
             event: $allEvents[0],
-            payload: $execution
+            payload: $execution,
+            project: $project
         );
         Realtime::send(
             projectId: 'console',

@@ -2,9 +2,9 @@
 
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\Http\Http;
+use Utopia\App;
 
-Http::init()
+App::init()
     ->groups(['web'])
     ->inject('request')
     ->inject('response')
@@ -16,7 +16,7 @@ Http::init()
         ;
     });
 
-Http::get('/')
+App::get('/')
     ->alias('auth/*')
     ->alias('/invite')
     ->alias('/login')

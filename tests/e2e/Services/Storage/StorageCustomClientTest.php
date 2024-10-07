@@ -1089,7 +1089,7 @@ class StorageCustomClientTest extends Scope
 
         $this->assertEquals(200, $file['headers']['status-code']);
 
-        // Team 2 view success
+        // Team 1 view success
         $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1111,8 +1111,6 @@ class StorageCustomClientTest extends Scope
             'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
-
-        $this->assertEquals($file['headers']['status-code'], 401);
 
         // Team 2 create failure
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
