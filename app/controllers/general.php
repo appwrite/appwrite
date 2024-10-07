@@ -460,6 +460,10 @@ App::init()
         /*
         * Appwrite Router
         */
+
+
+        $ctime = time();
+        var_dump("[".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - Before general first init hook");
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
@@ -661,6 +665,9 @@ App::init()
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_UNKNOWN_ORIGIN, $originValidator->getDescription());
         }
+
+        $diff = time() - $ctime;
+        var_dump("[".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - After general first init hook : " . $diff . " sec");
     });
 
 App::options()
