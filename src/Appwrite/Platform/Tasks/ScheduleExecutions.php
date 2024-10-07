@@ -21,6 +21,11 @@ class ScheduleExecutions extends ScheduleBase
         return 'execution';
     }
 
+    public static function getCollectionId(): string
+    {
+        return 'executions';
+    }
+
     protected function enqueueResources(array $pools, callable $getConsoleDB): void
     {
         [$connection,$pool, $dbForConsole] = $getConsoleDB();

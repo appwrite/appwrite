@@ -138,7 +138,11 @@ class Request extends HttpRequest
             return $this->headers;
         }
 
-        $this->headers = $this->generateHeaders();
+        try {
+            $this->headers = $this->generateHeaders();
+        } catch (\Throwable) {
+            $this->headers = [];
+        }
 
         if (empty($this->swoole->cookie)) {
             return $this->headers;

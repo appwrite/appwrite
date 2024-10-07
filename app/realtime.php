@@ -46,7 +46,14 @@ require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-$realtime = new Realtime();
+if (!function_exists('getRealtime')) {
+    function getRealtime(): Realtime
+    {
+        return new Realtime();
+    }
+}
+
+$realtime = getRealtime();
 
 /**
  * Table for statistics across all workers.

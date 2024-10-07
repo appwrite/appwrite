@@ -47,7 +47,7 @@ $project
         $payload = $message->getPayload() ?? [];
         $project = new Document($payload['project'] ?? []);
 
-        if ($project->getId() === 'console') {
+        if ($project->getId() === 'console' || $project->isEmpty() || ! empty($project->getInternalId())) {
             return $project;
         }
 

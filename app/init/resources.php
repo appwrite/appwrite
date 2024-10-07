@@ -58,9 +58,9 @@ use Utopia\VCS\Adapter\Git\GitHub;
 
 global $container;
 
-function getDevice($root): Device
+function getDevice(string $root, string $connection = ''): Device
 {
-    $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    $connection = !empty($connection) ? $connection : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
     if (!empty($connection)) {
         $acl = 'private';

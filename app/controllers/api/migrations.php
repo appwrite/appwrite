@@ -60,6 +60,7 @@ Http::post('/v1/migrations/appwrite')
             'status' => 'pending',
             'stage' => 'init',
             'source' => Appwrite::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'endpoint' => $endpoint,
                 'projectId' => $projectId,
@@ -164,6 +165,7 @@ Http::post('/v1/migrations/firebase/oauth')
             'status' => 'pending',
             'stage' => 'init',
             'source' => Firebase::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'serviceAccount' => json_encode($serviceAccount),
             ],
@@ -224,6 +226,7 @@ Http::post('/v1/migrations/firebase')
             'status' => 'pending',
             'stage' => 'init',
             'source' => Firebase::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'serviceAccount' => $serviceAccount,
             ],
@@ -279,6 +282,7 @@ Http::post('/v1/migrations/supabase')
             'status' => 'pending',
             'stage' => 'init',
             'source' => Supabase::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'endpoint' => $endpoint,
                 'apiKey' => $apiKey,
@@ -340,6 +344,7 @@ Http::post('/v1/migrations/nhost')
             'status' => 'pending',
             'stage' => 'init',
             'source' => NHost::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'subdomain' => $subdomain,
                 'region' => $region,

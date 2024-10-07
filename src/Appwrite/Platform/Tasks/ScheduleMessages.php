@@ -20,6 +20,11 @@ class ScheduleMessages extends ScheduleBase
         return 'message';
     }
 
+    public static function getCollectionId(): string
+    {
+        return 'messages';
+    }
+
     protected function enqueueResources(array $pools, callable $getConsoleDB): void
     {
         [$connection,$pool, $dbForConsole] = $getConsoleDB();

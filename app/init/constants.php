@@ -63,6 +63,9 @@ const APP_HOSTNAME_INTERNAL = 'appwrite';
 const APP_FUNCTION_SPECIFICATION_DEFAULT = Specification::S_05VCPU_512MB;
 const APP_FUNCTION_CPUS_DEFAULT = 0.5;
 const APP_FUNCTION_MEMORY_DEFAULT = 512;
+const APP_PLATFORM_SERVER = 'server';
+const APP_PLATFORM_CLIENT = 'client';
+const APP_PLATFORM_CONSOLE = 'console';
 const DATABASE_SHARED_TABLES = 'database_db_fra1_self_hosted_16_0';
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
@@ -121,7 +124,7 @@ const APP_AUTH_TYPE_JWT = 'JWT';
 const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
-const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_OUTPUT_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
 // Function headers
 const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
 const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
@@ -183,6 +186,7 @@ const METRIC_FUNCTION_ID_BUILDS_FAILED  = '{functionInternalId}.builds.failed';
 
 const METRIC_FUNCTION_ID_BUILDS_STORAGE = '{functionInternalId}.builds.storage';
 const METRIC_FUNCTION_ID_BUILDS_COMPUTE  = '{functionInternalId}.builds.compute';
+
 const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
 const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
 const METRIC_FUNCTION_ID_BUILDS_MB_SECONDS = '{functionInternalId}.builds.mbSeconds';

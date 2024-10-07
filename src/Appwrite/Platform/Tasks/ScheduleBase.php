@@ -23,6 +23,7 @@ abstract class ScheduleBase extends Action
     abstract public static function getName(): string;
 
     abstract public static function getSupportedResource(): string;
+    abstract public static function getCollectionId(): string;
 
     abstract protected function enqueueResources(
         array $pools,
@@ -70,7 +71,7 @@ abstract class ScheduleBase extends Action
             };
 
             $resource = $getProjectDB($project)->getDocument(
-                $collectionId,
+                static::getCollectionId(),
                 $schedule->getAttribute('resourceId')
             );
 
@@ -114,12 +115,7 @@ abstract class ScheduleBase extends Action
                 try {
                     $this->schedules[$document->getInternalId()] = $getSchedule($document);
                 } catch (\Throwable $th) {
-                    $collectionId = match ($document->getAttribute('resourceType')) {
-                        'function' => 'functions',
-                        'message' => 'messages',
-                        'execution' => 'executions'
-                    };
-
+                    $collectionId = static::getCollectionId();
                     Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");
                     Console::error($th->getMessage());
                 }
@@ -132,7 +128,6 @@ abstract class ScheduleBase extends Action
         Console::success("{$total} resources were loaded in " . (\microtime(true) - $loadStart) . " seconds");
 
         Console::success("Starting timers at " . DateTime::now());
-
 
         Timer::tick(static::UPDATE_TIMER * 1000, function () use ($getConsoleDB, &$lastSyncUpdate, $getSchedule, $pools) {
             [$connection,$pool, $dbForConsole] = $getConsoleDB();
@@ -173,10 +168,10 @@ abstract class ScheduleBase extends Action
                     $new = \strtotime($document['resourceUpdatedAt']);
 
                     if (!$document['active']) {
-                        Console::info("Removing: {$document['resourceId']}");
+                        Console::info("Removing: {$document['resourceType']}::{$document['resourceId']}");
                         unset($this->schedules[$document->getInternalId()]);
                     } elseif ($new !== $org) {
-                        Console::info("Updating: {$document['resourceId']}");
+                        Console::info("Updating: {$document['resourceType']}::{$document['resourceId']}");
                         $this->schedules[$document->getInternalId()] = $getSchedule($document);
                     }
                 }

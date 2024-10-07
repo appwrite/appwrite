@@ -34,6 +34,16 @@ class Specs extends Action
         return 'specs';
     }
 
+    public function getRequest(): UtopiaRequest
+    {
+        return new AppwriteRequest(new SwooleRequest());
+    }
+
+    public function getResponse(): UtopiaResponse
+    {
+        return new AppwriteResponse(new SwooleResponse());
+    }
+
     public function __construct()
     {
         $this
@@ -199,10 +209,8 @@ class Specs extends Action
                             case APP_AUTH_TYPE_SESSION:
                                 $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                                 break;
-                            case APP_AUTH_TYPE_KEY:
-                                $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                                break;
                             case APP_AUTH_TYPE_JWT:
+                            case APP_AUTH_TYPE_KEY:
                                 $sdkPlatforms[] = APP_PLATFORM_SERVER;
                                 break;
                             case APP_AUTH_TYPE_ADMIN:
