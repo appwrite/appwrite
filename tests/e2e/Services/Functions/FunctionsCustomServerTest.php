@@ -553,7 +553,7 @@ class FunctionsCustomServerTest extends Scope
 
         $folder = 'php-large';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->output);
 
         $chunkSize = 5 * 1024 * 1024;
         $handle = @fopen($code, "rb");

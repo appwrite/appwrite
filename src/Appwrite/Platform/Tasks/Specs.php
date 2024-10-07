@@ -34,16 +34,6 @@ class Specs extends Action
         return 'specs';
     }
 
-    public function getRequest(): UtopiaRequest
-    {
-        return new AppwriteRequest(new SwooleRequest());
-    }
-
-    public function getResponse(): UtopiaResponse
-    {
-        return new AppwriteResponse(new SwooleResponse());
-    }
-
     public function __construct()
     {
         $this
