@@ -1859,10 +1859,11 @@ class FunctionsCustomServerTest extends Scope
                 'x-appwrite-response-format' => '1.4.0', // Set response format for 1.4 syntax
             ], $this->getHeaders()),
             [
-                'queries' => [ 'equal("name", ["Test2"])' ]
+                'queries' => [
+                    Query::equal('name', ['Test2'])->toString(),
+                ]
             ]
         );
-
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body']['functions']);
         $this->assertEquals('Test2', $response['body']['functions'][0]['name']);
