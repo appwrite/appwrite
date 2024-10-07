@@ -451,9 +451,6 @@ App::init()
     ->inject('queueForEvents')
     ->inject('queueForCertificates')
     ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, Usage $queueForUsage, Event $queueForEvents, Certificate $queueForCertificates) {
-        $ctime = time();
-        var_dump("[".$region."] - Before general first init hook");
-
         /*
         * Appwrite Router
         */
@@ -658,9 +655,6 @@ App::init()
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_UNKNOWN_ORIGIN, $originValidator->getDescription());
         }
-
-        $diff = time() - $ctime;
-        var_dump("[".$region."] - After general first init hook : " . $diff . " sec");
     });
 
 App::options()
