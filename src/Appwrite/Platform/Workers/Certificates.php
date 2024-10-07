@@ -126,7 +126,7 @@ class Certificates extends Action
         $certificate = $dbForConsole->findOne('certificates', [Query::equal('domain', [$domain->get()])]);
 
         // If we don't have certificate for domain yet, let's create new document. At the end we save it
-        if (empty($certificate) || $certificate->isEmpty()) {
+        if ($certificate->isEmpty()) {
             $certificate = new Document();
             $certificate->setAttribute('domain', $domain->get());
         }
