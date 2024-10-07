@@ -2406,6 +2406,17 @@ $projectCollections = array_merge([
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('originalId'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => Database::LENGTH_KEY,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'default' => null,
+                'array' => false,
+            ],
         ],
         'indexes' => [
             [
