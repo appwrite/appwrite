@@ -5,27 +5,25 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
-use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Models;
+use Appwrite\Utopia\Request as AppwriteRequest;
+use Appwrite\Utopia\Response as AppwriteResponse;
 use Exception;
-use Swoole\Http\Request as SwooleHttpRequest;
-use Swoole\Http\Response as SwooleHttpResponse;
+use Swoole\Http\Request as SwooleRequest;
+use Swoole\Http\Response as SwooleResponse;
+use Utopia\App;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
-use Utopia\DI\Container;
-use Utopia\DI\Dependency;
-use Utopia\Http\Adapter\FPM\Server;
-use Utopia\Http\Adapter\Swoole\Request;
-use Utopia\Http\Adapter\Swoole\Response as HttpResponse;
-use Utopia\Http\Http;
-use Utopia\Http\Validator\Text;
-use Utopia\Http\Validator\WhiteList;
 use Utopia\Platform\Action;
+use Utopia\Registry\Registry;
+use Utopia\Request as UtopiaRequest;
+use Utopia\Response as UtopiaResponse;
 use Utopia\System\System;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class Specs extends Action
 {
@@ -34,38 +32,37 @@ class Specs extends Action
         return 'specs';
     }
 
+    public function getRequest(): UtopiaRequest
+    {
+        return new AppwriteRequest(new SwooleRequest());
+    }
+
+    public function getResponse(): UtopiaResponse
+    {
+        return new AppwriteResponse(new SwooleResponse());
+    }
+
     public function __construct()
     {
         $this
             ->desc('Generate Appwrite API specifications')
             ->param('version', 'latest', new Text(16), 'Spec version', true)
             ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
-            ->inject('context')
-            ->callback(fn (string $version, string $mode, Container $context) => $this->action($version, $mode, $context));
+            ->inject('register')
+            ->callback(fn (string $version, string $mode, Registry $register) => $this->action($version, $mode, $register));
     }
 
-    public function action(string $version, string $mode, Container $container): void
+    public function action(string $version, string $mode, Registry $register): void
     {
-        $appRoutes = Http::getRoutes();
-        $response = new Response(new HttpResponse(new SwooleHttpResponse()));
+        $appRoutes = App::getRoutes();
+        $response = $this->getResponse();
         $mocks = ($mode === 'mocks');
 
-        $requestDependency = new Dependency();
-        $responseDependency = new Dependency();
-        $dbForConsole = new Dependency();
-        $dbForProject = new Dependency();
-
         // Mock dependencies
-        $requestDependency->setName('request')->setCallback(fn () => new Request(new SwooleHttpRequest()));
-        $responseDependency->setName('response')->setCallback(fn () => $response);
-        $dbForConsole->setName('dbForConsole')->setCallback(fn () => new Database(new MySQL(''), new Cache(new None())));
-        $dbForProject->setName('dbForProject')->setCallback(fn () => new Database(new MySQL(''), new Cache(new None())));
-
-        $container
-            ->set($requestDependency)
-            ->set($responseDependency)
-            ->set($dbForProject)
-            ->set($dbForConsole);
+        App::setResource('request', fn () => $this->getRequest());
+        App::setResource('response', fn () => $response);
+        App::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
+        App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
 
         $platforms = [
             'client' => APP_PLATFORM_CLIENT,
@@ -255,7 +252,7 @@ class Specs extends Action
                 ];
             }
 
-            $models = Models::getModels();
+            $models = $response->getModels();
 
             foreach ($models as $key => $value) {
                 if ($platform !== APP_PLATFORM_CONSOLE && !$value->isPublic()) {
@@ -263,7 +260,7 @@ class Specs extends Action
                 }
             }
 
-            $arguments = [new Http(new Server(), $container, 'UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
+            $arguments = [new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = match ($format) {
                     'swagger2' => new Swagger2(...$arguments),

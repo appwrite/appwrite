@@ -9,7 +9,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 
@@ -29,8 +28,7 @@ class Audits extends Action
             ->desc('Audits worker')
             ->inject('message')
             ->inject('dbForProject')
-            ->inject('authorization')
-            ->callback(fn ($message, $dbForProject, ValidatorAuthorization $authorization) => $this->action($message, $dbForProject, $authorization));
+            ->callback(fn ($message, $dbForProject) => $this->action($message, $dbForProject));
     }
 
 
@@ -43,7 +41,7 @@ class Audits extends Action
      * @throws Authorization
      * @throws Structure
      */
-    public function action(Message $message, Database $dbForProject, ValidatorAuthorization $auth): void
+    public function action(Message $message, Database $dbForProject): void
     {
 
         $payload = $message->getPayload() ?? [];

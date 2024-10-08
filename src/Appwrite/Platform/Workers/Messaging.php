@@ -178,7 +178,7 @@ class Messaging extends Action
             Query::equal('type', [$providerType]),
         ]);
 
-        if ($default->isEmpty()) {
+        if ($default === false || $default->isEmpty()) {
             $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
                 'status' => MessageStatus::FAILED,
                 'deliveryErrors' => ['No enabled provider found.']
@@ -275,7 +275,7 @@ class Messaging extends Action
                                         Query::equal('identifier', [$result['recipient']])
                                     ]);
 
-                                    if (!$target->isEmpty()) {
+                                    if ($target instanceof Document && !$target->isEmpty()) {
                                         $dbForProject->updateDocument(
                                             'targets',
                                             $target->getId(),

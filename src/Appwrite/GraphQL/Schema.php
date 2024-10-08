@@ -3,63 +3,54 @@
 namespace Appwrite\GraphQL;
 
 use Appwrite\GraphQL\Types\Mapper;
-use Appwrite\Utopia\Response\Models;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema as GQLSchema;
-use Utopia\DI\Container;
+use Utopia\App;
 use Utopia\Exception;
-use Utopia\Http\Adapter\Swoole\Response as UtopiaSwooleResponse;
-use Utopia\Http\Http;
-use Utopia\Http\Request;
-use Utopia\Http\Response as UtopiaHttpResponse;
-use Utopia\Http\Route;
+use Utopia\Route;
 
 class Schema
 {
-    protected ?GQLSchema $schema = null;
-    protected array $dirty = [];
+    protected static ?GQLSchema $schema = null;
+    protected static array $dirty = [];
 
     /**
      *
-     * @param Http $http
-     * @param callable $complexity Function to calculate complexity
-     * @param callable $attributes Function to get attributes
-     * @param array $urls Array of functions to get urls for specific method types
-     * @param array $params Array of functions to build parameters for specific method types
+     * @param App $utopia
+     * @param callable $complexity  Function to calculate complexity
+     * @param callable $attributes  Function to get attributes
+     * @param array $urls           Array of functions to get urls for specific method types
+     * @param array $params         Array of functions to build parameters for specific method types
      * @return GQLSchema
      * @throws Exception
      */
-    public function build(
-        Http $http,
-        Request $request,
-        UtopiaHttpResponse $response,
-        Container $container,
+    public static function build(
+        App $utopia,
         callable $complexity,
         callable $attributes,
         array $urls,
         array $params,
     ): GQLSchema {
-        if (!empty($this->schema)) {
-            return $this->schema;
+        App::setResource('utopia:graphql', static function () use ($utopia) {
+            return $utopia;
+        });
+
+        if (!empty(self::$schema)) {
+            return self::$schema;
         }
 
-        $api = $this->api(
-            $http,
-            $request,
-            $response,
-            $container,
+        $api = static::api(
+            $utopia,
             $complexity
         );
-        //        $collections = $this->collections(
-        //            $http,
-        //            $complexity,
-        //            $request,
-        //            $response,
-        //            $attributes,
-        //            $urls,
-        //            $params,
-        //        );
+        //$collections = static::collections(
+        //    $utopia,
+        //    $complexity,
+        //    $attributes,
+        //    $urls,
+        //    $params,
+        //);
 
         $queries = \array_merge_recursive(
             $api['query'],
@@ -73,7 +64,7 @@ class Schema
         \ksort($queries);
         \ksort($mutations);
 
-        return $this->schema = new GQLSchema([
+        return static::$schema = new GQLSchema([
             'query' => new ObjectType([
                 'name' => 'Query',
                 'fields' => $queries
@@ -89,23 +80,21 @@ class Schema
      * This function iterates all API routes and builds a GraphQL
      * schema defining types and resolvers for all response models.
      *
-     * @param Http $http
-     * @param Request $request
-     * @param UtopiaSwooleResponse $response
+     * @param App $utopia
      * @param callable $complexity
      * @return array
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function api(Http $http, Request $request, UtopiaHttpResponse $response, Container $container, callable $complexity): array
+    protected static function api(App $utopia, callable $complexity): array
     {
-        Mapper::init(Models::getModels());
-
-        $mapper = new Mapper();
+        Mapper::init($utopia
+            ->getResource('response')
+            ->getModels());
 
         $queries = [];
         $mutations = [];
 
-        foreach ($http->getRoutes() as $routes) {
+        foreach ($utopia->getRoutes() as $routes) {
             foreach ($routes as $route) {
                 /** @var Route $route */
 
@@ -117,7 +106,7 @@ class Schema
                     continue;
                 }
 
-                foreach ($mapper->route($http, $route, $request, $response, $container, $complexity) as $field) {
+                foreach (Mapper::route($utopia, $route, $complexity) as $field) {
                     switch ($route->getMethod()) {
                         case 'GET':
                             $queries[$name] = $field;
@@ -145,7 +134,7 @@ class Schema
      * Iterates all of a projects attributes and builds GraphQL
      * queries and mutations for the collections they make up.
      *
-     * @param Http $http
+     * @param App $utopia
      * @param callable $complexity
      * @param callable $attributes
      * @param array $urls
@@ -154,7 +143,7 @@ class Schema
      * @throws \Exception
      */
     protected static function collections(
-        Http $http,
+        App $utopia,
         callable $complexity,
         callable $attributes,
         array $urls,
@@ -205,36 +194,36 @@ class Schema
                 $queryFields[$collectionId . 'Get'] = [
                     'type' => $objectType,
                     'args' => Mapper::args('id'),
-                    /*'resolve' => Resolvers::documentGet(
-                        $http,
+                    'resolve' => Resolvers::documentGet(
+                        $utopia,
                         $databaseId,
                         $collectionId,
                         $urls['get'],
-                    )*/
+                    )
                 ];
                 $queryFields[$collectionId . 'List'] = [
                     'type' => Type::listOf($objectType),
                     'args' => Mapper::args('list'),
-                    /*'resolve' => Resolvers::documentList(
-                        $http,
+                    'resolve' => Resolvers::documentList(
+                        $utopia,
                         $databaseId,
                         $collectionId,
                         $urls['list'],
                         $params['list'],
-                    ),*/
+                    ),
                     'complexity' => $complexity,
                 ];
 
                 $mutationFields[$collectionId . 'Create'] = [
                     'type' => $objectType,
                     'args' => $attributes,
-                    /*'resolve' => Resolvers::documentCreate(
-                        $http,
+                    'resolve' => Resolvers::documentCreate(
+                        $utopia,
                         $databaseId,
                         $collectionId,
                         $urls['create'],
                         $params['create'],
-                    )*/
+                    )
                 ];
                 $mutationFields[$collectionId . 'Update'] = [
                     'type' => $objectType,
@@ -245,23 +234,23 @@ class Schema
                             $attributes
                         )
                     ),
-                    /*'resolve' => Resolvers::documentUpdate(
-                        $http,
+                    'resolve' => Resolvers::documentUpdate(
+                        $utopia,
                         $databaseId,
                         $collectionId,
                         $urls['update'],
                         $params['update'],
-                    )*/
+                    )
                 ];
                 $mutationFields[$collectionId . 'Delete'] = [
                     'type' => Mapper::model('none'),
                     'args' => Mapper::args('id'),
-                    /*'resolve' => Resolvers::documentDelete(
-                        $http,
+                    'resolve' => Resolvers::documentDelete(
+                        $utopia,
                         $databaseId,
                         $collectionId,
                         $urls['delete'],
-                    )*/
+                    )
                 ];
             }
             $offset += $limit;
@@ -273,8 +262,8 @@ class Schema
         ];
     }
 
-    public function setDirty(string $projectId): void
+    public static function setDirty(string $projectId): void
     {
-        $this->dirty[$projectId] = true;
+        self::$dirty[$projectId] = true;
     }
 }

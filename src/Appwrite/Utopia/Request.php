@@ -3,10 +3,11 @@
 namespace Appwrite\Utopia;
 
 use Appwrite\Utopia\Request\Filter;
-use Utopia\Http\Adapter\Swoole\Request as HttpRequest;
-use Utopia\Http\Route;
+use Swoole\Http\Request as SwooleRequest;
+use Utopia\Route;
+use Utopia\Swoole\Request as UtopiaRequest;
 
-class Request extends HttpRequest
+class Request extends UtopiaRequest
 {
     /**
      * @var array<Filter>
@@ -14,12 +15,9 @@ class Request extends HttpRequest
     private array $filters = [];
     private static ?Route $route = null;
 
-    /**
-     * Request constructor.
-     */
-    public function __construct(HttpRequest $request)
+    public function __construct(SwooleRequest $request)
     {
-        parent::__construct($request->swoole);
+        parent::__construct($request);
     }
 
     /**
@@ -115,16 +113,6 @@ class Request extends HttpRequest
         return self::$route !== null;
     }
 
-
-    public function removeHeader(string $key): static
-    {
-        if (isset($this->headers[$key])) {
-            unset($this->headers[$key]);
-        }
-
-        return parent::removeHeader($key);
-    }
-
     /**
      * Get headers
      *
@@ -134,18 +122,14 @@ class Request extends HttpRequest
      */
     public function getHeaders(): array
     {
-        if ($this->headers !== null) {
-            return $this->headers;
-        }
-
         try {
-            $this->headers = $this->generateHeaders();
+            $headers = $this->generateHeaders();
         } catch (\Throwable) {
-            $this->headers = [];
+            $headers = [];
         }
 
         if (empty($this->swoole->cookie)) {
-            return $this->headers;
+            return $headers;
         }
 
         $cookieHeaders = [];
@@ -154,10 +138,10 @@ class Request extends HttpRequest
         }
 
         if (!empty($cookieHeaders)) {
-            $this->headers['cookie'] = \implode('; ', $cookieHeaders);
+            $headers['cookie'] = \implode('; ', $cookieHeaders);
         }
 
-        return $this->headers;
+        return $headers;
     }
 
     /**
