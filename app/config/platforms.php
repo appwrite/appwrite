@@ -199,7 +199,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Console',
-                'version' => '1.1.0',
+                'version' => '1.2.1',
                 'url' => 'https://github.com/appwrite/sdk-for-console',
                 'package' => '',
                 'enabled' => true,
