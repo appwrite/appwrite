@@ -64,9 +64,10 @@ class DatabasesCustomClientTest extends Scope
             'required' => true,
         ]);
 
+        $this->assertEquals(202, $response['headers']['status-code']);
+
         sleep(1);
 
-        $this->assertEquals(202, $response['headers']['status-code']);
 
         // Document aliases write to update, delete
         $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', array_merge([
@@ -82,6 +83,7 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
+        $this->assertEquals(201, $document1['headers']['status-code']);
         $this->assertNotContains(Permission::create(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
         $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);

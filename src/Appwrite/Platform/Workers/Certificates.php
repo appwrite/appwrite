@@ -11,7 +11,6 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
 use Exception;
 use Throwable;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -22,6 +21,7 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -126,7 +126,7 @@ class Certificates extends Action
         $certificate = $dbForConsole->findOne('certificates', [Query::equal('domain', [$domain->get()])]);
 
         // If we don't have certificate for domain yet, let's create new document. At the end we save it
-        if (!$certificate) {
+        if ($certificate->isEmpty()) {
             $certificate = new Document();
             $certificate->setAttribute('domain', $domain->get());
         }
@@ -216,7 +216,7 @@ class Certificates extends Action
     {
         // Check if update or insert required
         $certificateDocument = $dbForConsole->findOne('certificates', [Query::equal('domain', [$domain])]);
-        if (!empty($certificateDocument) && !$certificateDocument->isEmpty()) {
+        if (!$certificateDocument->isEmpty()) {
             // Merge new data with current data
             $certificate = new Document(\array_merge($certificateDocument->getArrayCopy(), $certificate->getArrayCopy()));
             $certificate = $dbForConsole->updateDocument('certificates', $certificate->getId(), $certificate);
@@ -330,30 +330,26 @@ class Certificates extends Action
      *
      * @param string $folder Folder into which certificates should be generated
      * @param string $domain Domain to generate certificate for
-     * @return array Named array with keys 'stdout' and 'stderr', both string
+     * @return string output
      * @throws Exception
      */
-    private function issueCertificate(string $folder, string $domain, string $email): array
+    private function issueCertificate(string $folder, string $domain, string $email): string
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
-        $staging = (App::isProduction()) ? '' : ' --dry-run';
+        $staging = (Http::isProduction()) ? '' : ' --dry-run';
         $exit = Console::execute("certbot certonly -v --webroot --noninteractive --agree-tos{$staging}"
             . " --email " . $email
             . " --cert-name " . $folder
             . " -w " . APP_STORAGE_CERTIFICATES
-            . " -d {$domain}", '', $stdout, $stderr);
+            . " -d {$domain}", '', $output);
 
         // Unexpected error, usually 5XX, API limits, ...
         if ($exit !== 0) {
-            throw new Exception('Failed to issue a certificate with message: ' . $stderr);
+            throw new Exception('Failed to issue a certificate with message: ' . $output);
         }
 
-        return [
-            'stdout' => $stdout,
-            'stderr' => $stderr
-        ];
+        return $output;
     }
 
     /**
@@ -381,7 +377,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function applyCertificateFiles(string $folder, string $domain, array $letsEncryptData): void
+    private function applyCertificateFiles(string $folder, string $domain, string $letsEncryptData): void
     {
 
         // Prepare folder in storage for domain
@@ -394,19 +390,19 @@ class Certificates extends Action
 
         // Move generated files
         if (!@\rename('/etc/letsencrypt/live/' . $folder . '/cert.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem')) {
-            throw new Exception('Failed to rename certificate cert.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
+            throw new Exception('Failed to rename certificate cert.pem. Let\'s Encrypt log: ' . $letsEncryptData);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $folder . '/chain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/chain.pem')) {
-            throw new Exception('Failed to rename certificate chain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
+            throw new Exception('Failed to rename certificate chain.pem. Let\'s Encrypt log: ' . $letsEncryptData);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $folder . '/fullchain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/fullchain.pem')) {
-            throw new Exception('Failed to rename certificate fullchain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
+            throw new Exception('Failed to rename certificate fullchain.pem. Let\'s Encrypt log: ' . $letsEncryptData);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $folder . '/privkey.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/privkey.pem')) {
-            throw new Exception('Failed to rename certificate privkey.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
+            throw new Exception('Failed to rename certificate privkey.pem. Let\'s Encrypt log: ' . $letsEncryptData);
         }
 
         $config = \implode(PHP_EOL, [
@@ -482,7 +478,7 @@ class Certificates extends Action
             Query::equal('domain', [$domain]),
         ]);
 
-        if ($rule !== false && !$rule->isEmpty()) {
+        if (!$rule->isEmpty()) {
             $rule->setAttribute('certificateId', $certificateId);
             $rule->setAttribute('status', $success ? 'verified' : 'unverified');
             $dbForConsole->updateDocument('rules', $rule->getId(), $rule);

@@ -84,13 +84,13 @@ class Mails extends Action
             $bodyTemplate = __DIR__ . '/../../../../app/config/locale/templates/email-base.tpl';
         }
         $bodyTemplate = Template::fromFile($bodyTemplate);
-        $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
+        $bodyTemplate->setParam('{{body}}', $body, escape: false);
         foreach ($variables as $key => $value) {
             // TODO: hotfix for redirect param
-            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
+            $bodyTemplate->setParam('{{' . $key . '}}', $value, escape: $key !== 'redirect');
         }
         foreach ($this->richTextParams as $key => $value) {
-            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            $bodyTemplate->setParam('{{' . $key . '}}', $value, escape: false);
         }
         $body = $bodyTemplate->render();
 

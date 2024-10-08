@@ -3,7 +3,7 @@
 namespace Appwrite\Utopia\Database\Validator;
 
 use Utopia\Database\Validator\UID;
-use Utopia\Validator;
+use Utopia\Http\Validator;
 
 class CompoundUID extends Validator
 {

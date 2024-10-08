@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 
 class MessagingChannelsTest extends TestCase
 {
@@ -34,8 +35,12 @@ class MessagingChannelsTest extends TestCase
         'functions.1',
     ];
 
+    protected ValidatorAuthorization $auth;
+
     public function setUp(): void
     {
+        $this->auth = new ValidatorAuthorization();
+
         /**
          * Setup global Counts
          */
@@ -66,7 +71,7 @@ class MessagingChannelsTest extends TestCase
                     ]
                 ]);
 
-                $roles = Auth::getRoles($user);
+                $roles = Auth::getRoles($user, $this->auth);
 
                 $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
 
@@ -90,7 +95,7 @@ class MessagingChannelsTest extends TestCase
                     '$id' => ''
                 ]);
 
-                $roles = Auth::getRoles($user);
+                $roles = Auth::getRoles($user, $this->auth);
 
                 $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
 

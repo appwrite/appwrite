@@ -54,7 +54,8 @@ class Builds extends Action
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('log')
-            ->callback(fn ($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
+            ->inject('authorization')
+            ->callback(fn ($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log, Authorization $authorization) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log, $authorization));
     }
 
     /**
@@ -67,10 +68,11 @@ class Builds extends Action
      * @param Database $dbForProject
      * @param Device $deviceForFunctions
      * @param Log $log
+     * @param Authorization $auth
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log): void
+    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log, Authorization $auth): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -92,7 +94,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
+                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template, $log, $auth);
                 break;
 
             default:
@@ -113,11 +115,12 @@ class Builds extends Action
      * @param Document $deployment
      * @param Document $template
      * @param Log $log
+     * @param Authorization $auth
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Log $log, Authorization $auth): void
     {
         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
@@ -221,20 +224,18 @@ class Builds extends Action
                 $templateRootDirectory = \ltrim($templateRootDirectory, '/');
 
                 if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateVersion)) {
-                    $stdout = '';
-                    $stderr = '';
-
+                    $output = '';
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . $buildId . '-template';
                     $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateVersion, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
-                    $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
+                    $exit = Console::execute($gitCloneCommandForTemplate, '', $output);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to clone code repository: ' . $stderr);
+                        throw new \Exception('Unable to clone code repository: ' . $output);
                     }
 
                     // Ensure directories
-                    Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
+                    Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $output);
 
                     $tmpPathFile = $tmpTemplateDirectory . '/code.tar.gz';
 
@@ -245,7 +246,7 @@ class Builds extends Action
                     }
 
                     $tarParamDirectory = \escapeshellarg($tmpTemplateDirectory . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory));
-                    Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
+                    Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $output); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
 
                     $source = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
                     $result = $localDevice->transfer($tmpPathFile, $source, $deviceForFunctions);
@@ -254,7 +255,7 @@ class Builds extends Action
                         throw new \Exception("Unable to move file");
                     }
 
-                    Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
+                    Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $output);
 
                     $directorySize = $deviceForFunctions->getFileSize($source);
                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
@@ -276,6 +277,7 @@ class Builds extends Action
 
                 $branchName = $deployment->getAttribute('providerBranch');
                 $commitHash = $deployment->getAttribute('providerCommitHash', '');
+                $output = '';
 
                 $cloneVersion = $branchName;
                 $cloneType = GitHub::CLONE_TYPE_BRANCH;
@@ -283,22 +285,18 @@ class Builds extends Action
                     $cloneVersion = $commitHash;
                     $cloneType = GitHub::CLONE_TYPE_COMMIT;
                 }
-
                 $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $cloneVersion, $cloneType, $tmpDirectory, $rootDirectory);
-                $stdout = '';
-                $stderr = '';
-
-                Console::execute('mkdir -p ' . \escapeshellarg('/tmp/builds/' . $buildId), '', $stdout, $stderr);
+                Console::execute('mkdir -p ' . \escapeshellarg('/tmp/builds/' . $buildId), '', $output);
 
                 if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
                     Console::info('Build has been canceled');
                     return;
                 }
 
-                $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
+                $exit = Console::execute($gitCloneCommand, '', $output);
 
                 if ($exit !== 0) {
-                    throw new \Exception('Unable to clone code repository: ' . $stderr);
+                    throw new \Exception('Unable to clone code repository: ' . $output);
                 }
 
                 // Local refactoring for function folder with spaces
@@ -306,10 +304,10 @@ class Builds extends Action
                     $rootDirectoryWithoutSpaces = str_replace(' ', '', $rootDirectory);
                     $from = $tmpDirectory . '/' . $rootDirectory;
                     $to = $tmpDirectory . '/' . $rootDirectoryWithoutSpaces;
-                    $exit = Console::execute('mv "' . \escapeshellarg($from) . '" "' . \escapeshellarg($to) . '"', '', $stdout, $stderr);
+                    $exit = Console::execute('mv "' . \escapeshellarg($from) . '" "' . \escapeshellarg($to) . '"', '', $output);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to move function with spaces' . $stderr);
+                        throw new \Exception('Unable to move function with spaces' . $output);
                     }
                     $rootDirectory = $rootDirectoryWithoutSpaces;
                 }
@@ -330,33 +328,33 @@ class Builds extends Action
                     $tmpTemplateDirectory = '/tmp/builds/' . $buildId . '/template';
 
                     $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateVersion, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
-                    $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
+                    $exit = Console::execute($gitCloneCommandForTemplate, '', $output);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to clone code repository: ' . $stderr);
+                        throw new \Exception('Unable to clone code repository: ' . $output);
                     }
 
                     // Ensure directories
-                    Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
-                    Console::execute('mkdir -p ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
+                    Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $output);
+                    Console::execute('mkdir -p ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $output);
 
                     // Merge template into user repo
-                    Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
+                    Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $output);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . \escapeshellarg($tmpDirectory) . ' && git add . && git commit -m "Create ' . \escapeshellarg($function->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
+                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . \escapeshellarg($tmpDirectory) . ' && git add . && git commit -m "Create ' . \escapeshellarg($function->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $output);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to push code repository: ' . $stderr);
+                        throw new \Exception('Unable to push code repository: ' . $output);
                     }
 
-                    $exit = Console::execute('cd ' . \escapeshellarg($tmpDirectory) . ' && git rev-parse HEAD', '', $stdout, $stderr);
+                    $exit = Console::execute('cd ' . \escapeshellarg($tmpDirectory) . ' && git rev-parse HEAD', '', $output);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to get vcs commit SHA: ' . $stderr);
+                        throw new \Exception('Unable to get vcs commit SHA: ' . $output);
                     }
 
-                    $providerCommitHash = \trim($stdout);
+                    $providerCommitHash = \trim($output);
                     $authorUrl = "https://github.com/$cloneOwner";
 
                     $deployment->setAttribute('providerCommitHash', $providerCommitHash ?? '');
@@ -399,7 +397,7 @@ class Builds extends Action
                 }
 
                 $tarParamDirectory = '/tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory);
-                Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
+                Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $output); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
 
                 $source = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
                 $result = $localDevice->transfer($tmpPathFile, $source, $deviceForFunctions);
@@ -408,7 +406,7 @@ class Builds extends Action
                     throw new \Exception("Unable to move file");
                 }
 
-                Console::execute('rm -rf ' . \escapeshellarg($tmpPath), '', $stdout, $stderr);
+                Console::execute('rm -rf ' . \escapeshellarg($tmpPath), '', $output);
 
                 $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
 
@@ -663,7 +661,7 @@ class Builds extends Action
                 ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('schedule', $function->getAttribute('schedule'))
                 ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+            $auth->skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');

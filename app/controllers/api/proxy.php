@@ -7,7 +7,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Utopia\Database\Validator\Queries\Rules;
 use Appwrite\Utopia\Response;
-use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
@@ -15,13 +14,14 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\Domain as ValidatorDomain;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Logger\Log;
 use Utopia\System\System;
-use Utopia\Validator\Domain as ValidatorDomain;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
 
-App::post('/v1/proxy/rules')
+Http::post('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
     ->desc('Create rule')
     ->label('scope', 'rules.write')
@@ -63,7 +63,7 @@ App::post('/v1/proxy/rules')
             Query::equal('domain', [$domain]),
         ]);
 
-        if ($document && !$document->isEmpty()) {
+        if (!$document->isEmpty()) {
             if ($document->getAttribute('projectId') === $project->getId()) {
                 $resourceType = $document->getAttribute('resourceType');
                 $resourceId = $document->getAttribute('resourceId');
@@ -147,7 +147,7 @@ App::post('/v1/proxy/rules')
             ->dynamic($rule, Response::MODEL_PROXY_RULE);
     });
 
-App::get('/v1/proxy/rules')
+Http::get('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
     ->desc('List rules')
     ->label('scope', 'rules.read')
@@ -210,7 +210,7 @@ App::get('/v1/proxy/rules')
         ]), Response::MODEL_PROXY_RULE_LIST);
     });
 
-App::get('/v1/proxy/rules/:ruleId')
+Http::get('/v1/proxy/rules/:ruleId')
     ->groups(['api', 'proxy'])
     ->desc('Get rule')
     ->label('scope', 'rules.read')
@@ -239,7 +239,7 @@ App::get('/v1/proxy/rules/:ruleId')
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
     });
 
-App::delete('/v1/proxy/rules/:ruleId')
+Http::delete('/v1/proxy/rules/:ruleId')
     ->groups(['api', 'proxy'])
     ->desc('Delete rule')
     ->label('scope', 'rules.write')
@@ -276,8 +276,8 @@ App::delete('/v1/proxy/rules/:ruleId')
         $response->noContent();
     });
 
-App::patch('/v1/proxy/rules/:ruleId/verification')
-    ->desc('Update rule verification status')
+Http::patch('/v1/proxy/rules/:ruleId/verification')
+    ->desc('Update Rule Verification Status')
     ->groups(['api', 'proxy'])
     ->label('scope', 'rules.write')
     ->label('event', 'rules.[ruleId].update')

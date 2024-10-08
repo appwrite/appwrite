@@ -3,11 +3,10 @@
 namespace Appwrite\Utopia;
 
 use Appwrite\Utopia\Request\Filter;
-use Swoole\Http\Request as SwooleRequest;
-use Utopia\Route;
-use Utopia\Swoole\Request as UtopiaRequest;
+use Utopia\Http\Adapter\Swoole\Request as HttpRequest;
+use Utopia\Http\Route;
 
-class Request extends UtopiaRequest
+class Request extends HttpRequest
 {
     /**
      * @var array<Filter>
@@ -15,9 +14,12 @@ class Request extends UtopiaRequest
     private array $filters = [];
     private static ?Route $route = null;
 
-    public function __construct(SwooleRequest $request)
+    /**
+     * Request constructor.
+     */
+    public function __construct(HttpRequest $request)
     {
-        parent::__construct($request);
+        parent::__construct($request->swoole);
     }
 
     /**
@@ -113,6 +115,16 @@ class Request extends UtopiaRequest
         return self::$route !== null;
     }
 
+
+    public function removeHeader(string $key): static
+    {
+        if (isset($this->headers[$key])) {
+            unset($this->headers[$key]);
+        }
+
+        return parent::removeHeader($key);
+    }
+
     /**
      * Get headers
      *
@@ -122,14 +134,18 @@ class Request extends UtopiaRequest
      */
     public function getHeaders(): array
     {
+        if ($this->headers !== null) {
+            return $this->headers;
+        }
+
         try {
-            $headers = $this->generateHeaders();
+            $this->headers = $this->generateHeaders();
         } catch (\Throwable) {
-            $headers = [];
+            $this->headers = [];
         }
 
         if (empty($this->swoole->cookie)) {
-            return $headers;
+            return $this->headers;
         }
 
         $cookieHeaders = [];
@@ -138,10 +154,10 @@ class Request extends UtopiaRequest
         }
 
         if (!empty($cookieHeaders)) {
-            $headers['cookie'] = \implode('; ', $cookieHeaders);
+            $this->headers['cookie'] = \implode('; ', $cookieHeaders);
         }
 
-        return $headers;
+        return $this->headers;
     }
 
     /**

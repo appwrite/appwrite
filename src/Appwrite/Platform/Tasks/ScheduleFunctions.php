@@ -5,9 +5,8 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Event\Func;
 use Cron\CronExpression;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
-use Utopia\Pools\Group;
+use Utopia\Queue\Connection\Redis;
 
 class ScheduleFunctions extends ScheduleBase
 {
@@ -31,7 +30,7 @@ class ScheduleFunctions extends ScheduleBase
         return 'functions';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
+    protected function enqueueResources(array $pools, callable $getConsoleDB): void
     {
         $timerStart = \microtime(true);
         $time = DateTime::now();
@@ -73,8 +72,11 @@ class ScheduleFunctions extends ScheduleBase
             \go(function () use ($delay, $scheduleKeys, $pools) {
                 \sleep($delay); // in seconds
 
-                $queue = $pools->get('queue')->pop();
-                $connection = $queue->getResource();
+                $pool = $pools['pools-queue-queue']['pool'];
+                $connection = $pool->get();
+                $this->connections->add($connection, $pool);
+
+                $queueConnection = new Redis($connection);
 
                 foreach ($scheduleKeys as $scheduleKey) {
                     // Ensure schedule was not deleted
@@ -84,7 +86,7 @@ class ScheduleFunctions extends ScheduleBase
 
                     $schedule = $this->schedules[$scheduleKey];
 
-                    $queueForFunctions = new Func($connection);
+                    $queueForFunctions = new Func($queueConnection);
 
                     $queueForFunctions
                         ->setType('schedule')
@@ -95,7 +97,8 @@ class ScheduleFunctions extends ScheduleBase
                         ->trigger();
                 }
 
-                $queue->reclaim();
+                $this->connections->reclaim();
+                // $queue->reclaim(); // TODO: Do in try/catch/finally, or add to connectons resource
             });
         }
 
