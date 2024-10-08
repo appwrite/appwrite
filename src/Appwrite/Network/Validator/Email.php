@@ -2,14 +2,14 @@
 
 namespace Appwrite\Network\Validator;
 
-use Utopia\Http\Validator;
+use Utopia\Validator;
 
 /**
  * Email
  *
  * Validate that an variable is a valid email address
  *
- * @package Utopia\Http\Validator
+ * @package Utopia\Validator
  */
 class Email extends Validator
 {

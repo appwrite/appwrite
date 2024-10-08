@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\Authentication;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
@@ -19,6 +18,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Teams;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
+use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -37,16 +37,15 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Http;
-use Utopia\Http\Validator\ArrayList;
-use Utopia\Http\Validator\Assoc;
-use Utopia\Http\Validator\Host;
-use Utopia\Http\Validator\Text;
-use Utopia\Http\Validator\WhiteList;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Assoc;
+use Utopia\Validator\Host;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
-Http::post('/v1/teams')
+App::post('/v1/teams')
     ->desc('Create team')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].create')
@@ -67,16 +66,15 @@ Http::post('/v1/teams')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('authorization')
-    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Authorization $authorization) {
+    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
-        $isAppUser = Auth::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
 
         try {
-            $team = $authorization->skip(fn () => $dbForProject->createDocument('teams', new Document([
+            $team = Authorization::skip(fn () => $dbForProject->createDocument('teams', new Document([
                 '$id' => $teamId,
                 '$permissions' => [
                     Permission::read(Role::team($teamId)),
@@ -135,7 +133,7 @@ Http::post('/v1/teams')
             ->dynamic($team, Response::MODEL_TEAM);
     });
 
-Http::get('/v1/teams')
+App::get('/v1/teams')
     ->desc('List teams')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -193,7 +191,7 @@ Http::get('/v1/teams')
         ]), Response::MODEL_TEAM_LIST);
     });
 
-Http::get('/v1/teams/:teamId')
+App::get('/v1/teams/:teamId')
     ->desc('Get team')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -220,7 +218,7 @@ Http::get('/v1/teams/:teamId')
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
-Http::get('/v1/teams/:teamId/prefs')
+App::get('/v1/teams/:teamId/prefs')
     ->desc('Get team preferences')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -248,7 +246,7 @@ Http::get('/v1/teams/:teamId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-Http::put('/v1/teams/:teamId')
+App::put('/v1/teams/:teamId')
     ->desc('Update name')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update')
@@ -291,7 +289,7 @@ Http::put('/v1/teams/:teamId')
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
-Http::put('/v1/teams/:teamId/prefs')
+App::put('/v1/teams/:teamId/prefs')
     ->desc('Update preferences')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update.prefs')
@@ -327,7 +325,7 @@ Http::put('/v1/teams/:teamId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-Http::delete('/v1/teams/:teamId')
+App::delete('/v1/teams/:teamId')
     ->desc('Delete team')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].delete')
@@ -376,7 +374,7 @@ Http::delete('/v1/teams/:teamId')
         $response->noContent();
     });
 
-Http::post('/v1/teams/:teamId/memberships')
+App::post('/v1/teams/:teamId/memberships')
     ->desc('Create team membership')
     ->groups(['api', 'teams', 'auth'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].create')
@@ -418,10 +416,9 @@ Http::post('/v1/teams/:teamId/memberships')
     ->inject('queueForMails')
     ->inject('queueForMessaging')
     ->inject('queueForEvents')
-    ->inject('authorization')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, Authorization $authorization) {
-        $isAPIKey = Auth::isAppUser($authorization->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
         $url = htmlentities($url);
         if (empty($url)) {
@@ -433,8 +430,8 @@ Http::post('/v1/teams/:teamId/memberships')
         if (empty($userId) && empty($email) && empty($phone)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'At least one of userId, email, or phone is required');
         }
-        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
-        $isAppUser = Auth::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         if (!$isPrivilegedUser && !$isAppUser && empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED);
@@ -463,17 +460,17 @@ Http::post('/v1/teams/:teamId/memberships')
             $name = empty($name) ? $invitee->getAttribute('name', '') : $name;
         } elseif (!empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
-            if ($invitee->isEmpty() && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
+            if (!empty($invitee) && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
             }
         } elseif (!empty($phone)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-            if ($invitee->isEmpty() && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
+            if (!empty($invitee) && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
             }
         }
 
-        if (!isset($invitee) || $invitee->isEmpty()) { // Create new user if no user with same email found
+        if (empty($invitee)) { // Create new user if no user with same email found
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if (!$isPrivilegedUser && !$isAppUser && $limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
@@ -494,7 +491,7 @@ Http::post('/v1/teams/:teamId/memberships')
 
             try {
                 $userId = ID::unique();
-                $invitee = $authorization->skip(fn () => $dbForProject->createDocument('users', new Document([
+                $invitee = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
                     '$id' => $userId,
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -525,13 +522,12 @@ Http::post('/v1/teams/:teamId/memberships')
                     'memberships' => null,
                     'search' => implode(' ', [$userId, $email, $name]),
                 ])));
-
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
         }
 
-        $isOwner = $authorization->isRole('team:' . $team->getId() . '/owner');
+        $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
@@ -563,12 +559,12 @@ Http::post('/v1/teams/:teamId/memberships')
 
         if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
             try {
-                $membership = $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership));
+                $membership = Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership));
             } catch (Duplicate $th) {
                 throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
 
-            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
@@ -590,7 +586,7 @@ Http::post('/v1/teams/:teamId/memberships')
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
                 $message
-                    ->setParam('{{body}}', $body, escape: false)
+                    ->setParam('{{body}}', $body, escapeHtml: false)
                     ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
                     ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
                     ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
@@ -708,7 +704,7 @@ Http::post('/v1/teams/:teamId/memberships')
             );
     });
 
-Http::get('/v1/teams/:teamId/memberships')
+App::get('/v1/teams/:teamId/memberships')
     ->desc('List team memberships')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -811,7 +807,7 @@ Http::get('/v1/teams/:teamId/memberships')
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
-Http::get('/v1/teams/:teamId/memberships/:membershipId')
+App::get('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Get team membership')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -867,7 +863,7 @@ Http::get('/v1/teams/:teamId/memberships/:membershipId')
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
     });
 
-Http::patch('/v1/teams/:teamId/memberships/:membershipId')
+App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Update membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update')
@@ -899,8 +895,7 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('authorization')
-    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Authorization $authorization) {
+    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -917,9 +912,9 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
-        $isAppUser = Auth::isAppUser($authorization->getRoles());
-        $isOwner = $authorization->isRole('team:' . $team->getId() . '/owner');
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+        $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to modify roles');
@@ -950,7 +945,7 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId')
         );
     });
 
-Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
+App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->desc('Update team membership status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
@@ -976,9 +971,7 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('project')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->inject('authorization')
-    ->inject('authentication')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents, Authorization $authorization, Authentication $authentication) {
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -987,7 +980,7 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
-        $team = $authorization->skip(fn () => $dbForProject->getDocument('teams', $teamId));
+        $team = Authorization::skip(fn () => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
@@ -1022,11 +1015,11 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setAttribute('confirm', true)
         ;
 
-        $authorization->skip(fn () => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
+        Authorization::skip(fn () => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
 
         // Log user in
 
-        $authorization->addRole(Role::user($user->getId())->toString());
+        Authorization::setRole(Role::user($user->getId())->toString());
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
@@ -1056,13 +1049,13 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $authorization->addRole(Role::user($userId)->toString());
+        Authorization::setRole(Role::user($userId)->toString());
 
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+        Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -1072,13 +1065,13 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         if (!Config::getParam('domainVerification')) {
             $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([$authentication->getCookieName() => Auth::encodeSession($user->getId(), $secret)]))
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
             ;
         }
 
         $response
-            ->addCookie($authentication->getCookieName() . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie($authentication->getCookieName(), Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
         ;
 
         $response->dynamic(
@@ -1090,7 +1083,7 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         );
     });
 
-Http::delete('/v1/teams/:teamId/memberships/:membershipId')
+App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Delete team membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].delete')
@@ -1108,8 +1101,7 @@ Http::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('authorization')
-    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $authorization) {
+    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
@@ -1144,7 +1136,7 @@ Http::delete('/v1/teams/:teamId/memberships/:membershipId')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
-            $authorization->skip(fn () => $dbForProject->decreaseDocumentAttribute('teams', $team->getId(), 'total', 1, 0));
+            Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute('teams', $team->getId(), 'total', 1, 0));
         }
 
         $queueForEvents
@@ -1157,7 +1149,7 @@ Http::delete('/v1/teams/:teamId/memberships/:membershipId')
         $response->noContent();
     });
 
-Http::get('/v1/teams/:teamId/logs')
+App::get('/v1/teams/:teamId/logs')
     ->desc('List team logs')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -1174,8 +1166,7 @@ Http::get('/v1/teams/:teamId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('authorization')
-    ->action(function (string $teamId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization) {
+    ->action(function (string $teamId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 

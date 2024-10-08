@@ -175,9 +175,9 @@ class Func extends Event
      *
      * @return string
      */
-    public function getBody(): string
+    public function getData(): string
     {
-        return $this->body;
+        return $this->data;
     }
 
     /**

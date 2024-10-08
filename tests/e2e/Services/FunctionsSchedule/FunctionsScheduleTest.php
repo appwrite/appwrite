@@ -1,13 +1,12 @@
 <?php
 
-namespace Tests\E2E\Services\FunctionsSchedule;
+namespace Tests\E2E\Services\Functions;
 
 use Appwrite\ID;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\Role;
 
 class FunctionsScheduleTest extends Scope

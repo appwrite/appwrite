@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator;
 
-use Utopia\Http\Validator;
+use Utopia\Validator;
 
 class ProjectId extends Validator
 {

@@ -2,12 +2,12 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
+use Utopia\App;
 use Utopia\Database\Document;
-use Utopia\Http\Http;
-use Utopia\Http\Validator\Text;
 use Utopia\System\System;
+use Utopia\Validator\Text;
 
-Http::init()
+App::init()
     ->groups(['console'])
     ->inject('project')
     ->action(function (Document $project) {
@@ -17,7 +17,7 @@ Http::init()
     });
 
 
-Http::get('/v1/console/variables')
+App::get('/v1/console/variables')
     ->desc('Get variables')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -56,8 +56,8 @@ Http::get('/v1/console/variables')
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);
     });
 
-Http::post('/v1/console/assistant')
-    ->desc('Ask Query')
+App::post('/v1/console/assistant')
+    ->desc('Ask query')
     ->groups(['api', 'assistant'])
     ->label('scope', 'assistant.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])

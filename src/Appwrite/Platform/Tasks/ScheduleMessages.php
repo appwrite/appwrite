@@ -3,7 +3,8 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Messaging;
-use Utopia\Queue\Connection\Redis;
+use Utopia\Database\Database;
+use Utopia\Pools\Group;
 
 class ScheduleMessages extends ScheduleBase
 {
@@ -25,11 +26,8 @@ class ScheduleMessages extends ScheduleBase
         return 'messages';
     }
 
-    protected function enqueueResources(array $pools, callable $getConsoleDB): void
+    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
-        [$connection,$pool, $dbForConsole] = $getConsoleDB();
-        $this->connections->add($connection, $pool);
-
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
                 continue;
@@ -42,15 +40,10 @@ class ScheduleMessages extends ScheduleBase
                 continue;
             }
 
-            \go(function () use ($now, $schedule, $pools, $dbForConsole) {
-                $pool = $pools['pools-queue-queue']['pool'];
-                $dsn = $pools['pools-queue-queue']['dsn'];
-                $connection = $pool->get();
-                $this->connections->add($connection, $pool);
-
-                $queueConnection = new Redis($dsn->getHost(), $dsn->getPort());
-
-                $queueForMessaging = new Messaging($queueConnection);
+            \go(function () use ($schedule, $pools, $dbForConsole) {
+                $queue = $pools->get('queue')->pop();
+                $connection = $queue->getResource();
+                $queueForMessaging = new Messaging($connection);
 
                 $queueForMessaging
                     ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
@@ -63,7 +56,8 @@ class ScheduleMessages extends ScheduleBase
                     $schedule['$id'],
                 );
 
-                $this->connections->reclaim();
+                $queue->reclaim();
+
                 unset($this->schedules[$schedule['$internalId']]);
             });
         }
