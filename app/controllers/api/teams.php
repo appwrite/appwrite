@@ -573,7 +573,6 @@ Http::post('/v1/teams/:teamId/memberships')
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
             try {
-                print_r($membership);
                 $membership = $dbForProject->createDocument('memberships', $membership);
             } catch (Duplicate $th) {
                 throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
