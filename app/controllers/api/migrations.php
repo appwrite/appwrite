@@ -33,7 +33,7 @@ include_once __DIR__ . '/../shared/api.php';
 
 App::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Appwrite Data')
+    ->desc('Migrate Appwrite data')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
@@ -60,6 +60,7 @@ App::post('/v1/migrations/appwrite')
             'status' => 'pending',
             'stage' => 'init',
             'source' => Appwrite::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'endpoint' => $endpoint,
                 'projectId' => $projectId,
@@ -87,7 +88,7 @@ App::post('/v1/migrations/appwrite')
 
 App::post('/v1/migrations/firebase/oauth')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Firebase Data (OAuth)')
+    ->desc('Migrate Firebase data (OAuth)')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
@@ -164,6 +165,7 @@ App::post('/v1/migrations/firebase/oauth')
             'status' => 'pending',
             'stage' => 'init',
             'source' => Firebase::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'serviceAccount' => json_encode($serviceAccount),
             ],
@@ -189,7 +191,7 @@ App::post('/v1/migrations/firebase/oauth')
 
 App::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Firebase Data (Service Account)')
+    ->desc('Migrate Firebase data (Service Account)')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
@@ -224,6 +226,7 @@ App::post('/v1/migrations/firebase')
             'status' => 'pending',
             'stage' => 'init',
             'source' => Firebase::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'serviceAccount' => $serviceAccount,
             ],
@@ -249,7 +252,7 @@ App::post('/v1/migrations/firebase')
 
 App::post('/v1/migrations/supabase')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Supabase Data')
+    ->desc('Migrate Supabase data')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
@@ -279,6 +282,7 @@ App::post('/v1/migrations/supabase')
             'status' => 'pending',
             'stage' => 'init',
             'source' => Supabase::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'endpoint' => $endpoint,
                 'apiKey' => $apiKey,
@@ -309,7 +313,7 @@ App::post('/v1/migrations/supabase')
 
 App::post('/v1/migrations/nhost')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate NHost Data')
+    ->desc('Migrate NHost data')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
@@ -340,6 +344,7 @@ App::post('/v1/migrations/nhost')
             'status' => 'pending',
             'stage' => 'init',
             'source' => NHost::getName(),
+            'destination' => Appwrite::getName(),
             'credentials' => [
                 'subdomain' => $subdomain,
                 'region' => $region,
@@ -371,7 +376,7 @@ App::post('/v1/migrations/nhost')
 
 App::get('/v1/migrations')
     ->groups(['api', 'migrations'])
-    ->desc('List Migrations')
+    ->desc('List migrations')
     ->label('scope', 'migrations.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'migrations')
@@ -424,7 +429,7 @@ App::get('/v1/migrations')
 
 App::get('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
-    ->desc('Get Migration')
+    ->desc('Get migration')
     ->label('scope', 'migrations.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'migrations')
@@ -448,7 +453,7 @@ App::get('/v1/migrations/:migrationId')
 
 App::get('/v1/migrations/appwrite/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on Appwrite Data')
+    ->desc('Generate a report on Appwrite data')
     ->label('scope', 'migrations.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'migrations')
@@ -490,7 +495,7 @@ App::get('/v1/migrations/appwrite/report')
 
 App::get('/v1/migrations/firebase/report')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on Firebase Data')
+    ->desc('Generate a report on Firebase data')
     ->label('scope', 'migrations.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'migrations')
@@ -537,7 +542,7 @@ App::get('/v1/migrations/firebase/report')
 
 App::get('/v1/migrations/firebase/report/oauth')
     ->groups(['api', 'migrations'])
-    ->desc('Generate a report on Firebase Data using OAuth')
+    ->desc('Generate a report on Firebase data using OAuth')
     ->label('scope', 'migrations.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'migrations')
@@ -627,7 +632,7 @@ App::get('/v1/migrations/firebase/report/oauth')
     });
 
 App::get('/v1/migrations/firebase/connect')
-    ->desc('Authorize with firebase')
+    ->desc('Authorize with Firebase')
     ->groups(['api', 'migrations'])
     ->label('scope', 'migrations.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -781,7 +786,7 @@ App::get('/v1/migrations/firebase/redirect')
     });
 
 App::get('/v1/migrations/firebase/projects')
-    ->desc('List Firebase Projects')
+    ->desc('List Firebase projects')
     ->groups(['api', 'migrations'])
     ->label('scope', 'migrations.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -870,7 +875,7 @@ App::get('/v1/migrations/firebase/projects')
     });
 
 App::get('/v1/migrations/firebase/deauthorize')
-    ->desc('Revoke Appwrite\'s authorization to access Firebase Projects')
+    ->desc('Revoke Appwrite\'s authorization to access Firebase projects')
     ->groups(['api', 'migrations'])
     ->label('scope', 'migrations.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -985,7 +990,7 @@ App::get('/v1/migrations/nhost/report')
 
 App::patch('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
-    ->desc('Retry Migration')
+    ->desc('Retry migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].retry')
     ->label('audits.event', 'migration.retry')
@@ -1030,7 +1035,7 @@ App::patch('/v1/migrations/:migrationId')
 
 App::delete('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
-    ->desc('Delete Migration')
+    ->desc('Delete migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].delete')
     ->label('audits.event', 'migrationId.delete')

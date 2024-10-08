@@ -58,7 +58,7 @@ Server::setResource('project', function (Message $message, Database $dbForConsol
     $payload = $message->getPayload() ?? [];
     $project = new Document($payload['project'] ?? []);
 
-    if ($project->getId() === 'console') {
+    if ($project->getId() === 'console' || $project->isEmpty() || ! empty($project->getInternalId())) {
         return $project;
     }
 
@@ -346,8 +346,12 @@ $worker
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $responseCode = $logger->addLog($log);
-            Console::info('Usage stats log pushed with status code: ' . $responseCode);
+            try {
+                $responseCode = $logger->addLog($log);
+                Console::info('Error log pushed with status code: ' . $responseCode);
+            } catch (Throwable $th) {
+                Console::error('Error pushing log: ' . $th->getMessage());
+            }
         }
 
         Console::error('[Error] Type: ' . get_class($error));
