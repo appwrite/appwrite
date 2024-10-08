@@ -11054,7 +11054,7 @@
                                     "body": {
                                         "type": "string",
                                         "description": "HTTP body of execution. Default value is empty string.",
-                                        "x-example": null
+                                        "x-example": "<BODY>"
                                     },
                                     "async": {
                                         "type": "boolean",
