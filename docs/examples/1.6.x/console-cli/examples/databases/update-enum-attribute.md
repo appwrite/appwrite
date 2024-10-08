@@ -4,4 +4,5 @@ appwrite databases updateEnumAttribute \
         --key '' \
         --elements one two three \
         --required false \
-        --default <DEFAULT>
+        --default <DEFAULT> \
+
