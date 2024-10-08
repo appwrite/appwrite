@@ -6,7 +6,6 @@ concurrency:
 
 env:
   IMAGE: appwrite-dev
-  CACHE_KEY: appwrite-dev-${{ github.event.pull_request.head.sha }}
 
 on: [pull_request]
 
@@ -30,8 +29,8 @@ jobs:
           push: false
           tags: ${{ env.IMAGE }}
           load: true
-          cache-from: type=gha,scope=appwrite
-          cache-to: type=gha,mode=max,scope=appwrite
+          cache-from: type=gha,scope=${{ env.CACHE_KEY }}
+          cache-to: type=gha,mode=max,scope=${{ env.CACHE_KEY }}
           outputs: type=docker,dest=/tmp/${{ env.IMAGE }}.tar
           build-args: |
             DEBUG=false
@@ -41,9 +40,7 @@ jobs:
       - name: Cache Docker Image
         uses: actions/cache@v4
         with:
-          key: ${{ env.CACHE_KEY }}
-          restore-keys: |
-            appwrite-dev-
+          key: appwrite-dev-${{ hashFiles('**') }}
           path: /tmp/${{ env.IMAGE }}.tar
 
   unit_test:
@@ -58,7 +55,7 @@ jobs:
       - name: Load Cache
         uses: actions/cache@v4
         with:
-          key: ${{ env.CACHE_KEY }}
+          key: appwrite-dev-${{ hashFiles('**') }}
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
@@ -88,7 +85,7 @@ jobs:
       - name: Load Cache
         uses: actions/cache@v4
         with:
-          key: ${{ env.CACHE_KEY }}
+          key: appwrite-dev-${{ hashFiles('**') }}
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
@@ -136,7 +133,7 @@ jobs:
       - name: Load Cache
         uses: actions/cache@v4
         with:
-          key: ${{ env.CACHE_KEY }}
+          key: appwrite-dev-${{ hashFiles('**') }}
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
@@ -162,7 +159,7 @@ jobs:
       - name: Load Cache
         uses: actions/cache@v4
         with:
-          key: ${{ env.CACHE_KEY }}
+          key: appwrite-dev-${{ hashFiles('**') }}
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
       - name: Load and Start Appwrite
