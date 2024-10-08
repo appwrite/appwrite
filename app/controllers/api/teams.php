@@ -473,7 +473,7 @@ Http::post('/v1/teams/:teamId/memberships')
             }
         }
 
-        if ($invitee->isEmpty()) { // Create new user if no user with same email found
+        if (!isset($invitee) || $invitee->isEmpty()) { // Create new user if no user with same email found
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if (!$isPrivilegedUser && !$isAppUser && $limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
