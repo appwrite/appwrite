@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1884e3a2966762c4a955842426b64f6c",
+    "content-hash": "be975bb1dc68125e005eba8ac5de635c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1724,16 +1724,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.53.5",
+            "version": "dev-feat-findone-update-0.53.x",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "689ba22063bf46def385da8695ba7a921e81e38d"
+                "reference": "923260ac25780b3e60c255a5529da4cc440ae174"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/689ba22063bf46def385da8695ba7a921e81e38d",
-                "reference": "689ba22063bf46def385da8695ba7a921e81e38d",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/923260ac25780b3e60c255a5529da4cc440ae174",
+                "reference": "923260ac25780b3e60c255a5529da4cc440ae174",
                 "shasum": ""
             },
             "require": {
@@ -1760,7 +1760,38 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\E2E\\": "tests/e2e",
+                    "Tests\\Unit\\": "tests/unit"
+                }
+            },
+            "scripts": {
+                "build": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose build"
+                ],
+                "start": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose up -d"
+                ],
+                "test": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 512M"
+                ],
+                "coverage": [
+                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -1773,10 +1804,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.53.5"
+                "source": "https://github.com/utopia-php/database/tree/feat-findone-update-0.53.x",
+                "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2024-09-24T08:43:10+00:00"
+            "time": "2024-10-07T02:09:46+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2175,16 +2206,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.6.4",
+            "version": "0.6.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "e43ef283f1386084e11d1ffe093fb6c6d7a6ce6c"
+                "reference": "7b2d40d526b82e9b92a17ea681b8103222e3c86a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/e43ef283f1386084e11d1ffe093fb6c6d7a6ce6c",
-                "reference": "e43ef283f1386084e11d1ffe093fb6c6d7a6ce6c",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/7b2d40d526b82e9b92a17ea681b8103222e3c86a",
+                "reference": "7b2d40d526b82e9b92a17ea681b8103222e3c86a",
                 "shasum": ""
             },
             "require": {
@@ -2225,9 +2256,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.4"
+                "source": "https://github.com/utopia-php/migration/tree/0.6.5"
             },
-            "time": "2024-10-02T15:16:36+00:00"
+            "time": "2024-10-07T08:54:05+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -3002,16 +3033,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.39.22",
+            "version": "0.39.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "bdbb1607527550e67283ff0533522d1410c2c0df"
+                "reference": "0acceabb7593c9c07c5db85a84a5ebac60896763"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/bdbb1607527550e67283ff0533522d1410c2c0df",
-                "reference": "bdbb1607527550e67283ff0533522d1410c2c0df",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/0acceabb7593c9c07c5db85a84a5ebac60896763",
+                "reference": "0acceabb7593c9c07c5db85a84a5ebac60896763",
                 "shasum": ""
             },
             "require": {
@@ -3047,9 +3078,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.22"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.23"
             },
-            "time": "2024-10-01T16:16:26+00:00"
+            "time": "2024-10-08T00:38:57+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -7002,9 +7033,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-findone-update-0.53.x",
+            "alias": "0.53.6",
+            "alias_normalized": "0.53.6.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
