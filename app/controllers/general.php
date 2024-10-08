@@ -507,7 +507,7 @@ App::init()
                     $mainDomain = $envDomain;
                 } else {
                     $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
-                    $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
+                    $mainDomain = !$domainDocument->isEmpty() ? $domainDocument->getAttribute('domain') : $domain->get();
                 }
 
                 if ($mainDomain !== $domain->get()) {
@@ -517,7 +517,7 @@ App::init()
                         Query::equal('domain', [$domain->get()])
                     ]);
 
-                    if (!$domainDocument) {
+                    if ($domainDocument->isEmpty()) {
                         $domainDocument = new Document([
                             'domain' => $domain->get(),
                             'resourceType' => 'api',
