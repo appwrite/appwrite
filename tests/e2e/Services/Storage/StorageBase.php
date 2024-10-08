@@ -96,6 +96,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id']
         ];
+        $largeFile = [];
         $id = '';
         while (!feof($handle)) {
             $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');

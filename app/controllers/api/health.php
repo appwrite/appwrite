@@ -134,10 +134,10 @@ App::get('/v1/health/cache')
 
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
+                $checkStart = \microtime(true);
+
                 try {
                     $adapter = $pools->get($database)->pop()->getResource();
-
-                    $checkStart = \microtime(true);
 
                     if ($adapter->ping()) {
                         $output[] = new Document([
@@ -191,10 +191,10 @@ App::get('/v1/health/queue')
 
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
+                $checkStart = \microtime(true);
+
                 try {
                     $adapter = $pools->get($database)->pop()->getResource();
-
-                    $checkStart = \microtime(true);
 
                     if ($adapter->ping()) {
                         $output[] = new Document([
@@ -248,10 +248,10 @@ App::get('/v1/health/pubsub')
 
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
+                $checkStart = \microtime(true);
+
                 try {
                     $adapter = $pools->get($database)->pop()->getResource();
-
-                    $checkStart = \microtime(true);
 
                     if ($adapter->ping()) {
                         $output[] = new Document([

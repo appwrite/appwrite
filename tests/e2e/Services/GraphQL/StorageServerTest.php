@@ -232,7 +232,7 @@ class StorageServerTest extends Scope
     /**
      * @depends testCreateFile
      * @param $file
-     * @return array
+     * @return void
      * @throws \Exception
      */
     public function testGetFileDownload($file)

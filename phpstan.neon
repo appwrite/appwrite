@@ -1,0 +1,5 @@
+parameters:
+  scanDirectories:
+    - vendor/swoole/ide-helper
+  excludePaths:
+    - tests/resources

@@ -52,7 +52,6 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
 
     $image = new Image(\file_get_contents($path));
     $image->crop((int) $width, (int) $height);
-    $output = (empty($output)) ? $type : $output;
     $data = $image->output($output, $quality);
     $response
         ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
@@ -271,7 +270,6 @@ App::get('/v1/avatars/image')
         }
 
         $image->crop((int) $width, (int) $height);
-        $output = (empty($output)) ? $type : $output;
         $data = $image->output($output, $quality);
 
         $response
@@ -416,7 +414,6 @@ App::get('/v1/avatars/favicon')
 
         $image = new Image($data);
         $image->crop((int) $width, (int) $height);
-        $output = (empty($output)) ? $type : $output;
         $data = $image->output($output, $quality);
 
         $response

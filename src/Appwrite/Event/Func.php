@@ -171,16 +171,6 @@ class Func extends Event
     }
 
     /**
-     * Returns set custom data for the function event.
-     *
-     * @return string
-     */
-    public function getData(): string
-    {
-        return $this->data;
-    }
-
-    /**
      * Sets JWT for the function event.
      *
      * @param string $jwt

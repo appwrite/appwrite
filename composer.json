@@ -14,7 +14,8 @@
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/pint --test",
         "format": "vendor/bin/pint",
-        "bench": "vendor/bin/phpbench run --report=benchmark"
+        "bench": "vendor/bin/phpbench run --report=benchmark",
+        "check": "./vendor/bin/phpstan analyse --level 1 -c phpstan.neon app src tests"
     },
     "autoload": {
         "psr-4": {
@@ -88,7 +89,8 @@
         "swoole/ide-helper": "5.1.2",
         "textalk/websocket": "1.5.7",
         "laravel/pint": "^1.14",
-        "phpbench/phpbench": "^1.2"
+        "phpbench/phpbench": "^1.2",
+        "phpstan/phpstan": "1.12.*"
     },
     "provide": {
         "ext-phpiredis": "*"

@@ -199,7 +199,7 @@ class Databases extends Action
         }
 
         if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
-            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
         }
 
         $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);

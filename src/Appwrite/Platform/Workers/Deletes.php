@@ -756,7 +756,7 @@ class Deletes extends Action
             Query::equal('resourceType', ['function']),
             Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
-        ], $dbForConsole, function (Document $document) use ($project, $dbForConsole) {
+        ], $dbForConsole, function (Document $document) use ($dbForConsole) {
             $this->deleteRule($dbForConsole, $document);
         });
 

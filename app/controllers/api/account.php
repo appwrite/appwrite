@@ -144,7 +144,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
         ->trigger();
 };
 
-
+// @phpstan-ignore class.notFound
 $createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
     $roles = Authorization::getRoles();
     $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -581,13 +581,14 @@ App::delete('/v1/account/sessions')
                     ->setDocument($session)
                     ->trigger();
             }
+
+            $queueForEvents
+                ->setParam('userId', $user->getId())
+                ->setParam('sessionId', $session->getId()); // TODO: Trigger for all sessions
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId());
 
         $response->noContent();
     });
@@ -825,6 +826,7 @@ App::post('/v1/account/sessions/email')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('hooks')
+    // @phpstan-ignore class.notFound
     ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -955,6 +957,7 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('dbForProject')
     ->inject('geodb')
     ->inject('queueForEvents')
+    // @phpstan-ignore class.notFound
     ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents) {
         $protocol = $request->getProtocol();
         $roles = Authorization::getRoles();
@@ -1252,6 +1255,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('dbForProject')
     ->inject('geodb')
     ->inject('queueForEvents')
+    // @phpstan-ignore class.notFound
     ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
@@ -1389,6 +1393,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $sessions = $user->getAttribute('sessions', []);
+        $session = null;
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
         if ($current) { // Delete current session of new one.
@@ -1657,6 +1662,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
         }
+
+        /** @var Utopia\Database\Document $session */
 
         if (isset($sessionUpgrade) && $sessionUpgrade) {
             foreach ($user->getAttribute('targets', []) as $target) {
@@ -2554,6 +2561,7 @@ App::get('/v1/account/logs')
     ->inject('locale')
     ->inject('geodb')
     ->inject('dbForProject')
+    // @phpstan-ignore class.notFound
     ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
 
         try {

@@ -454,7 +454,7 @@ App::post('/v1/teams/:teamId/memberships')
             }
         } elseif (!empty($phone)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-            if (!empty($invitee) && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
+            if (!empty($invitee) && $invitee->getAttribute('email', '') !== $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
             }
         }
@@ -950,6 +950,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('project')
     ->inject('geodb')
     ->inject('queueForEvents')
+    // @phpstan-ignore class.notFound
     ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents) {
         $protocol = $request->getProtocol();
 
@@ -1145,6 +1146,7 @@ App::get('/v1/teams/:teamId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (string $teamId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $team = $dbForProject->getDocument('teams', $teamId);

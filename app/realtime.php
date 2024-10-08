@@ -266,7 +266,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $attempts = 0;
     $start = time();
 
-    Timer::tick(5000, function () use ($server, $register, $realtime, $stats, $logError) {
+    Timer::tick(5000, function () use ($server, $register, $realtime, $stats) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */

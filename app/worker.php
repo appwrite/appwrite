@@ -36,6 +36,8 @@ use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 
+/** @var Utopia\Registry\Registry $register */
+
 Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
@@ -271,7 +273,6 @@ Server::setResource('deviceForBuilds', function (Document $project) {
 Server::setResource('deviceForCache', function (Document $project) {
     return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 }, ['project']);
-
 
 $pools = $register->get('pools');
 $platform = new Appwrite();

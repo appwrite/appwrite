@@ -899,6 +899,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (string $providerId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
@@ -2031,6 +2032,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (string $topicId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
@@ -2399,6 +2401,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (string $subscriberId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
@@ -2932,9 +2935,8 @@ App::post('/v1/messaging/messages/push')
             $host = System::getEnv('_APP_DOMAIN', 'localhost');
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
 
-            $scheduleTime = $currentScheduledAt ?? $scheduledAt;
-            if (!\is_null($scheduleTime)) {
-                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
+            if (!\is_null($scheduledAt)) {
+                $expiry = (new \DateTime($scheduledAt))->add(new \DateInterval('P15D'))->format('U');
             } else {
                 $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
@@ -3081,6 +3083,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
         $message = $dbForProject->getDocument('messages', $messageId);
 

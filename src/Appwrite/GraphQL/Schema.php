@@ -156,6 +156,7 @@ class Schema
         $offset = 0;
 
         while (!empty($attrs = $attributes($limit, $offset))) {
+            $databaseId = '';
             foreach ($attrs as $attr) {
                 if ($attr['status'] !== 'available') {
                     continue;

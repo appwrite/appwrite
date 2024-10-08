@@ -44,6 +44,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
+// @phpstan-ignore class.notFound
 function router(App $utopia, Database $dbForConsole, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, Usage $queueForUsage, Reader $geodb)
 {
     $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
@@ -242,7 +243,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         if ($version === 'v2') {
             $vars = \array_merge($vars, [
                 'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
-                'APPWRITE_FUNCTION_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_DATA' => $body,
                 'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
                 'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
             ]);
@@ -450,6 +451,7 @@ App::init()
     ->inject('queueForUsage')
     ->inject('queueForEvents')
     ->inject('queueForCertificates')
+    // @phpstan-ignore class.notFound
     ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, Usage $queueForUsage, Event $queueForEvents, Certificate $queueForCertificates) {
         /*
         * Appwrite Router
@@ -667,6 +669,7 @@ App::options()
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
         /*
         * Appwrite Router
@@ -954,6 +957,7 @@ App::get('/robots.txt')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
@@ -979,6 +983,7 @@ App::get('/humans.txt')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');

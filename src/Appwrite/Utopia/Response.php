@@ -650,6 +650,10 @@ class Response extends SwooleResponse
                             $ruleType = $rule['type'];
                         }
 
+                        if (!isset($ruleType)) {
+                            continue;
+                        }
+
                         if (!array_key_exists($ruleType, $this->models)) {
                             throw new Exception('Missing model for rule: ' . $ruleType);
                         }

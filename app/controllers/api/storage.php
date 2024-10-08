@@ -257,10 +257,6 @@ App::put('/v1/storage/buckets/:bucketId')
 
         $permissions ??= $bucket->getPermissions();
         $maximumFileSize ??= $bucket->getAttribute('maximumFileSize', (int) System::getEnv('_APP_STORAGE_LIMIT', 0));
-        $allowedFileExtensions ??= $bucket->getAttribute('allowedFileExtensions', []);
-        $enabled ??= $bucket->getAttribute('enabled', true);
-        $encryption ??= $bucket->getAttribute('encryption', true);
-        $antivirus ??= $bucket->getAttribute('antivirus', true);
 
         /**
          * Map aggregate permissions into the multiple permissions they represent,
@@ -581,8 +577,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
             if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
                 $openSSLVersion = '1';
                 $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
-                $openSSLTag = \bin2hex($tag);
-                $openSSLIV = \bin2hex($iv);
+                $openSSLTag = '';
+                $openSSLIV = '';
             }
 
             if ($file->isEmpty()) {
@@ -1666,7 +1662,7 @@ App::get('/v1/storage/usage')
         ];
 
         $total = [];
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -1751,7 +1747,7 @@ App::get('/v1/storage/:bucketId/usage')
         ];
 
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

@@ -560,7 +560,7 @@ class MessagingTest extends Scope
         $apiKey = $emailDSN->getPassword();
         $domain = $emailDSN->getUser();
 
-        if (empty($to) || empty($from) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
+        if (empty($to) || empty($fromName) || empty($fromEmail) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
             $this->markTestSkipped('Email provider not configured');
         }
 

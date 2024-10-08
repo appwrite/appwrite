@@ -381,7 +381,7 @@ function updateAttribute(
                 size: $size,
                 required: $required,
                 default: $default,
-                formatOptions: $options ?? null,
+                formatOptions: $options,
                 newKey: $newKey ?? null
             );
         } catch (TruncateException) {
@@ -603,6 +603,7 @@ App::get('/v1/databases/:databaseId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (string $databaseId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
@@ -942,6 +943,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -1066,8 +1068,6 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
-
-        $enabled ??= $collection->getAttribute('enabled', true);
 
         $collection = $dbForProject->updateDocument('database_' . $database->getInternalId(), $collectionId, $collection
             ->setAttribute('name', $name)
@@ -3296,6 +3296,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));

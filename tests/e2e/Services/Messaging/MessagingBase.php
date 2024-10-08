@@ -1429,7 +1429,7 @@ trait MessagingBase
         $authKey = $smsDSN->getPassword();
         $templateId = $smsDSN->getParam('templateId');
 
-        if (empty($to) || empty($from) || empty($senderId) || empty($authKey)) {
+        if (empty($to) || empty($senderId) || empty($authKey)) {
             $this->markTestSkipped('SMS provider not configured');
         }
 

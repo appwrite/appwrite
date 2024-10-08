@@ -25,6 +25,7 @@ App::get('/v1/locale')
     ->inject('response')
     ->inject('locale')
     ->inject('geodb')
+    // @phpstan-ignore class.notFound
     ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb) {
         $eu = Config::getParam('locale-eu');
         $currencies = Config::getParam('locale-currencies');
@@ -210,6 +211,7 @@ App::get('/v1/locale/continents')
     ->action(function (Response $response, Locale $locale) {
         $list = Config::getParam('locale-continents');
 
+        $output = [];
         foreach ($list as $value) {
             $output[] = new Document([
                 'name' => $locale->getText('continents.' . strtolower($value)),

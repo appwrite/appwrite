@@ -197,6 +197,7 @@ class Builds extends Action
         $isVcsEnabled = !empty($providerRepositoryId);
         $owner = '';
         $repositoryName = '';
+        $providerInstallationId = '';
 
         if ($isVcsEnabled) {
             $installation = $dbForConsole->getDocument('installations', $installationId);
@@ -359,7 +360,7 @@ class Builds extends Action
                     $providerCommitHash = \trim($stdout);
                     $authorUrl = "https://github.com/$cloneOwner";
 
-                    $deployment->setAttribute('providerCommitHash', $providerCommitHash ?? '');
+                    $deployment->setAttribute('providerCommitHash', $providerCommitHash);
                     $deployment->setAttribute('providerCommitAuthorUrl', $authorUrl);
                     $deployment->setAttribute('providerCommitAuthor', 'Appwrite');
                     $deployment->setAttribute('providerCommitMessage', "Create '" . $function->getAttribute('name', '') . "' function");

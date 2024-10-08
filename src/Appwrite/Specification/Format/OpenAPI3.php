@@ -103,10 +103,6 @@ class OpenAPI3 extends Format
             $output['components']['securitySchemes']['Key']['x-appwrite'] = ['demo' => '<YOUR_API_KEY>'];
         }
 
-        if (isset($output['securityDefinitions']['JWT'])) {
-            $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => '<YOUR_JWT>'];
-        }
-
         if (isset($output['components']['securitySchemes']['Locale'])) {
             $output['components']['securitySchemes']['Locale']['x-appwrite'] = ['demo' => 'en'];
         }
@@ -239,7 +235,6 @@ class OpenAPI3 extends Format
 
             if ($route->getLabel('sdk.response.code', 500) === 204) {
                 $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['description'] = 'No content';
-                unset($temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['schema']);
             }
 
             if ((!empty($scope))) { //  && 'public' != $scope
@@ -287,7 +282,7 @@ class OpenAPI3 extends Format
                     $validator = $validator->getValidator();
                 }
 
-                switch ((!empty($validator)) ? \get_class($validator) : '') {
+                switch (get_class($validator)) {
                     case 'Utopia\Database\Validator\UID':
                     case 'Utopia\Validator\Text':
                         $node['schema']['type'] = $validator->getType();

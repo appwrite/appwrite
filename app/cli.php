@@ -23,6 +23,8 @@ use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 
+/** @var Utopia\Registry\Registry $register */
+
 // overwriting runtimes to be architectur agnostic for CLI
 Config::setParam('runtimes', (new Runtimes('v4'))->getAll(supported: false));
 
@@ -57,6 +59,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
     $maxAttempts = 5;
     $attempts = 0;
     $ready = false;
+    $dbForConsole = null;
 
     do {
         $attempts++;
@@ -89,6 +92,8 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             sleep($sleep);
         }
     } while ($attempts < $maxAttempts && !$ready);
+
+    /** @var Utopia\Database\Database $dbForConsole */
 
     if (!$ready) {
         throw new Exception("Console is not ready yet. Please try again later.");
