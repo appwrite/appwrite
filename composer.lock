@@ -1623,16 +1623,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.15.0",
+            "version": "0.15.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea"
+                "reference": "d69bbe51a6a94dc4e5bcdd542b5938038b985a65"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
-                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/d69bbe51a6a94dc4e5bcdd542b5938038b985a65",
+                "reference": "d69bbe51a6a94dc4e5bcdd542b5938038b985a65",
                 "shasum": ""
             },
             "require": {
@@ -1666,9 +1666,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.15.0"
+                "source": "https://github.com/utopia-php/cli/tree/0.15.1"
             },
-            "time": "2023-03-01T05:55:14+00:00"
+            "time": "2024-10-04T13:55:36+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -2997,12 +2997,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "b2ffda20ae3a2025d2167cceb103f8f368f374f2"
+                "reference": "0dbf8fddd8a866bd29bfa9428a38fa6c83c8b80e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b2ffda20ae3a2025d2167cceb103f8f368f374f2",
-                "reference": "b2ffda20ae3a2025d2167cceb103f8f368f374f2",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/0dbf8fddd8a866bd29bfa9428a38fa6c83c8b80e",
+                "reference": "0dbf8fddd8a866bd29bfa9428a38fa6c83c8b80e",
                 "shasum": ""
             },
             "require": {
@@ -3041,7 +3041,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/feat-multipart"
             },
-            "time": "2024-10-01T17:41:50+00:00"
+            "time": "2024-10-08T10:06:20+00:00"
         },
         {
             "name": "doctrine/annotations",
