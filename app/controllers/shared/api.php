@@ -162,8 +162,6 @@ App::init()
     ->inject('mode')
     ->inject('team')
     ->action(function (App $utopia, Request $request, Database $dbForConsole, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
-        $ctime = \microtime(true);
-        var_dump($request->getURI() . " [".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - Before shared api first init hook");
 
         $route = $utopia->getRoute();
 
@@ -347,8 +345,6 @@ App::init()
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
         }
-        $diff = \microtime(true) - $ctime;
-        var_dump($request->getURI() . " [".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - After shared api first init hook : " . $diff . " sec");
     });
 
 App::init()
@@ -368,8 +364,6 @@ App::init()
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
-        $ctime = \microtime(true);
-        var_dump($request->getURI() . " [".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - Before shared api second init hook");
         $route = $utopia->getRoute();
 
         if (
@@ -527,8 +521,6 @@ App::init()
                 ;
             }
         }
-        $diff = \microtime(true) - $ctime;
-        var_dump($request->getURI() . " [".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - After shared api second init hook : " . $diff . " sec");
     });
 
 App::init()
@@ -559,8 +551,6 @@ App::shutdown()
     ->inject('project')
     ->inject('dbForProject')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
-        $ctime = \microtime(true);
-        var_dump($request->getURI() . " [".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - Before shared api first shutdown hook");
         $route = $utopia->getRoute();
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
         $session = $response->getPayload();
@@ -586,8 +576,6 @@ App::shutdown()
         }
 
         $dbForProject->purgeCachedDocument('users', $userId);
-        $diff = \microtime(true) - $ctime;
-        var_dump($request->getURI() . " [".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - After shared api first shutdown hook : " . $diff . " sec");
     });
 
 App::shutdown()
@@ -610,8 +598,6 @@ App::shutdown()
     ->inject('dbForConsole')
     ->inject('realtimeConnection')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole, callable $realtimeConnection) use ($parseLabel) {
-        $ctime = \microtime(true);
-        var_dump($request->getURI() . " [".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - Before shared api second shutdown hook");
         $route = $utopia->getRoute();
         $responsePayload = $response->getPayload();
 
@@ -815,8 +801,6 @@ App::shutdown()
                 }
             }
         }
-        $diff = \microtime(true) - $ctime;
-        var_dump($request->getURI() . " [".$project->getAttribute('region')."|".System::getEnv('_APP_REGION')."] - After shared api second shutdown  hook : " . $diff . " sec");
     });
 
 App::init()

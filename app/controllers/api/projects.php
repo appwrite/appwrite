@@ -88,11 +88,7 @@ App::post('/v1/projects')
     ->inject('hooks')
     ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForConsole, Cache $cache, Group $pools, Hooks $hooks) {
 
-        $ctime = \microtime(true);
-        var_dump($request->getURI() . " [".$region."|".System::getEnv('_APP_REGION')."] - Before getDocument('teams')");
         $team = $dbForConsole->getDocument('teams', $teamId);
-        $diff = \microtime(true) - $ctime;
-        var_dump($request->getURI() . " [".$region."|".System::getEnv('_APP_REGION')."] - After getDocument('teams') : " . $diff . " sec");
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
@@ -158,9 +154,6 @@ App::post('/v1/projects')
         }
 
         try {
-
-            $ctime = \microtime(true);
-            var_dump($request->getURI() . " [".$region."|".System::getEnv('_APP_REGION')."] - Before createDocument('projects')");
             $project = $dbForConsole->createDocument('projects', new Document([
                 '$id' => $projectId,
                 '$permissions' => [
@@ -195,8 +188,6 @@ App::post('/v1/projects')
                 'database' => $dsn,
             ]));
 
-            $diff = \microtime(true) - $ctime;
-            var_dump($request->getURI() . " [".$region."|".System::getEnv('_APP_REGION')."] - After createDocument('projects') : " . $diff . " sec");
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
@@ -248,11 +239,7 @@ App::post('/v1/projects')
             }, $collection['indexes']);
 
             try {
-                $ctime = \microtime(true);
-                var_dump($request->getURI() ." [".$region."|".System::getEnv('_APP_REGION')."] - Before createCollection('".$key."')");
                 $dbForProject->createCollection($key, $attributes, $indexes);
-                $diff = \microtime(true) - $ctime;
-                var_dump($request->getURI() . " [".$region."|".System::getEnv('_APP_REGION')."] - After createCollection('".$key."') : " . $diff . " sec");
             } catch (Duplicate) {
                 // Collection already exists
             }
