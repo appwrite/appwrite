@@ -28,6 +28,11 @@ use Utopia\System\System;
 
 class Functions extends Action
 {
+    /**
+     * @var mixed|string
+     */
+    protected string $sourceRegion;
+
     public static function getName(): string
     {
         return 'functions';
@@ -47,7 +52,8 @@ class Functions extends Action
             ->inject('queueForEvents')
             ->inject('queueForUsage')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+            ->inject('realtimeConnection')
+            ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, Callable $realtimeConnection) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log, $realtimeConnection));
     }
 
     /**
@@ -63,7 +69,7 @@ class Functions extends Action
      * @throws \Utopia\Database\Exception
      * @throws Conflict
      */
-    public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log): void
+    public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, Callable $realtimeConnection): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -101,6 +107,8 @@ class Functions extends Action
             return;
         }
 
+        $this->sourceRegion = $payload['sourceRegion'] ?? 'default';
+
         if ($function->isEmpty() && !empty($functionId)) {
             $function = $dbForProject->getDocument('functions', $functionId);
         }
@@ -133,6 +141,7 @@ class Functions extends Action
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
                     $this->execute(
+                        realtimeConnection: $realtimeConnection,
                         log: $log,
                         dbForProject: $dbForProject,
                         queueForFunctions: $queueForFunctions,
@@ -168,6 +177,7 @@ class Functions extends Action
                 $execution = new Document($payload['execution'] ?? []);
                 $user = new Document($payload['user'] ?? []);
                 $this->execute(
+                    realtimeConnection: $realtimeConnection,
                     log: $log,
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
@@ -190,6 +200,7 @@ class Functions extends Action
             case 'schedule':
                 $execution = new Document($payload['execution'] ?? []);
                 $this->execute(
+                    realtimeConnection: $realtimeConnection,
                     log: $log,
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
@@ -299,6 +310,7 @@ class Functions extends Action
      * @throws Conflict
      */
     private function execute(
+        Callable $realtimeConnection,
         Log $log,
         Database $dbForProject,
         Func $queueForFunctions,
@@ -591,6 +603,7 @@ class Functions extends Action
             project: $project
         );
         Realtime::send(
+            redis: $realtimeConnection($this->sourceRegion),
             projectId: 'console',
             payload: $execution->getArrayCopy(),
             events: $allEvents,
@@ -598,6 +611,7 @@ class Functions extends Action
             roles: $target['roles']
         );
         Realtime::send(
+            redis: $realtimeConnection($this->sourceRegion),
             projectId: $project->getId(),
             payload: $execution->getArrayCopy(),
             events: $allEvents,

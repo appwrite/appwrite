@@ -36,6 +36,10 @@ class Migrations extends Action
     protected Database $dbForConsole;
 
     protected Document $project;
+    /**
+     * @var string
+     */
+    protected string $sourceRegion;
 
     public static function getName(): string
     {
@@ -53,13 +57,14 @@ class Migrations extends Action
             ->inject('dbForProject')
             ->inject('dbForConsole')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $log));
+            ->inject('realtimeConnection')
+            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log, Callable $realtimeConnection) => $this->action($message, $dbForProject, $dbForConsole, $log, $realtimeConnection));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log): void
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log,  Callable $realtimeConnection): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -75,6 +80,7 @@ class Migrations extends Action
             return;
         }
 
+        $this->sourceRegion = $payload['sourceRegion'] ?? 'default';
         $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
         $this->project = $project;
@@ -89,7 +95,7 @@ class Migrations extends Action
         $log->addTag('migrationId', $migration->getId());
         $log->addTag('projectId', $project->getId());
 
-        $this->processMigration($migration, $log);
+        $this->processMigration($migration, $log, $realtimeConnection);
     }
 
     /**
@@ -158,7 +164,7 @@ class Migrations extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function updateMigrationDocument(Document $migration, Document $project): Document
+    protected function updateMigrationDocument(Document $migration, Document $project, Callable $realtimeConnection): Document
     {
         /** Trigger Realtime */
         $allEvents = Event::generateEvents('migrations.[migrationId].update', [
@@ -172,6 +178,7 @@ class Migrations extends Action
         );
 
         Realtime::send(
+            redis: $realtimeConnection($this->sourceRegion),
             projectId: 'console',
             payload: $migration->getArrayCopy(),
             events: $allEvents,
@@ -180,6 +187,7 @@ class Migrations extends Action
         );
 
         Realtime::send(
+            redis: $realtimeConnection($this->sourceRegion),
             projectId: $project->getId(),
             payload: $migration->getArrayCopy(),
             events: $allEvents,
@@ -253,6 +261,11 @@ class Migrations extends Action
     }
 
     /**
+     * @param Document $project
+     * @param Document $migration
+     * @param Log $log
+     * @param callable $realtimeConnection
+     * @return void
      * @throws Authorization
      * @throws Conflict
      * @throws Restricted
@@ -260,7 +273,7 @@ class Migrations extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function processMigration(Document $migration, Log $log): void
+    protected function processMigration(Document $migration, Log $log, Callable $realtimeConnection): void
     {
         $project = $this->project;
         $projectDocument = $this->dbForConsole->getDocument('projects', $project->getId());
@@ -286,7 +299,7 @@ class Migrations extends Action
 
             $migration->setAttribute('stage', 'processing');
             $migration->setAttribute('status', 'processing');
-            $this->updateMigrationDocument($migration, $projectDocument);
+            $this->updateMigrationDocument($migration, $projectDocument, $realtimeConnection);
 
             $log->addTag('type', $migration->getAttribute('source'));
 
@@ -302,14 +315,14 @@ class Migrations extends Action
 
             /** Start Transfer */
             $migration->setAttribute('stage', 'migrating');
-            $this->updateMigrationDocument($migration, $projectDocument);
+            $this->updateMigrationDocument($migration, $projectDocument, $realtimeConnection);
 
             $transfer->run(
                 $migration->getAttribute('resources'),
                 function () use ($migration, $transfer, $projectDocument) {
                     $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
                     $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
-                    $this->updateMigrationDocument($migration, $projectDocument);
+                    $this->updateMigrationDocument($migration, $projectDocument, $realtimeConnection);
                 },
                 $migration->getAttribute('resourceId'),
                 $migration->getAttribute('resourceType')
@@ -348,7 +361,7 @@ class Migrations extends Action
 
                 $migration->setAttribute('errors', $errorMessages);
                 $log->addExtra('migrationErrors', json_encode($errorMessages));
-                $this->updateMigrationDocument($migration, $projectDocument);
+                $this->updateMigrationDocument($migration, $projectDocument, $realtimeConnection);
 
                 return;
             }
@@ -389,7 +402,7 @@ class Migrations extends Action
                 $this->removeAPIKey($tempAPIKey);
             }
 
-            $this->updateMigrationDocument($migration, $projectDocument);
+            $this->updateMigrationDocument($migration, $projectDocument, $realtimeConnection);
 
             if ($migration->getAttribute('status', '') === 'failed') {
                 Console::error('Migration('.$migration->getInternalId().':'.$migration->getId().') failed, Project('.$this->project->getInternalId().':'.$this->project->getId().')');

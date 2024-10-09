@@ -93,8 +93,8 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
-        $database
+    $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+    if (in_array($dsn->getHost(), $sharedTablesKeys)) {        $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
             ->setNamespace($dsn->getParam('namespace'));
@@ -126,8 +126,8 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
         if (isset($databases[$dsn->getHost()])) {
             $database = $databases[$dsn->getHost()];
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
-                $database
+            $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+            if (in_array($dsn->getHost(), $sharedTablesKeys)) {                $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
                     ->setNamespace($dsn->getParam('namespace'));
@@ -150,8 +150,8 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
         $databases[$dsn->getHost()] = $database;
 
-        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
-            $database
+        $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        if (in_array($dsn->getHost(), $sharedTablesKeys)) {            $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
                 ->setNamespace($dsn->getParam('namespace'));
@@ -256,22 +256,27 @@ Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
-Server::setResource('deviceForFunctions', function (Document $project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForFunctions', function (Document $project, $connectionString) {
+    return getDevice(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId(), $connectionString);
+}, ['project', 'connectionString']);
 
-Server::setResource('deviceForFiles', function (Document $project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForFiles', function (Document $project, $connectionString) {
+    return getDevice(APP_STORAGE_UPLOADS.'/app-'.$project->getId(), $connectionString);
+}, ['project', 'connectionString']);
 
-Server::setResource('deviceForBuilds', function (Document $project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForBuilds', function (Document $project, $connectionString) {
+    return getDevice(APP_STORAGE_BUILDS.'/app-'.$project->getId(), $connectionString);
+}, ['project', 'connectionString']);
 
-Server::setResource('deviceForCache', function (Document $project) {
-    return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
-}, ['project']);
+Server::setResource('deviceForCache', function (Document $project, $connectionString) {
+    return getDevice(APP_STORAGE_CACHE.'/app-'.$project->getId(), $connectionString);
+}, ['project', 'connectionString']);
 
+Server::setResource('realtimeConnection',function ($pools) {
+    return function () use ($pools)  {
+        return $pools->get('pubsub')->pop()->getResource();
+    };
+}, ['pools']);
 
 $pools = $register->get('pools');
 $platform = new Appwrite();

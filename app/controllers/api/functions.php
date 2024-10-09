@@ -183,7 +183,8 @@ App::post('/v1/functions')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->inject('realtimeConnection')
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $githubgithub, Callable $realtimeConnection) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
@@ -374,6 +375,7 @@ App::post('/v1/functions')
                 project: $project
             );
             Realtime::send(
+                redis: $realtimeConnection($queueForEvents->getSourceRegion()),
                 projectId: 'console',
                 payload: $rule->getArrayCopy(),
                 events: $allEvents,
@@ -381,6 +383,7 @@ App::post('/v1/functions')
                 roles: $target['roles']
             );
             Realtime::send(
+                redis: $realtimeConnection($queueForEvents->getSourceRegion()),
                 projectId: $project->getId(),
                 payload: $rule->getArrayCopy(),
                 events: $allEvents,

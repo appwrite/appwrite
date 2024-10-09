@@ -108,6 +108,7 @@ class Database extends Event
      */
     public function trigger(): string|bool
     {
+
         try {
             $dsn = new DSN($this->getProject()->getAttribute('database'));
         } catch (\InvalidArgumentException) {
@@ -121,6 +122,7 @@ class Database extends Event
 
         try {
             $result = $client->enqueue([
+                'sourceRegion' =>  $this->getSourceRegion(),
                 'project' => $this->project,
                 'user' => $this->user,
                 'type' => $this->type,

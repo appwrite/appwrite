@@ -498,12 +498,13 @@ class Deletes extends Action
         ];
 
         $limit = \count($projectCollectionIds) + 25;
+        $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         while (true) {
             $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
-                if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
+                if (! in_array($dsn->getHost(), $sharedTablesKeys) || !\in_array($collection->getId(), $projectCollectionIds)) {
                     try {
                         $dbForProject->deleteCollection($collection->getId());
                     } catch (Throwable $e) {
@@ -515,13 +516,12 @@ class Deletes extends Action
                         if (!preg_match('/^_\d+_\d+$/', $collection->getId())) {
                             throw $e;
                         }
-                    }
-                } else {
+                    }                } else {
                     $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                 }
             }
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            if (in_array($dsn->getHost(), $sharedTablesKeys)) {
                 $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
 
                 if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
@@ -575,7 +575,8 @@ class Deletes extends Action
         ], $dbForConsole);
 
         // Delete metadata table
-        if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+        System::getEnv('_APP_DATABASE_SHARED_TABLES', '');
+        if (! in_array($dsn, $sharedTablesKeys)) {
             $dbForProject->deleteCollection('_metadata');
         } else {
             $this->deleteByGroup('_metadata', [], $dbForProject);
