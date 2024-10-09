@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f05357728316c79037d22ee26afd2d3e",
+    "content-hash": "89ebc75f08cd9ee5a5cccd64d0f9938a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2124,16 +2124,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.12.0",
+            "version": "0.12.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "6e466d3511981291843c6ebf9ce3f44fc75e37b0"
+                "reference": "b9dfafb5efc1d12cbee01d03dc98853ef026e35b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/6e466d3511981291843c6ebf9ce3f44fc75e37b0",
-                "reference": "6e466d3511981291843c6ebf9ce3f44fc75e37b0",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/b9dfafb5efc1d12cbee01d03dc98853ef026e35b",
+                "reference": "b9dfafb5efc1d12cbee01d03dc98853ef026e35b",
                 "shasum": ""
             },
             "require": {
@@ -2169,22 +2169,22 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.12.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.12.1"
             },
-            "time": "2024-05-30T14:58:25+00:00"
+            "time": "2024-10-09T08:17:07+00:00"
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.6.6",
+            "version": "0.6.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "667997c7ca6c445001d56f70205b6cf13c6b7343"
+                "reference": "9f2d1afc2acf2b6cdc5088ad4becbab131df0f2a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/667997c7ca6c445001d56f70205b6cf13c6b7343",
-                "reference": "667997c7ca6c445001d56f70205b6cf13c6b7343",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/9f2d1afc2acf2b6cdc5088ad4becbab131df0f2a",
+                "reference": "9f2d1afc2acf2b6cdc5088ad4becbab131df0f2a",
                 "shasum": ""
             },
             "require": {
@@ -2225,9 +2225,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.6"
+                "source": "https://github.com/utopia-php/migration/tree/0.6.7"
             },
-            "time": "2024-10-09T09:51:43+00:00"
+            "time": "2024-10-09T10:21:25+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -3573,16 +3573,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.3.0",
+            "version": "v5.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "3abf7425cd284141dc5d8d14a9ee444de3345d1a"
+                "reference": "8eea230464783aa9671db8eea6f8c6ac5285794b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/3abf7425cd284141dc5d8d14a9ee444de3345d1a",
-                "reference": "3abf7425cd284141dc5d8d14a9ee444de3345d1a",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/8eea230464783aa9671db8eea6f8c6ac5285794b",
+                "reference": "8eea230464783aa9671db8eea6f8c6ac5285794b",
                 "shasum": ""
             },
             "require": {
@@ -3625,9 +3625,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.3.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.3.1"
             },
-            "time": "2024-09-29T13:56:26+00:00"
+            "time": "2024-10-08T18:51:32+00:00"
         },
         {
             "name": "phar-io/manifest",
