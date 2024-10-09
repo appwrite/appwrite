@@ -209,6 +209,11 @@ class Functions extends Action
                     executionId: $execution->getId() ?? null
                 );
                 break;
+            case 'delayed_execution_write':
+                $execution = new Document($payload['execution'] ?? []);
+                $execution->setAttribute('$collection', 'executions');
+                $execution = $dbForProject->createDocument('executions', $execution);
+                return;
         }
     }
 
