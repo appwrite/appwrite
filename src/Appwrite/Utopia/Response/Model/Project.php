@@ -234,6 +234,18 @@ class Project extends Model
                 'default' => '',
                 'example' => 'tls',
             ])
+            ->addRule('pingCount', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of times the ping was received for this project.',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule('pingedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Last ping datetime in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
         ;
 
         $services = Config::getParam('services', []);
