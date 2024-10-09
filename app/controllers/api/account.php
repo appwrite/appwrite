@@ -1156,7 +1156,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
             $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
         }
         $token = false;
-        $state = Auth::stateGenerator($success, $failure, token, $key);
+        $state = Auth::stateGenerator($success, $failure, $token, $key);
         $oauth2 = new $className($appId, $appSecret, $callback, [$state], $scopes);
 
         $response
