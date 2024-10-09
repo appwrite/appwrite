@@ -1,9 +1,5 @@
 <?php
 
-const APP_PLATFORM_SERVER = 'server';
-const APP_PLATFORM_CLIENT = 'client';
-const APP_PLATFORM_CONSOLE = 'console';
-
 return [
     APP_PLATFORM_CLIENT => [
         'key' => APP_PLATFORM_CLIENT,
@@ -203,7 +199,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Console',
-                'version' => '1.1.0',
+                'version' => '1.2.1',
                 'url' => 'https://github.com/appwrite/sdk-for-console',
                 'package' => '',
                 'enabled' => true,

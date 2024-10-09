@@ -243,7 +243,11 @@ class Realtime extends Adapter
      * @param string $event
      * @param Document $payload
      * @param Document|null $project
+     * @param Document|null $database
+     * @param Document|null $collection
+     * @param Document|null $bucket
      * @return array
+     * @throws \Exception
      */
     public static function fromPayload(string $event, Document $payload, Document $project = null, Document $database = null, Document $collection = null, Document $bucket = null): array
     {
@@ -262,6 +266,13 @@ class Realtime extends Adapter
                 break;
             case 'rules':
                 $channels[] = 'console';
+                $channels[] = 'projects.' . $project->getId();
+                $projectId = 'console';
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                break;
+            case 'projects':
+                $channels[] = 'console';
+                $channels[] = 'projects.' . $parts[1];
                 $projectId = 'console';
                 $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
@@ -280,6 +291,7 @@ class Realtime extends Adapter
             case 'databases':
                 if (in_array($parts[4] ?? [], ['attributes', 'indexes'])) {
                     $channels[] = 'console';
+                    $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 } elseif (($parts[4] ?? '') === 'documents') {
@@ -319,6 +331,7 @@ class Realtime extends Adapter
                 if ($parts[2] === 'executions') {
                     if (!empty($payload->getRead())) {
                         $channels[] = 'console';
+                        $channels[] = 'projects.' . $project->getId();
                         $channels[] = 'executions';
                         $channels[] = 'executions.' . $payload->getId();
                         $channels[] = 'functions.' . $payload->getAttribute('functionId');
@@ -326,6 +339,7 @@ class Realtime extends Adapter
                     }
                 } elseif ($parts[2] === 'deployments') {
                     $channels[] = 'console';
+                    $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
@@ -333,6 +347,7 @@ class Realtime extends Adapter
                 break;
             case 'migrations':
                 $channels[] = 'console';
+                $channels[] = 'projects.' . $project->getId();
                 $projectId = 'console';
                 $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
