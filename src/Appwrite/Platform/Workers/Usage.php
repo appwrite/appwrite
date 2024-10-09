@@ -56,7 +56,6 @@ class Usage extends Action
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
-        //Todo Figure out way to preserve keys when the container is being recreated @shimonewman
 
         $aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
         $project = new Document($payload['project'] ?? []);
@@ -86,7 +85,7 @@ class Usage extends Action
             $this->stats[$projectId]['keys'][$metric['key']] += $metric['value'];
         }
 
-        // If keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
+         //If keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
         if (
             $this->keys >= self::KEYS_THRESHOLD ||
             (time() - $this->lastTriggeredTime > $aggregationInterval  && $this->keys > 0)
@@ -118,7 +117,7 @@ class Usage extends Action
 
         try {
             switch (true) {
-                case $document->getCollection() === 'users': // users
+                case $document->getCollection() === 'users':  //users
                     $sessions = count($document->getAttribute(METRIC_SESSIONS, 0));
                     if (!empty($sessions)) {
                         $metrics[] = [
@@ -127,7 +126,7 @@ class Usage extends Action
                         ];
                     }
                     break;
-                case $document->getCollection() === 'databases': // databases
+                case $document->getCollection() === 'databases':  //databases
                     $collections = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS)));
                     $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS)));
                     if (!empty($collections['value'])) {
@@ -270,11 +269,79 @@ class Usage extends Action
                         ];
                     }
                     break;
+
+                case $document->getCollection() === 'deployments':
+
+                    $build = $dbForProject->getDocument('builds', $document->getAttribute('buildId'));
+
+                    if (! $build->isEmpty()) {
+                        // Project scope
+
+                        $metrics[] = [
+                            'key' => METRIC_BUILDS,
+                            'value' => -1,
+                        ];
+
+                        $metrics[] = [
+                            'key' => $build->getAttribute('status') === 'ready' ? METRIC_BUILDS_SUCCESS : METRIC_BUILDS_FAILED,
+                            'value' => -1
+                        ];
+
+                        $metrics[] = [
+                            'key' => METRIC_BUILDS_STORAGE,
+                            'value' => ($build->getAttribute('size') * -1)
+                        ];
+
+                        $metrics[] = [
+                            'key' => METRIC_BUILDS_COMPUTE,
+                            'value' => (($build->getAttribute('duration', 0) * 1000) * -1),
+                        ];
+
+                        $metrics[] = [
+                            'key' => $build->getAttribute('status') === 'ready' ? METRIC_BUILDS_COMPUTE_SUCCESS : METRIC_BUILDS_COMPUTE_FAILED,
+                            'value' => (($build->getAttribute('duration') * 1000) * -1),
+                        ];
+
+
+                        //Function scope
+                        $metrics[] = [
+                            'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), METRIC_FUNCTION_ID_BUILDS),
+                            'value' => -1,
+                        ];
+
+                        $statusMetric = $build->getAttribute('status') === 'ready' ? METRIC_FUNCTION_ID_BUILDS_SUCCESS : METRIC_FUNCTION_ID_BUILDS_FAILED;
+
+                        $metrics[] = [
+                            'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), $statusMetric),
+                            'value' => -1,
+                        ];
+
+                        $metrics[] = [
+                            'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), METRIC_FUNCTION_ID_BUILDS_STORAGE),
+                            'value' => ($build->getAttribute('size') * -1),
+                        ];
+
+                        $metrics[] = [
+                            'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), METRIC_FUNCTION_ID_BUILDS_COMPUTE),
+                            'value' => (($build->getAttribute('duration') * 1000) * -1),
+                        ];
+
+
+                        $statusMetric = $build->getAttribute('status') === 'ready' ? METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS : METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED;
+
+                        $metrics[] = [
+                            'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), $statusMetric),
+                            'value' => (($build->getAttribute('duration') * 1000) * -1),
+                        ];
+                    }
+
+                    break;
+
                 default:
                     break;
             }
         } catch (\Throwable $e) {
-            console::error("[reducer] " . " {DateTime::now()} " . " {$project->getInternalId()} " . " {$e->getMessage()}");
+            Console::error('[' . DateTime::now() . '] ' . $project->getInternalId() . '  '. $e->getMessage());;
         }
     }
 }
