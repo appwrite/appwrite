@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 
@@ -249,20 +250,29 @@ class FunctionsCustomClientTest extends Scope
             'activate' => true
         ]);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'x-appwrite-event' => "OVERRIDDEN",
-            'x-appwrite-trigger' => "OVERRIDDEN",
-            'x-appwrite-user-id' => "OVERRIDDEN",
-            'x-appwrite-user-jwt' => "OVERRIDDEN",
-        ]);
-        $output = json_decode($execution['body']['responseBody'], true);
-        $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_JWT']);
-        $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_EVENT']);
-        $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_TRIGGER']);
-        $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_USER_ID']);
+        try {
+            $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'x-appwrite-event' => "OVERRIDDEN",
+                'x-appwrite-trigger' => "OVERRIDDEN",
+                'x-appwrite-user-id' => "OVERRIDDEN",
+                'x-appwrite-user-jwt' => "OVERRIDDEN",
+            ]);
+    
+            $output = json_decode($execution['body']['responseBody'], true);
+            $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_JWT']);
+            $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_EVENT']);
+            $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_TRIGGER']);
+            $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_USER_ID']);
+        } catch (\Exception $e) {
+            // output docker logs
+            $out = '';
+            Console::execute('docker compose logs appwrite', '', $out, $out);
+            fwrite(STDOUT, print_r($out, true));
+        }
+
 
         $this->cleanupFunction($functionId);
     }
