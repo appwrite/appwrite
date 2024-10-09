@@ -181,6 +181,59 @@ class Auth
     }
 
     /**
+     * Generates a state code for dynamic state.
+     *
+     * @param string $success success url
+     * @param string $failure failure url
+     * @param string $secret The secret key
+     *
+     * @return string The base64-encoded state code containing the payload and its signature.
+     */
+    public static function stateGenerator(string $success, string $failure, string $secret)
+    {
+        $payload = [
+            'success' => $success,
+            'failure' => $failure,
+            'time' => time(), // The current time
+        ];
+
+        $payloadString = json_encode($payload);
+        $signature = hash_hmac('sha256', $payloadString, $secret);
+        $code = $payloadString . '--' . $signature;
+
+        // Encode the code
+        $code = base64_encode($code);
+
+        return $code;
+    }
+
+    /**
+     * Verifies string The base64-encoded state for dynamic state
+     *
+     * @param string $code base64-encoded state
+     * @param string $secret secret key
+     *
+     * @return array|false The decoded payload if code is valid, or false if verification fails.
+     */
+    public static function stateVerify(string $code, string $secret)
+    {
+        // Decode the code
+        $code = base64_decode($code);
+
+        list($payloadString, $signature) = explode('--', $code, 2);
+        $expectedSignature = hash_hmac('sha256', $payloadString, $secret);
+
+        if (!hash_equals($expectedSignature, $signature)) {
+            return false;
+        }
+
+        // The code is valid, return the payload
+        $payload = json_decode($payloadString, true);
+
+        return $payload;
+    }
+
+    /**
      * Encode.
      *
      * One-way encryption
