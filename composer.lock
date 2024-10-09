@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a81b2ddbd465059b986947b63435e2bc",
+    "content-hash": "89ebc75f08cd9ee5a5cccd64d0f9938a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -157,16 +157,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.15.0",
+            "version": "0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "68ea5bcc24c513a6d641ddf9412bbab13e5dfb94"
+                "reference": "0ccc89e5ed2d2fec757139a50626179b76c579d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/68ea5bcc24c513a6d641ddf9412bbab13e5dfb94",
-                "reference": "68ea5bcc24c513a6d641ddf9412bbab13e5dfb94",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/0ccc89e5ed2d2fec757139a50626179b76c579d9",
+                "reference": "0ccc89e5ed2d2fec757139a50626179b76c579d9",
                 "shasum": ""
             },
             "require": {
@@ -206,9 +206,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.15.0"
+                "source": "https://github.com/appwrite/runtimes/tree/0.16.0"
             },
-            "time": "2024-08-21T10:23:45+00:00"
+            "time": "2024-10-08T12:49:05+00:00"
         },
         {
             "name": "beberlei/assert",
