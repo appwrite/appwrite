@@ -1623,16 +1623,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.15.0",
+            "version": "0.15.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea"
+                "reference": "d69bbe51a6a94dc4e5bcdd542b5938038b985a65"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
-                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/d69bbe51a6a94dc4e5bcdd542b5938038b985a65",
+                "reference": "d69bbe51a6a94dc4e5bcdd542b5938038b985a65",
                 "shasum": ""
             },
             "require": {
@@ -1666,9 +1666,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.15.0"
+                "source": "https://github.com/utopia-php/cli/tree/0.15.1"
             },
-            "time": "2023-03-01T05:55:14+00:00"
+            "time": "2024-10-04T13:55:36+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -2123,16 +2123,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.12.0",
+            "version": "0.12.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "6e466d3511981291843c6ebf9ce3f44fc75e37b0"
+                "reference": "b9dfafb5efc1d12cbee01d03dc98853ef026e35b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/6e466d3511981291843c6ebf9ce3f44fc75e37b0",
-                "reference": "6e466d3511981291843c6ebf9ce3f44fc75e37b0",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/b9dfafb5efc1d12cbee01d03dc98853ef026e35b",
+                "reference": "b9dfafb5efc1d12cbee01d03dc98853ef026e35b",
                 "shasum": ""
             },
             "require": {
@@ -2168,9 +2168,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.12.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.12.1"
             },
-            "time": "2024-05-30T14:58:25+00:00"
+            "time": "2024-10-09T08:17:07+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -2993,16 +2993,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.39.22",
+            "version": "0.39.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "bdbb1607527550e67283ff0533522d1410c2c0df"
+                "reference": "0acceabb7593c9c07c5db85a84a5ebac60896763"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/bdbb1607527550e67283ff0533522d1410c2c0df",
-                "reference": "bdbb1607527550e67283ff0533522d1410c2c0df",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/0acceabb7593c9c07c5db85a84a5ebac60896763",
+                "reference": "0acceabb7593c9c07c5db85a84a5ebac60896763",
                 "shasum": ""
             },
             "require": {
@@ -3038,9 +3038,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.22"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.23"
             },
-            "time": "2024-10-01T16:16:26+00:00"
+            "time": "2024-10-08T00:38:57+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -3564,16 +3564,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.3.0",
+            "version": "v5.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "3abf7425cd284141dc5d8d14a9ee444de3345d1a"
+                "reference": "8eea230464783aa9671db8eea6f8c6ac5285794b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/3abf7425cd284141dc5d8d14a9ee444de3345d1a",
-                "reference": "3abf7425cd284141dc5d8d14a9ee444de3345d1a",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/8eea230464783aa9671db8eea6f8c6ac5285794b",
+                "reference": "8eea230464783aa9671db8eea6f8c6ac5285794b",
                 "shasum": ""
             },
             "require": {
@@ -3616,9 +3616,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.3.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.3.1"
             },
-            "time": "2024-09-29T13:56:26+00:00"
+            "time": "2024-10-08T18:51:32+00:00"
         },
         {
             "name": "phar-io/manifest",

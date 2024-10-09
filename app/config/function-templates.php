@@ -3,7 +3,7 @@
 const TEMPLATE_RUNTIMES = [
     'NODE' => [
         'name' => 'node',
-        'versions' => ['21.0', '20.0', '19.0', '18.0', '16.0', '14.5']
+        'versions' => ['22', '21.0', '20.0', '19.0', '18.0', '16.0', '14.5']
     ],
     'PYTHON' => [
         'name' => 'python',
@@ -11,7 +11,7 @@ const TEMPLATE_RUNTIMES = [
     ],
     'DART' => [
         'name' => 'dart',
-        'versions' => ['3.3', '3.1', '3.0', '2.19', '2.18', '2.17', '2.16', '2.16']
+        'versions' => ['3.5', '3.3', '3.1', '3.0', '2.19', '2.18', '2.17', '2.16', '2.16']
     ],
     'GO' => [
         'name' => 'go',
@@ -23,11 +23,15 @@ const TEMPLATE_RUNTIMES = [
     ],
     'BUN' => [
         'name' => 'bun',
-        'versions' => ['1.0']
+        'versions' => ['1.1', '1.0']
     ],
     'RUBY' => [
         'name' => 'ruby',
         'versions' => ['3.3', '3.2', '3.1', '3.0']
+    ],
+    'DENO' => [
+        'name' => 'deno',
+        'versions' => ['2.0', '1.46', '1.40', '1.35', '1.24', '1.21']
     ],
 ];
 
@@ -75,6 +79,7 @@ return [
             ),
             ...getRuntimes(TEMPLATE_RUNTIMES['BUN'], 'bun install', 'src/main.ts', 'bun/starter'),
             ...getRuntimes(TEMPLATE_RUNTIMES['RUBY'], 'bundle install', 'lib/main.rb', 'ruby/starter'),
+            ...getRuntimes(TEMPLATE_RUNTIMES['DENO'], 'deno cache src/main.ts', 'src/main.ts', 'deno/starter'),
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/starter">file</a>.',
         'vcsProvider' => 'github',
