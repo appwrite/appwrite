@@ -189,11 +189,12 @@ class Auth
      *
      * @return string The base64-encoded state code containing the payload and its signature.
      */
-    public static function stateGenerator(string $success, string $failure, string $secret)
+    public static function stateGenerator(string $success, string $failure, bool $token, string $secret)
     {
         $payload = [
             'success' => $success,
             'failure' => $failure,
+            'token' => $token,
             'time' => time(), // The current time
         ];
 
