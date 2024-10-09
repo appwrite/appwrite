@@ -21,6 +21,10 @@ const TEMPLATE_RUNTIMES = [
         'name' => 'php',
         'versions' => ['8.3', '8.2', '8.1', '8.0']
     ],
+    'DENO' => [
+        'name' => 'deno',
+        'versions' => ['2.0', '1.46', '1.40', '1.35', '1.24', '1.21']
+    ],
     'BUN' => [
         'name' => 'bun',
         'versions' => ['1.1', '1.0']
@@ -28,10 +32,6 @@ const TEMPLATE_RUNTIMES = [
     'RUBY' => [
         'name' => 'ruby',
         'versions' => ['3.3', '3.2', '3.1', '3.0']
-    ],
-    'DENO' => [
-        'name' => 'deno',
-        'versions' => ['2.0', '1.46', '1.40', '1.35', '1.24', '1.21']
     ],
 ];
 
