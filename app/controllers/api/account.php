@@ -1129,6 +1129,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
         }
 
+        $key = "";
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
@@ -1154,12 +1155,9 @@ App::get('/v1/account/sessions/oauth2/:provider')
         if (empty($failure)) {
             $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
         }
-
-        $oauth2 = new $className($appId, $appSecret, $callback, [
-            'success' => $success,
-            'failure' => $failure,
-            'token' => false,
-        ], $scopes);
+        $token = false;
+        $state = Auth::stateGenerator($success, $failure, token, $key);
+        $oauth2 = new $className($appId, $appSecret, $callback, [$state], $scopes);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -1267,15 +1265,22 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
+        $key = "";
         $providers = Config::getParam('oAuthProviders');
         $providerName = $providers[$provider]['name'] ?? '';
 
         /** @var Appwrite\Auth\OAuth2 $oauth2 */
         $oauth2 = new $className($appId, $appSecret, $callback);
 
+        $verificationState = Auth::stateVerify($state, $key);
+
+        if($verificationState === false) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Wrong state code from OAuth2 provider');
+        }
+
         if (!empty($state)) {
             try {
-                $state = \array_merge($defaultState, $oauth2->parseState($state));
+                $state = \array_merge($defaultState,  $verificationState);
             } catch (\Throwable $exception) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to parse login state params as passed from OAuth2 provider');
             }
