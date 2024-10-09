@@ -1,0 +1,162 @@
+x-logging: &x-logging
+    logging:
+        driver: "json-file"
+        options:
+            max-file: "5"
+            max-size: "10m"
+
+services:
+    traefik:
+        command:
+            - --log.level=DEBUG
+            - --api.insecure=true
+        ports:
+            - 9500:8080
+    appwrite:
+        ports:
+            - 9501:80
+        volumes:
+            - ./phpunit.xml:/usr/src/code/phpunit.xml
+            - ./tests:/usr/src/code/tests
+            - ./app:/usr/src/code/app
+            - ./docs:/usr/src/code/docs
+            - ./public:/usr/src/code/public
+            - ./src:/usr/src/code/src
+            - ./dev:/usr/src/code/dev
+    appwrite-realtime:
+        ports:
+            - 9505:80
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-worker-audits:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-worker-webhooks:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-worker-deletes:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-worker-databases:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-worker-builds:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-worker-certificates:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-worker-functions:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-worker-mails:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-worker-messaging:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-worker-migrations:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-worker-usage:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-worker-usage-dump:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-task-maintenance:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-task-scheduler-functions:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-task-scheduler-executions:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    appwrite-task-scheduler-messages:
+        volumes:
+            - ./app:/usr/src/code/app
+            - ./src:/usr/src/code/src
+    mariadb:
+        ports:
+            - "3306:3306"
+    redis:
+        ports:
+            - "6379:6379"
+
+    # Dev Tools Start ------------------------------------------------------------------------------------------
+    #
+    # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
+    #
+    # Here is a description of the different tools and why are we using them:
+    #
+    # MailCatcher - An SMTP server. Catches all system emails and displays them in a nice UI.
+    # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
+    # Redis Insight - A nice UI for exploring Redis data
+    # Adminer - A nice UI for exploring MariaDB data
+    # GraphQl Explorer - A nice UI for exploring GraphQL API
+
+    maildev: # used mainly for dev tests
+        image: appwrite/mailcatcher:1.0.0
+        container_name: appwrite-mailcatcher
+        <<: *x-logging
+        ports:
+            - "9503:1080"
+        networks:
+            - appwrite
+
+    request-catcher: # used mainly for dev tests
+        image: appwrite/requestcatcher:1.0.0
+        container_name: appwrite-requestcatcher
+        <<: *x-logging
+        ports:
+            - "9504:5000"
+        networks:
+            - appwrite
+
+    adminer:
+        image: adminer
+        container_name: appwrite-adminer
+        <<: *x-logging
+        restart: always
+        ports:
+            - 9506:8080
+        networks:
+            - appwrite
+
+    redis-insight:
+        image: redis/redisinsight:latest
+        restart: unless-stopped
+        networks:
+            - appwrite
+        environment:
+            - REDIS_HOSTS=redis
+        ports:
+            - "8081:5540"
+
+    graphql-explorer:
+        container_name: appwrite-graphql-explorer
+        image: appwrite/altair:0.3.0
+        restart: unless-stopped
+        networks:
+            - appwrite
+        ports:
+            - "9509:3000"
+        environment:
+            - SERVER_URL=http://localhost/v1/graphql
