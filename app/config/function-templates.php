@@ -3,7 +3,7 @@
 const TEMPLATE_RUNTIMES = [
     'NODE' => [
         'name' => 'node',
-        'versions' => ['22.0', '21.0', '20.0', '19.0', '18.0', '16.0', '14.5']
+        'versions' => ['22', '21.0', '20.0', '19.0', '18.0', '16.0', '14.5']
     ],
     'PYTHON' => [
         'name' => 'python',
