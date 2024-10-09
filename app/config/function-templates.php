@@ -77,9 +77,9 @@ return [
                 'src/index.php',
                 'php/starter'
             ),
+            ...getRuntimes(TEMPLATE_RUNTIMES['DENO'], 'deno cache src/main.ts', 'src/main.ts', 'deno/starter'),
             ...getRuntimes(TEMPLATE_RUNTIMES['BUN'], 'bun install', 'src/main.ts', 'bun/starter'),
             ...getRuntimes(TEMPLATE_RUNTIMES['RUBY'], 'bundle install', 'lib/main.rb', 'ruby/starter'),
-            ...getRuntimes(TEMPLATE_RUNTIMES['DENO'], 'deno cache src/main.ts', 'src/main.ts', 'deno/starter'),
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/starter">file</a>.',
         'vcsProvider' => 'github',
