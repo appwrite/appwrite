@@ -469,7 +469,6 @@ App::init()
             );
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
-
             if (!empty($data) && !$cacheLog->isEmpty()) {
                 $parts = explode('/', $cacheLog->getAttribute('resourceType'));
                 $type = $parts[0] ?? null;
@@ -712,9 +711,13 @@ App::shutdown()
          * Cache label
          */
         $useCache = $route->getLabel('cache', false);
+        var_dump('$useCache=');
+        var_dump($useCache);
         if ($useCache) {
             $resource = $resourceType = null;
             $data = $response->getPayload();
+            var_dump('!empty($data[payload]=');
+            var_dump(!empty($data['payload']));
             if (!empty($data['payload'])) {
                 $pattern = $route->getLabel('cache.resource', null);
                 if (!empty($pattern)) {
@@ -731,7 +734,10 @@ App::shutdown()
                 $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
+                var_dump('$cacheLog=');
+                var_dump($cacheLog);
                 if ($cacheLog->isEmpty()) {
+                    var_dump('inserting.....');
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                         '$id' => $key,
                         'resource' => $resource,
