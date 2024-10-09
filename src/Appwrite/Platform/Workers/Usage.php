@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\UsageDump;
 use Exception;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -85,7 +86,7 @@ class Usage extends Action
             $this->stats[$projectId]['keys'][$metric['key']] += $metric['value'];
         }
 
-         //If keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
+        //If keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
         if (
             $this->keys >= self::KEYS_THRESHOLD ||
             (time() - $this->lastTriggeredTime > $aggregationInterval  && $this->keys > 0)
@@ -271,20 +272,21 @@ class Usage extends Action
                     break;
 
                 case $document->getCollection() === 'deployments':
-
                     $build = $dbForProject->getDocument('builds', $document->getAttribute('buildId'));
 
                     if (! $build->isEmpty()) {
-                        // Project scope
+                        $function = $dbForProject->getDocument('functions', $document->getAttribute('resourceId'));
+
+                        if (!$function->isEmpty()) {
+                            $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specifications', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+                            $cpus = $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT;
+                            $memory = max($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT, 1024);
+                            $buildMbSec = (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration') * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT));
+                        }
 
                         $metrics[] = [
                             'key' => METRIC_BUILDS,
                             'value' => -1,
-                        ];
-
-                        $metrics[] = [
-                            'key' => $build->getAttribute('status') === 'ready' ? METRIC_BUILDS_SUCCESS : METRIC_BUILDS_FAILED,
-                            'value' => -1
                         ];
 
                         $metrics[] = [
@@ -297,22 +299,64 @@ class Usage extends Action
                             'value' => (($build->getAttribute('duration', 0) * 1000) * -1),
                         ];
 
-                        $metrics[] = [
-                            'key' => $build->getAttribute('status') === 'ready' ? METRIC_BUILDS_COMPUTE_SUCCESS : METRIC_BUILDS_COMPUTE_FAILED,
-                            'value' => (($build->getAttribute('duration') * 1000) * -1),
-                        ];
+                        if (!empty($buildMbSec)) {
+                            $metrics[] = [
+                                'key' => METRIC_BUILDS_MB_SECONDS,
+                                'value' => ($buildMbSec * -1),
+                            ];
 
+                            $metrics[] = [
+                                'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS),
+                                'value' => ($buildMbSec * -1),
+                            ];
+                        }
 
-                        //Function scope
+                        if ($build->getAttribute('status') === 'ready') {
+
+                            $metrics[] = [
+                                'key' => METRIC_BUILDS_SUCCESS,
+                                'value' => -1
+                            ];
+
+                            $metrics[] = [
+                                'key' => METRIC_BUILDS_COMPUTE_SUCCESS,
+                                'value' => (($build->getAttribute('duration') * 1000) * -1),
+                            ];
+
+                            $metrics[] = [
+                                'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS),
+                                'value' => (($build->getAttribute('duration') * 1000) * -1),
+                            ];
+
+                            $metrics[] = [
+                                'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), METRIC_FUNCTION_ID_BUILDS_SUCCESS),
+                                'value' => -1,
+                            ];
+
+                        } elseif ($build->getAttribute('status') === 'failed') {
+                            $metrics[] = [
+                                'key' => METRIC_BUILDS_FAILED,
+                                'value' => -1
+                            ];
+
+                            $metrics[] = [
+                                'key' => METRIC_BUILDS_COMPUTE_FAILED,
+                                'value' => (($build->getAttribute('duration') * 1000) * -1),
+                            ];
+
+                            $metrics[] = [
+                                'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), METRIC_FUNCTION_ID_BUILDS_FAILED),
+                                'value' => -1,
+                            ];
+
+                            $metrics[] = [
+                                'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED),
+                                'value' => (($build->getAttribute('duration') * 1000) * -1),
+                            ];
+                        }
+
                         $metrics[] = [
                             'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), METRIC_FUNCTION_ID_BUILDS),
-                            'value' => -1,
-                        ];
-
-                        $statusMetric = $build->getAttribute('status') === 'ready' ? METRIC_FUNCTION_ID_BUILDS_SUCCESS : METRIC_FUNCTION_ID_BUILDS_FAILED;
-
-                        $metrics[] = [
-                            'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), $statusMetric),
                             'value' => -1,
                         ];
 
@@ -325,23 +369,15 @@ class Usage extends Action
                             'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), METRIC_FUNCTION_ID_BUILDS_COMPUTE),
                             'value' => (($build->getAttribute('duration') * 1000) * -1),
                         ];
-
-
-                        $statusMetric = $build->getAttribute('status') === 'ready' ? METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS : METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED;
-
-                        $metrics[] = [
-                            'key' => str_replace('{functionInternalId}', $document->getAttribute('resourceInternalId'), $statusMetric),
-                            'value' => (($build->getAttribute('duration') * 1000) * -1),
-                        ];
                     }
-
                     break;
 
                 default:
                     break;
             }
         } catch (\Throwable $e) {
-            Console::error('[' . DateTime::now() . '] ' . $project->getInternalId() . '  '. $e->getMessage());;
+            Console::error('[' . DateTime::now() . '] ' . $project->getInternalId() . '  '. $e->getMessage());
+            ;
         }
     }
 }
