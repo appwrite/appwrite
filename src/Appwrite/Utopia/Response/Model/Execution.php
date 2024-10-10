@@ -81,7 +81,7 @@ class Execution extends Model
                 'example' => 200,
             ])
             ->addRule('responseBody', [
-                'type' => self::TYPE_PAYLOAD,
+                'type' => self::TYPE_STRING,
                 'description' => 'HTTP response body. This will return empty unless execution is created as synchronous.',
                 'default' => '',
             ])
