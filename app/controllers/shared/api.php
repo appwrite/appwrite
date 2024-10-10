@@ -753,10 +753,8 @@ App::shutdown()
                 );
 
                 $timestamp = 60 * 60 * 24 * 30;
-                $data = $cache->load($key, $timestamp);
-                var_dump($cacheLog->getAttribute('signature'));
-                var_dump(empty($data));
-                if ($signature !== $cacheLog->getAttribute('signature') || empty($data)) {
+                $cacheFile = $cache->load($key, $timestamp);
+                if ($signature !== $cacheLog->getAttribute('signature') || empty($cacheFile)) {
                     $cache->save($key, $data['payload']);
                 }
             }
