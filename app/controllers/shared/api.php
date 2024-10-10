@@ -461,6 +461,7 @@ App::init()
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject));
 
         $useCache = $route->getLabel('cache', false);
+
         if ($useCache) {
             $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
             $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -711,13 +712,11 @@ App::shutdown()
          * Cache label
          */
         $useCache = $route->getLabel('cache', false);
-        var_dump('$useCache=');
-        var_dump($useCache);
+
         if ($useCache) {
             $resource = $resourceType = null;
             $data = $response->getPayload();
-            var_dump('!empty($data[payload]=');
-            var_dump(!empty($data['payload']));
+
             if (!empty($data['payload'])) {
                 $pattern = $route->getLabel('cache.resource', null);
                 if (!empty($pattern)) {
@@ -734,10 +733,8 @@ App::shutdown()
                 $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
-                var_dump('$cacheLog=');
-                var_dump($cacheLog);
+
                 if ($cacheLog->isEmpty()) {
-                    var_dump('inserting.....');
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                         '$id' => $key,
                         'resource' => $resource,
@@ -751,16 +748,16 @@ App::shutdown()
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                 }
 
-                if ($signature !== $cacheLog->getAttribute('signature')) {
-                    $cache = new Cache(
-                        new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-                    );
+                $cache = new Cache(
+                    new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+                );
+                $timestamp = 60 * 60 * 24 * 30;
+                $data = $cache->load($key, $timestamp);
+                if ($signature !== $cacheLog->getAttribute('signature') || empty($data)) {
                     $cache->save($key, $data['payload']);
                 }
             }
         }
-
-
 
         if ($project->getId() !== 'console') {
             if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
