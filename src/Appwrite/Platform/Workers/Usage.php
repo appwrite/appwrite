@@ -274,7 +274,7 @@ class Usage extends Action
                 case $document->getCollection() === 'deployments':
                     $build = $dbForProject->getDocument('builds', $document->getAttribute('buildId'));
 
-                    if (! $build->isEmpty()) {
+                    if (!$build->isEmpty()) {
                         $function = $dbForProject->getDocument('functions', $document->getAttribute('resourceId'));
 
                         if (!$function->isEmpty()) {
