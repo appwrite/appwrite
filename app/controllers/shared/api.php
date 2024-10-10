@@ -471,6 +471,7 @@ App::init()
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
             if (!empty($data) && !$cacheLog->isEmpty()) {
+                $timerStart = \microtime(true);
                 $parts = explode('/', $cacheLog->getAttribute('resourceType'));
                 $type = $parts[0] ?? null;
 
@@ -506,7 +507,8 @@ App::init()
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
                 }
-
+                $timerEnd= \microtime(true);
+                var_dump('Timer: ' . $timerEnd - $timerStart);
                 $response
                     ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
