@@ -146,7 +146,6 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
 
             if ($event === Database::EVENT_DOCUMENT_DELETE && $document->getAttribute('resourceType') === 'functions') {
-                var_dump($document);
                 $queueForUsage
                     ->addReduce($document);
             }
