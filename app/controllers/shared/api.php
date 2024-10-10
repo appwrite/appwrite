@@ -751,6 +751,7 @@ App::shutdown()
                 $cache = new Cache(
                     new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
                 );
+
                 $timestamp = 60 * 60 * 24 * 30;
                 $data = $cache->load($key, $timestamp);
                 if ($signature !== $cacheLog->getAttribute('signature') || empty($data)) {
