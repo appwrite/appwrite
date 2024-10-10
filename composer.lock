@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a81b2ddbd465059b986947b63435e2bc",
+    "content-hash": "89ebc75f08cd9ee5a5cccd64d0f9938a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -157,16 +157,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.15.0",
+            "version": "0.16.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "68ea5bcc24c513a6d641ddf9412bbab13e5dfb94"
+                "reference": "b36da25768c2dc66908ae226f6eed1b073a6f642"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/68ea5bcc24c513a6d641ddf9412bbab13e5dfb94",
-                "reference": "68ea5bcc24c513a6d641ddf9412bbab13e5dfb94",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/b36da25768c2dc66908ae226f6eed1b073a6f642",
+                "reference": "b36da25768c2dc66908ae226f6eed1b073a6f642",
                 "shasum": ""
             },
             "require": {
@@ -206,9 +206,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.15.0"
+                "source": "https://github.com/appwrite/runtimes/tree/0.16.1"
             },
-            "time": "2024-08-21T10:23:45+00:00"
+            "time": "2024-10-09T10:27:14+00:00"
         },
         {
             "name": "beberlei/assert",
@@ -2124,16 +2124,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.12.0",
+            "version": "0.12.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "6e466d3511981291843c6ebf9ce3f44fc75e37b0"
+                "reference": "b9dfafb5efc1d12cbee01d03dc98853ef026e35b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/6e466d3511981291843c6ebf9ce3f44fc75e37b0",
-                "reference": "6e466d3511981291843c6ebf9ce3f44fc75e37b0",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/b9dfafb5efc1d12cbee01d03dc98853ef026e35b",
+                "reference": "b9dfafb5efc1d12cbee01d03dc98853ef026e35b",
                 "shasum": ""
             },
             "require": {
@@ -2169,22 +2169,22 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.12.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.12.1"
             },
-            "time": "2024-05-30T14:58:25+00:00"
+            "time": "2024-10-09T08:17:07+00:00"
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.6.5",
+            "version": "0.6.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "7b2d40d526b82e9b92a17ea681b8103222e3c86a"
+                "reference": "c3740de52c1b616aa7f054d0fadb9207895b5279"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/7b2d40d526b82e9b92a17ea681b8103222e3c86a",
-                "reference": "7b2d40d526b82e9b92a17ea681b8103222e3c86a",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c3740de52c1b616aa7f054d0fadb9207895b5279",
+                "reference": "c3740de52c1b616aa7f054d0fadb9207895b5279",
                 "shasum": ""
             },
             "require": {
@@ -2225,9 +2225,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.5"
+                "source": "https://github.com/utopia-php/migration/tree/0.6.8"
             },
-            "time": "2024-10-07T08:54:05+00:00"
+            "time": "2024-10-10T08:09:19+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -3573,16 +3573,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.3.0",
+            "version": "v5.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "3abf7425cd284141dc5d8d14a9ee444de3345d1a"
+                "reference": "8eea230464783aa9671db8eea6f8c6ac5285794b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/3abf7425cd284141dc5d8d14a9ee444de3345d1a",
-                "reference": "3abf7425cd284141dc5d8d14a9ee444de3345d1a",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/8eea230464783aa9671db8eea6f8c6ac5285794b",
+                "reference": "8eea230464783aa9671db8eea6f8c6ac5285794b",
                 "shasum": ""
             },
             "require": {
@@ -3625,9 +3625,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.3.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.3.1"
             },
-            "time": "2024-09-29T13:56:26+00:00"
+            "time": "2024-10-08T18:51:32+00:00"
         },
         {
             "name": "phar-io/manifest",
