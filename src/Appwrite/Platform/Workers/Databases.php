@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Exception;
-use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -492,8 +491,6 @@ class Databases extends Action
         });
 
         $dbForProject->deleteCollection('database_' . $database->getInternalId());
-
-        $this->deleteAuditLogsByResource('database/' . $database->getId(), $project, $dbForProject);
     }
 
     /**
@@ -549,23 +546,8 @@ class Databases extends Action
             Query::equal('databaseInternalId', [$databaseInternalId]),
             Query::equal('collectionInternalId', [$collectionInternalId])
         ], $dbForProject);
-
-        $this->deleteAuditLogsByResource('database/' . $databaseId . '/collection/' . $collectionId, $project, $dbForProject);
     }
 
-    /**
-     * @param string $resource
-     * @param Document $project
-     * @param Database $dbForProject
-     * @return void
-     * @throws Exception
-     */
-    protected function deleteAuditLogsByResource(string $resource, Document $project, Database $dbForProject): void
-    {
-        $this->deleteByGroup(Audit::COLLECTION, [
-            Query::equal('resource', [$resource])
-        ], $dbForProject);
-    }
 
     /**
      * @param string $collection collectionID
