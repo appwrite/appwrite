@@ -268,6 +268,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $route = $app->getRoute();
 
             $log = $app->getResource("log");
+            $log->setMasked($route->getLabel('sensitive', []));
 
             if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
@@ -292,22 +293,12 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $log->addExtra('trace', $th->getTraceAsString());
             $log->addExtra('roles', Authorization::getRoles());
 
-            $sensitive = $route->getLabel('sensitive', []);
-
             foreach ($route->getPathValues($request) as $key => $value) {
-                $log->addTag($key, \in_array($key, $sensitive) ? \str_repeat('*', \strlen($value)) : $value);
+                $log->addTag($key, $value);
             }
 
             if (\in_array($route->getMethod(), ['POST', 'PUT', 'PATCH'])) {
-                $params = [];
-
-                foreach ($request->getParams() as $key => $value) {
-                    $params[$key] = \in_array($key, $sensitive) ? \str_repeat('*', \strlen($value)) : $value;
-                }
-
-                if (!empty($params)) {
-                    $log->addExtra('params', $params);
-                }
+                $log->addExtra('params', $route->getParams());
             }
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
