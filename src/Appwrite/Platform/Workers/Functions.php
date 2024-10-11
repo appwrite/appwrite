@@ -130,6 +130,11 @@ class Functions extends Action
                     if (!array_intersect($events, $function->getAttribute('events', []))) {
                         continue;
                     }
+                    // filter disabled functions from getting executed.
+                    if ($function->getAttribute('enabled', true) === false) {
+                        continue;
+                    }
+
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
                     $this->execute(
@@ -321,6 +326,12 @@ class Functions extends Action
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
         $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+
+        if ($function->getAttribute('enabled', true) === false) {
+            $errorMessage = 'The function is disabled. Re-enable the function and try again.';
+            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            return;
+        }
 
         $log->addTag('deploymentId', $deploymentId);
 

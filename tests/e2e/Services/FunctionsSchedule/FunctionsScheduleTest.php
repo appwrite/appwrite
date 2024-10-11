@@ -172,6 +172,52 @@ class FunctionsScheduleTest extends Scope
         $this->cleanupFunction($functionId, $executionId);
     }
 
+    public function testCreateScheduledExecutionForDisabledFunction()
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Disabled',
+            'enabled' => false,
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'events' => [
+                'users.*.create',
+                'users.*.delete',
+            ],
+            'schedule' => '* * * * *', // Execute every 60 seconds
+            'timeout' => 10,
+        ]);
+
+        $this->setupDeployment($functionId, [
+            'entrypoint' => 'index.php',
+            'code' => $this->packageFunction('php'),
+            'activate' => true
+        ]);
+
+        // Wait for scheduled execution
+        \sleep(60);
+
+        $this->assertEventually(function () use ($functionId) {
+            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $executions['headers']['status-code']);
+            $this->assertCount(1, $executions['body']['executions']);
+
+            $asyncExecution = $executions['body']['executions'][0];
+
+            $this->assertEquals('schedule', $asyncExecution['trigger']);
+            $this->assertEquals('failed', $asyncExecution['status']);
+            $this->assertEquals('The function is disabled. Re-enable the function and try again.', $asyncExecution['errors']);
+        }, 60000, 500);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testDeleteScheduledExecution()
     {
         $functionId = $this->setupFunction([
