@@ -72,6 +72,14 @@ class Functions extends Action
         }
 
         $type = $payload['type'] ?? '';
+
+        // Short-term solution to offhand write operation from API contianer
+        if ($type === 'delayed_execution_write') {
+            $execution = new Document($payload['execution'] ?? []);
+            $execution = $dbForProject->createDocument('executions', $execution);
+            return;
+        }
+
         $events = $payload['events'] ?? [];
         $data = $payload['body'] ?? '';
         $eventData = $payload['payload'] ?? '';
@@ -209,11 +217,6 @@ class Functions extends Action
                     executionId: $execution->getId() ?? null
                 );
                 break;
-            case 'delayed_execution_write':
-                $execution = new Document($payload['execution'] ?? []);
-                $execution->setAttribute('$collection', 'executions');
-                $execution = $dbForProject->createDocument('executions', $execution);
-                return;
         }
     }
 

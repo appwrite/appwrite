@@ -370,6 +370,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             $queueForFunctions
                 ->setType('delayed_execution_write')
                 ->setExecution($execution)
+                ->setProject($project)
                 ->trigger();
         }
 
