@@ -1,4 +1,4 @@
-FROM composer:2.0 as composer
+FROM composer:2.0 AS composer
 
 ARG TESTING=false
 ENV TESTING=$TESTING
@@ -12,24 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM --platform=$BUILDPLATFORM node:20.11.0-alpine3.19 as node
-
-COPY app/console /usr/local/src/console
-
-WORKDIR /usr/local/src/console
-
-ARG VITE_GA_PROJECT
-ARG VITE_CONSOLE_MODE
-ARG VITE_APPWRITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
-
-ENV VITE_GA_PROJECT=$VITE_GA_PROJECT
-ENV VITE_CONSOLE_MODE=$VITE_CONSOLE_MODE
-ENV VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
-
-RUN npm ci
-RUN npm run build
-
-FROM appwrite/base:0.9.0 as final
+FROM appwrite/base:0.9.3 AS final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -48,7 +31,6 @@ RUN \
 WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
-COPY --from=node /usr/local/src/console/build /usr/src/code/console
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -72,9 +54,6 @@ RUN mkdir -p /storage/uploads && \
     chown -Rf www-data.www-data /storage/functions && chmod -Rf 0755 /storage/functions && \
     chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug
 
-# Development Executables
-RUN chmod +x /usr/local/bin/dev-generate-translations
-
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/install && \
@@ -82,6 +61,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/schedule-functions && \
+    chmod +x /usr/local/bin/schedule-executions && \
     chmod +x /usr/local/bin/schedule-messages && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
@@ -99,40 +79,19 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-databases && \
     chmod +x /usr/local/bin/worker-deletes && \
     chmod +x /usr/local/bin/worker-functions && \
-    chmod +x /usr/local/bin/worker-hamster && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-migrations && \
     chmod +x /usr/local/bin/worker-webhooks && \
-    chmod +x /usr/local/bin/worker-hamster && \
     chmod +x /usr/local/bin/worker-usage && \
     chmod +x /usr/local/bin/worker-usage-dump
-
-
-# Cloud Executabless
-RUN chmod +x /usr/local/bin/calc-tier-stats && \
-    chmod +x /usr/local/bin/calc-users-stats && \
-    chmod +x /usr/local/bin/clear-card-cache && \
-    chmod +x /usr/local/bin/delete-orphaned-projects && \
-    chmod +x /usr/local/bin/get-migration-stats && \
-    chmod +x /usr/local/bin/hamster && \
-    chmod +x /usr/local/bin/patch-delete-project-collections && \
-    chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
-    chmod +x /usr/local/bin/patch-recreate-repositories-documents && \
-    chmod +x /usr/local/bin/volume-sync && \
-    chmod +x /usr/local/bin/patch-delete-project-collections && \
-    chmod +x /usr/local/bin/delete-orphaned-projects && \
-    chmod +x /usr/local/bin/clear-card-cache && \
-    chmod +x /usr/local/bin/calc-users-stats && \
-    chmod +x /usr/local/bin/calc-tier-stats && \
-    chmod +x /usr/local/bin/get-migration-stats && \
-    chmod +x /usr/local/bin/create-inf-metric
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
 # Enable Extensions
 RUN if [ "$DEBUG" == "true" ]; then cp /usr/src/code/dev/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini; fi
+RUN if [ "$DEBUG" == "true" ]; then mkdir -p /tmp/xdebug; fi
 RUN if [ "$DEBUG" = "false" ]; then rm -rf /usr/src/code/dev; fi
 RUN if [ "$DEBUG" = "false" ]; then rm -f /usr/local/lib/php/extensions/no-debug-non-zts-20220829/xdebug.so; fi
 

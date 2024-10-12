@@ -20,6 +20,7 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -27,6 +28,7 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -229,13 +231,15 @@ function updateAttribute(
     Database $dbForProject,
     Event $queueForEvents,
     string $type,
+    int $size = null,
     string $filter = null,
     string|bool|int|float $default = null,
     bool $required = null,
     int|float $min = null,
     int|float $max = null,
     array $elements = null,
-    array $options = []
+    array $options = [],
+    string $newKey = null,
 ): Document {
     $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -280,6 +284,10 @@ function updateAttribute(
     $attribute
         ->setAttribute('default', $default)
         ->setAttribute('required', $required);
+
+    if (!empty($size)) {
+        $attribute->setAttribute('size', $size);
+    }
 
     $formatOptions = $attribute->getAttribute('formatOptions');
 
@@ -346,6 +354,7 @@ function updateAttribute(
         $dbForProject->updateRelationship(
             collection: $collectionId,
             id: $key,
+            newKey: $newKey,
             onDelete: $primaryDocumentOptions['onDelete'],
         );
 
@@ -353,22 +362,52 @@ function updateAttribute(
             $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $primaryDocumentOptions['relatedCollection']);
 
             $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey']);
+
+            if (!empty($newKey) && $newKey !== $key) {
+                $options['twoWayKey'] = $newKey;
+            }
+
             $relatedOptions = \array_merge($relatedAttribute->getAttribute('options'), $options);
             $relatedAttribute->setAttribute('options', $relatedOptions);
             $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey'], $relatedAttribute);
+
             $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
         }
     } else {
-        $dbForProject->updateAttribute(
-            collection: $collectionId,
-            id: $key,
-            required: $required,
-            default: $default,
-            formatOptions: $options ?? null
-        );
+        try {
+            $dbForProject->updateAttribute(
+                collection: $collectionId,
+                id: $key,
+                size: $size,
+                required: $required,
+                default: $default,
+                formatOptions: $options ?? null,
+                newKey: $newKey ?? null
+            );
+        } catch (TruncateException) {
+            throw new Exception(Exception::ATTRIBUTE_INVALID_RESIZE);
+        }
     }
 
-    $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
+    if (!empty($newKey) && $key !== $newKey) {
+        // Delete attribute and recreate since we can't modify IDs
+        $original = clone $attribute;
+
+        $dbForProject->deleteDocument('attributes', $attribute->getId());
+
+        $attribute
+            ->setAttribute('$id', ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $newKey))
+            ->setAttribute('key', $newKey);
+
+        try {
+            $attribute = $dbForProject->createDocument('attributes', $attribute);
+        } catch (DatabaseException|PDOException) {
+            $attribute = $dbForProject->createDocument('attributes', $original);
+        }
+    } else {
+        $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
+    }
+
     $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collection->getId());
 
     $queueForEvents
@@ -666,16 +705,10 @@ App::put('/v1/databases/:databaseId')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        try {
-            $database = $dbForProject->updateDocument('databases', $databaseId, $database
-                ->setAttribute('name', $name)
-                ->setAttribute('enabled', $enabled)
-                ->setAttribute('search', implode(' ', [$databaseId, $name])));
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (StructureException $exception) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Bad structure. ' . $exception->getMessage());
-        }
+        $database = $dbForProject->updateDocument('databases', $databaseId, $database
+            ->setAttribute('name', $name)
+            ->setAttribute('enabled', $enabled)
+            ->setAttribute('search', implode(' ', [$databaseId, $name])));
 
         $queueForEvents->setParam('databaseId', $database->getId());
 
@@ -1036,19 +1069,14 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
         $enabled ??= $collection->getAttribute('enabled', true);
 
-        try {
-            $collection = $dbForProject->updateDocument('database_' . $database->getInternalId(), $collectionId, $collection
-                ->setAttribute('name', $name)
-                ->setAttribute('$permissions', $permissions)
-                ->setAttribute('documentSecurity', $documentSecurity)
-                ->setAttribute('enabled', $enabled)
-                ->setAttribute('search', implode(' ', [$collectionId, $name])));
-            $dbForProject->updateCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $permissions, $documentSecurity);
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (StructureException $exception) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Bad structure. ' . $exception->getMessage());
-        }
+        $collection = $dbForProject->updateDocument('database_' . $database->getInternalId(), $collectionId, $collection
+            ->setAttribute('name', $name)
+            ->setAttribute('$permissions', $permissions)
+            ->setAttribute('documentSecurity', $documentSecurity)
+            ->setAttribute('enabled', $enabled)
+            ->setAttribute('search', implode(' ', [$collectionId, $name])));
+
+        $dbForProject->updateCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $permissions, $documentSecurity);
 
         $queueForEvents
             ->setContext('database', $database)
@@ -1163,6 +1191,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             'array' => $array,
             'filters' => $filters,
         ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -1871,10 +1900,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('size', null, new Integer(), 'Maximum size of the string attribute.', true)
+    ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?int $size, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $attribute = updateAttribute(
             databaseId: $databaseId,
@@ -1883,8 +1914,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
             type: Database::VAR_STRING,
+            size: $size,
             default: $default,
-            required: $required
+            required: $required,
+            newKey: $newKey
         );
 
         $response
@@ -1910,10 +1943,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Nullable(new Email()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
@@ -1923,7 +1957,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
             type: Database::VAR_STRING,
             filter: APP_DATABASE_ATTRIBUTE_EMAIL,
             default: $default,
-            required: $required
+            required: $required,
+            newKey: $newKey
         );
 
         $response
@@ -1950,10 +1985,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
     ->param('elements', null, new ArrayList(new Text(DATABASE::LENGTH_KEY), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . DATABASE::LENGTH_KEY . ' characters long.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?array $elements, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?array $elements, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
@@ -1964,7 +2000,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
             filter: APP_DATABASE_ATTRIBUTE_ENUM,
             default: $default,
             required: $required,
-            elements: $elements
+            elements: $elements,
+            newKey: $newKey
         );
 
         $response
@@ -1990,10 +2027,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Nullable(new IP()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
@@ -2003,7 +2041,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
             type: Database::VAR_STRING,
             filter: APP_DATABASE_ATTRIBUTE_IP,
             default: $default,
-            required: $required
+            required: $required,
+            newKey: $newKey
         );
 
         $response
@@ -2029,10 +2068,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Nullable(new URL()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
@@ -2042,7 +2082,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
             type: Database::VAR_STRING,
             filter: APP_DATABASE_ATTRIBUTE_URL,
             default: $default,
-            required: $required
+            required: $required,
+            newKey: $newKey
         );
 
         $response
@@ -2070,10 +2111,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
     ->param('min', null, new Integer(), 'Minimum value to enforce on new documents')
     ->param('max', null, new Integer(), 'Maximum value to enforce on new documents')
     ->param('default', null, new Nullable(new Integer()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
@@ -2084,7 +2126,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
             default: $default,
             required: $required,
             min: $min,
-            max: $max
+            max: $max,
+            newKey: $newKey
         );
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
@@ -2119,10 +2162,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
     ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents')
     ->param('max', null, new FloatValidator(), 'Maximum value to enforce on new documents')
     ->param('default', null, new Nullable(new FloatValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
@@ -2133,7 +2177,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
             default: $default,
             required: $required,
             min: $min,
-            max: $max
+            max: $max,
+            newKey: $newKey
         );
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
@@ -2166,10 +2211,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Nullable(new Boolean()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
@@ -2178,7 +2224,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
             queueForEvents: $queueForEvents,
             type: Database::VAR_BOOLEAN,
             default: $default,
-            required: $required
+            required: $required,
+            newKey: $newKey
         );
 
         $response
@@ -2204,10 +2251,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Nullable(new DatetimeValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $newKey, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
@@ -2216,7 +2264,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
             queueForEvents: $queueForEvents,
             type: Database::VAR_DATETIME,
             default: $default,
-            required: $required
+            required: $required,
+            newKey: $newKey
         );
 
         $response
@@ -2241,6 +2290,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('onDelete', null, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL], true), 'Constraints option', true)
+    ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -2249,6 +2299,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         string $collectionId,
         string $key,
         ?string $onDelete,
+        ?string $newKey,
         Response $response,
         Database $dbForProject,
         Event $queueForEvents
@@ -2263,7 +2314,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             required: false,
             options: [
                 'onDelete' => $onDelete
-            ]
+            ],
+            newKey: $newKey
         );
 
         $options = $attribute->getAttribute('options', []);
@@ -2955,17 +3007,26 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $processDocument($collection, $document);
 
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($document, Response::MODEL_DOCUMENT);
+
+        $relationships = \array_map(
+            fn ($document) => $document->getAttribute('key'),
+            \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            )
+        );
+
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $database)
-        ;
+            ->setPayload($response->getPayload(), sensitive: $relationships);
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
@@ -3536,15 +3597,23 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $processDocument($collection, $document);
 
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
+
+        $relationships = \array_map(
+            fn ($document) => $document->getAttribute('key'),
+            \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            )
+        );
+
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $database)
-        ;
-
-        $response->dynamic($document, Response::MODEL_DOCUMENT);
+            ->setPayload($response->getPayload(), sensitive: $relationships);
     });
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
@@ -3599,16 +3668,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         }
 
         $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
-            try {
-                $dbForProject->deleteDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $documentId
-                );
-            } catch (AuthorizationException) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            } catch (RestrictedException) {
-                throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
-            }
+            $dbForProject->deleteDocument(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $documentId
+            );
         });
 
         // Add $collectionId and $databaseId for all documents
@@ -3646,6 +3709,14 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $processDocument($collection, $document);
 
+        $relationships = \array_map(
+            fn ($document) => $document->getAttribute('key'),
+            \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            )
+        );
+
         $queueForDeletes
             ->setType(DELETE_TYPE_AUDIT)
             ->setDocument($document);
@@ -3656,7 +3727,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $database)
-            ->setPayload($response->output($document, Response::MODEL_DOCUMENT));
+            ->setPayload($response->output($document, Response::MODEL_DOCUMENT), sensitive: $relationships);
 
         $response->noContent();
     });

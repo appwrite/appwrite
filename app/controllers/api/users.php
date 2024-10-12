@@ -1,5 +1,6 @@
 <?php
 
+use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
@@ -39,6 +40,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
@@ -138,7 +140,9 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                if ($existingTarget) {
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                }
             }
         }
 
@@ -160,7 +164,9 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$phone]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                if ($existingTarget) {
+                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                }
             }
         }
 
@@ -446,7 +452,7 @@ App::post('/v1/users/scrypt-modified')
     });
 
 App::post('/v1/users/:userId/targets')
-    ->desc('Create User Target')
+    ->desc('Create user target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.create')
     ->label('audits.resource', 'target/response.$id')
@@ -641,7 +647,7 @@ App::get('/v1/users/:userId/prefs')
     });
 
 App::get('/v1/users/:userId/targets/:targetId')
-    ->desc('Get User Target')
+    ->desc('Get user target')
     ->groups(['api', 'users'])
     ->label('scope', 'targets.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
@@ -842,7 +848,7 @@ App::get('/v1/users/:userId/logs')
     });
 
 App::get('/v1/users/:userId/targets')
-    ->desc('List User Targets')
+    ->desc('List user targets')
     ->groups(['api', 'users'])
     ->label('scope', 'targets.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
@@ -897,7 +903,7 @@ App::get('/v1/users/:userId/targets')
     });
 
 App::get('/v1/users/identities')
-    ->desc('List Identities')
+    ->desc('List identities')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -1206,7 +1212,7 @@ App::patch('/v1/users/:userId/email')
             // Makes sure this email is not already used in another identity
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
-                Query::notEqual('userId', $user->getId()),
+                Query::notEqual('userInternalId', $user->getInternalId()),
             ]);
             if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
@@ -1419,7 +1425,7 @@ App::patch('/v1/users/:userId/prefs')
     });
 
 App::patch('/v1/users/:userId/targets/:targetId')
-    ->desc('Update User target')
+    ->desc('Update user target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.update')
     ->label('audits.resource', 'target/{response.$id}')
@@ -1551,7 +1557,7 @@ App::patch('/v1/users/:userId/mfa')
     });
 
 App::get('/v1/users/:userId/mfa/factors')
-    ->desc('List Factors')
+    ->desc('List factors')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
@@ -1584,7 +1590,7 @@ App::get('/v1/users/:userId/mfa/factors')
     });
 
 App::get('/v1/users/:userId/mfa/recovery-codes')
-    ->desc('Get MFA Recovery Codes')
+    ->desc('Get MFA recovery codes')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
@@ -1619,7 +1625,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
     });
 
 App::patch('/v1/users/:userId/mfa/recovery-codes')
-    ->desc('Create MFA Recovery Codes')
+    ->desc('Create MFA recovery codes')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create.mfa.recovery-codes')
     ->label('scope', 'users.write')
@@ -1665,7 +1671,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
     });
 
 App::put('/v1/users/:userId/mfa/recovery-codes')
-    ->desc('Regenerate MFA Recovery Codes')
+    ->desc('Regenerate MFA recovery codes')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.mfa.recovery-codes')
     ->label('scope', 'users.write')
@@ -1710,7 +1716,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
     });
 
 App::delete('/v1/users/:userId/mfa/authenticators/:type')
-    ->desc('Delete Authenticator')
+    ->desc('Delete authenticator')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete.mfa')
     ->label('scope', 'users.write')
@@ -1780,7 +1786,7 @@ App::post('/v1/users/:userId/sessions')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret = Auth::codeGenerator();
+        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
 
@@ -1797,6 +1803,7 @@ App::post('/v1/users/:userId/sessions')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => $expire,
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1808,7 +1815,6 @@ App::post('/v1/users/:userId/sessions')
         $session = $dbForProject->createDocument('sessions', $session);
         $session
             ->setAttribute('secret', $secret)
-            ->setAttribute('expire', $expire)
             ->setAttribute('countryName', $countryName);
 
         $queueForEvents
@@ -2089,6 +2095,56 @@ App::delete('/v1/users/identities/:identityId')
             ->setPayload($response->output($identity, Response::MODEL_IDENTITY));
 
         return $response->noContent();
+    });
+
+App::post('/v1/users/:userId/jwts')
+    ->desc('Create user JWT')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createJWT')
+    ->label('sdk.description', '/docs/references/users/create-user-jwt.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_JWT)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('sessionId', '', new UID(), 'Session ID. Use the string \'recent\' to use the most recent session. Defaults to the most recent session.', true)
+    ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, string $sessionId, int $duration, Response $response, Database $dbForProject) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $sessions = $user->getAttribute('sessions', []);
+        $session = new Document();
+
+        if ($sessionId === 'recent') {
+            // Get most recent
+            $session = \count($sessions) > 0 ? $sessions[\count($sessions) - 1] : new Document();
+        } else {
+            // Find by ID
+            foreach ($sessions as $loopSession) { /** @var Utopia\Database\Document $loopSession */
+                if ($loopSession->getId() == $sessionId) {
+                    $session = $loopSession;
+                    break;
+                }
+            }
+        }
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document(['jwt' => $jwt->encode([
+                'userId' => $user->getId(),
+                'sessionId' => $session->isEmpty() ? '' : $session->getId()
+            ])]), Response::MODEL_JWT);
     });
 
 App::get('/v1/users/usage')

@@ -116,6 +116,11 @@ class Databases extends Action
          */
         $attribute = $dbForProject->getDocument('attributes', $attribute->getId());
 
+        if ($attribute->isEmpty()) {
+            // Attribute was deleted before job was processed
+            return;
+        }
+
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
         $type = $attribute->getAttribute('type', '');
@@ -175,7 +180,6 @@ class Databases extends Action
                     $relatedAttribute->setAttribute('error', $e->getMessage());
                 }
             }
-
 
             $dbForProject->updateDocument(
                 'attributes',
@@ -503,6 +507,7 @@ class Databases extends Action
      * @throws DatabaseException
      * @throws Restricted
      * @throws Structure
+     * @throws Exception
      */
     protected function deleteCollection(Document $database, Document $collection, Document $project, Database $dbForProject): void
     {
@@ -515,20 +520,23 @@ class Databases extends Action
         $databaseId = $database->getId();
         $databaseInternalId = $database->getInternalId();
 
-        $relationships = \array_filter(
-            $collection->getAttribute('attributes'),
-            fn ($attribute) => $attribute['type'] === Database::VAR_RELATIONSHIP
-        );
-
-        foreach ($relationships as $relationship) {
-            if (!$relationship['twoWay']) {
-                continue;
+        /**
+         * Related collections relating to current collection
+         */
+        $this->deleteByGroup(
+            'attributes',
+            [
+                Query::equal('databaseInternalId', [$databaseInternalId]),
+                Query::equal('type', [Database::VAR_RELATIONSHIP]),
+                Query::notEqual('collectionInternalId', $collectionInternalId),
+                Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
+            ],
+            $dbForProject,
+            function ($attribute) use ($dbForProject, $databaseInternalId) {
+                $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
+                $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
             }
-            $relatedCollection = $dbForProject->getDocument('database_' . $databaseInternalId, $relationship['relatedCollection']);
-            $dbForProject->deleteDocument('attributes', $databaseInternalId . '_' . $relatedCollection->getInternalId() . '_' . $relationship['twoWayKey']);
-            $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
-            $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
-        }
+        );
 
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());
 

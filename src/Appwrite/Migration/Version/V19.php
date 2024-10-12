@@ -3,7 +3,6 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -11,6 +10,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Query;
+use Utopia\System\System;
 
 class V19 extends Migration
 {
@@ -731,7 +731,7 @@ class V19 extends Migration
 
                 if (empty($document->getAttribute('scheduleId', null))) {
                     $schedule = $this->consoleDB->createDocument('schedules', new Document([
-                        'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                        'region' => System::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                         'resourceType' => 'function',
                         'resourceId' => $document->getId(),
                         'resourceInternalId' => $document->getInternalId(),
@@ -816,29 +816,27 @@ class V19 extends Migration
 
             Console::log('Migrating Collection ' . $collection['$id'] . ':');
 
-            \Co\run(function (array $collection, callable $callback) {
-                foreach ($this->documentsIterator($collection['$id']) as $document) {
-                    go(function (Document $document, callable $callback) {
-                        if (empty($document->getId()) || empty($document->getCollection())) {
-                            return;
-                        }
+            foreach ($this->documentsIterator($collection['$id']) as $document) {
+                go(function (Document $document, callable $callback) {
+                    if (empty($document->getId()) || empty($document->getCollection())) {
+                        return;
+                    }
 
-                        $old = $document->getArrayCopy();
-                        $new = call_user_func($callback, $document);
+                    $old = $document->getArrayCopy();
+                    $new = call_user_func($callback, $document);
 
-                        if (is_null($new) || $new->getArrayCopy() == $old) {
-                            return;
-                        }
+                    if (is_null($new) || $new->getArrayCopy() == $old) {
+                        return;
+                    }
 
-                        try {
-                            $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
-                        } catch (\Throwable $th) {
-                            Console::error('Failed to update document: ' . $th->getMessage());
-                            return;
-                        }
-                    }, $document, $callback);
-                }
-            }, $collection, $callback);
+                    try {
+                        $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
+                    } catch (\Throwable $th) {
+                        Console::error('Failed to update document: ' . $th->getMessage());
+                        return;
+                    }
+                }, $document, $callback);
+            }
         }
     }
 }

@@ -7,12 +7,12 @@ use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\App;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -22,10 +22,12 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
+use Utopia\System\System;
 
 class Deletes extends Action
 {
@@ -93,12 +95,6 @@ class Deletes extends Action
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
                         break;
-                    case DELETE_TYPE_TEAMS:
-                        $this->deleteMemberships($getProjectDB, $document, $project);
-                        if ($project->getId() === 'console') {
-                            $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $document);
-                        }
-                        break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
                         break;
@@ -112,6 +108,9 @@ class Deletes extends Action
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
                         break;
                 }
+                break;
+            case DELETE_TYPE_TEAM_PROJECTS:
+                $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $document);
                 break;
             case DELETE_TYPE_EXECUTIONS:
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
@@ -180,7 +179,7 @@ class Deletes extends Action
         $this->listByGroup(
             'schedules',
             [
-                Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
+                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
                 Query::equal('active', [false]),
             ],
@@ -417,7 +416,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteMemberships(callable $getProjectDB, Document $document, Document $project): void
+    public function deleteMemberships(callable $getProjectDB, Document $document, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
         $teamInternalId = $document->getInternalId();
@@ -441,18 +440,25 @@ class Deletes extends Action
      * @param Document $document
      * @return void
      * @throws Authorization
-     * @throws \Utopia\Database\Exception
+     * @throws DatabaseException
      * @throws Conflict
      * @throws Restricted
      * @throws Structure
+     * @throws Exception
      */
-    private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
+    private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, Document $document): void
     {
 
         $projects = $dbForConsole->find('projects', [
             Query::equal('teamInternalId', [$document->getInternalId()])
         ]);
+
         foreach ($projects as $project) {
+            $deviceForFiles = getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+            $deviceForFunctions = getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+            $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+            $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
+
             $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $project);
             $dbForConsole->deleteDocument('projects', $project->getId());
         }
@@ -469,25 +475,48 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      * @throws Authorization
-     * @throws \Utopia\Database\Exception
+     * @throws DatabaseException
      */
     private function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
     {
-        $projectId = $document->getId();
         $projectInternalId = $document->getInternalId();
 
-        // Delete project tables
+        try {
+            $dsn = new DSN($document->getAttribute('database', 'console'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $document->getAttribute('database', 'console'));
+        }
+
         $dbForProject = $getProjectDB($document);
 
-        while (true) {
-            $collections = $dbForProject->listCollections();
+        $projectCollectionIds = [
+            ...\array_keys(Config::getParam('collections', [])['projects']),
+            Audit::COLLECTION,
+            TimeLimit::COLLECTION,
+        ];
 
-            if (empty($collections)) {
-                break;
-            }
+        $limit = \count($projectCollectionIds) + 25;
+
+        while (true) {
+            $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
-                $dbForProject->deleteCollection($collection->getId());
+                if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
+                    $dbForProject->deleteCollection($collection->getId());
+                } else {
+                    $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
+                }
+            }
+
+            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+                $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
+
+                if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
+                    break;
+                }
+            } elseif (empty($collections)) {
+                break;
             }
         }
 
@@ -523,17 +552,16 @@ class Deletes extends Action
             Query::equal('projectInternalId', [$projectInternalId]),
         ], $dbForConsole);
 
-        // Delete VCS commments
+        // Delete VCS comments
         $this->deleteByGroup('vcsComments', [
             Query::equal('projectInternalId', [$projectInternalId]),
         ], $dbForConsole);
 
-        // Delete metadata tables
-        try {
+        // Delete metadata table
+        if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
             $dbForProject->deleteCollection('_metadata');
-        } catch (\Throwable) {
-            // Ignore: deleteCollection tries to delete a metadata entry after the collection is deleted,
-            // which will throw an exception here because the metadata collection is already deleted.
+        } else {
+            $this->deleteByGroup('_metadata', [], $dbForProject);
         }
 
         // Delete all storage directories
@@ -660,9 +688,11 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
         $timeLimit = new TimeLimit("", 0, 1, $dbForProject);
         $abuse = new Abuse($timeLimit);
-        $status = $abuse->cleanup($abuseRetention);
-        if (!$status) {
-            throw new Exception('Failed to delete Abuse logs for project ' . $projectId);
+
+        try {
+            $abuse->cleanup($abuseRetention);
+        } catch (DatabaseException $e) {
+            Console::error('Failed to delete abuse logs for project ' . $projectId . ': ' . $e->getMessage());
         }
     }
 
@@ -678,9 +708,11 @@ class Deletes extends Action
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
         $audit = new Audit($dbForProject);
-        $status = $audit->cleanup($auditRetention);
-        if (!$status) {
-            throw new Exception('Failed to delete Audit logs for project' . $projectId);
+
+        try {
+            $audit->cleanup($auditRetention);
+        } catch (DatabaseException $e) {
+            Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $e->getMessage());
         }
     }
 
@@ -935,7 +967,12 @@ class Deletes extends Action
         while ($sum === $limit) {
             $chunk++;
 
-            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
+            try {
+                $results = $database->find($collection, [Query::limit($limit), ...$queries]);
+            } catch (DatabaseException $e) {
+                Console::error('Failed to find documents for collection ' . $collection . ': ' . $e->getMessage());
+                return;
+            }
 
             $sum = count($results);
 
@@ -1083,7 +1120,7 @@ class Deletes extends Action
      */
     private function deleteRuntimes(callable $getProjectDB, ?Document $function, Document $project): void
     {
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
         $deleteByFunction = function (Document $function) use ($getProjectDB, $project, $executor) {
             $this->listByGroup(

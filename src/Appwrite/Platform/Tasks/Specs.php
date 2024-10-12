@@ -18,6 +18,7 @@ use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Request;
+use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -257,8 +258,8 @@ class Specs extends Action
                 };
 
                 $specs = new Specification($formatInstance);
-                $endpoint = App::getEnv('_APP_HOME', '[HOSTNAME]');
-                $email = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $endpoint = System::getEnv('_APP_HOME', '[HOSTNAME]');
+                $email = System::getEnv('_APP_SYSTEM_TEAM_EMAIL', APP_EMAIL_TEAM);
 
                 $formatInstance
                     ->setParam('name', APP_NAME)
@@ -279,7 +280,7 @@ class Specs extends Action
                 if ($mocks) {
                     $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-mocks-' . $platform . '.json';
 
-                    if (!file_put_contents($path, json_encode($specs->parse()))) {
+                    if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
                         throw new Exception('Failed to save mocks spec file: ' . $path);
                     }
 
@@ -290,7 +291,7 @@ class Specs extends Action
 
                 $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
 
-                if (!file_put_contents($path, json_encode($specs->parse()))) {
+                if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
                     throw new Exception('Failed to save spec file: ' . $path);
                 }
 

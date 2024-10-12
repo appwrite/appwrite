@@ -2,9 +2,11 @@
 
 namespace Tests\E2E\General;
 
+use Appwrite\Functions\Specification;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use DateTime;
+use PHPUnit\Framework\ExpectationFailedException;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -12,6 +14,7 @@ use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class UsageTest extends Scope
@@ -140,7 +143,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(12, count($response['body']));
+        $this->assertEquals(20, count($response['body']));
         $this->validateDates($response['body']['network']);
         $this->validateDates($response['body']['requests']);
         $this->validateDates($response['body']['users']);
@@ -321,7 +324,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(12, count($response['body']));
+        $this->assertEquals(20, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
         $this->validateDates($response['body']['requests']);
@@ -542,7 +545,7 @@ class UsageTest extends Scope
             ]
         );
 
-        $this->assertEquals(12, count($response['body']));
+        $this->assertEquals(20, count($response['body']));
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals(1, count($response['body']['network']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
@@ -617,6 +620,7 @@ class UsageTest extends Scope
                 ],
                 'schedule' => '0 0 1 1 *',
                 'timeout' => 10,
+                'specification' => Specification::S_8VCPU_8GB
             ]
         );
 
@@ -759,7 +763,7 @@ class UsageTest extends Scope
 
     /** @depends testPrepareFunctionsStats */
     #[Retry(count: 1)]
-    public function testFunctionsStats(array $data): void
+    public function testFunctionsStats(array $data): array
     {
         $functionId = $data['functionId'];
         $executionTime = $data['executionTime'];
@@ -774,14 +778,19 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(15, count($response['body']));
+        $this->assertEquals(19, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['deployments']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
+        $this->assertIsNumeric($response['body']['deploymentsStorageTotal']);
+        $this->assertIsNumeric($response['body']['buildsMbSecondsTotal']);
+        $this->assertIsNumeric($response['body']['executionsMbSecondsTotal']);
         $this->assertIsArray($response['body']['builds']);
         $this->assertIsArray($response['body']['buildsTime']);
+        $this->assertIsArray($response['body']['buildsMbSeconds']);
         $this->assertIsArray($response['body']['executions']);
         $this->assertIsArray($response['body']['executionsTime']);
+        $this->assertIsArray($response['body']['executionsMbSeconds']);
         $this->assertEquals($executions, $response['body']['executions'][array_key_last($response['body']['executions'])]['value']);
         $this->validateDates($response['body']['executions']);
         $this->assertEquals($executionTime, $response['body']['executionsTime'][array_key_last($response['body']['executionsTime'])]['value']);
@@ -794,21 +803,143 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(17, count($response['body']));
+        $this->assertEquals(21, count($response['body']));
         $this->assertEquals($response['body']['range'], '30d');
         $this->assertIsArray($response['body']['functions']);
         $this->assertIsArray($response['body']['deployments']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
         $this->assertIsArray($response['body']['builds']);
         $this->assertIsArray($response['body']['buildsTime']);
+        $this->assertIsArray($response['body']['buildsMbSeconds']);
         $this->assertIsArray($response['body']['executions']);
         $this->assertIsArray($response['body']['executionsTime']);
+        $this->assertIsArray($response['body']['executionsMbSeconds']);
         $this->assertEquals($executions, $response['body']['executions'][array_key_last($response['body']['executions'])]['value']);
         $this->validateDates($response['body']['executions']);
         $this->assertEquals($executionTime, $response['body']['executionsTime'][array_key_last($response['body']['executionsTime'])]['value']);
         $this->validateDates($response['body']['executionsTime']);
         $this->assertGreaterThan(0, $response['body']['buildsTime'][array_key_last($response['body']['buildsTime'])]['value']);
         $this->validateDates($response['body']['buildsTime']);
+
+        return $data;
+    }
+
+    /** @depends testFunctionsStats */
+    public function testCustomDomainsFunctionStats(array $data): void
+    {
+        $functionId = $data['functionId'];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'name' => 'Test',
+            'execute' => ['any']
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('resourceId', [$functionId])->toString(),
+                Query::equal('resourceType', ['function'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(1, $rules['body']['total']);
+        $this->assertCount(1, $rules['body']['rules']);
+        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
+
+        $domain = $rules['body']['rules'][0]['domain'];
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/functions/' . $functionId . '/usage?range=30d',
+            $this->getConsoleHeaders()
+        );
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(19, count($response['body']));
+        $this->assertEquals('30d', $response['body']['range']);
+
+        $functionsMetrics = $response['body'];
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/project/usage',
+            $this->getConsoleHeaders(),
+            [
+                'period' => '1h',
+                'startDate' => self::getToday(),
+                'endDate' => self::getTomorrow(),
+            ]
+        );
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $projectMetrics = $response['body'];
+
+        // Create custom domain execution
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        sleep(self::WAIT + 20);
+        $tries = 0;
+
+        while (true) {
+            try {
+                // Compare new values with old values
+                $response = $this->client->call(
+                    Client::METHOD_GET,
+                    '/functions/' . $functionId . '/usage?range=30d',
+                    $this->getConsoleHeaders()
+                );
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertEquals(19, count($response['body']));
+                $this->assertEquals('30d', $response['body']['range']);
+
+                // Check if the new values are greater than the old values
+                $this->assertEquals($functionsMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
+                $this->assertGreaterThan($functionsMetrics['executionsTimeTotal'], $response['body']['executionsTimeTotal']);
+                $this->assertGreaterThan($functionsMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
+
+                $response = $this->client->call(
+                    Client::METHOD_GET,
+                    '/project/usage',
+                    $this->getConsoleHeaders(),
+                    [
+                        'period' => '1h',
+                        'startDate' => self::getToday(),
+                        'endDate' => self::getTomorrow(),
+                    ]
+                );
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertEquals($projectMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
+                $this->assertGreaterThan($projectMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
+
+                break;
+            } catch (ExpectationFailedException $th) {
+                if ($tries >= 5) {
+                    throw $th;
+                } else {
+                    $tries++;
+                    sleep(5);
+                }
+            }
+        }
     }
 
     public function tearDown(): void

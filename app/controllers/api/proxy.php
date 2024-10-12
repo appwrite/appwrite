@@ -16,13 +16,14 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
+use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 App::post('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
-    ->desc('Create Rule')
+    ->desc('Create rule')
     ->label('scope', 'rules.write')
     ->label('event', 'rules.[ruleId].create')
     ->label('audits.event', 'rule.create')
@@ -44,10 +45,16 @@ App::post('/v1/proxy/rules')
     ->inject('dbForConsole')
     ->inject('dbForProject')
     ->action(function (string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForConsole, Database $dbForProject) {
-        $mainDomain = App::getEnv('_APP_DOMAIN', '');
+        $mainDomain = System::getEnv('_APP_DOMAIN', '');
         if ($domain === $mainDomain) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your main domain to specific resource. Please use subdomain or a different domain.');
         }
+
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        if ($functionsDomain != '' && str_ends_with($domain, $functionsDomain)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
+        }
+
         if ($domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
@@ -108,13 +115,13 @@ App::post('/v1/proxy/rules')
         ]);
 
         $status = 'created';
-        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS');
         if (!empty($functionsDomain) && \str_ends_with($domain->get(), $functionsDomain)) {
             $status = 'verified';
         }
 
         if ($status === 'created') {
-            $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+            $target = new Domain(System::getEnv('_APP_DOMAIN_TARGET', ''));
             $validator = new CNAME($target->get()); // Verify Domain with DNS records
 
             if ($validator->isValid($domain->get())) {
@@ -142,7 +149,7 @@ App::post('/v1/proxy/rules')
 
 App::get('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
-    ->desc('List Rules')
+    ->desc('List rules')
     ->label('scope', 'rules.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'proxy')
@@ -205,7 +212,7 @@ App::get('/v1/proxy/rules')
 
 App::get('/v1/proxy/rules/:ruleId')
     ->groups(['api', 'proxy'])
-    ->desc('Get Rule')
+    ->desc('Get rule')
     ->label('scope', 'rules.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'proxy')
@@ -234,7 +241,7 @@ App::get('/v1/proxy/rules/:ruleId')
 
 App::delete('/v1/proxy/rules/:ruleId')
     ->groups(['api', 'proxy'])
-    ->desc('Delete Rule')
+    ->desc('Delete rule')
     ->label('scope', 'rules.write')
     ->label('event', 'rules.[ruleId].delete')
     ->label('audits.event', 'rules.delete')
@@ -270,7 +277,7 @@ App::delete('/v1/proxy/rules/:ruleId')
     });
 
 App::patch('/v1/proxy/rules/:ruleId/verification')
-    ->desc('Update Rule Verification Status')
+    ->desc('Update rule verification status')
     ->groups(['api', 'proxy'])
     ->label('scope', 'rules.write')
     ->label('event', 'rules.[ruleId].update')
@@ -296,7 +303,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
-        $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+        $target = new Domain(System::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Domain target must be configured as environment variable.');

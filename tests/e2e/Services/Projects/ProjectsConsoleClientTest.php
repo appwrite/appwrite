@@ -484,6 +484,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertIsNumeric($response['body']['bucketsTotal']);
         $this->assertIsNumeric($response['body']['usersTotal']);
         $this->assertIsNumeric($response['body']['filesStorageTotal']);
+        $this->assertIsNumeric($response['body']['deploymentStorageTotal']);
 
 
         /**
@@ -610,7 +611,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'emails' => [ 'testuser@appwrite.io', 'testusertwo@appwrite.io' ],
+            'emails' => ['testuser@appwrite.io', 'testusertwo@appwrite.io'],
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
@@ -647,7 +648,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'emails' => [ 'u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io' ],
+            'emails' => ['u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io'],
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
@@ -663,7 +664,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'emails' => [ 'u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io', 'u11@appwrite.io' ],
+            'emails' => ['u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io', 'u11@appwrite.io'],
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
@@ -950,7 +951,7 @@ class ProjectsConsoleClientTest extends Scope
     public function testUpdateProjectOAuth($data): array
     {
         $id = $data['projectId'] ?? '';
-        $providers = require('app/config/oAuthProviders.php');
+        $providers = require(__DIR__ . '/../../../../app/config/oAuthProviders.php');
 
         /**
          * Test for SUCCESS
@@ -1061,7 +1062,7 @@ class ProjectsConsoleClientTest extends Scope
     public function testUpdateProjectAuthStatus($data): array
     {
         $id = $data['projectId'] ?? '';
-        $auth = require('app/config/auth.php');
+        $auth = require(__DIR__ . '/../../../../app/config/auth.php');
 
         $originalEmail = uniqid() . 'user@localhost.test';
         $originalPassword = 'password';
@@ -1238,6 +1239,36 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
+        // Creating A Team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Test Team 1',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        $teamId = $team['body']['$id'];
+        $email = uniqid() . 'user@localhost.test';
+
+        // Creating A User Using Team membership
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', array_merge($this->getHeaders(), [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ]), [
+            'email' => $email,
+            'roles' => [],
+            'url' => 'http://localhost',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
         $email = uniqid() . 'user@localhost.test';
 
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
@@ -1251,7 +1282,9 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(Exception::USER_COUNT_EXCEEDED, $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
 
         /**
          * Test for FAILURE
@@ -1497,8 +1530,8 @@ class ProjectsConsoleClientTest extends Scope
 
 
         /**
-        * Reset
-        */
+         * Reset
+         */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1509,6 +1542,212 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(0, $response['body']['authPasswordHistory']);
         return $data;
+    }
+
+    /**
+     * @group smtpAndTemplates
+     * @group projectsCRUD
+     *
+     * @depends testCreateProject
+     * */
+    public function testUpdateMockNumbers($data)
+    {
+        $id = $data['projectId'] ?? '';
+
+        /**
+         * Test for Failure
+         */
+
+        /** Trying to pass an empty body to the endpoint */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Param "numbers" is not optional.', $response['body']['message']);
+
+        /** Trying to pass body with incorrect structure */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                'phone' => '+1655513432',
+                'otp' => '123456'
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Invalid payload structure. Please check the "phone" and "otp" fields', $response['body']['message']);
+
+        /** Trying to pass an OTP longer than 6 characters*/
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '12345678'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Invalid OTP. Please make sure the OTP is a 6 digit number', $response['body']['message']);
+
+        /** Trying to pass an OTP shorter than 6 characters*/
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '123'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Invalid OTP. Please make sure the OTP is a 6 digit number', $response['body']['message']);
+
+        /** Trying to pass an OTP with non numeric characters */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '123re2'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Invalid OTP. Please make sure the OTP is a 6 digit number', $response['body']['message']);
+
+        /** Trying to pass an invalid phone number  */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '1655234',
+                    'otp' => '123456'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
+
+        /** Trying to pass a number longer than 15 digits  */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1234567890987654',
+                    'otp' => '123456'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
+
+        /** Trying to pass duplicate numbers  */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '123456'
+                ],
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '123456'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Duplicate phone numbers are not allowed.', $response['body']['message']);
+
+        $numbers = [];
+        for ($i = 0; $i < 11; $i++) {
+            $numbers[] = [
+                'phone' => '+1655513432',
+                'otp' => '123456'
+            ];
+        }
+
+        /** Trying to pass more than 10 values */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => $numbers
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
+
+        /**
+         * Test for success
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => []
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '123456'
+                ]
+            ]
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Create phone session for this project and check if the mock number is used
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/phone', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => 'unique()',
+            'phone' => '+1655513432',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $userId = $response['body']['userId'];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => $userId,
+            'secret' => '654321', // Try a random code
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => $userId,
+            'secret' => '123456',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
     }
 
     /**
@@ -1614,8 +1853,8 @@ class ProjectsConsoleClientTest extends Scope
 
 
         /**
-        * Reset
-        */
+         * Reset
+         */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1897,7 +2136,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($project['body']['$id']);
 
         $id = $project['body']['$id'];
-        $services = require('app/config/services.php');
+        $services = require(__DIR__ . '/../../../../app/config/services.php');
 
         /**
          * Test for Disabled
@@ -1971,7 +2210,7 @@ class ProjectsConsoleClientTest extends Scope
     {
         $id = $data['projectId'];
 
-        $services = require('app/config/services.php');
+        $services = require(__DIR__ . '/../../../../app/config/services.php');
 
         /**
          * Test for Disabled
@@ -2045,7 +2284,7 @@ class ProjectsConsoleClientTest extends Scope
     {
         $id = $data['projectId'];
 
-        $services = require('app/config/services.php');
+        $services = require(__DIR__ . '/../../../../app/config/services.php');
 
         /**
          * Test for Disabled
@@ -2702,6 +2941,99 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
 
         return $data;
+    }
+
+    /**
+     * @depends testCreateProject
+     */
+    public function testCreateProjectKeyOutdated($data): void
+    {
+        $id = $data['projectId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_POST, '/mock/api-key-unprefixed', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $id
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertContains('users.read', $response['body']['scopes']);
+        $this->assertNotEmpty($response['body']['secret']);
+        $this->assertStringStartsNotWith(API_KEY_STANDARD . '_', $response['body']['secret']);
+
+        $keyId = $response['body']['$id'];
+        $secret = $response['body']['secret'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $secret
+        ], []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/keys/' . $keyId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+    }
+
+    // JWT Keys
+
+    /**
+     * @depends testCreateProject
+     */
+    public function testJWTKey($data): void
+    {
+        $id = $data['projectId'] ?? '';
+
+        // Create JWT key
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/jwts', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'duration' => 5,
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['jwt']);
+
+        $jwt = $response['body']['jwt'];
+
+        // Ensure JWT key works
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $jwt,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('users', $response['body']);
+
+        // Ensure JWT key respect scopes
+        $response = $this->client->call(Client::METHOD_GET, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $jwt,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Ensure JWT key expires
+        \sleep(10);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $jwt,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
     }
 
     // Platforms

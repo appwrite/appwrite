@@ -1,5 +1,7 @@
 <?php
 
+use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Audit;
@@ -16,7 +18,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -26,6 +28,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
@@ -194,55 +197,99 @@ App::init()
         $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
         $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
 
-        $authKey = $request->getHeader('x-appwrite-key', '');
+        $apiKey = $request->getHeader('x-appwrite-key', '');
 
-        if (!empty($authKey)) { // API Key authentication
+        // API Key authentication
+        if (!empty($apiKey)) {
             // Do not allow API key and session to be set at the same time
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
 
-            // Check if given key match project API keys
-            $key = $project->find('secret', $authKey, 'keys');
-            if ($key) {
-                $user = new Document([
-                    '$id' => '',
-                    'status' => true,
-                    'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
-                    'password' => '',
-                    'name' => $project->getAttribute('name', 'Untitled'),
-                ]);
+            // Remove after migration
+            if (!\str_contains($apiKey, '_')) {
+                $keyType = API_KEY_STANDARD;
+                $authKey = $apiKey;
+            } else {
+                [ $keyType, $authKey ] = \explode('_', $apiKey, 2);
+            }
 
-                $role = Auth::USER_ROLE_APPS;
-                $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+            if ($keyType === API_KEY_DYNAMIC) {
+                // Dynamic key
 
-                $expire = $key->getAttribute('expire');
-                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
-                    throw new Exception(Exception::PROJECT_KEY_EXPIRED);
+                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+
+                try {
+                    $payload = $jwtObj->decode($authKey);
+                } catch (JWTException $error) {
+                    throw new Exception(Exception::API_KEY_EXPIRED);
                 }
 
-                Authorization::setRole(Auth::USER_ROLE_APPS);
-                Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+                $projectId = $payload['projectId'] ?? '';
+                $tokenScopes = $payload['scopes'] ?? [];
 
-                $accessedAt = $key->getAttribute('accessedAt', '');
-                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
-                    $key->setAttribute('accessedAt', DateTime::now());
-                    $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                    $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                // JWT includes project ID for better security
+                if ($projectId === $project->getId()) {
+                    $user = new Document([
+                        '$id' => '',
+                        'status' => true,
+                        'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
+                        'password' => '',
+                        'name' => $project->getAttribute('name', 'Untitled'),
+                    ]);
+
+                    $role = Auth::USER_ROLE_APPS;
+                    $scopes = \array_merge($roles[$role]['scopes'], $tokenScopes);
+
+                    Authorization::setRole(Auth::USER_ROLE_APPS);
+                    Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
                 }
+            } elseif ($keyType === API_KEY_STANDARD) {
+                // No underline means no prefix. Backwards compatibility.
+                // Regular key
 
-                $sdkValidator = new WhiteList($servers, true);
-                $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
-                if ($sdkValidator->isValid($sdk)) {
-                    $sdks = $key->getAttribute('sdks', []);
-                    if (!in_array($sdk, $sdks)) {
-                        array_push($sdks, $sdk);
-                        $key->setAttribute('sdks', $sdks);
+                // Check if given key match project API keys
+                $key = $project->find('secret', $apiKey, 'keys');
+                if ($key) {
+                    $user = new Document([
+                        '$id' => '',
+                        'status' => true,
+                        'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
+                        'password' => '',
+                        'name' => $project->getAttribute('name', 'Untitled'),
+                    ]);
 
-                        /** Update access time as well */
-                        $key->setAttribute('accessedAt', Datetime::now());
+                    $role = Auth::USER_ROLE_APPS;
+                    $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+
+                    $expire = $key->getAttribute('expire');
+                    if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
+                        throw new Exception(Exception::PROJECT_KEY_EXPIRED);
+                    }
+
+                    Authorization::setRole(Auth::USER_ROLE_APPS);
+                    Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+
+                    $accessedAt = $key->getAttribute('accessedAt', '');
+                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
+                        $key->setAttribute('accessedAt', DateTime::now());
                         $dbForConsole->updateDocument('keys', $key->getId(), $key);
                         $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                    }
+
+                    $sdkValidator = new WhiteList($servers, true);
+                    $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+                    if ($sdkValidator->isValid($sdk)) {
+                        $sdks = $key->getAttribute('sdks', []);
+                        if (!in_array($sdk, $sdks)) {
+                            array_push($sdks, $sdk);
+                            $key->setAttribute('sdks', $sdks);
+
+                            /** Update access time as well */
+                            $key->setAttribute('accessedAt', Datetime::now());
+                            $dbForConsole->updateDocument('keys', $key->getId(), $key);
+                            $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                        }
                     }
                 }
             }
@@ -280,18 +327,16 @@ App::init()
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
-        if ($mode !== APP_MODE_ADMIN) {
-            $mfaEnabled = $user->getAttribute('mfa', false);
-            $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
-            $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
-            $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
-            $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
-            $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
+        $mfaEnabled = $user->getAttribute('mfa', false);
+        $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
+        $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
+        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
+        $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
+        $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
-            if (!in_array('mfa', $route->getGroups())) {
-                if ($session && \count($session->getAttribute('factors')) < $minimumFactors) {
-                    throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
-                }
+        if (!in_array('mfa', $route->getGroups())) {
+            if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
+                throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
         }
     });
@@ -370,11 +415,10 @@ App::init()
                 $response
                     ->addHeader('X-RateLimit-Limit', $limit)
                     ->addHeader('X-RateLimit-Remaining', $remaining)
-                    ->addHeader('X-RateLimit-Reset', $time)
-                ;
+                    ->addHeader('X-RateLimit-Reset', $time);
             }
 
-            $enabled = App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+            $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
 
             if (
                 $enabled                // Abuse is enabled
@@ -409,12 +453,11 @@ App::init()
 
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
-        ;
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject));
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
-            $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+            $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
             $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
@@ -463,10 +506,14 @@ App::init()
                     ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'))
-                    ->send($data)
-                ;
+                    ->send($data);
             } else {
-                $response->addHeader('X-Appwrite-Cache', 'miss');
+                $response
+                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->addHeader('Expires', 0)
+                    ->addHeader('X-Appwrite-Cache', 'miss')
+                ;
             }
         }
     });
@@ -555,10 +602,11 @@ App::shutdown()
             /**
              * Trigger functions.
              */
-            $queueForFunctions
-                ->from($queueForEvents)
-                ->trigger();
-
+            if (!$queueForEvents->isPaused()) {
+                $queueForFunctions
+                    ->from($queueForEvents)
+                    ->trigger();
+            }
             /**
              * Trigger webhooks.
              */
@@ -590,7 +638,7 @@ App::shutdown()
 
                 Realtime::send(
                     projectId: $target['projectId'] ?? $project->getId(),
-                    payload: $queueForEvents->getPayload(),
+                    payload: $queueForEvents->getRealtimePayload(),
                     events: $allEvents,
                     channels: $target['channels'],
                     roles: $target['roles'],
@@ -670,7 +718,7 @@ App::shutdown()
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
-                $key = md5($request->getURI() . '*' . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
+                $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
                 $signature = md5($data['payload']);
                 $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
@@ -701,7 +749,7 @@ App::shutdown()
 
 
         if ($project->getId() !== 'console') {
-            if ($mode !== APP_MODE_ADMIN) {
+            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {
@@ -720,11 +768,22 @@ App::shutdown()
         }
 
         /**
+         * Update project last activity
+         */
+        if (!$project->isEmpty() && $project->getId() !== 'console') {
+            $accessedAt = $project->getAttribute('accessedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+                $project->setAttribute('accessedAt', DateTime::now());
+                Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
+            }
+        }
+
+        /**
          * Update user last activity
          */
         if (!$user->isEmpty()) {
             $accessedAt = $user->getAttribute('accessedAt', '');
-            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCCESS)) > $accessedAt) {
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if (APP_MODE_ADMIN !== $mode) {
@@ -739,7 +798,7 @@ App::shutdown()
 App::init()
     ->groups(['usage'])
     ->action(function () {
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
+        if (System::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
             throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
     });

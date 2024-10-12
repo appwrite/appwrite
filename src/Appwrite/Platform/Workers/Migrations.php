@@ -16,6 +16,7 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Logger\Log;
+use Utopia\Logger\Log\Breadcrumb;
 use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
@@ -85,6 +86,7 @@ class Migrations extends Action
             return;
         }
 
+        $log->addTag('migrationId', $migration->getId());
         $log->addTag('projectId', $project->getId());
 
         $this->processMigration($project, $migration, $log);
@@ -256,6 +258,7 @@ class Migrations extends Action
             $migrationDocument = $this->dbForProject->getDocument('migrations', $migration->getId());
             $migrationDocument->setAttribute('stage', 'processing');
             $migrationDocument->setAttribute('status', 'processing');
+            $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'processing'", \microtime(true)));
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
             $log->addTag('type', $migrationDocument->getAttribute('source'));
@@ -277,6 +280,7 @@ class Migrations extends Action
 
             /** Start Transfer */
             $migrationDocument->setAttribute('stage', 'migrating');
+            $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'migrating'", \microtime(true)));
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
             $transfer->run($migrationDocument->getAttribute('resources'), function () use ($migrationDocument, $transfer, $projectDocument) {
                 $migrationDocument->setAttribute('resourceData', json_encode($transfer->getCache()));
@@ -291,18 +295,20 @@ class Migrations extends Action
             if (!empty($sourceErrors) || !empty($destinationErrors)) {
                 $migrationDocument->setAttribute('status', 'failed');
                 $migrationDocument->setAttribute('stage', 'finished');
+                $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and failed", \microtime(true)));
 
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
                     /** @var MigrationException $error */
-                    $errorMessages[] = "Error occurred while fetching '{$error->getResourceType()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
+                    $errorMessages[] = "Error occurred while fetching '{$error->getResourceGroup()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
                 }
                 foreach ($destinationErrors as $error) {
                     /** @var MigrationException $error */
-                    $errorMessages[] = "Error occurred while pushing '{$error->getResourceType()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
+                    $errorMessages[] = "Error occurred while pushing '{$error->getResourceGroup()}:{$error->getResourceId()}' to destination with message: '{$error->getMessage()}'";
                 }
 
                 $migrationDocument->setAttribute('errors', $errorMessages);
+                $log->addExtra('migrationErrors', json_encode($errorMessages));
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
                 return;
@@ -310,6 +316,7 @@ class Migrations extends Action
 
             $migrationDocument->setAttribute('status', 'completed');
             $migrationDocument->setAttribute('stage', 'finished');
+            $log->addBreadcrumb(new Breadcrumb("debug", "migration", "Migration hit stage 'finished' and succeeded", \microtime(true)));
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
 
@@ -330,14 +337,15 @@ class Migrations extends Action
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
                     /** @var MigrationException $error */
-                    $errorMessages[] = "Error occurred while fetching '{$error->getResourceType()}:{$error->getResourceId()}' from source with message '{$error->getMessage()}'";
+                    $errorMessages[] = "Error occurred while fetching '{$error->getResourceGroup()}:{$error->getResourceId()}' from source with message '{$error->getMessage()}'";
                 }
                 foreach ($destinationErrors as $error) {
                     /** @var MigrationException $error */
-                    $errorMessages[] = "Error occurred while pushing '{$error->getResourceType()}:{$error->getResourceId()}' to destination with message '{$error->getMessage()}'";
+                    $errorMessages[] = "Error occurred while pushing '{$error->getResourceGroup()}:{$error->getResourceId()}' to destination with message '{$error->getMessage()}'";
                 }
 
                 $migrationDocument->setAttribute('errors', $errorMessages);
+                $log->addTag('migrationErrors', json_encode($errorMessages));
             }
         } finally {
             if ($tempAPIKey) {
@@ -347,7 +355,7 @@ class Migrations extends Action
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
                 if ($migrationDocument->getAttribute('status', '') == 'failed') {
-                    throw new Exception(implode("\n", $migrationDocument->getAttribute('errors', [])));
+                    throw new Exception("Migration failed");
                 }
             }
         }
