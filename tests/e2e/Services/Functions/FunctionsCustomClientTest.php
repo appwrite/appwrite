@@ -258,11 +258,13 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-user-id' => "OVERRIDDEN",
             'x-appwrite-user-jwt' => "OVERRIDDEN",
         ]);
+
         $output = json_decode($execution['body']['responseBody'], true);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_JWT']);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_EVENT']);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_USER_ID']);
+
 
         $this->cleanupFunction($functionId);
     }

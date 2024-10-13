@@ -26,6 +26,7 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -1056,6 +1057,38 @@ App::get('/.well-known/acme-challenge/*')
 
 include_once __DIR__ . '/shared/api.php';
 include_once __DIR__ . '/shared/api/auth.php';
+
+App::get('/v1/ping')
+    ->groups(['api', 'general'])
+    ->desc('Test the connection between the Appwrite and the SDK.')
+    ->label('scope', 'global')
+    ->label('event', 'projects.[projectId].ping')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->inject('queueForEvents')
+    ->action(function (Response $response, Document $project, Database $dbForConsole, Event $queueForEvents) {
+        if ($project->isEmpty()) {
+            throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
+        }
+
+        $pingCount = $project->getAttribute('pingCount', 0) + 1;
+        $pingedAt = DateTime::now();
+
+        $project
+            ->setAttribute('pingCount', $pingCount)
+            ->setAttribute('pingedAt', $pingedAt);
+
+        Authorization::skip(function () use ($dbForConsole, $project) {
+            $dbForConsole->updateDocument('projects', $project->getId(), $project);
+        });
+
+        $queueForEvents
+            ->setParam('projectId', $project->getId())
+            ->setPayload($response->output($project, Response::MODEL_PROJECT));
+
+        $response->text('Pong!');
+    });
 
 App::wildcard()
     ->groups(['api'])
