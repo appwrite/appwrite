@@ -268,9 +268,9 @@ Server::setResource('deviceForBuilds', function (Document $project, $connectionS
     return getDevice(APP_STORAGE_BUILDS.'/app-'.$project->getId(), $connectionString);
 }, ['project', 'connectionString']);
 
-Server::setResource('deviceForCache', function (Document $project, $connectionString) {
-    return getDevice(APP_STORAGE_CACHE.'/app-'.$project->getId(), $connectionString);
-}, ['project', 'connectionString']);
+Server::setResource('deviceForCache', function (Document $project) {
+    return getDevice(APP_STORAGE_CACHE.'/app-'.$project->getId());
+}, ['project']);
 
 Server::setResource('realtimeConnection',function ($pools) {
     return function () use ($pools)  {
