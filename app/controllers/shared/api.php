@@ -507,8 +507,7 @@ App::init()
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
                 }
-                $timerEnd= \microtime(true);
-                var_dump('Timer: ' . $timerEnd - $timerStart);
+
                 $response
                     ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
