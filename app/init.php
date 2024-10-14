@@ -945,7 +945,9 @@ $register->set('pools', function () {
                 },
                 default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
-
+            var_dump($poolSize);
+            $poolSize = $poolSize/8;
+            var_dump($poolSize);
             $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 switch ($type) {
