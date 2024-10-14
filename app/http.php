@@ -58,8 +58,6 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server, $workerId) {
     Console::success('Reload completed...');
 });
 
-Files::load(__DIR__ . '/../console');
-
 include __DIR__ . '/controllers/general.php';
 
 $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $register) {
@@ -301,8 +299,12 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $responseCode = $logger->addLog($log);
-            Console::info('Log pushed with status code: ' . $responseCode);
+            try {
+                $responseCode = $logger->addLog($log);
+                Console::info('Error log pushed with status code: ' . $responseCode);
+            } catch (Throwable $th) {
+                Console::error('Error pushing log: ' . $th->getMessage());
+            }
         }
 
         Console::error('[Error] Type: ' . get_class($th));

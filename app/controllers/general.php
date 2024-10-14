@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../init.php';
 
+use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
@@ -11,9 +12,11 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
+use Appwrite\Utopia\Request\Filters\V18 as RequestV18;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
+use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
@@ -22,6 +25,7 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -29,6 +33,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
+use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
@@ -93,6 +98,9 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     $type = $route->getAttribute('resourceType');
 
     if ($type === 'function') {
+        $utopia->getRoute()?->label('sdk.namespace', 'functions');
+        $utopia->getRoute()?->label('sdk.method', 'createExecution');
+
         if (System::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https') {
                 if ($request->getMethod() !== Request::METHOD_GET) {
@@ -130,6 +138,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
@@ -163,7 +172,15 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED, 'To execute function using domain, execute permissions must include "any" or "guests"');
         }
 
+        $jwtExpiry = $function->getAttribute('timeout', 900);
+        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+        $apiKey = $jwtObj->encode([
+            'projectId' => $project->getId(),
+            'scopes' => $function->getAttribute('scopes', [])
+        ]);
+
         $headers = \array_merge([], $requestHeaders);
+        $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = '';
         $headers['x-appwrite-user-jwt'] = '';
@@ -242,14 +259,36 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = System::getEnv('_APP_DOMAIN');
+        $endpoint = $protocol . '://' . $hostname . "/v1";
+
         // Appwrite vars
         $vars = \array_merge($vars, [
+            'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
+            'APPWRITE_VERSION' => APP_VERSION_STABLE,
+            'APPWRITE_REGION' => $project->getAttribute('region'),
+            'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
+            'APPWRITE_VCS_REPOSITORY_ID' => $deployment->getAttribute('providerRepositoryId', ''),
+            'APPWRITE_VCS_REPOSITORY_NAME' => $deployment->getAttribute('providerRepositoryName', ''),
+            'APPWRITE_VCS_REPOSITORY_OWNER' => $deployment->getAttribute('providerRepositoryOwner', ''),
+            'APPWRITE_VCS_REPOSITORY_URL' => $deployment->getAttribute('providerRepositoryUrl', ''),
+            'APPWRITE_VCS_REPOSITORY_BRANCH' => $deployment->getAttribute('providerBranch', ''),
+            'APPWRITE_VCS_REPOSITORY_BRANCH_URL' => $deployment->getAttribute('providerBranchUrl', ''),
+            'APPWRITE_VCS_COMMIT_HASH' => $deployment->getAttribute('providerCommitHash', ''),
+            'APPWRITE_VCS_COMMIT_MESSAGE' => $deployment->getAttribute('providerCommitMessage', ''),
+            'APPWRITE_VCS_COMMIT_URL' => $deployment->getAttribute('providerCommitUrl', ''),
+            'APPWRITE_VCS_COMMIT_AUTHOR_NAME' => $deployment->getAttribute('providerCommitAuthor', ''),
+            'APPWRITE_VCS_COMMIT_AUTHOR_URL' => $deployment->getAttribute('providerCommitAuthorUrl', ''),
+            'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
         ]);
 
         /** Execute function */
@@ -272,6 +311,9 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $command,
+                cpus: $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+                memory: $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
+                logging: $function->getAttribute('logging', true),
                 requestTimeout: 30
             );
 
@@ -283,7 +325,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             }
 
             /** Update execution status */
-            $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
+            $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
@@ -305,21 +347,27 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 throw $th;
             }
         } finally {
+            $fileSize = 0;
+            $file = $request->getFiles('file');
+            if (!empty($file)) {
+                $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+            }
+
             $queueForUsage
+                ->addMetric(METRIC_NETWORK_REQUESTS, 1)
+                ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
+                ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize())
                 ->addMetric(METRIC_EXECUTIONS, 1)
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(512 * $execution->getAttribute('duration', 0)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(512 * $execution->getAttribute('duration', 0)))
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
                 ->setProject($project)
                 ->trigger()
             ;
 
-            if ($function->getAttribute('logging')) {
-                /** @var Document $execution */
-                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-            }
+            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
         $execution->setAttribute('logs', '');
@@ -334,13 +382,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         $execution->setAttribute('responseHeaders', $headers);
 
         $body = $execution['responseBody'] ?? '';
-
-        $encodingKey = \array_search('x-open-runtimes-encoding', \array_column($execution['responseHeaders'], 'name'));
-        if ($encodingKey !== false) {
-            if (($execution['responseHeaders'][$encodingKey]['value'] ?? '') === 'base64') {
-                $body = \base64_decode($body);
-            }
-        }
 
         $contentType = 'text/plain';
         foreach ($execution['responseHeaders'] as $header) {
@@ -442,6 +483,9 @@ App::init()
             }
             if (version_compare($requestFormat, '1.5.0', '<')) {
                 $request->addFilter(new RequestV17());
+            }
+            if (version_compare($requestFormat, '1.6.0', '<')) {
+                $request->addFilter(new RequestV18());
             }
         }
 
@@ -558,6 +602,9 @@ App::init()
             }
             if (version_compare($responseFormat, '1.5.0', '<')) {
                 $response->addFilter(new ResponseV17());
+            }
+            if (version_compare($responseFormat, '1.6.0', '<')) {
+                $response->addFilter(new ResponseV18());
             }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
                 $response->addHeader('X-Appwrite-Warning', "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is ". APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks");
@@ -731,16 +778,24 @@ App::error()
             $providerName = System::getEnv('_APP_EXPERIMENT_LOGGING_PROVIDER', '');
             $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
 
-            if (!(empty($providerName) || empty($providerConfig))) {
-                if (!Logger::hasProvider($providerName)) {
-                    throw new Exception("Logging provider not supported. Logging is disabled");
-                }
+            try {
+                $loggingProvider = new DSN($providerConfig ?? '');
+                $providerName = $loggingProvider->getScheme();
 
-                $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
-                $adapter = new $classname($providerConfig);
-                $logger = new Logger($adapter);
-                $logger->setSample(0.04);
-                $publish = true;
+                if (!empty($providerName) && $providerName === 'sentry') {
+                    $key = $loggingProvider->getPassword();
+                    $projectId = $loggingProvider->getUser() ?? '';
+                    $host = 'https://' . $loggingProvider->getHost();
+
+                    $adapter = new Sentry($projectId, $key, $host);
+                    $logger = new Logger($adapter);
+                    $logger->setSample(0.04);
+                    $publish = true;
+                } else {
+                    throw new \Exception('Invalid experimental logging provider');
+                }
+            } catch (\Throwable $th) {
+                Console::warning('Failed to initialize logging provider: ' . $th->getMessage());
             }
         }
 
@@ -809,8 +864,12 @@ App::error()
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $responseCode = $logger->addLog($log);
-            Console::info('Log pushed with status code: ' . $responseCode);
+            try {
+                $responseCode = $logger->addLog($log);
+                Console::info('Error log pushed with status code: ' . $responseCode);
+            } catch (Throwable $th) {
+                Console::error('Error pushing log: ' . $th->getMessage());
+            }
         }
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */
@@ -904,7 +963,7 @@ App::get('/robots.txt')
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
-        if ($host === $mainDomain) {
+        if ($host === $mainDomain || $host === 'localhost') {
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
@@ -929,7 +988,7 @@ App::get('/humans.txt')
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
-        if ($host === $mainDomain) {
+        if ($host === $mainDomain || $host === 'localhost') {
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
@@ -989,6 +1048,38 @@ App::get('/.well-known/acme-challenge/*')
 
 include_once __DIR__ . '/shared/api.php';
 include_once __DIR__ . '/shared/api/auth.php';
+
+App::get('/v1/ping')
+    ->groups(['api', 'general'])
+    ->desc('Test the connection between the Appwrite and the SDK.')
+    ->label('scope', 'global')
+    ->label('event', 'projects.[projectId].ping')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->inject('queueForEvents')
+    ->action(function (Response $response, Document $project, Database $dbForConsole, Event $queueForEvents) {
+        if ($project->isEmpty()) {
+            throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
+        }
+
+        $pingCount = $project->getAttribute('pingCount', 0) + 1;
+        $pingedAt = DateTime::now();
+
+        $project
+            ->setAttribute('pingCount', $pingCount)
+            ->setAttribute('pingedAt', $pingedAt);
+
+        Authorization::skip(function () use ($dbForConsole, $project) {
+            $dbForConsole->updateDocument('projects', $project->getId(), $project);
+        });
+
+        $queueForEvents
+            ->setParam('projectId', $project->getId())
+            ->setPayload($response->output($project, Response::MODEL_PROJECT));
+
+        $response->text('Pong!');
+    });
 
 App::wildcard()
     ->groups(['api'])

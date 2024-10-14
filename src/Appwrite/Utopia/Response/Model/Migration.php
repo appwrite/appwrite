@@ -18,7 +18,7 @@ class Migration extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Variable creation date in ISO 8601 format.',
+                'description' => 'Migration creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
