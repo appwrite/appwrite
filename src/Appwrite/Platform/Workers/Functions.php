@@ -72,6 +72,14 @@ class Functions extends Action
         }
 
         $type = $payload['type'] ?? '';
+
+        // Short-term solution to offhand write operation from API contianer
+        if ($type === Func::TYPE_ASYNC_WRITE) {
+            $execution = new Document($payload['execution'] ?? []);
+            $execution = $dbForProject->createDocument('executions', $execution);
+            return;
+        }
+
         $events = $payload['events'] ?? [];
         $data = $payload['body'] ?? '';
         $eventData = $payload['payload'] ?? '';
