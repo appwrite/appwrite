@@ -889,10 +889,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' === $output)) { // Fallback webp to jpeg when no browser support
-            $output = 'jpg';
-        }
-
         $inputs = Config::getParam('storage-inputs');
         $outputs = Config::getParam('storage-outputs');
         $fileLogos = Config::getParam('storage-logos');
@@ -1309,7 +1305,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
     ->action(function (string $bucketId, string $fileId, string $jwt, Response $response, Request $request, Database $dbForProject, Document $project, string $mode, Device $deviceForFiles) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $decoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'));
+        $decoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 
         try {
             $decoded = $decoder->decode($jwt);
@@ -1320,8 +1316,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
         if (
             $decoded['projectId'] !== $project->getId() ||
             $decoded['bucketId'] !== $bucketId ||
-            $decoded['fileId'] !== $fileId ||
-            $decoded['exp'] < \time()
+            $decoded['fileId'] !== $fileId
         ) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -1550,7 +1545,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     });
 
 App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
-    ->desc('Delete File')
+    ->desc('Delete file')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('event', 'buckets.[bucketId].files.[fileId].delete')

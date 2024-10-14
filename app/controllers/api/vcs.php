@@ -96,7 +96,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $commentStatus = $isAuthorized ? 'waiting' : 'failed';
 
-            $authorizeUrl = $request->getProtocol() . '://' . $request->getHostname() . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
+            $authorizeUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
             $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
 
@@ -263,7 +263,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 };
 
 App::get('/v1/vcs/github/authorize')
-    ->desc('Install GitHub App')
+    ->desc('Install GitHub app')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('sdk.namespace', 'vcs')
@@ -305,7 +305,7 @@ App::get('/v1/vcs/github/authorize')
     });
 
 App::get('/v1/vcs/github/callback')
-    ->desc('Capture installation and authorization from GitHub App')
+    ->desc('Capture installation and authorization from GitHub app')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -464,6 +464,67 @@ App::get('/v1/vcs/github/callback')
             ->redirect($redirectSuccess);
     });
 
+App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/contents')
+    ->desc('Get files and directories of a VCS repository')
+    ->groups(['api', 'vcs'])
+    ->label('scope', 'vcs.read')
+    ->label('sdk.namespace', 'vcs')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.method', 'getRepositoryContents')
+    ->label('sdk.description', '')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VCS_CONTENT_LIST)
+    ->param('installationId', '', new Text(256), 'Installation Id')
+    ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
+    ->param('providerRootDirectory', '', new Text(256, 0), 'Path to get contents of nested directory', true)
+    ->inject('gitHub')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->action(function (string $installationId, string $providerRepositoryId, string $providerRootDirectory, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
+        $installation = $dbForConsole->getDocument('installations', $installationId);
+
+        if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        $providerInstallationId = $installation->getAttribute('providerInstallationId');
+        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
+        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+
+        $owner = $github->getOwnerName($providerInstallationId);
+        try {
+            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            if (empty($repositoryName)) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
+        } catch (RepositoryNotFound $e) {
+            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+        }
+
+        $contents = $github->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
+
+        $vcsContents = [];
+        foreach ($contents as $content) {
+            $isDirectory = false;
+            if ($content['type'] === GitHub::CONTENTS_DIRECTORY) {
+                $isDirectory = true;
+            }
+
+            $vcsContents[] = new Document([
+                'isDirectory' => $isDirectory,
+                'name' => $content['name'] ?? '',
+                'size' => $content['size'] ?? 0
+            ]);
+        }
+
+        $response->dynamic(new Document([
+            'contents' => $vcsContents
+        ]), Response::MODEL_VCS_CONTENT_LIST);
+    });
+
 App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
     ->desc('Detect runtime settings from source code')
     ->groups(['api', 'vcs'])
@@ -505,6 +566,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         }
 
         $files = $github->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
+        $files = \array_column($files, 'name');
         $languages = $github->listRepositoryLanguages($owner, $repositoryName);
 
         $detectorFactory = new Detector($files, $languages);
@@ -536,7 +598,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
-    ->desc('List Repositories')
+    ->desc('List repositories')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('sdk.namespace', 'vcs')
@@ -586,6 +648,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
             return function () use ($repo, $github) {
                 try {
                     $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
+                    $files = \array_column($files, 'name');
                     $languages = $github->listRepositoryLanguages($repo['organization'], $repo['name']);
 
                     $detectorFactory = new Detector($files, $languages);
@@ -780,7 +843,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
-    ->desc('List Repository Branches')
+    ->desc('List repository branches')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('sdk.namespace', 'vcs')
@@ -829,7 +892,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     });
 
 App::post('/v1/vcs/github/events')
-    ->desc('Create Event')
+    ->desc('Create event')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->inject('gitHub')
@@ -1057,7 +1120,7 @@ App::get('/v1/vcs/installations/:installationId')
     });
 
 App::delete('/v1/vcs/installations/:installationId')
-    ->desc('Delete Installation')
+    ->desc('Delete installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
     ->label('sdk.namespace', 'vcs')
