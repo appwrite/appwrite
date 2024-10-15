@@ -2109,7 +2109,7 @@ trait DatabasesBase
             ],
         ]);
         $this->assertEquals(400, $documents['headers']['status-code']);
-        $this->assertEquals('Invalid query: Query on attribute has greater than 100 values: releaseYear', $documents['body']['message']);
+        $this->assertEquals('Invalid query: Query on attribute has greater than '.APP_DATABASE_QUERY_VALUES.' values: releaseYear', $documents['body']['message']);
 
         $value = '';
 
