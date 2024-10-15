@@ -2096,7 +2096,7 @@ trait DatabasesBase
          */
         $conditions = [];
 
-        for ($i = 0; $i < 101; $i++) {
+        for ($i = 0; $i < APP_DATABASE_QUERY_VALUES + 1; $i++) {
             $conditions[] = $i;
         }
 
