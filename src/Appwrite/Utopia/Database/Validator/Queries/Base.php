@@ -66,7 +66,7 @@ class Base extends Queries
             new Limit(),
             new Offset(),
             new Cursor(),
-            new Filter($attributes),
+            new Filter($attributes, APP_DATABASE_QUERY_VALUES),
             new Order($attributes),
         ];
 
