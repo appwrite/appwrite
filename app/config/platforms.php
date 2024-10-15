@@ -199,7 +199,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Console',
-                'version' => '1.1.0',
+                'version' => '1.2.1',
                 'url' => 'https://github.com/appwrite/sdk-for-console',
                 'package' => '',
                 'enabled' => true,
@@ -281,7 +281,7 @@ return [
             [
                 'key' => 'php',
                 'name' => 'PHP',
-                'version' => '12.0.0',
+                'version' => '12.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-php',
                 'package' => 'https://packagist.org/packages/appwrite/appwrite',
                 'enabled' => true,
