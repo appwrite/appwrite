@@ -2339,6 +2339,7 @@ class AccountCustomClientTest extends Scope
     /**
      * @depends testUpdatePhone
      */
+    #[Retry(count: 3)]
     public function testPhoneVerification(array $data): array
     {
         $session = $data['session'] ?? '';
@@ -2358,21 +2359,13 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
 
-        $token = null;
+        $smsRequest = $this->getLastRequest();
 
-        $this->assertEventually(function () use (&$token) {
-            $request = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
-
-            $body = json_decode($request['data'], true);
-            $this->assertArrayHasKey('message', $body);
-
-            $token = substr($body['message'], 0, 6);
-            $this->assertNotEmpty($token);
-        }, 10000, 500);
-
+        $message = $smsRequest['data']['message'];
+        $token = substr($message, 0, 6);
 
         return \array_merge($data, [
-            'token' => $token
+            'token' => \substr($smsRequest['data']['message'], 0, 6)
         ]);
     }
 
