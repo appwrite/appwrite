@@ -2406,6 +2406,17 @@ $projectCollections = array_merge([
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('originalId'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => Database::LENGTH_KEY,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'default' => null,
+                'array' => false,
+            ],
         ],
         'indexes' => [
             [
@@ -4109,9 +4120,20 @@ $projectCollections = array_merge([
                 '$id' => ID::custom('source'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 8192,
+                'size' => 8192, // reduce size
                 'signed' => true,
                 'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('destination'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false, // make true after patch script
                 'default' => null,
                 'array' => false,
                 'filters' => [],
@@ -4508,6 +4530,28 @@ $consoleCollections = array_merge([
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('pingCount'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => 0,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('pingedAt'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ]
         ],
         'indexes' => [
             [
@@ -4531,6 +4575,20 @@ $consoleCollections = array_merge([
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
+            [
+                '$id' => ID::custom('_key_pingCount'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['pingCount'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_pingedAt'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['pingedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ]
         ],
     ],
 

@@ -28,6 +28,12 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('databasesStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of databases storage size (in bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('usersTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of users.',
@@ -114,6 +120,13 @@ class UsageProject extends Model
             ->addRule('bucketsBreakdown', [
                 'type' => Response::MODEL_METRIC_BREAKDOWN,
                 'description' => 'Aggregated breakdown in totals of usage by buckets.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('databasesStorageBreakdown', [
+                'type' => Response::MODEL_METRIC_BREAKDOWN,
+                'description' => 'An array of the aggregated breakdown of storage usage by databases.',
                 'default' => [],
                 'example' => [],
                 'array' => true
