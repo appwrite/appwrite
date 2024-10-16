@@ -130,7 +130,7 @@ const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1_073_741_824; // 2^32 bits / 4 bits per char
 const APP_DATABASE_TIMEOUT_MILLISECONDS = 15_000;
-const APP_DATABASE_QUERY_VALUES = 500;
+const APP_DATABASE_QUERY_MAX_VALUES = 500;
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
@@ -1400,7 +1400,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
-        ->setMaxQueryValues(APP_DATABASE_QUERY_VALUES);
+        ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
     try {
         $dsn = new DSN($project->getAttribute('database'));
@@ -1437,7 +1437,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', 'console')
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
-        ->setMaxQueryValues(APP_DATABASE_QUERY_VALUES);
+        ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
     return $database;
 }, ['pools', 'cache']);
@@ -1462,7 +1462,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
-                ->setMaxQueryValues(APP_DATABASE_QUERY_VALUES);
+                ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
             if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
                 $database

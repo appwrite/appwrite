@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "59f5ddee3c1259ce3f63762f2f064cc6",
+    "content-hash": "18505aa5baca1170e7cbdbb2a355b173",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1724,16 +1724,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-0.53.x-max-query-size",
+            "version": "0.53.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "7c15e2ba06e82d7daeb4edbf43564b435324a7d4"
+                "reference": "f4f9297d633b9f8407c6261535549bfd6024a468"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/7c15e2ba06e82d7daeb4edbf43564b435324a7d4",
-                "reference": "7c15e2ba06e82d7daeb4edbf43564b435324a7d4",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f4f9297d633b9f8407c6261535549bfd6024a468",
+                "reference": "f4f9297d633b9f8407c6261535549bfd6024a468",
                 "shasum": ""
             },
             "require": {
@@ -1774,9 +1774,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.53.x-max-query-size"
+                "source": "https://github.com/utopia-php/database/tree/0.53.8"
             },
-            "time": "2024-10-15T12:20:07+00:00"
+            "time": "2024-10-16T08:16:33+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -7003,18 +7003,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-0.53.x-max-query-size",
-            "alias": "0.53.6",
-            "alias_normalized": "0.53.6.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
