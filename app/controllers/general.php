@@ -10,6 +10,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Platform\Appwrite;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
@@ -38,6 +39,7 @@ use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
+use Utopia\Platform\Service;
 use Utopia\System\System;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\Text;
@@ -1100,3 +1102,8 @@ App::wildcard()
 foreach (Config::getParam('services', []) as $service) {
     include_once $service['controller'];
 }
+
+// Modules
+
+$platform = new Appwrite();
+$platform->init(Service::TYPE_HTTP);
