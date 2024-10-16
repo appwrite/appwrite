@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5fef87b7ea4352869a502d1570bd43e7",
+    "content-hash": "865034db0a7ce59cae1c9f9b2c71d7b7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3002,16 +3002,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.39.24",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "412451c87f6ef17e24e9a5cf41721043d74c60c8"
+                "reference": "a810403a7e37c43523663e9537e070fe62ceb3e7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/412451c87f6ef17e24e9a5cf41721043d74c60c8",
-                "reference": "412451c87f6ef17e24e9a5cf41721043d74c60c8",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a810403a7e37c43523663e9537e070fe62ceb3e7",
+                "reference": "a810403a7e37c43523663e9537e070fe62ceb3e7",
                 "shasum": ""
             },
             "require": {
@@ -3027,6 +3027,7 @@
                 "phpunit/phpunit": "11.*",
                 "squizlabs/php_codesniffer": "3.*"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -3047,9 +3048,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.24"
+                "source": "https://github.com/appwrite/sdk-generator/tree/master"
             },
-            "time": "2024-10-09T19:13:27+00:00"
+            "time": "2024-10-14T16:51:18+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -7005,7 +7006,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "appwrite/sdk-generator": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
