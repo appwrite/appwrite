@@ -2096,7 +2096,7 @@ trait DatabasesBase
          */
         $conditions = [];
 
-        for ($i = 0; $i < 101; $i++) {
+        for ($i = 0; $i < APP_DATABASE_QUERY_MAX_VALUES + 1; $i++) {
             $conditions[] = $i;
         }
 
@@ -2109,7 +2109,7 @@ trait DatabasesBase
             ],
         ]);
         $this->assertEquals(400, $documents['headers']['status-code']);
-        $this->assertEquals('Invalid query: Query on attribute has greater than 100 values: releaseYear', $documents['body']['message']);
+        $this->assertEquals('Invalid query: Query on attribute has greater than '.APP_DATABASE_QUERY_MAX_VALUES.' values: releaseYear', $documents['body']['message']);
 
         $value = '';
 
