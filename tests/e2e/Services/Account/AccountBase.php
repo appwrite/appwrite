@@ -2,12 +2,15 @@
 
 namespace Tests\E2E\Services\Account;
 
+use Appwrite\Tests\Async;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait AccountBase
 {
+    use Async;
+
     public function testCreateAccount(): array
     {
         $email = uniqid() . 'user@localhost.test';
