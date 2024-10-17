@@ -3123,7 +3123,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
-            
+
             $documentId = $cursor->getValue();
 
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
