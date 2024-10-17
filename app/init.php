@@ -1771,10 +1771,10 @@ App::setResource('requestTimestamp', function ($request) {
     }
     return $requestTimestamp;
 }, ['request']);
+
 App::setResource('plan', function (array $plan = []) {
     return [];
 });
-
 
 App::setResource('team', function (Document $project, Database $dbForConsole, App $utopia, Request $request) {
     $teamInternalId = '';
@@ -1806,3 +1806,5 @@ App::setResource('team', function (Document $project, Database $dbForConsole, Ap
     }
     return $team;
 }, ['project', 'dbForConsole', 'utopia', 'request']);
+
+App::setResource('blocksCheck', fn() => fn(...$args) => null);
