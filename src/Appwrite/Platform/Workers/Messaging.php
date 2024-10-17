@@ -586,7 +586,7 @@ class Messaging extends Action
                 Query::limit(\count($ccTargets)),
             ]);
             foreach ($ccTargets as $ccTarget) {
-                $cc[] = ['email' => $ccTarget['identifier']];
+                $cc[] = ['email' => $ccTarget['identifier'], 'name' => $ccTarget['name'] ?? $ccTarget['identifier']];
             }
         }
 
@@ -596,7 +596,7 @@ class Messaging extends Action
                 Query::limit(\count($bccTargets)),
             ]);
             foreach ($bccTargets as $bccTarget) {
-                $bcc[] = ['email' => $bccTarget['identifier']];
+                $bcc[] = ['email' => $bccTarget['identifier'], 'name' => $bccTarget['name'] ?? $bccTarget['identifier']];
             }
         }
 
