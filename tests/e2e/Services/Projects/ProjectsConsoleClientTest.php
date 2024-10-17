@@ -3950,27 +3950,15 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals("APP_TEST_UPDATE", $variable['body']['key']);
         $this->assertEquals("TESTINGVALUEUPDATED", $variable['body']['value']);
 
-        $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['variableId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $data['projectId'],
-            'x-appwrite-mode' => 'admin',
-        ], $this->getHeaders()), [
-            'key' => 'APP_TEST_UPDATE_2',
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals("APP_TEST_UPDATE_2", $response['body']['key']);
-        $this->assertEquals("TESTINGVALUEUPDATED", $response['body']['value']);
-
-        $variable = $this->client->call(Client::METHOD_GET, '/project/variables/' . $data['variableId'], array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/project/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()));
 
-        $this->assertEquals(200, $variable['headers']['status-code']);
-        $this->assertEquals("APP_TEST_UPDATE_2", $variable['body']['key']);
-        $this->assertEquals("TESTINGVALUEUPDATED", $variable['body']['value']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, sizeof($response['body']['variables']));
+        $this->assertEquals("APP_TEST_UPDATE", $response['body']['variables'][0]['key']);
 
         /**
          * Test for FAILURE
@@ -4017,6 +4005,17 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/project/variables/NON_EXISTING_VARIABLE', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'key' => 'APP_TEST_UPDATE',
+            'value' => 'TESTINGVALUEUPDATED'
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         return $data;
     }
