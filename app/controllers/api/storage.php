@@ -24,6 +24,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Image\Image;
 use Utopia\Storage\Compression\Algorithms\GZIP;
@@ -178,6 +179,12 @@ App::get('/v1/storage/buckets')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $bucketId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('buckets', $bucketId);
 
@@ -744,6 +751,12 @@ App::get('/v1/storage/buckets/:bucketId/files')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $fileId = $cursor->getValue();
 
             if ($fileSecurity && !$valid) {

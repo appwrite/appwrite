@@ -20,6 +20,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Detector\Adapter\Bun;
 use Utopia\Detector\Adapter\CPP;
 use Utopia\Detector\Adapter\Dart;
@@ -1069,6 +1070,12 @@ App::get('/v1/vcs/installations')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $installationId = $cursor->getValue();
             $cursorDocument = $dbForConsole->getDocument('installations', $installationId);
 

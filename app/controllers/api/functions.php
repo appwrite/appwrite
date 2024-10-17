@@ -37,6 +37,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Device;
@@ -431,6 +432,12 @@ App::get('/v1/functions')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $functionId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('functions', $functionId);
 
@@ -1407,6 +1414,12 @@ App::get('/v1/functions/:functionId/deployments')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $deploymentId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('deployments', $deploymentId);
 
@@ -2153,6 +2166,12 @@ App::get('/v1/functions/:functionId/executions')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $executionId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('executions', $executionId);
 
