@@ -547,6 +547,13 @@ App::get('/v1/databases')
         });
         $cursor = reset($cursor);
         if ($cursor) {
+            /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $databaseId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('databases', $databaseId);
 
@@ -879,6 +886,12 @@ App::get('/v1/databases/:databaseId/collections')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $collectionId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
@@ -1789,6 +1802,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         $cursor = \reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $attributeId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->find('attributes', [
                 Query::equal('collectionInternalId', [$collection->getInternalId()]),
@@ -2668,6 +2686,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $indexId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->find('indexes', [
                 Query::equal('collectionInternalId', [$collection->getInternalId()]),
