@@ -19,9 +19,9 @@ class VCSConsoleClientTest extends Scope
     use ProjectCustom;
     use SideConsole;
 
-    public string $providerInstallationId = '42954928';
-    public string $providerRepositoryId = '705764267';
-    public string $providerRepositoryId2 = '708688544';
+    public string $providerInstallationId = '42954928'; // appwrite-test
+    public string $providerRepositoryId = '705764267'; // ruby-starter (public)
+    public string $providerRepositoryId2 = '708688544'; // function1.4 (private)
 
     public function testGitHubAuthorize(): string
     {
@@ -79,6 +79,78 @@ class VCSConsoleClientTest extends Scope
          */
 
         $runtime = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/providerRepositories/randomRepositoryId/detection', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $runtime['headers']['status-code']);
+    }
+
+    /**
+     * @depends testGitHubAuthorize
+     */
+    public function testContents(string $installationId): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        $runtime = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/contents', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $runtime['headers']['status-code']);
+        $this->assertGreaterThan(0, $runtime['body']['total']);
+        $this->assertIsArray($runtime['body']['contents']);
+        $this->assertGreaterThan(0, \count($runtime['body']['contents']));
+
+        $gemfileContent = null;
+        foreach ($runtime['body']['contents'] as $content) {
+            if ($content['name'] === "Gemfile") {
+                $gemfileContent = $content;
+                break;
+            }
+        }
+        $this->assertNotNull($gemfileContent);
+        $this->assertFalse($gemfileContent['isDirectory']);
+        $this->assertGreaterThan(0, $gemfileContent['size']); // Should be ~50 bytes
+        $this->assertLessThan(100, $gemfileContent['size']);
+
+        $libContent = null;
+        foreach ($runtime['body']['contents'] as $content) {
+            if ($content['name'] === "lib") {
+                $libContent = $content;
+                break;
+            }
+        }
+        $this->assertNotNull($libContent);
+        $this->assertTrue($libContent['isDirectory']);
+        $this->assertEquals(0, $gemfileContent['size']);
+
+        $runtime = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/contents?providerRootDirectory=lib', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $runtime['headers']['status-code']);
+        $this->assertGreaterThan(0, $runtime['body']['total']);
+        $this->assertIsArray($runtime['body']['contents']);
+        $this->assertGreaterThan(0, \count($runtime['body']['contents']));
+
+        $mainRbContent = null;
+        foreach ($runtime['body']['contents'] as $content) {
+            if ($content['name'] === "main.rb") {
+                $mainRbContent = $content;
+                break;
+            }
+        }
+        $this->assertNotNull($mainRbContent);
+        $this->assertFalse($mainRbContent['isDirectory']);
+        $this->assertGreaterThan(0, $gemfileContent['size']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        $runtime = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/providerRepositories/randomRepositoryId/contents', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 

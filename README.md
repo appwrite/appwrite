@@ -1,4 +1,4 @@
-> Our Appwrite Init event has concluded. You can check out all the new and upcoming features [on our Init website](https://appwrite.io/init) 🚀
+> Appwrite Init has concluded! You can check out all the latest announcements [on our Init website](https://appwrite.io/init) 🚀
 
 <br />
 <p align="center">
@@ -9,7 +9,6 @@
     <br />
     <br />
 </p>
-
 
 <!-- [![Build Status](https://img.shields.io/travis/com/appwrite/appwrite?style=flat-square)](https://travis-ci.com/appwrite/appwrite) -->
 
@@ -76,7 +75,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.5.5
+    appwrite/appwrite:1.6.0
 ```
 
 ### Windows
@@ -88,7 +87,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.5.5
+    appwrite/appwrite:1.6.0
 ```
 
 #### PowerShell
@@ -98,7 +97,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.5.5
+    appwrite/appwrite:1.6.0
 ```
 
 Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
@@ -135,6 +134,12 @@ Choose from one of the providers below:
           <br /><sub><b>Akamai Compute</b></sub></a>    
       </a>
     </td>
+    <td align="center" width="100" height="100">
+      <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
+        <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
+          <br /><sub><b>AWS Marketplace</b></sub></a>    
+      </a>
+    </td>
   </tr>
 </table>
 
@@ -142,29 +147,29 @@ Choose from one of the providers below:
 
 Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK into your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
 
-| Platform           | Technology |
-|--------------------|------------|
-| **Web app**        | [Quick start for Web](/docs/quick-starts/web) |
-|                    | [Quick start for Next.js](/docs/quick-starts/nextjs) |
-|                    | [Quick start for React](/docs/quick-starts/react) |
-|                    | [Quick start for Vue.js](/docs/quick-starts/vue) |
-|                    | [Quick start for Nuxt](/docs/quick-starts/nuxt) |
-|                    | [Quick start for SvelteKit](/docs/quick-starts/sveltekit) |
-|                    | [Quick start for Refine](/docs/quick-starts/refine) |
-|                    | [Quick start for Angular](/docs/quick-starts/angular) |
-| **Mobile and Native** | [Quick start for React Native](/docs/quick-starts/react-native) |
-|                    | [Quick start for Flutter](/docs/quick-starts/flutter) |
-|                    | [Quick start for Apple](/docs/quick-starts/apple) |
-|                    | [Quick start for Android](/docs/quick-starts/android) |
-| **Server**         | [Quick start for Node.js](/docs/quick-starts/node) |
-|                    | [Quick start for Python](/docs/quick-starts/python) |
-|                    | [Quick start for .NET](/docs/quick-starts/dotnet) |
-|                    | [Quick start for Dart](/docs/quick-starts/dart) |
-|                    | [Quick start for Ruby](/docs/quick-starts/ruby) |
-|                    | [Quick start for Deno](/docs/quick-starts/deno) |
-|                    | [Quick start for PHP](/docs/quick-starts/php) |
-|                    | [Quick start for Kotlin](/docs/quick-starts/kotlin) |
-|                    | [Quick start for Swift](/docs/quick-starts/swift) |
+| Platform              | Technology                                                                         |
+| --------------------- | ---------------------------------------------------------------------------------- |
+| **Web app**           | [Quick start for Web](https://appwrite.io/docs/quick-starts/web)                   |
+|                       | [Quick start for Next.js](https://appwrite.io/docs/quick-starts/nextjs)            |
+|                       | [Quick start for React](https://appwrite.io/docs/quick-starts/react)               |
+|                       | [Quick start for Vue.js](https://appwrite.io/docs/quick-starts/vue)                |
+|                       | [Quick start for Nuxt](https://appwrite.io/docs/quick-starts/nuxt)                 |
+|                       | [Quick start for SvelteKit](https://appwrite.io/docs/quick-starts/sveltekit)       |
+|                       | [Quick start for Refine](https://appwrite.io/docs/quick-starts/refine)             |
+|                       | [Quick start for Angular](https://appwrite.io/docs/quick-starts/angular)           |
+| **Mobile and Native** | [Quick start for React Native](https://appwrite.io/docs/quick-starts/react-native) |
+|                       | [Quick start for Flutter](https://appwrite.io/docs/quick-starts/flutter)           |
+|                       | [Quick start for Apple](https://appwrite.io/docs/quick-starts/apple)               |
+|                       | [Quick start for Android](https://appwrite.io/docs/quick-starts/android)           |
+| **Server**            | [Quick start for Node.js](https://appwrite.io/docs/quick-starts/node)              |
+|                       | [Quick start for Python](https://appwrite.io/docs/quick-starts/python)             |
+|                       | [Quick start for .NET](https://appwrite.io/docs/quick-starts/dotnet)               |
+|                       | [Quick start for Dart](https://appwrite.io/docs/quick-starts/dart)                 |
+|                       | [Quick start for Ruby](https://appwrite.io/docs/quick-starts/ruby)                 |
+|                       | [Quick start for Deno](https://appwrite.io/docs/quick-starts/deno)                 |
+|                       | [Quick start for PHP](https://appwrite.io/docs/quick-starts/php)                   |
+|                       | [Quick start for Kotlin](https://appwrite.io/docs/quick-starts/kotlin)             |
+|                       | [Quick start for Swift](https://appwrite.io/docs/quick-starts/swift)               |
 
 ### Products
 

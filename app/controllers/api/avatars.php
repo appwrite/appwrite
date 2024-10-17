@@ -321,7 +321,7 @@ App::get('/v1/avatars/favicon')
                 ->setUserAgent(\sprintf(
                     APP_USERAGENT,
                     System::getEnv('_APP_VERSION', 'UNKNOWN'),
-                    System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+                    System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
                 ))
                 ->fetch($url);
         } catch (\Throwable) {
@@ -550,7 +550,7 @@ App::get('/v1/avatars/initials')
     });
 
 App::get('/v1/cards/cloud')
-    ->desc('Get Front Of Cloud Card')
+    ->desc('Get front Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -757,7 +757,7 @@ App::get('/v1/cards/cloud')
     });
 
 App::get('/v1/cards/cloud-back')
-    ->desc('Get Back Of Cloud Card')
+    ->desc('Get back Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -835,7 +835,7 @@ App::get('/v1/cards/cloud-back')
     });
 
 App::get('/v1/cards/cloud-og')
-    ->desc('Get OG Image From Cloud Card')
+    ->desc('Get OG image From Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)

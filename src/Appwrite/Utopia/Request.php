@@ -122,7 +122,11 @@ class Request extends UtopiaRequest
      */
     public function getHeaders(): array
     {
-        $headers = $this->generateHeaders();
+        try {
+            $headers = $this->generateHeaders();
+        } catch (\Throwable) {
+            $headers = [];
+        }
 
         if (empty($this->swoole->cookie)) {
             return $headers;

@@ -9,7 +9,6 @@ use Tests\E2E\General\UsageTest;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -102,7 +101,7 @@ class ProjectsConsoleClientTest extends Scope
             'region' => 'default'
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return [
             'projectId' => $projectId,
@@ -485,6 +484,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertIsNumeric($response['body']['bucketsTotal']);
         $this->assertIsNumeric($response['body']['usersTotal']);
         $this->assertIsNumeric($response['body']['filesStorageTotal']);
+        $this->assertIsNumeric($response['body']['deploymentStorageTotal']);
 
 
         /**
@@ -546,7 +546,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => '',
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return ['projectId' => $projectId];
     }
@@ -611,7 +611,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'emails' => [ 'testuser@appwrite.io', 'testusertwo@appwrite.io' ],
+            'emails' => ['testuser@appwrite.io', 'testusertwo@appwrite.io'],
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
@@ -648,7 +648,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'emails' => [ 'u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io' ],
+            'emails' => ['u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io'],
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
@@ -664,7 +664,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'emails' => [ 'u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io', 'u11@appwrite.io' ],
+            'emails' => ['u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io', 'u11@appwrite.io'],
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
@@ -1239,6 +1239,36 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
+        // Creating A Team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Test Team 1',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        $teamId = $team['body']['$id'];
+        $email = uniqid() . 'user@localhost.test';
+
+        // Creating A User Using Team membership
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', array_merge($this->getHeaders(), [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ]), [
+            'email' => $email,
+            'roles' => [],
+            'url' => 'http://localhost',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
         $email = uniqid() . 'user@localhost.test';
 
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
@@ -1252,7 +1282,9 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(Exception::USER_COUNT_EXCEEDED, $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
 
         /**
          * Test for FAILURE
@@ -1498,8 +1530,8 @@ class ProjectsConsoleClientTest extends Scope
 
 
         /**
-        * Reset
-        */
+         * Reset
+         */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1510,6 +1542,212 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(0, $response['body']['authPasswordHistory']);
         return $data;
+    }
+
+    /**
+     * @group smtpAndTemplates
+     * @group projectsCRUD
+     *
+     * @depends testCreateProject
+     * */
+    public function testUpdateMockNumbers($data)
+    {
+        $id = $data['projectId'] ?? '';
+
+        /**
+         * Test for Failure
+         */
+
+        /** Trying to pass an empty body to the endpoint */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Param "numbers" is not optional.', $response['body']['message']);
+
+        /** Trying to pass body with incorrect structure */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                'phone' => '+1655513432',
+                'otp' => '123456'
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Invalid payload structure. Please check the "phone" and "otp" fields', $response['body']['message']);
+
+        /** Trying to pass an OTP longer than 6 characters*/
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '12345678'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Invalid OTP. Please make sure the OTP is a 6 digit number', $response['body']['message']);
+
+        /** Trying to pass an OTP shorter than 6 characters*/
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '123'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Invalid OTP. Please make sure the OTP is a 6 digit number', $response['body']['message']);
+
+        /** Trying to pass an OTP with non numeric characters */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '123re2'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Invalid OTP. Please make sure the OTP is a 6 digit number', $response['body']['message']);
+
+        /** Trying to pass an invalid phone number  */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '1655234',
+                    'otp' => '123456'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
+
+        /** Trying to pass a number longer than 15 digits  */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1234567890987654',
+                    'otp' => '123456'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
+
+        /** Trying to pass duplicate numbers  */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '123456'
+                ],
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '123456'
+                ]
+            ]
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Duplicate phone numbers are not allowed.', $response['body']['message']);
+
+        $numbers = [];
+        for ($i = 0; $i < 11; $i++) {
+            $numbers[] = [
+                'phone' => '+1655513432',
+                'otp' => '123456'
+            ];
+        }
+
+        /** Trying to pass more than 10 values */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => $numbers
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Phone number must start with a \'+\' can have a maximum of fifteen digits.', $response['body']['message']);
+
+        /**
+         * Test for success
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => []
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'numbers' => [
+                [
+                    'phone' => '+1655513432',
+                    'otp' => '123456'
+                ]
+            ]
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Create phone session for this project and check if the mock number is used
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/phone', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => 'unique()',
+            'phone' => '+1655513432',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $userId = $response['body']['userId'];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => $userId,
+            'secret' => '654321', // Try a random code
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => $userId,
+            'secret' => '123456',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
     }
 
     /**
@@ -1615,8 +1853,8 @@ class ProjectsConsoleClientTest extends Scope
 
 
         /**
-        * Reset
-        */
+         * Reset
+         */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2705,6 +2943,99 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
+    /**
+     * @depends testCreateProject
+     */
+    public function testCreateProjectKeyOutdated($data): void
+    {
+        $id = $data['projectId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_POST, '/mock/api-key-unprefixed', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $id
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertContains('users.read', $response['body']['scopes']);
+        $this->assertNotEmpty($response['body']['secret']);
+        $this->assertStringStartsNotWith(API_KEY_STANDARD . '_', $response['body']['secret']);
+
+        $keyId = $response['body']['$id'];
+        $secret = $response['body']['secret'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $secret
+        ], []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/keys/' . $keyId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+    }
+
+    // JWT Keys
+
+    /**
+     * @depends testCreateProject
+     */
+    public function testJWTKey($data): void
+    {
+        $id = $data['projectId'] ?? '';
+
+        // Create JWT key
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/jwts', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'duration' => 5,
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['jwt']);
+
+        $jwt = $response['body']['jwt'];
+
+        // Ensure JWT key works
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $jwt,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('users', $response['body']);
+
+        // Ensure JWT key respect scopes
+        $response = $this->client->call(Client::METHOD_GET, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $jwt,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Ensure JWT key expires
+        \sleep(10);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $jwt,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
     // Platforms
 
     /**
@@ -3461,505 +3792,5 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(404, $project['headers']['status-code']);
 
         return $data;
-    }
-
-    public function testTenantIsolation(): void
-    {
-        // Create a team and a project
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
-            'name' => 'Amazing Team',
-        ]);
-
-        $teamId = $team['body']['$id'];
-
-        // Project-level isolation
-        $project1 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-shared-tables' => false
-        ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
-            'name' => 'Amazing Project',
-            'teamId' => $teamId,
-            'region' => 'default'
-        ]);
-
-        // Application level isolation (shared tables)
-        $project2 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-shared-tables' => true
-        ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
-            'name' => 'Amazing Project',
-            'teamId' => $teamId,
-            'region' => 'default'
-        ]);
-
-        // Project-level isolation
-        $project3 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-shared-tables' => false
-        ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
-            'name' => 'Amazing Project',
-            'teamId' => $teamId,
-            'region' => 'default'
-        ]);
-
-        // Application level isolation (shared tables)
-        $project4 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-shared-tables' => true
-        ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
-            'name' => 'Amazing Project',
-            'teamId' => $teamId,
-            'region' => 'default'
-        ]);
-
-        // Create and API key in each project
-        $key1 = $this->client->call(Client::METHOD_POST, '/projects/' . $project1['body']['$id'] . '/keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Key Test',
-            'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.read', 'attributes.write', 'indexes.read', 'indexes.write', 'documents.read', 'documents.write', 'users.read', 'users.write'],
-        ]);
-
-        $key2 = $this->client->call(Client::METHOD_POST, '/projects/' . $project2['body']['$id'] . '/keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Key Test',
-            'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.read', 'attributes.write', 'indexes.read', 'indexes.write', 'documents.read', 'documents.write', 'users.read', 'users.write'],
-        ]);
-
-        $key3 = $this->client->call(Client::METHOD_POST, '/projects/' . $project3['body']['$id'] . '/keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Key Test',
-            'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.read', 'attributes.write', 'indexes.read', 'indexes.write', 'documents.read', 'documents.write', 'users.read', 'users.write'],
-        ]);
-
-        $key4 = $this->client->call(Client::METHOD_POST, '/projects/' . $project4['body']['$id'] . '/keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Key Test',
-            'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.read', 'attributes.write', 'indexes.read', 'indexes.write', 'documents.read', 'documents.write', 'users.read', 'users.write'],
-        ]);
-
-        // Create a database in each project
-        $database1 = $this->client->call(Client::METHOD_POST, '/databases', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project1['body']['$id'],
-            'x-appwrite-key' => $key1['body']['secret']
-        ], [
-            'databaseId' => ID::unique(),
-            'name' => 'Amazing Database',
-        ]);
-
-        $database2 = $this->client->call(Client::METHOD_POST, '/databases', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project2['body']['$id'],
-            'x-appwrite-key' => $key2['body']['secret']
-        ], [
-            'databaseId' => ID::unique(),
-            'name' => 'Amazing Database',
-        ]);
-
-        $database3 = $this->client->call(Client::METHOD_POST, '/databases', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project3['body']['$id'],
-            'x-appwrite-key' => $key3['body']['secret']
-        ], [
-            'databaseId' => ID::unique(),
-            'name' => 'Amazing Database',
-        ]);
-
-        $database4 = $this->client->call(Client::METHOD_POST, '/databases', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project4['body']['$id'],
-            'x-appwrite-key' => $key4['body']['secret']
-        ], [
-            'databaseId' => ID::unique(),
-            'name' => 'Amazing Database',
-        ]);
-
-        // Create a collection in each project
-        $collection1 = $this->client->call(Client::METHOD_POST, '/databases/' . $database1['body']['$id'] . '/collections', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project1['body']['$id'],
-            'x-appwrite-key' => $key1['body']['secret']
-        ], [
-            'databaseId' => $database1['body']['$id'],
-            'collectionId' => ID::unique(),
-            'name' => 'Amazing Collection',
-        ]);
-
-        $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $database2['body']['$id'] . '/collections', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project2['body']['$id'],
-            'x-appwrite-key' => $key2['body']['secret']
-        ], [
-            'databaseId' => $database2['body']['$id'],
-            'collectionId' => ID::unique(),
-            'name' => 'Amazing Collection',
-        ]);
-
-        $collection3 = $this->client->call(Client::METHOD_POST, '/databases/' . $database3['body']['$id'] . '/collections', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project3['body']['$id'],
-            'x-appwrite-key' => $key3['body']['secret']
-        ], [
-            'databaseId' => $database3['body']['$id'],
-            'collectionId' => ID::unique(),
-            'name' => 'Amazing Collection',
-        ]);
-
-        $collection4 = $this->client->call(Client::METHOD_POST, '/databases/' . $database4['body']['$id'] . '/collections', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project4['body']['$id'],
-            'x-appwrite-key' => $key4['body']['secret']
-        ], [
-            'databaseId' => $database4['body']['$id'],
-            'collectionId' => ID::unique(),
-            'name' => 'Amazing Collection',
-        ]);
-
-        // Create an attribute in each project
-        $attribute1 = $this->client->call(Client::METHOD_POST, '/databases/' . $database1['body']['$id'] . '/collections/' . $collection1['body']['$id'] . '/attributes/string', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project1['body']['$id'],
-            'x-appwrite-key' => $key1['body']['secret']
-        ], [
-            'databaseId' => $database1['body']['$id'],
-            'collectionId' => $collection1['body']['$id'],
-            'key' => ID::unique(),
-            'size' => 255,
-            'required' => true
-        ]);
-
-        $attribute2 = $this->client->call(Client::METHOD_POST, '/databases/' . $database2['body']['$id'] . '/collections/' . $collection2['body']['$id'] . '/attributes/string', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project2['body']['$id'],
-            'x-appwrite-key' => $key2['body']['secret']
-        ], [
-            'databaseId' => $database2['body']['$id'],
-            'collectionId' => $collection2['body']['$id'],
-            'key' => ID::unique(),
-            'size' => 255,
-            'required' => true
-        ]);
-
-        $attribute3 = $this->client->call(Client::METHOD_POST, '/databases/' . $database3['body']['$id'] . '/collections/' . $collection3['body']['$id'] . '/attributes/string', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project3['body']['$id'],
-            'x-appwrite-key' => $key3['body']['secret']
-        ], [
-            'databaseId' => $database3['body']['$id'],
-            'collectionId' => $collection3['body']['$id'],
-            'key' => ID::unique(),
-            'size' => 255,
-            'required' => true
-        ]);
-
-        $attribute4 = $this->client->call(Client::METHOD_POST, '/databases/' . $database4['body']['$id'] . '/collections/' . $collection4['body']['$id'] . '/attributes/string', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project4['body']['$id'],
-            'x-appwrite-key' => $key4['body']['secret']
-        ], [
-            'databaseId' => $database4['body']['$id'],
-            'collectionId' => $collection4['body']['$id'],
-            'key' => ID::unique(),
-            'size' => 255,
-            'required' => true
-        ]);
-
-        // Wait for attributes
-        \sleep(2);
-
-        // Create an index in each project
-        $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $database1['body']['$id'] . '/collections/' . $collection1['body']['$id'] . '/indexes', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project1['body']['$id'],
-            'x-appwrite-key' => $key1['body']['secret']
-        ], [
-            'databaseId' => $database1['body']['$id'],
-            'collectionId' => $collection1['body']['$id'],
-            'key' => ID::unique(),
-            'type' => Database::INDEX_KEY,
-            'attributes' => [$attribute1['body']['key']],
-        ]);
-
-        $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $database2['body']['$id'] . '/collections/' . $collection2['body']['$id'] . '/indexes', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project2['body']['$id'],
-            'x-appwrite-key' => $key2['body']['secret']
-        ], [
-            'databaseId' => $database2['body']['$id'],
-            'collectionId' => $collection2['body']['$id'],
-            'key' => ID::unique(),
-            'type' => Database::INDEX_KEY,
-            'attributes' => [$attribute2['body']['key']],
-        ]);
-
-        $index3 = $this->client->call(Client::METHOD_POST, '/databases/' . $database3['body']['$id'] . '/collections/' . $collection3['body']['$id'] . '/indexes', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project3['body']['$id'],
-            'x-appwrite-key' => $key3['body']['secret']
-        ], [
-            'databaseId' => $database3['body']['$id'],
-            'collectionId' => $collection3['body']['$id'],
-            'key' => ID::unique(),
-            'type' => Database::INDEX_KEY,
-            'attributes' => [$attribute3['body']['key']],
-        ]);
-
-        $index4 = $this->client->call(Client::METHOD_POST, '/databases/' . $database4['body']['$id'] . '/collections/' . $collection4['body']['$id'] . '/indexes', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project4['body']['$id'],
-            'x-appwrite-key' => $key4['body']['secret']
-        ], [
-            'databaseId' => $database4['body']['$id'],
-            'collectionId' => $collection4['body']['$id'],
-            'key' => ID::unique(),
-            'type' => Database::INDEX_KEY,
-            'attributes' => [$attribute4['body']['key']],
-        ]);
-
-        // Wait for indexes
-        \sleep(2);
-
-        // Assert that each project has only 1 database, 1 collection, 1 attribute and 1 index
-        $databasesProject1 = $this->client->call(Client::METHOD_GET, '/databases', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project1['body']['$id'],
-            'x-appwrite-key' => $key1['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $databasesProject1['body']['total']);
-        $this->assertEquals(1, \count($databasesProject1['body']['databases']));
-
-        $databasesProject2 = $this->client->call(Client::METHOD_GET, '/databases', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project2['body']['$id'],
-            'x-appwrite-key' => $key2['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $databasesProject2['body']['total']);
-        $this->assertEquals(1, \count($databasesProject2['body']['databases']));
-
-        $databasesProject3 = $this->client->call(Client::METHOD_GET, '/databases', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project3['body']['$id'],
-            'x-appwrite-key' => $key3['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $databasesProject3['body']['total']);
-        $this->assertEquals(1, \count($databasesProject3['body']['databases']));
-
-        $databasesProject4 = $this->client->call(Client::METHOD_GET, '/databases', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project4['body']['$id'],
-            'x-appwrite-key' => $key4['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $databasesProject4['body']['total']);
-        $this->assertEquals(1, \count($databasesProject4['body']['databases']));
-
-        $collectionsProject1 = $this->client->call(Client::METHOD_GET, '/databases/' . $database1['body']['$id'] . '/collections', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project1['body']['$id'],
-            'x-appwrite-key' => $key1['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $collectionsProject1['body']['total']);
-        $this->assertEquals(1, \count($collectionsProject1['body']['collections']));
-
-        $collectionsProject2 = $this->client->call(Client::METHOD_GET, '/databases/' . $database2['body']['$id'] . '/collections', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project2['body']['$id'],
-            'x-appwrite-key' => $key2['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $collectionsProject2['body']['total']);
-        $this->assertEquals(1, \count($collectionsProject2['body']['collections']));
-
-        $collectionsProject3 = $this->client->call(Client::METHOD_GET, '/databases/' . $database3['body']['$id'] . '/collections', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project3['body']['$id'],
-            'x-appwrite-key' => $key3['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $collectionsProject3['body']['total']);
-        $this->assertEquals(1, \count($collectionsProject3['body']['collections']));
-
-        $collectionsProject4 = $this->client->call(Client::METHOD_GET, '/databases/' . $database4['body']['$id'] . '/collections', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project4['body']['$id'],
-            'x-appwrite-key' => $key4['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $collectionsProject4['body']['total']);
-        $this->assertEquals(1, \count($collectionsProject4['body']['collections']));
-
-        $attributesProject1 = $this->client->call(Client::METHOD_GET, '/databases/' . $database1['body']['$id'] . '/collections/' . $collection1['body']['$id'] . '/attributes', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project1['body']['$id'],
-            'x-appwrite-key' => $key1['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $attributesProject1['body']['total']);
-        $this->assertEquals(1, \count($attributesProject1['body']['attributes']));
-        $this->assertEquals('available', $attributesProject1['body']['attributes'][0]['status']);
-
-        $attributesProject2 = $this->client->call(Client::METHOD_GET, '/databases/' . $database2['body']['$id'] . '/collections/' . $collection2['body']['$id'] . '/attributes', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project2['body']['$id'],
-            'x-appwrite-key' => $key2['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $attributesProject2['body']['total']);
-        $this->assertEquals(1, \count($attributesProject2['body']['attributes']));
-        $this->assertEquals('available', $attributesProject2['body']['attributes'][0]['status']);
-
-        $attributesProject3 = $this->client->call(Client::METHOD_GET, '/databases/' . $database3['body']['$id'] . '/collections/' . $collection3['body']['$id'] . '/attributes', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project3['body']['$id'],
-            'x-appwrite-key' => $key3['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $attributesProject3['body']['total']);
-        $this->assertEquals(1, \count($attributesProject3['body']['attributes']));
-        $this->assertEquals('available', $attributesProject3['body']['attributes'][0]['status']);
-
-        $attributesProject4 = $this->client->call(Client::METHOD_GET, '/databases/' . $database4['body']['$id'] . '/collections/' . $collection4['body']['$id'] . '/attributes', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project4['body']['$id'],
-            'x-appwrite-key' => $key4['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $attributesProject4['body']['total']);
-        $this->assertEquals(1, \count($attributesProject4['body']['attributes']));
-        $this->assertEquals('available', $attributesProject4['body']['attributes'][0]['status']);
-
-        $indexesProject1 = $this->client->call(Client::METHOD_GET, '/databases/' . $database1['body']['$id'] . '/collections/' . $collection1['body']['$id'] . '/indexes', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project1['body']['$id'],
-            'x-appwrite-key' => $key1['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $indexesProject1['body']['total']);
-        $this->assertEquals(1, \count($indexesProject1['body']['indexes']));
-
-        $indexesProject2 = $this->client->call(Client::METHOD_GET, '/databases/' . $database2['body']['$id'] . '/collections/' . $collection2['body']['$id'] . '/indexes', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project2['body']['$id'],
-            'x-appwrite-key' => $key2['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $indexesProject2['body']['total']);
-        $this->assertEquals(1, \count($indexesProject2['body']['indexes']));
-
-        $indexesProject3 = $this->client->call(Client::METHOD_GET, '/databases/' . $database3['body']['$id'] . '/collections/' . $collection3['body']['$id'] . '/indexes', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project3['body']['$id'],
-            'x-appwrite-key' => $key3['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $indexesProject3['body']['total']);
-        $this->assertEquals(1, \count($indexesProject3['body']['indexes']));
-
-        $indexesProject4 = $this->client->call(Client::METHOD_GET, '/databases/' . $database4['body']['$id'] . '/collections/' . $collection4['body']['$id'] . '/indexes', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project4['body']['$id'],
-            'x-appwrite-key' => $key4['body']['secret']
-        ]);
-
-        $this->assertEquals(1, $indexesProject4['body']['total']);
-        $this->assertEquals(1, \count($indexesProject4['body']['indexes']));
-
-        // Attempt to read cross-type resources
-        $collectionProject2WithProject1Key = $this->client->call(Client::METHOD_GET, '/databases/' . $database2['body']['$id'] . '/collections/' . $collection2['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project1['body']['$id'],
-            'x-appwrite-key' => $key1['body']['secret']
-        ]);
-
-        $this->assertEquals(404, $collectionProject2WithProject1Key['headers']['status-code']);
-
-        $collectionProject1WithProject2Key = $this->client->call(Client::METHOD_GET, '/databases/' . $database1['body']['$id'] . '/collections/' . $collection1['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project2['body']['$id'],
-            'x-appwrite-key' => $key2['body']['secret']
-        ]);
-
-        $this->assertEquals(404, $collectionProject1WithProject2Key['headers']['status-code']);
-
-        // Attempt to read cross-tenant resources
-        $collectionProject3WithProject1Key = $this->client->call(Client::METHOD_GET, '/databases/' . $database3['body']['$id'] . '/collections/' . $collection3['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project1['body']['$id'],
-            'x-appwrite-key' => $key1['body']['secret']
-        ]);
-
-        $this->assertEquals(404, $collectionProject3WithProject1Key['headers']['status-code']);
-
-        $collectionProject1WithProject3Key = $this->client->call(Client::METHOD_GET, '/databases/' . $database1['body']['$id'] . '/collections/' . $collection1['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project3['body']['$id'],
-            'x-appwrite-key' => $key3['body']['secret']
-        ]);
-
-        $this->assertEquals(404, $collectionProject1WithProject3Key['headers']['status-code']);
-
-        // Assert that shared project resources can have the same ID as they're unique on tenant + ID not just ID
-        $collection5 = $this->client->call(Client::METHOD_POST, '/databases/' . $database2['body']['$id'] . '/collections', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project2['body']['$id'],
-            'x-appwrite-key' => $key2['body']['secret']
-        ], [
-            'databaseId' => $database2['body']['$id'],
-            'collectionId' => $collection4['body']['$id'],
-            'name' => 'Amazing Collection',
-        ]);
-
-        $this->assertEquals(201, $collection5['headers']['status-code']);
-
-        // Assert that users across projects on shared tables can have the same email as they're unique on tenant + email not just email
-        $user1 = $this->client->call(Client::METHOD_POST, '/users', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project2['body']['$id'],
-            'x-appwrite-key' => $key2['body']['secret']
-        ], [
-            'userId' => 'user',
-            'email' => 'test@appwrite.io',
-            'password' => 'password',
-            'name' => 'Test User',
-        ]);
-
-        $this->assertEquals(201, $user1['headers']['status-code']);
-
-        $user2 = $this->client->call(Client::METHOD_POST, '/users', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project4['body']['$id'],
-            'x-appwrite-key' => $key4['body']['secret']
-        ], [
-            'userId' => 'user',
-            'email' => 'test@appwrite.io',
-            'password' => 'password',
-            'name' => 'Test User',
-        ]);
-
-        $this->assertEquals(201, $user2['headers']['status-code']);
     }
 }

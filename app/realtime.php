@@ -13,7 +13,7 @@ use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -40,7 +40,7 @@ require_once __DIR__ . '/init.php';
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 // Allows overriding
-if (!function_exists("getConsoleDB")) {
+if (!function_exists('getConsoleDB')) {
     function getConsoleDB(): Database
     {
         global $register;
@@ -66,7 +66,7 @@ if (!function_exists("getConsoleDB")) {
 }
 
 // Allows overriding
-if (!function_exists("getProjectDB")) {
+if (!function_exists('getProjectDB')) {
     function getProjectDB(Document $project): Database
     {
         global $register;
@@ -92,7 +92,7 @@ if (!function_exists("getProjectDB")) {
 
         $database = new Database($adapter, getCache());
 
-        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
@@ -113,7 +113,7 @@ if (!function_exists("getProjectDB")) {
 }
 
 // Allows overriding
-if (!function_exists("getCache")) {
+if (!function_exists('getCache')) {
     function getCache(): Cache
     {
         global $register;
@@ -135,7 +135,14 @@ if (!function_exists("getCache")) {
     }
 }
 
-$realtime = new Realtime();
+if (!function_exists('getRealtime')) {
+    function getRealtime(): Realtime
+    {
+        return new Realtime();
+    }
+}
+
+$realtime = getRealtime();
 
 /**
  * Table for statistics across all workers.
@@ -178,15 +185,18 @@ $logError = function (Throwable $error, string $action) use ($register) {
         $log->addExtra('file', $error->getFile());
         $log->addExtra('line', $error->getLine());
         $log->addExtra('trace', $error->getTraceAsString());
-        $log->addExtra('detailedTrace', $error->getTrace());
 
         $log->setAction($action);
 
         $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
         $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-        $responseCode = $logger->addLog($log);
-        Console::info('Realtime log pushed with status code: ' . $responseCode);
+        try {
+            $responseCode = $logger->addLog($log);
+            Console::info('Error log pushed with status code: ' . $responseCode);
+        } catch (Throwable $th) {
+            Console::error('Error pushing log: ' . $th->getMessage());
+        }
     }
 
     Console::error('[Error] Type: ' . get_class($error));
@@ -233,29 +243,32 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    // Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
-    //     $payload = [];
-    //     foreach ($stats as $projectId => $value) {
-    //         $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
-    //     }
-    //     if (empty($payload) || empty($statsDocument)) {
-    //         return;
-    //     }
+    // TODO: Remove this if check once it doesn't cause issues for cloud
+    if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+        Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
+            $payload = [];
+            foreach ($stats as $projectId => $value) {
+                $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
+            }
+            if (empty($payload) || empty($statsDocument)) {
+                return;
+            }
 
-    //     try {
-    //         $database = getConsoleDB();
+            try {
+                $database = getConsoleDB();
 
-    //         $statsDocument
-    //             ->setAttribute('timestamp', DateTime::now())
-    //             ->setAttribute('value', json_encode($payload));
+                $statsDocument
+                    ->setAttribute('timestamp', DateTime::now())
+                    ->setAttribute('value', json_encode($payload));
 
-    //         Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
-    //     } catch (Throwable $th) {
-    //         call_user_func($logError, $th, "updateWorkerDocument");
-    //     } finally {
-    //         $register->get('pools')->reclaim();
-    //     }
-    // });
+                Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+            } catch (Throwable $th) {
+                call_user_func($logError, $th, "updateWorkerDocument");
+            } finally {
+                $register->get('pools')->reclaim();
+            }
+        });
+    }
 });
 
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
@@ -268,54 +281,57 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
-        // if ($realtime->hasSubscriber('console', Role::users()->toString(), 'project')) {
-        //     $database = getConsoleDB();
+        // TODO: Remove this if check once it doesn't cause issues for cloud
+        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+            if ($realtime->hasSubscriber('console', Role::users()->toString(), 'project')) {
+                $database = getConsoleDB();
 
-        //     $payload = [];
+                $payload = [];
 
-        //     $list = Authorization::skip(fn () => $database->find('realtime', [
-        //         Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
-        //     ]));
+                $list = Authorization::skip(fn () => $database->find('realtime', [
+                    Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
+                ]));
 
-        //     /**
-        //      * Aggregate stats across containers.
-        //      */
-        //     foreach ($list as $document) {
-        //         foreach (json_decode($document->getAttribute('value')) as $projectId => $value) {
-        //             if (array_key_exists($projectId, $payload)) {
-        //                 $payload[$projectId] +=  $value;
-        //             } else {
-        //                 $payload[$projectId] =  $value;
-        //             }
-        //         }
-        //     }
+                /**
+                 * Aggregate stats across containers.
+                 */
+                foreach ($list as $document) {
+                    foreach (json_decode($document->getAttribute('value')) as $projectId => $value) {
+                        if (array_key_exists($projectId, $payload)) {
+                            $payload[$projectId] += $value;
+                        } else {
+                            $payload[$projectId] = $value;
+                        }
+                    }
+                }
 
-        //     foreach ($stats as $projectId => $value) {
-        //         if (!array_key_exists($projectId, $payload)) {
-        //             continue;
-        //         }
+                foreach ($stats as $projectId => $value) {
+                    if (!array_key_exists($projectId, $payload)) {
+                        continue;
+                    }
 
-        //         $event = [
-        //             'project' => 'console',
-        //             'roles' => ['team:' . $stats->get($projectId, 'teamId')],
-        //             'data' => [
-        //                 'events' => ['stats.connections'],
-        //                 'channels' => ['project'],
-        //                 'timestamp' => DateTime::formatTz(DateTime::now()),
-        //                 'payload' => [
-        //                     $projectId => $payload[$projectId]
-        //                 ]
-        //             ]
-        //         ];
+                    $event = [
+                        'project' => 'console',
+                        'roles' => ['team:' . $stats->get($projectId, 'teamId')],
+                        'data' => [
+                            'events' => ['stats.connections'],
+                            'channels' => ['project'],
+                            'timestamp' => DateTime::formatTz(DateTime::now()),
+                            'payload' => [
+                                $projectId => $payload[$projectId]
+                            ]
+                        ]
+                    ];
 
-        //         $server->send($realtime->getSubscribers($event), json_encode([
-        //             'type' => 'event',
-        //             'data' => $event['data']
-        //         ]));
-        //     }
+                    $server->send($realtime->getSubscribers($event), json_encode([
+                        'type' => 'event',
+                        'data' => $event['data']
+                    ]));
+                }
 
-        //     $register->get('pools')->reclaim();
-        // }
+                $register->get('pools')->reclaim();
+            }
+        }
         /**
          * Sending test message for SDK E2E tests every 5 seconds.
          */
@@ -375,8 +391,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $user = $database->getDocument('users', $userId);
 
                         $roles = Auth::getRoles($user);
+                        $channels = $realtime->connections[$connection]['channels'];
 
-                        $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
+                        $realtime->unsubscribe($connection);
+                        $realtime->subscribe($projectId, $connection, $roles, $channels);
 
                         $register->get('pools')->reclaim();
                     }

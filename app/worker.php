@@ -34,7 +34,6 @@ use Utopia\Queue\Connection;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
-use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 
 Authorization::disable();
@@ -59,7 +58,7 @@ Server::setResource('project', function (Message $message, Database $dbForConsol
     $payload = $message->getPayload() ?? [];
     $project = new Document($payload['project'] ?? []);
 
-    if ($project->getId() === 'console') {
+    if ($project->getId() === 'console' || $project->isEmpty() || ! empty($project->getInternalId())) {
         return $project;
     }
 
@@ -94,7 +93,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+    if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
         $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
@@ -127,7 +126,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
         if (isset($databases[$dsn->getHost()])) {
             $database = $databases[$dsn->getHost()];
 
-            if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
@@ -151,7 +150,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
         $databases[$dsn->getHost()] = $database;
 
-        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
@@ -273,13 +272,10 @@ Server::setResource('deviceForCache', function (Document $project) {
     return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 }, ['project']);
 
-Server::setResource('deviceForLocalFiles', function (Document $project) {
-    return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-}, ['project']);
 
 $pools = $register->get('pools');
 $platform = new Appwrite();
-$args = $_SERVER['argv'];
+$args = $platform->getEnv('argv');
 
 if (!isset($args[1])) {
     Console::error('Missing worker name');
@@ -288,11 +284,6 @@ if (!isset($args[1])) {
 
 \array_shift($args);
 $workerName = $args[0];
-$workerIndex = $args[1] ?? '';
-
-if (!empty($workerIndex)) {
-    $workerName .= '_' . $workerIndex;
-}
 
 if (\str_starts_with($workerName, 'databases')) {
     $queueName = System::getEnv('_APP_QUEUE_NAME', 'database_db_main');
@@ -337,10 +328,6 @@ $worker
         $pools->reclaim();
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
-        if ($error instanceof PDOException) {
-            throw $error;
-        }
-
         if ($logger) {
             $log->setNamespace("appwrite-worker");
             $log->setServer(\gethostname());
@@ -354,14 +341,17 @@ $worker
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
             $log->addExtra('roles', Authorization::getRoles());
 
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $responseCode = $logger->addLog($log);
-            Console::info('Usage stats log pushed with status code: ' . $responseCode);
+            try {
+                $responseCode = $logger->addLog($log);
+                Console::info('Error log pushed with status code: ' . $responseCode);
+            } catch (Throwable $th) {
+                Console::error('Error pushing log: ' . $th->getMessage());
+            }
         }
 
         Console::error('[Error] Type: ' . get_class($error));

@@ -11,7 +11,7 @@ return [
     /** General Errors */
     Exception::GENERAL_UNKNOWN => [
         'name' => Exception::GENERAL_UNKNOWN,
-        'description' => 'An unknown error has occured. Please check the logs for more information.',
+        'description' => 'An unknown error has occurred. Please check the logs for more information.',
         'code' => 500,
     ],
     Exception::GENERAL_MOCK => [
@@ -134,7 +134,7 @@ return [
     Exception::USER_COUNT_EXCEEDED => [
         'name' => Exception::USER_COUNT_EXCEEDED,
         'description' => 'The current project has exceeded the maximum number of users. Please check your user limit in the Appwrite console.',
-        'code' => 501,
+        'code' => 400,
     ],
     Exception::USER_CONSOLE_COUNT_EXCEEDED => [
         'name' => Exception::USER_CONSOLE_COUNT_EXCEEDED,
@@ -284,7 +284,7 @@ return [
     ],
     Exception::USER_CHALLENGE_REQUIRED => [
         'name' => Exception::USER_CHALLENGE_REQUIRED,
-        'description' => 'A recently succeessful challenge is required to complete this action. A challenge is considered recent for 5 minutes.',
+        'description' => 'A recently successful challenge is required to complete this action. A challenge is considered recent for 5 minutes.',
         'code' => 401,
     ],
     Exception::USER_OAUTH2_BAD_REQUEST => [
@@ -331,6 +331,11 @@ return [
         'name' => Exception::USER_API_KEY_AND_SESSION_SET,
         'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
+    ],
+    Exception::API_KEY_EXPIRED => [
+        'name' => Exception::API_KEY_EXPIRED,
+        'description' => 'The dynamic API key has expired. Please don\'t use dynamic API keys for more than duration of the execution.',
+        'code' => 401,
     ],
 
     /** Teams */
@@ -489,7 +494,7 @@ return [
     ],
     Exception::REPOSITORY_NOT_FOUND => [
         'name' => Exception::REPOSITORY_NOT_FOUND,
-        'description' => 'Repository with the requested ID could not be found. Check to see if the ID is correct, or create the respository.',
+        'description' => 'Repository with the requested ID could not be found. Check to see if the ID is correct, or create the repository.',
         'code' => 404,
     ],
     Exception::PROVIDER_CONTRIBUTION_CONFLICT => [
@@ -499,7 +504,7 @@ return [
     ],
     Exception::GENERAL_PROVIDER_FAILURE => [
         'name' => Exception::GENERAL_PROVIDER_FAILURE,
-        'description' => 'VCS (Version Control System) provider failed to proccess the request. We believe this is an error with the VCS provider. Try again, or contact support for more information.',
+        'description' => 'VCS (Version Control System) provider failed to process the request. We believe this is an error with the VCS provider. Try again, or contact support for more information.',
         'code' => 400,
     ],
 
@@ -519,6 +524,16 @@ return [
         'description' => 'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".',
         'code' => 404,
     ],
+    Exception::FUNCTION_SYNCHRONOUS_TIMEOUT => [
+        'name' => Exception::FUNCTION_SYNCHRONOUS_TIMEOUT,
+        'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
+        'code' => 408,
+    ],
+    Exception::FUNCTION_TEMPLATE_NOT_FOUND => [
+        'name' => Exception::FUNCTION_TEMPLATE_NOT_FOUND,
+        'description' => 'Function Template with the requested ID could not be found.',
+        'code' => 404,
+    ],
 
     /** Builds  */
     Exception::BUILD_NOT_FOUND => [
@@ -536,6 +551,11 @@ return [
         'description' => 'Build with the requested ID is already in progress. Please wait before you can retry.',
         'code' => 400,
     ],
+    Exception::BUILD_ALREADY_COMPLETED => [
+        'name' => Exception::BUILD_ALREADY_COMPLETED,
+        'description' => 'Build with the requested ID is already completed and cannot be canceled.',
+        'code' => 400,
+    ],
 
     /** Deployments */
     Exception::DEPLOYMENT_NOT_FOUND => [
@@ -549,6 +569,12 @@ return [
         'name' => Exception::EXECUTION_NOT_FOUND,
         'description' => 'Execution with the requested ID could not be found.',
         'code' => 404,
+    ],
+
+    Exception::EXECUTION_IN_PROGRESS => [
+        'name' => Exception::EXECUTION_IN_PROGRESS,
+        'description' => 'Can\'t delete ongoing execution. Please wait for execution to finish before deleting it.',
+        'code' => 400,
     ],
 
     /** Databases */
@@ -671,6 +697,11 @@ return [
     Exception::RELATIONSHIP_VALUE_INVALID => [
         'name' => Exception::RELATIONSHIP_VALUE_INVALID,
         'description' => 'The relationship value is invalid.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_INVALID_RESIZE => [
+        'name' => Exception::ATTRIBUTE_INVALID_RESIZE,
+        'description' => "Existing data is too large for new size, truncate your existing data then try again.",
         'code' => 400,
     ],
 

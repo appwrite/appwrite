@@ -202,6 +202,8 @@ trait AccountBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($userId, $response['body']['$id']);
+        $this->assertEquals($userId, $response['body']['$id']);
+        $this->assertTrue($response['body']['emailVerification']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', array_merge([
             'origin' => 'http://localhost',
