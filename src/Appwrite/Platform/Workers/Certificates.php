@@ -160,7 +160,10 @@ class Certificates extends Action
 
             try {
                 // Generate certificate files using Let's Encrypt
-                $letsEncryptData = $this->issueCertificate($folder, $domain->get(), $email);    
+                $letsEncryptData = $this->issueCertificate($folder, $domain->get(), $email);   
+
+                // Give certificates to Traefik
+                $this->applyCertificateFiles($folder, $domain->get(), $letsEncryptData);
             } catch (\Throwable $th) {
                 Console::error('Failed to generate Lets Encrypt certificate');
             }
@@ -175,9 +178,6 @@ class Certificates extends Action
             } catch (\Throwable $th) {
                 Console::error('Failed to add custom hostname to registrar: ' . $th->getMessage());
             }
-
-            // Give certificates to Traefik
-            $this->applyCertificateFiles($folder, $domain->get(), $letsEncryptData);
 
             // Update certificate info stored in database
             $certificate->setAttribute('renewDate', $this->getRenewDate($domain->get()));
@@ -222,13 +222,13 @@ class Certificates extends Action
     {
         $client = new Client();
         $client
-            ->addHeader('Content-Type', Client::CONTENT_TYPE_APPLICATION_JSON)
+            ->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON)
              ->addHeader('Authorization', 'Bearer ' . System::getEnv('_APP_SYSTEM_CLOUDFLARE_TOKEN'));
 
         $response = $client->fetch("https://api.cloudflare.com/client/v4/zones/b2d0e62383d3c0f6299efab107af2c7a/custom_hostnames", Client::METHOD_POST, [
             'custom_metadata' => [
-                'projectId' => $project->getId(),
-                'organizationId' => $project->getAttribute('teamId')
+                'projectId' => $project->getId() ?? '',
+                'organizationId' => $project->getAttribute('teamId', '')
             ],
             'hostname' => $hostname,
             'ssl' => [
