@@ -222,7 +222,12 @@ class Certificates extends Action
                 'projectId' => $project->getId(),
                 'organizationId' => $project->getAttribute('teamId')
             ],
-            'hostname' => $hostname
+            'hostname' => $hostname,
+            'ssl' => [
+                "method" => "http",
+                "type" => "dv",
+                "wildcard" => false
+            ]
         ]);
 
         if ($response->getStatusCode() !== 200) {
