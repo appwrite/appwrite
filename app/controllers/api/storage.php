@@ -11,6 +11,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Buckets;
 use Appwrite\Utopia\Database\Validator\Queries\Files;
+use Appwrite\Utopia\Database\Validator\Queries\FileTokens;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -23,6 +24,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Image\Image;
@@ -40,6 +42,7 @@ use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -854,10 +857,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
+    ->inject('resourceToken')
     ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceForFiles, Device $deviceForLocal) {
+    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Request $request, Response $response, Document $project, Database $dbForProject, Document $resourceToken, string $mode, Device $deviceForFiles, Device $deviceForLocal) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -872,17 +876,22 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
+        $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') == $bucket->getInternalId();
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
-        if (!$fileSecurity && !$valid) {
+        if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($fileSecurity && !$valid) {
+        if ($fileSecurity && !$valid && !$isToken) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
+
+        if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getInternalId()) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         if ($file->isEmpty()) {
@@ -1641,6 +1650,465 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $response->noContent();
     });
 
+/** File Tokens */
+App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
+    ->desc('Create file token')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.write')
+    ->label('audits.event', 'fileToken.create')
+    ->label('event', 'buckets.[bucketId].files.[fileId].tokens.[tokenId].create')
+    ->label('audits.resource', 'token/{response.$id}')
+    ->label('usage.metric', 'fileTokens.{scope}.requests.create')
+    ->label('usage.params', ['bucketId:{request.bucketId}', 'fileId:{request.fileId}'])
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'createFileToken')
+    ->label('sdk.description', '/docs/references/storage/create-file-token.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_RESOURCE_TOKEN)
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
+    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('expire', null, new Nullable(new DatetimeValidator()), 'Token expiry date', true)
+    ->param('permissions', [], new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('user')
+    ->inject('queueForEvents')
+    ->action(function (string $bucketId, string $fileId, ?string $expire, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents) {
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+        $validator = new Authorization(Database::PERMISSION_READ);
+        $valid = $validator->isValid($bucket->getRead());
+        if (!$fileSecurity && !$valid) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        if ($fileSecurity && !$valid) {
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+        } else {
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
+
+        if ($file->isEmpty()) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        $token = $dbForProject->createDocument('resourceTokens', new Document([
+            '$id' => ID::unique(),
+            'secret' => Auth::tokenGenerator(128),
+            'resourceId' => $bucketId . ':' . $fileId,
+            'resourceInternalId' => $bucket->getInternalId() . ':' . $file->getInternalId(),
+            'resourceType' => 'file',
+            'expire' => $expire,
+            '$permissions' => $permissions
+        ]));
+
+        $queueForEvents
+            ->setParam('bucketId', $bucket->getId())
+            ->setParam('fileId', $file->getId())
+            ->setParam('tokenId', $token->getId())
+            ->setContext('bucket', $bucket)
+        ;
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($token, Response::MODEL_RESOURCE_TOKEN);
+    });
+
+App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
+    ->desc('List file tokens')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('usage.metric', 'fileTokens.{scope}.requests.read')
+    ->label('usage.params', ['bucketId:{request.bucketId}'])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'listFileTokens')
+    ->label('sdk.description', '/docs/references/storage/list-file-tokens.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_RESOURCE_TOKEN_LIST)
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
+    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('queries', [], new FileTokens(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', FileTokens::ALLOWED_ATTRIBUTES), true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $bucketId, string $fileId, array $queries, Response $response, Database $dbForProject) {
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+        $validator = new Authorization(Database::PERMISSION_READ);
+        $valid = $validator->isValid($bucket->getRead());
+        if (!$fileSecurity && !$valid) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        if ($fileSecurity && !$valid) {
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+        } else {
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
+
+        if ($file->isEmpty()) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        $queries = Query::parseQueries($queries);
+        // Get cursor document if there was a cursor query
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $tokenId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('resourceTokens', $tokenId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "File token '{$tokenId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $queries = [...$queries, Query::equal('resourceInternalId', [$bucket->getInternalId() . ':' . $file->getInternalId()]), Query::equal('resourceType', ['file'])];
+        $filterQueries = Query::groupByType($queries)['filters'];
+
+        $response->dynamic(new Document([
+            'tokens' => $dbForProject->find('resourceTokens', $queries),
+            'total' => $dbForProject->count('resourceTokens', $filterQueries, APP_LIMIT_COUNT),
+        ]), Response::MODEL_RESOURCE_TOKEN_LIST);
+    });
+
+App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
+    ->desc('Get file token')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('usage.metric', 'fileTokens.{scope}.requests.read')
+    ->label('usage.params', ['bucketId:{request.bucketId}','fileId:{request.fileId}'])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getFileToken')
+    ->label('sdk.description', '/docs/references/storage/get-file-token.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_RESOURCE_TOKEN)
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
+    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('tokenId', '', new UID(), 'File token ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $bucketId, string $fileId, string $tokenId, Response $response, Database $dbForProject) {
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+        $validator = new Authorization(Database::PERMISSION_READ);
+        $valid = $validator->isValid($bucket->getRead());
+        if (!$fileSecurity && !$valid) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        if ($fileSecurity && !$valid) {
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+        } else {
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
+
+        if ($file->isEmpty()) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        $token = $dbForProject->getDocument('resourceTokens', $tokenId);
+
+        if ($token->isEmpty() || $token->getAttribute('resourceInternalId') != $bucket->getInternalId() . ':' . $file->getInternalId()) {
+            throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
+        }
+
+        $response->dynamic($token, Response::MODEL_RESOURCE_TOKEN);
+    });
+
+// Get token as JWT
+App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId/jwt')
+    ->desc('Get file token jwt')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('usage.metric', 'fileTokens.{scope}.requests.read')
+    ->label('usage.params', ['bucketId:{request.bucketId}','fileId:{request.fileId}'])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getFileTokenJWT')
+    ->label('sdk.description', '/docs/references/storage/get-file-token-jwt.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_JWT)
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
+    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('tokenId', '', new UID(), 'File token ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $bucketId, string $fileId, string $tokenId, Response $response, Database $dbForProject) {
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+        $validator = new Authorization(Database::PERMISSION_READ);
+        $valid = $validator->isValid($bucket->getRead());
+        if (!$fileSecurity && !$valid) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        if ($fileSecurity && !$valid) {
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+        } else {
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
+
+        if ($file->isEmpty()) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        $token = $dbForProject->getDocument('resourceTokens', $tokenId);
+
+        if ($token->isEmpty() || $token->getAttribute('resourceInternalId') != $bucket->getInternalId() . ':' . $file->getInternalId()) {
+            throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
+        }
+
+        // calculate maxAge based on expiry date
+        $maxAge = PHP_INT_MAX;
+        $expire = $token->getAttribute('expire');
+        if ($expire != null) {
+            $now = new \DateTime();
+            $expiryDate = new \DateTime($expire);
+            $maxAge = $expiryDate->getTimestamp() - $now->getTimestamp();
+            ;
+        }
+
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $maxAge, 10); // Instantiate with key, algo, maxAge and leeway.
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document(['jwt' => $jwt->encode([
+                'resourceType' => 'file',
+                'resourceId' => $token->getAttribute('resourceId'),
+                'resourceInternalId' => $token->getAttribute('resourceInternalId'),
+                'tokenId' => $token->getId(),
+                'secret' => $token->getAttribute('secret')
+            ])]), Response::MODEL_JWT);
+    });
+
+App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
+    ->desc('Update file token')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.write')
+    ->label('event', 'buckets.[bucketId].files.[fileId].tokens.[tokenId].update')
+    ->label('audits.event', 'fileTokens.update')
+    ->label('audits.resource', 'fileTokens/{response.$id}')
+    ->label('usage.metric', 'filesTokens.{scope}.requests.update')
+    ->label('usage.params', ['bucketId:{request.bucketId}', 'fileId:{request.tokenId}'])
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'updateFileToken')
+    ->label('sdk.description', '/docs/references/storage/update-file.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_RESOURCE_TOKEN)
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
+    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('tokenId', '', new UID(), 'File token unique ID.')
+    ->param('expire', null, new Nullable(new DatetimeValidator()), 'File token expiry date', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('user')
+    ->inject('mode')
+    ->inject('queueForEvents')
+    ->action(function (string $bucketId, string $fileId, string $tokenId, ?string $expire, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $queueForEvents) {
+
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+        $validator = new Authorization(Database::PERMISSION_READ);
+        $valid = $validator->isValid($bucket->getRead());
+        if (!$fileSecurity && !$valid) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        if ($fileSecurity && !$valid) {
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+        } else {
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
+
+        if ($file->isEmpty()) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        $token = $dbForProject->getDocument('resourceTokens', $tokenId);
+
+        if ($token->isEmpty() || $token->getAttribute('resourceInternalId') != $bucket->getInternalId() . ':' . $file->getInternalId()) {
+            throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
+        }
+
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions, [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ]);
+
+        // Users can only manage their own roles, API keys and Admin users can manage any
+        $roles = Authorization::getRoles();
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !\is_null($permissions)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    $permission = Permission::parse($permission);
+                    if ($permission->getPermission() != $type) {
+                        continue;
+                    }
+                    $role = (new Role(
+                        $permission->getRole(),
+                        $permission->getIdentifier(),
+                        $permission->getDimension()
+                    ))->toString();
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
+                    }
+                }
+            }
+        }
+
+        if (\is_null($permissions)) {
+            $permissions = $token->getPermissions() ?? [];
+        }
+
+        $token
+            ->setAttribute('expire', $expire)
+            ->setAttribute('$permissions', $permissions);
+
+        $token = $dbForProject->updateDocument('resourceTokens', $tokenId, $token);
+
+        $queueForEvents
+            ->setParam('bucketId', $bucket->getId())
+            ->setParam('fileId', $file->getId())
+            ->setParam('tokenId', $token->getId())
+            ->setContext('bucket', $bucket)
+        ;
+
+        $response->dynamic($file, Response::MODEL_RESOURCE_TOKEN);
+    });
+
+App::delete('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
+    ->desc('Delete file token')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.write')
+    ->label('event', 'buckets.[bucketId].files.[fileId].tokens.[tokenId].delete')
+    ->label('audits.event', 'fileToken.delete')
+    ->label('audits.resource', 'token/{request.tokenId}')
+    ->label('usage.metric', 'fileTokens.{scope}.requests.delete')
+    ->label('usage.params', ['bucketId:{request.bucketId}','fileId:{request.fileId}'])
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'deleteFileToken')
+    ->label('sdk.description', '/docs/references/storage/delete-file.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
+    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('tokenId', '', new UID(), 'File token ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $bucketId, string $fileId, string $tokenId, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+        $validator = new Authorization(Database::PERMISSION_READ);
+        $valid = $validator->isValid($bucket->getRead());
+        if (!$fileSecurity && !$valid) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        if ($fileSecurity && !$valid) {
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+        } else {
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
+
+        if ($file->isEmpty()) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        $token = $dbForProject->getDocument('resourceTokens', $tokenId);
+        if ($token->isEmpty() || $token->getAttribute('resourceInternalId') != $bucket->getInternalId() . ':' . $file->getInternalId()) {
+            throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
+        }
+
+        $dbForProject->deleteDocument('resourceTokens', $tokenId);
+
+        $queueForEvents
+            ->setParam('bucketId', $bucket->getId())
+            ->setParam('fileId', $file->getId())
+            ->setParam('tokenId', $token->getId())
+            ->setContext('bucket', $bucket)
+            ->setPayload($response->output($file, Response::MODEL_RESOURCE_TOKEN))
+        ;
+
+        $response->noContent();
+    });
+
+/** Storage usage */
 App::get('/v1/storage/usage')
     ->desc('Get storage usage stats')
     ->groups(['api', 'storage'])
