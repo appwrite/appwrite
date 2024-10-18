@@ -4575,6 +4575,20 @@ $consoleCollections = array_merge([
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
+            [
+                '$id' => ID::custom('_key_pingCount'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['pingCount'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_pingedAt'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['pingedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ]
         ],
     ],
 
