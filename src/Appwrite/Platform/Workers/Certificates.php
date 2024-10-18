@@ -50,7 +50,7 @@ class Certificates extends Action
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
             ->inject('log')
-            ->callback(fn (Message $message, Document $project, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
+            ->callback(fn (Message $message, Document $project, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $project, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
     }
 
     /**
@@ -79,7 +79,7 @@ class Certificates extends Action
 
         $log->addTag('domain', $domain->get());
 
-        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $skipRenewCheck);
+        $this->execute($domain, $project, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $skipRenewCheck);
     }
 
     /**
@@ -93,7 +93,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, bool $skipRenewCheck = false): void
+    private function execute(Domain $domain, Document $project, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, bool $skipRenewCheck = false): void
     {
         /**
          * 1. Read arguments and validate domain
@@ -165,8 +165,12 @@ class Certificates extends Action
             $logs = 'Certificate successfully generated.';
             $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
 
-            // TEMP: add custom hostnames to cloudflare
-            $this->addCustomHostnameToRegistrar($project, $domain->get());
+            try {
+                // TEMP: add custom hostnames to cloudflare
+                $this->addCustomHostnameToRegistrar($project, $domain->get());
+            } catch (Exception $e) {
+                Console::error('Failed to add custom hostname to registrar: ' . $e->getMessage());
+            }
 
             // Give certificates to Traefik
             $this->applyCertificateFiles($folder, $domain->get(), $letsEncryptData);
