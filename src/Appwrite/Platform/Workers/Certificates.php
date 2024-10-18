@@ -158,9 +158,13 @@ class Certificates extends Action
             // Prepare folder name for certbot. Using this helps prevent miss-match in LetsEncrypt configuration when renewing certificate
             $folder = ID::unique();
 
-            // Generate certificate files using Let's Encrypt
-            $letsEncryptData = $this->issueCertificate($folder, $domain->get(), $email);
-
+            try {
+                // Generate certificate files using Let's Encrypt
+                $letsEncryptData = $this->issueCertificate($folder, $domain->get(), $email);    
+            } catch (\Throwable $th) {
+                Console::error('Failed to generate Lets Encrypt certificate');
+            }
+           
             // Command succeeded, store all data into document
             $logs = 'Certificate successfully generated.';
             $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
@@ -168,8 +172,8 @@ class Certificates extends Action
             try {
                 // TEMP: add custom hostnames to cloudflare
                 $this->addCustomHostnameToRegistrar($project, $domain->get());
-            } catch (Exception $e) {
-                Console::error('Failed to add custom hostname to registrar: ' . $e->getMessage());
+            } catch (\Throwable $th) {
+                Console::error('Failed to add custom hostname to registrar: ' . $th->getMessage());
             }
 
             // Give certificates to Traefik
