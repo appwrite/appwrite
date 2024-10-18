@@ -226,10 +226,6 @@ class Certificates extends Action
              ->addHeader('Authorization', 'Bearer ' . System::getEnv('_APP_SYSTEM_CLOUDFLARE_TOKEN'));
 
         $response = $client->fetch("https://api.cloudflare.com/client/v4/zones/b2d0e62383d3c0f6299efab107af2c7a/custom_hostnames", Client::METHOD_POST, [
-            'custom_metadata' => [
-                'projectId' => $project->getId() ?? '',
-                'organizationId' => $project->getAttribute('teamId', '')
-            ],
             'hostname' => $hostname,
             'ssl' => [
                 "method" => "http",
