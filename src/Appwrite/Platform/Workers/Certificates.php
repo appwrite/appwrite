@@ -22,6 +22,7 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
+use Utopia\Fetch\Client;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -43,16 +44,18 @@ class Certificates extends Action
         $this
             ->desc('Certificates worker')
             ->inject('message')
+            ->inject('project')
             ->inject('dbForConsole')
             ->inject('queueForMails')
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
+            ->callback(fn (Message $message, Document $project, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
     }
 
     /**
      * @param Message $message
+     * @param Document $project
      * @param Database $dbForConsole
      * @param Mail $queueForMails
      * @param Event $queueForEvents
@@ -62,7 +65,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -162,6 +165,8 @@ class Certificates extends Action
             $logs = 'Certificate successfully generated.';
             $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
 
+            // TEMP: add custom hostnames to cloudflare
+            $this->addCustomHostnameToRegistrar($project, $domain->get());
 
             // Give certificates to Traefik
             $this->applyCertificateFiles($folder, $domain->get(), $letsEncryptData);
@@ -194,6 +199,34 @@ class Certificates extends Action
 
             // Save all changes we made to certificate document into database
             $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForConsole, $queueForEvents, $queueForFunctions);
+        }
+    }
+
+    /**
+     * Add custom hostname to Cloudflare registrar
+     *
+     * @param Document $project
+     * @param string $hostname
+     * @return void
+     * @throws Exception
+     */
+    private function addCustomHostnameToRegistrar(Document $project, string $hostname): void
+    {
+        $client = new Client();
+        $client
+            ->addHeader('Content-Type', Client::CONTENT_TYPE_APPLICATION_JSON)
+             ->addHeader('Authorization', 'Bearer ' . System::getEnv('_APP_SYSTEM_CLOUDFLARE_TOKEN'));
+
+        $response = $client->fetch("https://api.cloudflare.com/client/v4/zones/zone_id/custom_hostnames", Client::METHOD_POST, [
+            'custom_metadata' => [
+                'projectId' => $project->getId(),
+                'organizationId' => $project->getAttribute('teamId')
+            ],
+            'hostname' => $hostname
+        ]);
+
+        if ($response->getStatusCode() !== 400) {
+            throw new Exception('Failed to add custom hostname to Cloudflare: ' . $response->getBody());
         }
     }
 
