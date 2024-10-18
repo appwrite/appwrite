@@ -3877,7 +3877,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, sizeof($response['body']['variables']));
+        $this->assertCount(1, $response['body']['variables']);
         $this->assertEquals(1, $response['body']['total']);
         $this->assertEquals("APP_TEST", $response['body']['variables'][0]['key']);
         $this->assertEquals("TESTINGVALUE", $response['body']['variables'][0]['value']);
@@ -3957,7 +3957,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, sizeof($response['body']['variables']));
+        $this->assertCount(1, $response['body']['variables']);
         $this->assertEquals("APP_TEST_UPDATE", $response['body']['variables'][0]['key']);
 
         /**
@@ -4044,7 +4044,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(0, sizeof($response['body']['variables']));
+        $this->assertCount(0, $response['body']['variables']);
         $this->assertEquals(0, $response['body']['total']);
 
         /**
