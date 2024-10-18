@@ -217,7 +217,7 @@ class Certificates extends Action
             ->addHeader('Content-Type', Client::CONTENT_TYPE_APPLICATION_JSON)
              ->addHeader('Authorization', 'Bearer ' . System::getEnv('_APP_SYSTEM_CLOUDFLARE_TOKEN'));
 
-        $response = $client->fetch("https://api.cloudflare.com/client/v4/zones/zone_id/custom_hostnames", Client::METHOD_POST, [
+        $response = $client->fetch("https://api.cloudflare.com/client/v4/zones/b2d0e62383d3c0f6299efab107af2c7a/custom_hostnames", Client::METHOD_POST, [
             'custom_metadata' => [
                 'projectId' => $project->getId(),
                 'organizationId' => $project->getAttribute('teamId')
@@ -225,7 +225,7 @@ class Certificates extends Action
             'hostname' => $hostname
         ]);
 
-        if ($response->getStatusCode() !== 400) {
+        if ($response->getStatusCode() !== 200) {
             throw new Exception('Failed to add custom hostname to Cloudflare: ' . $response->getBody());
         }
     }
