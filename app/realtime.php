@@ -13,7 +13,7 @@ use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -92,7 +92,7 @@ if (!function_exists("getProjectDB")) {
 
         $database = new Database($adapter, getCache());
 
-        if ($dsn->getHost() === DATABASE_SHARED_TABLES) {
+        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
@@ -178,7 +178,6 @@ $logError = function (Throwable $error, string $action) use ($register) {
         $log->addExtra('file', $error->getFile());
         $log->addExtra('line', $error->getLine());
         $log->addExtra('trace', $error->getTraceAsString());
-        $log->addExtra('detailedTrace', $error->getTrace());
 
         $log->setAction($action);
 
@@ -381,8 +380,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $user = $database->getDocument('users', $userId);
 
                         $roles = Auth::getRoles($user);
+                        $channels = $realtime->connections[$connection]['channels'];
 
-                        $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
+                        $realtime->unsubscribe($connection);
+                        $realtime->subscribe($projectId, $connection, $roles, $channels);
 
                         $register->get('pools')->reclaim();
                     }

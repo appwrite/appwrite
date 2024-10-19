@@ -135,9 +135,9 @@ class Certificates extends Action
 
         try {
             // Email for alerts is required by LetsEncrypt
-            $email = System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
+            $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
             if (empty($email)) {
-                throw new Exception('You must set a valid security email address (_APP_SYSTEM_SECURITY_EMAIL_ADDRESS) to issue an SSL certificate.');
+                throw new Exception('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue an SSL certificate.');
             }
 
             // Validate domain and DNS records. Skip if job is forced
@@ -439,42 +439,26 @@ class Certificates extends Action
 
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
 
-        // Send mail to administratore mail
+        // Send mail to administrator mail
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
         $template->setParam('{{domain}}', $domain);
         $template->setParam('{{error}}', \nl2br($errorMessage));
         $template->setParam('{{attempts}}', $attempt);
-
-        // TODO: Use setbodyTemplate once #7307 is merged
-        $subject = 'Certificate failed to generate';
-        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
-
-        $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
-
-        $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl');
-        $message
-            ->setParam('{{body}}', $locale->getText("emails.certificate.body"), escapeHtml: false)
-            ->setParam('{{hello}}', $locale->getText("emails.certificate.hello"))
-            ->setParam('{{footer}}', $locale->getText("emails.certificate.footer"))
-            ->setParam('{{thanks}}', $locale->getText("emails.certificate.thanks"))
-            ->setParam('{{signature}}', $locale->getText("emails.certificate.signature"));
-        $body = $message->render();
+        $body = $template->render();
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            'domain' => $domain,
-            'error' => '<br><pre>' . $errorMessage . '</pre>',
-            'attempt' => $attempt,
-            'project' => 'Console',
-            'redirect' => 'https://' . $domain,
         ];
+
+        $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
 
         $queueForMails
             ->setSubject($subject)
             ->setBody($body)
             ->setName('Appwrite Administrator')
+            ->setbodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
             ->setVariables($emailVariables)
-            ->setRecipient(System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
+            ->setRecipient(System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')))
             ->trigger();
     }
 

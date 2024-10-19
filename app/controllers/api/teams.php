@@ -10,6 +10,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
+use Appwrite\Platform\Workers\Deletes;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Memberships;
@@ -338,10 +339,12 @@ App::delete('/v1/teams/:teamId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
+    ->inject('getProjectDB')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
     ->inject('queueForDeletes')
-    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->inject('queueForEvents')
+    ->inject('project')
+    ->action(function (string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Document $project) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -353,9 +356,14 @@ App::delete('/v1/teams/:teamId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($team);
+        $deletes = new Deletes();
+        $deletes->deleteMemberships($getProjectDB, $team, $project);
+
+        if ($project->getId() === 'console') {
+            $queueForDeletes
+                ->setType(DELETE_TYPE_TEAM_PROJECTS)
+                ->setDocument($team);
+        }
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
@@ -387,7 +395,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
-    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients']) // TODO add our own built-in confirm page
+    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -401,6 +409,7 @@ App::post('/v1/teams/:teamId/memberships')
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
+        $url = htmlentities($url);
         if (empty($url)) {
             if (!$isAPIKey && !$isPrivilegedUser) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'URL is required');
@@ -668,6 +677,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $queueForEvents
+            ->setParam('userId', $invitee->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
         ;
@@ -901,6 +911,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents
+            ->setParam('userId', $profile->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
@@ -1026,6 +1037,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
         $queueForEvents
+            ->setParam('userId', $user->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
         ;
@@ -1107,6 +1119,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         }
 
         $queueForEvents
+            ->setParam('userId', $user->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
             ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP))

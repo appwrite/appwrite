@@ -321,7 +321,7 @@ App::get('/v1/avatars/favicon')
                 ->setUserAgent(\sprintf(
                     APP_USERAGENT,
                     System::getEnv('_APP_VERSION', 'UNKNOWN'),
-                    System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+                    System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
                 ))
                 ->fetch($url);
         } catch (\Throwable) {
@@ -550,7 +550,7 @@ App::get('/v1/avatars/initials')
     });
 
 App::get('/v1/cards/cloud')
-    ->desc('Get Front Of Cloud Card')
+    ->desc('Get front Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -609,9 +609,9 @@ App::get('/v1/cards/cloud')
 
             $isPlatinum = $user->getInternalId() % 100 === 0;
         } else {
-            $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
+            $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brien Junior' : 'Walter O\'Brien';
             $createdAt = new \DateTime('now');
-            $githubName = $mock === 'normal-no-github' ? '' : ($mock === 'normal-long' ? 'sir-first-walterobrian-junior' : 'walterobrian');
+            $githubName = $mock === 'normal-no-github' ? '' : ($mock === 'normal-long' ? 'sir-first-walterobrien-junior' : 'walterobrien');
             $isHero = $mock === 'hero';
             $isContributor = $mock === 'contributor';
             $isEmployee = \str_starts_with($mock, 'employee');
@@ -757,7 +757,7 @@ App::get('/v1/cards/cloud')
     });
 
 App::get('/v1/cards/cloud-back')
-    ->desc('Get Back Of Cloud Card')
+    ->desc('Get back Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -835,7 +835,7 @@ App::get('/v1/cards/cloud-back')
     });
 
 App::get('/v1/cards/cloud-og')
-    ->desc('Get OG Image From Cloud Card')
+    ->desc('Get OG image From Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -900,9 +900,9 @@ App::get('/v1/cards/cloud-og')
         } else {
             $bgVariation = \str_ends_with($mock, '-bg2') ? '2' : (\str_ends_with($mock, '-bg3') ? '3' : '1');
             $cardVariation = \str_ends_with($mock, '-right') ? '2' : (\str_ends_with($mock, '-middle') ? '3' : '1');
-            $name = \str_starts_with($mock, 'normal-long') ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
+            $name = \str_starts_with($mock, 'normal-long') ? 'Sir First Walter O\'Brien Junior' : 'Walter O\'Brien';
             $createdAt = new \DateTime('now');
-            $githubName = $mock === 'normal-no-github' ? '' : (\str_starts_with($mock, 'normal-long') ? 'sir-first-walterobrian-junior' : 'walterobrian');
+            $githubName = $mock === 'normal-no-github' ? '' : (\str_starts_with($mock, 'normal-long') ? 'sir-first-walterobrien-junior' : 'walterobrien');
             $isHero = \str_starts_with($mock, 'hero');
             $isContributor = \str_starts_with($mock, 'contributor');
             $isEmployee = \str_starts_with($mock, 'employee');
