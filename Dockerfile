@@ -23,6 +23,11 @@ ENV DEBUG=$DEBUG
 ENV _APP_VERSION=$VERSION \
     _APP_HOME=https://appwrite.io
 
+# Install Memcached
+RUN apk add libmemcached-dev libmemcached autoconf pkgconfig g++ zlib-dev make &&  \
+    pecl install memcached && docker-php-ext-enable memcached &&  \
+    apk del make g++ autoconf pkgconfig
+
 RUN \
   if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \

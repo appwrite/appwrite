@@ -48,6 +48,21 @@ CLI::setResource('cache', function ($pools) {
     return new Cache(new Sharding($adapters));
 }, ['pools']);
 
+CLI::setResource('memcached', function ($pools) {
+    $adapters = [];
+    $list = Config::getParam('pools-files-cache', []);
+
+    foreach ($list as $value) {
+        $adapters[] = $pools
+            ->get($value)
+            ->pop()
+            ->getResource()
+        ;
+    }
+
+    return new Cache(new Sharding($adapters));
+}, ['pools']);
+
 CLI::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
