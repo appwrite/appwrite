@@ -224,6 +224,7 @@ App::post('/v1/projects')
         }
 
         var_dump($dsn->getHost());
+        var_dump(in_array($dsn->getHost(), $sharedTablesV1));
         var_dump($sharedTablesV1);
         var_dump($globalCollections);
         var_dump($create);
@@ -242,7 +243,7 @@ App::post('/v1/projects')
                 if (($collection['$collection'] ?? '') !== Database::METADATA) {
                     continue;
                 }
-
+                var_dump('trying to create collection ' . $collection['$collection']);
                 $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
                 $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
                 $dbForProject->createCollection($key, $attributes, $indexes);
