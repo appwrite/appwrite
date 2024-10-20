@@ -223,12 +223,6 @@ App::post('/v1/projects')
             $create = false;
         }
 
-        var_dump($dsn->getHost());
-        var_dump(in_array($dsn->getHost(), $sharedTablesV1));
-        var_dump($sharedTablesV1);
-        var_dump($globalCollections);
-        var_dump($create);
-
         if ($create || !$globalCollections) {
             var_dump('#######');
             var_dump($globalCollections);
