@@ -223,10 +223,9 @@ App::post('/v1/projects')
             $create = false;
         }
 
+        var_dump($globalCollections);
+        var_dump($create);
         if ($create || !$globalCollections) {
-            var_dump('#######');
-            var_dump($globalCollections);
-            var_dump($create);
             $audit = new Audit($dbForProject);
             $audit->setup();
 
