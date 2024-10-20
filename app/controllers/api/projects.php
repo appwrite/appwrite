@@ -203,7 +203,6 @@ App::post('/v1/projects')
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
         $globalCollections = !\in_array($dsn->getHost(), $sharedTablesV1);
-
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $dbForProject
                 ->setSharedTables(true)
@@ -223,6 +222,11 @@ App::post('/v1/projects')
         } catch (Duplicate) {
             $create = false;
         }
+
+        var_dump($dsn->getHost());
+        var_dump($sharedTablesV1);
+        var_dump($globalCollections);
+        var_dump($create);
 
         if ($create || !$globalCollections) {
             $audit = new Audit($dbForProject);
