@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Exception;
-use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -53,12 +52,7 @@ class Databases extends Action
      * @param Log $log
      * @param callable $realtimeConnection
      * @return void
-     * @throws Authorization
-     * @throws Conflict
-     * @throws DatabaseException
-     * @throws Restricted
-     * @throws Structure
-     * @throws Exception
+     * @throws \Exception
      */
     public function action(Message $message, Database $dbForConsole, Database $dbForProject, Log $log, callable $realtimeConnection): void
     {
@@ -106,9 +100,7 @@ class Databases extends Action
      * @return void
      * @throws Authorization
      * @throws Conflict
-     * @throws DatabaseException
-     * @throws Structure
-     * @throws Exception
+     * @throws \Exception
      */
     private function createAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject, callable $realtimeConnection): void
     {
@@ -150,7 +142,6 @@ class Databases extends Action
         $filters = $attribute->getAttribute('filters', []);
         $options = $attribute->getAttribute('options', []);
         $project = $dbForConsole->getDocument('projects', $projectId);
-
 
         try {
             switch ($type) {
@@ -232,12 +223,9 @@ class Databases extends Action
      * @return void
      * @throws Authorization
      * @throws Conflict
-     * @throws DatabaseException
-     * @throws Restricted
-     * @throws Structure
-     * @throws Exception
-     */
-    private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject, callable $realtimeConnection): void
+     * @throws \Exception
+     **/
+    private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
@@ -390,9 +378,8 @@ class Databases extends Action
      * @return void
      * @throws Authorization
      * @throws Conflict
-     * @throws DatabaseException
      * @throws Structure
-     * @throws Exception
+     * @throws DatabaseException
      */
     private function createIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject, callable $realtimeConnection): void
     {
@@ -453,9 +440,8 @@ class Databases extends Action
      * @return void
      * @throws Authorization
      * @throws Conflict
-     * @throws DatabaseException
      * @throws Structure
-     * @throws Exception
+     * @throws DatabaseException
      */
     private function deleteIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject, callable $realtimeConnection): void
     {
@@ -516,8 +502,6 @@ class Databases extends Action
         });
 
         $dbForProject->deleteCollection('database_' . $database->getInternalId());
-
-        $this->deleteAuditLogsByResource('database/' . $database->getId(), $project, $dbForProject);
     }
 
     /**
@@ -573,23 +557,8 @@ class Databases extends Action
             Query::equal('databaseInternalId', [$databaseInternalId]),
             Query::equal('collectionInternalId', [$collectionInternalId])
         ], $dbForProject);
-
-        $this->deleteAuditLogsByResource('database/' . $databaseId . '/collection/' . $collectionId, $project, $dbForProject);
     }
 
-    /**
-     * @param string $resource
-     * @param Document $project
-     * @param Database $dbForProject
-     * @return void
-     * @throws Exception
-     */
-    protected function deleteAuditLogsByResource(string $resource, Document $project, Database $dbForProject): void
-    {
-        $this->deleteByGroup(Audit::COLLECTION, [
-            Query::equal('resource', [$resource])
-        ], $dbForProject);
-    }
 
     /**
      * @param string $collection collectionID

@@ -118,6 +118,10 @@ App::post('/v1/projects')
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
+        if ($projectId === 'console') {
+            throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
+        }
+
         $databases = Config::getParam('pools-database', []);
 
         $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
@@ -135,14 +139,10 @@ App::post('/v1/projects')
             $dsn = $databases[array_rand($databases)];
         }
 
-        if ($projectId === 'console') {
-            throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
-        }
-
         // TODO: Temporary until all projects are using shared tables.
-        $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        if (in_array($dsn, $sharedTablesKeys)) {
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
+        if (\in_array($dsn, $sharedTables)) {
             $schema = 'appwrite';
             $database = 'appwrite';
             $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
@@ -187,7 +187,6 @@ App::post('/v1/projects')
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
             ]));
-
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
@@ -201,11 +200,14 @@ App::post('/v1/projects')
 
         $adapter = $pools->get($dsn->getHost())->pop()->getResource();
         $dbForProject = new Database($adapter, $cache);
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
+        $globalCollections = !\in_array($dsn->getHost(), $sharedTablesV1);
 
-        $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        if (in_array($dsn->getHost(), $sharedTablesKeys)) {            $dbForProject
+        if (\in_array($dsn->getHost(), $sharedTables)) {
+            $dbForProject
                 ->setSharedTables(true)
-                ->setTenant($project->getInternalId())
+                ->setTenant($globalCollections ? null : $project->getInternalId())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $dbForProject
@@ -214,34 +216,32 @@ App::post('/v1/projects')
                 ->setNamespace('_' . $project->getInternalId());
         }
 
-        $dbForProject->create();
+        $create = true;
 
-        $audit = new Audit($dbForProject);
-        $audit->setup();
+        try {
+            $dbForProject->create();
+        } catch (Duplicate) {
+            $create = false;
+        }
 
-        $abuse = new TimeLimit('', 0, 1, $dbForProject);
-        $abuse->setup();
+        if ($create || !$globalCollections) {
+            $audit = new Audit($dbForProject);
+            $audit->setup();
 
-        /** @var array $collections */
-        $collections = Config::getParam('collections', [])['projects'] ?? [];
+            $abuse = new TimeLimit('', 0, 1, $dbForProject);
+            $abuse->setup();
 
-        foreach ($collections as $key => $collection) {
-            if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                continue;
-            }
+            /** @var array $collections */
+            $collections = Config::getParam('collections', [])['projects'] ?? [];
 
-            $attributes = \array_map(function (array $attribute) {
-                return new Document($attribute);
-            }, $collection['attributes']);
+            foreach ($collections as $key => $collection) {
+                if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                    continue;
+                }
 
-            $indexes = \array_map(function (array $index) {
-                return new Document($index);
-            }, $collection['indexes']);
-
-            try {
+                $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
+                $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
                 $dbForProject->createCollection($key, $attributes, $indexes);
-            } catch (Duplicate) {
-                // Collection already exists
             }
         }
 

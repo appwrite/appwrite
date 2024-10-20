@@ -119,10 +119,6 @@ class Deletes extends Action
                 if (!$project->isEmpty()) {
                     $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
                 }
-
-                if (!$document->isEmpty()) {
-                    $this->deleteAuditLogsByResource($getProjectDB, 'document/' . $document->getId(), $project);
-                }
                 break;
             case DELETE_TYPE_ABUSE:
                 $this->deleteAbuseLogs($project, $getProjectDB, $abuseRetention);
@@ -498,13 +494,13 @@ class Deletes extends Action
         ];
 
         $limit = \count($projectCollectionIds) + 25;
-        $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         while (true) {
             $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
-                if (! in_array($dsn->getHost(), $sharedTablesKeys) || !\in_array($collection->getId(), $projectCollectionIds)) {
+                if (\in_array($dsn->getHost(), $sharedTables) || !\in_array($collection->getId(), $projectCollectionIds)) {
                     try {
                         $dbForProject->deleteCollection($collection->getId());
                     } catch (Throwable $e) {
@@ -516,12 +512,13 @@ class Deletes extends Action
                         if (!preg_match('/^_\d+_\d+$/', $collection->getId())) {
                             throw $e;
                         }
-                    }                } else {
+                    }
+                } else {
                     $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                 }
             }
 
-            if (in_array($dsn->getHost(), $sharedTablesKeys)) {
+            if (\in_array($dsn->getHost(), $sharedTables)) {
                 $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
 
                 if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
@@ -575,8 +572,7 @@ class Deletes extends Action
         ], $dbForConsole);
 
         // Delete metadata table
-        System::getEnv('_APP_DATABASE_SHARED_TABLES', '');
-        if (! in_array($dsn, $sharedTablesKeys)) {
+        if (\in_array($dsn->getHost(), $sharedTables)) {
             $dbForProject->deleteCollection('_metadata');
         } else {
             $this->deleteByGroup('_metadata', [], $dbForProject);
@@ -732,22 +728,6 @@ class Deletes extends Action
         } catch (DatabaseException $e) {
             Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $e->getMessage());
         }
-    }
-
-    /**
-     * @param callable $getProjectDB
-     * @param string $resource
-     * @param Document $project
-     * @return void
-     * @throws Exception
-     */
-    private function deleteAuditLogsByResource(callable $getProjectDB, string $resource, Document $project): void
-    {
-        $dbForProject = $getProjectDB($project);
-
-        $this->deleteByGroup(Audit::COLLECTION, [
-            Query::equal('resource', [$resource])
-        ], $dbForProject);
     }
 
     /**

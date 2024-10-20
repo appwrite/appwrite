@@ -3,7 +3,6 @@
 use Appwrite\Auth\Auth;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
@@ -3656,11 +3655,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForDeletes')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Usage $queueForUsage, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, Usage $queueForUsage, string $mode) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -3732,10 +3730,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             )
         );
-
-        $queueForDeletes
-            ->setType(DELETE_TYPE_AUDIT)
-            ->setDocument($document);
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)

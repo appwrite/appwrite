@@ -92,8 +92,10 @@ if (!function_exists('getProjectDB')) {
 
         $database = new Database($adapter, getCache());
 
-        $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        if (in_array($dsn->getHost(), $sharedTablesKeys)) {            $database
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+        if (\in_array($dsn->getHost(), $sharedTables)) {
+            $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
                 ->setNamespace($dsn->getParam('namespace'));

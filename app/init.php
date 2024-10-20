@@ -1407,8 +1407,10 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-    if (in_array($dsn->getHost(), $sharedTablesKeys)) {        $database
+    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+    if (\in_array($dsn->getHost(), $sharedTables)) {
+        $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
             ->setNamespace($dsn->getParam('namespace'));
@@ -1460,8 +1462,10 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-            $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-            if (in_array($dsn->getHost(), $sharedTablesKeys)) {                $database
+            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+            if (\in_array($dsn->getHost(), $sharedTables)) {
+                $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
                     ->setNamespace($dsn->getParam('namespace'));
