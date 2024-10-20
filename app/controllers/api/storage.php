@@ -13,6 +13,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Buckets;
 use Appwrite\Utopia\Database\Validator\Queries\Files;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -1157,8 +1158,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('deviceForFiles')
-    ->action(function (string $bucketId, string $fileId, Response $response, Request $request, Database $dbForProject, string $mode, Device $deviceForFiles) {
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+    ->inject('memcached')
+    ->action(function (string $bucketId, string $fileId, Response $response, Request $request, Database $dbForProject, string $mode, Device $deviceForFiles, Cache $memcached) {
+        $bucket = Authorization::skip(fn() => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -1230,63 +1232,66 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
 
-        $source = '';
-        if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-            $source = $deviceForFiles->read($path);
-            $source = OpenSSL::decrypt(
-                $source,
-                $file->getAttribute('openSSLCipher'),
-                System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                0,
-                \hex2bin($file->getAttribute('openSSLIV')),
-                \hex2bin($file->getAttribute('openSSLTag'))
-            );
-        }
+        $ttl = 60 * 60; // 1 hour
+        $key = 'storage-file-cache-' . $fileId;
+        $cache = $memcached->load($key, $ttl);
 
-        switch ($file->getAttribute('algorithm', Compression::NONE)) {
-            case Compression::ZSTD:
-                if (empty($source)) {
-                    $source = $deviceForFiles->read($path);
-                }
-                $compressor = new Zstd();
-                $source = $compressor->decompress($source);
-                break;
-            case Compression::GZIP:
-                if (empty($source)) {
-                    $source = $deviceForFiles->read($path);
-                }
-                $compressor = new GZIP();
-                $source = $compressor->decompress($source);
-                break;
+        if ($cache !== false) {
+            $source = $cache;
+            $response->addHeader('X-Appwrite-Cache', 'hit');
+        } else {
+            $source = $deviceForFiles->read($path);
+
+            if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
+                $source = OpenSSL::decrypt(
+                    $source,
+                    $file->getAttribute('openSSLCipher'),
+                    System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                    0,
+                    \hex2bin($file->getAttribute('openSSLIV')),
+                    \hex2bin($file->getAttribute('openSSLTag'))
+                );
+            }
+
+            switch ($file->getAttribute('algorithm', Compression::NONE)) {
+                case Compression::ZSTD:
+                    $compressor = new Zstd();
+                    $source = $compressor->decompress($source);
+                    break;
+                case Compression::GZIP:
+                    $compressor = new GZIP();
+                    $source = $compressor->decompress($source);
+                    break;
+            }
+
+            $memcached->save($key, $source);
+            $response->addHeader('X-Appwrite-Cache', 'miss');
         }
 
         if (!empty($source)) {
             if (!empty($rangeHeader)) {
                 $response->send(substr($source, $start, ($end - $start + 1)));
             }
+
             $response->send($source);
             return;
         }
 
         if (!empty($rangeHeader)) {
-            $response->send($deviceForFiles->read($path, $start, ($end - $start + 1)));
+            $response->send(substr($source, $start, ($end - $start + 1)));
             return;
         }
 
-        $size = $deviceForFiles->getFileSize($path);
+        $size = strlen($source);
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $deviceForFiles->read(
-                        $path,
-                        ($i * MAX_OUTPUT_CHUNK_SIZE),
-                        min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
-                    ),
+                    substr($source, ($i * MAX_OUTPUT_CHUNK_SIZE), min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))),
                     (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
                 );
             }
         } else {
-            $response->send($deviceForFiles->read($path));
+            $response->send($source);
         }
     });
 
@@ -1572,7 +1577,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('queueForDeletes')
-    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $queueForEvents, string $mode, Device $deviceForFiles, Delete $queueForDeletes) {
+    ->inject('memcached')
+    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $queueForEvents, string $mode, Device $deviceForFiles, Delete $queueForDeletes, Cache $memcached) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -1630,6 +1636,9 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         } else {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to delete file from device');
         }
+
+        // purge cache from memory.
+        $memcached->purge('storage-file-cache-' . $fileId);
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId())

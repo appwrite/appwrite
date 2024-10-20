@@ -194,6 +194,22 @@ Server::setResource('cache', function (Registry $register) {
     return new Cache(new Sharding($adapters));
 }, ['register']);
 
+Server::setResource('memcached', function (Registry $register) {
+    $adapters = [];
+    $pools = $register->get('pools');
+    $list = Config::getParam('pools-files-cache', []);
+
+    foreach ($list as $value) {
+        $adapters[] = $pools
+            ->get($value)
+            ->pop()
+            ->getResource()
+        ;
+    }
+
+    return new Cache(new Sharding($adapters));
+}, ['register']);
+
 Server::setResource('log', fn () => new Log());
 
 Server::setResource('queueForUsage', function (Connection $queue) {

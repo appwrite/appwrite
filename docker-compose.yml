@@ -118,6 +118,8 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_MEMCACHED_PORT
+      - _APP_MEMCACHED_HOST
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -974,6 +976,19 @@ services:
     volumes:
       - appwrite-redis:/data:rw
 
+  memcached:
+    image: memcached:1.6.31-alpine
+    <<: *x-logging
+    container_name: appwrite-memcached
+    # 2GB memory, port 11211, object 128mb limit, 4 threads
+    command: memcached -m 2048 -p 11211 -u root -I 128m -t 4 -v
+    ports:
+      - "11211:11211"
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-memcached:/data:rw
+
   # Dev Tools Start ------------------------------------------------------------------------------------------
   #
   # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
@@ -1048,6 +1063,7 @@ networks:
 volumes:
   appwrite-mariadb:
   appwrite-redis:
+  appwrite-memcached:
   appwrite-cache:
   appwrite-uploads:
   appwrite-certificates:

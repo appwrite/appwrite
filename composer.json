@@ -34,6 +34,7 @@
         "ext-curl": "*",
         "ext-imagick": "*",
         "ext-mbstring": "*",
+        "ext-memcached": "*",
         "ext-json": "*",
         "ext-yaml": "*",
         "ext-dom": "*",

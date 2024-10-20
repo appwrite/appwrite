@@ -42,10 +42,12 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
 use MaxMind\Db\Reader;
+use Memcached as MemcachedClient;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Adapter\Memcached as MemcachedCache;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -827,6 +829,11 @@ $register->set('pools', function () {
         'user' => System::getEnv('_APP_REDIS_USER', ''),
         'pass' => System::getEnv('_APP_REDIS_PASS', ''),
     ]);
+    $fallbackForMemcached = 'memcached_main=' . AppwriteURL::unparse([
+        'scheme' => 'memcached',
+        'host' => System::getEnv('_APP_MEMCACHED_HOST', 'memcached'),
+        'port' => System::getEnv('_APP_MEMCACHED_PORT', '11211'),
+    ]);
 
     $connections = [
         'console' => [
@@ -858,6 +865,12 @@ $register->set('pools', function () {
             'dsns' => System::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
             'multiple' => true,
             'schemes' => ['redis'],
+        ],
+        'files-cache' => [
+            'type' => 'cache',
+            'multiple' => true,
+            'dsns' => $fallbackForMemcached,
+            'schemes' => ['memcached']
         ],
     ];
 
@@ -936,6 +949,12 @@ $register->set('pools', function () {
 
                     return $redis;
                 },
+                'memcached' => function () use ($dsnHost, $dsnPort) {
+                    $memcached = new MemcachedClient();
+                    @$memcached->addServer($dsnHost, (int)$dsnPort);
+
+                    return $memcached;
+                },
                 default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
 
@@ -963,6 +982,7 @@ $register->set('pools', function () {
                     case 'cache':
                         $adapter = match ($dsn->getScheme()) {
                             'redis' => new RedisCache($resource()),
+                            'memcached' => new MemcachedCache($resource()),
                             default => null
                         };
                         break;
@@ -1488,6 +1508,21 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
+
+    foreach ($list as $value) {
+        $adapters[] = $pools
+            ->get($value)
+            ->pop()
+            ->getResource()
+        ;
+    }
+
+    return new Cache(new Sharding($adapters));
+}, ['pools']);
+
+App::setResource('memcached', function (Group $pools) {
+    $adapters = [];
+    $list = Config::getParam('pools-files-cache', []);
 
     foreach ($list as $value) {
         $adapters[] = $pools
