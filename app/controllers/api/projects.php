@@ -234,7 +234,21 @@ App::post('/v1/projects')
 
                 $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
                 $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
-                $dbForProject->createCollection($key, $attributes, $indexes);
+
+                try {
+                    $dbForProject->createCollection($key, $attributes, $indexes);
+                } catch (Duplicate) {
+                    if (!$globalCollections) {
+                        $dbForProject->createDocument(Database::METADATA, new Document([
+                            '$id' => ID::custom($key),
+                            '$permissions' => [Permission::create(Role::any())],
+                            'name' => $key,
+                            'attributes' => $attributes,
+                            'indexes' => $indexes,
+                            'documentSecurity' => true
+                        ]));
+                    }
+                }
             }
         }
 
