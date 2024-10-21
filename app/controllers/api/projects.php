@@ -203,11 +203,12 @@ App::post('/v1/projects')
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
         $globalCollections = !\in_array($dsn->getHost(), $sharedTablesV1);
+
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $dbForProject
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
-                //->setTenant($globalCollections ? null : $project->getInternalId())
+                ->setTenant($globalCollections ? null : $project->getInternalId())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $dbForProject
@@ -218,14 +219,13 @@ App::post('/v1/projects')
 
         $create = true;
 
-        //try {
-           $dbForProject->create();
-        //} catch (Duplicate) {
-          //  $create = false;
-        //}
+        try {
+            $dbForProject->create();
+        } catch (Duplicate) {
+            $create = false;
+        }
 
-
-        //if ($create || !$globalCollections) {
+        if ($create || !$globalCollections) {
             $audit = new Audit($dbForProject);
             $audit->setup();
 
@@ -244,7 +244,7 @@ App::post('/v1/projects')
                 $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
                 $dbForProject->createCollection($key, $attributes, $indexes);
             }
-        //}
+        }
 
         // Hook allowing instant project mirroring during migration
         // Outside of migration, hook is not registered and has no effect
