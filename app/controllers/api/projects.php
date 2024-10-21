@@ -207,7 +207,6 @@ App::post('/v1/projects')
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $dbForProject
                 ->setSharedTables(true)
-                ->setTenant($project->getInternalId())
                 ->setTenant($globalCollections ? null : $project->getInternalId())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
@@ -224,8 +223,6 @@ App::post('/v1/projects')
         } catch (Duplicate) {
             $create = false;
         }
-
-
 
         if ($create || !$globalCollections) {
             $audit = new Audit($dbForProject);
@@ -247,7 +244,16 @@ App::post('/v1/projects')
                 try {
                     $dbForProject->createCollection($key, $attributes, $indexes);
                 } catch (Duplicate) {
-                    // Collection already exists
+                    if (!$globalCollections) {
+                        $dbForProject->createDocument(Database::METADATA, new Document([
+                            '$id' => ID::custom($key),
+                            '$permissions' => [Permission::create(Role::any())],
+                            'name' => $key,
+                            'attributes' => $attributes,
+                            'indexes' => $indexes,
+                            'documentSecurity' => true
+                        ]));
+                    }
                 }
             }
         }
