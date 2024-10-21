@@ -241,6 +241,7 @@ App::post('/v1/projects')
 
                 $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
                 $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+
                 try {
                     $dbForProject->createCollection($key, $attributes, $indexes);
                 } catch (Duplicate) {
