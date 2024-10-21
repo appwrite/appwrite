@@ -225,10 +225,7 @@ App::post('/v1/projects')
             $create = false;
         }
 
-        var_dump('$globalCollections = ');
-        var_dump($globalCollections);
-        var_dump('$create = ');
-        var_dump($create);
+
 
         if ($create || !$globalCollections) {
             $audit = new Audit($dbForProject);
@@ -247,7 +244,11 @@ App::post('/v1/projects')
 
                 $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
                 $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
-                $dbForProject->createCollection($key, $attributes, $indexes);
+                try {
+                    $dbForProject->createCollection($key, $attributes, $indexes);
+                } catch (Duplicate) {
+                    // Collection already exists
+                }
             }
         }
 
