@@ -2337,10 +2337,11 @@ App::post('/v1/functions/:functionId/variables')
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
+    ->param('secret', false, new Boolean(true), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->action(function (string $functionId, string $key, string $value, mixed $secret, Response $response, Database $dbForProject, Database $dbForConsole) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -2361,6 +2362,7 @@ App::post('/v1/functions/:functionId/variables')
             'resourceType' => 'function',
             'key' => $key,
             'value' => $value,
+            'secret' => $secret,
             'search' => implode(' ', [$variableId, $function->getId(), $key, 'function']),
         ]);
 
