@@ -54,7 +54,7 @@ App::post('/v1/proxy/rules')
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 
-        switch($resourceType) {
+        switch ($resourceType) {
             case 'function':
                 if (str_ends_with($domain, $functionsDomain)) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
@@ -95,33 +95,33 @@ App::post('/v1/proxy/rules')
 
         $resourceInternalId = '';
 
-        switch($resourceType) {
+        switch ($resourceType) {
             case 'function':
-	            if (empty($resourceId)) {
-	                throw new Exception(Exception::FUNCTION_NOT_FOUND);
-	            }
+                if (empty($resourceId)) {
+                    throw new Exception(Exception::FUNCTION_NOT_FOUND);
+                }
 
-	            $function = $dbForProject->getDocument('functions', $resourceId);
+                $function = $dbForProject->getDocument('functions', $resourceId);
 
-	            if ($function->isEmpty()) {
-	                throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
-	            }
+                if ($function->isEmpty()) {
+                    throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
+                }
 
-	            $resourceInternalId = $function->getInternalId();
+                $resourceInternalId = $function->getInternalId();
                 break;
             case 'site':
                 if (empty($resourceId)) {
                     // todo: use site relecant exception
-	                throw new Exception(Exception::FUNCTION_NOT_FOUND);
-	            }
+                    throw new Exception(Exception::FUNCTION_NOT_FOUND);
+                }
 
-	            $site = $dbForProject->getDocument('sites', $resourceId);
+                $site = $dbForProject->getDocument('sites', $resourceId);
 
-	            if ($site->isEmpty()) {
-	                throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
-	            }
+                if ($site->isEmpty()) {
+                    throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
+                }
 
-	            $resourceInternalId = $site->getInternalId();
+                $resourceInternalId = $site->getInternalId();
                 break;
         }
 
