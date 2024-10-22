@@ -467,7 +467,7 @@ class HealthCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('/CN=appwrite.io', $response['body']['name']);
         $this->assertEquals('appwrite.io', $response['body']['subjectSN']);
-        $this->assertEquals("Let's Encrypt", $response['body']['issuerOrganisation']);
+        $this->assertContains($response['body']['issuerOrganisation'], ['Let\'s Encrypt', 'Google Trust Services']);
         $this->assertIsInt($response['body']['validFrom']);
         $this->assertIsInt($response['body']['validTo']);
 
