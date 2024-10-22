@@ -89,7 +89,7 @@ class CreateSite extends Base
             ->inject('queueForBuilds')
             ->inject('dbForConsole')
             ->inject('gitHub')
-            ->callback(fn ($siteId, $name, $framework, $enabled, $installCommand, $buildCommand, $outputDirectory, $fallbackRedirect, $scopes, $installationId, $providerRepositoryId, $providerBranch, $providerSilentMode, $providerRootDirectory, $templateRepository, $templateOwner, $templateRootDirectory, $templateVersion, $specification, $request, $response, $dbForProject, $project, $user, $queueForEvents, $queueForBuilds, $dbForConsole, $github) => $this->action($siteId, $name, $framework, $enabled, $installCommand, $buildCommand, $outputDirectory, $fallbackRedirect, $scopes, $installationId, $providerRepositoryId, $providerBranch, $providerSilentMode, $providerRootDirectory, $templateRepository, $templateOwner, $templateRootDirectory, $templateVersion, $specification, $request, $response, $dbForProject, $project, $user, $queueForEvents, $queueForBuilds, $dbForConsole, $github));
+            ->callback([$this, 'action']);
     }
 
     public function action(string $siteId, string $name, string $framework, bool $enabled, string $installCommand, string $buildCommand, string $outputDirectory, string $fallbackRedirect, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)

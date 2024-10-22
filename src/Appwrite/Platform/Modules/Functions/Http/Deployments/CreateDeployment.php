@@ -68,7 +68,7 @@ class CreateDeployment extends Action
             ->inject('deviceForFunctions')
             ->inject('deviceForLocal')
             ->inject('queueForBuilds')
-            ->callback(fn ($functionId, $entrypoint, $commands, $code, $activate, $request, $response, $dbForProject, $queueForEvents, $project, $deviceForFunctions, $deviceForLocal, $queueForBuilds) => $this->action($functionId, $entrypoint, $commands, $code, $activate, $request, $response, $dbForProject, $queueForEvents, $project, $deviceForFunctions, $deviceForLocal, $queueForBuilds));
+            ->callback([$this, 'action']);
     }
 
     public function action(string $functionId, ?string $entrypoint, ?string $commands, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds)

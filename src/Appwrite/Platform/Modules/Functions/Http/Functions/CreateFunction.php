@@ -97,7 +97,7 @@ class CreateFunction extends Base
             ->inject('queueForBuilds')
             ->inject('dbForConsole')
             ->inject('gitHub')
-            ->callback(fn ($functionId, $name, $runtime, $execute, $events, $schedule, $timeout, $enabled, $logging, $entrypoint, $commands, $scopes, $installationId, $providerRepositoryId, $providerBranch, $providerSilentMode, $providerRootDirectory, $templateRepository, $templateOwner, $templateRootDirectory, $templateVersion, $specification, $request, $response, $dbForProject, $project, $user, $queueForEvents, $queueForBuilds, $dbForConsole, $github) => $this->action($functionId, $name, $runtime, $execute, $events, $schedule, $timeout, $enabled, $logging, $entrypoint, $commands, $scopes, $installationId, $providerRepositoryId, $providerBranch, $providerSilentMode, $providerRootDirectory, $templateRepository, $templateOwner, $templateRootDirectory, $templateVersion, $specification, $request, $response, $dbForProject, $project, $user, $queueForEvents, $queueForBuilds, $dbForConsole, $github));
+            ->callback([$this, 'action']);
     }
 
     public function action(string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
