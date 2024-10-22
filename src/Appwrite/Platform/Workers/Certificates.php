@@ -160,14 +160,14 @@ class Certificates extends Action
 
             try {
                 // Generate certificate files using Let's Encrypt
-                $letsEncryptData = $this->issueCertificate($folder, $domain->get(), $email);   
+                $letsEncryptData = $this->issueCertificate($folder, $domain->get(), $email);
 
                 // Give certificates to Traefik
                 $this->applyCertificateFiles($folder, $domain->get(), $letsEncryptData);
             } catch (\Throwable $th) {
                 Console::error('Failed to generate Lets Encrypt certificate');
             }
-           
+
             // Command succeeded, store all data into document
             $logs = 'Certificate successfully generated.';
             $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
