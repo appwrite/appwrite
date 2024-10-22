@@ -4315,7 +4315,7 @@ App::post('/v1/account/targets/push')
 
         $device = $detector->getDevice();
 
-        $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
+        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret);
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
         try {
@@ -4386,7 +4386,7 @@ App::put('/v1/account/targets/:targetId/push')
         if ($identifier) {
             $target
                 ->setAttribute('identifier', $identifier)
-                ->setAtttibute('expired', false);
+                ->setAttribute('expired', false);
         }
 
         $detector = new Detector($request->getUserAgent());

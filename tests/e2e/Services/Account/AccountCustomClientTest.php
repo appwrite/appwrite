@@ -2698,11 +2698,10 @@ class AccountCustomClientTest extends Scope
 
     public function testCreatePushTarget(): void
     {
-        $response = $this->client->call(Client::METHOD_POST, '/account/push/targets', [
+        $response = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
             'targetId' => ID::unique(),
             'identifier' => 'test-identifier',
         ]);
@@ -2714,24 +2713,22 @@ class AccountCustomClientTest extends Scope
 
     public function testUpdatePushTarget(): void
     {
-        $response = $this->client->call(Client::METHOD_POST, '/account/push/targets', [
+        $response = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
+        ], $this->getHeaders()), [
             'targetId' => ID::unique(),
-            'identifier' => 'test-identifier',
+            'identifier' => 'test-identifier-2',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('test-identifier', $response['body']['identifier']);
+        $this->assertEquals('test-identifier-2', $response['body']['identifier']);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/account/push/targets/' . $response['body']['$id'], [
+        $response = $this->client->call(Client::METHOD_PUT, '/account/targets/'. $response['body']['$id'] .'/push', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
+        ], $this->getHeaders()), [
             'identifier' => 'test-identifier-updated',
         ]);
 
