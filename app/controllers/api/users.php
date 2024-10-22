@@ -1503,7 +1503,9 @@ App::patch('/v1/users/:userId/targets/:targetId')
                     throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
             }
 
-            $target->setAttribute('identifier', $identifier);
+            $target
+                ->setAttribute('identifier', $identifier)
+                ->setAttribute('expired', false);
         }
 
         if ($providerId) {
@@ -1517,8 +1519,9 @@ App::patch('/v1/users/:userId/targets/:targetId')
                 throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
             }
 
-            $target->setAttribute('providerId', $provider->getId());
-            $target->setAttribute('providerInternalId', $provider->getInternalId());
+            $target
+                ->setAttribute('providerId', $provider->getId())
+                ->setAttribute('providerInternalId', $provider->getInternalId());
         }
 
         if ($name) {
