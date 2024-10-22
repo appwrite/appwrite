@@ -100,7 +100,10 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
     $type = $route->getAttribute('resourceType');
 
-    if ($type === 'function') {
+    if ($type === 'function' || $type === 'sites') {
+        $isFunction = $type === 'function' ;
+        $isSite = $type === 'sites';
+
         $utopia->getRoute()?->label('sdk.namespace', 'functions');
         $utopia->getRoute()?->label('sdk.method', 'createExecution');
 
@@ -109,12 +112,11 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
                 }
-
                 return $response->redirect('https://' . $request->getHostname() . $request->getURI());
             }
         }
 
-        $functionId = $route->getAttribute('resourceId');
+        $resourceId = $route->getAttribute('resourceId');
         $projectId = $route->getAttribute('projectId');
 
         $path = ($swooleRequest->server['request_uri'] ?? '/');
@@ -122,7 +124,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         if (!empty($query)) {
             $path .= '?' . $query;
         }
-
 
         $body = $swooleRequest->getContent() ?? '';
         $method = $swooleRequest->server['request_method'];
@@ -133,7 +134,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $dbForProject = $getProjectDB($project);
 
-        $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        $function = Authorization::skip(fn () => $dbForProject->getDocument($isSite ? 'sites' : 'functions', $resourceId));
 
         if ($function->isEmpty() || !$function->getAttribute('enabled')) {
             throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
@@ -230,7 +231,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             'errors' => '',
             'logs' => '',
             'duration' => 0.0,
-            'search' => implode(' ', [$functionId, $executionId]),
+            'search' => implode(' ', [$resourceId, $executionId]),
         ]);
 
         $queueForEvents
@@ -269,7 +270,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         // Appwrite vars
         $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
-            'APPWRITE_FUNCTION_ID' => $functionId,
+            'APPWRITE_FUNCTION_ID' => $resourceId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
@@ -359,22 +360,28 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             $queueForUsage
                 ->addMetric(METRIC_NETWORK_REQUESTS, 1)
                 ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
-                ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize())
-                ->addMetric(METRIC_EXECUTIONS, 1)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
-                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                ->setProject($project)
-                ->trigger()
-            ;
+                ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
+            if ($isFunction) {
+                $queueForUsage
+                    ->addMetric(METRIC_EXECUTIONS, 1)
+                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+                    ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
+                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
+                    ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)));
+            }
 
-            $queueForFunctions
-                ->setType(Func::TYPE_ASYNC_WRITE)
-                ->setExecution($execution)
+            $queueForUsage
                 ->setProject($project)
                 ->trigger();
+
+            if ($isFunction) {
+                $queueForFunctions
+                    ->setType(Func::TYPE_ASYNC_WRITE)
+                    ->setExecution($execution)
+                    ->setProject($project)
+                    ->trigger();
+            }
         }
 
         $execution->setAttribute('logs', '');
