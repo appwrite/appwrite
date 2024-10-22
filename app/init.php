@@ -132,6 +132,7 @@ const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1_073_741_824; // 2^32 bits / 4
 const APP_DATABASE_TIMEOUT_MILLISECONDS = 15_000;
 const APP_DATABASE_QUERY_MAX_VALUES = 500;
 const APP_STORAGE_UPLOADS = '/storage/uploads';
+const APP_STORAGE_SITES = '/storage/sites';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -1521,6 +1522,10 @@ App::setResource('deviceForLocal', function () {
 
 App::setResource('deviceForFiles', function ($project) {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+}, ['project']);
+
+App::setResource('deviceForSites', function ($project) {
+    return getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
 }, ['project']);
 
 App::setResource('deviceForFunctions', function ($project) {
