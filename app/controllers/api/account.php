@@ -4384,7 +4384,9 @@ App::put('/v1/account/targets/:targetId/push')
         }
 
         if ($identifier) {
-            $target->setAttribute('identifier', $identifier);
+            $target
+                ->setAttribute('identifier', $identifier)
+                ->setAtttibute('expired', false);
         }
 
         $detector = new Detector($request->getUserAgent());
