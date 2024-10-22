@@ -140,16 +140,48 @@ class Builds extends Action
             throw new \Exception('Deployment not found', 404);
         }
 
-        if (empty($deployment->getAttribute('entrypoint', ''))) {
+        if ($isFunction && empty($deployment->getAttribute('entrypoint', ''))) {
             throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".', 500);
         }
 
         $version = $resource->getAttribute('version', 'v2');
+        if ($isSite) {
+            $version = 'v4';
+        }
         $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specifications', APP_FUNCTION_SPECIFICATION_DEFAULT)];
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         // todo: fix for sites using frameworks
         $key =  $resource->getAttribute('runtime');
         $runtime = $runtimes[$key] ?? null;
+
+        if ($isSite) {
+            // $key = "{$this->key}-{$version->version}";
+            // $list[$key] = array_merge(
+            //     [
+            //         'key' => $this->key,
+            //         'name' => $this->name,
+            //         'logo' => "{$this->key}.png",
+            //         'startCommand' => $this->startCommand,
+            //     ],
+            //     [
+            //     'version' => $this->version,
+            //     'base' => $this->base,
+            //     'image' => $this->image,
+            //     'supports' => $this->supports,
+            // ]
+            // );
+            $runtime = [
+                'key' => 'static-for-now',
+                'name' => 'Static',
+                'logo' => 'node.png',
+                'startCommand' => null,
+                'version' => 'v1',
+                'base' => 'rtsp/lighttpd',
+                'image' => 'rtsp/lighttpd',
+                'supports' => [System::X86, System::ARM64, System::ARMV7, System::ARMV8]
+            ];
+        }
+
         if (\is_null($runtime)) {
             throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
         }
@@ -541,8 +573,12 @@ class Builds extends Action
                 'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
             ]);
 
-            //todo: for sites use isntall and build command
             $command = $deployment->getAttribute('commands', '');
+
+            //todo: for sites use isntall and build command
+            if ($isSite) {
+                $command = 'npm ci && npm run build';
+            }
 
             $response = null;
             $err = null;
