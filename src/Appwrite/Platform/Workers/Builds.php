@@ -109,7 +109,7 @@ class Builds extends Action
      * @param Database $dbForProject
      * @param GitHub $github
      * @param Document $project
-     * @param Document $function
+     * @param Document $resource
      * @param Document $deployment
      * @param Document $template
      * @param Log $log
@@ -117,22 +117,25 @@ class Builds extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, Log $log): void
     {
+        // todo: refactor
+        $isFunction = $resource->getCollection() === 'functions';
+        $isSite = $resource->getCollection() === 'sites';
+        $foreignKey = $isFunction ? 'functionId' : 'siteId';
+
         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
-        $functionId = $function->getId();
-        $log->addTag('functionId', $function->getId());
+        $log->addTag($foreignKey, $resource->getId());
 
-        $function = $dbForProject->getDocument('functions', $functionId);
-        if ($function->isEmpty()) {
+        $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+        if ($resource->isEmpty()) {
             throw new \Exception('Function not found', 404);
         }
 
-        $deploymentId = $deployment->getId();
-        $log->addTag('deploymentId', $deploymentId);
+        $log->addTag('deploymentId', $deployment->getId());
 
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         if ($deployment->isEmpty()) {
             throw new \Exception('Deployment not found', 404);
         }
@@ -141,18 +144,19 @@ class Builds extends Action
             throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".', 500);
         }
 
-        $version = $function->getAttribute('version', 'v2');
-        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specifications', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+        $version = $resource->getAttribute('version', 'v2');
+        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specifications', APP_FUNCTION_SPECIFICATION_DEFAULT)];
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $key = $function->getAttribute('runtime');
+        // todo: fix for sites using frameworks
+        $key =  $resource->getAttribute('runtime');
         $runtime = $runtimes[$key] ?? null;
         if (\is_null($runtime)) {
-            throw new \Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
         }
 
         // Realtime preparation
-        $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
-            'functionId' => $function->getId(),
+        $allEvents = Event::generateEvents("{$resource->getCollection()}.[{$foreignKey}].deployments.[deploymentId].update", [
+            $foreignKey => $resource->getId(),
             'deploymentId' => $deployment->getId()
         ]);
 
@@ -171,7 +175,7 @@ class Builds extends Action
                 'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
                 'path' => '',
-                'runtime' => $function->getAttribute('runtime'),
+                'runtime' => $resource->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
                 'sourceType' => strtolower($deviceForFunctions->getType()),
                 'logs' => '',
@@ -263,7 +267,7 @@ class Builds extends Action
             } elseif ($isNewBuild && $isVcsEnabled) {
                 // VCS and VCS+Temaplte
                 $tmpDirectory = '/tmp/builds/' . $buildId . '/code';
-                $rootDirectory = $function->getAttribute('providerRootDirectory', '');
+                $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
                 $rootDirectory = \rtrim($rootDirectory, '/');
                 $rootDirectory = \ltrim($rootDirectory, '.');
                 $rootDirectory = \ltrim($rootDirectory, '/');
@@ -344,7 +348,7 @@ class Builds extends Action
                     Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . \escapeshellarg($tmpDirectory) . ' && git add . && git commit -m "Create ' . \escapeshellarg($function->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
+                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . \escapeshellarg($tmpDirectory) . ' && git add . && git commit -m "Create ' . \escapeshellarg($resource->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to push code repository: ' . $stderr);
@@ -362,7 +366,7 @@ class Builds extends Action
                     $deployment->setAttribute('providerCommitHash', $providerCommitHash ?? '');
                     $deployment->setAttribute('providerCommitAuthorUrl', $authorUrl);
                     $deployment->setAttribute('providerCommitAuthor', 'Appwrite');
-                    $deployment->setAttribute('providerCommitMessage', "Create '" . $function->getAttribute('name', '') . "' function");
+                    $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
                     $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
@@ -415,7 +419,7 @@ class Builds extends Action
                 $directorySize = $deviceForFunctions->getFileSize($source);
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
 
-                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
             }
 
             /** Request the executor to build the code... */
@@ -423,7 +427,7 @@ class Builds extends Action
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
             }
 
             /** Trigger Webhook */
@@ -433,8 +437,8 @@ class Builds extends Action
                     ->setQueue(Event::WEBHOOK_QUEUE_NAME)
                     ->setClass(Event::WEBHOOK_CLASS_NAME)
                     ->setProject($project)
-                    ->setEvent('functions.[functionId].deployments.[deploymentId].update')
-                    ->setParam('functionId', $function->getId())
+                    ->setEvent("{$resource->getCollection()}.[{$foreignKey}].deployments.[deploymentId].update")
+                    ->setParam($foreignKey, $resource->getId())
                     ->setParam('deploymentId', $deployment->getId())
                     ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
 
@@ -464,12 +468,12 @@ class Builds extends Action
             $vars = [];
 
             // Shared vars
-            foreach ($function->getAttribute('varsProject', []) as $var) {
+            foreach ($resource->getAttribute('varsProject', []) as $var) {
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
             // Function vars
-            foreach ($function->getAttribute('vars', []) as $var) {
+            foreach ($resource->getAttribute('vars', []) as $var) {
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
@@ -478,27 +482,48 @@ class Builds extends Action
 
             $jwtExpiry = (int)System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+            //todo: not needed for sites yet, might be useful as a build variable but too shortlived
             $apiKey = $jwtObj->encode([
                 'projectId' => $project->getId(),
-                'scopes' => $function->getAttribute('scopes', [])
+                'scopes' => $resource->getAttribute('scopes', [])
             ]);
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_DOMAIN');
             $endpoint = $protocol . '://' . $hostname . "/v1";
 
+            //todo: ugly, but works
+            if ($isFunction) {
+                $vars = [
+                    ...$vars,
+                    'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
+                    'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
+                    'APPWRITE_FUNCTION_ID' => $resource->getId(),
+                    'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
+                    'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
+                    'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
+                    'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
+                    'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                    'APPWRITE_FUNCTION_CPUS' => $cpus,
+                    'APPWRITE_FUNCTION_MEMORY' => $memory
+                ];
+            }
+            if ($isSite) {
+                $vars = [
+                    ...$vars,
+                    'APPWRITE_SITE_ID' => $resource->getId(),
+                    'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),
+                    'APPWRITE_SITE_DEPLOYMENT' => $deployment->getId(),
+                    'APPWRITE_SITE_PROJECT_ID' => $project->getId(),
+                    'APPWRITE_SITE_RUNTIME_NAME' => $runtime['name'] ?? '',
+                    'APPWRITE_SITE_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                    'APPWRITE_SITE_CPUS' => $cpus,
+                    'APPWRITE_SITE_MEMORY' => $memory
+                ];
+            }
+
             // Appwrite vars
             $vars = \array_merge($vars, [
-                'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
-                'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
-                'APPWRITE_FUNCTION_ID' => $function->getId(),
-                'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
-                'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-                'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-                'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
-                'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-                'APPWRITE_FUNCTION_CPUS' => $cpus,
-                'APPWRITE_FUNCTION_MEMORY' => $memory,
                 'APPWRITE_VERSION' => APP_VERSION_STABLE,
                 'APPWRITE_REGION' => $project->getAttribute('region'),
                 'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
@@ -516,6 +541,7 @@ class Builds extends Action
                 'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
             ]);
 
+            //todo: for sites use isntall and build command
             $command = $deployment->getAttribute('commands', '');
 
             $response = null;
@@ -529,9 +555,9 @@ class Builds extends Action
             $isCanceled = false;
 
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, $cpus, $memory, &$err) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, &$err) {
                     try {
-                        $version = $function->getAttribute('version', 'v2');
+                        $version = $resource->getAttribute('version', 'v2');
                         $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
 
                         $response = $executor->createRuntime(
@@ -637,17 +663,17 @@ class Builds extends Action
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
             }
 
             Console::success("Build id: $buildId created");
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
-                $function->setAttribute('deploymentInternalId', $deployment->getInternalId());
-                $function->setAttribute('deployment', $deployment->getId());
-                $function->setAttribute('live', true);
-                $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+                $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                $resource->setAttribute('deployment', $deployment->getId());
+                $resource->setAttribute('live', true);
+                $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
             }
 
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
@@ -658,12 +684,14 @@ class Builds extends Action
             /** Update function schedule */
 
             // Inform scheduler if function is still active
-            $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
-            $schedule
-                ->setAttribute('resourceUpdatedAt', DateTime::now())
-                ->setAttribute('schedule', $function->getAttribute('schedule'))
-                ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+            if ($isFunction) {
+                $schedule = $dbForConsole->getDocument('schedules', $resource->getAttribute('scheduleId'));
+                $schedule
+                    ->setAttribute('resourceUpdatedAt', DateTime::now())
+                    ->setAttribute('schedule', $resource->getAttribute('schedule'))
+                    ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deployment')));
+                Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+            }
         } catch (\Throwable $th) {
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
                 Console::info('Build has been canceled');
@@ -680,7 +708,7 @@ class Builds extends Action
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
             }
         } finally {
             /**
@@ -702,30 +730,35 @@ class Builds extends Action
 
             /** Trigger usage queue */
             if ($build->getAttribute('status') === 'ready') {
-                $queueForUsage
-                    ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$build->getAttribute('duration', 0) * 1000)
-                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$build->getAttribute('duration', 0) * 1000);
+                if ($isFunction) {
+                    $queueForUsage
+                        ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
+                        ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$build->getAttribute('duration', 0) * 1000)
+                        ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
+                        ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$build->getAttribute('duration', 0) * 1000);
+                }
             } elseif ($build->getAttribute('status') === 'failed') {
-                $queueForUsage
-                    ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$build->getAttribute('duration', 0) * 1000)
-                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_FAILED), 1) // per function
-                    ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED), (int)$build->getAttribute('duration', 0) * 1000);
+                if ($isFunction) {
+                    $queueForUsage
+                        ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
+                        ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$build->getAttribute('duration', 0) * 1000)
+                        ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_FAILED), 1) // per function
+                        ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED), (int)$build->getAttribute('duration', 0) * 1000);
+                }
             }
-
-            $queueForUsage
-                ->addMetric(METRIC_BUILDS, 1) // per project
-                ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
-                ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
-                ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                ->setProject($project)
-                ->trigger();
+            if ($isFunction) {
+                $queueForUsage
+                    ->addMetric(METRIC_BUILDS, 1) // per project
+                    ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+                    ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+                    ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                    ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
+                    ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+                    ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+                    ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                    ->setProject($project)
+                    ->trigger();
+            }
         }
     }
 
@@ -736,7 +769,7 @@ class Builds extends Action
      * @param string $owner
      * @param string $repositoryName
      * @param Document $project
-     * @param Document $function
+     * @param Document $resource
      * @param string $deploymentId
      * @param Database $dbForProject
      * @param Database $dbForConsole
@@ -747,9 +780,9 @@ class Builds extends Action
      * @throws Conflict
      * @throws Restricted
      */
-    protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole): void
+    protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $resource, string $deploymentId, Database $dbForProject, Database $dbForConsole): void
     {
-        if ($function->getAttribute('providerSilentMode', false) === true) {
+        if ($resource->getAttribute('providerSilentMode', false) === true) {
             return;
         }
 
@@ -771,16 +804,14 @@ class Builds extends Action
                 default => $status
             };
 
-            $functionName = $function->getAttribute('name');
+            $resourceName = $resource->getAttribute('name');
             $projectName = $project->getAttribute('name');
 
-            $name = "{$functionName} ({$projectName})";
+            $name = "{$resourceName} ({$projectName})";
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_DOMAIN');
-            $functionId = $function->getId();
-            $projectId = $project->getId();
-            $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$projectId/functions/function-$functionId";
+            $providerTargetUrl = "{$protocol}://{$hostname}/console/project-{$project->getId()}/functions/function-{$resource->getId()}";
 
             $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, $state, $message, $providerTargetUrl, $name);
         }
@@ -809,7 +840,7 @@ class Builds extends Action
             try {
                 $comment = new Comment();
                 $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                $comment->addBuild($project, $function, $status, $deployment->getId(), ['type' => 'logs']);
+                $comment->addBuild($project, $resource, $status, $deployment->getId(), ['type' => 'logs']);
                 $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
             } finally {
                 $dbForConsole->deleteDocument('vcsCommentLocks', $commentId);

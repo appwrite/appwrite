@@ -37,7 +37,7 @@ App::post('/v1/proxy/rules')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROXY_RULE)
     ->param('domain', null, new ValidatorDomain(), 'Domain name.')
-    ->param('resourceType', null, new WhiteList(['api', 'function']), 'Action definition for the rule. Possible values are "api", "function"')
+    ->param('resourceType', null, new WhiteList(['api', 'function', 'site']), 'Action definition for the rule. Possible values are "api", "function" and "site"')
     ->param('resourceId', '', new UID(), 'ID of resource for the action type. If resourceType is "api", leave empty. If resourceType is "function", provide ID of the function.', true)
     ->inject('response')
     ->inject('project')
@@ -51,10 +51,22 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your main domain to specific resource. Please use subdomain or a different domain.');
         }
 
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-        if ($functionsDomain != '' && str_ends_with($domain, $functionsDomain)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
+
+        switch($resourceType) {
+            case 'function':
+                if (str_ends_with($domain, $functionsDomain)) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
+                }
+                break;
+            case 'site':
+                if (str_ends_with($domain, $sitesDomain)) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
+                }
+                break;
         }
+
 
         if ($domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
@@ -83,18 +95,34 @@ App::post('/v1/proxy/rules')
 
         $resourceInternalId = '';
 
-        if ($resourceType == 'function') {
-            if (empty($resourceId)) {
-                throw new Exception(Exception::FUNCTION_NOT_FOUND);
-            }
+        switch($resourceType) {
+            case 'function':
+	            if (empty($resourceId)) {
+	                throw new Exception(Exception::FUNCTION_NOT_FOUND);
+	            }
 
-            $function = $dbForProject->getDocument('functions', $resourceId);
+	            $function = $dbForProject->getDocument('functions', $resourceId);
 
-            if ($function->isEmpty()) {
-                throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
-            }
+	            if ($function->isEmpty()) {
+	                throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
+	            }
 
-            $resourceInternalId = $function->getInternalId();
+	            $resourceInternalId = $function->getInternalId();
+                break;
+            case 'site':
+                if (empty($resourceId)) {
+                    // todo: use site relecant exception
+	                throw new Exception(Exception::FUNCTION_NOT_FOUND);
+	            }
+
+	            $site = $dbForProject->getDocument('sites', $resourceId);
+
+	            if ($site->isEmpty()) {
+	                throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
+	            }
+
+	            $resourceInternalId = $site->getInternalId();
+                break;
         }
 
         try {
@@ -116,8 +144,8 @@ App::post('/v1/proxy/rules')
         ]);
 
         $status = 'created';
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS');
-        if (!empty($functionsDomain) && \str_ends_with($domain->get(), $functionsDomain)) {
+
+        if (\str_ends_with($domain->get(), $functionsDomain) || \str_ends_with($domain->get(), $sitesDomain)) {
             $status = 'verified';
         }
 
