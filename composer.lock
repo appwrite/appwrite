@@ -2070,16 +2070,16 @@
         },
         {
             "name": "utopia-php/logger",
-            "version": "0.6.1",
+            "version": "0.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/logger.git",
-                "reference": "7e8ff512c6f04577aba1df67c7b9628971946f9c"
+                "reference": "25b5bd2ad8bb51292f76332faa7034644fd0941d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/logger/zipball/7e8ff512c6f04577aba1df67c7b9628971946f9c",
-                "reference": "7e8ff512c6f04577aba1df67c7b9628971946f9c",
+                "url": "https://api.github.com/repos/utopia-php/logger/zipball/25b5bd2ad8bb51292f76332faa7034644fd0941d",
+                "reference": "25b5bd2ad8bb51292f76332faa7034644fd0941d",
                 "shasum": ""
             },
             "require": {
@@ -2118,22 +2118,22 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/logger/issues",
-                "source": "https://github.com/utopia-php/logger/tree/0.6.1"
+                "source": "https://github.com/utopia-php/logger/tree/0.6.2"
             },
-            "time": "2024-09-20T14:02:12+00:00"
+            "time": "2024-10-14T16:02:49+00:00"
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.12.1",
+            "version": "0.12.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "b9dfafb5efc1d12cbee01d03dc98853ef026e35b"
+                "reference": "f6790fba1fcee12163d51c65d2c226a7856295d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/b9dfafb5efc1d12cbee01d03dc98853ef026e35b",
-                "reference": "b9dfafb5efc1d12cbee01d03dc98853ef026e35b",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/f6790fba1fcee12163d51c65d2c226a7856295d9",
+                "reference": "f6790fba1fcee12163d51c65d2c226a7856295d9",
                 "shasum": ""
             },
             "require": {
@@ -2169,22 +2169,22 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.12.1"
+                "source": "https://github.com/utopia-php/messaging/tree/0.12.2"
             },
-            "time": "2024-10-09T08:17:07+00:00"
+            "time": "2024-10-22T01:02:20+00:00"
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.6.8",
+            "version": "0.6.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "c3740de52c1b616aa7f054d0fadb9207895b5279"
+                "reference": "ce97cdf2ca82e7cec78e2ed484ef2c71ebe8744b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c3740de52c1b616aa7f054d0fadb9207895b5279",
-                "reference": "c3740de52c1b616aa7f054d0fadb9207895b5279",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/ce97cdf2ca82e7cec78e2ed484ef2c71ebe8744b",
+                "reference": "ce97cdf2ca82e7cec78e2ed484ef2c71ebe8744b",
                 "shasum": ""
             },
             "require": {
@@ -2225,9 +2225,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.8"
+                "source": "https://github.com/utopia-php/migration/tree/0.6.9"
             },
-            "time": "2024-10-10T08:09:19+00:00"
+            "time": "2024-10-16T08:33:21+00:00"
         },
         {
             "name": "utopia-php/mongo",
