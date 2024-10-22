@@ -535,6 +535,13 @@ return [
         'code' => 404,
     ],
 
+    /** Sites */
+    Exception::SITE_FRAMEWORK_UNSUPPORTED => [
+        'name' => Exception::SITE_FRAMEWORK_UNSUPPORTED,
+        'description' => 'The requested framework is either inactive or unsupported. Please check the value of the _APP_SITES_FRAMEWORKS environment variable.',
+        'code' => 404,
+    ],
+
     /** Builds  */
     Exception::BUILD_NOT_FOUND => [
         'name' => Exception::BUILD_NOT_FOUND,

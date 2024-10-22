@@ -84,6 +84,7 @@ use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Session;
+use Appwrite\Utopia\Response\Model\Site;
 use Appwrite\Utopia\Response\Model\Specification;
 use Appwrite\Utopia\Response\Model\Subscriber;
 use Appwrite\Utopia\Response\Model\Target;
@@ -244,6 +245,10 @@ class Response extends SwooleResponse
     public const MODEL_VCS_CONTENT = 'vcsContent';
     public const MODEL_VCS_CONTENT_LIST = 'vcsContentList';
 
+    // Sites
+    public const MODEL_SITE = 'site';
+    public const MODEL_SITE_LIST = 'siteList';
+
     // Functions
     public const MODEL_FUNCTION = 'function';
     public const MODEL_FUNCTION_LIST = 'functionList';
@@ -351,6 +356,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Buckets List', self::MODEL_BUCKET_LIST, 'buckets', self::MODEL_BUCKET))
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
+            ->setModel(new BaseList('Sites List', self::MODEL_SITE_LIST, 'sites', self::MODEL_SITE))
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
             ->setModel(new BaseList('Function Templates List', self::MODEL_TEMPLATE_FUNCTION_LIST, 'templates', self::MODEL_TEMPLATE_FUNCTION))
             ->setModel(new BaseList('Installations List', self::MODEL_INSTALLATION_LIST, 'installations', self::MODEL_INSTALLATION))
@@ -422,6 +428,7 @@ class Response extends SwooleResponse
             ->setModel(new Bucket())
             ->setModel(new Team())
             ->setModel(new Membership())
+            ->setModel(new Site())
             ->setModel(new Func())
             ->setModel(new TemplateFunction())
             ->setModel(new TemplateRuntime())
