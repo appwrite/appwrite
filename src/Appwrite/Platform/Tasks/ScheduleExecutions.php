@@ -6,7 +6,6 @@ use Appwrite\Event\Func;
 use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
-use Utopia\Queue\Connection;
 
 class ScheduleExecutions extends ScheduleBase
 {
@@ -28,10 +27,11 @@ class ScheduleExecutions extends ScheduleBase
         return 'executions';
     }
 
-    protected function enqueueResources(Connection $queue, Database $dbForConsole): void
+    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
-
-        $queueForFunctions = new Func($queue);
+        $queue = $pools->get('queue')->pop();
+        $connection = $queue->getResource();
+        $queueForFunctions = new Func($connection);
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
 
         foreach ($this->schedules as $schedule) {
@@ -81,5 +81,7 @@ class ScheduleExecutions extends ScheduleBase
 
             unset($this->schedules[$schedule['$internalId']]);
         }
+
+        $queue->reclaim();
     }
 }

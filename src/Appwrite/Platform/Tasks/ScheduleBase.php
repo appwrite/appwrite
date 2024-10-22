@@ -11,7 +11,6 @@ use Utopia\Database\Exception;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
-use Utopia\Queue\Connection;
 use Utopia\System\System;
 
 use function Swoole\Coroutine\run;
@@ -26,7 +25,7 @@ abstract class ScheduleBase extends Action
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
     abstract public static function getCollectionId(): string;
-    abstract protected function enqueueResources(Connection $queue, Database $dbForConsole);
+    abstract protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void;
 
     public function __construct()
     {
@@ -34,10 +33,10 @@ abstract class ScheduleBase extends Action
 
         $this
             ->desc("Execute {$type}s scheduled in Appwrite")
-            ->inject('queue')
+            ->inject('pools')
             ->inject('dbForConsole')
             ->inject('getProjectDB')
-            ->callback(fn (Connection $queue, Database $dbForConsole, callable $getProjectDB) => $this->action($queue, $dbForConsole, $getProjectDB));
+            ->callback(fn (Group $pools, Database $dbForConsole, callable $getProjectDB) => $this->action($pools, $dbForConsole, $getProjectDB));
     }
 
     /**
@@ -45,7 +44,7 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(Connection $queue, Database $dbForConsole, callable $getProjectDB): void
+    public function action(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
@@ -114,15 +113,17 @@ abstract class ScheduleBase extends Action
             $latestDocument = \end($results);
         }
 
+        $pools->reclaim();
+
         Console::success("{$total} resources were loaded in " . (\microtime(true) - $loadStart) . " seconds");
 
         Console::success("Starting timers at " . DateTime::now());
 
-        run(function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $queue) {
+        run(function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $pools, $getProjectDB) {
             /**
              * The timer synchronize $schedules copy with database collection.
              */
-            Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $queue) {
+            Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $pools) {
                 $time = DateTime::now();
                 $timerStart = \microtime(true);
 
@@ -171,15 +172,17 @@ abstract class ScheduleBase extends Action
                 $lastSyncUpdate = $time;
                 $timerEnd = \microtime(true);
 
+                $pools->reclaim();
+
                 Console::log("Sync tick: {$total} schedules were updated in " . ($timerEnd - $timerStart) . " seconds");
             });
 
             Timer::tick(
                 static::ENQUEUE_TIMER * 1000,
-                fn () => $this->enqueueResources($queue, $dbForConsole)
+                fn () => $this->enqueueResources($pools, $dbForConsole, $getProjectDB)
             );
 
-            $this->enqueueResources($queue, $dbForConsole);
+            $this->enqueueResources($pools, $dbForConsole, $getProjectDB);
         });
     }
 }

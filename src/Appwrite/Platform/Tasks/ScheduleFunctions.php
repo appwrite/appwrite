@@ -8,7 +8,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Pools\Group;
-use Utopia\Queue\Connection;
 
 class ScheduleFunctions extends ScheduleBase
 {
@@ -32,7 +31,7 @@ class ScheduleFunctions extends ScheduleBase
         return 'functions';
     }
 
-    protected function enqueueResources(Connection $queue, Database $dbForConsole): void
+    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         $timerStart = \microtime(true);
         $time = DateTime::now();
@@ -71,8 +70,11 @@ class ScheduleFunctions extends ScheduleBase
         }
 
         foreach ($delayedExecutions as $delay => $scheduleKeys) {
-            \go(function () use ($delay, $scheduleKeys, $queue) {
+            \go(function () use ($delay, $scheduleKeys, $pools) {
                 \sleep($delay); // in seconds
+
+                $queue = $pools->get('queue')->pop();
+                $connection = $queue->getResource();
 
                 foreach ($scheduleKeys as $scheduleKey) {
                     // Ensure schedule was not deleted
@@ -82,7 +84,7 @@ class ScheduleFunctions extends ScheduleBase
 
                     $schedule = $this->schedules[$scheduleKey];
 
-                    $queueForFunctions = new Func($queue);
+                    $queueForFunctions = new Func($connection);
 
                     $queueForFunctions
                         ->setType('schedule')
@@ -92,6 +94,8 @@ class ScheduleFunctions extends ScheduleBase
                         ->setProject($schedule['project'])
                         ->trigger();
                 }
+
+                $queue->reclaim();
             });
         }
 

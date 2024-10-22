@@ -207,7 +207,8 @@ App::post('/v1/projects')
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $dbForProject
                 ->setSharedTables(true)
-                ->setTenant($globalCollections ? null : $project->getInternalId())
+                ->setTenant($project->getInternalId())
+                //->setTenant($globalCollections ? null : $project->getInternalId())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $dbForProject
@@ -218,46 +219,50 @@ App::post('/v1/projects')
 
         $create = true;
 
-        try {
+       // try {
             $dbForProject->create();
-        } catch (Duplicate) {
-            $create = false;
-        }
+       // } catch (Duplicate) {
+         //   $create = false;
+        //}
 
-        if ($create || !$globalCollections) {
-            $audit = new Audit($dbForProject);
-            $audit->setup();
+        $audit = new Audit($dbForProject);
+        $audit->setup();
 
-            $abuse = new TimeLimit('', 0, 1, $dbForProject);
-            $abuse->setup();
+        $abuse = new TimeLimit('', 0, 1, $dbForProject);
+        $abuse->setup();
 
-            /** @var array $collections */
-            $collections = Config::getParam('collections', [])['projects'] ?? [];
+        /** @var array $collections */
+        $collections = Config::getParam('collections', [])['projects'] ?? [];
 
-            foreach ($collections as $key => $collection) {
-                if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                    continue;
-                }
+        foreach ($collections as $key => $collection) {
+            if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                continue;
+            }
 
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+            $attributes = \array_map(function (array $attribute) {
+                return new Document($attribute);
+            }, $collection['attributes']);
+
+            $indexes = \array_map(function (array $index) {
+                return new Document($index);
+            }, $collection['indexes']);
 
                 try {
                     $dbForProject->createCollection($key, $attributes, $indexes);
                 } catch (Duplicate) {
-                    if (!$globalCollections) {
-                        $dbForProject->createDocument(Database::METADATA, new Document([
-                            '$id' => ID::custom($key),
-                            '$permissions' => [Permission::create(Role::any())],
-                            'name' => $key,
-                            'attributes' => $attributes,
-                            'indexes' => $indexes,
-                            'documentSecurity' => true
-                        ]));
-                    }
+//                    if (!$globalCollections) {
+//                        $dbForProject->createDocument(Database::METADATA, new Document([
+//                            '$id' => ID::custom($key),
+//                            '$permissions' => [Permission::create(Role::any())],
+//                            'name' => $key,
+//                            'attributes' => $attributes,
+//                            'indexes' => $indexes,
+//                            'documentSecurity' => true
+//                        ]));
+//                    }
                 }
             }
-        }
+       // }
 
         // Hook allowing instant project mirroring during migration
         // Outside of migration, hook is not registered and has no effect
