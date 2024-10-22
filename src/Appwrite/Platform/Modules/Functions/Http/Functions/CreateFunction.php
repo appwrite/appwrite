@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Compute\Functions\Http\Functions;
+namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
 use Appwrite\Event\Build;
 use Appwrite\Event\Event;
@@ -8,6 +8,7 @@ use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\Validator\RuntimeSpecification;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
@@ -33,10 +34,9 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 
-class CreateFunction extends Action
+class CreateFunction extends Base
 {
     use HTTP;
-    private $helper;
 
     public static function getName()
     {
@@ -45,7 +45,6 @@ class CreateFunction extends Action
 
     public function __construct()
     {
-        $this->helper = new Helper();
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/functions')
@@ -214,7 +213,7 @@ class CreateFunction extends Action
 
         if (!empty($providerRepositoryId)) {
             // Deploy VCS
-            $this->helper->redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
+            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
         } elseif (!$template->isEmpty()) {
             // Deploy non-VCS from template
             $deploymentId = ID::unique();

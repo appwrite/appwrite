@@ -24,6 +24,9 @@ class Event
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
 
+    public const SITES_QUEUE_NAME = 'v1-sites';
+    public const SITES_CLASS_NAME = 'SitesV1';
+
     public const USAGE_QUEUE_NAME = 'v1-usage';
     public const USAGE_CLASS_NAME = 'UsageV1';
 

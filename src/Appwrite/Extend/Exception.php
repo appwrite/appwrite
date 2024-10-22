@@ -151,6 +151,9 @@ class Exception extends \Exception
     public const PROVIDER_CONTRIBUTION_CONFLICT    = 'provider_contribution_conflict';
     public const GENERAL_PROVIDER_FAILURE          = 'general_provider_failure';
 
+    /** Sites */
+    public const SITE_FRAMEWORK_UNSUPPORTED        = 'site_framework_unsupported';
+
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
     public const FUNCTION_RUNTIME_UNSUPPORTED      = 'function_runtime_unsupported';

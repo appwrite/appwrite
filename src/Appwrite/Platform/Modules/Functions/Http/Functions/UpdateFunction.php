@@ -1,12 +1,13 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Compute\Functions\Http\Functions;
+namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
 use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\Validator\RuntimeSpecification;
+use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
@@ -34,10 +35,9 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 
-class UpdateFunction extends Action
+class UpdateFunction extends Base
 {
     use HTTP;
-    private $helper;
 
     public static function getName()
     {
@@ -46,7 +46,6 @@ class UpdateFunction extends Action
 
     public function __construct()
     {
-        $this->helper = new Helper();
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/functions/:functionId')
             ->desc('Update function')
@@ -238,7 +237,7 @@ class UpdateFunction extends Action
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->helper->redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $github);
+            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $github);
         }
 
         // Inform scheduler if function is still active

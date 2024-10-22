@@ -1,10 +1,10 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Compute\Functions\Services;
+namespace Appwrite\Platform\Modules\Functions\Services;
 
-use Appwrite\Platform\Modules\Compute\Functions\Http\Deployments\CreateDeployment;
-use Appwrite\Platform\Modules\Compute\Functions\Http\Functions\CreateFunction;
-use Appwrite\Platform\Modules\Compute\Functions\Http\Functions\UpdateFunction;
+use Appwrite\Platform\Modules\Functions\Http\Deployments\CreateDeployment;
+use Appwrite\Platform\Modules\Functions\Http\Functions\CreateFunction;
+use Appwrite\Platform\Modules\Functions\Http\Functions\UpdateFunction;
 use Utopia\Platform\Service;
 
 class Http extends Service
