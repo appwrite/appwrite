@@ -1498,6 +1498,7 @@ trait UsersBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('random-email1@mail.org', $response['body']['identifier']);
+        $this->assertEquals(false, $response['body']['expired']);
         return $response['body'];
     }
 

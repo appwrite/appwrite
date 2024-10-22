@@ -2695,4 +2695,48 @@ class AccountCustomClientTest extends Scope
 
         return $data;
     }
+
+    public function testCreatePushTarget(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account/push/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'identifier' => 'test-identifier',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('test-identifier', $response['body']['identifier']);
+    }
+
+    public function testUpdatePushTarget(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account/push/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'identifier' => 'test-identifier',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('test-identifier', $response['body']['identifier']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/push/targets/' . $response['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'identifier' => 'test-identifier-updated',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('test-identifier-updated', $response['body']['identifier']);
+        $this->assertEquals(false, $response['body']['expired']);
+    }
 }
