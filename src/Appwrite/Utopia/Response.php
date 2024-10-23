@@ -44,6 +44,7 @@ use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
+use Appwrite\Utopia\Response\Model\Framework;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Headers;
 use Appwrite\Utopia\Response\Model\HealthAntivirus;
@@ -248,6 +249,8 @@ class Response extends SwooleResponse
     // Sites
     public const MODEL_SITE = 'site';
     public const MODEL_SITE_LIST = 'siteList';
+    public const MODEL_FRAMEWORK = 'framework';
+    public const MODEL_FRAMEWORK_LIST = 'frameworkList';
 
     // Functions
     public const MODEL_FUNCTION = 'function';
@@ -362,6 +365,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Installations List', self::MODEL_INSTALLATION_LIST, 'installations', self::MODEL_INSTALLATION))
             ->setModel(new BaseList('Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_LIST, 'providerRepositories', self::MODEL_PROVIDER_REPOSITORY))
             ->setModel(new BaseList('Branches List', self::MODEL_BRANCH_LIST, 'branches', self::MODEL_BRANCH))
+            ->setModel(new BaseList('Frameworks List', self::MODEL_FRAMEWORK_LIST, 'frameworks', self::MODEL_FRAMEWORK))
             ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
             ->setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
@@ -439,6 +443,7 @@ class Response extends SwooleResponse
             ->setModel(new VcsContent())
             ->setModel(new Branch())
             ->setModel(new Runtime())
+            ->setModel(new Framework())
             ->setModel(new Deployment())
             ->setModel(new Execution())
             ->setModel(new Build())
