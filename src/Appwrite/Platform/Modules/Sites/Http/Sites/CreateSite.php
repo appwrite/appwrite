@@ -79,7 +79,7 @@ class CreateSite extends Base
                 Config::getParam('framework-specifications', []),
                 App::getEnv('_APP_SITES_CPUS', APP_SITE_CPUS_DEFAULT),
                 App::getEnv('_APP_SITES_MEMORY', APP_SITE_MEMORY_DEFAULT)
-            ), 'Runtime specification for the site and builds.', true, ['plan'])
+            ), 'Framework specification for the site and builds.', true, ['plan'])
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')

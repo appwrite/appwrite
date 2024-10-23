@@ -65,7 +65,6 @@ class CreateDeployment extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->inject('project')
             ->inject('deviceForSites')
             ->inject('deviceForFunctions') // TODO: Remove this later once volume is added to executor
             ->inject('deviceForLocal')
@@ -73,7 +72,7 @@ class CreateDeployment extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, ?string $installCommand, ?string $buildCommand, ?string $outputDirectory, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds)
+    public function action(string $siteId, ?string $installCommand, ?string $buildCommand, ?string $outputDirectory, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds)
     {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
