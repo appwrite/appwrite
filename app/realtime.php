@@ -137,14 +137,17 @@ if (!function_exists('getCache')) {
     }
 }
 
-if (!function_exists('getRealtime')) {
-    function getRealtime(): Realtime
+if (!function_exists("getPubSub")) {
+    function getPubSub(): \Redis
     {
-        return new Realtime();
+        global $register;
+
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        return $pools->get('pubsub')->pop()->getResource();
     }
 }
 
-$realtime = getRealtime();
+$realtime = new Realtime();
 
 /**
  * Table for statistics across all workers.
@@ -367,7 +370,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
             $start = time();
 
-            $redis = $register->get('pools')->get('pubsub')->pop()->getResource(); /** @var Redis $redis */
+            $redis = getPubSub(); /** @var \Redis $redis */
             $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
             if ($redis->ping(true)) {

@@ -79,6 +79,7 @@ class Migration extends Event
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
+            'sourceRegion' =>  $this->getSourceRegion(),
             'project' => $this->project,
             'user' => $this->user,
             'migration' => $this->migration,

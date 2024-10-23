@@ -6,6 +6,7 @@ use InvalidArgumentException;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
+use Utopia\System\System;
 
 class Event
 {
@@ -108,6 +109,13 @@ class Event
     public function getEvent(): string
     {
         return $this->event;
+    }
+
+
+
+    public function getSourceRegion(): string
+    {
+        return System::getEnv('_APP_REGION', 'default');
     }
 
     /**
@@ -322,6 +330,7 @@ class Event
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
+            'sourceRegion' =>  $this->getSourceRegion(),
             'project' => $this->project,
             'user' => $this->user,
             'userId' => $this->userId,

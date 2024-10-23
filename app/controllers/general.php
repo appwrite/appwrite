@@ -59,6 +59,12 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         ])
     )[0] ?? null;
 
+//    var_dump(System::getEnv('_APP_DOMAIN_FUNCTIONS', ''));
+//    var_dump($host);
+//    var_dump(APP_HOSTNAME_INTERNAL);
+//    var_dump($request->getHeader('host'));
+//    var_dump($request->getHeader('x-forwarded-host'));
+
     if ($route === null) {
         if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
@@ -461,7 +467,8 @@ App::init()
         /*
         * Appwrite Router
         */
-        $host = $request->getHostname() ?? '';
+
+       $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
@@ -662,6 +669,7 @@ App::init()
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_UNKNOWN_ORIGIN, $originValidator->getDescription());
         }
+
     });
 
 App::options()
@@ -1014,7 +1022,6 @@ App::get('/.well-known/acme-challenge/*')
     ->action(function (Request $request, Response $response) {
         $uriChunks = \explode('/', $request->getURI());
         $token = $uriChunks[\count($uriChunks) - 1];
-
         $validator = new Text(100, allowList: [
             ...Text::NUMBERS,
             ...Text::ALPHABET_LOWER,

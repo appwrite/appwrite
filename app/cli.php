@@ -163,15 +163,19 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
+
 CLI::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
+
 CLI::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
+
 CLI::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
+
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
         $logger = $register->get('logger');

@@ -125,11 +125,20 @@ App::post('/v1/projects')
 
         $databases = Config::getParam('pools-database', []);
 
+        $databases = Config::getParam('pools-database', []);
+        var_dump($databases);
         $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
         $index = \array_search($databaseOverride, $databases);
         if ($index !== false) {
             $dsn = $databases[$index];
         } else {
+
+            if ($region !== 'default') {
+                $databases = array_filter($databases, function ($value) use ($region) {
+                    return str_contains($value, $region);
+                });
+            }
+
             $dsn = $databases[array_rand($databases)];
         }
 
@@ -191,6 +200,9 @@ App::post('/v1/projects')
             // TODO: Temporary until all projects are using shared tables
             $dsn = new DSN('mysql://' . $dsn);
         }
+
+
+        var_dump($dsn->getHost());
 
         $adapter = $pools->get($dsn->getHost())->pop()->getResource();
         $dbForProject = new Database($adapter, $cache);
@@ -263,6 +275,9 @@ App::post('/v1/projects')
                     continue;
                 }
 
+            $indexes = \array_map(function (array $index) {
+                return new Document($index);
+            }, $collection['indexes']);
                 $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
                 $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
 
@@ -279,7 +294,7 @@ App::post('/v1/projects')
                     ]));
                 }
             }
-        }
+       // }
 
         // Hook allowing instant project mirroring during migration
         // Outside of migration, hook is not registered and has no effect
