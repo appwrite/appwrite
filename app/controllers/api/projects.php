@@ -196,12 +196,16 @@ App::post('/v1/projects')
         $dbForProject = new Database($adapter, $cache);
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-        $globalCollections = !\in_array($dsn->getHost(), $sharedTablesV1);
 
-        if (\in_array($dsn->getHost(), $sharedTables)) {
+        $projectTables = !\in_array($dsn->getHost(), $sharedTables);
+        $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
+        $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
+        $sharedTables = $sharedTablesV1 || $sharedTablesV2;
+
+        if ($sharedTables) {
             $dbForProject
                 ->setSharedTables(true)
-                ->setTenant($globalCollections ? null : $project->getInternalId())
+                ->setTenant($sharedTablesV1 ? $project->getInternalId() : null)
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $dbForProject
@@ -218,37 +222,39 @@ App::post('/v1/projects')
             $create = false;
         }
 
-        if ($create || !$globalCollections) {
+        if ($create || $projectTables) {
             $audit = new Audit($dbForProject);
             $audit->setup();
 
             $abuse = new TimeLimit('', 0, 1, $dbForProject);
             $abuse->setup();
+        }
 
-            if (!$globalCollections) {
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), TimeLimit::ATTRIBUTES);
-                $indexes = \array_map(fn (array $index) => new Document($index), TimeLimit::INDEXES);
-                $dbForProject->createDocument(Database::METADATA, new Document([
-                    '$id' => ID::custom('audit'),
-                    '$permissions' => [Permission::create(Role::any())],
-                    'name' => 'audit',
-                    'attributes' => $attributes,
-                    'indexes' => $indexes,
-                    'documentSecurity' => true
-                ]));
+        if (!$create && $sharedTablesV1) {
+            $attributes = \array_map(fn ($attribute) => new Document($attribute), TimeLimit::ATTRIBUTES);
+            $indexes = \array_map(fn (array $index) => new Document($index), TimeLimit::INDEXES);
+            $dbForProject->createDocument(Database::METADATA, new Document([
+                '$id' => ID::custom('audit'),
+                '$permissions' => [Permission::create(Role::any())],
+                'name' => 'audit',
+                'attributes' => $attributes,
+                'indexes' => $indexes,
+                'documentSecurity' => true
+            ]));
 
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), Audit::ATTRIBUTES);
-                $indexes = \array_map(fn (array $index) => new Document($index), Audit::INDEXES);
-                $dbForProject->createDocument(Database::METADATA, new Document([
-                    '$id' => ID::custom('abuse'),
-                    '$permissions' => [Permission::create(Role::any())],
-                    'name' => 'abuse',
-                    'attributes' => $attributes,
-                    'indexes' => $indexes,
-                    'documentSecurity' => true
-                ]));
-            }
+            $attributes = \array_map(fn ($attribute) => new Document($attribute), Audit::ATTRIBUTES);
+            $indexes = \array_map(fn (array $index) => new Document($index), Audit::INDEXES);
+            $dbForProject->createDocument(Database::METADATA, new Document([
+                '$id' => ID::custom('abuse'),
+                '$permissions' => [Permission::create(Role::any())],
+                'name' => 'abuse',
+                'attributes' => $attributes,
+                'indexes' => $indexes,
+                'documentSecurity' => true
+            ]));
+        }
 
+        if ($create || $sharedTablesV1) {
             /** @var array $collections */
             $collections = Config::getParam('collections', [])['projects'] ?? [];
 
@@ -263,16 +269,14 @@ App::post('/v1/projects')
                 try {
                     $dbForProject->createCollection($key, $attributes, $indexes);
                 } catch (Duplicate) {
-                    if (!$globalCollections) {
-                        $dbForProject->createDocument(Database::METADATA, new Document([
-                            '$id' => ID::custom($key),
-                            '$permissions' => [Permission::create(Role::any())],
-                            'name' => $key,
-                            'attributes' => $attributes,
-                            'indexes' => $indexes,
-                            'documentSecurity' => true
-                        ]));
-                    }
+                    $dbForProject->createDocument(Database::METADATA, new Document([
+                        '$id' => ID::custom($key),
+                        '$permissions' => [Permission::create(Role::any())],
+                        'name' => $key,
+                        'attributes' => $attributes,
+                        'indexes' => $indexes,
+                        'documentSecurity' => true
+                    ]));
                 }
             }
         }
