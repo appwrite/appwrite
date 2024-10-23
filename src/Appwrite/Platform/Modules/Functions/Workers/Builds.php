@@ -145,6 +145,8 @@ class Builds extends Action
         }
 
         $version = $resource->getAttribute('version', 'v2');
+
+        // todo: fallback for sites
         if ($isSite) {
             $version = 'v4';
         }
@@ -154,6 +156,7 @@ class Builds extends Action
         $key =  $resource->getAttribute('runtime');
         $runtime = $runtimes[$key] ?? null;
 
+        // todo: fallback for sites
         if ($isSite) {
             $runtime = $runtimes['node-18.0'];
         }
@@ -687,9 +690,16 @@ class Builds extends Action
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
                 $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
-                $resource->setAttribute('deployment', $deployment->getId());
                 $resource->setAttribute('live', true);
-                $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
+                // todo: fix here how clean this is
+                if ($isSite) {
+                    $resource->setAttribute('deploymentId', $deployment->getId());
+                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+                }
+                if ($isFunction) {
+                    $resource->setAttribute('deployment', $deployment->getId());
+                    $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
+                }
             }
 
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
