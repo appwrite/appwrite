@@ -225,6 +225,30 @@ App::post('/v1/projects')
             $abuse = new TimeLimit('', 0, 1, $dbForProject);
             $abuse->setup();
 
+            if (!$globalCollections) {
+                $attributes = \array_map(fn ($attribute) => new Document($attribute), TimeLimit::ATTRIBUTES);
+                $indexes = \array_map(fn (array $index) => new Document($index), TimeLimit::INDEXES);
+                $dbForProject->createDocument(Database::METADATA, new Document([
+                    '$id' => ID::custom('audit'),
+                    '$permissions' => [Permission::create(Role::any())],
+                    'name' => 'audit',
+                    'attributes' => $attributes,
+                    'indexes' => $indexes,
+                    'documentSecurity' => true
+                ]));
+
+                $attributes = \array_map(fn ($attribute) => new Document($attribute), Audit::ATTRIBUTES);
+                $indexes = \array_map(fn (array $index) => new Document($index), Audit::INDEXES);
+                $dbForProject->createDocument(Database::METADATA, new Document([
+                    '$id' => ID::custom('abuse'),
+                    '$permissions' => [Permission::create(Role::any())],
+                    'name' => 'abuse',
+                    'attributes' => $attributes,
+                    'indexes' => $indexes,
+                    'documentSecurity' => true
+                ]));
+            }
+
             /** @var array $collections */
             $collections = Config::getParam('collections', [])['projects'] ?? [];
 
