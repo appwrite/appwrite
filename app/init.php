@@ -41,6 +41,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
@@ -129,6 +130,7 @@ const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1_073_741_824; // 2^32 bits / 4 bits per char
 const APP_DATABASE_TIMEOUT_MILLISECONDS = 15_000;
+const APP_DATABASE_QUERY_MAX_VALUES = 500;
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
@@ -151,6 +153,9 @@ const APP_HOSTNAME_INTERNAL = 'appwrite';
 const APP_FUNCTION_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
 const APP_FUNCTION_CPUS_DEFAULT = 0.5;
 const APP_FUNCTION_MEMORY_DEFAULT = 512;
+const APP_PLATFORM_SERVER = 'server';
+const APP_PLATFORM_CLIENT = 'client';
+const APP_PLATFORM_CONSOLE = 'console';
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
@@ -238,10 +243,13 @@ const METRIC_MESSAGES_TYPE_PROVIDER_FAILED  = METRIC_MESSAGES . '.{type}.{provid
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
+const METRIC_DATABASES_STORAGE = 'databases.storage';
 const METRIC_DATABASE_ID_COLLECTIONS = '{databaseInternalId}.collections';
+const METRIC_DATABASE_ID_STORAGE = '{databaseInternalId}.databases.storage';
 const METRIC_DOCUMENTS = 'documents';
 const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE = '{databaseInternalId}.{collectionInternalId}.databases.storage';
 const METRIC_BUCKETS = 'buckets';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
@@ -1252,13 +1260,13 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user = new Document([]);
     }
 
-    if (APP_MODE_ADMIN === $mode) {
-        if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
-            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
-        } else {
-            $user = new Document([]);
-        }
-    }
+    // if (APP_MODE_ADMIN === $mode) {
+    //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
+    //         Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+    //     } else {
+    //         $user = new Document([]);
+    //     }
+    // }
 
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
@@ -1335,7 +1343,7 @@ App::setResource('console', function () {
         '$collection' => ID::custom('projects'),
         'description' => 'Appwrite core engine',
         'logo' => '',
-        'teamId' => -1,
+        'teamId' => null,
         'webhooks' => [],
         'keys' => [],
         'platforms' => [
@@ -1391,7 +1399,8 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     $database
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', $project->getId())
-        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+        ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
     try {
         $dsn = new DSN($project->getAttribute('database'));
@@ -1427,7 +1436,8 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
         ->setNamespace('_console')
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', 'console')
-        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+        ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
     return $database;
 }, ['pools', 'cache']);
@@ -1451,7 +1461,8 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             $database
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())
-                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+                ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
             if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
                 $database
@@ -1516,9 +1527,9 @@ App::setResource('deviceForBuilds', function ($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
 
-function getDevice($root): Device
+function getDevice(string $root, string $connection = ''): Device
 {
-    $connection = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    $connection = !empty($connection) ? $connection : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
     if (!empty($connection)) {
         $acl = 'private';
@@ -1763,3 +1774,35 @@ App::setResource('requestTimestamp', function ($request) {
 App::setResource('plan', function (array $plan = []) {
     return [];
 });
+
+
+App::setResource('team', function (Document $project, Database $dbForConsole, App $utopia, Request $request) {
+    $teamInternalId = '';
+    if ($project->getId() !== 'console') {
+        $teamInternalId = $project->getAttribute('teamInternalId', '');
+    } else {
+        $route = $utopia->match($request);
+        $path = $route->getPath();
+        if (str_starts_with($path, '/v1/projects/:projectId')) {
+            $uri = $request->getURI();
+            $pid = explode('/', $uri)[3];
+            $p = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $pid));
+            $teamInternalId = $p->getAttribute('teamInternalId', '');
+        } elseif ($path === '/v1/projects') {
+            $teamId = $request->getParam('teamId', '');
+            $team = Authorization::skip(fn () => $dbForConsole->getDocument('teams', $teamId));
+            return $team;
+        }
+    }
+
+    $team = Authorization::skip(function () use ($dbForConsole, $teamInternalId) {
+        return $dbForConsole->findOne('teams', [
+            Query::equal('$internalId', [$teamInternalId]),
+        ]);
+    });
+
+    if (!$team) {
+        $team = new Document([]);
+    }
+    return $team;
+}, ['project', 'dbForConsole', 'utopia', 'request']);

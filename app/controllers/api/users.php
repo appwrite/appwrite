@@ -36,6 +36,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
@@ -576,6 +577,12 @@ App::get('/v1/users')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $userId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('users', $userId);
 
@@ -886,6 +893,11 @@ App::get('/v1/users/:userId/targets')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $targetId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('targets', $targetId);
 
@@ -938,6 +950,12 @@ App::get('/v1/users/identities')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $identityId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('identities', $identityId);
 
@@ -1485,7 +1503,9 @@ App::patch('/v1/users/:userId/targets/:targetId')
                     throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
             }
 
-            $target->setAttribute('identifier', $identifier);
+            $target
+                ->setAttribute('identifier', $identifier)
+                ->setAttribute('expired', false);
         }
 
         if ($providerId) {
@@ -1499,8 +1519,9 @@ App::patch('/v1/users/:userId/targets/:targetId')
                 throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
             }
 
-            $target->setAttribute('providerId', $provider->getId());
-            $target->setAttribute('providerInternalId', $provider->getInternalId());
+            $target
+                ->setAttribute('providerId', $provider->getId())
+                ->setAttribute('providerInternalId', $provider->getInternalId());
         }
 
         if ($name) {
