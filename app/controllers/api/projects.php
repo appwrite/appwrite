@@ -231,8 +231,8 @@ App::post('/v1/projects')
         }
 
         if (!$create && $sharedTablesV1) {
-            $attributes = \array_map(fn ($attribute) => new Document($attribute), TimeLimit::ATTRIBUTES);
-            $indexes = \array_map(fn (array $index) => new Document($index), TimeLimit::INDEXES);
+            $attributes = \array_map(fn ($attribute) => new Document($attribute), Audit::ATTRIBUTES);
+            $indexes = \array_map(fn (array $index) => new Document($index), Audit::INDEXES);
             $dbForProject->createDocument(Database::METADATA, new Document([
                 '$id' => ID::custom('audit'),
                 '$permissions' => [Permission::create(Role::any())],
@@ -242,8 +242,8 @@ App::post('/v1/projects')
                 'documentSecurity' => true
             ]));
 
-            $attributes = \array_map(fn ($attribute) => new Document($attribute), Audit::ATTRIBUTES);
-            $indexes = \array_map(fn (array $index) => new Document($index), Audit::INDEXES);
+            $attributes = \array_map(fn ($attribute) => new Document($attribute), TimeLimit::ATTRIBUTES);
+            $indexes = \array_map(fn (array $index) => new Document($index), TimeLimit::INDEXES);
             $dbForProject->createDocument(Database::METADATA, new Document([
                 '$id' => ID::custom('abuse'),
                 '$permissions' => [Permission::create(Role::any())],
