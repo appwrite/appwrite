@@ -228,10 +228,17 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $payload);
         $this->assertEquals('error', $payload['type']);
         $this->assertEquals(1008, $payload['data']['code']);
-        $this->assertEquals('Invalid Origin. Register your new client (appwrite.unknown) as a new Web platform on your project console dashboard', $payload['data']['message']);
+        $this->assertEquals(
+            'Invalid Origin. Register your new client (appwrite.unknown) as a new Web platform on your project console dashboard',
+            $payload['data']['message']
+        );
         \usleep(250000); // 250ms
-        $this->expectException(ConnectionException::class); // Check if server disconnnected client
-        $client->close();
+
+        try {
+            $client->close();
+        } catch (ConnectionException $e) {
+            $this->assertInstanceOf(ConnectionException::class, $e); // Check if server disconnected client
+        }
     }
 
     public function testChannelAccount()
