@@ -323,12 +323,12 @@ App::post('/v1/project/variables')
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
-    ->param('secret', false, new Boolean(true), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
+    ->param('secret', false, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForConsole')
-    ->action(function (string $key, string $value, mixed $secret, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->action(function (string $key, string $value, bool $secret, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
         $variableId = ID::unique();
 
         $variable = new Document([
