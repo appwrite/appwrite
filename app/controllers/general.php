@@ -100,8 +100,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     $type = $rule->getAttribute('resourceType');
 
     if ($type === 'function' || $type === 'site') {
-        // $isFunction = $type === 'function' ;
-        // $isSite = $type === 'site';
         $resourceCollection = match($type) {
             'function' => 'functions',
             'site' => 'sites'
