@@ -336,6 +336,7 @@ Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
 Config::load('runtime-specifications', __DIR__ . '/config/runtimes/specifications.php');
 Config::load('function-templates', __DIR__ . '/config/function-templates.php');
+Config::load('site-templates', __DIR__ . '/config/site-templates.php');
 
 /**
  * New DB Filters
@@ -558,7 +559,7 @@ Database::addFilter(
         return $database
             ->find('variables', [
                 Query::equal('resourceInternalId', [$document->getInternalId()]),
-                Query::equal('resourceType', ['function']),
+                Query::equal('resourceType', ['function', 'site']),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }

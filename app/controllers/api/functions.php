@@ -2565,7 +2565,7 @@ App::get('/v1/functions/templates')
     ->desc('List function templates')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listTemplates')
+    ->label('sdk.method', 'listTemplates') // TODO: Change to listFunctionTemplates later
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.description', '/docs/references/functions/list-templates.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
