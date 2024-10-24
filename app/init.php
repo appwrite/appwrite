@@ -558,7 +558,7 @@ Database::addFilter(
         return $database
             ->find('variables', [
                 Query::equal('resourceInternalId', [$document->getInternalId()]),
-                Query::equal('resourceType', ['function']),
+                Query::equal('resourceType', ['function', 'site']),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
