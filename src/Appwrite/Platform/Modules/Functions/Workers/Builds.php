@@ -830,7 +830,7 @@ class Builds extends Action
     protected function getCommand(Document $resource, Document $deployment): string
     {
         return match($resource->getCollection()) {
-            'functions' => $deployment->getAttribute('command', ''),
+            'functions' => $deployment->getAttribute('commands', ''),
             'sites' => implode(' && ', array_filter([
                 $deployment->getAttribute('installCommand'),
                 $deployment->getAttribute('buildCommand')
