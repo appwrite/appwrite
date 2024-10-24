@@ -167,8 +167,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         }
 
         $deploymentId = match($type) {
-            'function' => $resource->getAttribute('deploymentId', ''),
-            'site' => $resource->getAttribute('deployment', '')
+            'function' => $resource->getAttribute('deployment', ''),
+            'site' => $resource->getAttribute('deploymentId', '')
         };
 
         $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
