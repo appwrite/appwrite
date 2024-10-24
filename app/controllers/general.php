@@ -167,6 +167,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
             }
         }
+        //todo: find a better approach
         $deploymentId = $isSite ? $function->getAttribute('deploymentId', '') : $function->getAttribute('deployment', '');
         $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
 
