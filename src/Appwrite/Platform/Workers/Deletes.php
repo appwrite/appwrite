@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Certificates\AdapterProvider;
 use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
@@ -50,18 +51,22 @@ class Deletes extends Action
             ->inject('deviceForFunctions')
             ->inject('deviceForBuilds')
             ->inject('deviceForCache')
+            ->inject('adapterForCertificates')
             ->inject('abuseRetention')
             ->inject('executionRetention')
             ->inject('auditRetention')
             ->inject('log')
-            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log) => $this->action($message, $dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $abuseRetention, $executionRetention, $auditRetention, $log));
+            ->callback(
+                fn ($message, $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, AdapterProvider $adapterProvider, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log) =>
+                    $this->action($message, $dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $adapterProvider, $abuseRetention, $executionRetention, $auditRetention, $log)
+            );
     }
 
     /**
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
+    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, AdapterProvider $adapterProvider, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -84,10 +89,10 @@ class Deletes extends Action
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_PROJECTS:
-                        $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $document);
+                        $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $adapterProvider, $document);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
-                        $this->deleteFunction($dbForConsole, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $document, $project);
+                        $this->deleteFunction($dbForConsole, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $adapterProvider, $document, $project);
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
                         $this->deleteDeployment($getProjectDB, $deviceForFunctions, $deviceForBuilds, $document, $project);
@@ -102,7 +107,7 @@ class Deletes extends Action
                         $this->deleteInstallation($dbForConsole, $getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_RULES:
-                        $this->deleteRule($dbForConsole, $document);
+                        $this->deleteRule($dbForConsole, $document, $adapterProvider);
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
@@ -110,7 +115,7 @@ class Deletes extends Action
                 }
                 break;
             case DELETE_TYPE_TEAM_PROJECTS:
-                $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $document);
+                $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $adapterProvider, $document);
                 break;
             case DELETE_TYPE_EXECUTIONS:
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
@@ -442,7 +447,7 @@ class Deletes extends Action
      * @throws Structure
      * @throws Exception
      */
-    private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, Document $document): void
+    private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, AdapterProvider $adapterProvider, Document $document): void
     {
 
         $projects = $dbForConsole->find('projects', [
@@ -455,7 +460,7 @@ class Deletes extends Action
             $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
             $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 
-            $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $project);
+            $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $adapterProvider, $project);
             $dbForConsole->deleteDocument('projects', $project->getId());
         }
     }
@@ -473,7 +478,7 @@ class Deletes extends Action
      * @throws Authorization
      * @throws DatabaseException
      */
-    private function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
+    private function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, AdapterProvider $adapterProvider, Document $document): void
     {
         $projectInternalId = $document->getInternalId();
         $projectId = $document->getId();
@@ -536,8 +541,8 @@ class Deletes extends Action
         // Delete project and function rules
         $this->deleteByGroup('rules', [
             Query::equal('projectInternalId', [$projectInternalId])
-        ], $dbForConsole, function (Document $document) use ($dbForConsole) {
-            $this->deleteRule($dbForConsole, $document);
+        ], $dbForConsole, function (Document $document) use ($dbForConsole, $adapterProvider) {
+            $this->deleteRule($dbForConsole, $document, $adapterProvider);
         });
 
         // Delete Keys
@@ -738,7 +743,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteFunction(Database $dbForConsole, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, Document $project): void
+    private function deleteFunction(Database $dbForConsole, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, AdapterProvider $adapterProvider, Document $document, Document $project): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -753,8 +758,8 @@ class Deletes extends Action
             Query::equal('resourceType', ['function']),
             Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
-        ], $dbForConsole, function (Document $document) use ($project, $dbForConsole) {
-            $this->deleteRule($dbForConsole, $document);
+        ], $dbForConsole, function (Document $document) use ($project, $dbForConsole, $adapterProvider) {
+            $this->deleteRule($dbForConsole, $document, $adapterProvider);
         });
 
         /**
@@ -1040,21 +1045,11 @@ class Deletes extends Action
      * @param Document $document rule document
      * @return void
      */
-    private function deleteRule(Database $dbForConsole, Document $document): void
+    private function deleteRule(Database $dbForConsole, Document $document, AdapterProvider $adapterForCertificate): void
     {
-
         $domain = $document->getAttribute('domain');
-        $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
-        $checkTraversal = realpath($directory) === $directory;
-
-        if ($checkTraversal && is_dir($directory)) {
-            // Delete files, so Traefik is aware of change
-            array_map('unlink', glob($directory . '/*.*'));
-            rmdir($directory);
-            Console::info("Deleted certificate files for {$domain}");
-        } else {
-            Console::info("No certificate files found for {$domain}");
-        }
+        $adapter = $adapterForCertificate->get($domain);
+        $adapter->deleteCertificate($domain);
 
         // Delete certificate document, so Appwrite is aware of change
         if (isset($document['certificateId'])) {
