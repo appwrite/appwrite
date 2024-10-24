@@ -44,7 +44,7 @@ class Variable extends Model
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Variable secret flag.',
+                'description' => 'Variable secret flag. Secret variables can only be updated or deleted, but never read.',
                 'default' => false,
                 'example' => false,
             ])
