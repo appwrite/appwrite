@@ -14,6 +14,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 class CreateVariable extends Base
@@ -45,13 +46,14 @@ class CreateVariable extends Base
             ->param('siteId', '', new UID(), 'Site unique ID.', false)
             ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
             ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
+            ->param('secret', false, new Boolean(), 'Is secret? Secret variables can only be updated or deleted, they cannot be read.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForConsole')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $key, string $value, Response $response, Database $dbForProject, Database $dbForConsole)
+    public function action(string $siteId, string $key, string $value, bool $secret, Response $response, Database $dbForProject, Database $dbForConsole)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -73,6 +75,7 @@ class CreateVariable extends Base
             'resourceType' => 'site',
             'key' => $key,
             'value' => $value,
+            'secret' => $secret,
             'search' => implode(' ', [$variableId, $site->getId(), $key, 'site']),
         ]);
 
