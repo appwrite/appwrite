@@ -91,8 +91,10 @@ use Appwrite\Utopia\Response\Model\Subscriber;
 use Appwrite\Utopia\Response\Model\Target;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\TemplateEmail;
+use Appwrite\Utopia\Response\Model\TemplateFramework;
 use Appwrite\Utopia\Response\Model\TemplateFunction;
 use Appwrite\Utopia\Response\Model\TemplateRuntime;
+use Appwrite\Utopia\Response\Model\TemplateSite;
 use Appwrite\Utopia\Response\Model\TemplateSMS;
 use Appwrite\Utopia\Response\Model\TemplateVariable;
 use Appwrite\Utopia\Response\Model\Token;
@@ -251,6 +253,9 @@ class Response extends SwooleResponse
     public const MODEL_SITE_LIST = 'siteList';
     public const MODEL_FRAMEWORK = 'framework';
     public const MODEL_FRAMEWORK_LIST = 'frameworkList';
+    public const MODEL_TEMPLATE_SITE = 'templateSite';
+    public const MODEL_TEMPLATE_SITE_LIST = 'templateSiteList';
+    public const MODEL_TEMPLATE_FRAMEWORK = 'templateFramework';
 
     // Functions
     public const MODEL_FUNCTION = 'function';
@@ -360,6 +365,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
             ->setModel(new BaseList('Sites List', self::MODEL_SITE_LIST, 'sites', self::MODEL_SITE))
+            ->setModel(new BaseList('Site Templates List', self::MODEL_TEMPLATE_SITE_LIST, 'templates', self::MODEL_TEMPLATE_SITE))
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
             ->setModel(new BaseList('Function Templates List', self::MODEL_TEMPLATE_FUNCTION_LIST, 'templates', self::MODEL_TEMPLATE_FUNCTION))
             ->setModel(new BaseList('Installations List', self::MODEL_INSTALLATION_LIST, 'installations', self::MODEL_INSTALLATION))
@@ -433,6 +439,8 @@ class Response extends SwooleResponse
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Site())
+            ->setModel(new TemplateSite())
+            ->setModel(new TemplateFramework())
             ->setModel(new Func())
             ->setModel(new TemplateFunction())
             ->setModel(new TemplateRuntime())
