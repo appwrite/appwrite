@@ -13,9 +13,11 @@ use Appwrite\Platform\Modules\Sites\Http\Deployments\UpdateDeployment;
 use Appwrite\Platform\Modules\Sites\Http\Sites\CreateSite;
 use Appwrite\Platform\Modules\Sites\Http\Sites\DeleteSite;
 use Appwrite\Platform\Modules\Sites\Http\Sites\GetSite;
+use Appwrite\Platform\Modules\Sites\Http\Sites\GetSitesUsage;
+use Appwrite\Platform\Modules\Sites\Http\Sites\GetSiteUsage;
 use Appwrite\Platform\Modules\Sites\Http\Sites\ListFrameworks;
 use Appwrite\Platform\Modules\Sites\Http\Sites\ListSites;
-use Appwrite\Platform\Modules\Sites\Http\Sites\ListSiteTemplates;
+use Appwrite\Platform\Modules\Sites\Http\Sites\ListTemplates;
 use Appwrite\Platform\Modules\Sites\Http\Sites\UpdateSite;
 use Appwrite\Platform\Modules\Sites\Http\Variables\CreateVariable;
 use Appwrite\Platform\Modules\Sites\Http\Variables\DeleteVariable;
@@ -48,6 +50,8 @@ class Http extends Service
         $this->addAction(ListVariables::getName(), new ListVariables());
         $this->addAction(UpdateVariable::getName(), new UpdateVariable());
         $this->addAction(DeleteVariable::getName(), new DeleteVariable());
-        $this->addAction(ListSiteTemplates::getName(), new ListSiteTemplates());
+        $this->addAction(ListTemplates::getName(), new ListTemplates());
+        $this->addAction(GetSiteUsage::getName(), new GetSiteUsage());
+        $this->addAction(GetSitesUsage::getName(), new GetSitesUsage());
     }
 }

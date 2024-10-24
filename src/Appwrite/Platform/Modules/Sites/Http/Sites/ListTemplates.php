@@ -12,13 +12,13 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
-class ListSiteTemplates extends Base
+class ListTemplates extends Base
 {
     use HTTP;
 
     public static function getName()
     {
-        return 'listSiteTemplates';
+        return 'listTemplates';
     }
 
     public function __construct()
@@ -26,11 +26,11 @@ class ListSiteTemplates extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/sites/templates')
-            ->desc('List site templates')
+            ->desc('List templates')
             ->groups(['api'])
             ->label('scope', 'public')
             ->label('sdk.namespace', 'sites')
-            ->label('sdk.method', 'listSiteTemplates')
+            ->label('sdk.method', 'listTemplates')
             ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
             ->label('sdk.description', '/docs/references/sites/list-templates.md')
             ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -47,8 +47,6 @@ class ListSiteTemplates extends Base
     public function action(array $frameworks, array $usecases, int $limit, int $offset, Response $response)
     {
         $templates = Config::getParam('site-templates', []);
-
-        var_dump($templates);
 
         if (!empty($frameworks)) {
             $templates = \array_filter($templates, function ($template) use ($frameworks) {
