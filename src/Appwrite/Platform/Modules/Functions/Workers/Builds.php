@@ -145,6 +145,8 @@ class Builds extends Action
         }
 
         $version = $resource->getAttribute('version', 'v2');
+
+        // todo: fallback for sites
         if ($isSite) {
             $version = 'v4';
         }
@@ -154,32 +156,9 @@ class Builds extends Action
         $key =  $resource->getAttribute('runtime');
         $runtime = $runtimes[$key] ?? null;
 
+        // todo: fallback for sites
         if ($isSite) {
-            // $key = "{$this->key}-{$version->version}";
-            // $list[$key] = array_merge(
-            //     [
-            //         'key' => $this->key,
-            //         'name' => $this->name,
-            //         'logo' => "{$this->key}.png",
-            //         'startCommand' => $this->startCommand,
-            //     ],
-            //     [
-            //     'version' => $this->version,
-            //     'base' => $this->base,
-            //     'image' => $this->image,
-            //     'supports' => $this->supports,
-            // ]
-            // );
-            $runtime = [
-                'key' => 'static-for-now',
-                'name' => 'Static',
-                'logo' => 'node.png',
-                'startCommand' => null,
-                'version' => 'v1',
-                'base' => 'rtsp/lighttpd',
-                'image' => 'rtsp/lighttpd',
-                'supports' => [System::X86, System::ARM64, System::ARMV7, System::ARMV8]
-            ];
+            $runtime = $runtimes['node-18.0'];
         }
 
         if (\is_null($runtime)) {
@@ -591,9 +570,13 @@ class Builds extends Action
             $isCanceled = false;
 
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, &$err) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, &$err, $isSite) {
                     try {
+
                         $version = $resource->getAttribute('version', 'v2');
+                        if ($isSite) {
+                            $version = 'v4';
+                        }
                         $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
 
                         $response = $executor->createRuntime(
@@ -605,7 +588,7 @@ class Builds extends Action
                             cpus: $cpus,
                             memory: $memory,
                             remove: true,
-                            entrypoint: $deployment->getAttribute('entrypoint'),
+                            entrypoint: $deployment->getAttribute('entrypoint', 'package.json'), // TODO: change this later so that sites don't need to have an entrypoint
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
                             command: $command
@@ -707,9 +690,16 @@ class Builds extends Action
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
                 $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
-                $resource->setAttribute('deployment', $deployment->getId());
                 $resource->setAttribute('live', true);
-                $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
+                // todo: fix here how clean this is
+                if ($isSite) {
+                    $resource->setAttribute('deploymentId', $deployment->getId());
+                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+                }
+                if ($isFunction) {
+                    $resource->setAttribute('deployment', $deployment->getId());
+                    $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
+                }
             }
 
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {

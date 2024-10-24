@@ -100,9 +100,9 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
     $type = $route->getAttribute('resourceType');
 
-    if ($type === 'function' || $type === 'sites') {
+    if ($type === 'function' || $type === 'site') {
         $isFunction = $type === 'function' ;
-        $isSite = $type === 'sites';
+        $isSite = $type === 'site';
 
         $utopia->getRoute()?->label('sdk.namespace', 'functions');
         $utopia->getRoute()?->label('sdk.method', 'createExecution');
@@ -132,6 +132,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
+        /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument($isSite ? 'sites' : 'functions', $resourceId));
@@ -146,11 +147,29 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
-        if (\is_null($runtime)) {
-            throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+        // todo: fallback for static sites runtime
+        if ($isSite) {
+            $runtime = [
+                'key' => 'static-for-now',
+                'name' => 'Static',
+                'logo' => 'node.png',
+                'startCommand' => null,
+                'version' => 'v1',
+                'base' => 'static:1.0',
+                'image' => 'static:1.0',
+                'supports' => [System::X86, System::ARM64, System::ARMV7, System::ARMV8]
+            ];
         }
 
-        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
+        //todo: figure out for sites/functions
+        if ($isFunction) {
+            if (\is_null($runtime)) {
+                throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+            }
+        }
+        //todo: find a better approach
+        $deploymentId = $isSite ? $function->getAttribute('deploymentId', '') : $function->getAttribute('deployment', '');
+        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
@@ -170,10 +189,13 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             throw new AppwriteException(AppwriteException::BUILD_NOT_READY);
         }
 
-        $permissions = $function->getAttribute('execute');
+        //todo: figure out for sites/functions
+        if ($isFunction) {
+            $permissions = $function->getAttribute('execute');
 
-        if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
-            throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED, 'To execute function using domain, execute permissions must include "any" or "guests"');
+            if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
+                throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED, 'To execute function using domain, execute permissions must include "any" or "guests"');
+            }
         }
 
         $jwtExpiry = $function->getAttribute('timeout', 900);
@@ -299,22 +321,28 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
         try {
             $version = $function->getAttribute('version', 'v2');
-            $command = $runtime['startCommand'];
-            $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
+            $entrypoint = $deployment->getAttribute('entrypoint', '');
+            // todo: figure out site specific settings
+            if ($isSite) {
+                $version = 'v4';
+                $entrypoint = 'placeholder';
+            }
+            $runtimeEntrypoint = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $runtime['startCommand'] . '"';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
                 body: \strlen($body) > 0 ? $body : null,
                 variables: $vars,
-                timeout: $function->getAttribute('timeout', 0),
+                // todo: figure out timeouts for sites
+                timeout: $function->getAttribute('timeout', 30),
                 image: $runtime['image'],
                 source: $build->getAttribute('path', ''),
-                entrypoint: $deployment->getAttribute('entrypoint', ''),
+                entrypoint: $entrypoint,
                 version: $version,
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: $command,
+                runtimeEntrypoint: $runtimeEntrypoint,
                 cpus: $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
                 memory: $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
                 logging: $function->getAttribute('logging', true),
@@ -336,7 +364,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
-
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 

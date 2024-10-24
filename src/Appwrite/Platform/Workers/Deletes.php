@@ -47,6 +47,7 @@ class Deletes extends Action
             ->inject('dbForConsole')
             ->inject('getProjectDB')
             ->inject('deviceForFiles')
+            ->inject('deviceForSites')
             ->inject('deviceForFunctions')
             ->inject('deviceForBuilds')
             ->inject('deviceForCache')
@@ -54,14 +55,14 @@ class Deletes extends Action
             ->inject('executionRetention')
             ->inject('auditRetention')
             ->inject('log')
-            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log) => $this->action($message, $dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $abuseRetention, $executionRetention, $auditRetention, $log));
+            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log) => $this->action($message, $dbForConsole, $getProjectDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $abuseRetention, $executionRetention, $auditRetention, $log));
     }
 
     /**
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
+    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -84,7 +85,7 @@ class Deletes extends Action
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_PROJECTS:
-                        $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $document);
+                        $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $document);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
                         $this->deleteFunction($dbForConsole, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $document, $project);
@@ -451,11 +452,12 @@ class Deletes extends Action
 
         foreach ($projects as $project) {
             $deviceForFiles = getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+            $deviceForSites = getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
             $deviceForFunctions = getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
             $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
             $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 
-            $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $project);
+            $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $project);
             $dbForConsole->deleteDocument('projects', $project->getId());
         }
     }
@@ -473,7 +475,7 @@ class Deletes extends Action
      * @throws Authorization
      * @throws DatabaseException
      */
-    private function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
+    private function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
     {
         $projectInternalId = $document->getInternalId();
         $projectId = $document->getId();
@@ -503,7 +505,7 @@ class Deletes extends Action
                     try {
                         $dbForProject->deleteCollection($collection->getId());
                     } catch (Throwable $e) {
-                        Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
+                        Console::error('Error deleting ' . $collection->getId() . ' ' . $e->getMessage());
 
                         /**
                          * Ignore junction tables;
@@ -579,6 +581,7 @@ class Deletes extends Action
 
         // Delete all storage directories
         $deviceForFiles->delete($deviceForFiles->getRoot(), true);
+        $deviceForSites->delete($deviceForSites->getRoot(), true);
         $deviceForFunctions->delete($deviceForFunctions->getRoot(), true);
         $deviceForBuilds->delete($deviceForBuilds->getRoot(), true);
         $deviceForCache->delete($deviceForCache->getRoot(), true);

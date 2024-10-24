@@ -138,6 +138,15 @@ $databaseListener = function (string $event, Document $document, Document $proje
                     ->addReduce($document);
             }
             break;
+        case $document->getCollection() === 'sites':
+            $queueForUsage
+                ->addMetric(METRIC_SITES, $value); // per project
+
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
         case $document->getCollection() === 'deployments':
             $queueForUsage
                 ->addMetric(METRIC_DEPLOYMENTS, $value) // per project

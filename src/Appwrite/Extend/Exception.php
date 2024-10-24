@@ -152,6 +152,7 @@ class Exception extends \Exception
     public const GENERAL_PROVIDER_FAILURE          = 'general_provider_failure';
 
     /** Sites */
+    public const SITE_NOT_FOUND                    = 'site_not_found';
     public const SITE_FRAMEWORK_UNSUPPORTED        = 'site_framework_unsupported';
 
     /** Functions */
