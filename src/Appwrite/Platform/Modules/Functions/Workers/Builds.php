@@ -119,10 +119,11 @@ class Builds extends Action
      */
     protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, Log $log): void
     {
-        // todo: refactor
-        $isFunction = $resource->getCollection() === 'functions';
-        $isSite = $resource->getCollection() === 'sites';
-        $foreignKey = $isFunction ? 'functionId' : 'siteId';
+        $foreignKey = match($resource->getCollection()) {
+            'functions' => 'functionId',
+            'sites' => 'siteId',
+            default => throw new \Exception('Invalid resource type')
+        };
 
         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
@@ -140,30 +141,14 @@ class Builds extends Action
             throw new \Exception('Deployment not found', 404);
         }
 
-        if ($isFunction && empty($deployment->getAttribute('entrypoint', ''))) {
+        // todo: figure out a better way, entrypoint is not required for sites
+        if ($resource->getCollection() === 'functions' && empty($deployment->getAttribute('entrypoint', ''))) {
             throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".', 500);
         }
 
-        $version = $resource->getAttribute('version', 'v2');
-
-        // todo: fallback for sites
-        if ($isSite) {
-            $version = 'v4';
-        }
+        $version = $this->getVersion($resource);
+        $runtime = $this->getRuntime($resource, $version);
         $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specifications', APP_FUNCTION_SPECIFICATION_DEFAULT)];
-        $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        // todo: fix for sites using frameworks
-        $key =  $resource->getAttribute('runtime');
-        $runtime = $runtimes[$key] ?? null;
-
-        // todo: fallback for sites
-        if ($isSite) {
-            $runtime = $runtimes['node-18.0'];
-        }
-
-        if (\is_null($runtime)) {
-            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
-        }
 
         // Realtime preparation
         $allEvents = Event::generateEvents("{$resource->getCollection()}.[{$foreignKey}].deployments.[deploymentId].update", [
@@ -503,36 +488,6 @@ class Builds extends Action
             $hostname = System::getEnv('_APP_DOMAIN');
             $endpoint = $protocol . '://' . $hostname . "/v1";
 
-            //todo: ugly, but works
-            if ($isFunction) {
-                $vars = [
-                    ...$vars,
-                    'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
-                    'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
-                    'APPWRITE_FUNCTION_ID' => $resource->getId(),
-                    'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
-                    'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-                    'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-                    'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
-                    'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-                    'APPWRITE_FUNCTION_CPUS' => $cpus,
-                    'APPWRITE_FUNCTION_MEMORY' => $memory
-                ];
-            }
-            if ($isSite) {
-                $vars = [
-                    ...$vars,
-                    'APPWRITE_SITE_ID' => $resource->getId(),
-                    'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),
-                    'APPWRITE_SITE_DEPLOYMENT' => $deployment->getId(),
-                    'APPWRITE_SITE_PROJECT_ID' => $project->getId(),
-                    'APPWRITE_SITE_RUNTIME_NAME' => $runtime['name'] ?? '',
-                    'APPWRITE_SITE_RUNTIME_VERSION' => $runtime['version'] ?? '',
-                    'APPWRITE_SITE_CPUS' => $cpus,
-                    'APPWRITE_SITE_MEMORY' => $memory
-                ];
-            }
-
             // Appwrite vars
             $vars = \array_merge($vars, [
                 'APPWRITE_VERSION' => APP_VERSION_STABLE,
@@ -552,12 +507,41 @@ class Builds extends Action
                 'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
             ]);
 
-            $command = $deployment->getAttribute('commands', '');
-
-            //todo: for sites use isntall and build command
-            if ($isSite) {
-                $command = 'npm ci && npm run build';
+            switch ($resource->getCollection()) {
+                case 'functions':
+                    $vars = [
+                        ...$vars,
+                        'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
+                        'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
+                        'APPWRITE_FUNCTION_ID' => $resource->getId(),
+                        'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
+                        'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
+                        'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
+                        'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
+                        'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                        'APPWRITE_FUNCTION_CPUS' => $cpus,
+                        'APPWRITE_FUNCTION_MEMORY' => $memory
+                    ];
+                    break;
+                case 'sites':
+                    $vars = [
+                        ...$vars,
+                        'APPWRITE_SITE_ID' => $resource->getId(),
+                        'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),
+                        'APPWRITE_SITE_DEPLOYMENT' => $deployment->getId(),
+                        'APPWRITE_SITE_PROJECT_ID' => $project->getId(),
+                        'APPWRITE_SITE_RUNTIME_NAME' => $runtime['name'] ?? '',
+                        'APPWRITE_SITE_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                        'APPWRITE_SITE_CPUS' => $cpus,
+                        'APPWRITE_SITE_MEMORY' => $memory
+                    ];
+                    break;
             }
+
+            $command = $this->getCommand(
+                resource: $resource,
+                deployment: $deployment
+            );
 
             $response = null;
             $err = null;
@@ -570,13 +554,8 @@ class Builds extends Action
             $isCanceled = false;
 
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, &$err, $isSite) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, &$err, $version) {
                     try {
-
-                        $version = $resource->getAttribute('version', 'v2');
-                        if ($isSite) {
-                            $version = 'v4';
-                        }
                         $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
 
                         $response = $executor->createRuntime(
@@ -691,14 +670,15 @@ class Builds extends Action
             if ($deployment->getAttribute('activate') === true) {
                 $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
                 $resource->setAttribute('live', true);
-                // todo: fix here how clean this is
-                if ($isSite) {
-                    $resource->setAttribute('deploymentId', $deployment->getId());
-                    $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
-                }
-                if ($isFunction) {
-                    $resource->setAttribute('deployment', $deployment->getId());
-                    $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
+                switch ($resource->getCollection()) {
+                    case 'functions':
+                        $resource->setAttribute('deployment', $deployment->getId());
+                        $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
+                        break;
+                    case 'sites':
+                        $resource->setAttribute('deploymentId', $deployment->getId());
+                        $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+                        break;
                 }
             }
 
@@ -710,7 +690,7 @@ class Builds extends Action
             /** Update function schedule */
 
             // Inform scheduler if function is still active
-            if ($isFunction) {
+            if ($resource->getCollection() === 'functions') {
                 $schedule = $dbForConsole->getDocument('schedules', $resource->getAttribute('scheduleId'));
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
@@ -753,39 +733,109 @@ class Builds extends Action
                 channels: $target['channels'],
                 roles: $target['roles']
             );
-
-            /** Trigger usage queue */
-            if ($build->getAttribute('status') === 'ready') {
-                if ($isFunction) {
-                    $queueForUsage
-                        ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
-                        ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$build->getAttribute('duration', 0) * 1000)
-                        ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_SUCCESS), 1) // per function
-                        ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS), (int)$build->getAttribute('duration', 0) * 1000);
-                }
-            } elseif ($build->getAttribute('status') === 'failed') {
-                if ($isFunction) {
-                    $queueForUsage
-                        ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
-                        ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$build->getAttribute('duration', 0) * 1000)
-                        ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_FAILED), 1) // per function
-                        ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED), (int)$build->getAttribute('duration', 0) * 1000);
-                }
-            }
-            if ($isFunction) {
-                $queueForUsage
-                    ->addMetric(METRIC_BUILDS, 1) // per project
-                    ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
-                    ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
-                    ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                    ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
-                    ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
-                    ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
-                    ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                    ->setProject($project)
-                    ->trigger();
-            }
+            $this->sendUsage(
+                resource:$resource,
+                build: $build,
+                project: $project,
+                queue: $queueForUsage
+            );
         }
+    }
+
+    protected function sendUsage(Document $resource, Document $build, Document $project, Usage $queue): void
+    {
+        $key = match($resource->getCollection()) {
+            'functions' => 'functionInternalId',
+            'sites' => 'siteInternalId',
+            default => throw new \Exception('Invalid resource type')
+        };
+
+        $metrics = match($resource->getCollection()) {
+            'functions' => [
+                'builds' => METRIC_FUNCTION_ID_BUILDS,
+                'buildsSuccess' => METRIC_FUNCTION_ID_BUILDS_SUCCESS,
+                'buildsFailed' => METRIC_FUNCTION_ID_BUILDS_FAILED,
+                'buildsComputeSuccess' => METRIC_FUNCTION_ID_BUILDS_COMPUTE_SUCCESS,
+                'buildsComputeFailed' => METRIC_FUNCTION_ID_BUILDS_COMPUTE_FAILED,
+                'buildsStorage' => METRIC_FUNCTION_ID_BUILDS_STORAGE,
+                'buildsCompute' => METRIC_FUNCTION_ID_BUILDS_COMPUTE,
+                'buildsMbSeconds' => METRIC_FUNCTION_ID_BUILDS_MB_SECONDS
+            ],
+            'sites' => [
+                'builds' => METRIC_SITES_ID_BUILDS,
+                'buildsSuccess' => METRIC_SITES_ID_BUILDS_SUCCESS,
+                'buildsFailed' => METRIC_SITES_ID_BUILDS_FAILED,
+                'buildsComputeSuccess' => METRIC_SITES_ID_BUILDS_COMPUTE_SUCCESS,
+                'buildsComputeFailed' => METRIC_SITES_ID_BUILDS_COMPUTE_FAILED,
+                'buildsStorage' => METRIC_SITES_ID_BUILDS_STORAGE,
+                'buildsCompute' => METRIC_SITES_ID_BUILDS_COMPUTE,
+                'buildsMbSeconds' => METRIC_SITES_ID_BUILDS_MB_SECONDS
+            ]
+        };
+
+        switch ($build->getAttribute('status')) {
+            case 'ready':
+                $queue
+                    ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
+                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$build->getAttribute('duration', 0) * 1000)
+                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsSuccess']), 1) // per function
+                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsComputeSuccess']), (int)$build->getAttribute('duration', 0) * 1000);
+                break;
+            case 'failed':
+                $queue
+                    ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
+                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$build->getAttribute('duration', 0) * 1000)
+                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsFailed']), 1) // per function
+                    ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsComputeFailed']), (int)$build->getAttribute('duration', 0) * 1000);
+                break;
+        }
+
+        $queue
+            ->addMetric(METRIC_BUILDS, 1) // per project
+            ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+            ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['builds']), 1) // per function
+            ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsStorage']), $build->getAttribute('size', 0))
+            ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsCompute']), (int)$build->getAttribute('duration', 0) * 1000)
+            ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsMbSeconds']), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+            ->setProject($project)
+            ->trigger();
+    }
+
+    protected function getRuntime(Document $resource, string $version): array
+    {
+        $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
+        $key =  $resource->getAttribute('runtime');
+        $runtime = match ($resource->getCollection()) {
+            'functions' => $runtimes[$key] ?? null,
+            'sites' => $runtimes['node-18.0'] ?? null,
+            default => null
+        };
+        if (\is_null($runtime)) {
+            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
+        }
+
+        return $runtime;
+    }
+
+    protected function getVersion(Document $resource): string
+    {
+        return match ($resource->getCollection()) {
+            'functions' => $resource->getAttribute('version', 'v2'),
+            'sites' => 'v4',
+        };
+    }
+
+    protected function getCommand(Document $resource, Document $deployment): string
+    {
+        return match($resource->getCollection()) {
+            'functions' => $deployment->getAttribute('command', ''),
+            'sites' => implode(' && ', array_filter([
+                $deployment->getAttribute('installCommand'),
+                $deployment->getAttribute('buildCommand')
+            ]))
+        };
     }
 
     /**
