@@ -1163,6 +1163,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('resourceType', 'buckets')
+    ->label('cache', true)
+    ->label('cache.resourceType', 'bucket/{request.bucketId}')
+    ->label('cache.resource', 'file/{request.fileId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFileView')
@@ -1282,14 +1285,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
         if (!empty($source)) {
             if (!empty($rangeHeader)) {
-                $response->send(substr($source, $start, ($end - $start + 1)));
+                $response->file(substr($source, $start, ($end - $start + 1)));
             }
-            $response->send($source);
+            $response->file($source);
             return;
         }
 
         if (!empty($rangeHeader)) {
-            $response->send($deviceForFiles->read($path, $start, ($end - $start + 1)));
+            $response->file($deviceForFiles->read($path, $start, ($end - $start + 1)));
             return;
         }
 
@@ -1306,7 +1309,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
                 );
             }
         } else {
-            $response->send($deviceForFiles->read($path));
+            $response->file($deviceForFiles->read($path));
         }
     });
 

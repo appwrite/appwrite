@@ -462,14 +462,17 @@ App::init()
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
-            $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+            $keyParams = $request->getURI() . '*' . implode('*', $request->getParams());
+            if(!empty($request->getRangeStart())) $keyParams .= '*'.$request->getRangeStart();
+            if(!empty($request->getRangeEnd())) $keyParams .= '*'.$request->getRangeEnd();
+            $keyParams .= '*' . APP_CACHE_BUSTER;
+            $key = md5($keyParams);
             $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
-
             if (!empty($data) && !$cacheLog->isEmpty()) {
                 $parts = explode('/', $cacheLog->getAttribute('resourceType'));
                 $type = $parts[0] ?? null;
@@ -506,12 +509,14 @@ App::init()
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
                 }
-
                 $response
                     ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
-                    ->addHeader('X-Appwrite-Cache', 'hit')
-                    ->setContentType($cacheLog->getAttribute('mimeType'))
-                    ->send($data);
+                    ->addHeader('X-Appwrite-Cache', 'hit');
+                foreach ($cacheLog->getAttribute('headers') as $key => $value) {
+                    $response->addHeader($key, $value);
+                }
+
+                 $response->send($data);
             } else {
                 $response
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
@@ -704,7 +709,8 @@ App::shutdown()
         if (!empty($queueForMessaging->getType())) {
             $queueForMessaging->trigger();
         }
-
+        var_dump($request->getRangeStart());
+        var_dump($request->getRangeEnd());
         /**
          * Cache label
          */
@@ -712,7 +718,9 @@ App::shutdown()
         if ($useCache) {
             $resource = $resourceType = null;
             $data = $response->getPayload();
+
             if (!empty($data['payload'])) {
+
                 $pattern = $route->getLabel('cache.resource', null);
                 if (!empty($pattern)) {
                     $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
@@ -723,17 +731,29 @@ App::shutdown()
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
-                $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+                $keyParams = $request->getURI() . '*' . implode('*', $request->getParams());
+                if(!empty($request->getRangeStart())) $keyParams .= '*'.$request->getRangeStart();
+                if(!empty($request->getRangeEnd())) $keyParams .= '*'.$request->getRangeEnd();
+                $keyParams .= '*'. APP_CACHE_BUSTER;
+                $key = md5($keyParams);
                 $signature = md5($data['payload']);
                 $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
+                    $filterList = ['Cache-Control', 'Pragma', 'Expires', 'X-Appwrite-Cache'];
+                    $headers = [];
+                    foreach ($response->getHeaders() as $name => $value) {
+                       if(!in_array($name, $filterList)) {
+                           $headers[$name] =  $value;
+                       }
+                    }
+
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                         '$id' => $key,
                         'resource' => $resource,
                         'resourceType' => $resourceType,
-                        'mimeType' => $response->getContentType(),
+                        'headers' => $headers,
                         'accessedAt' => $now,
                         'signature' => $signature,
                     ])));
@@ -750,8 +770,6 @@ App::shutdown()
                 }
             }
         }
-
-
 
         if ($project->getId() !== 'console') {
             if (!Auth::isPrivilegedUser(Authorization::getRoles())) {

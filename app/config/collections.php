@@ -57,6 +57,17 @@ $commonCollections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('headers'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => 'accessedAt',
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
