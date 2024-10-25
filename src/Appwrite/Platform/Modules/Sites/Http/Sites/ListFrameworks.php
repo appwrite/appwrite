@@ -45,12 +45,12 @@ class ListFrameworks extends Base
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_SITES_FRAMEWORKS', '')));
 
         $allowed = [];
-        foreach ($frameworks as $framework) {
-            $id = $framework['$id'];
+        foreach ($frameworks as $id => $framework) {
             if (!empty($allowList) && !\in_array($id, $allowList)) {
                 continue;
             }
 
+            $framework['$id'] = $id;
             $allowed[] = $framework;
         }
 

@@ -5,8 +5,7 @@
  */
 
 return [
-    [
-        '$id' => 'sveltekit',
+    "sveltekit" => [
         'key' => 'sveltekit',
         'name' => 'SvelteKit',
         'logo' => 'sveltekit.png',
@@ -17,8 +16,7 @@ return [
             'node-20.0'
         ],
     ],
-    [
-        '$id' => 'nextjs',
+    "nextjs" => [
         'key' => 'nextjs',
         'name' => 'Next.js',
         'logo' => 'nextjs.png',

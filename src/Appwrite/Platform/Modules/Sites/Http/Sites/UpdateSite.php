@@ -55,7 +55,7 @@ class UpdateSite extends Base
             ->label('sdk.response.model', Response::MODEL_SITE)
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
-            ->param('framework', '', new WhiteList(Config::getParam('frameworks'), true), 'Sites framework.')
+            ->param('framework', '', new WhiteList(array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true) // TODO: Add logging param later
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
