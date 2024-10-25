@@ -32,12 +32,18 @@ class Http extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_HTTP;
+        // Sites
         $this->addAction(CreateSite::getName(), new CreateSite());
         $this->addAction(GetSite::getName(), new GetSite());
         $this->addAction(ListSites::getName(), new ListSites());
         $this->addAction(UpdateSite::getName(), new UpdateSite());
         $this->addAction(DeleteSite::getName(), new DeleteSite());
+
+        // Frameworks
         $this->addAction(ListFrameworks::getName(), new ListFrameworks());
+
+
+        // Deployments
         $this->addAction(CreateDeployment::getName(), new CreateDeployment());
         $this->addAction(GetDeployment::getName(), new GetDeployment());
         $this->addAction(ListDeployments::getName(), new ListDeployments());
@@ -47,12 +53,16 @@ class Http extends Service
         $this->addAction(DownloadBuild::getName(), new DownloadBuild());
         $this->addAction(RebuildDeployment::getName(), new RebuildDeployment());
         $this->addAction(CancelDeployment::getName(), new CancelDeployment());
+
+        // Variables
         $this->addAction(CreateVariable::getName(), new CreateVariable());
         $this->addAction(GetVariable::getName(), new GetVariable());
         $this->addAction(ListVariables::getName(), new ListVariables());
         $this->addAction(UpdateVariable::getName(), new UpdateVariable());
         $this->addAction(DeleteVariable::getName(), new DeleteVariable());
         $this->addAction(ListTemplates::getName(), new ListTemplates());
+
+        // Usage
         $this->addAction(GetSiteUsage::getName(), new GetSiteUsage());
         $this->addAction(GetSitesUsage::getName(), new GetSitesUsage());
     }

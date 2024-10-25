@@ -44,29 +44,30 @@ use function Swoole\Coroutine\batch;
 
 $createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForConsole, Build $queueForBuilds, callable $getProjectDB, Request $request) {
     $errors = [];
-    foreach ($repositories as $resource) {
+    foreach ($repositories as $repository) {
         try {
-            $resourceType = $resource->getAttribute('resourceType');
+            $resourceType = $repository->getAttribute('resourceType');
 
-            if ($resourceType !== "function") {
+            if ($resourceType !== "function" && $resourceType !== "site") {
                 continue;
             }
 
-            $projectId = $resource->getAttribute('projectId');
+            $projectId = $repository->getAttribute('projectId');
             $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
             $dbForProject = $getProjectDB($project);
 
-            $functionId = $resource->getAttribute('resourceId');
-            $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
-            $functionInternalId = $function->getInternalId();
+            $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
+            $resourceId = $repository->getAttribute('resourceId');
+            $resource = Authorization::skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+            $resourceInternalId = $resource->getInternalId();
 
             $deploymentId = ID::unique();
-            $repositoryId = $resource->getId();
-            $repositoryInternalId = $resource->getInternalId();
-            $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
-            $installationId = $resource->getAttribute('installationId');
-            $installationInternalId = $resource->getAttribute('installationInternalId');
-            $productionBranch = $function->getAttribute('providerBranch');
+            $repositoryId = $repository->getId();
+            $repositoryInternalId = $repository->getInternalId();
+            $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
+            $installationId = $repository->getAttribute('installationId');
+            $installationInternalId = $repository->getAttribute('installationInternalId');
+            $productionBranch = $resource->getAttribute('providerBranch');
             $activate = false;
 
             if ($providerBranch == $productionBranch && $external === false) {
@@ -90,7 +91,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             $isAuthorized = !$external;
 
             if (!$isAuthorized && !empty($providerPullRequestId)) {
-                if (\in_array($providerPullRequestId, $resource->getAttribute('providerPullRequestIds', []))) {
+                if (\in_array($providerPullRequestId, $repository->getAttribute('providerPullRequestIds', []))) {
                     $isAuthorized = true;
                 }
             }
@@ -103,7 +104,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $latestCommentId = '';
 
-            if (!empty($providerPullRequestId) && $function->getAttribute('providerSilentMode', false) === false) {
+            if (!empty($providerPullRequestId) && $resource->getAttribute('providerSilentMode', false) === false) {
                 $latestComment = Authorization::skip(fn () => $dbForConsole->findOne('vcsComments', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::equal('providerPullRequestId', [$providerPullRequestId]),
@@ -114,12 +115,12 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $latestCommentId = $latestComment->getAttribute('providerCommentId', '');
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $commentStatus, $deploymentId, $action);
 
                     $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                 } else {
                     $comment = new Comment();
-                    $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $commentStatus, $deploymentId, $action);
                     $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
                     if (!empty($latestCommentId)) {
@@ -156,19 +157,19 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $latestCommentId = $comment->getAttribute('providerCommentId', '');
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $commentStatus, $deploymentId, $action);
 
                     $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                 }
             }
 
             if (!$isAuthorized) {
-                $functionName = $function->getAttribute('name');
+                $resourceName = $resource->getAttribute('name');
                 $projectName = $project->getAttribute('name');
-                $name = "{$functionName} ({$projectName})";
+                $name = "{$resourceName} ({$projectName})";
                 $message = 'Authorization required for external contributor.';
 
-                $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
+                $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
                 try {
                     $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
                     if (empty($repositoryName)) {
@@ -195,11 +196,15 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     Permission::update(Role::any()),
                     Permission::delete(Role::any()),
                 ],
-                'resourceId' => $functionId,
-                'resourceInternalId' => $functionInternalId,
-                'resourceType' => 'functions',
-                'entrypoint' => $function->getAttribute('entrypoint'),
-                'commands' => $function->getAttribute('commands'),
+                'resourceId' => $resourceId,
+                'resourceInternalId' => $resourceInternalId,
+                'resourceType' => $resourceCollection,
+                'entrypoint' => $resource->getAttribute('entrypoint', ''),
+                'commands' => $resource->getAttribute('commands', []),
+                'installCommand' => $resource->getAttribute('installCommand', ''),
+                'buildCommand' => $resource->getAttribute('buildCommand', ''),
+                'outputDirectory' => $resource->getAttribute('outputDirectory', ''),
+                'fallbackRedirect' => $resource->getAttribute('fallbackRedirect', ''),
                 'type' => 'vcs',
                 'installationId' => $installationId,
                 'installationInternalId' => $installationInternalId,
@@ -217,17 +222,17 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'providerCommitUrl' => $providerCommitUrl,
                 'providerCommentId' => \strval($latestCommentId),
                 'providerBranch' => $providerBranch,
-                'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
+                'search' => implode(' ', [$deploymentId, $resource->getAttribute('entrypoint', '')]),
                 'activate' => $activate,
             ]));
 
-            if (!empty($providerCommitHash) && $function->getAttribute('providerSilentMode', false) === false) {
-                $functionName = $function->getAttribute('name');
+            if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
+                $resourceName = $resource->getAttribute('name');
                 $projectName = $project->getAttribute('name');
-                $name = "{$functionName} ({$projectName})";
+                $name = "{$resourceName} ({$projectName})";
                 $message = 'Starting...';
 
-                $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
+                $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
                 try {
                     $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
                     if (empty($repositoryName)) {
@@ -238,17 +243,17 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 }
                 $owner = $github->getOwnerName($providerInstallationId);
 
-                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
+                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/$resourceCollection/$resourceType-$resourceId";
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
             }
 
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
-                ->setResource($function)
+                ->setResource($resource)
                 ->setDeployment($deployment)
                 ->setProject($project); // set the project because it won't be set for git deployments
 
-            $queueForBuilds->trigger(); // must trigger here so that we create a build for each function
+            $queueForBuilds->trigger(); // must trigger here so that we create a build for each function/site
 
             //TODO: Add event?
         } catch (Throwable $e) {
@@ -936,7 +941,7 @@ App::post('/v1/vcs/github/events')
 
                 $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
-                //find functionId from functions table
+                //find resourceId from relevant resources table
                 $repositories = Authorization::skip(fn () => $dbForConsole->find('repositories', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::limit(100),
@@ -948,7 +953,7 @@ App::post('/v1/vcs/github/events')
                 }
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
-                    // TODO: Use worker for this job instead (update function as well)
+                    // TODO: Use worker for this job instead (update function/site as well)
                     $providerInstallationId = $parsedPayload["installationId"];
 
                     $installations = $dbForConsole->find('installations', [
