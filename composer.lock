@@ -157,16 +157,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.16.2",
+            "version": "0.16.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "c33005e3eaaf2d427e9fd1077d5335e31f4d36f9"
+                "reference": "a8458e1d1e29782160f7301479e202f703373419"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/c33005e3eaaf2d427e9fd1077d5335e31f4d36f9",
-                "reference": "c33005e3eaaf2d427e9fd1077d5335e31f4d36f9",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/a8458e1d1e29782160f7301479e202f703373419",
+                "reference": "a8458e1d1e29782160f7301479e202f703373419",
                 "shasum": ""
             },
             "require": {
@@ -206,9 +206,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.16.2"
+                "source": "https://github.com/appwrite/runtimes/tree/0.16.3"
             },
-            "time": "2024-10-09T15:02:52+00:00"
+            "time": "2024-10-25T16:04:32+00:00"
         },
         {
             "name": "beberlei/assert",
@@ -7029,5 +7029,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
