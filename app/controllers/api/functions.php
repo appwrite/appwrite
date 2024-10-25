@@ -2615,8 +2615,8 @@ App::get('/v1/functions/templates/:templateId')
     ->action(function (string $templateId, Response $response) {
         $templates = Config::getParam('function-templates', []);
 
-        $template = array_shift(\array_filter($templates, function ($template) use ($templateId) {
-            return $template['id'] === $templateId;
+        $template = array_shift(array_filter($templates, function ($item) use ($templateId) {
+            return $item['id'] === $templateId;
         }));
 
         if (empty($template)) {
