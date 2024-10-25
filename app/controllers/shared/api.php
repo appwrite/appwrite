@@ -735,6 +735,7 @@ App::shutdown()
                 if(!empty($request->getRangeStart())) $keyParams .= '*'.$request->getRangeStart();
                 if(!empty($request->getRangeEnd())) $keyParams .= '*'.$request->getRangeEnd();
                 $keyParams .= '*'. APP_CACHE_BUSTER;
+                var_dump($keyParams);
                 $key = md5($keyParams);
                 $signature = md5($data['payload']);
                 $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
