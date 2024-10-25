@@ -206,6 +206,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
 
+        //todo: check if this would work for sites
         if ($type === 'function') {
             $jwtExpiry = $resource->getAttribute('timeout', 900);
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
@@ -330,6 +331,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             };
             $entrypoint = match($type) {
                 'function' => $deployment->getAttribute('entrypoint', ''),
+                //todo: check if null works
                 'site' => 'placeholder' // entrypoint is required in api, but not needed with site
             };
             $runtimeEntrypoint = match ($version) {

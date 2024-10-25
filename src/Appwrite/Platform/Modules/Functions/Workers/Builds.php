@@ -119,7 +119,7 @@ class Builds extends Action
      */
     protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, Log $log): void
     {
-        $foreignKey = match($resource->getCollection()) {
+        $resourceKey = match($resource->getCollection()) {
             'functions' => 'functionId',
             'sites' => 'siteId',
             default => throw new \Exception('Invalid resource type')
@@ -127,7 +127,7 @@ class Builds extends Action
 
         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
-        $log->addTag($foreignKey, $resource->getId());
+        $log->addTag($resourceKey, $resource->getId());
 
         $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
         if ($resource->isEmpty()) {
@@ -151,8 +151,8 @@ class Builds extends Action
         $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specifications', APP_FUNCTION_SPECIFICATION_DEFAULT)];
 
         // Realtime preparation
-        $allEvents = Event::generateEvents("{$resource->getCollection()}.[{$foreignKey}].deployments.[deploymentId].update", [
-            $foreignKey => $resource->getId(),
+        $allEvents = Event::generateEvents("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update", [
+            $resourceKey => $resource->getId(),
             'deploymentId' => $deployment->getId()
         ]);
 
@@ -433,8 +433,8 @@ class Builds extends Action
                     ->setQueue(Event::WEBHOOK_QUEUE_NAME)
                     ->setClass(Event::WEBHOOK_CLASS_NAME)
                     ->setProject($project)
-                    ->setEvent("{$resource->getCollection()}.[{$foreignKey}].deployments.[deploymentId].update")
-                    ->setParam($foreignKey, $resource->getId())
+                    ->setEvent("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update")
+                    ->setParam($resourceKey, $resource->getId())
                     ->setParam('deploymentId', $deployment->getId())
                     ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
 
@@ -809,7 +809,7 @@ class Builds extends Action
         $key =  $resource->getAttribute('runtime');
         $runtime = match ($resource->getCollection()) {
             'functions' => $runtimes[$key] ?? null,
-            'sites' => $runtimes['node-18.0'] ?? null,
+            'sites' => $runtimes['node-18.0'] ?? null, //todo: fix hardcode
             default => null
         };
         if (\is_null($runtime)) {
