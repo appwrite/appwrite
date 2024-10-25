@@ -16,6 +16,7 @@ use Appwrite\Platform\Modules\Sites\Http\Sites\DeleteSite;
 use Appwrite\Platform\Modules\Sites\Http\Sites\GetSite;
 use Appwrite\Platform\Modules\Sites\Http\Sites\GetSitesUsage;
 use Appwrite\Platform\Modules\Sites\Http\Sites\GetSiteUsage;
+use Appwrite\Platform\Modules\Sites\Http\Sites\GetTemplate;
 use Appwrite\Platform\Modules\Sites\Http\Sites\ListFrameworks;
 use Appwrite\Platform\Modules\Sites\Http\Sites\ListSites;
 use Appwrite\Platform\Modules\Sites\Http\Sites\ListTemplates;
@@ -60,7 +61,10 @@ class Http extends Service
         $this->addAction(ListVariables::getName(), new ListVariables());
         $this->addAction(UpdateVariable::getName(), new UpdateVariable());
         $this->addAction(DeleteVariable::getName(), new DeleteVariable());
+
+        // Templates
         $this->addAction(ListTemplates::getName(), new ListTemplates());
+        $this->addAction(GetTemplate::getName(), new GetTemplate());
 
         // Usage
         $this->addAction(GetSiteUsage::getName(), new GetSiteUsage());
