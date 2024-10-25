@@ -58,7 +58,7 @@ class CreateSite extends Base
             ->label('sdk.response.model', Response::MODEL_SITE)
             ->param('siteId', '', new CustomId(), 'Site ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
-            ->param('framework', '', new WhiteList(Config::getParam('frameworks'), true), 'Sites framework.')
+            ->param('framework', '', new WhiteList(array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true) // TODO: Add logging param later
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
@@ -79,7 +79,7 @@ class CreateSite extends Base
                 Config::getParam('framework-specifications', []),
                 App::getEnv('_APP_SITES_CPUS', APP_SITE_CPUS_DEFAULT),
                 App::getEnv('_APP_SITES_MEMORY', APP_SITE_MEMORY_DEFAULT)
-            ), 'Runtime specification for the site and builds.', true, ['plan'])
+            ), 'Framework specification for the site and builds.', true, ['plan'])
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')

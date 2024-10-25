@@ -198,6 +198,17 @@ abstract class Format
                         break;
                 }
                 break;
+            case 'sites':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'getSiteUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'SiteUsageRange';
+                        }
+                        break;
+                }
+                break;
             case 'messaging':
                 switch ($method) {
                     case 'getUsage':
@@ -382,6 +393,14 @@ abstract class Format
                 switch ($method) {
                     case 'getUsage':
                     case 'getFunctionUsage':
+                        // Range Enum Keys
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
+                }
+                break;
+            case 'sites':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'getSiteUsage':
                         // Range Enum Keys
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
