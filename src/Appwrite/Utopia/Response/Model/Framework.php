@@ -34,11 +34,17 @@ class Framework extends Model
                 'default' => '',
                 'example' => 'sveltekit.png',
             ])
-            ->addRule('supports', [
+            ->addRule('defaultRuntime', [
                 'type' => self::TYPE_STRING,
-                'description' => 'List of supported architectures.',
+                'description' => 'Default runtime version.',
                 'default' => '',
-                'example' => 'amd64',
+                'example' => 'node-20.0',
+            ])
+            ->addRule('runtimes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'List of supported runtime versions.',
+                'default' => '',
+                'example' => 'node-16.0',
                 'array' => true,
             ])
         ;

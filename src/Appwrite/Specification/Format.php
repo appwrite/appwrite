@@ -198,6 +198,17 @@ abstract class Format
                         break;
                 }
                 break;
+            case 'sites':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'getSiteUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'SiteUsageRange';
+                        }
+                        break;
+                }
+                // no break
             case 'messaging':
                 switch ($method) {
                     case 'getUsage':

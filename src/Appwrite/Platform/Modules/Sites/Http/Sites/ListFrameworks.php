@@ -12,7 +12,6 @@ use Utopia\System\System;
 
 class ListFrameworks extends Base
 {
-    // TODO: This won't work right now as the structure of frameworks is not properly defined, fix it later
     use HTTP;
 
     public static function getName()
@@ -46,12 +45,12 @@ class ListFrameworks extends Base
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_SITES_FRAMEWORKS', '')));
 
         $allowed = [];
-        foreach ($frameworks as $id => $framework) {
+        foreach ($frameworks as $framework) {
+            $id = $framework['$id'];
             if (!empty($allowList) && !\in_array($id, $allowList)) {
                 continue;
             }
 
-            $framework['$id'] = $id;
             $allowed[] = $framework;
         }
 
