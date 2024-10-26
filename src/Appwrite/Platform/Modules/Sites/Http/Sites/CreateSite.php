@@ -64,6 +64,7 @@ class CreateSite extends Base
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
             ->param('fallbackRedirect', '', new Text(8192, 0), 'Fallback Redirect URL for site in case a route is not found.', true)
+            ->param('subDomain', '', new CustomId(), 'Unique custom sub-domain. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true) //TODO: Update description of scopes
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
@@ -92,7 +93,7 @@ class CreateSite extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $name, string $framework, bool $enabled, string $installCommand, string $buildCommand, string $outputDirectory, string $fallbackRedirect, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
+    public function action(string $siteId, string $name, string $framework, bool $enabled, string $installCommand, string $buildCommand, string $outputDirectory, string $fallbackRedirect, string $subDomain, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
         $siteId = ($siteId == 'unique()') ? ID::unique() : $siteId;
 
@@ -215,7 +216,7 @@ class CreateSite extends Base
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         if (!empty($sitesDomain)) {
             $ruleId = ID::unique();
-            $routeSubdomain = ID::unique();
+            $routeSubdomain = $subDomain ?? ID::unique();
             $domain = "{$routeSubdomain}.{$sitesDomain}";
 
             $rule = Authorization::skip(
