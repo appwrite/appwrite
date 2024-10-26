@@ -4,7 +4,7 @@
  * List of Appwrite Sites supported frameworks
  */
 
- const TEMPLATE_RUNTIMES = [
+const TEMPLATE_RUNTIMES = [
     'NODE' => [
         'name' => 'node',
         'versions' => ['22', '21.0', '20.0', '19.0', '18.0', '16.0', '14.5']
@@ -39,11 +39,12 @@
     ],
 ];
 
- function getVersions(array $versions, string $prefix) {
+function getVersions(array $versions, string $prefix)
+{
     return array_map(function ($version) use ($prefix) {
         return $prefix . '-' . $version;
     }, $versions);
- }
+}
 
 return [
     'sveltekit' => [
