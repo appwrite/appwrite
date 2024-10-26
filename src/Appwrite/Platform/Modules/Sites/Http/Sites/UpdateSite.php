@@ -21,8 +21,10 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Request;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -42,7 +44,7 @@ class UpdateSite extends Base
             ->setHttpPath('/v1/sites/:siteId')
             ->desc('Update site')
             ->groups(['api', 'sites'])
-            ->label('scope', 'functions.write') // TODO: update it to sites.write later
+            ->label('scope', 'sites.write')
             ->label('event', 'sites.[siteId].update')
             ->label('audits.event', 'sites.update')
             ->label('audits.resource', 'site/{response.$id}')
@@ -57,6 +59,7 @@ class UpdateSite extends Base
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true) // TODO: Add logging param later
+            ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 900)), 'Maximum request time in seconds.', true)
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
@@ -84,7 +87,7 @@ class UpdateSite extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $name, string $framework, bool $enabled, string $installCommand, string $buildCommand, string $outputDirectory, string $fallbackRedirect, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
+    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $fallbackRedirect, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
         // TODO: If only branch changes, re-deploy
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -202,8 +205,9 @@ class UpdateSite extends Base
             'framework' => $framework,
             'enabled' => $enabled,
             'live' => $live,
-            'buildCommand' => $buildCommand,
+            'timeout' => $timeout,
             'installCommand' => $installCommand,
+            'buildCommand' => $buildCommand,
             'outputDirectory' => $outputDirectory,
             'fallbackRedirect' => $fallbackRedirect,
             'scopes' => $scopes,

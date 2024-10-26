@@ -27,7 +27,7 @@ class ListVariables extends Base
             ->setHttpPath('/v1/sites/:siteId/variables')
             ->desc('List variables')
             ->groups(['api', 'sites'])
-            ->label('scope', 'functions.read') // TODO: Update scope to sites
+            ->label('scope', 'sites.read')
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
             ->label('sdk.namespace', 'sites')
             ->label('sdk.method', 'listVariables')

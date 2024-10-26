@@ -72,6 +72,12 @@ class Site extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('timeout', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Site request timeout in seconds.',
+                'default' => 15,
+                'example' => 300,
+            ])
             ->addRule('installCommand', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The install command used to install the site dependencies.',

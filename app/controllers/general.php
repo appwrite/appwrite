@@ -155,8 +155,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 'logo' => 'node.png',
                 'startCommand' => null,
                 'version' => 'v1',
-                'base' => 'static:1.0',
-                'image' => 'static:1.0',
+                'base' => 'openruntimes/static:v4-:1.0',
+                'image' => 'openruntimes/static:v4-:1.0',
                 'supports' => [System::X86, System::ARM64, System::ARMV7, System::ARMV8]
             ],
             default => null

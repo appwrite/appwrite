@@ -64,6 +64,12 @@ return [ // List of publicly visible scopes
     'functions.write' => [
         'description' => 'Access to create, update, and delete your project\'s functions and code deployments',
     ],
+    'sites.read' => [
+        'description' => 'Access to read your project\'s sites and deployments',
+    ],
+    'sites.write' => [
+        'description' => 'Access to create, update, and delete your project\'s sites and deployments',
+    ],
     'execution.read' => [
         'description' => 'Access to read your project\'s execution logs',
     ],

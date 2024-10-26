@@ -29,7 +29,7 @@ class DeleteDeployment extends Action
             ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId')
             ->desc('Delete deployment')
             ->groups(['api', 'sites'])
-            ->label('scope', 'functions.write') //TODO: Update the scope to sites later
+            ->label('scope', 'sites.write')
             ->label('event', 'sites.[siteId].deployments.[deploymentId].delete')
             ->label('audits.event', 'deployment.delete')
             ->label('audits.resource', 'site/{request.siteId}')
