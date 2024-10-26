@@ -142,23 +142,17 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
         }
 
-        $version = $resource->getAttribute('version', 'v2');
+        $version = match($type) {
+            'function' => $resource->getAttribute('version', 'v2'),
+            'site' => 'v4'
+        };
+
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
 
-        //todo: have runtime configs for sites
         $runtime = match($type) {
-            'function' => (isset($runtimes[$resource->getAttribute('runtime', '')])) ? $runtimes[$resource->getAttribute('runtime', '')] : null,
-            'site' => [
-                'key' => 'static-for-now',
-                'name' => 'Static',
-                'logo' => 'node.png',
-                'startCommand' => null,
-                'version' => 'v1',
-                'base' => 'static:1.0',
-                'image' => 'static:1.0',
-                'supports' => [System::X86, System::ARM64, System::ARMV7, System::ARMV8]
-            ],
+            'function' => $runtimes[$resource->getAttribute('runtime')] ?? null,
+            'site' => $runtimes[$resource->getAttribute('serveRuntime')] ?? null,
             default => null
         };
 

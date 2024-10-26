@@ -67,6 +67,7 @@ class Executor
         string $destination = '',
         array $variables = [],
         string $command = null,
+        string $outputDirectory = ''
     ) {
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
@@ -90,6 +91,7 @@ class Executor
             'memory' => $memory,
             'version' => $version,
             'timeout' => $timeout,
+            'outputDirectory' => $outputDirectory
         ];
 
         $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
