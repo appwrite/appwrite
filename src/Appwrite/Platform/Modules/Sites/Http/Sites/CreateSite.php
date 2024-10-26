@@ -18,6 +18,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -95,6 +96,25 @@ class CreateSite extends Base
 
     public function action(string $siteId, string $name, string $framework, bool $enabled, string $installCommand, string $buildCommand, string $outputDirectory, string $fallbackRedirect, string $subDomain, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $ruleId = '';
+        $routeSubdomain = '';
+        $domain = '';
+
+        if (!empty($sitesDomain)) {
+            $ruleId = ID::unique();
+            $routeSubdomain = $subDomain ?? ID::unique();
+            $domain = "{$routeSubdomain}.{$sitesDomain}";
+
+            $subDomain = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
+                Query::equal('domain', [$domain])
+            ]));
+
+            if (!empty($subDomain)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Subdomain already exists. Please choose a different subdomain.');
+            }
+        }
+
         $siteId = ($siteId == 'unique()') ? ID::unique() : $siteId;
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_SITES_FRAMEWORKS', '')));
@@ -213,12 +233,7 @@ class CreateSite extends Base
                 ->setTemplate($template);
         }
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         if (!empty($sitesDomain)) {
-            $ruleId = ID::unique();
-            $routeSubdomain = $subDomain ?? ID::unique();
-            $domain = "{$routeSubdomain}.{$sitesDomain}";
-
             $rule = Authorization::skip(
                 fn () => $dbForConsole->createDocument('rules', new Document([
                     '$id' => $ruleId,
