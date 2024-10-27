@@ -115,6 +115,7 @@ class Builds extends Action
      * @param Log $log
      * @return void
      * @throws \Utopia\Database\Exception
+     *
      * @throws Exception
      */
     protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, Log $log): void
@@ -393,9 +394,13 @@ class Builds extends Action
                 }
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
-                $functionsSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
-                if ($directorySize > $functionsSizeLimit) {
-                    throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
+                $sizeLimit = match ($resource->getCollection()) {
+                    'functions' => (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000'),
+                    'sites' => (int)System::getEnv('_APP_SITES_SIZE_LIMIT', '50000000')
+                };
+
+                if ($directorySize > $sizeLimit) {
+                    throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / 1048576, 2) . ' MBs.');
                 }
 
                 $tarParamDirectory = '/tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory);
@@ -473,16 +478,35 @@ class Builds extends Action
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
-            $cpus = $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT;
-            $memory = max($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT, 1024); // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
+            $collection = $resource->getCollection();
 
-            $jwtExpiry = (int)System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
-            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
-            //todo: not needed for sites yet, might be useful as a build variable but too shortlived
-            $apiKey = $jwtObj->encode([
-                'projectId' => $project->getId(),
-                'scopes' => $resource->getAttribute('scopes', [])
-            ]);
+            $cpus = match ($collection) {
+                'functions' => $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+                'sites' => $siteVars['cpus'] ?? APP_SITE_CPUS_DEFAULT
+            };
+
+            $memory = match ($collection) {
+                'functions' => max($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT, 1024), // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
+                'sites' => max($siteVars['memory'] ?? APP_SITE_MEMORY_DEFAULT, 1024)
+            };
+
+            $timeout = match ($collection) {
+                'functions' => (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900),
+                'sites' => (int) System::getEnv('_APP_SITES_BUILD_TIMEOUT', 900),
+            };
+
+            // JWT and API key generation for functions only
+            if ($collection === 'functions') {
+                $jwtExpiry = (int)System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+
+                $apiKey = $jwtObj->encode([
+                    'projectId' => $project->getId(),
+                    'scopes' => $resource->getAttribute('scopes', [])
+                ]);
+
+                $vars = array_merge($vars, ['APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey]);
+            }
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_DOMAIN');
@@ -512,7 +536,6 @@ class Builds extends Action
                     $vars = [
                         ...$vars,
                         'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
-                        'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                         'APPWRITE_FUNCTION_ID' => $resource->getId(),
                         'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
                         'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -554,7 +577,7 @@ class Builds extends Action
             $isCanceled = false;
 
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, &$err, $version) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, $timeout, &$err, $version) {
                     try {
                         $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
 
@@ -566,6 +589,7 @@ class Builds extends Action
                             version: $version,
                             cpus: $cpus,
                             memory: $memory,
+                            timeout: $timeout,
                             remove: true,
                             entrypoint: $deployment->getAttribute('entrypoint', 'package.json'), // TODO: change this later so that sites don't need to have an entrypoint
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",

@@ -58,6 +58,8 @@ $admins = [
     'health.read',
     'functions.read',
     'functions.write',
+    'sites.read',
+    'sites.write',
     'execution.read',
     'execution.write',
     'rules.read',

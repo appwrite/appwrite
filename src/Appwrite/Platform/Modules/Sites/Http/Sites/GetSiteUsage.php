@@ -31,7 +31,7 @@ class GetSiteUsage extends Base
             ->setHttpPath('/v1/sites/:siteId/usage')
             ->desc('Get site usage')
             ->groups(['api', 'sites', 'usage'])
-            ->label('scope', 'functions.read') // TODO: Update scope to sites.read
+            ->label('scope', 'sites.read')
             ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
             ->label('sdk.namespace', 'sites')
             ->label('sdk.method', 'getSiteUsage')

@@ -33,7 +33,7 @@ class CreateVariable extends Base
             ->setHttpPath('/v1/sites/:siteId/variables')
             ->desc('Create variable')
             ->groups(['api', 'sites'])
-            ->label('scope', 'functions.write') // TODO: Update scope to sites.write
+            ->label('scope', 'sites.write')
             ->label('audits.event', 'variable.create')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY])

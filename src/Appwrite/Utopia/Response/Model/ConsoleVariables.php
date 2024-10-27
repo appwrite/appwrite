@@ -28,6 +28,12 @@ class ConsoleVariables extends Model
                 'default' => '',
                 'example' => '30000000',
             ])
+            ->addRule('_APP_SITES_SIZE_LIMIT', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Maximum file size allowed for site deployment in bytes.',
+                'default' => '',
+                'example' => '30000000',
+            ])
             ->addRule('_APP_USAGE_STATS', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Defines if usage stats are enabled. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'.',
