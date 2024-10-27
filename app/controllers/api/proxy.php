@@ -54,11 +54,12 @@ App::post('/v1/proxy/rules')
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 
-        if ($functionsDomain != '' && str_ends_with($domain, $functionsDomain)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
-        }
-        if ($sitesDomain != '' && str_ends_with($domain, $sitesDomain)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your sites domain or it\'s subdomain to specific resource. Please use different domain.');
+        if (
+            ($functionsDomain !== '' && str_ends_with($domain, $functionsDomain)) ||
+            ($sitesDomain !== '' && str_ends_with($domain, $sitesDomain))
+        ) {
+            // TODO: Refactor later
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions or sites domain or their subdomains to a specific resource. Please use a different domain.');
         }
 
         if ($domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
