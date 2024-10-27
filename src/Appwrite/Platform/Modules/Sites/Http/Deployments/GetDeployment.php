@@ -70,8 +70,7 @@ class GetDeployment extends Action
 
         $rule = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
             Query::equal("resourceType", ["deployment"]),
-            Query::equal("resourceId", [$deployment->getId()]),
-            Query::limit(1)
+            Query::equal("resourceId", [$deployment->getId()])
         ]));
 
         if (!empty($rule)) {

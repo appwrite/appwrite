@@ -111,8 +111,7 @@ class ListDeployments extends Action
 
             $rule = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
                 Query::equal("resourceType", ["deployment"]),
-                Query::equal("resourceId", [$result->getId()]),
-                Query::limit(1)
+                Query::equal("resourceId", [$result->getId()])
             ]));
 
             if (!empty($rule)) {
