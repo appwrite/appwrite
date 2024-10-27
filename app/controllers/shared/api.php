@@ -473,7 +473,9 @@ App::init()
             );
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
+
             if (!empty($data) && !$cacheLog->isEmpty()) {
+
                 $parts = explode('/', $cacheLog->getAttribute('resourceType'));
                 $type = $parts[0] ?? null;
 
@@ -718,7 +720,7 @@ App::shutdown()
         if ($useCache) {
             $resource = $resourceType = null;
             $data = $response->getPayload();
-
+            var_dump($response->getHeaders());
             if (!empty($data['payload'])) {
 
                 $pattern = $route->getLabel('cache.resource', null);
@@ -735,6 +737,7 @@ App::shutdown()
                 if(!empty($request->getRangeStart())) $keyParams .= '*'.$request->getRangeStart();
                 if(!empty($request->getRangeEnd())) $keyParams .= '*'.$request->getRangeEnd();
                 $keyParams .= '*'. APP_CACHE_BUSTER;
+
                 $key = md5($keyParams);
                 $signature = md5($data['payload']);
                 $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));

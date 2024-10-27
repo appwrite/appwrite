@@ -695,6 +695,48 @@ class Response extends SwooleResponse
     }
 
     /**
+     * Output response
+     *
+     * Generate HTTP response output including the response header (+cookies) and body and prints them.
+     *
+     * @param string $body
+     * @param bool $end
+     *
+     * @return void
+     */
+    public function bla(string $body = '', bool $end = false): void
+    {
+            if ($this->sent) {
+                return;
+            }
+
+            if ($end) {
+                $this->sent = true;
+            }
+
+
+
+            $this->addHeader('X-Debug-Speed', (string) (microtime(true) - $this->startTime));
+
+            $this
+                ->appendCookies()
+                ->appendHeaders();
+
+            $this->payload = [
+                'payload' => $body
+            ];
+
+            if (!$this->disablePayload) {
+                $this->write($body);
+                if ($end) {
+                    $this->disablePayload();
+                    $this->end();
+                }
+            } else {
+                $this->end();
+            }
+    }
+    /**
      * YAML
      *
      * This helper is for sending YAML HTTP response.

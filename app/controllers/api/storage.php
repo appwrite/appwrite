@@ -1299,6 +1299,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         $size = $deviceForFiles->getFileSize($path);
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
+
                 $response->chunk(
                     $deviceForFiles->read(
                         $path,
