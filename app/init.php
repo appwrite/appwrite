@@ -1635,7 +1635,7 @@ App::setResource('geodbClient', function () {
     return $client;
 });
 
-App::setResource('geoRecordDocker', function ($ip, $geodbClient) {
+App::setResource('geoRecordDocker', function (string $ip, Client $geodbClient) {
     $record = null;
     try {
         $record = $geodbClient->fetch("/ips/{$ip}", Client::METHOD_GET);
@@ -1649,7 +1649,7 @@ App::setResource('geoRecordDocker', function ($ip, $geodbClient) {
     return $record;
 }, ['ip', 'geodbClient']);
 
-App::setResource('geoRecordEmbeded', function ($ip, $geodb) {
+App::setResource('geoRecordEmbeded', function (string $ip, Reader $geodb) {
     $record = $geodb->get($ip);
     $output = null;
     if ($record) {
@@ -1661,7 +1661,7 @@ App::setResource('geoRecordEmbeded', function ($ip, $geodb) {
     return $output;
 }, ['ip', 'geodb']);
 
-App::setResource('geoRecord', function ($geoRecordDocker, $geoRecordEmbeded, $locale, $ip) {
+App::setResource('geoRecord', function (array $geoRecordDocker, array $geoRecordEmbeded, Locale $locale, string $ip) {
     $record = $geoRecordDocker ??= $geoRecordEmbeded;
     $eu = Config::getParam('locale-eu');
     $currencies = Config::getParam('locale-currencies');
