@@ -9,6 +9,7 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Insight;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
@@ -16,7 +17,6 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
-use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -242,6 +242,10 @@ Server::setResource('queueForFunctions', function (Connection $queue) {
 
 Server::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
+}, ['queue']);
+
+Server::setResource('queueForInsights', function (Connection $queue) {
+    return new Insight($queue);
 }, ['queue']);
 
 Server::setResource('queueForMigrations', function (Connection $queue) {
