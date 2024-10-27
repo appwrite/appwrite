@@ -46,8 +46,7 @@ App::get('/v1/console/variables')
         $variables = new Document([
             '_APP_DOMAIN_TARGET' => System::getEnv('_APP_DOMAIN_TARGET'),
             '_APP_STORAGE_LIMIT' => +System::getEnv('_APP_STORAGE_LIMIT'),
-            '_APP_FUNCTIONS_SIZE_LIMIT' => +System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT'),
-            '_APP_SITES_SIZE_LIMIT' => +System::getEnv('_APP_SITES_SIZE_LIMIT'),
+            '_APP_COMPUTE_SIZE_LIMIT' => +System::getEnv('_APP_COMPUTE_SIZE_LIMIT'),
             '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS'),
             '_APP_VCS_ENABLED' => $isVcsEnabled,
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,

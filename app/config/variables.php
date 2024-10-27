@@ -715,21 +715,6 @@ return [
         ],
     ],
     [
-        'category' => 'Sites',
-        'description' => '',
-        'variables' => [
-            [
-                'name' => '_APP_SITES_SIZE_LIMIT',
-                'description' => 'The maximum size of a site in bytes. The default value is 30MB.',
-                'introduction' => '0.13.0',
-                'default' => '30000000',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-        ]
-    ],
-    [
         'category' => 'Functions',
         'description' => '',
         'variables' => [

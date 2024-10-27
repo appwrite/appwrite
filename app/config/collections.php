@@ -3074,7 +3074,7 @@ $projectCollections = array_merge([
                 'size' => 128,
                 'signed' => false,
                 'required' => false,
-                'default' => APP_FUNCTION_SPECIFICATION_DEFAULT,
+                'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
                 'filters' => [],
             ],
             [
@@ -3410,7 +3410,7 @@ $projectCollections = array_merge([
                 'size' => 128,
                 'signed' => false,
                 'required' => false,
-                'default' => APP_FUNCTION_SPECIFICATION_DEFAULT,
+                'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
                 'filters' => [],
             ],
             [
