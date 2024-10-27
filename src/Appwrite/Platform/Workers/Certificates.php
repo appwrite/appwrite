@@ -174,7 +174,6 @@ class Certificates extends Action
             $logs = 'Certificate successfully generated.';
             $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
 
-             var_dump($certificate);
             // Give certificates to Traefik
             $this->applyCertificateFiles($folder, $domain->get(), $letsEncryptData);
 
