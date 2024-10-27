@@ -22,7 +22,6 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
-use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
@@ -64,7 +63,6 @@ class UpdateSite extends Base
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
             ->param('fallbackRedirect', '', new Text(8192, 0), 'Fallback Redirect URL for site in case a route is not found.', true)
-            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true) //TODO: Update description of scopes
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
@@ -87,7 +85,7 @@ class UpdateSite extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $fallbackRedirect, array $scopes, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
+    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $fallbackRedirect, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
         // TODO: If only branch changes, re-deploy
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -210,7 +208,6 @@ class UpdateSite extends Base
             'buildCommand' => $buildCommand,
             'outputDirectory' => $outputDirectory,
             'fallbackRedirect' => $fallbackRedirect,
-            'scopes' => $scopes,
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),
             'providerRepositoryId' => $providerRepositoryId,
