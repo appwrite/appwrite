@@ -119,10 +119,6 @@ class Deletes extends Action
                 if (!$project->isEmpty()) {
                     $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
                 }
-
-                if (!$document->isEmpty()) {
-                    $this->deleteAuditLogsByResource($getProjectDB, 'document/' . $document->getId(), $project);
-                }
                 break;
             case DELETE_TYPE_ABUSE:
                 $this->deleteAbuseLogs($project, $getProjectDB, $abuseRetention);
@@ -480,6 +476,7 @@ class Deletes extends Action
     private function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
     {
         $projectInternalId = $document->getInternalId();
+        $projectId = $document->getId();
 
         try {
             $dsn = new DSN($document->getAttribute('database', 'console'));
@@ -566,6 +563,11 @@ class Deletes extends Action
         // Delete VCS comments
         $this->deleteByGroup('vcsComments', [
             Query::equal('projectInternalId', [$projectInternalId]),
+        ], $dbForConsole);
+
+        // Delete Schedules (No projectInternalId in this collection)
+        $this->deleteByGroup('schedules', [
+            Query::equal('projectId', [$projectId]),
         ], $dbForConsole);
 
         // Delete metadata table
@@ -725,22 +727,6 @@ class Deletes extends Action
         } catch (DatabaseException $e) {
             Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $e->getMessage());
         }
-    }
-
-    /**
-     * @param callable $getProjectDB
-     * @param string $resource
-     * @param Document $project
-     * @return void
-     * @throws Exception
-     */
-    private function deleteAuditLogsByResource(callable $getProjectDB, string $resource, Document $project): void
-    {
-        $dbForProject = $getProjectDB($project);
-
-        $this->deleteByGroup(Audit::COLLECTION, [
-            Query::equal('resource', [$resource])
-        ], $dbForProject);
     }
 
     /**
@@ -966,7 +952,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    protected function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
     {
         $count = 0;
         $chunk = 0;
@@ -1008,7 +994,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
     {
         $count = 0;
         $chunk = 0;

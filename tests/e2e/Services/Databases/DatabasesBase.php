@@ -1744,6 +1744,21 @@ trait DatabasesBase
 
         $this->assertEquals(400, $documents['headers']['status-code']);
 
+        /**
+         * Test null value for cursor
+         */
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                '{"method":"cursorAfter","values":[null]}',
+            ],
+        ]);
+
+        $this->assertEquals(400, $documents['headers']['status-code']);
+
         return [];
     }
 
@@ -2096,7 +2111,7 @@ trait DatabasesBase
          */
         $conditions = [];
 
-        for ($i = 0; $i < 101; $i++) {
+        for ($i = 0; $i < APP_DATABASE_QUERY_MAX_VALUES + 1; $i++) {
             $conditions[] = $i;
         }
 
@@ -2109,7 +2124,7 @@ trait DatabasesBase
             ],
         ]);
         $this->assertEquals(400, $documents['headers']['status-code']);
-        $this->assertEquals('Invalid query: Query on attribute has greater than 100 values: releaseYear', $documents['body']['message']);
+        $this->assertEquals('Invalid query: Query on attribute has greater than '.APP_DATABASE_QUERY_MAX_VALUES.' values: releaseYear', $documents['body']['message']);
 
         $value = '';
 

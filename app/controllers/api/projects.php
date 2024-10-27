@@ -31,6 +31,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -279,6 +280,12 @@ App::get('/v1/projects')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $projectId = $cursor->getValue();
             $cursorDocument = $dbForConsole->getDocument('projects', $projectId);
 
@@ -923,6 +930,7 @@ App::delete('/v1/projects/:projectId')
         }
 
         $queueForDeletes
+            ->setProject($project)
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($project);
 
@@ -1744,7 +1752,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->param('port', 587, new Integer(), 'SMTP server port', true)
     ->param('username', '', new Text(0, 0), 'SMTP server username', true)
     ->param('password', '', new Text(0, 0), 'SMTP server password', true)
-    ->param('secure', '', new WhiteList(['tls'], true), 'Does SMTP server use secure connection', true)
+    ->param('secure', '', new WhiteList(['tls', 'ssl'], true), 'Does SMTP server use secure connection', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('queueForMails')

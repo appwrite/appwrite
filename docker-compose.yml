@@ -864,7 +864,7 @@ services:
 
   appwrite-assistant:
     container_name: appwrite-assistant
-    image: appwrite/assistant:0.4.0
+    image: appwrite/assistant:0.5.0
     networks:
       - appwrite
     environment:

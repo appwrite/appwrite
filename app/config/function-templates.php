@@ -3,7 +3,7 @@
 const TEMPLATE_RUNTIMES = [
     'NODE' => [
         'name' => 'node',
-        'versions' => ['21.0', '20.0', '19.0', '18.0', '16.0', '14.5']
+        'versions' => ['22', '21.0', '20.0', '19.0', '18.0', '16.0', '14.5']
     ],
     'PYTHON' => [
         'name' => 'python',
@@ -11,7 +11,7 @@ const TEMPLATE_RUNTIMES = [
     ],
     'DART' => [
         'name' => 'dart',
-        'versions' => ['3.3', '3.1', '3.0', '2.19', '2.18', '2.17', '2.16', '2.16']
+        'versions' => ['3.5', '3.3', '3.1', '3.0', '2.19', '2.18', '2.17', '2.16', '2.16']
     ],
     'GO' => [
         'name' => 'go',
@@ -21,9 +21,13 @@ const TEMPLATE_RUNTIMES = [
         'name' => 'php',
         'versions' => ['8.3', '8.2', '8.1', '8.0']
     ],
+    'DENO' => [
+        'name' => 'deno',
+        'versions' => ['2.0', '1.46', '1.40', '1.35', '1.24', '1.21']
+    ],
     'BUN' => [
         'name' => 'bun',
-        'versions' => ['1.0']
+        'versions' => ['1.1', '1.0']
     ],
     'RUBY' => [
         'name' => 'ruby',
@@ -51,7 +55,7 @@ return [
         'id' => 'starter',
         'name' => 'Starter function',
         'tagline' =>
-        'A simple function to get started. Edit this function to explore endless possibilities with Appwrite Functions.',
+            'A simple function to get started. Edit this function to explore endless possibilities with Appwrite Functions.',
         'permissions' => ['any'],
         'events' => [],
         'cron' => '',
@@ -73,6 +77,7 @@ return [
                 'src/index.php',
                 'php/starter'
             ),
+            ...getRuntimes(TEMPLATE_RUNTIMES['DENO'], 'deno cache src/main.ts', 'src/main.ts', 'deno/starter'),
             ...getRuntimes(TEMPLATE_RUNTIMES['BUN'], 'bun install', 'src/main.ts', 'bun/starter'),
             ...getRuntimes(TEMPLATE_RUNTIMES['RUBY'], 'bundle install', 'lib/main.rb', 'ruby/starter'),
         ],
@@ -121,7 +126,7 @@ return [
                 'description' => 'Authentication token to access your Upstash Vector database. <a class="u-bold" target="_blank" href="https://upstash.com/docs/vector/overall/getstarted">Learn more</a>.',
                 'value' => '',
                 'placeholder' =>
-                'oe4wNTbwHVLcDNa6oceZfhBEABsCNYh43ii6Xdq4bKBH7mq7qJkUmc4cs3ABbYyuVKWZTxVQjiNjYgydn2dkhABNes4NAuDpj7qxUAmZYqGJT78',
+                    'oe4wNTbwHVLcDNa6oceZfhBEABsCNYh43ii6Xdq4bKBH7mq7qJkUmc4cs3ABbYyuVKWZTxVQjiNjYgydn2dkhABNes4NAuDpj7qxUAmZYqGJT78',
                 'required' => true,
                 'type' => 'password'
             ]
@@ -227,7 +232,7 @@ return [
         'id' => 'query-mongo-atlas',
         'name' => 'Query MongoDB Atlas',
         'tagline' =>
-        'Realtime NoSQL document database with geospecial, graph, search, and vector suport.',
+            'Realtime NoSQL document database with geospecial, graph, search, and vector suport.',
         'permissions' => ['any'],
         'events' => [],
         'cron' => '',
@@ -252,7 +257,7 @@ return [
                 'description' => 'The endpoint to connect to your Mongo database. <a class="u-bold" target="_blank" href="https://www.mongodb.com/docs/atlas/getting-started/">Learn more</a>.',
                 'value' => '',
                 'placeholder' =>
-                'mongodb+srv://appwrite:Yx42hafg7Q4fgkxe@cluster0.7mslfog.mongodb.net/?retryWrites=true&w=majority&appName=Appwrite',
+                    'mongodb+srv://appwrite:Yx42hafg7Q4fgkxe@cluster0.7mslfog.mongodb.net/?retryWrites=true&w=majority&appName=Appwrite',
                 'required' => true,
                 'type' => 'password'
             ]
@@ -264,7 +269,7 @@ return [
         'id' => 'query-neon-postgres',
         'name' => 'Query Neon Postgres',
         'tagline' =>
-        'Reliable SQL database with replication, point-in-time recovery, and pgvector support.',
+            'Reliable SQL database with replication, point-in-time recovery, and pgvector support.',
         'permissions' => ['any'],
         'events' => [],
         'cron' => '',
@@ -491,7 +496,7 @@ return [
         'id' => 'censor-with-redact',
         'name' => 'Censor with Redact',
         'tagline' =>
-        'Censor sensitive information from a provided text string using Redact API by Pangea.',
+            'Censor sensitive information from a provided text string using Redact API by Pangea.',
         'permissions' => ['any'],
         'events' => [],
         'cron' => '',
@@ -560,7 +565,7 @@ return [
         'id' => 'github-issue-bot',
         'name' => 'GitHub issue bot',
         'tagline' =>
-        'Automate the process of responding to newly opened issues in a GitHub repository.',
+            'Automate the process of responding to newly opened issues in a GitHub repository.',
         'permissions' => ['any'],
         'events' => [],
         'cron' => '',
