@@ -54,19 +54,12 @@ App::post('/v1/proxy/rules')
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 
-        switch ($resourceType) {
-            case 'function':
-                if (str_ends_with($domain, $functionsDomain)) {
-                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
-                }
-                break;
-            case 'site':
-                if (str_ends_with($domain, $sitesDomain)) {
-                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
-                }
-                break;
+        if ($functionsDomain != '' && str_ends_with($domain, $functionsDomain)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
         }
-
+        if ($sitesDomain != '' && str_ends_with($domain, $sitesDomain)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your sites domain or it\'s subdomain to specific resource. Please use different domain.');
+        }
 
         if ($domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
@@ -111,8 +104,7 @@ App::post('/v1/proxy/rules')
                 break;
             case 'site':
                 if (empty($resourceId)) {
-                    // todo: use site relecant exception
-                    throw new Exception(Exception::FUNCTION_NOT_FOUND);
+                    throw new Exception(Exception::SITE_NOT_FOUND);
                 }
 
                 $site = $dbForProject->getDocument('sites', $resourceId);
