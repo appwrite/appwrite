@@ -371,3 +371,39 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
 
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
     });
+
+App::get('/v1/proxy/subdomains')
+    ->desc('Check if subdomain is available')
+    ->groups(['api', 'proxy'])
+    ->label('scope', 'rules.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'proxy')
+    ->label('sdk.method', 'checkSubdomain')
+    ->label('sdk.description', '/docs/references/proxy/check-subdomain.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('resourceType', null, new WhiteList(['function', 'site']), 'Action definition for the rule. Possible values are "api", "function" and "site"')
+    ->param('subdomain', '', new Text(256), 'Subdomain name.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $resourceType, string $subdomain, Response $response, Database $dbForConsole) {
+        $resourceDomain = $resourceType === 'site' ? System::getEnv('_APP_DOMAIN_SITES', '') : System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $domain = $subdomain . '.' . $resourceDomain;
+
+        $document = $dbForConsole->findOne('rules', [
+            Query::equal('domain', [$domain]),
+        ]);
+
+        if ($document && !$document->isEmpty()) {
+            return $response->json([
+                'success' => false,
+                'message' => 'Subdomain is already taken.'
+            ], Response::STATUS_CODE_CONFLICT);
+        }
+
+        return $response->json([
+            'success' => true,
+            'message' => 'Subdomain is available.'
+        ], Response::STATUS_CODE_OK);
+    });
