@@ -58,13 +58,6 @@ class Site extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('scopes', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Allowed permission scopes.',
-                'default' => [],
-                'example' => 'users.read',
-                'array' => true,
-            ])
             ->addRule('vars', [
                 'type' => Response::MODEL_VARIABLE,
                 'description' => 'Site variables.',
@@ -137,6 +130,18 @@ class Site extends Model
                 'description' => 'Machine specification for builds and executions.',
                 'default' => APP_SITE_SPECIFICATION_DEFAULT,
                 'example' => APP_SITE_SPECIFICATION_DEFAULT,
+            ])
+            ->addRule('buildRuntime', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Site build runtime.',
+                'default' => '',
+                'example' => 'node-22',
+            ])
+            ->addRule('serveRuntime', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Site serve runtime.',
+                'default' => '',
+                'example' => 'static-1',
             ])
         ;
     }
