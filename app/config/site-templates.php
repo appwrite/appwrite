@@ -2,60 +2,36 @@
 
 const TEMPLATE_FRAMEWORKS = [
     'SVELTEKIT' => [
-        'name' => 'sveltekit'
+        'name' => 'Svelte Kit'
     ],
     'NEXTJS' => [
-        'name' => 'nextjs'
+        'name' => 'Next.js'
     ],
 ];
 
-function getFramework($framework, $installCommand, $buildCommand, $outputDirectory, $fallbackRedirect, $providerRootDirectory)
+function getFramework($framework, $installCommand, $buildCommand, $outputDirectory, $providerRootDirectory)
 {
     return [
         'name' => $framework['name'],
         'installCommand' => $installCommand,
         'buildCommand' => $buildCommand,
         'outputDirectory' => $outputDirectory,
-        'fallbackRedirect' => $fallbackRedirect,
         'providerRootDirectory' => $providerRootDirectory
     ];
 }
 
 return [
     [
-        'icon' => 'icon-lightning-bolt',
         'id' => 'starter',
-        'name' => 'Starter site',
-        'tagline' =>
-        'A simple site to get started. Edit this site to explore endless possibilities with Appwrite Sites.',
+        'name' => 'Personal portfolio',
         'useCases' => ['starter'],
         'frameworks' => [
-            ...getFramework(TEMPLATE_FRAMEWORKS['SVELTEKIT'], 'npm install', 'npm run build', 'build', 'index.html', 'node/starter')
+            ...getFramework(TEMPLATE_FRAMEWORKS['SVELTEKIT'], 'npm install --force', 'npm run build', './build', './')
         ],
-        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/starter">file</a>.',
         'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
+        'providerRepositoryId' => 'portfolio-walter-o-brien',
+        'providerOwner' => 'adityaoberai',
+        'providerVersion' => '0.1.*',
         'variables' => [],
-        'scopes' => ['users.read']
     ],
-    [
-        'icon' => 'icon-lightning-bolt',
-        'id' => 'starter1',
-        'name' => 'Starter1 site',
-        'tagline' =>
-        'A simple site to get started. Edit this site to explore endless possibilities with Appwrite Sites.',
-        'useCases' => ['messaging'],
-        'frameworks' => [
-            ...getFramework(TEMPLATE_FRAMEWORKS['SVELTEKIT'], 'npm install', 'npm run build', 'build', 'index.html', 'node/starter1')
-        ],
-        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/starter">file</a>.',
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
-        'variables' => [],
-        'scopes' => ['users.read']
-    ]
 ];

@@ -34,12 +34,6 @@ class TemplateFramework extends Model
                 'default' => '',
                 'example' => 'build',
             ])
-            ->addRule('fallbackRedirect', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The fallback redirect for the site when a route is not found.',
-                'default' => '',
-                'example' => 'index.html',
-            ])
             ->addRule('providerRootDirectory', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Path to site in VCS (Version Control System) repository',

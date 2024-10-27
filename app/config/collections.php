@@ -3403,17 +3403,6 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('fallbackRedirect'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 2048,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => ID::custom('serveRuntime'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

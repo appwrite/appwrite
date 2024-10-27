@@ -204,7 +204,6 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'installCommand' => $resource->getAttribute('installCommand', ''),
                 'buildCommand' => $resource->getAttribute('buildCommand', ''),
                 'outputDirectory' => $resource->getAttribute('outputDirectory', ''),
-                'fallbackRedirect' => $resource->getAttribute('fallbackRedirect', ''),
                 'type' => 'vcs',
                 'installationId' => $installationId,
                 'installationInternalId' => $installationInternalId,
