@@ -3403,17 +3403,6 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('scopes'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => [],
-                'array' => true,
-                'filters' => [],
-            ],
-            [
                 '$id' => ID::custom('fallbackRedirect'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -3423,7 +3412,29 @@ $projectCollections = array_merge([
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ]
+            ],
+            [
+                '$id' => ID::custom('serveRuntime'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 2048,
+                'signed' => true,
+                'required' => true,
+                'default' => '',
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('buildRuntime'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 2048,
+                'signed' => true,
+                'required' => true,
+                'default' => '',
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [

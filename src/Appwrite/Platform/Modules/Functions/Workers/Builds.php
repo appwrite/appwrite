@@ -574,7 +574,8 @@ class Builds extends Action
                             entrypoint: $deployment->getAttribute('entrypoint', 'package.json'), // TODO: change this later so that sites don't need to have an entrypoint
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
-                            command: $command
+                            command: $command,
+                            outputDirectory: $resource->getAttribute('outputDirectory', '')
                         );
                     } catch (\Throwable $error) {
                         $err = $error;
@@ -821,8 +822,8 @@ class Builds extends Action
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $key =  $resource->getAttribute('runtime');
         $runtime = match ($resource->getCollection()) {
-            'functions' => $runtimes[$key] ?? null,
-            'sites' => $runtimes['node-18.0'] ?? null, //todo: fix hardcode
+            'functions' => $runtimes[$resource->getAttribute('runtime')] ?? null,
+            'sites' => $runtimes[$resource->getAttribute('buildRuntime')] ?? null,
             default => null
         };
         if (\is_null($runtime)) {
