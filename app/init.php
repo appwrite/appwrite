@@ -1668,7 +1668,7 @@ App::setResource('geoRecordEmbeded', function (string $ip, Reader $geodb) {
     return $output;
 }, ['ip', 'geodb']);
 
-App::setResource('geoRecord', function (array $geoRecordDocker, array $geoRecordEmbeded, Locale $locale, string $ip) {
+App::setResource('geoRecord', function (?array $geoRecordDocker, ?array $geoRecordEmbeded, Locale $locale, string $ip) {
     $record = $geoRecordDocker ??= $geoRecordEmbeded;
     $eu = Config::getParam('locale-eu');
     $currencies = Config::getParam('locale-currencies');
