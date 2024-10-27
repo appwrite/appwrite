@@ -946,8 +946,8 @@ services:
     networks:
       - appwrite
     environment:
-      - APPWRITE_BROWSER_SECRET=123
-      - PORT=1234
+      - APPWRITE_BROWSER_SECRET=123 # TODO: Change this to a random secret
+      - PORT=1234 # TODO: Use a different port
 
   openruntimes-executor:
     container_name: openruntimes-executor
