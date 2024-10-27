@@ -27,7 +27,7 @@ return function ($context) {
         'APPWRITE_REGION' => \getenv('APPWRITE_REGION') ?: '',
         'UNICODE_TEST' => "êä",
         'GLOBAL_VARIABLE' => \getenv('GLOBAL_VARIABLE') ?: '',
-        'APPWRITE_FUNCTION_CPUS' => \getenv('APPWRITE_FUNCTION_CPUS') ?: '',
-        'APPWRITE_FUNCTION_MEMORY' => \getenv('APPWRITE_FUNCTION_MEMORY') ?: '',
+        'APPWRITE_COMPUTE_CPUS' => \getenv('APPWRITE_COMPUTE_CPUS') ?: '',
+        'APPWRITE_COMPUTE_MEMORY' => \getenv('APPWRITE_COMPUTE_MEMORY') ?: '',
     ], \intval($statusCode));
 };
