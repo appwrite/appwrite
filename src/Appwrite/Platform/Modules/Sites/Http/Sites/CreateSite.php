@@ -66,8 +66,8 @@ class CreateSite extends Base
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
             ->param('subdomain', '', new CustomId(), 'Unique custom sub-domain. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
-            ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', true)
-            ->param('serveRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use when serving site.', true)
+            ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.')
+            ->param('serveRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use when serving site.')
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
@@ -104,7 +104,7 @@ class CreateSite extends Base
 
         if (!empty($sitesDomain)) {
             $ruleId = ID::unique();
-            $routeSubdomain = $subdomain ?? ID::unique();
+            $routeSubdomain = $subdomain ?: ID::unique();
             $domain = "{$routeSubdomain}.{$sitesDomain}";
 
             $subdomain = Authorization::skip(fn () => $dbForConsole->findOne('rules', [

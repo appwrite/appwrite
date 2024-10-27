@@ -94,6 +94,12 @@ class Deployment extends Model
                 'default' => 0,
                 'example' => 128,
             ])
+            ->addRule('domain', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Preview domain.',
+                'default' => '',
+                'example' => 'deploy1-project1.appwrite.site',
+            ])
             ->addRule('providerRepositoryName', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The name of the vcs provider repository',

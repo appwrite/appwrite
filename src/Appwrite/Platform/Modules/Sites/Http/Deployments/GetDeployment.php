@@ -3,8 +3,10 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Query;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -37,10 +39,11 @@ class GetDeployment extends Action
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForConsole')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject)
+    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, Database $dbForConsole)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -64,6 +67,15 @@ class GetDeployment extends Action
         $deployment->setAttribute('buildTime', $build->getAttribute('duration', 0));
         $deployment->setAttribute('buildSize', $build->getAttribute('size', 0));
         $deployment->setAttribute('size', $deployment->getAttribute('size', 0));
+
+        $rule = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
+            Query::equal("resourceType", ["deployment"]),
+            Query::equal("resourceId", [$deployment->getId()])
+        ]));
+
+        if (!empty($rule)) {
+            $deployment->setAttribute('domain', $rule->getAttribute('domain', ''));
+        }
 
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     }
