@@ -3381,6 +3381,17 @@ $projectCollections = array_merge([
                 'filters' => ['subQueryProjectVariables'],
             ],
             [
+                '$id' => ID::custom('timeout'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

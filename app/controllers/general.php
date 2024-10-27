@@ -325,8 +325,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             };
             $entrypoint = match($type) {
                 'function' => $deployment->getAttribute('entrypoint', ''),
-                //todo: check if null works
-                'site' => 'placeholder' // entrypoint is required in api, but not needed with site
+                'site' => ''
             };
             $runtimeEntrypoint = match ($version) {
                 'v2' => '',
@@ -338,7 +337,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 deploymentId: $deployment->getId(),
                 body: \strlen($body) > 0 ? $body : null,
                 variables: $vars,
-                // todo: figure out timeouts for sites
                 timeout: $resource->getAttribute('timeout', 30),
                 image: $runtime['image'],
                 source: $build->getAttribute('path', ''),

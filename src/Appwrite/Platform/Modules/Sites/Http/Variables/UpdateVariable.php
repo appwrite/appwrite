@@ -28,7 +28,7 @@ class UpdateVariable extends Base
             ->setHttpPath('/v1/sites/:siteId/variables/:variableId')
             ->desc('Update variable')
             ->groups(['api', 'sites'])
-            ->label('scope', 'functions.write') // TODO: Update scope to sites
+            ->label('scope', 'sites.write')
             ->label('audits.event', 'variable.update')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY])

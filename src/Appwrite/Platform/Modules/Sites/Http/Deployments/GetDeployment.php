@@ -25,7 +25,7 @@ class GetDeployment extends Action
             ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId')
             ->desc('Get deployment')
             ->groups(['api', 'sites'])
-            ->label('scope', 'functions.read') //TODO: Update the scope to sites later
+            ->label('scope', 'sites.read')
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
             ->label('sdk.namespace', 'sites')
             ->label('sdk.method', 'getDeployment')
