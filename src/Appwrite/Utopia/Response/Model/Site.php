@@ -89,12 +89,6 @@ class Site extends Model
                 'default' => '',
                 'example' => 'build',
             ])
-            ->addRule('fallbackRedirect', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The URL to redirect to if the route is not found.', //TODO: Update the description
-                'default' => '',
-                'example' => 'https://appwrite.io',
-            ])
             ->addRule('installationId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Site VCS (Version Control System) installation id.',

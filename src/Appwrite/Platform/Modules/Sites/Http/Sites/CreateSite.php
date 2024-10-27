@@ -65,8 +65,9 @@ class CreateSite extends Base
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
-            ->param('fallbackRedirect', '', new Text(8192, 0), 'Fallback Redirect URL for site in case a route is not found.', true)
             ->param('subdomain', '', new CustomId(), 'Unique custom sub-domain. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
+            ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', true)
+            ->param('serveRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use when serving site.', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
@@ -94,7 +95,7 @@ class CreateSite extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $fallbackRedirect, string $subdomain, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
+    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $subdomain, string $buildRuntime, string $serveRuntime, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $ruleId = '';
@@ -159,7 +160,6 @@ class CreateSite extends Base
             'installCommand' => $installCommand,
             'buildCommand' => $buildCommand,
             'outputDirectory' => $outputDirectory,
-            'fallbackRedirect' => $fallbackRedirect,
             'search' => implode(' ', [$siteId, $name, $framework]),
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),
@@ -170,8 +170,8 @@ class CreateSite extends Base
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
             'specification' => $specification,
-            'buildRuntime' => Config::getParam('frameworks', [])[$framework]['defaultBuildRuntime'],
-            'serveRuntime' => Config::getParam('frameworks', [])[$framework]['defaultServeRuntime'],
+            'buildRuntime' => $buildRuntime,
+            'serveRuntime' => $serveRuntime,
         ]));
 
         // Git connect logic

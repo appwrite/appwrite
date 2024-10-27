@@ -32,20 +32,27 @@ class TemplateFramework extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'The output directory to store the build output.',
                 'default' => '',
-                'example' => 'build',
-            ])
-            ->addRule('fallbackRedirect', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The fallback redirect for the site when a route is not found.',
-                'default' => '',
-                'example' => 'index.html',
+                'example' => './build',
             ])
             ->addRule('providerRootDirectory', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Path to site in VCS (Version Control System) repository',
                 'default' => '',
-                'example' => 'node/starter',
-            ]);
+                'example' => './svelte-kit/starter',
+            ])
+            ->addRule('serveRuntime', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Runtime used during serve of template deployment.',
+                'default' => '',
+                'example' => 'static-1',
+            ])
+            ->addRule('buildRuntime', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Runtime used during build step of template.',
+                'default' => '',
+                'example' => 'node-22',
+            ])
+        ;
     }
 
     /**
