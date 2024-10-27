@@ -67,7 +67,7 @@ class UpdateFunction extends Base
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
             ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
             ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-            ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
+            ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_COMPUTE_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
             ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
             ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
             ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
@@ -78,11 +78,11 @@ class UpdateFunction extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-            ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
+            ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
                 $plan,
                 Config::getParam('runtime-specifications', []),
-                App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
-                App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
+                App::getEnv('_APP_COMPUTE_CPUS', APP_COMPUTE_CPUS_DEFAULT),
+                App::getEnv('_APP_COMPUTE_MEMORY', APP_COMPUTE_MEMORY_DEFAULT)
             ), 'Runtime specification for the function and builds.', true, ['plan'])
             ->inject('request')
             ->inject('response')

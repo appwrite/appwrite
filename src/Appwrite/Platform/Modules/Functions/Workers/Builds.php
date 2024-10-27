@@ -149,7 +149,7 @@ class Builds extends Action
 
         $version = $this->getVersion($resource);
         $runtime = $this->getRuntime($resource, $version);
-        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specifications', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specifications', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         // Realtime preparation
         $allEvents = Event::generateEvents("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update", [
@@ -394,10 +394,7 @@ class Builds extends Action
                 }
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
-                $sizeLimit = match ($resource->getCollection()) {
-                    'functions' => (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000'),
-                    'sites' => (int)System::getEnv('_APP_SITES_SIZE_LIMIT', '50000000')
-                };
+                $sizeLimit = (int)System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000');
 
                 if ($directorySize > $sizeLimit) {
                     throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / 1048576, 2) . ' MBs.');
@@ -478,26 +475,13 @@ class Builds extends Action
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
-            $collection = $resource->getCollection();
-
-            $cpus = match ($collection) {
-                'functions' => $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
-                'sites' => $siteVars['cpus'] ?? APP_SITE_CPUS_DEFAULT
-            };
-
-            $memory = match ($collection) {
-                'functions' => max($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT, 1024), // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
-                'sites' => max($siteVars['memory'] ?? APP_SITE_MEMORY_DEFAULT, 1024)
-            };
-
-            $timeout = match ($collection) {
-                'functions' => (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900),
-                'sites' => (int) System::getEnv('_APP_SITES_BUILD_TIMEOUT', 900),
-            };
+            $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
+            $memory =  max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, 1024); // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
+            $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
             // JWT and API key generation for functions only
-            if ($collection === 'functions') {
-                $jwtExpiry = (int)System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+            if ($resource->getCollection() === 'functions') {
+                $jwtExpiry = (int)System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
                 $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
 
                 $apiKey = $jwtObj->encode([
@@ -601,11 +585,12 @@ class Builds extends Action
                         $err = $error;
                     }
                 }),
-                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err, &$isCanceled) {
+                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, $timeout, &$err, &$isCanceled) {
                     try {
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
+                            timeout: $timeout,
                             callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $allEvents, $project, &$isCanceled) {
                                 if ($isCanceled) {
                                     return;
@@ -669,7 +654,7 @@ class Builds extends Action
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
 
-            $buildSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_BUILD_SIZE_LIMIT', '2000000000');
+            $buildSizeLimit = (int)System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
             if ($response['size'] > $buildSizeLimit) {
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
             }
@@ -819,11 +804,11 @@ class Builds extends Action
             ->addMetric(METRIC_BUILDS, 1) // per project
             ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
             ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
-            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['builds']), 1) // per function
             ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsStorage']), $build->getAttribute('size', 0))
             ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsCompute']), (int)$build->getAttribute('duration', 0) * 1000)
-            ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsMbSeconds']), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+            ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsMbSeconds']), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->setProject($project)
             ->trigger();
     }

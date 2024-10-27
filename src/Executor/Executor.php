@@ -115,10 +115,9 @@ class Executor
     public function getLogs(
         string $deploymentId,
         string $projectId,
+        string $timeout,
         callable $callback
     ) {
-        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
-
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes/{$runtimeId}/logs";
         $params = [

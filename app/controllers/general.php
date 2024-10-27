@@ -108,7 +108,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         $utopia->getRoute()?->label('sdk.namespace', 'functions');
         $utopia->getRoute()?->label('sdk.method', 'createExecution');
 
-        if (System::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+        if (System::getEnv('_APP_OPTIONS_COMPUTE_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https') {
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
@@ -148,7 +148,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         };
 
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         $runtime = match($type) {
             'function' => $runtimes[$resource->getAttribute('runtime')] ?? null,
@@ -297,8 +297,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
-            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
+            'APPWRITE_COMPUTE_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+            'APPWRITE_COMPUTE_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
             'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
@@ -346,8 +346,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $runtimeEntrypoint,
-                cpus: $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
-                memory: $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
+                cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+                memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
                 logging: $resource->getAttribute('logging', true),
                 requestTimeout: 30
             );
@@ -398,8 +398,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                     ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                     ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                     ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                    ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                    ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)));
+                    ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+                    ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)));
             }
 
             $queueForUsage

@@ -128,8 +128,8 @@ class Site extends Model
             ->addRule('specification', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Machine specification for builds and executions.',
-                'default' => APP_SITE_SPECIFICATION_DEFAULT,
-                'example' => APP_SITE_SPECIFICATION_DEFAULT,
+                'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
+                'example' => APP_COMPUTE_SPECIFICATION_DEFAULT,
             ])
             ->addRule('buildRuntime', [
                 'type' => self::TYPE_STRING,

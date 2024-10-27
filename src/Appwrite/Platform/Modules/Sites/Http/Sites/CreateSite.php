@@ -61,7 +61,7 @@ class CreateSite extends Base
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true) // TODO: Add logging param later
-            ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 900)), 'Maximum request time in seconds.', true)
+            ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_COMPUTE_TIMEOUT', 900)), 'Maximum request time in seconds.', true)
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
@@ -76,11 +76,11 @@ class CreateSite extends Base
             ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true)
             ->param('templateRootDirectory', '', new Text(128, 0), 'Path to site code in the template repo.', true)
             ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the site template.', true)
-            ->param('specification', APP_SITE_SPECIFICATION_DEFAULT, fn (array $plan) => new FrameworkSpecification(
+            ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new FrameworkSpecification(
                 $plan,
                 Config::getParam('framework-specifications', []),
-                App::getEnv('_APP_SITES_CPUS', APP_SITE_CPUS_DEFAULT),
-                App::getEnv('_APP_SITES_MEMORY', APP_SITE_MEMORY_DEFAULT)
+                App::getEnv('_APP_COMPUTE_CPUS', APP_COMPUTE_CPUS_DEFAULT),
+                App::getEnv('_APP_COMPUTE_MEMORY', APP_COMPUTE_MEMORY_DEFAULT)
             ), 'Framework specification for the site and builds.', true, ['plan'])
             ->inject('request')
             ->inject('response')
