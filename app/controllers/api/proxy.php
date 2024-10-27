@@ -388,6 +388,7 @@ App::get('/v1/proxy/subdomains')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $resourceType, string $subdomain, Response $response, Database $dbForConsole) {
+        //TODO: Add tests for this endpoint
         $resourceDomain = $resourceType === 'site' ? System::getEnv('_APP_DOMAIN_SITES', '') : System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         $domain = $subdomain . '.' . $resourceDomain;
 
