@@ -23,7 +23,7 @@ return [
         'name' => 'Personal portfolio',
         'useCases' => ['starter'],
         'frameworks' => [
-            ...getFramework(TEMPLATE_FRAMEWORKS['SVELTEKIT'], [
+            ...getFramework('SVELTEKIT', [
                 'serveRuntime' => 'static-1',
                 'installCommand' => 'npm install --force',
                 'providerRootDirectory' => './'

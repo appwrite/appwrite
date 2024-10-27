@@ -318,6 +318,7 @@ if (!App::isProduction()) {
 /*
  * ENV vars
  */
+Config::load('template-runtimes', __DIR__ . '/config/template-runtimes.php');
 Config::load('events', __DIR__ . '/config/events.php');
 Config::load('auth', __DIR__ . '/config/auth.php');
 Config::load('apis', __DIR__ . '/config/apis.php');  // List of APIs
