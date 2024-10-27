@@ -1647,7 +1647,7 @@ App::setResource('geoRecordDocker', function ($ip, $geodbClient) {
     }
 
     return $record;
-});
+}, ['ip', 'geodbClient']);
 
 App::setResource('geoRecordEmbeded', function ($ip, $geodb) {
     $record = $geodb->get($ip);
