@@ -104,7 +104,7 @@ class CreateSite extends Base
 
         if (!empty($sitesDomain)) {
             $ruleId = ID::unique();
-            $routeSubdomain = $subdomain ?? ID::unique();
+            $routeSubdomain = $subdomain || ID::unique();
             $domain = "{$routeSubdomain}.{$sitesDomain}";
 
             $subdomain = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
