@@ -66,7 +66,8 @@ class TemplateSite extends Model
                 'default' => [],
                 'example' => [],
                 'array' => true
-            ]);
+            ])
+        ;
     }
 
     /**
