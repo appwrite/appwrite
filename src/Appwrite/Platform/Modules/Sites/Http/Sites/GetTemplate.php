@@ -44,9 +44,10 @@ class GetTemplate extends Base
     {
         $templates = Config::getParam('site-templates', []);
 
-        $template = array_shift(\array_filter($templates, function ($item) use ($templateId) {
+        $allowedTemplates = \array_filter($templates, function ($item) use ($templateId) {
             return $item['id'] === $templateId;
-        }));
+        });
+        $template = array_shift($allowedTemplates);
 
         if (empty($template)) {
             throw new Exception(Exception::SITE_TEMPLATE_NOT_FOUND);
