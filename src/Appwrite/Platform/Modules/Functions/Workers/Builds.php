@@ -482,14 +482,12 @@ class Builds extends Action
 
             $cpus = match ($collection) {
                 'functions' => $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
-                'sites' => $siteVars['cpus'] ?? APP_SITE_CPUS_DEFAULT,
-                default => APP_FUNCTION_CPUS_DEFAULT,
+                'sites' => $siteVars['cpus'] ?? APP_SITE_CPUS_DEFAULT
             };
 
             $memory = match ($collection) {
-                'functions' => max($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT, 1024),
-                'sites' => max($siteVars['memory'] ?? APP_SITE_MEMORY_DEFAULT, 1024),
-                default => max(APP_FUNCTION_MEMORY_DEFAULT, 1024), // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
+                'functions' => max($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT, 1024), // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
+                'sites' => max($siteVars['memory'] ?? APP_SITE_MEMORY_DEFAULT, 1024)
             };
 
             $timeout = match ($collection) {

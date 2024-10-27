@@ -31,7 +31,7 @@ class ListSites extends Base
             ->setHttpPath('/v1/sites')
             ->desc('List sites')
             ->groups(['api', 'sites'])
-            ->label('scope', 'sites.write')
+            ->label('scope', 'sites.read')
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
             ->label('sdk.namespace', 'sites')
             ->label('sdk.method', 'list')
