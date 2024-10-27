@@ -99,10 +99,11 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
     $type = $rule->getAttribute('resourceType');
 
-    if ($type === 'function' || $type === 'site') {
+    if ($type === 'function' || $type === 'site' || $type === 'deployment') {
         $resourceCollection = match($type) {
             'function' => 'functions',
-            'site' => 'sites'
+            'site' => 'sites',
+            'deployment' => 'deployments',
         };
 
         $utopia->getRoute()?->label('sdk.namespace', 'functions');
@@ -136,7 +137,12 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $resource = Authorization::skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+        if ($resourceCollection === 'deployments') {
+            $subResource = Authorization::skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+            $resource = Authorization::skip(fn () => $dbForProject->getDocument($subResource->getAttribute('resourceType'), $subResource->getAttribute('resourceId')));
+        } else {
+            $resource = Authorization::skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+        }
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
             throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
@@ -144,7 +150,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $version = match($type) {
             'function' => $resource->getAttribute('version', 'v2'),
-            'site' => 'v4'
+            'site' => 'v4',
+            'deployment' => 'v4'
         };
 
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
@@ -153,6 +160,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         $runtime = match($type) {
             'function' => $runtimes[$resource->getAttribute('runtime')] ?? null,
             'site' => $runtimes[$resource->getAttribute('serveRuntime')] ?? null,
+            'deployment' => $runtimes[$resource->getAttribute('serveRuntime')] ?? null,
             default => null
         };
 
@@ -162,7 +170,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $deploymentId = match($type) {
             'function' => $resource->getAttribute('deployment', ''),
-            'site' => $resource->getAttribute('deploymentId', '')
+            'site' => $resource->getAttribute('deploymentId', ''),
+            'deployment' => $subResource->getId()
         };
 
         $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
@@ -321,11 +330,13 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         try {
             $version = match($type) {
                 'function' => $resource->getAttribute('version', 'v2'),
-                'site' => 'v4'
+                'site' => 'v4',
+                'deployment' => 'v4'
             };
             $entrypoint = match($type) {
                 'function' => $deployment->getAttribute('entrypoint', ''),
-                'site' => ''
+                'site' => '',
+                'deployment' => ''
             };
             $runtimeEntrypoint = match ($version) {
                 'v2' => '',
