@@ -27,7 +27,7 @@ class ScheduleMessages extends ScheduleBase
         return 'messages';
     }
 
-    protected function enqueueResources(Pool $poolForQueue, Database $dbForConsole, callable $getProjectDB): void
+    protected function enqueueResources(\Utopia\Pools\Pool $poolForQueue, Database $dbForConsole, callable $getProjectDB): void
     {
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {

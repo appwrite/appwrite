@@ -28,7 +28,7 @@ class ScheduleExecutions extends ScheduleBase
         return 'executions';
     }
 
-    protected function enqueueResources(Pool $poolForQueue, Database $dbForConsole, callable $getProjectDB): void
+    protected function enqueueResources(\Utopia\Pools\Pool $poolForQueue, Database $dbForConsole, callable $getProjectDB): void
     {
         $queue = $poolForQueue->pop();
         $connection = $queue->getResource();
