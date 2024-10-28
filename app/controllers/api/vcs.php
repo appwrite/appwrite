@@ -113,7 +113,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 if ($latestComment !== false && !$latestComment->isEmpty()) {
                     $latestCommentId = $latestComment->getAttribute('providerCommentId', '');
-                    
+
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
                     $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '', '');

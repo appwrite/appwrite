@@ -691,28 +691,6 @@ class Builds extends Action
 
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
-            if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
-            }
-
-            Console::success("Build id: $buildId created");
-
-            /** Set auto deploy */
-            if ($deployment->getAttribute('activate') === true) {
-                $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
-                $resource->setAttribute('live', true);
-                switch ($resource->getCollection()) {
-                    case 'functions':
-                        $resource->setAttribute('deployment', $deployment->getId());
-                        $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
-                        break;
-                    case 'sites':
-                        $resource->setAttribute('deploymentId', $deployment->getId());
-                        $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
-                        break;
-                }
-            }
-
             // Preview deployments for sites
             if ($resource->getCollection() === 'sites') {
                 $ruleId = ID::unique();
@@ -736,6 +714,28 @@ class Builds extends Action
                         'certificateId' => '',
                     ]))
                 );
+            }
+
+            if ($isVcsEnabled) {
+                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
+            }
+
+            Console::success("Build id: $buildId created");
+
+            /** Set auto deploy */
+            if ($deployment->getAttribute('activate') === true) {
+                $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                $resource->setAttribute('live', true);
+                switch ($resource->getCollection()) {
+                    case 'functions':
+                        $resource->setAttribute('deployment', $deployment->getId());
+                        $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
+                        break;
+                    case 'sites':
+                        $resource->setAttribute('deploymentId', $deployment->getId());
+                        $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+                        break;
+                }
             }
 
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
@@ -991,7 +991,7 @@ class Builds extends Action
 
                 $previewUrl = match($resource->getCollection()) {
                     'functions' => '',
-                    'sites' => $rule->getAttribute('domain', ''),
+                    'sites' => !empty($rule) ? $rule->getAttribute('domain', '') : '',
                     default => throw new \Exception('Invalid resource type')
                 };
 

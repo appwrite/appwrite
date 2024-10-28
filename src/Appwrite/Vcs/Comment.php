@@ -63,16 +63,16 @@ class Comment
                 ];
             }
 
-            if($build['resourceType'] === 'site') {
+            if ($build['resourceType'] === 'site') {
                 $projects[$build['projectId']]['site'][$build['resourceId']] = [
                     'name' => $build['resourceName'],
                     'status' => $build['buildStatus'],
                     'deploymentId' => $build['deploymentId'],
                     'action' => $build['action'],
-                    'previewUrl' => $build['$previewUrl'],
+                    'previewUrl' => $build['previewUrl'],
                     'previewQrCode' => $build['previewQrCode']
                 ];
-            } else if($build['resourceType'] === 'function') {
+            } elseif ($build['resourceType'] === 'function') {
                 $projects[$build['projectId']]['function'][$build['resourceId']] = [
                     'name' => $build['resourceName'],
                     'status' => $build['buildStatus'],
@@ -88,7 +88,7 @@ class Comment
 
             $text .= "Project name: **{$project['name']}** \nProject ID: `{$projectId}`\n\n";
 
-            if(\count($project['site']) > 0) {
+            if (\count($project['site']) > 0) {
 
                 $text .= "| Site | ID | Status | Previews | Action |\n";
                 $text .= "| :- | :-  | :-  | :-  | :- |\n";
@@ -124,7 +124,7 @@ class Comment
                 $text .= "\n\n";
             }
 
-            if(\count($project['function']) > 0) {
+            if (\count($project['function']) > 0) {
 
                 $text .= "| Function | ID | Status | Action |\n";
                 $text .= "| :- | :-  | :-  | :- |\n";
