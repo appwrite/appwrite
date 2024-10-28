@@ -50,7 +50,6 @@ class ListFrameworks extends Base
                 continue;
             }
 
-            $framework['$id'] = $id;
             $allowed[] = $framework;
         }
 

@@ -19,7 +19,6 @@ return [
     'sveltekit' => [
         'key' => 'sveltekit',
         'name' => 'SvelteKit',
-        'logo' => 'sveltekit.png',
         'defaultServeRuntime' => 'node-22',
         'serveRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'defaultBuildRuntime' => 'node-22',
@@ -28,7 +27,6 @@ return [
     'nextjs' => [
         'key' => 'nextjs',
         'name' => 'Next.js',
-        'logo' => 'nextjs.png',
         'defaultServeRuntime' => 'node-22',
         'serveRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'defaultBuildRuntime' => 'node-22',
@@ -37,7 +35,6 @@ return [
     'static' => [
         'key' => 'static',
         'name' => 'Static',
-        'logo' => 'static.png',
         'defaultServeRuntime' => 'static-1',
         'serveRuntimes' => [
             'static-1'
