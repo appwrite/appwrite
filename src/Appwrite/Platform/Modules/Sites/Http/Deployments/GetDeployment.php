@@ -3,9 +3,10 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Query;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -38,12 +39,13 @@ class GetDeployment extends Action
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
             ->inject('dbForConsole')
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, Database $dbForConsole)
+    public function action(string $siteId, string $deploymentId, Response $response, Document $project, Database $dbForProject, Database $dbForConsole)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -69,8 +71,9 @@ class GetDeployment extends Action
         $deployment->setAttribute('size', $deployment->getAttribute('size', 0));
 
         $rule = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
+            Query::equal("projectInternalId", [$project->getInternalId()]),
             Query::equal("resourceType", ["deployment"]),
-            Query::equal("resourceId", [$deployment->getId()])
+            Query::equal("resourceInternalId", [$deployment->getInternalId()])
         ]));
 
         if (!empty($rule)) {

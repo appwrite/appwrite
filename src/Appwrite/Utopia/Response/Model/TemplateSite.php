@@ -10,7 +10,7 @@ class TemplateSite extends Model
     public function __construct()
     {
         $this
-            ->addRule('id', [
+            ->addRule('key', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Site Template ID.',
                 'default' => '',
