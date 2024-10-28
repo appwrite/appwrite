@@ -115,13 +115,13 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $latestCommentId = $latestComment->getAttribute('providerCommentId', '');
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $resource, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action);
 
-                    $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment($resourceType)));
+                    $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                 } else {
                     $comment = new Comment();
-                    $comment->addBuild($project, $resource, $commentStatus, $deploymentId, $action);
-                    $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment($resourceType)));
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action);
+                    $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
                     if (!empty($latestCommentId)) {
                         $teamId = $project->getAttribute('teamId', '');
@@ -157,7 +157,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $latestCommentId = $comment->getAttribute('providerCommentId', '');
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $resource, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action);
 
                     $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                 }

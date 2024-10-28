@@ -949,9 +949,15 @@ class Builds extends Action
 
             // Wrap in try/finally to ensure lock file gets deleted
             try {
+                $resourceType = match($resource->getCollection()) {
+                    'functions' => 'function',
+                    'sites' => 'site',
+                    default => throw new \Exception('Invalid resource type')
+                };
+
                 $comment = new Comment();
                 $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                $comment->addBuild($project, $resource, $status, $deployment->getId(), ['type' => 'logs']);
+                $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs']);
                 $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
             } finally {
                 $dbForConsole->deleteDocument('vcsCommentLocks', $commentId);
