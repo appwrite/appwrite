@@ -10,12 +10,6 @@ class Framework extends Model
     public function __construct()
     {
         $this
-            ->addRule('$id', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Framework ID.',
-                'default' => '',
-                'example' => 'sveltekit',
-            ])
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Parent framework key.',

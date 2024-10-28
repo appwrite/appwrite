@@ -175,7 +175,7 @@ class Builds extends Action
                 'runtime' => $resource->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
                 'sourceType' => strtolower($deviceForFunctions->getType()),
-                'logs' => '',
+                'logs' => [],
                 'endTime' => null,
                 'duration' => 0,
                 'size' => 0
@@ -610,9 +610,29 @@ class Builds extends Action
                                         return;
                                     }
 
-                                    $logs = \mb_substr($logs, 0, null, 'UTF-8'); // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
+                                    // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
+                                    $logs = \mb_substr($logs, 0, null, 'UTF-8');
 
-                                    $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
+                                    $currentChunks = $build->getAttribute('logs', []);
+
+                                    // Parse styled&timestamped logs
+                                    $streamChunks = [];
+                                    $streamLogs = \str_replace("\\n", "{APPWRITE_LINEBREAK_PLACEHOLDER}", $logs);
+                                    foreach (\explode("\n", $streamLogs) as $streamLog) {
+                                        if (empty($streamLog)) {
+                                            continue;
+                                        }
+
+                                        $streamLog = \str_replace("{APPWRITE_LINEBREAK_PLACEHOLDER}", "\n", $streamLog);
+                                        $streamParts = \explode(" ", $streamLog, 2);
+
+                                        $currentChunks[] = [
+                                            'timestamp' => $streamParts[0] ?? '',
+                                            'content' => $streamParts[1] ?? ''
+                                        ];
+                                    }
+
+                                    $build = $build->setAttribute('logs', $currentChunks);
                                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
 
                                     /**
@@ -666,7 +686,7 @@ class Builds extends Action
             $build->setAttribute('status', 'ready');
             $build->setAttribute('path', $response['path']);
             $build->setAttribute('size', $response['size']);
-            $build->setAttribute('logs', $response['output']);
+            // $build->setAttribute('logs', $response['output']); // TODO: Figure out how to write them all at the end
 
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
@@ -744,7 +764,14 @@ class Builds extends Action
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'failed');
-            $build->setAttribute('logs', $th->getMessage());
+
+            $datetime = new \DateTime();
+            $build->setAttribute('logs', [
+                [
+                    'timestamp' => $datetime->format('Y-m-d\TH:i:s.vP'),
+                    'content' => "[31m" . $th->getMessage() . "[0m"
+                ]
+            ]);
 
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 

@@ -2,7 +2,8 @@
 
 const TEMPLATE_FRAMEWORKS = [
     'SVELTEKIT' => [
-        'name' => 'Svelte Kit',
+        'key' => 'sveltekit',
+        'name' => 'SvelteKit',
         'installCommand' => 'npm install',
         'buildCommand' => 'npm run build',
         'outputDirectory' => './build',
@@ -19,7 +20,7 @@ function getFramework(string $frameworkEnum, array $overrides)
 
 return [
     [
-        'id' => 'starter',
+        'key' => 'starter',
         'name' => 'Personal portfolio',
         'useCases' => ['starter'],
         'frameworks' => [

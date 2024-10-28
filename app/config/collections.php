@@ -4042,9 +4042,9 @@ $projectCollections = array_merge([
                 'size' => 1000000,
                 'signed' => true,
                 'required' => false,
-                'default' => '',
-                'array' => false,
-                'filters' => [],
+                'default' => [],
+                'array' => true,
+                'filters' => ['json'],
             ],
             [
                 '$id' => ID::custom('sourceType'),
