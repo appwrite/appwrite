@@ -27,7 +27,7 @@ class Comment
         return \count($this->builds) === 0;
     }
 
-    public function addBuild(Document $project, Document $resource, string $resourceType, string $buildStatus, string $deploymentId, array $action): void
+    public function addBuild(Document $project, Document $resource, string $resourceType, string $buildStatus, string $deploymentId, array $action, string $previewUrl, string $previewQrCode): void
     {
         // Unique index
         $id = $project->getId() . '_' . $resource->getId();
@@ -41,6 +41,8 @@ class Comment
             'buildStatus' => $buildStatus,
             'deploymentId' => $deploymentId,
             'action' => $action,
+            'previewQrCode' => $previewQrCode,
+            'previewUrl' => $previewUrl,
         ];
     }
 
@@ -67,8 +69,8 @@ class Comment
                     'status' => $build['buildStatus'],
                     'deploymentId' => $build['deploymentId'],
                     'action' => $build['action'],
-                    'previewUrl' => 'http://google.com',
-                    'previewQrCode' => 'https://cloud.appwrite.io/v1/avatars/qr?text=https://www.google.com/'
+                    'previewUrl' => $build['$previewUrl'],
+                    'previewQrCode' => $build['previewQrCode']
                 ];
             } else if($build['resourceType'] === 'function') {
                 $projects[$build['projectId']]['function'][$build['resourceId']] = [
@@ -85,6 +87,42 @@ class Comment
             $hostname = System::getEnv('_APP_DOMAIN');
 
             $text .= "Project name: **{$project['name']}** \nProject ID: `{$projectId}`\n\n";
+
+            if(\count($project['site']) > 0) {
+
+                $text .= "| Site | ID | Status | Previews | Action |\n";
+                $text .= "| :- | :-  | :-  | :-  | :- |\n";
+
+                foreach ($project['site'] as $siteId => $site) {
+                    $generateImage = function (string $status) use ($protocol, $hostname) {
+                        $extention = $status === 'building' ? 'gif' : 'png';
+                        $imagesUrl = $protocol . '://' . $hostname . '/console/images/vcs/';
+                        $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imagesUrl . 'status-' . $status . '-dark.' . $extention . '"><img alt="' . $status . '" height="25" align="center" src="' . $imagesUrl . 'status-' . $status . '-light.' . $extention . '"></picture>';
+
+                        return $imageUrl;
+                    };
+
+                    $status = match ($site['status']) {
+                        'waiting' => $generateImage('waiting') . ' Waiting to build',
+                        'processing' => $generateImage('processing') . ' Processing',
+                        'building' => $generateImage('building') . ' Building',
+                        'ready' => $generateImage('ready') . ' Ready',
+                        'failed' => $generateImage('failed') . ' Failed',
+                    };
+
+                    if ($site['action']['type'] === 'logs') {
+                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/sites/site-' . $siteId . '/deployment-' . $site['deploymentId'] . ')';
+                    } else {
+                        $action = '[Authorize](' . $site['action']['url'] . ')';
+                    }
+
+                    $previews = '[Preview URL](' . $site['previewUrl'] . ') [QR Code](' . $site['previewQrCode'] . ')';
+
+                    $text .= "| {$site['name']} | `{$siteId}` | {$status} | {$previews} | {$action} |\n";
+                }
+
+                $text .= "\n\n";
+            }
 
             if(\count($project['function']) > 0) {
 
@@ -115,45 +153,10 @@ class Comment
 
                     $text .= "| {$function['name']} | `{$functionId}` | {$status} | {$action} |\n";
                 }
+
+                $text .= "\n\n";
             }
 
-            $text .= "\n\n";
-
-            if(\count($project['site']) > 0) {
-
-                $text .= "| Site | ID | Status | Previews | Action |\n";
-                $text .= "| :- | :-  | :-  | :-  | :- |\n";
-
-                foreach ($project['site'] as $siteId => $site) {
-                    $generateImage = function (string $status) use ($protocol, $hostname) {
-                        $extention = $status === 'building' ? 'gif' : 'png';
-                        $imagesUrl = $protocol . '://' . $hostname . '/console/images/vcs/';
-                        $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imagesUrl . 'status-' . $status . '-dark.' . $extention . '"><img alt="' . $status . '" height="25" align="center" src="' . $imagesUrl . 'status-' . $status . '-light.' . $extention . '"></picture>';
-
-                        return $imageUrl;
-                    };
-
-                    $status = match ($site['status']) {
-                        'waiting' => $generateImage('waiting') . ' Waiting to build',
-                        'processing' => $generateImage('processing') . ' Processing',
-                        'building' => $generateImage('building') . ' Building',
-                        'ready' => $generateImage('ready') . ' Ready',
-                        'failed' => $generateImage('failed') . ' Failed',
-                    };
-
-                    if ($site['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/sites/site-' . $siteId . '/deployment-' . $site['deploymentId'] . ')';
-                    } else {
-                        $action = '[Authorize](' . $site['action']['url'] . ')';
-                    }
-
-                    $previews = '[Preview URL](' . $site['previewUrl'] . ') | [QR Code](' . $site['previewQrCode'] . ')';
-
-                    $text .= "| {$site['name']} | `{$siteId}` | {$status} | {$previews} | {$action} |\n";
-                }
-            }
-
-            $text .= "\n\n";
         }
 
         $text .= "Only deployments on the production branch are activated automatically. Learn more about Appwrite [Functions](https://appwrite.io/docs/functions) and [Sites](https://appwrite.io/docs/sites).\n\n";

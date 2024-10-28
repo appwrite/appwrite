@@ -955,9 +955,21 @@ class Builds extends Action
                     default => throw new \Exception('Invalid resource type')
                 };
 
+                $previewUrl = match($resource->getCollection()) {
+                    'functions' => '',
+                    'sites' => $deployment->getAttribute('domain', ''),
+                    default => throw new \Exception('Invalid resource type')
+                };
+
+                $previweQrCode = match($resource->getCollection()) {
+                    'functions' => '',
+                    'sites' => 'https://cloud.appwrite.io/v1/avatars/qr?text=' . $previewUrl,
+                    default => throw new \Exception('Invalid resource type')
+                };
+
                 $comment = new Comment();
                 $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs']);
+                $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl, $previweQrCode);
                 $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
             } finally {
                 $dbForConsole->deleteDocument('vcsCommentLocks', $commentId);
