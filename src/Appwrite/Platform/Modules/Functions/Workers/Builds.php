@@ -22,6 +22,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -690,28 +691,6 @@ class Builds extends Action
 
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
-            if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
-            }
-
-            Console::success("Build id: $buildId created");
-
-            /** Set auto deploy */
-            if ($deployment->getAttribute('activate') === true) {
-                $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
-                $resource->setAttribute('live', true);
-                switch ($resource->getCollection()) {
-                    case 'functions':
-                        $resource->setAttribute('deployment', $deployment->getId());
-                        $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
-                        break;
-                    case 'sites':
-                        $resource->setAttribute('deploymentId', $deployment->getId());
-                        $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
-                        break;
-                }
-            }
-
             // Preview deployments for sites
             if ($resource->getCollection() === 'sites') {
                 $ruleId = ID::unique();
@@ -735,6 +714,28 @@ class Builds extends Action
                         'certificateId' => '',
                     ]))
                 );
+            }
+
+            if ($isVcsEnabled) {
+                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
+            }
+
+            Console::success("Build id: $buildId created");
+
+            /** Set auto deploy */
+            if ($deployment->getAttribute('activate') === true) {
+                $resource->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                $resource->setAttribute('live', true);
+                switch ($resource->getCollection()) {
+                    case 'functions':
+                        $resource->setAttribute('deployment', $deployment->getId());
+                        $resource = $dbForProject->updateDocument('functions', $resource->getId(), $resource);
+                        break;
+                    case 'sites':
+                        $resource->setAttribute('deploymentId', $deployment->getId());
+                        $resource = $dbForProject->updateDocument('sites', $resource->getId(), $resource);
+                        break;
+                }
             }
 
             if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
@@ -976,9 +977,34 @@ class Builds extends Action
 
             // Wrap in try/finally to ensure lock file gets deleted
             try {
+                $resourceType = match($resource->getCollection()) {
+                    'functions' => 'function',
+                    'sites' => 'site',
+                    default => throw new \Exception('Invalid resource type')
+                };
+
+                $rule = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
+                    Query::equal("projectInternalId", [$project->getInternalId()]),
+                    Query::equal("resourceType", ["deployment"]),
+                    Query::equal("resourceInternalId", [$deployment->getInternalId()])
+                ]));
+
+                $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+                $previewUrl = match($resource->getCollection()) {
+                    'functions' => '',
+                    'sites' => !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '',
+                    default => throw new \Exception('Invalid resource type')
+                };
+
+                $previweQrCode = match($resource->getCollection()) {
+                    'functions' => '',
+                    'sites' => 'https://cloud.appwrite.io/v1/avatars/qr?text=' . $previewUrl,
+                    default => throw new \Exception('Invalid resource type')
+                };
+
                 $comment = new Comment();
                 $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                $comment->addBuild($project, $resource, $status, $deployment->getId(), ['type' => 'logs']);
+                $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl, $previweQrCode);
                 $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
             } finally {
                 $dbForConsole->deleteDocument('vcsCommentLocks', $commentId);
