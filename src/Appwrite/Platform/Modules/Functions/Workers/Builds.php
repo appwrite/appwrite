@@ -22,6 +22,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -982,9 +983,15 @@ class Builds extends Action
                     default => throw new \Exception('Invalid resource type')
                 };
 
+                $rule = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
+                    Query::equal("projectInternalId", [$project->getInternalId()]),
+                    Query::equal("resourceType", ["deployment"]),
+                    Query::equal("resourceInternalId", [$deployment->getInternalId()])
+                ]));
+
                 $previewUrl = match($resource->getCollection()) {
                     'functions' => '',
-                    'sites' => $deployment->getAttribute('domain', ''),
+                    'sites' => $rule->getAttribute('domain', ''),
                     default => throw new \Exception('Invalid resource type')
                 };
 
