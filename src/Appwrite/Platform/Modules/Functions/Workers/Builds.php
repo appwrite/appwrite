@@ -989,9 +989,10 @@ class Builds extends Action
                     Query::equal("resourceInternalId", [$deployment->getInternalId()])
                 ]));
 
+                $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
                 $previewUrl = match($resource->getCollection()) {
                     'functions' => '',
-                    'sites' => !empty($rule) ? $rule->getAttribute('domain', '') : '',
+                    'sites' => !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '',
                     default => throw new \Exception('Invalid resource type')
                 };
 
