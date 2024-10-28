@@ -8,6 +8,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Pools\Group;
+use Utopia\Pools\Pool;
 
 class ScheduleFunctions extends ScheduleBase
 {
