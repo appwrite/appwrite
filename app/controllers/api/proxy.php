@@ -397,14 +397,8 @@ App::get('/v1/proxy/subdomains')
         ]);
 
         if ($document && !$document->isEmpty()) {
-            return $response->json([
-                'success' => false,
-                'message' => 'Subdomain is already taken.'
-            ], Response::STATUS_CODE_CONFLICT);
+            throw new Exception(Exception::RULE_ALREADY_EXISTS, 'Subdomain already assigned to different project.');
         }
 
-        return $response->json([
-            'success' => true,
-            'message' => 'Subdomain is available.'
-        ], Response::STATUS_CODE_OK);
+        $response->noContent();
     });
