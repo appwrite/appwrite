@@ -117,11 +117,11 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
                     $comment->addBuild($project, $resource, $commentStatus, $deploymentId, $action);
 
-                    $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                    $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment($resourceType)));
                 } else {
                     $comment = new Comment();
                     $comment->addBuild($project, $resource, $commentStatus, $deploymentId, $action);
-                    $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
+                    $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment($resourceType)));
 
                     if (!empty($latestCommentId)) {
                         $teamId = $project->getAttribute('teamId', '');
