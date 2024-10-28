@@ -163,6 +163,10 @@ CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
 
+CLI::setResource('poolForQueue', function (Group $pools) {
+    return $pools->get('queue');
+}, ['pools']);
+
 CLI::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);

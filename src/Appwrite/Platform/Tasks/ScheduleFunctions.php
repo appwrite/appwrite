@@ -31,7 +31,7 @@ class ScheduleFunctions extends ScheduleBase
         return 'functions';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
+    protected function enqueueResources(Pool $poolForQueue, Database $dbForConsole, callable $getProjectDB): void
     {
         $timerStart = \microtime(true);
         $time = DateTime::now();
@@ -70,10 +70,10 @@ class ScheduleFunctions extends ScheduleBase
         }
 
         foreach ($delayedExecutions as $delay => $scheduleKeys) {
-            \go(function () use ($delay, $scheduleKeys, $pools) {
+            \go(function () use ($delay, $scheduleKeys, $poolForQueue) {
                 \sleep($delay); // in seconds
 
-                $queue = $pools->get('queue')->pop();
+                $queue = $poolForQueue->pop();
                 $connection = $queue->getResource();
 
                 foreach ($scheduleKeys as $scheduleKey) {
