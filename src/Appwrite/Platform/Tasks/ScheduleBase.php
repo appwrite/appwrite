@@ -34,7 +34,7 @@ abstract class ScheduleBase extends Action
 
         $this
             ->desc("Execute {$type}s scheduled in Appwrite")
-            ->inject('queuePool')
+            ->inject('poolForQueue')
             ->inject('dbForConsole')
             ->inject('getProjectDB')
             ->callback(fn (Pool $poolForQueue, Database $dbForConsole, callable $getProjectDB) => $this->action($poolForQueue, $dbForConsole, $getProjectDB));
