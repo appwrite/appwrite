@@ -45,7 +45,7 @@ class GetTemplate extends Base
         $templates = Config::getParam('site-templates', []);
 
         $allowedTemplates = \array_filter($templates, function ($item) use ($templateId) {
-            return $item['id'] === $templateId;
+            return $item['key'] === $templateId;
         });
         $template = array_shift($allowedTemplates);
 
