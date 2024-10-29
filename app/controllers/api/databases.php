@@ -1951,7 +1951,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
-    ->param('size', null, new Integer(), 'Maximum size of the string attribute.', true)
+    ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Maximum size of the string attribute.', true)
     ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
