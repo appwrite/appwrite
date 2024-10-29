@@ -57,7 +57,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$eventDatabaseListener = function (string $event, Document $document, EventDatabase $queueForEvents, Response $response) {
+$eventDatabaseListener = function (string $event, Document $document, Event $queueForEvents, Response $response) {
     if ($document->getCollection() === 'users' && $event === Database::EVENT_DOCUMENT_CREATE) {
         $queueForEvents
             ->setEvent('users.[userId].create')
