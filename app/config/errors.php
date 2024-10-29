@@ -24,6 +24,11 @@ return [
         'description' => 'Access to this API is forbidden.',
         'code' => 401,
     ],
+    Exception::GENERAL_RESOURCE_BLOCKED => [
+        'name' => Exception::GENERAL_RESOURCE_BLOCKED,
+        'description' => 'Access to this resource is blocked.',
+        'code' => 401,
+    ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
         'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
@@ -697,6 +702,11 @@ return [
     Exception::RELATIONSHIP_VALUE_INVALID => [
         'name' => Exception::RELATIONSHIP_VALUE_INVALID,
         'description' => 'The relationship value is invalid.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_INVALID_RESIZE => [
+        'name' => Exception::ATTRIBUTE_INVALID_RESIZE,
+        'description' => "Existing data is too large for new size, truncate your existing data then try again.",
         'code' => 400,
     ],
 

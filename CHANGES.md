@@ -1,3 +1,228 @@
+# Version 1.6.0
+
+## What's Changed
+
+### Notable changes
+
+* Allow execution filter attributes in [#7607](https://github.com/appwrite/appwrite/pull/7607)
+* Add dynamic API keys for function executions in [#7512](https://github.com/appwrite/appwrite/pull/7512)
+* Add metrics for successful and failed builds in [#8210](https://github.com/appwrite/appwrite/pull/8210)
+* Update logging config to use a DSN approach in [#8187](https://github.com/appwrite/appwrite/pull/8187)
+* Add projects.createJWT endpoint for dynamic keys in [#8213](https://github.com/appwrite/appwrite/pull/8213)
+* Add users.createJWT() endpoint for local function development in [#8207](https://github.com/appwrite/appwrite/pull/8207)
+* Added cancel build endpoint in [#7605](https://github.com/appwrite/appwrite/pull/7605)
+* Add CLI as a function deployment type in [#8215](https://github.com/appwrite/appwrite/pull/8215)
+* Add vcs.getRepositoryContents() endpoint in [#8330](https://github.com/appwrite/appwrite/pull/8330)
+* Add appwrite version in function variables in [#8336](https://github.com/appwrite/appwrite/pull/8336)
+* Add support for scheduled executions in [#8243](https://github.com/appwrite/appwrite/pull/8243)
+* Add endpoint to delete execution in [#8337](https://github.com/appwrite/appwrite/pull/8337)
+* OPR v4 support in [#8323](https://github.com/appwrite/appwrite/pull/8323)
+* Mock OTP and phone numbers in [#7565](https://github.com/appwrite/appwrite/pull/7565)
+* Support scheduled executions in [#8355](https://github.com/appwrite/appwrite/pull/8355)
+* Add alert for new sessions in [#8315](https://github.com/appwrite/appwrite/pull/8315)
+* Update delete authenticator to remove OTP Validation in [#8367](https://github.com/appwrite/appwrite/pull/8367)
+* Track project last activity in [#8366](https://github.com/appwrite/appwrite/pull/8366)
+* Containerize the console in [#8406](https://github.com/appwrite/appwrite/pull/8406)
+* Implement MBSeconds Metric on 1.5.X in [#8385](https://github.com/appwrite/appwrite/pull/8385)
+* Support JWTs without session ID in [#8420](https://github.com/appwrite/appwrite/pull/8420)
+* 1.6.x sdks in [#8359](https://github.com/appwrite/appwrite/pull/8359)
+* Base migration for 1.6.x in [#8417](https://github.com/appwrite/appwrite/pull/8417)
+* 1.6.x migrations and filters in [#8403](https://github.com/appwrite/appwrite/pull/8403)
+* Add APPWRITE_REGION in function variables in [#8394](https://github.com/appwrite/appwrite/pull/8394)
+* Support dynamic keys for domain executions in [#8428](https://github.com/appwrite/appwrite/pull/8428)
+* Bump DBIP to latest version in [#8467](https://github.com/appwrite/appwrite/pull/8467)
+* Automatically restart function on crash in [#8473](https://github.com/appwrite/appwrite/pull/8473)
+* Don't send session alerts for otp and magic-url logins in [#8459](https://github.com/appwrite/appwrite/pull/8459)
+* Mark 4XX executions as successful in [#8493](https://github.com/appwrite/appwrite/pull/8493)
+* Add dynamic keys in builds in [#8492](https://github.com/appwrite/appwrite/pull/8492)
+* Allow deployment queries on type and size in [#8515](https://github.com/appwrite/appwrite/pull/8515)
+* Add OTP email template in [#8501](https://github.com/appwrite/appwrite/pull/8501)
+* Update console links in [#8523](https://github.com/appwrite/appwrite/pull/8523)
+* Add multipart support in [#8477](https://github.com/appwrite/appwrite/pull/8477)
+* Separate deployment sizes in [#8556](https://github.com/appwrite/appwrite/pull/8556)
+* Add go runtime in [#8572](https://github.com/appwrite/appwrite/pull/8572)
+* Add react native platform in [#8562](https://github.com/appwrite/appwrite/pull/8562)
+* Merge deployments and build storage metrics together in API in [#8443](https://github.com/appwrite/appwrite/pull/8443)
+* Support string attribute resizing in [#8597](https://github.com/appwrite/appwrite/pull/8597)
+* Support renaming attributes in [#8544](https://github.com/appwrite/appwrite/pull/8544)
+* Add VCS vars to deployments & executions in [#8631](https://github.com/appwrite/appwrite/pull/8631)
+* Function storage metrics in [#8668](https://github.com/appwrite/appwrite/pull/8668)
+* External messaging usage count in [#8672](https://github.com/appwrite/appwrite/pull/8672)
+
+### Fixes
+
+* Fix execution duration in [#8357](https://github.com/appwrite/appwrite/pull/8357)
+* Fix file size calculations in [#8432](https://github.com/appwrite/appwrite/pull/8432)
+* Fix disabled function logging in [#8398](https://github.com/appwrite/appwrite/pull/8398)
+* Fix function redeployments in [#8434](https://github.com/appwrite/appwrite/pull/8434)
+* Add value to variables template in [#8483](https://github.com/appwrite/appwrite/pull/8483)
+* Fix build size limits in [#8396](https://github.com/appwrite/appwrite/pull/8396)
+* Fix deployment method name in [#8490](https://github.com/appwrite/appwrite/pull/8490)
+* Fix function disconnecting from git in [#8500](https://github.com/appwrite/appwrite/pull/8500)
+* Increase buckets metadata in [#8452](https://github.com/appwrite/appwrite/pull/8452)
+* Fix deploy from git with space in [#8517](https://github.com/appwrite/appwrite/pull/8517)
+* Fix missing build logs in [#8484](https://github.com/appwrite/appwrite/pull/8484)
+* Delete team memberships synchronously in [#8217](https://github.com/appwrite/appwrite/pull/8217)
+* Fix Anyof validator in specs in [#8543](https://github.com/appwrite/appwrite/pull/8543)
+* Fix missing function variables in [#8554](https://github.com/appwrite/appwrite/pull/8554)
+* Fix deadlock in [#8609](https://github.com/appwrite/appwrite/pull/8609)
+* Fix domain execution stats in [#8608](https://github.com/appwrite/appwrite/pull/8608)
+* Update console redirect to include query params in [#8619](https://github.com/appwrite/appwrite/pull/8619)
+* Update abuse-key for mfa challenge endpoints in [#8649](https://github.com/appwrite/appwrite/pull/8649)
+* Fix cross-project scheduler stability in [#8641](https://github.com/appwrite/appwrite/pull/8641)
+* Fix vcs deployment size in [#8640](https://github.com/appwrite/appwrite/pull/8640)
+* Fix logging behaviour for Functions in [#8627](https://github.com/appwrite/appwrite/pull/8627)
+* Add retention env vars to deletes worker in [#8662](https://github.com/appwrite/appwrite/pull/8662)
+* Fix scheduled executions data in [#8639](https://github.com/appwrite/appwrite/pull/8639)
+
+### Miscellaneous
+
+* Sync 1.6.x with main in [#8163](https://github.com/appwrite/appwrite/pull/8163)
+* Remove build ID from rebuild deployment endpoint in [#8214](https://github.com/appwrite/appwrite/pull/8214)
+* 1.6.x specs in [#8304](https://github.com/appwrite/appwrite/pull/8304)
+* Sync with main in [#8295](https://github.com/appwrite/appwrite/pull/8295)
+* Fix 1.6.x failing tests in [#8333](https://github.com/appwrite/appwrite/pull/8333)
+* Ensure CI/CD works in [#8350](https://github.com/appwrite/appwrite/pull/8350)
+* Update specs in [#8356](https://github.com/appwrite/appwrite/pull/8356)
+* Sync main to 1.6.x in [#8430](https://github.com/appwrite/appwrite/pull/8430)
+* Add scheduledAt in execution response model in [#8425](https://github.com/appwrite/appwrite/pull/8425)
+* Move functions marketplace to appwrite in [#8427](https://github.com/appwrite/appwrite/pull/8427)
+* Refactor deployment check in function tests in [#8444](https://github.com/appwrite/appwrite/pull/8444)
+* Add ci/cd benchmark in [#8414](https://github.com/appwrite/appwrite/pull/8414)
+* Upgrade SDK version in [#8465](https://github.com/appwrite/appwrite/pull/8465)
+* Improve session alert in [#8399](https://github.com/appwrite/appwrite/pull/8399)
+* Address review comments in [#8422](https://github.com/appwrite/appwrite/pull/8422)
+* Add scopes to function template in [#8496](https://github.com/appwrite/appwrite/pull/8496)
+* Update benchmark comment in [#8507](https://github.com/appwrite/appwrite/pull/8507)
+* Add key to runtime model in [#8503](https://github.com/appwrite/appwrite/pull/8503)
+* Upgrade logger in [#8497](https://github.com/appwrite/appwrite/pull/8497)
+* Change default email addresses in [#8466](https://github.com/appwrite/appwrite/pull/8466)
+* Improve scheduled executions in [#8412](https://github.com/appwrite/appwrite/pull/8412)
+* Sync 1.5.x into main in [#8509](https://github.com/appwrite/appwrite/pull/8509)
+* Sync 1.6 with main in [#8529](https://github.com/appwrite/appwrite/pull/8529)
+* Fix templates CORS in [#8528](https://github.com/appwrite/appwrite/pull/8528)
+* Update size to specification for variable runtimes in [#8537](https://github.com/appwrite/appwrite/pull/8537)
+* Add boundary to multipart header in [#8539](https://github.com/appwrite/appwrite/pull/8539)
+* Support manual templates in [#8527](https://github.com/appwrite/appwrite/pull/8527)
+* Reorder runtimes in [#8540](https://github.com/appwrite/appwrite/pull/8540)
+* Fix 1.6 bugs in [#8358](https://github.com/appwrite/appwrite/pull/8358)
+* Add seconds precision to scheduledAt in [#8546](https://github.com/appwrite/appwrite/pull/8546)
+* Update docker base image in [#8485](https://github.com/appwrite/appwrite/pull/8485)
+* Update create execution return type in [#8542](https://github.com/appwrite/appwrite/pull/8542)
+* Default fallback to  for templateBranch in [#8547](https://github.com/appwrite/appwrite/pull/8547)
+* Fix env vars functions test in [#8555](https://github.com/appwrite/appwrite/pull/8555)
+* Fix session alerts in [#8550](https://github.com/appwrite/appwrite/pull/8550)
+* Add runtime controls in [#8384](https://github.com/appwrite/appwrite/pull/8384)
+* Revert request type to json in create execution in [#8563](https://github.com/appwrite/appwrite/pull/8563)
+* Sync 1.6.x Filters and Migrations with latest in [#8553](https://github.com/appwrite/appwrite/pull/8553)
+* Update sdks in [#8551](https://github.com/appwrite/appwrite/pull/8551)
+* Update Docs in [#8567](https://github.com/appwrite/appwrite/pull/8567)
+* Headers validator benchmark in [#8561](https://github.com/appwrite/appwrite/pull/8561)
+* Fix go version in [#8571](https://github.com/appwrite/appwrite/pull/8571)
+* Update dependencies in [#8574](https://github.com/appwrite/appwrite/pull/8574)
+* Upgrade console in [#8575](https://github.com/appwrite/appwrite/pull/8575)
+* 1.6.x logging test in [#8580](https://github.com/appwrite/appwrite/pull/8580)
+* Bump console sdk in [#8581](https://github.com/appwrite/appwrite/pull/8581)
+* Update sdks in [#8582](https://github.com/appwrite/appwrite/pull/8582)
+* Add changelogs for dart and flutter in [#8587](https://github.com/appwrite/appwrite/pull/8587)
+* Add payload validator in [#8594](https://github.com/appwrite/appwrite/pull/8594)
+* Update geodb in [#8615](https://github.com/appwrite/appwrite/pull/8615)
+* Update createdeployment methodtype to upload in [#8616](https://github.com/appwrite/appwrite/pull/8616)
+* Remove tenant in document filter in [#8624](https://github.com/appwrite/appwrite/pull/8624)
+* Improve mail datetime format in [#8628](https://github.com/appwrite/appwrite/pull/8628)
+* Fix router function execution logging in [#8625](https://github.com/appwrite/appwrite/pull/8625)
+* Add Functions templates async test in [#8622](https://github.com/appwrite/appwrite/pull/8622)
+* Update console in [#8629](https://github.com/appwrite/appwrite/pull/8629)
+* 1.6.1 in [#8630](https://github.com/appwrite/appwrite/pull/8630)
+* Update version in [#8646](https://github.com/appwrite/appwrite/pull/8646)
+* Phone auth metric rename in [#8648](https://github.com/appwrite/appwrite/pull/8648)
+* Pretty print specs in [#8643](https://github.com/appwrite/appwrite/pull/8643)
+* Fix messaging metrics in [#8674](https://github.com/appwrite/appwrite/pull/8674)
+* Bump console to 5.0.6 in [#8585](https://github.com/appwrite/appwrite/pull/8585)
+
+# Version 1.5.10
+
+## What's Changed
+
+### Notable changes
+
+* Bump console to version 4.3.30 in [#8520](https://github.com/appwrite/appwrite/pull/8520)
+
+### Fixes
+
+* Fix migration stuck at "Starting Data Migration [...]" in [#8519](https://github.com/appwrite/appwrite/pull/8519)
+
+# Version 1.5.9
+
+## What's Changed
+
+### Notable changes
+
+* Add Darija (Moroccan Arabic) translation file in [7501](https://github.com/appwrite/appwrite/pull/7501)
+* Bump console to version 4.3.29 in [8504](https://github.com/appwrite/appwrite/pull/8504)
+
+### Fixes
+
+* Fix domain check in [8472](https://github.com/appwrite/appwrite/pull/8472)
+* Fix "API must be called in the coroutine" in [8495](https://github.com/appwrite/appwrite/pull/8495)
+* Bump executor version from 0.5.5 to 0.5.7 in [8502](https://github.com/appwrite/appwrite/pull/8502)
+
+### Miscellaneous
+* Add profiler for debugging in [8397](https://github.com/appwrite/appwrite/pull/8397)
+* Document APIs that don't support redirects in [8233](https://github.com/appwrite/appwrite/pull/8233)
+
+# Version 1.5.8
+
+## What's Changed
+
+### Notable changes
+
+* Support Twilio messaging service SID in [8222](https://github.com/appwrite/appwrite/pull/8222)
+* Improve cache performance in [8230](https://github.com/appwrite/appwrite/pull/8230)
+* Add hk in translations in [8179](https://github.com/appwrite/appwrite/pull/8179)
+* Update pwd abuse in [8255](https://github.com/appwrite/appwrite/pull/8255)
+* Remove detailed trace in [8374](https://github.com/appwrite/appwrite/pull/8374)
+* Remove relationship attributes from realtime event payloads in [8381](https://github.com/appwrite/appwrite/pull/8381)
+* Sanitize URLs in emails in [8415](https://github.com/appwrite/appwrite/pull/8415)
+* Bump console to version 4.3.27 in [8482](https://github.com/appwrite/appwrite/pull/8482)
+
+### Fixes
+
+* Ensure usage is counted for errors in [8120](https://github.com/appwrite/appwrite/pull/8120)
+* Fix MFA for OAuth2 only accounts in [8245](https://github.com/appwrite/appwrite/pull/8245)
+* Delete Expired Targets Per Project in [8239](https://github.com/appwrite/appwrite/pull/8239)
+* Don't set the target field if the existing target document is false in [8236](https://github.com/appwrite/appwrite/pull/8236)
+* Disable validation for project DBs during migration in [8298](https://github.com/appwrite/appwrite/pull/8298)
+* Add `default` to Collection Attributes in Migration in [8271](https://github.com/appwrite/appwrite/pull/8271)
+* Fix Create bucket endpoint validator for maximum file size in [8275](https://github.com/appwrite/appwrite/pull/8275)
+* Disable validation for subquery to prevent error in [8297](https://github.com/appwrite/appwrite/pull/8297)
+* Fix 'Missing required attribute "expire"' on `users.createSession()` in [8308](https://github.com/appwrite/appwrite/pull/8308)
+* Fix certificate emails in [8292](https://github.com/appwrite/appwrite/pull/8292)
+* Fix browser-cached deleted file in [8264](https://github.com/appwrite/appwrite/pull/8264)
+* Fix migration of firebase users [8377](https://github.com/appwrite/appwrite/pull/8377)
+* Fix `path` for vcs function deployments in [8408](https://github.com/appwrite/appwrite/pull/8408)
+* Fix calculations in [8431](https://github.com/appwrite/appwrite/pull/8431)
+* Fix bugs with migrations in [8442](https://github.com/appwrite/appwrite/pull/8442)
+* Fix queueForUsage not triggering for domain executions in [8463](https://github.com/appwrite/appwrite/pull/8463)
+* Fix realtime permission change in [8416](https://github.com/appwrite/appwrite/pull/8416)
+
+### Miscellaneous
+
+* Bump base image from 0.9.0 to 0.9.1 in [8238](https://github.com/appwrite/appwrite/pull/8238)
+* Use latest Platform and add Core module in [7936](https://github.com/appwrite/appwrite/pull/7936)
+* Add Test to Validate Headers aren't Overridden in [8228](https://github.com/appwrite/appwrite/pull/8228)
+* Fix hyperlink in storage docs in [8269](https://github.com/appwrite/appwrite/pull/8269)
+* Update cache & database in [8285](https://github.com/appwrite/appwrite/pull/8285)
+* Fix flaky certificate test in [8316](https://github.com/appwrite/appwrite/pull/8316)
+* Fix flaky function test in [8317](https://github.com/appwrite/appwrite/pull/8317)
+* Update account API reference in [8305](https://github.com/appwrite/appwrite/pull/8305)
+* Update functions API reference in [8346](https://github.com/appwrite/appwrite/pull/8346)
+* Implement deploymentsStorage metric for projects API in [8258](https://github.com/appwrite/appwrite/pull/8258)
+* Add new audit events in [8424](https://github.com/appwrite/appwrite/pull/8424)
+* Move mbSeconds into 1.5.x in [8449](https://github.com/appwrite/appwrite/pull/8449)
+* Clean projects cache while migrating in [8395](https://github.com/appwrite/appwrite/pull/8395)
+* Use git tags for function template in [8445](https://github.com/appwrite/appwrite/pull/8445)
+
 # Version 1.5.7
 ## What's Changed
 

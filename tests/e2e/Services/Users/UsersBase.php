@@ -999,6 +999,7 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertNotEmpty($user['body']['$id']);
         $this->assertEmpty($user['body']['password']);
+        sleep(5);
 
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
@@ -1497,6 +1498,7 @@ trait UsersBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('random-email1@mail.org', $response['body']['identifier']);
+        $this->assertEquals(false, $response['body']['expired']);
         return $response['body'];
     }
 
@@ -1509,6 +1511,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(3, \count($response['body']['targets']));
     }

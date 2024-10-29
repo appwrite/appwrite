@@ -55,7 +55,7 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $output = (empty($output)) ? $type : $output;
     $data = $image->output($output, $quality);
     $response
-        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+        ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
         ->setContentType('image/png')
         ->file($data);
     unset($image);
@@ -275,7 +275,7 @@ App::get('/v1/avatars/image')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType('image/png')
             ->file($data);
         unset($image);
@@ -409,7 +409,7 @@ App::get('/v1/avatars/favicon')
                 throw new Exception(Exception::AVATAR_ICON_NOT_FOUND, 'Favicon not found');
             }
             $response
-                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+                ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
                 ->setContentType('image/x-icon')
                 ->file($data);
         }
@@ -420,7 +420,7 @@ App::get('/v1/avatars/favicon')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType('image/png')
             ->file($data);
         unset($image);
@@ -461,7 +461,7 @@ App::get('/v1/avatars/qr')
         $image->crop((int) $size, (int) $size);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->send($image->output('png', 9));
     });
@@ -544,13 +544,13 @@ App::get('/v1/avatars/initials')
         $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($image->getImageBlob());
     });
 
 App::get('/v1/cards/cloud')
-    ->desc('Get Front Of Cloud Card')
+    ->desc('Get front Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -751,13 +751,13 @@ App::get('/v1/cards/cloud')
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });
 
 App::get('/v1/cards/cloud-back')
-    ->desc('Get Back Of Cloud Card')
+    ->desc('Get back Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -829,13 +829,13 @@ App::get('/v1/cards/cloud-back')
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });
 
 App::get('/v1/cards/cloud-og')
-    ->desc('Get OG Image From Cloud Card')
+    ->desc('Get OG image From Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -1219,7 +1219,7 @@ App::get('/v1/cards/cloud-og')
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });

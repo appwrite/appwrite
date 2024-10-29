@@ -39,6 +39,7 @@ class Exception extends \Exception
     public const GENERAL_UNKNOWN                   = 'general_unknown';
     public const GENERAL_MOCK                      = 'general_mock';
     public const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
+    public const GENERAL_RESOURCE_BLOCKED          = 'general_resource_blocked';
     public const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
     public const GENERAL_API_DISABLED              = 'general_api_disabled';
     public const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';
@@ -200,6 +201,7 @@ class Exception extends \Exception
     public const ATTRIBUTE_LIMIT_EXCEEDED          = 'attribute_limit_exceeded';
     public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
     public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
+    public const ATTRIBUTE_INVALID_RESIZE          = 'attribute_invalid_resize';
 
     /** Relationship */
     public const RELATIONSHIP_VALUE_INVALID        = 'relationship_value_invalid';
@@ -313,7 +315,7 @@ class Exception extends \Exception
         $this->code = $code ?? $this->errors[$type]['code'];
 
         // Mark string errors like HY001 from PDO as 500 errors
-        if(\is_string($this->code)) {
+        if (\is_string($this->code)) {
             if (\is_numeric($this->code)) {
                 $this->code = (int) $this->code;
             } else {

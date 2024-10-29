@@ -20,6 +20,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Detector\Adapter\Bun;
 use Utopia\Detector\Adapter\CPP;
 use Utopia\Detector\Adapter\Dart;
@@ -96,7 +97,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $commentStatus = $isAuthorized ? 'waiting' : 'failed';
 
-            $authorizeUrl = $request->getProtocol() . '://' . $request->getHostname() . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
+            $authorizeUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
             $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
 
@@ -263,7 +264,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 };
 
 App::get('/v1/vcs/github/authorize')
-    ->desc('Install GitHub App')
+    ->desc('Install GitHub app')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('sdk.namespace', 'vcs')
@@ -305,7 +306,7 @@ App::get('/v1/vcs/github/authorize')
     });
 
 App::get('/v1/vcs/github/callback')
-    ->desc('Capture installation and authorization from GitHub App')
+    ->desc('Capture installation and authorization from GitHub app')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -509,7 +510,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $vcsContents = [];
         foreach ($contents as $content) {
             $isDirectory = false;
-            if($content['type'] === GitHub::CONTENTS_DIRECTORY) {
+            if ($content['type'] === GitHub::CONTENTS_DIRECTORY) {
                 $isDirectory = true;
             }
 
@@ -598,7 +599,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
-    ->desc('List Repositories')
+    ->desc('List repositories')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('sdk.namespace', 'vcs')
@@ -843,7 +844,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
-    ->desc('List Repository Branches')
+    ->desc('List repository branches')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('sdk.namespace', 'vcs')
@@ -892,7 +893,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     });
 
 App::post('/v1/vcs/github/events')
-    ->desc('Create Event')
+    ->desc('Create event')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->inject('gitHub')
@@ -1069,6 +1070,12 @@ App::get('/v1/vcs/installations')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $installationId = $cursor->getValue();
             $cursorDocument = $dbForConsole->getDocument('installations', $installationId);
 
@@ -1120,7 +1127,7 @@ App::get('/v1/vcs/installations/:installationId')
     });
 
 App::delete('/v1/vcs/installations/:installationId')
-    ->desc('Delete Installation')
+    ->desc('Delete installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
     ->label('sdk.namespace', 'vcs')
