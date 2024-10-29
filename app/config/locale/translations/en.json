@@ -28,7 +28,7 @@
     "emails.sessionAlert.thanks": "Thanks,",
     "emails.sessionAlert.signature": "{{project}} team",
     "emails.otpSession.subject": "OTP for {{project}} Login",
-    "emails.otpSession.hello": "Hello {{user}}",
+    "emails.otpSession.hello": "Hello {{user}},",
     "emails.otpSession.description": "Enter the following verification code when prompted to securely sign in to your {{b}}{{project}}{{/b}} account. This code will expire in 15 minutes.",
     "emails.otpSession.clientInfo": "This sign in was requested using {{b}}{{agentClient}}{{/b}} on {{b}}{{agentDevice}}{{/b}} {{b}}{{agentOs}}{{/b}}. If you didn't request the sign in, you can safely ignore this email.",
     "emails.otpSession.securityPhrase": "Security phrase for this email is {{b}}{{phrase}}{{/b}}. You can trust this email if this phrase matches the phrase shown during sign in.",
