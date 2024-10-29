@@ -137,7 +137,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
         }
 
-        if ($isResourceBlocked($project, 'functions', $functionId)) {
+        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $functionId)) {
             throw new AppwriteException(AppwriteException::GENERAL_RESOURCE_BLOCKED);
         }
 
