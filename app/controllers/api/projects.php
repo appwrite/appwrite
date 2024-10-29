@@ -31,6 +31,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -279,6 +280,12 @@ App::get('/v1/projects')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $projectId = $cursor->getValue();
             $cursorDocument = $dbForConsole->getDocument('projects', $projectId);
 
@@ -923,6 +930,7 @@ App::delete('/v1/projects/:projectId')
         }
 
         $queueForDeletes
+            ->setProject($project)
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($project);
 
@@ -1199,7 +1207,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 App::post('/v1/projects/:projectId/keys')
     ->desc('Create key')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'keys.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createKey')
@@ -1249,7 +1257,7 @@ App::post('/v1/projects/:projectId/keys')
 App::get('/v1/projects/:projectId/keys')
     ->desc('List keys')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->label('scope', 'keys.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listKeys')
@@ -1281,7 +1289,7 @@ App::get('/v1/projects/:projectId/keys')
 App::get('/v1/projects/:projectId/keys/:keyId')
     ->desc('Get key')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->label('scope', 'keys.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getKey')
@@ -1315,7 +1323,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
 App::put('/v1/projects/:projectId/keys/:keyId')
     ->desc('Update key')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'keys.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateKey')
@@ -1361,7 +1369,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 App::delete('/v1/projects/:projectId/keys/:keyId')
     ->desc('Delete key')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'keys.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteKey')
@@ -1436,7 +1444,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->desc('Create platform')
     ->groups(['api', 'projects'])
     ->label('audits.event', 'platforms.create')
-    ->label('scope', 'projects.write')
+    ->label('scope', 'platforms.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createPlatform')
@@ -1486,7 +1494,7 @@ App::post('/v1/projects/:projectId/platforms')
 App::get('/v1/projects/:projectId/platforms')
     ->desc('List platforms')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->label('scope', 'platforms.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listPlatforms')
@@ -1518,7 +1526,7 @@ App::get('/v1/projects/:projectId/platforms')
 App::get('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Get platform')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->label('scope', 'platforms.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getPlatform')
@@ -1552,7 +1560,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
 App::put('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Update platform')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'platforms.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updatePlatform')
@@ -1600,7 +1608,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete platform')
     ->groups(['api', 'projects'])
     ->label('audits.event', 'platforms.delete')
-    ->label('scope', 'projects.write')
+    ->label('scope', 'platforms.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deletePlatform')
@@ -1744,7 +1752,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->param('port', 587, new Integer(), 'SMTP server port', true)
     ->param('username', '', new Text(0, 0), 'SMTP server username', true)
     ->param('password', '', new Text(0, 0), 'SMTP server password', true)
-    ->param('secure', '', new WhiteList(['tls'], true), 'Does SMTP server use secure connection', true)
+    ->param('secure', '', new WhiteList(['tls', 'ssl'], true), 'Does SMTP server use secure connection', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('queueForMails')

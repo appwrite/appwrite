@@ -50,6 +50,7 @@ class Mapper
         $defaults = [
             'boolean' => Type::boolean(),
             'string' => Type::string(),
+            'payload' => Type::string(),
             'integer' => Type::int(),
             'double' => Type::float(),
             'datetime' => Type::string(),

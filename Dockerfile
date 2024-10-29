@@ -28,6 +28,8 @@ RUN \
     apk add boost boost-dev; \
   fi
 
+RUN apk add libwebp
+
 WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
