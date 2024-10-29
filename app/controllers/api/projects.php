@@ -16,7 +16,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
@@ -31,6 +31,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -59,6 +60,7 @@ App::init()
 App::post('/v1/projects')
     ->desc('Create project')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.create')
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
@@ -278,6 +280,12 @@ App::get('/v1/projects')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $projectId = $cursor->getValue();
             $cursorDocument = $dbForConsole->getDocument('projects', $projectId);
 
@@ -876,6 +884,14 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
     ->inject('dbForConsole')
     ->action(function (string $projectId, array $numbers, Response $response, Database $dbForConsole) {
 
+        $uniqueNumbers = [];
+        foreach ($numbers as $number) {
+            if (isset($uniqueNumbers[$number['phone']])) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Duplicate phone numbers are not allowed.');
+            }
+            $uniqueNumbers[$number['phone']] = $number['otp'];
+        }
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -894,6 +910,7 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
 App::delete('/v1/projects/:projectId')
     ->desc('Delete project')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.delete')
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
@@ -913,6 +930,7 @@ App::delete('/v1/projects/:projectId')
         }
 
         $queueForDeletes
+            ->setProject($project)
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($project);
 
@@ -1189,7 +1207,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 App::post('/v1/projects/:projectId/keys')
     ->desc('Create key')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'keys.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createKey')
@@ -1239,7 +1257,7 @@ App::post('/v1/projects/:projectId/keys')
 App::get('/v1/projects/:projectId/keys')
     ->desc('List keys')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->label('scope', 'keys.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listKeys')
@@ -1271,7 +1289,7 @@ App::get('/v1/projects/:projectId/keys')
 App::get('/v1/projects/:projectId/keys/:keyId')
     ->desc('Get key')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->label('scope', 'keys.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getKey')
@@ -1305,7 +1323,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
 App::put('/v1/projects/:projectId/keys/:keyId')
     ->desc('Update key')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'keys.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateKey')
@@ -1351,7 +1369,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 App::delete('/v1/projects/:projectId/keys/:keyId')
     ->desc('Delete key')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'keys.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteKey')
@@ -1425,7 +1443,8 @@ App::post('/v1/projects/:projectId/jwts')
 App::post('/v1/projects/:projectId/platforms')
     ->desc('Create platform')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('audits.event', 'platforms.create')
+    ->label('scope', 'platforms.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createPlatform')
@@ -1433,7 +1452,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PLATFORM)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS,  Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY], true), 'Platform type.')
+    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS,  Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY, Origin::CLIENT_TYPE_REACT_NATIVE_IOS, Origin::CLIENT_TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
@@ -1475,7 +1494,7 @@ App::post('/v1/projects/:projectId/platforms')
 App::get('/v1/projects/:projectId/platforms')
     ->desc('List platforms')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->label('scope', 'platforms.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listPlatforms')
@@ -1507,7 +1526,7 @@ App::get('/v1/projects/:projectId/platforms')
 App::get('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Get platform')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->label('scope', 'platforms.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getPlatform')
@@ -1541,7 +1560,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
 App::put('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Update platform')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'platforms.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updatePlatform')
@@ -1588,7 +1607,8 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
 App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete platform')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('audits.event', 'platforms.delete')
+    ->label('scope', 'platforms.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deletePlatform')
@@ -1732,7 +1752,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->param('port', 587, new Integer(), 'SMTP server port', true)
     ->param('username', '', new Text(0, 0), 'SMTP server username', true)
     ->param('password', '', new Text(0, 0), 'SMTP server password', true)
-    ->param('secure', '', new WhiteList(['tls'], true), 'Does SMTP server use secure connection', true)
+    ->param('secure', '', new WhiteList(['tls', 'ssl'], true), 'Does SMTP server use secure connection', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('queueForMails')

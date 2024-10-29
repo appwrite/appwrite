@@ -28,6 +28,12 @@ class UsageDatabase extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('storageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of total storage used in bytes.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('collections', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated  number of collections per period.',
@@ -38,6 +44,13 @@ class UsageDatabase extends Model
             ->addRule('documents', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated  number of documents per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('storage', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated storage used in bytes per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

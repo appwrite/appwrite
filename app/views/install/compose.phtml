@@ -166,7 +166,7 @@ $image = $this->getParam('image', '');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:appwrite/console:5.0.0-rc.11
+    image: <?php echo $organization; ?>/console:5.0.12
     restart: unless-stopped
     networks:
       - appwrite
@@ -336,6 +336,9 @@ $image = $this->getParam('image', '');
       - _APP_LOGGING_CONFIG
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
+      - _APP_MAINTENANCE_RETENTION_ABUSE
+      - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_EXECUTION
 
   appwrite-worker-databases:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -475,6 +478,8 @@ $image = $this->getParam('image', '');
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DOMAIN
+      - _APP_OPTIONS_FORCE_HTTPS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -526,6 +531,8 @@ $image = $this->getParam('image', '');
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
       - _APP_LOGGING_CONFIG
+      - _APP_DOMAIN
+      - _APP_OPTIONS_FORCE_HTTPS
 
   appwrite-worker-messaging:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -674,6 +681,7 @@ $image = $this->getParam('image', '');
     entrypoint: worker-usage-dump
     <<: *x-logging
     container_name: appwrite-worker-usage-dump
+    restart: unless-stopped
     networks:
       - appwrite
     depends_on:
@@ -787,7 +795,7 @@ $image = $this->getParam('image', '');
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.5.5
+    image: openruntimes/executor:0.6.11
     networks:
       - appwrite
       - runtimes

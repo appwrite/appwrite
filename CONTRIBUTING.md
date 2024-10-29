@@ -319,10 +319,13 @@ These are the current metrics we collect usage stats for:
 | users | Total number of users per project|
 | executions | Total number of executions per project           | 
 | databases | Total number of databases per project             | 
+| databases.storage | Total amount of storage used by all databases per project (in bytes) |
 | collections | Total number of collections per project | 
 | {databaseInternalId}.collections | Total number of collections per database| 
+| {databaseInternalId}.storage | Sum of database storage (in bytes) |
 | documents | Total number of documents per project             | 
 | {databaseInternalId}.{collectionInternalId}.documents | Total number of documents per collection | 
+| {databaseInternalId}.{collectionInternalId}.storage | Sum of database storage used by the collection (in bytes) |
 | buckets | Total number of buckets per project               | 
 | files | Total number of files per project                 |
 | {bucketInternalId}.files.storage | Sum of files.storage per bucket (in bytes)                  |
@@ -551,6 +554,12 @@ To run end-2-end tests for a specific service use:
 
 ```bash
 docker compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
+```
+
+To run one specific test:
+
+```bash
+docker compose exec appwrite vendor/bin/phpunit --filter [FunctionName]
 ```
 
 ## Benchmarking

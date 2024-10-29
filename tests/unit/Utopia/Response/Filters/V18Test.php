@@ -34,7 +34,7 @@ class V18Test extends TestCase
                 ],
                 [
                 ]
-            ]
+            ],
         ];
     }
 
@@ -44,6 +44,72 @@ class V18Test extends TestCase
     public function testFunction(array $content, array $expected): void
     {
         $model = Response::MODEL_FUNCTION;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+
+    public function executionProvider(): array
+    {
+        return [
+            'remove scheduledAt' => [
+                [
+                    'scheduledAt' => '2024-07-13T09:00:00.000Z',
+                ],
+                [
+                ]
+            ],
+            'update 404 status' => [
+                [
+                    'statusCode' => '404',
+                    'status' => 'completed'
+                ],
+                [
+                    'statusCode' => '404',
+                    'status' => 'failed'
+                ]
+            ],
+            'update 400 status' => [
+                [
+                    'statusCode' => '400',
+                    'status' => 'completed'
+                ],
+                [
+                    'statusCode' => '400',
+                    'status' => 'failed'
+                ]
+            ],
+            'dont update 200 status' => [
+                [
+                    'statusCode' => '200',
+                    'status' => 'completed'
+                ],
+                [
+                    'statusCode' => '200',
+                    'status' => 'completed'
+                ]
+            ],
+            'dont update 500 status' => [
+                [
+                    'statusCode' => '500',
+                    'status' => 'failed'
+                ],
+                [
+                    'statusCode' => '500',
+                    'status' => 'failed'
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * @dataProvider executionProvider
+     */
+    public function testExecution(array $content, array $expected): void
+    {
+        $model = Response::MODEL_EXECUTION;
 
         $result = $this->filter->parse($content, $model);
 
@@ -76,6 +142,31 @@ class V18Test extends TestCase
     public function testProject(array $content, array $expected): void
     {
         $model = Response::MODEL_PROJECT;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function runtimeProvider(): array
+    {
+        return [
+            'remove key' => [
+                [
+                    'key' => 'example_key',
+                ],
+                [
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * @dataProvider runtimeProvider
+     */
+    public function testRuntime(array $content, array $expected): void
+    {
+        $model = Response::MODEL_RUNTIME;
 
         $result = $this->filter->parse($content, $model);
 

@@ -286,7 +286,26 @@ class Swagger2 extends Format
                     $validator = $validator->getValidator();
                 }
 
-                switch ((!empty($validator)) ? \get_class($validator) : '') {
+                $class = !empty($validator)
+                    ? \get_class($validator)
+                    : '';
+
+                $base = !empty($class)
+                    ? \get_parent_class($class)
+                    : '';
+
+                switch ($base) {
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Base':
+                        $class = $base;
+                        break;
+                }
+
+                if ($class === 'Utopia\Validator\AnyOf') {
+                    $validator = $param['validator']->getValidators()[0];
+                    $class = \get_class($validator);
+                }
+
+                switch ($class) {
                     case 'Utopia\Validator\Text':
                     case 'Utopia\Database\Validator\UID':
                         $node['type'] = $validator->getType();
@@ -338,29 +357,11 @@ class Swagger2 extends Format
                         $consumes = ['multipart/form-data'];
                         $node['type'] = 'file';
                         break;
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Files':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Identities':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Installations':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Messages':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Migrations':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Providers':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Rules':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Subscribers':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Targets':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Topics':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Users':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Variables':
+                    case 'Appwrite\Functions\Validator\Payload':
+                        $consumes = ['multipart/form-data'];
+                        $node['type'] = 'payload';
+                        break;
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Base':
                     case 'Utopia\Database\Validator\Queries':
                     case 'Utopia\Database\Validator\Queries\Document':
                     case 'Utopia\Database\Validator\Queries\Documents':
@@ -428,7 +429,7 @@ class Swagger2 extends Format
                             }
                         }
 
-                        if ($allowed) {
+                        if ($allowed && $validator->getType() === 'string') {
                             $node['enum'] = $validator->getList();
                             $node['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $method, $name);
                             $node['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $method, $name);
@@ -573,6 +574,10 @@ class Swagger2 extends Format
 
                     case 'boolean':
                         $type = 'boolean';
+                        break;
+
+                    case 'payload':
+                        $type = 'payload';
                         break;
 
                     default:

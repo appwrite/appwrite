@@ -24,11 +24,8 @@ abstract class ScheduleBase extends Action
 
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
-
-    abstract protected function enqueueResources(
-        Group $pools,
-        Database $dbForConsole
-    );
+    abstract public static function getCollectionId(): string;
+    abstract protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void;
 
     public function __construct()
     {
@@ -62,18 +59,13 @@ abstract class ScheduleBase extends Action
         $getSchedule = function (Document $schedule) use ($dbForConsole, $getProjectDB): array {
             $project = $dbForConsole->getDocument('projects', $schedule->getAttribute('projectId'));
 
-            $collectionId = match ($schedule->getAttribute('resourceType')) {
-                'function' => 'functions',
-                'message' => 'messages',
-                'execution' => 'executions'
-            };
-
             $resource = $getProjectDB($project)->getDocument(
-                $collectionId,
+                static::getCollectionId(),
                 $schedule->getAttribute('resourceId')
             );
 
             return [
+                '$internalId' => $schedule->getInternalId(),
                 '$id' => $schedule->getId(),
                 'resourceId' => $schedule->getAttribute('resourceId'),
                 'schedule' => $schedule->getAttribute('schedule'),
@@ -110,14 +102,9 @@ abstract class ScheduleBase extends Action
 
             foreach ($results as $document) {
                 try {
-                    $this->schedules[$document['resourceId']] = $getSchedule($document);
+                    $this->schedules[$document->getInternalId()] = $getSchedule($document);
                 } catch (\Throwable $th) {
-                    $collectionId = match ($document->getAttribute('resourceType')) {
-                        'function' => 'functions',
-                        'message' => 'messages',
-                        'execution' => 'executions'
-                    };
-
+                    $collectionId = static::getCollectionId();
                     Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");
                     Console::error($th->getMessage());
                 }
@@ -132,7 +119,7 @@ abstract class ScheduleBase extends Action
 
         Console::success("Starting timers at " . DateTime::now());
 
-        run(function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $pools) {
+        run(function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $pools, $getProjectDB) {
             /**
              * The timer synchronize $schedules copy with database collection.
              */
@@ -164,18 +151,18 @@ abstract class ScheduleBase extends Action
                     $total = $total + $sum;
 
                     foreach ($results as $document) {
-                        $localDocument = $schedules[$document['resourceId']] ?? null;
+                        $localDocument = $this->schedules[$document->getInternalId()] ?? null;
 
                         // Check if resource has been updated since last sync
                         $org = $localDocument !== null ? \strtotime($localDocument['resourceUpdatedAt']) : null;
                         $new = \strtotime($document['resourceUpdatedAt']);
 
                         if (!$document['active']) {
-                            Console::info("Removing: {$document['resourceId']}");
-                            unset($this->schedules[$document['resourceId']]);
+                            Console::info("Removing: {$document['resourceType']}::{$document['resourceId']}");
+                            unset($this->schedules[$document->getInternalId()]);
                         } elseif ($new !== $org) {
-                            Console::info("Updating: {$document['resourceId']}");
-                            $this->schedules[$document['resourceId']] = $getSchedule($document);
+                            Console::info("Updating: {$document['resourceType']}::{$document['resourceId']}");
+                            $this->schedules[$document->getInternalId()] = $getSchedule($document);
                         }
                     }
 
@@ -192,10 +179,10 @@ abstract class ScheduleBase extends Action
 
             Timer::tick(
                 static::ENQUEUE_TIMER * 1000,
-                fn () => $this->enqueueResources($pools, $dbForConsole)
+                fn () => $this->enqueueResources($pools, $dbForConsole, $getProjectDB)
             );
 
-            $this->enqueueResources($pools, $dbForConsole);
+            $this->enqueueResources($pools, $dbForConsole, $getProjectDB);
         });
     }
 }

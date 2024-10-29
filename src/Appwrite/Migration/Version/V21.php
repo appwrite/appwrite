@@ -34,6 +34,11 @@ class V21 extends Migration
         Console::info('Migrating Collections');
         $this->migrateCollections();
 
+        if ($this->project->getInternalId() !== 'console') {
+            Console::info('Migrating Buckets');
+            $this->migrateBuckets();
+        }
+
         Console::info('Migrating Documents');
         $this->forEachDocument([$this, 'fixDocument']);
     }
@@ -69,6 +74,14 @@ class V21 extends Migration
                         Console::warning("'accessedAt' from {$id}: {$th->getMessage()}");
                     }
                     break;
+                case 'platforms':
+                    // Increase 'type' length to 255
+                    try {
+                        $this->projectDB->updateAttribute($id, 'type', size: 255);
+                    } catch (Throwable $th) {
+                        Console::warning("'type' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
                 case 'schedules':
                     // Create data attribute
                     try {
@@ -87,11 +100,11 @@ class V21 extends Migration
                         Console::warning("'scopes' from {$id}: {$th->getMessage()}");
                     }
 
-                    // Create size attribute
+                    // Create specification attribute
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'size');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'specification');
                     } catch (Throwable $th) {
-                        Console::warning("'size' from {$id}: {$th->getMessage()}");
+                        Console::warning("'specification' from {$id}: {$th->getMessage()}");
                     }
 
                     break;
@@ -116,6 +129,34 @@ class V21 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'_key_deployment' from {$id}: {$th->getMessage()}");
                     }
+
+                    try {
+                        /**
+                         * Create 'scheduledAt' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduledAt');
+                    } catch (\Throwable $th) {
+                        Console::warning("'scheduledAt' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        /**
+                         * Create 'scheduleInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleInternalId');
+                    } catch (\Throwable $th) {
+                        Console::warning("'scheduleInternalId' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        /**
+                         * Create 'scheduleId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleId');
+                    } catch (\Throwable $th) {
+                        Console::warning("'scheduleId' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
             }
 
             usleep(50000);
@@ -145,9 +186,28 @@ class V21 extends Migration
                 $document->setAttribute('scopes', []);
 
                 // Add size attribute
-                $document->setAttribute('size', 's-1vcpu-512m');
+                $document->setAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT);
         }
 
         return $document;
+    }
+
+    /**
+     * Migrating Buckets.
+     *
+     * @return void
+     */
+    private function migrateBuckets(): void
+    {
+        foreach ($this->documentsIterator('buckets') as $bucket) {
+            $bucketId = 'bucket_' . $bucket['$internalId'];
+
+            try {
+                $this->projectDB->updateAttribute($bucketId, 'metadata', size: 65534);
+                $this->projectDB->purgeCachedCollection($bucketId);
+            } catch (\Throwable $th) {
+                Console::warning("'bucketId' from {$bucketId}: {$th->getMessage()}");
+            }
+        }
     }
 }

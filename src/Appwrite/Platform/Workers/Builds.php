@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
@@ -141,6 +142,7 @@ class Builds extends Action
         }
 
         $version = $function->getAttribute('version', 'v2');
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specifications', APP_FUNCTION_SPECIFICATION_DEFAULT)];
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $key = $function->getAttribute('runtime');
         $runtime = $runtimes[$key] ?? null;
@@ -206,7 +208,60 @@ class Builds extends Action
         }
 
         try {
-            if ($isNewBuild && $isVcsEnabled) {
+            if ($isNewBuild && !$isVcsEnabled) {
+                // Non-vcs+Template
+
+                $templateRepositoryName = $template->getAttribute('repositoryName', '');
+                $templateOwnerName = $template->getAttribute('ownerName', '');
+                $templateVersion = $template->getAttribute('version', '');
+
+                $templateRootDirectory = $template->getAttribute('rootDirectory', '');
+                $templateRootDirectory = \rtrim($templateRootDirectory, '/');
+                $templateRootDirectory = \ltrim($templateRootDirectory, '.');
+                $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+
+                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateVersion)) {
+                    $stdout = '';
+                    $stderr = '';
+
+                    // Clone template repo
+                    $tmpTemplateDirectory = '/tmp/builds/' . $buildId . '-template';
+                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateVersion, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
+                    $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
+
+                    if ($exit !== 0) {
+                        throw new \Exception('Unable to clone code repository: ' . $stderr);
+                    }
+
+                    // Ensure directories
+                    Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
+
+                    $tmpPathFile = $tmpTemplateDirectory . '/code.tar.gz';
+
+                    $localDevice = new Local();
+
+                    if (substr($tmpTemplateDirectory, -1) !== '/') {
+                        $tmpTemplateDirectory .= '/';
+                    }
+
+                    $tarParamDirectory = \escapeshellarg($tmpTemplateDirectory . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory));
+                    Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
+
+                    $source = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                    $result = $localDevice->transfer($tmpPathFile, $source, $deviceForFunctions);
+
+                    if (!$result) {
+                        throw new \Exception("Unable to move file");
+                    }
+
+                    Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
+
+                    $directorySize = $deviceForFunctions->getFileSize($source);
+                    $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
+                }
+            } elseif ($isNewBuild && $isVcsEnabled) {
+                // VCS and VCS+Temaplte
                 $tmpDirectory = '/tmp/builds/' . $buildId . '/code';
                 $rootDirectory = $function->getAttribute('providerRootDirectory', '');
                 $rootDirectory = \rtrim($rootDirectory, '/');
@@ -221,10 +276,19 @@ class Builds extends Action
 
                 $branchName = $deployment->getAttribute('providerBranch');
                 $commitHash = $deployment->getAttribute('providerCommitHash', '');
-                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory, $commitHash);
+
+                $cloneVersion = $branchName;
+                $cloneType = GitHub::CLONE_TYPE_BRANCH;
+                if (!empty($commitHash)) {
+                    $cloneVersion = $commitHash;
+                    $cloneType = GitHub::CLONE_TYPE_COMMIT;
+                }
+
+                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $cloneVersion, $cloneType, $tmpDirectory, $rootDirectory);
                 $stdout = '';
                 $stderr = '';
-                Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
+
+                Console::execute('mkdir -p ' . \escapeshellarg('/tmp/builds/' . $buildId), '', $stdout, $stderr);
 
                 if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
                     Console::info('Build has been canceled');
@@ -237,20 +301,35 @@ class Builds extends Action
                     throw new \Exception('Unable to clone code repository: ' . $stderr);
                 }
 
+                // Local refactoring for function folder with spaces
+                if (str_contains($rootDirectory, ' ')) {
+                    $rootDirectoryWithoutSpaces = str_replace(' ', '', $rootDirectory);
+                    $from = $tmpDirectory . '/' . $rootDirectory;
+                    $to = $tmpDirectory . '/' . $rootDirectoryWithoutSpaces;
+                    $exit = Console::execute('mv "' . \escapeshellarg($from) . '" "' . \escapeshellarg($to) . '"', '', $stdout, $stderr);
+
+                    if ($exit !== 0) {
+                        throw new \Exception('Unable to move function with spaces' . $stderr);
+                    }
+                    $rootDirectory = $rootDirectoryWithoutSpaces;
+                }
+
+
                 // Build from template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
                 $templateOwnerName = $template->getAttribute('ownerName', '');
-                $templateBranch = $template->getAttribute('branch', '');
+                $templateVersion = $template->getAttribute('version', '');
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
                 $templateRootDirectory = \rtrim($templateRootDirectory, '/');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '.');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '/');
 
-                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateBranch)) {
+                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateVersion)) {
                     // Clone template repo
-                    $tmpTemplateDirectory = '/tmp/builds/' . \escapeshellcmd($buildId) . '/template';
-                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, $tmpTemplateDirectory, $templateRootDirectory);
+                    $tmpTemplateDirectory = '/tmp/builds/' . $buildId . '/template';
+
+                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateVersion, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
@@ -258,20 +337,20 @@ class Builds extends Action
                     }
 
                     // Ensure directories
-                    Console::execute('mkdir -p ' . $tmpTemplateDirectory . '/' . $templateRootDirectory, '', $stdout, $stderr);
-                    Console::execute('mkdir -p ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
+                    Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
+                    Console::execute('mkdir -p ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
 
                     // Merge template into user repo
-                    Console::execute('rsync -av --exclude \'.git\' ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/ ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
+                    Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . \escapeshellcmd($function->getAttribute('name', '')) . '\' function" && git push origin ' . \escapeshellcmd($branchName), '', $stdout, $stderr);
+                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . \escapeshellarg($tmpDirectory) . ' && git add . && git commit -m "Create ' . \escapeshellarg($function->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to push code repository: ' . $stderr);
                     }
 
-                    $exit = Console::execute('cd ' . $tmpDirectory . ' && git rev-parse HEAD', '', $stdout, $stderr);
+                    $exit = Console::execute('cd ' . \escapeshellarg($tmpDirectory) . ' && git rev-parse HEAD', '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to get vcs commit SHA: ' . $stderr);
@@ -305,7 +384,7 @@ class Builds extends Action
                     );
                 }
 
-                $tmpPath = '/tmp/builds/' . \escapeshellcmd($buildId);
+                $tmpPath = '/tmp/builds/' . $buildId;
                 $tmpPathFile = $tmpPath . '/code.tar.gz';
                 $localDevice = new Local();
 
@@ -314,25 +393,27 @@ class Builds extends Action
                 }
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
-                $functionsSizeLimit = (int) System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
+                $functionsSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
                 if ($directorySize > $functionsSizeLimit) {
                     throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
                 }
 
-                Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
+                $tarParamDirectory = '/tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory);
+                Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
 
-                $path = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-                $result = $localDevice->transfer($tmpPathFile, $path, $deviceForFunctions);
+                $source = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                $result = $localDevice->transfer($tmpPathFile, $source, $deviceForFunctions);
 
                 if (!$result) {
                     throw new \Exception("Unable to move file");
                 }
 
-                Console::execute('rm -rf ' . $tmpPath, '', $stdout, $stderr);
-
-                $source = $path;
+                Console::execute('rm -rf ' . \escapeshellarg($tmpPath), '', $stdout, $stderr);
 
                 $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
+
+                $directorySize = $deviceForFunctions->getFileSize($source);
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttribute('path', $source)->setAttribute('size', $directorySize));
 
                 $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
@@ -349,13 +430,13 @@ class Builds extends Action
             $deploymentModel = new Deployment();
             $deploymentUpdate =
                 $queueForEvents
-                ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-                ->setClass(Event::WEBHOOK_CLASS_NAME)
-                ->setProject($project)
-                ->setEvent('functions.[functionId].deployments.[deploymentId].update')
-                ->setParam('functionId', $function->getId())
-                ->setParam('deploymentId', $deployment->getId())
-                ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
+                    ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+                    ->setClass(Event::WEBHOOK_CLASS_NAME)
+                    ->setProject($project)
+                    ->setEvent('functions.[functionId].deployments.[deploymentId].update')
+                    ->setParam('functionId', $function->getId())
+                    ->setParam('deploymentId', $deployment->getId())
+                    ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())));
 
             $deploymentUpdate->trigger();
 
@@ -392,16 +473,47 @@ class Builds extends Action
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
+            $cpus = $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT;
+            $memory = max($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT, 1024); // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
+
+            $jwtExpiry = (int)System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+            $apiKey = $jwtObj->encode([
+                'projectId' => $project->getId(),
+                'scopes' => $function->getAttribute('scopes', [])
+            ]);
+
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $hostname = System::getEnv('_APP_DOMAIN');
+            $endpoint = $protocol . '://' . $hostname . "/v1";
+
             // Appwrite vars
             $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
+                'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                 'APPWRITE_FUNCTION_ID' => $function->getId(),
                 'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
                 'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
                 'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
                 'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
                 'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+                'APPWRITE_FUNCTION_CPUS' => $cpus,
+                'APPWRITE_FUNCTION_MEMORY' => $memory,
                 'APPWRITE_VERSION' => APP_VERSION_STABLE,
                 'APPWRITE_REGION' => $project->getAttribute('region'),
+                'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
+                'APPWRITE_VCS_REPOSITORY_ID' => $deployment->getAttribute('providerRepositoryId', ''),
+                'APPWRITE_VCS_REPOSITORY_NAME' => $deployment->getAttribute('providerRepositoryName', ''),
+                'APPWRITE_VCS_REPOSITORY_OWNER' => $deployment->getAttribute('providerRepositoryOwner', ''),
+                'APPWRITE_VCS_REPOSITORY_URL' => $deployment->getAttribute('providerRepositoryUrl', ''),
+                'APPWRITE_VCS_REPOSITORY_BRANCH' => $deployment->getAttribute('providerBranch', ''),
+                'APPWRITE_VCS_REPOSITORY_BRANCH_URL' => $deployment->getAttribute('providerBranchUrl', ''),
+                'APPWRITE_VCS_COMMIT_HASH' => $deployment->getAttribute('providerCommitHash', ''),
+                'APPWRITE_VCS_COMMIT_MESSAGE' => $deployment->getAttribute('providerCommitMessage', ''),
+                'APPWRITE_VCS_COMMIT_URL' => $deployment->getAttribute('providerCommitUrl', ''),
+                'APPWRITE_VCS_COMMIT_AUTHOR_NAME' => $deployment->getAttribute('providerCommitAuthor', ''),
+                'APPWRITE_VCS_COMMIT_AUTHOR_URL' => $deployment->getAttribute('providerCommitAuthorUrl', ''),
+                'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
             ]);
 
             $command = $deployment->getAttribute('commands', '');
@@ -414,8 +526,10 @@ class Builds extends Action
                 return;
             }
 
+            $isCanceled = false;
+
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, $cpus, $memory, &$err) {
                     try {
                         $version = $function->getAttribute('version', 'v2');
                         $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
@@ -426,6 +540,8 @@ class Builds extends Action
                             source: $source,
                             image: $runtime['image'],
                             version: $version,
+                            cpus: $cpus,
+                            memory: $memory,
                             remove: true,
                             entrypoint: $deployment->getAttribute('entrypoint'),
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
@@ -436,17 +552,28 @@ class Builds extends Action
                         $err = $error;
                     }
                 }),
-                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
+                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err, &$isCanceled) {
                     try {
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
-                            callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
-                                if ($response === null) {
+                            callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $allEvents, $project, &$isCanceled) {
+                                if ($isCanceled) {
+                                    return;
+                                }
+
+                                // If we have response or error from concurrent coroutine, we already have latest logs
+                                if ($response === null && $err === null) {
                                     $build = $dbForProject->getDocument('builds', $build->getId());
 
                                     if ($build->isEmpty()) {
                                         throw new \Exception('Build not found', 404);
+                                    }
+
+                                    if ($build->getAttribute('status') === 'canceled') {
+                                        $isCanceled = true;
+                                        Console::info('Ignoring realtime logs because build has been canceled');
+                                        return;
                                     }
 
                                     $logs = \mb_substr($logs, 0, null, 'UTF-8'); // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
@@ -481,16 +608,22 @@ class Builds extends Action
                 }),
             ]);
 
+            if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
+                Console::info('Build has been canceled');
+                return;
+            }
+
             if ($err) {
-                if ($dbForProject->getDocument('builds', $buildId)->getAttribute('status') === 'canceled') {
-                    Console::info('Build has been canceled');
-                    return;
-                }
                 throw $err;
             }
 
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
+
+            $buildSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_BUILD_SIZE_LIMIT', '2000000000');
+            if ($response['size'] > $buildSizeLimit) {
+                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
+            }
 
             /** Update the build document */
             $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp(floor($response['startTime']))));
@@ -500,6 +633,8 @@ class Builds extends Action
             $build->setAttribute('path', $response['path']);
             $build->setAttribute('size', $response['size']);
             $build->setAttribute('logs', $response['output']);
+
+            $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
@@ -540,14 +675,14 @@ class Builds extends Action
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'failed');
-            $build->setAttribute('logs', $th->getMessage() . "\n" . $th->getFile() . ':' . $th->getLine() . "\n" . $th->getTraceAsString());
+            $build->setAttribute('logs', $th->getMessage());
+
+            $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
         } finally {
-            $build = $dbForProject->updateDocument('builds', $buildId, $build);
-
             /**
              * Send realtime Event
              */
@@ -584,9 +719,11 @@ class Builds extends Action
                 ->addMetric(METRIC_BUILDS, 1) // per project
                 ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
                 ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+                ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
                 ->setProject($project)
                 ->trigger();
         }

@@ -86,7 +86,7 @@ class Migration extends Event
         return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
-            'migration' => $this->migration
+            'migration' => $this->migration,
         ]);
     }
 }

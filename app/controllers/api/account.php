@@ -42,6 +42,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
@@ -55,8 +56,8 @@ use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
-$oauthDefaultSuccess = '/auth/oauth2/success';
-$oauthDefaultFailure = '/auth/oauth2/failure';
+$oauthDefaultSuccess = '/console/auth/oauth2/success';
+$oauthDefaultFailure = '/console/auth/oauth2/failure';
 
 function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
 {
@@ -124,7 +125,9 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
-        'dateTime' => DateTime::format(new \DateTime(), 'Y-m-d H:i:s'),
+        'date' => (new \DateTime())->format('F j'),
+        'year' => (new \DateTime())->format('YYYY'),
+        'time' => (new \DateTime())->format('H:i:s'),
         'user' => $user->getAttribute('name'),
         'project' => $project->getAttribute('name'),
         'device' => $session->getAttribute('clientName'),
@@ -204,7 +207,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             Permission::delete(Role::user($user->getId())),
         ]));
 
-    $dbForProject->purgeCachedDocument('users', $user->getId());
     Authorization::skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
@@ -223,7 +225,21 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
-    if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
+    $isAllowedTokenType = match ($verifiedToken->getAttribute('type')) {
+        Auth::TOKEN_TYPE_MAGIC_URL,
+        Auth::TOKEN_TYPE_EMAIL => false,
+        default => true
+    };
+
+    $hasUserEmail = $user->getAttribute('email', false) !== false;
+
+    $isSessionAlertsEnabled = $project->getAttribute('auths', [])['sessionAlerts'] ?? false;
+
+    $isNotFirstSession = $dbForProject->count('sessions', [
+        Query::equal('userId', [$user->getId()]),
+    ]) !== 1;
+
+    if ($isAllowedTokenType && $hasUserEmail && $isSessionAlertsEnabled && $isNotFirstSession) {
         sendSessionAlert($locale, $user, $project, $session, $queueForMails);
     }
 
@@ -379,7 +395,7 @@ App::post('/v1/account')
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                if($existingTarget) {
+                if ($existingTarget) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
@@ -904,7 +920,11 @@ App::post('/v1/account/sessions/email')
         ;
 
         if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
-            sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+            if ($dbForProject->count('sessions', [
+                Query::equal('userId', [$user->getId()]),
+            ]) !== 1) {
+                sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+            }
         }
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1767,10 +1787,10 @@ App::post('/v1/account/tokens/magic-url')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
-
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
+        $url = htmlentities($url);
 
         if ($phrase === true) {
             $phrase = Phrase::generate();
@@ -1860,7 +1880,7 @@ App::post('/v1/account/tokens/magic-url')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if (empty($url)) {
-            $url = $request->getProtocol() . '://' . $request->getHostname() . '/auth/magic-url';
+            $url = $request->getProtocol() . '://' . $request->getHostname() . '/console/auth/magic-url';
         }
 
         $url = Template::parseURL($url);
@@ -2967,6 +2987,7 @@ App::post('/v1/account/recovery')
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
+        $url = htmlentities($url);
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -3230,6 +3251,7 @@ App::post('/v1/account/verification')
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
+        $url = htmlentities($url);
         if ($user->getAttribute('emailVerification')) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
         }
@@ -3551,7 +3573,7 @@ App::post('/v1/account/verification/phone')
     });
 
 App::put('/v1/account/verification/phone')
-    ->desc('Create phone verification (confirmation)')
+    ->desc('Update phone verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].verification.[tokenId].update')
@@ -3662,7 +3684,7 @@ App::patch('/v1/account/mfa')
     });
 
 App::get('/v1/account/mfa/factors')
-    ->desc('List Factors')
+    ->desc('List factors')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -3694,7 +3716,7 @@ App::get('/v1/account/mfa/factors')
     });
 
 App::post('/v1/account/mfa/authenticators/:type')
-    ->desc('Add Authenticator')
+    ->desc('Create authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'account')
@@ -3766,7 +3788,7 @@ App::post('/v1/account/mfa/authenticators/:type')
     });
 
 App::put('/v1/account/mfa/authenticators/:type')
-    ->desc('Verify Authenticator')
+    ->desc('Verify authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'account')
@@ -3831,7 +3853,7 @@ App::put('/v1/account/mfa/authenticators/:type')
     });
 
 App::post('/v1/account/mfa/recovery-codes')
-    ->desc('Create MFA Recovery Codes')
+    ->desc('Create MFA recovery codes')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'account')
@@ -3873,7 +3895,7 @@ App::post('/v1/account/mfa/recovery-codes')
     });
 
 App::patch('/v1/account/mfa/recovery-codes')
-    ->desc('Regenerate MFA Recovery Codes')
+    ->desc('Regenerate MFA recovery codes')
     ->groups(['api', 'account', 'mfaProtected'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'account')
@@ -3914,7 +3936,7 @@ App::patch('/v1/account/mfa/recovery-codes')
     });
 
 App::get('/v1/account/mfa/recovery-codes')
-    ->desc('Get MFA Recovery Codes')
+    ->desc('Get MFA recovery codes')
     ->groups(['api', 'account', 'mfaProtected'])
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -3944,7 +3966,7 @@ App::get('/v1/account/mfa/recovery-codes')
     });
 
 App::delete('/v1/account/mfa/authenticators/:type')
-    ->desc('Delete Authenticator')
+    ->desc('Delete authenticator')
     ->groups(['api', 'account', 'mfaProtected'])
     ->label('event', 'users.[userId].delete.mfa')
     ->label('scope', 'account')
@@ -3982,7 +4004,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
     });
 
 App::post('/v1/account/mfa/challenge')
-    ->desc('Create 2FA Challenge')
+    ->desc('Create MFA challenge')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].challenges.[challengeId].create')
@@ -3997,7 +4019,7 @@ App::post('/v1/account/mfa/challenge')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MFA_CHALLENGE)
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},token:{param-token}')
+    ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`.')
     ->inject('response')
     ->inject('dbForProject')
@@ -4170,7 +4192,7 @@ App::post('/v1/account/mfa/challenge')
     });
 
 App::put('/v1/account/mfa/challenge')
-    ->desc('Create MFA Challenge (confirmation)')
+    ->desc('Create MFA challenge (confirmation)')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -4184,7 +4206,7 @@ App::put('/v1/account/mfa/challenge')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'userId:{param-userId}')
+    ->label('abuse-key', 'url:{url},challengeId:{param-challengeId}')
     ->param('challengeId', '', new Text(256), 'ID of the challenge.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('project')
@@ -4293,7 +4315,7 @@ App::post('/v1/account/targets/push')
 
         $device = $detector->getDevice();
 
-        $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
+        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret);
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
         try {
@@ -4362,7 +4384,9 @@ App::put('/v1/account/targets/:targetId/push')
         }
 
         if ($identifier) {
-            $target->setAttribute('identifier', $identifier);
+            $target
+                ->setAttribute('identifier', $identifier)
+                ->setAttribute('expired', false);
         }
 
         $detector = new Detector($request->getUserAgent());
@@ -4431,7 +4455,7 @@ App::delete('/v1/account/targets/:targetId/push')
         $response->noContent();
     });
 App::get('/v1/account/identities')
-    ->desc('List Identities')
+    ->desc('List identities')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -4465,6 +4489,12 @@ App::get('/v1/account/identities')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $identityId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('identities', $identityId);
 

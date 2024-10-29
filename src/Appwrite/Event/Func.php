@@ -8,6 +8,8 @@ use Utopia\Queue\Connection;
 
 class Func extends Event
 {
+    public const TYPE_ASYNC_WRITE = 'async_write';
+
     protected string $jwt = '';
     protected string $type = '';
     protected string $body = '';
@@ -222,6 +224,7 @@ class Func extends Event
         return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
+            'userId' => $this->userId,
             'function' => $this->function,
             'functionId' => $this->functionId,
             'execution' => $this->execution,

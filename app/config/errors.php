@@ -24,6 +24,11 @@ return [
         'description' => 'Access to this API is forbidden.',
         'code' => 401,
     ],
+    Exception::GENERAL_RESOURCE_BLOCKED => [
+        'name' => Exception::GENERAL_RESOURCE_BLOCKED,
+        'description' => 'Access to this resource is blocked.',
+        'code' => 401,
+    ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
         'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
@@ -529,6 +534,11 @@ return [
         'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
         'code' => 408,
     ],
+    Exception::FUNCTION_TEMPLATE_NOT_FOUND => [
+        'name' => Exception::FUNCTION_TEMPLATE_NOT_FOUND,
+        'description' => 'Function Template with the requested ID could not be found.',
+        'code' => 404,
+    ],
 
     /** Builds  */
     Exception::BUILD_NOT_FOUND => [
@@ -692,6 +702,11 @@ return [
     Exception::RELATIONSHIP_VALUE_INVALID => [
         'name' => Exception::RELATIONSHIP_VALUE_INVALID,
         'description' => 'The relationship value is invalid.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_INVALID_RESIZE => [
+        'name' => Exception::ATTRIBUTE_INVALID_RESIZE,
+        'description' => "Existing data is too large for new size, truncate your existing data then try again.",
         'code' => 400,
     ],
 
