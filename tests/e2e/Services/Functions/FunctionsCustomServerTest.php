@@ -1675,6 +1675,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($cookie, $response['body']);
 
+        // Async execution document creation
+        $this->assertEventually(function () use ($functionId) {
+            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), []);
+
+            $this->assertEquals(200, $executions['headers']['status-code']);
+            $this->assertEquals(1, count($executions['body']['executions']));
+        });
+
         // Await Aggregation
         sleep(System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', 30));
 

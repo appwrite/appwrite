@@ -271,6 +271,12 @@ class Realtime extends Adapter
                 $projectId = 'console';
                 $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
+            case 'projects':
+                $channels[] = 'console';
+                $channels[] = 'projects.' . $parts[1];
+                $projectId = 'console';
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                break;
             case 'teams':
                 if ($parts[2] === 'memberships') {
                     $permissionsChanged = $parts[4] ?? false;

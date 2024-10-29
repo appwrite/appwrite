@@ -412,6 +412,11 @@ class Migrations extends Action
 
                 throw new Exception('Migration failed');
             }
+
+            if ($migration->getAttribute('status', '') === 'completed') {
+                $destination->success();
+                $source->success();
+            }
         }
     }
 }

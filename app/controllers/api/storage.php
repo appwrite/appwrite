@@ -24,6 +24,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Image\Image;
 use Utopia\Storage\Compression\Algorithms\GZIP;
@@ -48,6 +49,7 @@ App::post('/v1/storage/buckets')
     ->desc('Create bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('event', 'buckets.[bucketId].create')
     ->label('audits.event', 'bucket.create')
     ->label('audits.resource', 'bucket/{response.$id}')
@@ -146,6 +148,7 @@ App::get('/v1/storage/buckets')
     ->desc('List buckets')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.read')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'listBuckets')
@@ -178,6 +181,12 @@ App::get('/v1/storage/buckets')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $bucketId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('buckets', $bucketId);
 
@@ -200,6 +209,7 @@ App::get('/v1/storage/buckets/:bucketId')
     ->desc('Get bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.read')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getBucket')
@@ -225,6 +235,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->desc('Update bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('event', 'buckets.[bucketId].update')
     ->label('audits.event', 'bucket.update')
     ->label('audits.resource', 'bucket/{response.$id}')
@@ -292,6 +303,7 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->desc('Delete bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('audits.event', 'bucket.delete')
     ->label('event', 'buckets.[bucketId].delete')
     ->label('audits.resource', 'bucket/{request.bucketId}')
@@ -334,6 +346,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->desc('Create file')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('audits.event', 'file.create')
     ->label('event', 'buckets.[bucketId].files.[fileId].create')
     ->label('audits.resource', 'file/{response.$id}')
@@ -695,6 +708,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->desc('List files')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'listFiles')
@@ -744,6 +758,12 @@ App::get('/v1/storage/buckets/:bucketId/files')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $fileId = $cursor->getValue();
 
             if ($fileSecurity && !$valid) {
@@ -780,6 +800,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->desc('Get file')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFile')
@@ -827,6 +848,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->desc('Get file preview')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('cache', true)
     ->label('cache.resourceType', 'bucket/{request.bucketId}')
     ->label('cache.resource', 'file/{request.fileId}')
@@ -986,7 +1008,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType($contentType)
             ->file($data)
         ;
@@ -999,6 +1021,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->desc('Get file for download')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFileDownload')
@@ -1049,7 +1072,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         $response
             ->setContentType($file->getAttribute('mimeType'))
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
         ;
@@ -1139,6 +1162,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->desc('Get file for view')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFileView')
@@ -1199,7 +1223,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             ->addHeader('Content-Security-Policy', 'script-src none;')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
         ;
 
@@ -1290,6 +1314,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
     ->desc('Get file for push notification')
     ->groups(['api', 'storage'])
     ->label('scope', 'public')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', '*/*')
     ->label('sdk.methodType', 'location')
@@ -1353,7 +1378,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
             ->addHeader('Content-Security-Policy', 'script-src none;')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage());
 
         $size = $file->getAttribute('sizeOriginal', 0);
@@ -1444,6 +1469,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->desc('Update file')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('event', 'buckets.[bucketId].files.[fileId].update')
     ->label('audits.event', 'file.update')
     ->label('audits.resource', 'file/{response.$id}')
@@ -1548,6 +1574,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->desc('Delete file')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('event', 'buckets.[bucketId].files.[fileId].delete')
     ->label('audits.event', 'file.delete')
     ->label('audits.resource', 'file/{request.fileId}')
@@ -1641,6 +1668,7 @@ App::get('/v1/storage/usage')
     ->desc('Get storage usage stats')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getUsage')
@@ -1720,6 +1748,7 @@ App::get('/v1/storage/:bucketId/usage')
     ->desc('Get bucket usage stats')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
+    ->label('resourceType', RESOURCE_TYPE_BUCKETS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getBucketUsage')
