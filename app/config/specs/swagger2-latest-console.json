@@ -278,7 +278,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Update currently logged in user account email address. After changing user address, the user confirmation status will get reset. A new confirmation email is not sent automatically however you can use the send confirmation email endpoint again to send the confirmation email. For security measures, user password is required to complete this request.\nThis endpoint can also be used to convert an anonymous account to a normal one, by passing an email address and a new password.\n",
+                "description": "Update currently logged in user account email address. After changing user address, the user confirmation status will get reset. A new confirmation email is not sent automatically however you can use the send confirmation email endpoint again to send the confirmation email. For security measures, user password is required to complete this request.\r\nThis endpoint can also be used to convert an anonymous account to a normal one, by passing an email address and a new password.\r\n",
                 "responses": {
                     "200": {
                         "description": "User",
@@ -348,7 +348,7 @@
         },
         "\/account\/identities": {
             "get": {
-                "summary": "List Identities",
+                "summary": "List identities",
                 "operationId": "accountListIdentities",
                 "consumes": [
                     "application\/json"
@@ -670,7 +670,7 @@
         },
         "\/account\/mfa\/authenticators\/{type}": {
             "post": {
-                "summary": "Create Authenticator",
+                "summary": "Create authenticator",
                 "operationId": "accountCreateMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -737,7 +737,7 @@
                 ]
             },
             "put": {
-                "summary": "Verify Authenticator",
+                "summary": "Verify authenticator",
                 "operationId": "accountUpdateMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -822,7 +822,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Authenticator",
+                "summary": "Delete authenticator",
                 "operationId": "accountDeleteMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -886,7 +886,7 @@
         },
         "\/account\/mfa\/challenge": {
             "post": {
-                "summary": "Create MFA Challenge",
+                "summary": "Create MFA challenge",
                 "operationId": "accountCreateMfaChallenge",
                 "consumes": [
                     "application\/json"
@@ -965,7 +965,7 @@
                 ]
             },
             "put": {
-                "summary": "Create MFA Challenge (confirmation)",
+                "summary": "Create MFA challenge (confirmation)",
                 "operationId": "accountUpdateMfaChallenge",
                 "consumes": [
                     "application\/json"
@@ -1041,7 +1041,7 @@
         },
         "\/account\/mfa\/factors": {
             "get": {
-                "summary": "List Factors",
+                "summary": "List factors",
                 "operationId": "accountListMfaFactors",
                 "consumes": [
                     "application\/json"
@@ -1095,7 +1095,7 @@
         },
         "\/account\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA Recovery Codes",
+                "summary": "Get MFA recovery codes",
                 "operationId": "accountGetMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1147,7 +1147,7 @@
                 ]
             },
             "post": {
-                "summary": "Create MFA Recovery Codes",
+                "summary": "Create MFA recovery codes",
                 "operationId": "accountCreateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1199,7 +1199,7 @@
                 ]
             },
             "patch": {
-                "summary": "Regenerate MFA Recovery Codes",
+                "summary": "Regenerate MFA recovery codes",
                 "operationId": "accountUpdateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -1707,7 +1707,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Use this endpoint to complete the user account password reset. Both the **userId** and **secret** arguments will be passed as query parameters to the redirect URL you have provided when sending your request to the [POST \/account\/recovery](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createRecovery) endpoint.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.",
+                "description": "Use this endpoint to complete the user account password reset. Both the **userId** and **secret** arguments will be passed as query parameters to the redirect URL you have provided when sending your request to the [POST \/account\/recovery](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createRecovery) endpoint.\r\n\r\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.",
                 "responses": {
                     "200": {
                         "description": "Token",
@@ -1949,7 +1949,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Allow the user to login into their account by providing a valid email and password combination. This route will create a new session for the user.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Allow the user to login into their account by providing a valid email and password combination. This route will create a new session for the user.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
                 "responses": {
                     "201": {
                         "description": "Session",
@@ -2109,7 +2109,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed.\n\nIf there is already an active session, the new session will be attached to the logged-in account. If there are no active sessions, the server will attempt to look for a user with the same email address as the email received from the OAuth2 provider and attach the new session to the existing user. If no matching user is found - the server will create a new user.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
+                "description": "Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed.\r\n\r\nIf there is already an active session, the new session will be attached to the logged-in account. If there are no active sessions, the server will attempt to look for a user with the same email address as the email received from the OAuth2 provider and attach the new session to the existing user. If no matching user is found - the server will create a new user.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\r\n",
                 "responses": {
                     "301": {
                         "description": "No content"
@@ -2863,7 +2863,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -2949,7 +2949,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not been registered, a new user will be created. When the user clicks the link in the email, the user is redirected back to the URL you provided with the secret key and userId values attached to the URL query string. Use the query string parameters to submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The link sent to the user's email address is valid for 1 hour. If you are on a mobile device you can leave the URL parameter empty, so that the login completion will be handled by your Appwrite instance by default.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
+                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not been registered, a new user will be created. When the user clicks the link in the email, the user is redirected back to the URL you provided with the secret key and userId values attached to the URL query string. Use the query string parameters to submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The link sent to the user's email address is valid for 1 hour. If you are on a mobile device you can leave the URL parameter empty, so that the login completion will be handled by your Appwrite instance by default.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\r\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -3044,7 +3044,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed. \n\nIf authentication succeeds, `userId` and `secret` of a token will be appended to the success URL as query parameters. These can be used to create a new session using the [Create session](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed. \r\n\r\nIf authentication succeeds, `userId` and `secret` of a token will be appended to the success URL as query parameters. These can be used to create a new session using the [Create session](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
                 "responses": {
                     "301": {
                         "description": "No content"
@@ -3179,7 +3179,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an SMS with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's phone is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Sends the user an SMS with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's phone is valid for 15 minutes.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -3262,7 +3262,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
+                "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\r\n\r\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\r\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -3551,7 +3551,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "You can use this endpoint to show different browser icons to your users. The code argument receives the browser code as it appears in your user [GET \/account\/sessions](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#getSessions) endpoint. Use width, height and quality arguments to change the output settings.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.",
+                "description": "You can use this endpoint to show different browser icons to your users. The code argument receives the browser code as it appears in your user [GET \/account\/sessions](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#getSessions) endpoint. Use width, height and quality arguments to change the output settings.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -3680,7 +3680,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "The credit card endpoint will return you the icon of the credit card provider you need. Use width, height and quality arguments to change the output settings.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\n",
+                "description": "The credit card endpoint will return you the icon of the credit card provider you need. Use width, height and quality arguments to change the output settings.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\r\n",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -3813,7 +3813,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "Use this endpoint to fetch the favorite icon (AKA favicon) of any remote website URL.\n\nThis endpoint does not follow HTTP redirects.",
+                "description": "Use this endpoint to fetch the favorite icon (AKA favicon) of any remote website URL.\r\n\r\nThis endpoint does not follow HTTP redirects.",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -3880,7 +3880,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "You can use this endpoint to show different country flags icons to your users. The code argument receives the 2 letter country code. Use width, height and quality arguments to change the output settings. Country codes follow the [ISO 3166-1](https:\/\/en.wikipedia.org\/wiki\/ISO_3166-1) standard.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\n",
+                "description": "You can use this endpoint to show different country flags icons to your users. The code argument receives the 2 letter country code. Use width, height and quality arguments to change the output settings. Country codes follow the [ISO 3166-1](https:\/\/en.wikipedia.org\/wiki\/ISO_3166-1) standard.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\r\n",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -4371,7 +4371,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop and display remote images in your app or in case you want to make sure a 3rd party image is properly served using a TLS protocol.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 400x400px.\n\nThis endpoint does not follow HTTP redirects.",
+                "description": "Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop and display remote images in your app or in case you want to make sure a 3rd party image is properly served using a TLS protocol.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 400x400px.\r\n\r\nThis endpoint does not follow HTTP redirects.",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -4458,7 +4458,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "Use this endpoint to show your user initials avatar icon on your website or app. By default, this route will try to print your logged-in user name or email initials. You can also overwrite the user name if you pass the 'name' parameter. If no name is given and no user is logged, an empty avatar will be returned.\n\nYou can use the color and background params to change the avatar colors. By default, a random theme will be selected. The random theme will persist for the user's initials when reloading the same theme will always return for the same initials.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\n",
+                "description": "Use this endpoint to show your user initials avatar icon on your website or app. By default, this route will try to print your logged-in user name or email initials. You can also overwrite the user name if you pass the 'name' parameter. If no name is given and no user is logged, an empty avatar will be returned.\r\n\r\nYou can use the color and background params to change the avatar colors. By default, a random theme will be selected. The random theme will persist for the user's initials when reloading the same theme will always return for the same initials.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\r\n",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -4553,7 +4553,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "Converts a given plain text to a QR code image. You can use the query parameters to change the size and style of the resulting image.\n",
+                "description": "Converts a given plain text to a QR code image. You can use the query parameters to change the size and style of the resulting image.\r\n",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -4637,7 +4637,7 @@
         },
         "\/console\/assistant": {
             "post": {
-                "summary": "Ask Query",
+                "summary": "Ask query",
                 "operationId": "assistantChat",
                 "consumes": [
                     "application\/json"
@@ -4846,7 +4846,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a new Database.\n",
+                "description": "Create a new Database.\r\n",
                 "responses": {
                     "201": {
                         "description": "Database",
@@ -5727,7 +5727,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a boolean attribute.\n",
+                "description": "Create a boolean attribute.\r\n",
                 "responses": {
                     "202": {
                         "description": "AttributeBoolean",
@@ -6159,7 +6159,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create an email attribute.\n",
+                "description": "Create an email attribute.\r\n",
                 "responses": {
                     "202": {
                         "description": "AttributeEmail",
@@ -6265,7 +6265,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Update an email attribute. Changing the `default` value will not update already existing documents.\n",
+                "description": "Update an email attribute. Changing the `default` value will not update already existing documents.\r\n",
                 "responses": {
                     "200": {
                         "description": "AttributeEmail",
@@ -6375,7 +6375,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create an enumeration attribute. The `elements` param acts as a white-list of accepted values for this attribute. \n",
+                "description": "Create an enumeration attribute. The `elements` param acts as a white-list of accepted values for this attribute. \r\n",
                 "responses": {
                     "202": {
                         "description": "AttributeEnum",
@@ -6491,7 +6491,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Update an enum attribute. Changing the `default` value will not update already existing documents.\n",
+                "description": "Update an enum attribute. Changing the `default` value will not update already existing documents.\r\n",
                 "responses": {
                     "200": {
                         "description": "AttributeEnum",
@@ -6611,7 +6611,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a float attribute. Optionally, minimum and maximum values can be provided.\n",
+                "description": "Create a float attribute. Optionally, minimum and maximum values can be provided.\r\n",
                 "responses": {
                     "202": {
                         "description": "AttributeFloat",
@@ -6729,7 +6729,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Update a float attribute. Changing the `default` value will not update already existing documents.\n",
+                "description": "Update a float attribute. Changing the `default` value will not update already existing documents.\r\n",
                 "responses": {
                     "200": {
                         "description": "AttributeFloat",
@@ -6853,7 +6853,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create an integer attribute. Optionally, minimum and maximum values can be provided.\n",
+                "description": "Create an integer attribute. Optionally, minimum and maximum values can be provided.\r\n",
                 "responses": {
                     "202": {
                         "description": "AttributeInteger",
@@ -6971,7 +6971,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Update an integer attribute. Changing the `default` value will not update already existing documents.\n",
+                "description": "Update an integer attribute. Changing the `default` value will not update already existing documents.\r\n",
                 "responses": {
                     "200": {
                         "description": "AttributeInteger",
@@ -7095,7 +7095,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create IP address attribute.\n",
+                "description": "Create IP address attribute.\r\n",
                 "responses": {
                     "202": {
                         "description": "AttributeIP",
@@ -7201,7 +7201,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Update an ip attribute. Changing the `default` value will not update already existing documents.\n",
+                "description": "Update an ip attribute. Changing the `default` value will not update already existing documents.\r\n",
                 "responses": {
                     "200": {
                         "description": "AttributeIP",
@@ -7311,7 +7311,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create relationship attribute. [Learn more about relationship attributes](https:\/\/appwrite.io\/docs\/databases-relationships#relationship-attributes).\n",
+                "description": "Create relationship attribute. [Learn more about relationship attributes](https:\/\/appwrite.io\/docs\/databases-relationships#relationship-attributes).\r\n",
                 "responses": {
                     "202": {
                         "description": "AttributeRelationship",
@@ -7446,7 +7446,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a string attribute.\n",
+                "description": "Create a string attribute.\r\n",
                 "responses": {
                     "202": {
                         "description": "AttributeString",
@@ -7565,7 +7565,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Update a string attribute. Changing the `default` value will not update already existing documents.\n",
+                "description": "Update a string attribute. Changing the `default` value will not update already existing documents.\r\n",
                 "responses": {
                     "200": {
                         "description": "AttributeString",
@@ -7681,7 +7681,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a URL attribute.\n",
+                "description": "Create a URL attribute.\r\n",
                 "responses": {
                     "202": {
                         "description": "AttributeURL",
@@ -7787,7 +7787,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Update an url attribute. Changing the `default` value will not update already existing documents.\n",
+                "description": "Update an url attribute. Changing the `default` value will not update already existing documents.\r\n",
                 "responses": {
                     "200": {
                         "description": "AttributeURL",
@@ -8075,7 +8075,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Update relationship attribute. [Learn more about relationship attributes](https:\/\/appwrite.io\/docs\/databases-relationships#relationship-attributes).\n",
+                "description": "Update relationship attribute. [Learn more about relationship attributes](https:\/\/appwrite.io\/docs\/databases-relationships#relationship-attributes).\r\n",
                 "responses": {
                     "200": {
                         "description": "AttributeRelationship",
@@ -8817,7 +8817,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Creates an index on the attributes listed. Your index should include all the attributes you will query in a single request.\nAttributes can be `key`, `fulltext`, and `unique`.",
+                "description": "Creates an index on the attributes listed. Your index should include all the attributes you will query in a single request.\r\nAttributes can be `key`, `fulltext`, and `unique`.",
                 "responses": {
                     "202": {
                         "description": "Index",
@@ -9806,7 +9806,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "List allowed function specifications for this instance.\n",
+                "description": "List allowed function specifications for this instance.\r\n",
                 "responses": {
                     "200": {
                         "description": "Specifications List",
@@ -10533,7 +10533,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "Create a new function code deployment. Use this endpoint to upload a new version of your code function. To execute your newly uploaded code, you'll need to update the function's deployment to use your new deployment UID.\n\nThis endpoint accepts a tar.gz file compressed with your code. Make sure to include any dependencies your code has within the compressed file. You can learn more about code packaging in the [Appwrite Cloud Functions tutorial](https:\/\/appwrite.io\/docs\/functions).\n\nUse the \"command\" param to set the entrypoint used to execute your code.",
+                "description": "Create a new function code deployment. Use this endpoint to upload a new version of your code function. To execute your newly uploaded code, you'll need to update the function's deployment to use your new deployment UID.\r\n\r\nThis endpoint accepts a tar.gz file compressed with your code. Make sure to include any dependencies your code has within the compressed file. You can learn more about code packaging in the [Appwrite Cloud Functions tutorial](https:\/\/appwrite.io\/docs\/functions).\r\n\r\nUse the \"command\" param to set the entrypoint used to execute your code.",
                 "responses": {
                     "202": {
                         "description": "Deployment",
@@ -11336,7 +11336,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "Delete a function execution by its unique ID.\n",
+                "description": "Delete a function execution by its unique ID.\r\n",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -12660,7 +12660,7 @@
                 "tags": [
                     "health"
                 ],
-                "description": "Returns the amount of failed jobs in a given queue.\n",
+                "description": "Returns the amount of failed jobs in a given queue.\r\n",
                 "responses": {
                     "200": {
                         "description": "Health Queue",
@@ -13419,7 +13419,7 @@
                 "tags": [
                     "locale"
                 ],
-                "description": "Get the current user location based on IP. Returns an object with user country code, country name, continent name, continent code, ip address and suggested currency. You can use the locale header to get the data in a supported language.\n\n([IP Geolocation by DB-IP](https:\/\/db-ip.com))",
+                "description": "Get the current user location based on IP. Returns an object with user country code, country name, continent name, continent code, ip address and suggested currency. You can use the locale header to get the data in a supported language.\r\n\r\n([IP Geolocation by DB-IP](https:\/\/db-ip.com))",
                 "responses": {
                     "200": {
                         "description": "Locale",
@@ -13464,7 +13464,7 @@
         },
         "\/locale\/codes": {
             "get": {
-                "summary": "List Locale Codes",
+                "summary": "List locale codes",
                 "operationId": "localeListCodes",
                 "consumes": [
                     "application\/json"
@@ -14104,7 +14104,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update an email message by its unique ID.\n",
+                "description": "Update an email message by its unique ID.\r\n",
                 "responses": {
                     "200": {
                         "description": "Message",
@@ -14436,7 +14436,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update a push notification by its unique ID.\n",
+                "description": "Update a push notification by its unique ID.\r\n",
                 "responses": {
                     "200": {
                         "description": "Message",
@@ -14728,7 +14728,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update an email message by its unique ID.\n",
+                "description": "Update an email message by its unique ID.\r\n",
                 "responses": {
                     "200": {
                         "description": "Message",
@@ -14846,7 +14846,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Get a message by its unique ID.\n",
+                "description": "Get a message by its unique ID.\r\n",
                 "responses": {
                     "200": {
                         "description": "Message",
@@ -17461,7 +17461,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Get a provider by its unique ID.\n",
+                "description": "Get a provider by its unique ID.\r\n",
                 "responses": {
                     "200": {
                         "description": "Provider",
@@ -17903,7 +17903,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Get a topic by its unique ID.\n",
+                "description": "Get a topic by its unique ID.\r\n",
                 "responses": {
                     "200": {
                         "description": "Topic",
@@ -17965,7 +17965,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update a topic by its unique ID.\n",
+                "description": "Update a topic by its unique ID.\r\n",
                 "responses": {
                     "200": {
                         "description": "Topic",
@@ -18363,7 +18363,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Get a subscriber by its unique ID.\n",
+                "description": "Get a subscriber by its unique ID.\r\n",
                 "responses": {
                     "200": {
                         "description": "Subscriber",
@@ -18494,7 +18494,7 @@
         },
         "\/migrations": {
             "get": {
-                "summary": "List Migrations",
+                "summary": "List migrations",
                 "operationId": "migrationsList",
                 "consumes": [
                     "application\/json"
@@ -18569,7 +18569,7 @@
         },
         "\/migrations\/appwrite": {
             "post": {
-                "summary": "Migrate Appwrite Data",
+                "summary": "Migrate Appwrite data",
                 "operationId": "migrationsCreateAppwriteMigration",
                 "consumes": [
                     "application\/json"
@@ -18665,7 +18665,7 @@
         },
         "\/migrations\/appwrite\/report": {
             "get": {
-                "summary": "Generate a report on Appwrite Data",
+                "summary": "Generate a report on Appwrite data",
                 "operationId": "migrationsGetAppwriteReport",
                 "consumes": [
                     "application\/json"
@@ -18755,7 +18755,7 @@
         },
         "\/migrations\/firebase": {
             "post": {
-                "summary": "Migrate Firebase Data (Service Account)",
+                "summary": "Migrate Firebase data (Service Account)",
                 "operationId": "migrationsCreateFirebaseMigration",
                 "consumes": [
                     "application\/json"
@@ -18837,7 +18837,7 @@
         },
         "\/migrations\/firebase\/deauthorize": {
             "get": {
-                "summary": "Revoke Appwrite's authorization to access Firebase Projects",
+                "summary": "Revoke Appwrite's authorization to access Firebase projects",
                 "operationId": "migrationsDeleteFirebaseAuth",
                 "consumes": [
                     "application\/json"
@@ -18889,7 +18889,7 @@
         },
         "\/migrations\/firebase\/oauth": {
             "post": {
-                "summary": "Migrate Firebase Data (OAuth)",
+                "summary": "Migrate Firebase data (OAuth)",
                 "operationId": "migrationsCreateFirebaseOAuthMigration",
                 "consumes": [
                     "application\/json"
@@ -18971,7 +18971,7 @@
         },
         "\/migrations\/firebase\/projects": {
             "get": {
-                "summary": "List Firebase Projects",
+                "summary": "List Firebase projects",
                 "operationId": "migrationsListFirebaseProjects",
                 "consumes": [
                     "application\/json"
@@ -19023,7 +19023,7 @@
         },
         "\/migrations\/firebase\/report": {
             "get": {
-                "summary": "Generate a report on Firebase Data",
+                "summary": "Generate a report on Firebase data",
                 "operationId": "migrationsGetFirebaseReport",
                 "consumes": [
                     "application\/json"
@@ -19096,7 +19096,7 @@
         },
         "\/migrations\/firebase\/report\/oauth": {
             "get": {
-                "summary": "Generate a report on Firebase Data using OAuth",
+                "summary": "Generate a report on Firebase data using OAuth",
                 "operationId": "migrationsGetFirebaseReportOAuth",
                 "consumes": [
                     "application\/json"
@@ -19169,7 +19169,7 @@
         },
         "\/migrations\/nhost": {
             "post": {
-                "summary": "Migrate NHost Data",
+                "summary": "Migrate NHost data",
                 "operationId": "migrationsCreateNHostMigration",
                 "consumes": [
                     "application\/json"
@@ -19414,7 +19414,7 @@
         },
         "\/migrations\/supabase": {
             "post": {
-                "summary": "Migrate Supabase Data",
+                "summary": "Migrate Supabase data",
                 "operationId": "migrationsCreateSupabaseMigration",
                 "consumes": [
                     "application\/json"
@@ -19645,7 +19645,7 @@
         },
         "\/migrations\/{migrationId}": {
             "get": {
-                "summary": "Get Migration",
+                "summary": "Get migration",
                 "operationId": "migrationsGet",
                 "consumes": [
                     "application\/json"
@@ -19705,7 +19705,7 @@
                 ]
             },
             "patch": {
-                "summary": "Retry Migration",
+                "summary": "Retry migration",
                 "operationId": "migrationsRetry",
                 "consumes": [
                     "application\/json"
@@ -19765,7 +19765,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Migration",
+                "summary": "Delete migration",
                 "operationId": "migrationsDelete",
                 "consumes": [
                     "application\/json"
@@ -19908,7 +19908,7 @@
         },
         "\/project\/variables": {
             "get": {
-                "summary": "List Variables",
+                "summary": "List variables",
                 "operationId": "projectListVariables",
                 "consumes": [
                     "application\/json"
@@ -19958,7 +19958,7 @@
                 ]
             },
             "post": {
-                "summary": "Create Variable",
+                "summary": "Create variable",
                 "operationId": "projectCreateVariable",
                 "consumes": [
                     "application\/json"
@@ -20037,7 +20037,7 @@
         },
         "\/project\/variables\/{variableId}": {
             "get": {
-                "summary": "Get Variable",
+                "summary": "Get variable",
                 "operationId": "projectGetVariable",
                 "consumes": [
                     "application\/json"
@@ -20097,7 +20097,7 @@
                 ]
             },
             "put": {
-                "summary": "Update Variable",
+                "summary": "Update variable",
                 "operationId": "projectUpdateVariable",
                 "consumes": [
                     "application\/json"
@@ -20181,7 +20181,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Variable",
+                "summary": "Delete variable",
                 "operationId": "projectDeleteVariable",
                 "consumes": [
                     "application\/json"
@@ -21748,7 +21748,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.read",
+                    "scope": "keys.read",
                     "platforms": [
                         "console"
                     ],
@@ -21808,7 +21808,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.write",
+                    "scope": "keys.write",
                     "platforms": [
                         "console"
                     ],
@@ -21904,7 +21904,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.read",
+                    "scope": "keys.read",
                     "platforms": [
                         "console"
                     ],
@@ -21972,7 +21972,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.write",
+                    "scope": "keys.write",
                     "platforms": [
                         "console"
                     ],
@@ -22069,7 +22069,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.write",
+                    "scope": "keys.write",
                     "platforms": [
                         "console"
                     ],
@@ -22280,7 +22280,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.read",
+                    "scope": "platforms.read",
                     "platforms": [
                         "console"
                     ],
@@ -22340,7 +22340,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.write",
+                    "scope": "platforms.write",
                     "platforms": [
                         "console"
                     ],
@@ -22464,7 +22464,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.read",
+                    "scope": "platforms.read",
                     "platforms": [
                         "console"
                     ],
@@ -22532,7 +22532,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.write",
+                    "scope": "platforms.write",
                     "platforms": [
                         "console"
                     ],
@@ -22631,7 +22631,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.write",
+                    "scope": "platforms.write",
                     "platforms": [
                         "console"
                     ],
@@ -23101,7 +23101,8 @@
                                     "default": "",
                                     "x-example": "tls",
                                     "enum": [
-                                        "tls"
+                                        "tls",
+                                        "ssl"
                                     ],
                                     "x-enum-name": "SMTPSecure",
                                     "x-enum-keys": []
@@ -25101,7 +25102,7 @@
         },
         "\/proxy\/rules": {
             "get": {
-                "summary": "List Rules",
+                "summary": "List rules",
                 "operationId": "proxyListRules",
                 "consumes": [
                     "application\/json"
@@ -25174,7 +25175,7 @@
                 ]
             },
             "post": {
-                "summary": "Create Rule",
+                "summary": "Create rule",
                 "operationId": "proxyCreateRule",
                 "consumes": [
                     "application\/json"
@@ -25265,7 +25266,7 @@
         },
         "\/proxy\/rules\/{ruleId}": {
             "get": {
-                "summary": "Get Rule",
+                "summary": "Get rule",
                 "operationId": "proxyGetRule",
                 "consumes": [
                     "application\/json"
@@ -25325,7 +25326,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Rule",
+                "summary": "Delete rule",
                 "operationId": "proxyDeleteRule",
                 "consumes": [
                     "application\/json"
@@ -25382,7 +25383,7 @@
         },
         "\/proxy\/rules\/{ruleId}\/verification": {
             "patch": {
-                "summary": "Update Rule Verification Status",
+                "summary": "Update rule verification status",
                 "operationId": "proxyUpdateRuleVerification",
                 "consumes": [
                     "application\/json"
@@ -26014,7 +26015,7 @@
                 "tags": [
                     "storage"
                 ],
-                "description": "Create a new file. Before using this route, you should create a new bucket resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/storage#storageCreateBucket) API or directly from your Appwrite console.\n\nLarger files should be uploaded using multiple requests with the [content-range](https:\/\/developer.mozilla.org\/en-US\/docs\/Web\/HTTP\/Headers\/Content-Range) header to send a partial request with a maximum supported chunk of `5MB`. The `content-range` header values should always be in bytes.\n\nWhen the first request is sent, the server will return the **File** object, and the subsequent part request must include the file's **id** in `x-appwrite-id` header to allow the server to know that the partial upload is for the existing file and not for a new one.\n\nIf you're creating a new file using one of the Appwrite SDKs, all the chunking logic will be managed by the SDK internally.\n",
+                "description": "Create a new file. Before using this route, you should create a new bucket resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/storage#storageCreateBucket) API or directly from your Appwrite console.\r\n\r\nLarger files should be uploaded using multiple requests with the [content-range](https:\/\/developer.mozilla.org\/en-US\/docs\/Web\/HTTP\/Headers\/Content-Range) header to send a partial request with a maximum supported chunk of `5MB`. The `content-range` header values should always be in bytes.\r\n\r\nWhen the first request is sent, the server will return the **File** object, and the subsequent part request must include the file's **id** in `x-appwrite-id` header to allow the server to know that the partial upload is for the existing file and not for a new one.\r\n\r\nIf you're creating a new file using one of the Appwrite SDKs, all the chunking logic will be managed by the SDK internally.\r\n",
                 "responses": {
                     "201": {
                         "description": "File",
@@ -26265,7 +26266,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete File",
+                "summary": "Delete file",
                 "operationId": "storageDeleteFile",
                 "consumes": [
                     "application\/json"
@@ -26596,7 +26597,8 @@
                             "jpeg",
                             "gif",
                             "png",
-                            "webp"
+                            "webp",
+                            "avif"
                         ],
                         "x-enum-name": "ImageFormat",
                         "x-enum-keys": [],
@@ -27386,7 +27388,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Invite a new member to join your team. Provide an ID for existing users, or invite unregistered users using an email or phone number. If initiated from a Client SDK, Appwrite will send an email or sms with a link to join the team to the invited user, and an account will be created for them if one doesn't exist. If initiated from a Server SDK, the new member will be added automatically to the team.\n\nYou only need to provide one of a user ID, email, or phone number. Appwrite will prioritize accepting the user ID > email > phone number if you provide more than one of these parameters.\n\nUse the `url` parameter to redirect the user from the invitation email to your app. After the user is redirected, use the [Update Team Membership Status](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/teams#updateMembershipStatus) endpoint to allow the user to accept the invitation to the team. \n\nPlease note that to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) Appwrite will accept the only redirect URLs under the domains you have added as a platform on the Appwrite Console.\n",
+                "description": "Invite a new member to join your team. Provide an ID for existing users, or invite unregistered users using an email or phone number. If initiated from a Client SDK, Appwrite will send an email or sms with a link to join the team to the invited user, and an account will be created for them if one doesn't exist. If initiated from a Server SDK, the new member will be added automatically to the team.\r\n\r\nYou only need to provide one of a user ID, email, or phone number. Appwrite will prioritize accepting the user ID > email > phone number if you provide more than one of these parameters.\r\n\r\nUse the `url` parameter to redirect the user from the invitation email to your app. After the user is redirected, use the [Update Team Membership Status](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/teams#updateMembershipStatus) endpoint to allow the user to accept the invitation to the team. \r\n\r\nPlease note that to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) Appwrite will accept the only redirect URLs under the domains you have added as a platform on the Appwrite Console.\r\n",
                 "responses": {
                     "201": {
                         "description": "Membership",
@@ -27575,7 +27577,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Modify the roles of a team member. Only team members with the owner role have access to this endpoint. Learn more about [roles and permissions](https:\/\/appwrite.io\/docs\/permissions).\n",
+                "description": "Modify the roles of a team member. Only team members with the owner role have access to this endpoint. Learn more about [roles and permissions](https:\/\/appwrite.io\/docs\/permissions).\r\n",
                 "responses": {
                     "200": {
                         "description": "Membership",
@@ -27737,7 +27739,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Use this endpoint to allow a user to accept an invitation to join a team after being redirected back to your app from the invitation email received by the user.\n\nIf the request is successful, a session for the user is automatically created.\n",
+                "description": "Use this endpoint to allow a user to accept an invitation to join a team after being redirected back to your app from the invitation email received by the user.\r\n\r\nIf the request is successful, a session for the user is automatically created.\r\n",
                 "responses": {
                     "200": {
                         "description": "Membership",
@@ -28324,7 +28326,7 @@
         },
         "\/users\/identities": {
             "get": {
-                "summary": "List Identities",
+                "summary": "List identities",
                 "operationId": "usersListIdentities",
                 "consumes": [
                     "application\/json"
@@ -29369,7 +29371,7 @@
                 "tags": [
                     "users"
                 ],
-                "description": "Update the user labels by its unique ID. \n\nLabels can be used to grant access to resources. While teams are a way for user's to share access to a resource, labels can be defined by the developer to grant access without an invitation. See the [Permissions docs](https:\/\/appwrite.io\/docs\/permissions) for more info.",
+                "description": "Update the user labels by its unique ID. \r\n\r\nLabels can be used to grant access to resources. While teams are a way for user's to share access to a resource, labels can be defined by the developer to grant access without an invitation. See the [Permissions docs](https:\/\/appwrite.io\/docs\/permissions) for more info.",
                 "responses": {
                     "200": {
                         "description": "User",
@@ -29661,7 +29663,7 @@
         },
         "\/users\/{userId}\/mfa\/authenticators\/{type}": {
             "delete": {
-                "summary": "Delete Authenticator",
+                "summary": "Delete authenticator",
                 "operationId": "usersDeleteMfaAuthenticator",
                 "consumes": [
                     "application\/json"
@@ -29737,7 +29739,7 @@
         },
         "\/users\/{userId}\/mfa\/factors": {
             "get": {
-                "summary": "List Factors",
+                "summary": "List factors",
                 "operationId": "usersListMfaFactors",
                 "consumes": [
                     "application\/json"
@@ -29800,7 +29802,7 @@
         },
         "\/users\/{userId}\/mfa\/recovery-codes": {
             "get": {
-                "summary": "Get MFA Recovery Codes",
+                "summary": "Get MFA recovery codes",
                 "operationId": "usersGetMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -29861,7 +29863,7 @@
                 ]
             },
             "put": {
-                "summary": "Regenerate MFA Recovery Codes",
+                "summary": "Regenerate MFA recovery codes",
                 "operationId": "usersUpdateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -29922,7 +29924,7 @@
                 ]
             },
             "patch": {
-                "summary": "Create MFA Recovery Codes",
+                "summary": "Create MFA recovery codes",
                 "operationId": "usersCreateMfaRecoveryCodes",
                 "consumes": [
                     "application\/json"
@@ -30442,7 +30444,7 @@
                 "tags": [
                     "users"
                 ],
-                "description": "Creates a session for a user. Returns an immediately usable session object.\n\nIf you want to generate a token for a custom authentication flow, use the [POST \/users\/{userId}\/tokens](https:\/\/appwrite.io\/docs\/server\/users#createToken) endpoint.",
+                "description": "Creates a session for a user. Returns an immediately usable session object.\r\n\r\nIf you want to generate a token for a custom authentication flow, use the [POST \/users\/{userId}\/tokens](https:\/\/appwrite.io\/docs\/server\/users#createToken) endpoint.",
                 "responses": {
                     "201": {
                         "description": "Session",
@@ -30697,7 +30699,7 @@
         },
         "\/users\/{userId}\/targets": {
             "get": {
-                "summary": "List User Targets",
+                "summary": "List user targets",
                 "operationId": "usersListTargets",
                 "consumes": [
                     "application\/json"
@@ -30771,7 +30773,7 @@
                 ]
             },
             "post": {
-                "summary": "Create User Target",
+                "summary": "Create user target",
                 "operationId": "usersCreateTarget",
                 "consumes": [
                     "application\/json"
@@ -30886,7 +30888,7 @@
         },
         "\/users\/{userId}\/targets\/{targetId}": {
             "get": {
-                "summary": "Get User Target",
+                "summary": "Get user target",
                 "operationId": "usersGetTarget",
                 "consumes": [
                     "application\/json"
@@ -30956,7 +30958,7 @@
                 ]
             },
             "patch": {
-                "summary": "Update User target",
+                "summary": "Update user target",
                 "operationId": "usersUpdateTarget",
                 "consumes": [
                     "application\/json"
@@ -31133,7 +31135,7 @@
                 "tags": [
                     "users"
                 ],
-                "description": "Returns a token with a secret key for creating a session. Use the user ID and secret and submit a request to the [PUT \/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process.\n",
+                "description": "Returns a token with a secret key for creating a session. Use the user ID and secret and submit a request to the [PUT \/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process.\r\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -31368,7 +31370,7 @@
         },
         "\/vcs\/github\/installations\/{installationId}\/providerRepositories": {
             "get": {
-                "summary": "List Repositories",
+                "summary": "List repositories",
                 "operationId": "vcsListRepositories",
                 "consumes": [
                     "application\/json"
@@ -31594,7 +31596,7 @@
         },
         "\/vcs\/github\/installations\/{installationId}\/providerRepositories\/{providerRepositoryId}\/branches": {
             "get": {
-                "summary": "List Repository Branches",
+                "summary": "List repository branches",
                 "operationId": "vcsListRepositoryBranches",
                 "consumes": [
                     "application\/json"
@@ -32046,7 +32048,7 @@
                 ]
             },
             "delete": {
-                "summary": "Delete Installation",
+                "summary": "Delete installation",
                 "operationId": "vcsDeleteInstallation",
                 "consumes": [
                     "application\/json"
@@ -33456,6 +33458,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "size": {
                     "type": "integer",
                     "description": "Attribute size.",
@@ -33475,6 +33487,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "size"
             ]
         },
@@ -33513,6 +33527,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "min": {
                     "type": "integer",
                     "description": "Minimum value to enforce for new documents.",
@@ -33540,7 +33564,9 @@
                 "type",
                 "status",
                 "error",
-                "required"
+                "required",
+                "$createdAt",
+                "$updatedAt"
             ]
         },
         "attributeFloat": {
@@ -33578,6 +33604,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "min": {
                     "type": "number",
                     "description": "Minimum value to enforce for new documents.",
@@ -33605,7 +33641,9 @@
                 "type",
                 "status",
                 "error",
-                "required"
+                "required",
+                "$createdAt",
+                "$updatedAt"
             ]
         },
         "attributeBoolean": {
@@ -33643,6 +33681,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "default": {
                     "type": "boolean",
                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
@@ -33655,7 +33703,9 @@
                 "type",
                 "status",
                 "error",
-                "required"
+                "required",
+                "$createdAt",
+                "$updatedAt"
             ]
         },
         "attributeEmail": {
@@ -33693,6 +33743,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "format": {
                     "type": "string",
                     "description": "String format.",
@@ -33711,6 +33771,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "format"
             ]
         },
@@ -33749,6 +33811,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "elements": {
                     "type": "array",
                     "description": "Array of elements in enumerated type.",
@@ -33775,6 +33847,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "elements",
                 "format"
             ]
@@ -33814,6 +33888,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "format": {
                     "type": "string",
                     "description": "String format.",
@@ -33832,6 +33916,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "format"
             ]
         },
@@ -33870,6 +33956,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "format": {
                     "type": "string",
                     "description": "String format.",
@@ -33888,6 +33984,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "format"
             ]
         },
@@ -33926,6 +34024,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "format": {
                     "type": "string",
                     "description": "ISO 8601 format.",
@@ -33944,6 +34052,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "format"
             ]
         },
@@ -33982,6 +34092,16 @@
                     "x-example": false,
                     "x-nullable": true
                 },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Attribute creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Attribute update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
                 "relatedCollection": {
                     "type": "string",
                     "description": "The ID of the related collection.",
@@ -34019,6 +34139,8 @@
                 "status",
                 "error",
                 "required",
+                "$createdAt",
+                "$updatedAt",
                 "relatedCollection",
                 "relationType",
                 "twoWay",
@@ -34067,6 +34189,16 @@
                     },
                     "x-example": [],
                     "x-nullable": true
+                },
+                "$createdAt": {
+                    "type": "string",
+                    "description": "Index creation date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "$updatedAt": {
+                    "type": "string",
+                    "description": "Index update date in ISO 8601 format.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
                 }
             },
             "required": [
@@ -34074,7 +34206,9 @@
                 "type",
                 "status",
                 "error",
-                "attributes"
+                "attributes",
+                "$createdAt",
+                "$updatedAt"
             ]
         },
         "document": {
@@ -36104,9 +36238,9 @@
                     "format": "int32"
                 },
                 "responseBody": {
-                    "type": "string",
+                    "type": "payload",
                     "description": "HTTP response body. This will return empty unless execution is created as synchronous.",
-                    "x-example": "Developers are awesome."
+                    "x-example": ""
                 },
                 "responseHeaders": {
                     "type": "array",
@@ -37270,6 +37404,12 @@
                     "x-example": 0,
                     "format": "int32"
                 },
+                "storageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of total databases storage in bytes.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
                 "databases": {
                     "type": "array",
                     "description": "Aggregated number of databases per period.",
@@ -37296,6 +37436,15 @@
                         "$ref": "#\/definitions\/metric"
                     },
                     "x-example": []
+                },
+                "storage": {
+                    "type": "array",
+                    "description": "An array of the aggregated number of databases storage in bytes per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
                 }
             },
             "required": [
@@ -37303,9 +37452,11 @@
                 "databasesTotal",
                 "collectionsTotal",
                 "documentsTotal",
+                "storageTotal",
                 "databases",
                 "collections",
-                "documents"
+                "documents",
+                "storage"
             ]
         },
         "usageDatabase": {
@@ -37329,6 +37480,12 @@
                     "x-example": 0,
                     "format": "int32"
                 },
+                "storageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of total storage used in bytes.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
                 "collections": {
                     "type": "array",
                     "description": "Aggregated  number of collections per period.",
@@ -37346,14 +37503,25 @@
                         "$ref": "#\/definitions\/metric"
                     },
                     "x-example": []
+                },
+                "storage": {
+                    "type": "array",
+                    "description": "Aggregated storage used in bytes per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
                 }
             },
             "required": [
                 "range",
                 "collectionsTotal",
                 "documentsTotal",
+                "storageTotal",
                 "collections",
-                "documents"
+                "documents",
+                "storage"
             ]
         },
         "usageCollection": {
@@ -37921,6 +38089,12 @@
                     "x-example": 0,
                     "format": "int32"
                 },
+                "databasesStorageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of databases storage size (in bytes).",
+                    "x-example": 0,
+                    "format": "int32"
+                },
                 "usersTotal": {
                     "type": "integer",
                     "description": "Total aggregated number of users.",
@@ -38023,6 +38197,15 @@
                     },
                     "x-example": []
                 },
+                "databasesStorageBreakdown": {
+                    "type": "array",
+                    "description": "An array of the aggregated breakdown of storage usage by databases.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metricBreakdown"
+                    },
+                    "x-example": []
+                },
                 "executionsMbSecondsBreakdown": {
                     "type": "array",
                     "description": "Aggregated breakdown in totals of execution mbSeconds by functions.",
@@ -38055,6 +38238,7 @@
                 "executionsTotal",
                 "documentsTotal",
                 "databasesTotal",
+                "databasesStorageTotal",
                 "usersTotal",
                 "filesStorageTotal",
                 "functionsStorageTotal",
@@ -38069,6 +38253,7 @@
                 "executions",
                 "executionsBreakdown",
                 "bucketsBreakdown",
+                "databasesStorageBreakdown",
                 "executionsMbSecondsBreakdown",
                 "buildsMbSecondsBreakdown",
                 "functionsStorageBreakdown"
