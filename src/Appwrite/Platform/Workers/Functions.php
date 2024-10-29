@@ -126,7 +126,7 @@ class Functions extends Action
                         continue;
                     }
 
-                    if ($isResourceBlocked($project, 'functions', $function->getId())) {
+                    if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
                         Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
                         continue;
                     }
@@ -161,7 +161,7 @@ class Functions extends Action
             return;
         }
 
-        if ($isResourceBlocked($project, 'functions', $function->getId())) {
+        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
             Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
             return;
         }
