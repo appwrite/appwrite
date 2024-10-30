@@ -58,6 +58,9 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
 };
 
 $eventDatabaseListener = function (string $event, Document $document, Event $queueForEvents, Response $response, Func $queueForFunctions, Document $project) {
+    // Set event empty to avoid triggering events by default
+    $queueForEvents->setEvent('');
+
     if ($document->getCollection() === 'users' && $event === Database::EVENT_DOCUMENT_CREATE) {
         $queueForEvents
             ->setEvent('users.[userId].create')
