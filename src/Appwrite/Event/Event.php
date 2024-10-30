@@ -319,6 +319,10 @@ class Event
             return false;
         }
 
+        if (empty($this->event)) {
+            return false;
+        }
+
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
@@ -545,5 +549,37 @@ class Event
         $this->paused = $paused;
 
         return $this;
+    }
+
+    /**
+     * Clone event.
+     */
+    public function __clone()
+    {
+        if ($this->project instanceof Document) {
+            $this->project = clone $this->project;
+        }
+
+        if ($this->user instanceof Document) {
+            $this->user = clone $this->user;
+        }
+
+        foreach ($this->context as $key => $value) {
+            if ($value instanceof Document) {
+                $this->context[$key] = clone $value;
+            }
+        }
+
+        foreach ($this->params as $key => $value) {
+            if (is_object($value)) {
+                $this->params[$key] = clone $value;
+            }
+        }
+
+        foreach ($this->payload as $key => $value) {
+            if (is_object($value)) {
+                $this->payload[$key] = clone $value;
+            }
+        }
     }
 }
