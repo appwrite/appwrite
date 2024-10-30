@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Event\Messaging;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
+use Utopia\Pools\Pool;
 
 class ScheduleMessages extends ScheduleBase
 {
@@ -26,7 +27,7 @@ class ScheduleMessages extends ScheduleBase
         return 'messages';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
+    protected function enqueueResources(\Utopia\Pools\Pool $poolForQueue, Database $dbForConsole, callable $getProjectDB): void
     {
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
@@ -40,8 +41,8 @@ class ScheduleMessages extends ScheduleBase
                 continue;
             }
 
-            \go(function () use ($schedule, $pools, $dbForConsole) {
-                $queue = $pools->get('queue')->pop();
+            \go(function () use ($schedule, $poolForQueue, $dbForConsole) {
+                $queue = $poolForQueue->pop();
                 $connection = $queue->getResource();
                 $queueForMessaging = new Messaging($connection);
 

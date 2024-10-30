@@ -115,7 +115,8 @@ class Event
 
     public function getSourceRegion(): string
     {
-        return System::getEnv('_APP_REGION', 'default');
+        var_dump('event Source Region='.System::getEnv('_APP_REGION'));
+        return System::getEnv('_APP_REGION');
     }
 
     /**

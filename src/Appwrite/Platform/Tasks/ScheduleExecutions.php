@@ -6,6 +6,7 @@ use Appwrite\Event\Func;
 use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
+use Utopia\Pools\Pool;
 
 class ScheduleExecutions extends ScheduleBase
 {
@@ -27,9 +28,9 @@ class ScheduleExecutions extends ScheduleBase
         return 'executions';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
+    protected function enqueueResources(\Utopia\Pools\Pool $poolForQueue, Database $dbForConsole, callable $getProjectDB): void
     {
-        $queue = $pools->get('queue')->pop();
+        $queue = $poolForQueue->pop();
         $connection = $queue->getResource();
         $queueForFunctions = new Func($connection);
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');

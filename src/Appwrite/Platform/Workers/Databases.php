@@ -17,6 +17,7 @@ use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Databases extends Action
 {
@@ -67,7 +68,7 @@ class Databases extends Action
         $collection = new Document($payload['collection'] ?? []);
         $document = new Document($payload['document'] ?? []);
         $database = new Document($payload['database'] ?? []);
-        $this->sourceRegion = $payload['sourceRegion'] ?? 'default';
+        $this->sourceRegion = $payload['sourceRegion'] ?? null;
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
@@ -618,6 +619,7 @@ class Databases extends Action
         array $events,
         callable $realtimeConnection
     ): void {
+        var_dump('Send  message to realtime region='.$this->sourceRegion);
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern
             event: $events[0],
