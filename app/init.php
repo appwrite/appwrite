@@ -286,6 +286,17 @@ const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 
+// Resource types
+
+const RESOURCE_TYPE_PROJECTS = 'projects';
+const RESOURCE_TYPE_FUNCTIONS = 'functions';
+const RESOURCE_TYPE_DATABASES = 'databases';
+const RESOURCE_TYPE_BUCKETS = 'buckets';
+const RESOURCE_TYPE_PROVIDERS = 'providers';
+const RESOURCE_TYPE_TOPICS = 'topics';
+const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
+const RESOURCE_TYPE_MESSAGES = 'messages';
+
 $register = new Registry();
 
 App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
