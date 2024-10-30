@@ -57,13 +57,65 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$eventDatabaseListener = function (string $event, Document $document, Event $queueForEvents, Response $response) {
+$eventDatabaseListener = function (string $event, Document $document, Event $queueForEvents, Response $response, Func $queueForFunctions, Document $project) {
     if ($document->getCollection() === 'users' && $event === Database::EVENT_DOCUMENT_CREATE) {
         $queueForEvents
             ->setEvent('users.[userId].create')
             ->setParam('userId', $document->getId())
             ->setPayload($response->output($document, Response::MODEL_USER))
             ->trigger();
+    }
+
+    // FIXME: This is a temporary solution, this should be moved to the shutdown hook
+    /**
+     * Trigger functions.
+     */
+    if (!$queueForEvents->isPaused()) {
+        $queueForFunctions
+            ->from($queueForEvents)
+            ->trigger();
+    }
+
+    /**
+     * Trigger webhooks.
+     */
+    $queueForEvents
+        ->setClass(Event::WEBHOOK_CLASS_NAME)
+        ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+        ->trigger();
+
+    /**
+     * Trigger realtime.
+     */
+    if ($project->getId() !== 'console') {
+        $allEvents = Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams());
+        $payload = new Document($queueForEvents->getPayload());
+
+        $db = $queueForEvents->getContext('database');
+        $collection = $queueForEvents->getContext('collection');
+        $bucket = $queueForEvents->getContext('bucket');
+
+        $target = Realtime::fromPayload(
+            // Pass first, most verbose event pattern
+            event: $allEvents[0],
+            payload: $payload,
+            project: $project,
+            database: $db,
+            collection: $collection,
+            bucket: $bucket,
+        );
+
+        Realtime::send(
+            projectId: $target['projectId'] ?? $project->getId(),
+            payload: $queueForEvents->getRealtimePayload(),
+            events: $allEvents,
+            channels: $target['channels'],
+            roles: $target['roles'],
+            options: [
+                'permissionsChanged' => $target['permissionsChanged'],
+                'userId' => $queueForEvents->getParam('userId')
+            ]
+        );
     }
 };
 
@@ -369,9 +421,10 @@ App::init()
     ->inject('queueForDatabase')
     ->inject('queueForBuilds')
     ->inject('queueForUsage')
+    ->inject('queueForFunctions')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Func $queueForFunctions, Database $dbForProject, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -468,7 +521,7 @@ App::init()
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'trigger-events', fn ($event, $document) => $eventDatabaseListener($event, $document, clone $queueForEvents, $response));
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'trigger-events', fn ($event, $document) => $eventDatabaseListener($event, $document, clone $queueForEvents, $response, $queueForFunctions, $project));
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
