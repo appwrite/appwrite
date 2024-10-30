@@ -16,6 +16,17 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
         submodules: 'recursive'
+    
+    - name: Test DockerHub Token
+      run: |
+        if [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+          echo "DockerHub Token exists and its value is: ${{ secrets.DOCKERHUB_TOKEN }}"
+          echo "Length of token: ${#DOCKERHUB_TOKEN}"
+        else
+          echo "DockerHub Token is not set"
+        fi
+      env:
+        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build the Docker image
       uses: docker/build-push-action@v5
