@@ -43,7 +43,7 @@ trait MigrationsBase
         $this->assertEquals(202, $migration['headers']['status-code']);
         $this->assertNotEmpty($migration['body']);
         $this->assertNotEmpty($migration['body']['$id']);
-        
+
         $attempts = 0;
         while ($attempts < 5) {
             $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migration['body']['$id'], [
@@ -384,7 +384,7 @@ trait MigrationsBase
         $this->assertNotEmpty($response['body']);
 
         $membership = $response['body']['memberships'][0];
-        
+
         $this->assertEquals($user['body']['$id'], $membership['userId']);
         $this->assertEquals($team['body']['$id'], $membership['teamId']);
         $this->assertEquals(['owner'], $membership['roles']);
@@ -431,9 +431,9 @@ trait MigrationsBase
      * Databases
      */
 
-     /**
-      * Storage
-      */
+    /**
+     * Storage
+     */
 
     /**
      * Functions
