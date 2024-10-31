@@ -571,6 +571,7 @@ trait MigrationsBase
             'resources' => [
                 Resource::TYPE_DATABASE,
                 Resource::TYPE_COLLECTION,
+                Resource::TYPE_ATTRIBUTE,
                 Resource::TYPE_DOCUMENT,
             ],
             'endpoint' => 'http://localhost/v1',
@@ -579,9 +580,8 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_DATABASE, Resource::TYPE_COLLECTION, Resource::TYPE_DOCUMENT], $result['resources']);
-
-        foreach ([Resource::TYPE_DATABASE, Resource::TYPE_COLLECTION, Resource::TYPE_DOCUMENT] as $resource) {
+        $this->assertEquals([Resource::TYPE_DATABASE, Resource::TYPE_COLLECTION, Resource::TYPE_ATTRIBUTE, Resource::TYPE_DOCUMENT], $result['resources']);
+        foreach ([Resource::TYPE_DATABASE, Resource::TYPE_COLLECTION, Resource::TYPE_ATTRIBUTE, Resource::TYPE_DOCUMENT] as $resource) {
             $this->assertArrayHasKey($resource, $result['statusCounters']);
             $this->assertEquals(0, $result['statusCounters'][$resource]['error']);
             $this->assertEquals(0, $result['statusCounters'][$resource]['pending']);
