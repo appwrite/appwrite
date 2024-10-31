@@ -216,7 +216,7 @@ class Certificates extends Action
     {
         // Check if update or insert required
         $certificateDocument = $dbForConsole->findOne('certificates', [Query::equal('domain', [$domain])]);
-        if (!empty($certificateDocument) && !$certificateDocument->isEmpty()) {
+        if (!$certificateDocument->isEmpty()) {
             // Merge new data with current data
             $certificate = new Document(\array_merge($certificateDocument->getArrayCopy(), $certificate->getArrayCopy()));
             $certificate = $dbForConsole->updateDocument('certificates', $certificate->getId(), $certificate);
@@ -482,7 +482,7 @@ class Certificates extends Action
             Query::equal('domain', [$domain]),
         ]);
 
-        if ($rule !== false && !$rule->isEmpty()) {
+        if (!$rule->isEmpty()) {
             $rule->setAttribute('certificateId', $certificateId);
             $rule->setAttribute('status', $success ? 'verified' : 'unverified');
             $dbForConsole->updateDocument('rules', $rule->getId(), $rule);

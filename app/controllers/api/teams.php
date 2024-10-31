@@ -492,7 +492,7 @@ App::post('/v1/teams/:teamId/memberships')
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
-            if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+            if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 

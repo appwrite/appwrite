@@ -64,7 +64,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
         ]);
-        if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+        if (!$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
     }
@@ -1232,7 +1232,7 @@ App::patch('/v1/users/:userId/email')
                 Query::equal('providerEmail', [$email]),
                 Query::notEqual('userInternalId', $user->getInternalId()),
             ]);
-            if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+            if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
