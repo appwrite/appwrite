@@ -467,17 +467,17 @@ App::post('/v1/teams/:teamId/memberships')
             $name = empty($name) ? $invitee->getAttribute('name', '') : $name;
         } elseif (!empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
-            if (!empty($invitee) && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
+            if (!$invitee->isEmpty() && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
             }
         } elseif (!empty($phone)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-            if (!empty($invitee) && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
+            if (!$invitee->isEmpty() && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
             }
         }
 
-        if (empty($invitee)) { // Create new user if no user with same email found
+        if ($invitee->isEmpty()) { // Create new user if no user with same email found
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if (!$isPrivilegedUser && !$isAppUser && $limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
@@ -492,7 +492,7 @@ App::post('/v1/teams/:teamId/memberships')
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
-            if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+            if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
