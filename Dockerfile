@@ -92,10 +92,10 @@ RUN chmod +x /usr/local/bin/doctor && \
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
 # Enable Extensions
-RUN if [ "$DEBUG" == "true" ]; then cp /usr/src/code/dev/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini; fi
-RUN if [ "$DEBUG" == "true" ]; then mkdir -p /tmp/xdebug; fi
-RUN if [ "$DEBUG" = "false" ]; then rm -rf /usr/src/code/dev; fi
-RUN if [ "$DEBUG" = "false" ]; then rm -f /usr/local/lib/php/extensions/no-debug-non-zts-20220829/xdebug.so; fi
+RUN if [ "$DEBUG" == "true" ]; then cp /usr/src/code/dev/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini; fi && \
+ if [ "$DEBUG" == "true" ]; then mkdir -p /tmp/xdebug; fi && \
+ if [ "$DEBUG" = "false" ]; then rm -rf /usr/src/code/dev; fi && \
+ if [ "$DEBUG" = "false" ]; then rm -f /usr/local/lib/php/extensions/no-debug-non-zts-20220829/xdebug.so; fi
 
 EXPOSE 80
 
