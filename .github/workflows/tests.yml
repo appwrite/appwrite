@@ -125,6 +125,7 @@ jobs:
             Webhooks,
             VCS,
             Messaging,
+            Migrations
           ]
 
     steps:

@@ -64,7 +64,7 @@ App::post('/v1/proxy/rules')
             Query::equal('domain', [$domain]),
         ]);
 
-        if ($document && !$document->isEmpty()) {
+        if (!$document->isEmpty()) {
             if ($document->getAttribute('projectId') === $project->getId()) {
                 $resourceType = $document->getAttribute('resourceType');
                 $resourceId = $document->getAttribute('resourceId');

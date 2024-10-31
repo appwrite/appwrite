@@ -1812,9 +1812,6 @@ App::setResource('team', function (Document $project, Database $dbForConsole, Ap
         ]);
     });
 
-    if (!$team) {
-        $team = new Document([]);
-    }
     return $team;
 }, ['project', 'dbForConsole', 'utopia', 'request']);
 
