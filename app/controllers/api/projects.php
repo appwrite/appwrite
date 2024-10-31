@@ -269,9 +269,6 @@ App::post('/v1/projects')
                     continue;
                 }
 
-            $indexes = \array_map(function (array $index) {
-                return new Document($index);
-            }, $collection['indexes']);
                 $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
                 $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
 
@@ -288,7 +285,7 @@ App::post('/v1/projects')
                     ]));
                 }
             }
-       // }
+       }
 
         // Hook allowing instant project mirroring during migration
         // Outside of migration, hook is not registered and has no effect
