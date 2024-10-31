@@ -381,7 +381,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function applyCertificateFiles(string $folder, string $domain, array $letsEncryptData): void
+    protected function applyCertificateFiles(string $folder, string $domain, array $letsEncryptData): void
     {
 
         // Prepare folder in storage for domain
