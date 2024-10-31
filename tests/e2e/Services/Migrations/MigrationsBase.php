@@ -809,7 +809,7 @@ trait MigrationsBase
             'activate' => true
         ]);
 
-       $result = $this->performMigrationSync([
+        $result = $this->performMigrationSync([
             'resources' => [
                 Resource::TYPE_FUNCTION,
                 Resource::TYPE_DEPLOYMENT
