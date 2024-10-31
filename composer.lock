@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5fd3d4a7e4dd44e74bda31a0087c40d1",
+    "content-hash": "a2e4cb8d1757400071b4545cfbd3f805",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1724,16 +1724,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-findone-update-0.53.x",
+            "version": "0.53.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "b6ddececdcca36920d6791311affb0b0856a178b"
+                "reference": "19969d2c6d29b5d1cbf4cb1a33e18017a54f30e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/b6ddececdcca36920d6791311affb0b0856a178b",
-                "reference": "b6ddececdcca36920d6791311affb0b0856a178b",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/19969d2c6d29b5d1cbf4cb1a33e18017a54f30e3",
+                "reference": "19969d2c6d29b5d1cbf4cb1a33e18017a54f30e3",
                 "shasum": ""
             },
             "require": {
@@ -1804,10 +1804,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/feat-findone-update-0.53.x",
+                "source": "https://github.com/utopia-php/database/tree/0.53.9",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2024-10-31T07:55:39+00:00"
+            "time": "2024-10-31T08:18:52+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -7034,18 +7034,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-feat-findone-update-0.53.x",
-            "alias": "0.53.8",
-            "alias_normalized": "0.53.8.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
