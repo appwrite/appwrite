@@ -122,17 +122,15 @@ class Realtime extends Adapter
 
     /**
      * Sends an event to the Realtime Server
-     * @param \Redis $redis
      * @param string $projectId
      * @param array $payload
-     * @param array $events
+     * @param string $event
      * @param array $channels
      * @param array $roles
      * @param array $options
      * @return void
-     * @throws \RedisException
      */
-    public static function send(\Redis $redis, string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
+    public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
         if (empty($channels) || empty($roles) || empty($projectId)) {
             return;
@@ -140,8 +138,9 @@ class Realtime extends Adapter
 
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
-        var_dump($redis->getHost());
-        var_dump($channels);
+
+        $redis = new \Redis(); //TODO: make this part of the constructor
+        $redis->connect(System::getEnv('_APP_REDIS_HOST', ''), System::getEnv('_APP_REDIS_PORT', ''));
         $redis->publish('realtime', json_encode([
             'project' => $projectId,
             'roles' => $roles,

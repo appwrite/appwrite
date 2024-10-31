@@ -36,10 +36,6 @@ class Migrations extends Action
     protected Database $dbForConsole;
 
     protected Document $project;
-    /**
-     * @var string
-     */
-    protected string $sourceRegion;
 
     public static function getName(): string
     {
@@ -57,14 +53,13 @@ class Migrations extends Action
             ->inject('dbForProject')
             ->inject('dbForConsole')
             ->inject('log')
-            ->inject('realtimeConnection')
-            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log, Callable $realtimeConnection) => $this->action($message, $dbForProject, $dbForConsole, $log, $realtimeConnection));
+            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $log));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log,  Callable $realtimeConnection): void
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -80,7 +75,6 @@ class Migrations extends Action
             return;
         }
 
-        $this->sourceRegion = $payload['sourceRegion'] ?? 'default';
         $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
         $this->project = $project;
@@ -95,7 +89,7 @@ class Migrations extends Action
         $log->addTag('migrationId', $migration->getId());
         $log->addTag('projectId', $project->getId());
 
-        $this->processMigration($migration, $log, $realtimeConnection);
+        $this->processMigration($migration, $log);
     }
 
     /**
@@ -130,7 +124,7 @@ class Migrations extends Action
             ),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
-                $credentials['endpoint'],
+                $credentials['endpoint'] === 'http://localhost/v1' ? 'http://appwrite/v1' : $credentials['endpoint'],
                 $credentials['apiKey'],
             ),
             default => throw new \Exception('Invalid source type'),
@@ -140,16 +134,15 @@ class Migrations extends Action
     /**
      * @throws Exception
      */
-    protected function processDestination(Document $migration): Destination
+    protected function processDestination(Document $migration, string $apiKey): Destination
     {
         $destination = $migration->getAttribute('destination');
-        $credentials = $migration->getAttribute('credentials');
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
-                $credentials['projectId'],
-                $credentials['endpoint'],
-                $credentials['apiKey'],
+                $this->project->getId(),
+                'http://appwrite/v1',
+                $apiKey,
                 $this->dbForProject,
                 Config::getParam('collections', [])['databases']['collections'],
             ),
@@ -164,7 +157,7 @@ class Migrations extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function updateMigrationDocument(Document $migration, Document $project, Callable $realtimeConnection): Document
+    protected function updateMigrationDocument(Document $migration, Document $project): Document
     {
         /** Trigger Realtime */
         $allEvents = Event::generateEvents('migrations.[migrationId].update', [
@@ -178,7 +171,6 @@ class Migrations extends Action
         );
 
         Realtime::send(
-            redis: $realtimeConnection($this->sourceRegion),
             projectId: 'console',
             payload: $migration->getArrayCopy(),
             events: $allEvents,
@@ -187,7 +179,6 @@ class Migrations extends Action
         );
 
         Realtime::send(
-            redis: $realtimeConnection($this->sourceRegion),
             projectId: $project->getId(),
             payload: $migration->getArrayCopy(),
             events: $allEvents,
@@ -261,11 +252,6 @@ class Migrations extends Action
     }
 
     /**
-     * @param Document $project
-     * @param Document $migration
-     * @param Log $log
-     * @param callable $realtimeConnection
-     * @return void
      * @throws Authorization
      * @throws Conflict
      * @throws Restricted
@@ -273,7 +259,7 @@ class Migrations extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function processMigration(Document $migration, Log $log, Callable $realtimeConnection): void
+    protected function processMigration(Document $migration, Log $log): void
     {
         $project = $this->project;
         $projectDocument = $this->dbForConsole->getDocument('projects', $project->getId());
@@ -285,8 +271,8 @@ class Migrations extends Action
             $migration = $this->dbForProject->getDocument('migrations', $migration->getId());
 
             if (
-                $migration->getAttribute('source') === SourceAppwrite::getName() ||
-                $migration->getAttribute('destination') === DestinationAppwrite::getName()
+                $migration->getAttribute('source') === SourceAppwrite::getName() &&
+                empty($migration->getAttribute('credentials', []))
             ) {
                 $credentials = $migration->getAttribute('credentials', []);
 
@@ -299,12 +285,12 @@ class Migrations extends Action
 
             $migration->setAttribute('stage', 'processing');
             $migration->setAttribute('status', 'processing');
-            $this->updateMigrationDocument($migration, $projectDocument, $realtimeConnection);
+            $this->updateMigrationDocument($migration, $projectDocument);
 
             $log->addTag('type', $migration->getAttribute('source'));
 
             $source = $this->processSource($migration);
-            $destination = $this->processDestination($migration);
+            $destination = $this->processDestination($migration, $tempAPIKey->getAttribute('secret'));
 
             $source->report();
 
@@ -315,14 +301,14 @@ class Migrations extends Action
 
             /** Start Transfer */
             $migration->setAttribute('stage', 'migrating');
-            $this->updateMigrationDocument($migration, $projectDocument, $realtimeConnection);
+            $this->updateMigrationDocument($migration, $projectDocument);
 
             $transfer->run(
                 $migration->getAttribute('resources'),
                 function () use ($migration, $transfer, $projectDocument) {
                     $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
                     $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
-                    $this->updateMigrationDocument($migration, $projectDocument, $realtimeConnection);
+                    $this->updateMigrationDocument($migration, $projectDocument);
                 },
                 $migration->getAttribute('resourceId'),
                 $migration->getAttribute('resourceType')
@@ -361,7 +347,7 @@ class Migrations extends Action
 
                 $migration->setAttribute('errors', $errorMessages);
                 $log->addExtra('migrationErrors', json_encode($errorMessages));
-                $this->updateMigrationDocument($migration, $projectDocument, $realtimeConnection);
+                $this->updateMigrationDocument($migration, $projectDocument);
 
                 return;
             }
@@ -402,7 +388,7 @@ class Migrations extends Action
                 $this->removeAPIKey($tempAPIKey);
             }
 
-            $this->updateMigrationDocument($migration, $projectDocument, $realtimeConnection);
+            $this->updateMigrationDocument($migration, $projectDocument);
 
             if ($migration->getAttribute('status', '') === 'failed') {
                 Console::error('Migration('.$migration->getInternalId().':'.$migration->getId().') failed, Project('.$this->project->getInternalId().':'.$this->project->getId().')');

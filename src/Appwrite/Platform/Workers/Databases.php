@@ -17,15 +17,9 @@ use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
-use Utopia\System\System;
 
 class Databases extends Action
 {
-    /**
-     * @var array|mixed
-     */
-    protected string $sourceRegion;
-
     public static function getName(): string
     {
         return 'databases';
@@ -42,8 +36,7 @@ class Databases extends Action
             ->inject('dbForConsole')
             ->inject('dbForProject')
             ->inject('log')
-            ->inject('realtimeConnection')
-            ->callback(fn (Message $message, Database $dbForConsole, Database $dbForProject, Log $log, callable $realtimeConnection) => $this->action($message, $dbForConsole, $dbForProject, $log, $realtimeConnection));
+            ->callback(fn (Message $message, Database $dbForConsole, Database $dbForProject, Log $log) => $this->action($message, $dbForConsole, $dbForProject, $log));
     }
 
     /**
@@ -51,11 +44,10 @@ class Databases extends Action
      * @param Database $dbForConsole
      * @param Database $dbForProject
      * @param Log $log
-     * @param callable $realtimeConnection
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Database $dbForConsole, Database $dbForProject, Log $log, callable $realtimeConnection): void
+    public function action(Message $message, Database $dbForConsole, Database $dbForProject, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -68,7 +60,6 @@ class Databases extends Action
         $collection = new Document($payload['collection'] ?? []);
         $document = new Document($payload['document'] ?? []);
         $database = new Document($payload['database'] ?? []);
-        $this->sourceRegion = $payload['sourceRegion'] ?? null;
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
@@ -82,10 +73,10 @@ class Databases extends Action
         match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $project, $dbForProject),
             DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $project, $dbForProject),
-            DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject, $realtimeConnection),
-            DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject, $realtimeConnection),
-            DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject, $realtimeConnection),
-            DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject, $realtimeConnection),
+            DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject),
+            DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject),
+            DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
+            DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
             default => throw new \Exception('No database operation for type: ' . \strval($type)),
         };
     }
@@ -97,13 +88,12 @@ class Databases extends Action
      * @param Document $project
      * @param Database $dbForConsole
      * @param Database $dbForProject
-     * @param callable $realtimeConnection
      * @return void
      * @throws Authorization
      * @throws Conflict
      * @throws \Exception
      */
-    private function createAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject, callable $realtimeConnection): void
+    private function createAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
@@ -143,6 +133,7 @@ class Databases extends Action
         $filters = $attribute->getAttribute('filters', []);
         $options = $attribute->getAttribute('options', []);
         $project = $dbForConsole->getDocument('projects', $projectId);
+
 
         try {
             switch ($type) {
@@ -203,7 +194,7 @@ class Databases extends Action
                 );
             }
         } finally {
-            $this->trigger($database, $collection, $attribute, $project, $projectId, $events, $realtimeConnection);
+            $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
         }
 
         if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
@@ -220,7 +211,6 @@ class Databases extends Action
      * @param Document $project
      * @param Database $dbForConsole
      * @param Database $dbForProject
-     * @param callable $realtimeConnection
      * @return void
      * @throws Authorization
      * @throws Conflict
@@ -305,7 +295,7 @@ class Databases extends Action
                 );
             }
         } finally {
-            $this->trigger($database, $collection, $attribute, $project, $projectId, $events, $realtimeConnection);
+            $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
         }
 
         // The underlying database removes/rebuilds indexes when attribute is removed
@@ -375,14 +365,13 @@ class Databases extends Action
      * @param Document $project
      * @param Database $dbForConsole
      * @param Database $dbForProject
-     * @param callable $realtimeConnection
      * @return void
      * @throws Authorization
      * @throws Conflict
      * @throws Structure
      * @throws DatabaseException
      */
-    private function createIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject, callable $realtimeConnection): void
+    private function createIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
@@ -424,7 +413,7 @@ class Databases extends Action
                 $index->setAttribute('status', 'failed')
             );
         } finally {
-            $this->trigger($database, $collection, $index, $project, $projectId, $events, $realtimeConnection);
+            $this->trigger($database, $collection, $index, $project, $projectId, $events);
         }
 
         $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
@@ -437,14 +426,13 @@ class Databases extends Action
      * @param Document $project
      * @param Database $dbForConsole
      * @param Database $dbForProject
-     * @param callable $realtimeConnection
      * @return void
      * @throws Authorization
      * @throws Conflict
      * @throws Structure
      * @throws DatabaseException
      */
-    private function deleteIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject, callable $realtimeConnection): void
+    private function deleteIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
@@ -483,7 +471,7 @@ class Databases extends Action
                 $index->setAttribute('status', 'stuck')
             );
         } finally {
-            $this->trigger($database, $collection, $index, $project, $projectId, $events, $realtimeConnection);
+            $this->trigger($database, $collection, $index, $project, $projectId, $events);
         }
 
         $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collection->getId());
@@ -606,20 +594,14 @@ class Databases extends Action
         Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
     }
 
-    /**
-     * @throws \RedisException
-     * @throws Exception
-     */
     protected function trigger(
         Document $database,
         Document $collection,
         Document $attribute,
         Document $project,
         string $projectId,
-        array $events,
-        callable $realtimeConnection
+        array $events
     ): void {
-        var_dump('Send  message to realtime region='.$this->sourceRegion);
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern
             event: $events[0],
@@ -627,7 +609,6 @@ class Databases extends Action
             project: $project,
         );
         Realtime::send(
-            redis: $realtimeConnection($this->sourceRegion),
             projectId: 'console',
             payload: $attribute->getArrayCopy(),
             events: $events,

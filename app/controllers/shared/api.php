@@ -162,7 +162,6 @@ App::init()
     ->inject('mode')
     ->inject('team')
     ->action(function (App $utopia, Request $request, Database $dbForConsole, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
-
         $route = $utopia->getRoute();
 
         if ($project->isEmpty()) {
@@ -364,6 +363,7 @@ App::init()
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
+
         $route = $utopia->getRoute();
 
         if (
@@ -461,7 +461,6 @@ App::init()
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject));
 
         $useCache = $route->getLabel('cache', false);
-
         if ($useCache) {
             $key = md5($request->getURI() . '*' . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
             $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -470,8 +469,8 @@ App::init()
             );
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
+
             if (!empty($data) && !$cacheLog->isEmpty()) {
-                $timerStart = \microtime(true);
                 $parts = explode('/', $cacheLog->getAttribute('resourceType'));
                 $type = $parts[0] ?? null;
 
@@ -552,7 +551,6 @@ App::shutdown()
     ->inject('project')
     ->inject('dbForProject')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
-        $route = $utopia->getRoute();
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
         $session = $response->getPayload();
         $userId = $session['userId'] ?? '';
@@ -597,9 +595,8 @@ App::shutdown()
     ->inject('queueForFunctions')
     ->inject('mode')
     ->inject('dbForConsole')
-    ->inject('realtimeConnection')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole, callable $realtimeConnection) use ($parseLabel) {
-        $route = $utopia->getRoute();
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
+
         $responsePayload = $response->getPayload();
 
         if (!empty($queueForEvents->getEvent())) {
@@ -645,7 +642,6 @@ App::shutdown()
                 );
 
                 Realtime::send(
-                    redis: $realtimeConnection($queueForEvents->getSourceRegion()),
                     projectId: $target['projectId'] ?? $project->getId(),
                     payload: $queueForEvents->getRealtimePayload(),
                     events: $allEvents,
@@ -713,11 +709,9 @@ App::shutdown()
          * Cache label
          */
         $useCache = $route->getLabel('cache', false);
-
         if ($useCache) {
             $resource = $resourceType = null;
             $data = $response->getPayload();
-
             if (!empty($data['payload'])) {
                 $pattern = $route->getLabel('cache.resource', null);
                 if (!empty($pattern)) {
@@ -734,7 +728,6 @@ App::shutdown()
                 $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
-
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                         '$id' => $key,
@@ -760,6 +753,8 @@ App::shutdown()
                 }
             }
         }
+
+
 
         if ($project->getId() !== 'console') {
             if (!Auth::isPrivilegedUser(Authorization::getRoles())) {

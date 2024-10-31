@@ -1530,33 +1530,23 @@ App::setResource('deviceForLocal', function () {
     return new Local();
 });
 
-App::setResource('deviceForFiles', function ($project, $connectionString) {
-    return getDevice(APP_STORAGE_UPLOADS.'/app-'.$project->getId(), $connectionString);
-}, ['project', 'connectionString']);
+App::setResource('deviceForFiles', function ($project) {
+    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+}, ['project']);
 
-App::setResource('deviceForFunctions', function ($project, $connectionString) {
-    return getDevice(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId(), $connectionString);
-}, ['project', 'connectionString']);
+App::setResource('deviceForFunctions', function ($project) {
+    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+}, ['project']);
 
-App::setResource('deviceForBuilds', function ($project, $connectionString) {
-    return getDevice(APP_STORAGE_BUILDS.'/app-'.$project->getId(), $connectionString);
-}, ['project', 'connectionString']);
+App::setResource('deviceForBuilds', function ($project) {
+    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+}, ['project']);
 
-App::setResource('connectionString', function () {
-    return System::getEnv('_APP_CONNECTIONS_STORAGE', '');
-});
-
-App::setResource('realtimeConnection',function ($pools) {
-    return function () use ($pools)  {
-        return $pools->get('pubsub')->pop()->getResource();
-    };
-}, ['pools']);
-
-
-function getDevice(string $root, string $connectionString = ''): Device
+function getDevice(string $root, string $connection = ''): Device
 {
+    $connection = !empty($connection) ? $connection : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
-    if (! empty($connectionString)) {
+    if (!empty($connection)) {
         $acl = 'private';
         $device = Storage::DEVICE_LOCAL;
         $accessKey = '';
@@ -1565,7 +1555,7 @@ function getDevice(string $root, string $connectionString = ''): Device
         $region = '';
 
         try {
-            $dsn = new DSN($connectionString);
+            $dsn = new DSN($connection);
             $device = $dsn->getScheme();
             $accessKey = $dsn->getUser() ?? '';
             $accessSecret = $dsn->getPassword() ?? '';
@@ -1826,9 +1816,6 @@ App::setResource('team', function (Document $project, Database $dbForConsole, Ap
         ]);
     });
 
-    if (!$team) {
-        $team = new Document([]);
-    }
     return $team;
 }, ['project', 'dbForConsole', 'utopia', 'request']);
 
