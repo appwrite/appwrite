@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a2e4cb8d1757400071b4545cfbd3f805",
+    "content-hash": "1529d4abfe0432b2d9c838705220ed4a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1760,38 +1760,7 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\E2E\\": "tests/e2e",
-                    "Tests\\Unit\\": "tests/unit"
-                }
-            },
-            "scripts": {
-                "build": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose build"
-                ],
-                "start": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose up -d"
-                ],
-                "test": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 512M"
-                ],
-                "coverage": [
-                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1804,8 +1773,8 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/0.53.9",
-                "issues": "https://github.com/utopia-php/database/issues"
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/0.53.9"
             },
             "time": "2024-10-31T08:18:52+00:00"
         },
