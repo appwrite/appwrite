@@ -212,16 +212,16 @@
         },
         {
             "name": "beberlei/assert",
-            "version": "v3.3.2",
+            "version": "v3.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/beberlei/assert.git",
-                "reference": "cb70015c04be1baee6f5f5c953703347c0ac1655"
+                "reference": "b5fd8eacd8915a1b627b8bfc027803f1939734dd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/beberlei/assert/zipball/cb70015c04be1baee6f5f5c953703347c0ac1655",
-                "reference": "cb70015c04be1baee6f5f5c953703347c0ac1655",
+                "url": "https://api.github.com/repos/beberlei/assert/zipball/b5fd8eacd8915a1b627b8bfc027803f1939734dd",
+                "reference": "b5fd8eacd8915a1b627b8bfc027803f1939734dd",
                 "shasum": ""
             },
             "require": {
@@ -229,7 +229,7 @@
                 "ext-json": "*",
                 "ext-mbstring": "*",
                 "ext-simplexml": "*",
-                "php": "^7.0 || ^8.0"
+                "php": "^7.1 || ^8.0"
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "*",
@@ -273,9 +273,9 @@
             ],
             "support": {
                 "issues": "https://github.com/beberlei/assert/issues",
-                "source": "https://github.com/beberlei/assert/tree/v3.3.2"
+                "source": "https://github.com/beberlei/assert/tree/v3.3.3"
             },
-            "time": "2021-12-16T21:41:27+00:00"
+            "time": "2024-07-15T13:18:35+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2175,16 +2175,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.6.10",
+            "version": "0.6.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "6379fd1cd54cb9cb2d5b5999abcfab49801da510"
+                "reference": "4d167914d3f7fa1fe816b2b2c6f221e70166bfd7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/6379fd1cd54cb9cb2d5b5999abcfab49801da510",
-                "reference": "6379fd1cd54cb9cb2d5b5999abcfab49801da510",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/4d167914d3f7fa1fe816b2b2c6f221e70166bfd7",
+                "reference": "4d167914d3f7fa1fe816b2b2c6f221e70166bfd7",
                 "shasum": ""
             },
             "require": {
@@ -2225,9 +2225,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.10"
+                "source": "https://github.com/utopia-php/migration/tree/0.6.11"
             },
-            "time": "2024-10-29T02:19:43+00:00"
+            "time": "2024-10-31T06:19:57+00:00"
         },
         {
             "name": "utopia-php/mongo",
