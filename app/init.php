@@ -130,6 +130,7 @@ const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1_073_741_824; // 2^32 bits / 4 bits per char
 const APP_DATABASE_TIMEOUT_MILLISECONDS = 15_000;
+const APP_DATABASE_QUERY_MAX_VALUES = 500;
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
@@ -149,7 +150,7 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 const APP_HOSTNAME_INTERNAL = 'appwrite';
-const APP_FUNCTION_SPECIFICATION_DEFAULT = Specification::S_05VCPU_512MB;
+const APP_FUNCTION_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
 const APP_FUNCTION_CPUS_DEFAULT = 0.5;
 const APP_FUNCTION_MEMORY_DEFAULT = 512;
 const APP_PLATFORM_SERVER = 'server';
@@ -284,6 +285,17 @@ const METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS = '{functionInternalId}.execution
 const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
+
+// Resource types
+
+const RESOURCE_TYPE_PROJECTS = 'projects';
+const RESOURCE_TYPE_FUNCTIONS = 'functions';
+const RESOURCE_TYPE_DATABASES = 'databases';
+const RESOURCE_TYPE_BUCKETS = 'buckets';
+const RESOURCE_TYPE_PROVIDERS = 'providers';
+const RESOURCE_TYPE_TOPICS = 'topics';
+const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
+const RESOURCE_TYPE_MESSAGES = 'messages';
 
 $register = new Registry();
 
@@ -1398,7 +1410,8 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     $database
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', $project->getId())
-        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+        ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
     try {
         $dsn = new DSN($project->getAttribute('database'));
@@ -1434,7 +1447,8 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
         ->setNamespace('_console')
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', 'console')
-        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+        ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
     return $database;
 }, ['pools', 'cache']);
@@ -1458,7 +1472,8 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             $database
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())
-                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
+                ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
             if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
                 $database
@@ -1767,10 +1782,10 @@ App::setResource('requestTimestamp', function ($request) {
     }
     return $requestTimestamp;
 }, ['request']);
+
 App::setResource('plan', function (array $plan = []) {
     return [];
 });
-
 
 App::setResource('team', function (Document $project, Database $dbForConsole, App $utopia, Request $request) {
     $teamInternalId = '';
@@ -1802,3 +1817,8 @@ App::setResource('team', function (Document $project, Database $dbForConsole, Ap
     }
     return $team;
 }, ['project', 'dbForConsole', 'utopia', 'request']);
+
+App::setResource(
+    'isResourceBlocked',
+    fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
+);

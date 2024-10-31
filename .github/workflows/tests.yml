@@ -30,8 +30,8 @@ jobs:
           push: false
           tags: ${{ env.IMAGE }}
           load: true
-          cache-from: type=gha,scope=appwrite
-          cache-to: type=gha,mode=max,scope=appwrite
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           outputs: type=docker,dest=/tmp/${{ env.IMAGE }}.tar
           build-args: |
             DEBUG=false
@@ -42,8 +42,6 @@ jobs:
         uses: actions/cache@v4
         with:
           key: ${{ env.CACHE_KEY }}
-          restore-keys: |
-            appwrite-dev-
           path: /tmp/${{ env.IMAGE }}.tar
 
   unit_test:
@@ -127,6 +125,7 @@ jobs:
             Webhooks,
             VCS,
             Messaging,
+            Migrations
           ]
 
     steps:

@@ -119,10 +119,6 @@ class Deletes extends Action
                 if (!$project->isEmpty()) {
                     $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
                 }
-
-                if (!$document->isEmpty()) {
-                    $this->deleteAuditLogsByResource($getProjectDB, 'document/' . $document->getId(), $project);
-                }
                 break;
             case DELETE_TYPE_ABUSE:
                 $this->deleteAbuseLogs($project, $getProjectDB, $abuseRetention);
@@ -731,22 +727,6 @@ class Deletes extends Action
         } catch (DatabaseException $e) {
             Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $e->getMessage());
         }
-    }
-
-    /**
-     * @param callable $getProjectDB
-     * @param string $resource
-     * @param Document $project
-     * @return void
-     * @throws Exception
-     */
-    private function deleteAuditLogsByResource(callable $getProjectDB, string $resource, Document $project): void
-    {
-        $dbForProject = $getProjectDB($project);
-
-        $this->deleteByGroup(Audit::COLLECTION, [
-            Query::equal('resource', [$resource])
-        ], $dbForProject);
     }
 
     /**

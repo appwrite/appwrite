@@ -478,6 +478,44 @@ class RealtimeConsoleClientTest extends Scope
         $client->close();
     }
 
+    public function testPing()
+    {
+        $client = $this->getWebsocket(['console'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], 'console');
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertEquals('connected', $response['type']);
+
+        $pong = $this->client->call(Client::METHOD_GET, '/ping', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(200, $pong['headers']['status-code']);
+        $this->assertEquals('Pong!', $pong['body']);
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('console', $response['data']['channels']);
+        $this->assertContains("projects.{$this->getProject()['$id']}", $response['data']['channels']);
+        $this->assertContains("projects.{$this->getProject()['$id']}.ping", $response['data']['events']);
+        $this->assertNotEmpty($response['data']['payload']);
+        $this->assertArrayHasKey('pingCount', $response['data']['payload']);
+        $this->assertArrayHasKey('pingedAt', $response['data']['payload']);
+        $this->assertEquals(1, $response['data']['payload']['pingCount']);
+
+        $client->close();
+    }
+
     public function testCreateDeployment()
     {
         $response1 = $this->client->call(Client::METHOD_POST, '/functions', array_merge([

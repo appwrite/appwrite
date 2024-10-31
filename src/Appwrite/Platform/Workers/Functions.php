@@ -41,29 +41,18 @@ class Functions extends Action
         $this
             ->desc('Functions worker')
             ->groups(['functions'])
+            ->inject('project')
             ->inject('message')
             ->inject('dbForProject')
             ->inject('queueForFunctions')
             ->inject('queueForEvents')
             ->inject('queueForUsage')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+            ->inject('isResourceBlocked')
+            ->callback(fn (Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, callable $isResourceBlocked) => $this->action($project, $message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log, $isResourceBlocked));
     }
 
-    /**
-     * @param Message $message
-     * @param Database $dbForProject
-     * @param Func $queueForFunctions
-     * @param Event $queueForEvents
-     * @param Usage $queueForUsage
-     * @param Log $log
-     * @return void
-     * @throws Authorization
-     * @throws Structure
-     * @throws \Utopia\Database\Exception
-     * @throws Conflict
-     */
-    public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log): void
+    public function action(Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, callable $isResourceBlocked): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -72,10 +61,17 @@ class Functions extends Action
         }
 
         $type = $payload['type'] ?? '';
+
+        // Short-term solution to offhand write operation from API container
+        if ($type === Func::TYPE_ASYNC_WRITE) {
+            $execution = new Document($payload['execution'] ?? []);
+            $dbForProject->createDocument('executions', $execution);
+            return;
+        }
+
         $events = $payload['events'] ?? [];
         $data = $payload['body'] ?? '';
         $eventData = $payload['payload'] ?? '';
-        $project = new Document($payload['project'] ?? []);
         $function = new Document($payload['function'] ?? []);
         $functionId = $payload['functionId'] ?? '';
         $user = new Document($payload['user'] ?? []);
@@ -113,7 +109,6 @@ class Functions extends Action
             $limit = 30;
             $sum = 30;
             $offset = 0;
-            /** @var Document[] $functions */
             while ($sum >= $limit) {
                 $functions = $dbForProject->find('functions', [
                     Query::limit($limit),
@@ -130,6 +125,12 @@ class Functions extends Action
                     if (!array_intersect($events, $function->getAttribute('events', []))) {
                         continue;
                     }
+
+                    if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
+                        Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
+                        continue;
+                    }
+
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
                     $this->execute(
@@ -157,6 +158,11 @@ class Functions extends Action
                     Console::success('Triggered function: ' . $events[0]);
                 }
             }
+            return;
+        }
+
+        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
+            Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
             return;
         }
 
