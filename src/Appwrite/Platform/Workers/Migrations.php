@@ -124,7 +124,7 @@ class Migrations extends Action
             ),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
-                $credentials['endpoint'],
+                $credentials['endpoint'] === 'http://localhost/v1' ? 'http://appwrite/v1' : $credentials['endpoint'],
                 $credentials['apiKey'],
             ),
             default => throw new \Exception('Invalid source type'),
@@ -134,16 +134,15 @@ class Migrations extends Action
     /**
      * @throws Exception
      */
-    protected function processDestination(Document $migration): Destination
+    protected function processDestination(Document $migration, string $apiKey): Destination
     {
         $destination = $migration->getAttribute('destination');
-        $credentials = $migration->getAttribute('credentials');
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
-                $credentials['projectId'],
-                $credentials['endpoint'],
-                $credentials['apiKey'],
+                $this->project->getId(),
+                'http://appwrite/v1',
+                $apiKey,
                 $this->dbForProject,
                 Config::getParam('collections', [])['databases']['collections'],
             ),
@@ -272,8 +271,8 @@ class Migrations extends Action
             $migration = $this->dbForProject->getDocument('migrations', $migration->getId());
 
             if (
-                $migration->getAttribute('source') === SourceAppwrite::getName() ||
-                $migration->getAttribute('destination') === DestinationAppwrite::getName()
+                $migration->getAttribute('source') === SourceAppwrite::getName() &&
+                empty($migration->getAttribute('credentials', []))
             ) {
                 $credentials = $migration->getAttribute('credentials', []);
 
@@ -291,7 +290,7 @@ class Migrations extends Action
             $log->addTag('type', $migration->getAttribute('source'));
 
             $source = $this->processSource($migration);
-            $destination = $this->processDestination($migration);
+            $destination = $this->processDestination($migration, $tempAPIKey->getAttribute('secret'));
 
             $source->report();
 

@@ -330,7 +330,7 @@ App::post('/v1/account')
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
         ]);
-        if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+        if (!$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
@@ -393,7 +393,7 @@ App::post('/v1/account')
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
-                if ($existingTarget) {
+                if (!$existingTarget->isEmpty()) {
                     $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
@@ -829,7 +829,7 @@ App::post('/v1/account/sessions/email')
             Query::equal('email', [$email]),
         ]);
 
-        if (!$profile || empty($profile->getAttribute('passwordUpdate')) || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'))) {
+        if ($profile->isEmpty() || empty($profile->getAttribute('passwordUpdate')) || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'))) {
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
@@ -1369,7 +1369,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::equal('providerEmail', [$email]),
                 Query::notEqual('userInternalId', $user->getInternalId()),
             ]);
-            if (!empty($identityWithMatchingEmail)) {
+            if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
 
@@ -1400,7 +1400,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::equal('provider', [$provider]),
                 Query::equal('providerUid', [$oauth2ID]),
             ]);
-            if ($session !== false && !$session->isEmpty()) {
+            if (!$session->isEmpty()) {
                 $user->setAttributes($dbForProject->getDocument('users', $session->getAttribute('userId'))->getArrayCopy());
             }
         }
@@ -1418,7 +1418,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $userWithEmail = $dbForProject->findOne('users', [
                 Query::equal('email', [$email]),
             ]);
-            if ($userWithEmail !== false && !$userWithEmail->isEmpty()) {
+            if (!$userWithEmail->isEmpty()) {
                 $user->setAttributes($userWithEmail->getArrayCopy());
             }
 
@@ -1429,7 +1429,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Query::equal('providerUid', [$oauth2ID]),
                 ]);
 
-                if ($identity !== false && !$identity->isEmpty()) {
+                if (!$identity->isEmpty()) {
                     $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
                 }
             }
@@ -1449,7 +1449,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                     Query::equal('providerEmail', [$email]),
                 ]);
-                if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+                if (!$identityWithMatchingEmail->isEmpty()) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
                 }
 
@@ -1513,7 +1513,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             Query::equal('provider', [$provider]),
             Query::equal('providerUid', [$oauth2ID]),
         ]);
-        if ($identity === false || $identity->isEmpty()) {
+        if ($identity->isEmpty()) {
             // Before creating the identity, check if the email is already associated with another user
             $userId = $user->getId();
 
@@ -1797,7 +1797,7 @@ App::post('/v1/account/tokens/magic-url')
         $isAppUser = Auth::isAppUser($roles);
 
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
-        if ($result !== false && !$result->isEmpty()) {
+        if (!$result->isEmpty()) {
             $user->setAttributes($result->getArrayCopy());
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -1814,7 +1814,7 @@ App::post('/v1/account/tokens/magic-url')
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
-            if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+            if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
@@ -2038,7 +2038,7 @@ App::post('/v1/account/tokens/email')
         $isAppUser = Auth::isAppUser($roles);
 
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
-        if ($result !== false && !$result->isEmpty()) {
+        if (!$result->isEmpty()) {
             $user->setAttributes($result->getArrayCopy());
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -2055,7 +2055,7 @@ App::post('/v1/account/tokens/email')
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
-            if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+            if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
             }
 
@@ -2325,7 +2325,7 @@ App::post('/v1/account/tokens/phone')
         $isAppUser = Auth::isAppUser($roles);
 
         $result = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-        if ($result !== false && !$result->isEmpty()) {
+        if (!$result->isEmpty()) {
             $user->setAttributes($result->getArrayCopy());
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -2382,7 +2382,7 @@ App::post('/v1/account/tokens/phone')
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$phone]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget->isEmpty() ? false : $existingTarget]);
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         }
@@ -2749,7 +2749,7 @@ App::patch('/v1/account/email')
             Query::equal('providerEmail', [$email]),
             Query::notEqual('userInternalId', $user->getInternalId()),
         ]);
-        if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+        if (!$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
@@ -2770,7 +2770,7 @@ App::patch('/v1/account/email')
             Query::equal('identifier', [$email]),
         ]));
 
-        if ($target instanceof Document && !$target->isEmpty()) {
+        if (!$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
@@ -2836,7 +2836,7 @@ App::patch('/v1/account/phone')
             Query::equal('identifier', [$phone]),
         ]));
 
-        if ($target instanceof Document && !$target->isEmpty()) {
+        if (!$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
@@ -2995,7 +2995,7 @@ App::post('/v1/account/recovery')
             Query::equal('email', [$email]),
         ]);
 
-        if (!$profile) {
+        if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
