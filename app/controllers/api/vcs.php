@@ -20,6 +20,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Detector\Adapter\Bun;
 use Utopia\Detector\Adapter\CPP;
 use Utopia\Detector\Adapter\Dart;
@@ -109,7 +110,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     Query::orderDesc('$createdAt'),
                 ]));
 
-                if ($latestComment !== false && !$latestComment->isEmpty()) {
+                if (!$latestComment->isEmpty()) {
                     $latestCommentId = $latestComment->getAttribute('providerCommentId', '');
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
@@ -370,13 +371,11 @@ App::get('/v1/vcs/github/callback')
             $identity = $dbForConsole->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
-            if ($identity !== false && !$identity->isEmpty()) {
+            if (!$identity->isEmpty()) {
                 if ($identity->getAttribute('userInternalId', '') !== $user->getInternalId()) {
                     throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
                 }
-            }
 
-            if ($identity !== false && !$identity->isEmpty()) {
                 $identity = $identity
                     ->setAttribute('providerAccessToken', $accessToken)
                     ->setAttribute('providerRefreshToken', $refreshToken)
@@ -417,7 +416,7 @@ App::get('/v1/vcs/github/callback')
                 Query::equal('projectInternalId', [$projectInternalId])
             ]);
 
-            if ($installation === false || $installation->isEmpty()) {
+            if ($installation->isEmpty()) {
                 $teamId = $project->getAttribute('teamId', '');
 
                 $installation = new Document([
@@ -725,7 +724,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
                 Query::equal('provider', ['github']),
                 Query::equal('userInternalId', [$user->getInternalId()]),
             ]);
-            if ($identity === false || $identity->isEmpty()) {
+            if ($identity->isEmpty()) {
                 throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
             }
 
@@ -1069,6 +1068,12 @@ App::get('/v1/vcs/installations')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $installationId = $cursor->getValue();
             $cursorDocument = $dbForConsole->getDocument('installations', $installationId);
 

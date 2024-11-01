@@ -40,6 +40,7 @@ use Utopia\Database\Validator\Index as IndexValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Structure;
@@ -438,6 +439,7 @@ App::post('/v1/databases')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].create')
     ->label('scope', 'databases.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'database.create')
     ->label('audits.resource', 'database/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -515,6 +517,7 @@ App::get('/v1/databases')
     ->desc('List databases')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'list')
@@ -546,6 +549,13 @@ App::get('/v1/databases')
         });
         $cursor = reset($cursor);
         if ($cursor) {
+            /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $databaseId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('databases', $databaseId);
 
@@ -568,6 +578,7 @@ App::get('/v1/databases/:databaseId')
     ->desc('Get database')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'get')
@@ -593,6 +604,7 @@ App::get('/v1/databases/:databaseId/logs')
     ->desc('List database logs')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listLogs')
@@ -684,6 +696,7 @@ App::put('/v1/databases/:databaseId')
     ->desc('Update database')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'databases.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].update')
     ->label('audits.event', 'database.update')
     ->label('audits.resource', 'database/{response.$id}')
@@ -722,6 +735,7 @@ App::delete('/v1/databases/:databaseId')
     ->desc('Delete database')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'databases.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].delete')
     ->label('audits.event', 'database.delete')
     ->label('audits.resource', 'database/{request.databaseId}')
@@ -771,6 +785,7 @@ App::post('/v1/databases/:databaseId/collections')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].create')
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'collection.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -838,6 +853,7 @@ App::get('/v1/databases/:databaseId/collections')
     ->desc('List collections')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listCollections')
@@ -878,6 +894,12 @@ App::get('/v1/databases/:databaseId/collections')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $collectionId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
@@ -901,6 +923,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->desc('Get collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getCollection')
@@ -935,6 +958,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->desc('List collection logs')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listCollectionLogs')
@@ -1035,6 +1059,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->desc('Update collection')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].update')
     ->label('audits.event', 'collection.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -1098,6 +1123,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->desc('Delete collection')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].delete')
     ->label('audits.event', 'collection.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -1154,6 +1180,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -1211,6 +1238,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.namespace', 'databases')
@@ -1253,6 +1281,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.namespace', 'databases')
@@ -1300,6 +1329,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.namespace', 'databases')
@@ -1342,6 +1372,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.namespace', 'databases')
@@ -1384,6 +1415,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.namespace', 'databases')
@@ -1455,6 +1487,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.namespace', 'databases')
@@ -1529,6 +1562,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.namespace', 'databases')
@@ -1570,6 +1604,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.namespace', 'databases')
@@ -1614,6 +1649,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.namespace', 'databases')
@@ -1741,6 +1777,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->desc('List attributes')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listAttributes')
@@ -1788,6 +1825,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         $cursor = \reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $attributeId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->find('attributes', [
                 Query::equal('collectionInternalId', [$collection->getInternalId()]),
@@ -1819,6 +1861,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->desc('Get attribute')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getAttribute')
@@ -1893,6 +1936,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->desc('Update string attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -1936,6 +1980,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
     ->desc('Update email attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -1977,6 +2022,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
     ->desc('Update enum attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -2020,6 +2066,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
     ->desc('Update IP address attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -2061,6 +2108,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
     ->desc('Update URL attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -2102,6 +2150,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
     ->desc('Update integer attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -2153,6 +2202,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
     ->desc('Update float attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -2204,6 +2254,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
     ->desc('Update boolean attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -2244,6 +2295,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
     ->desc('Update dateTime attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -2284,6 +2336,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->desc('Update relationship attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -2341,6 +2394,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->desc('Delete attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -2455,6 +2509,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].create')
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'index.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -2624,6 +2679,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->desc('List indexes')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listIndexes')
@@ -2667,6 +2723,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $indexId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->find('indexes', [
                 Query::equal('collectionInternalId', [$collection->getInternalId()]),
@@ -2694,6 +2755,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->desc('Get index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getIndex')
@@ -2733,6 +2795,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->desc('Delete index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update')
     ->label('audits.event', 'index.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -2798,6 +2861,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].create')
     ->label('scope', 'documents.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'document.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
@@ -3049,6 +3113,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->desc('List documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listDocuments')
@@ -3094,6 +3159,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $cursor = \reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
+
             $documentId = $cursor->getValue();
 
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
@@ -3204,6 +3275,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->desc('Get document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getDocument')
@@ -3296,6 +3368,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->desc('List document logs')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listDocumentLogs')
@@ -3401,6 +3474,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
     ->label('scope', 'documents.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'document.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
@@ -3636,6 +3710,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->desc('Delete document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].delete')
     ->label('audits.event', 'document.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
@@ -3656,11 +3731,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForDeletes')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Usage $queueForUsage, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, Usage $queueForUsage, string $mode) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -3733,10 +3807,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             )
         );
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_AUDIT)
-            ->setDocument($document);
-
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
@@ -3755,6 +3825,7 @@ App::get('/v1/databases/usage')
     ->desc('Get databases usage stats')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getUsage')
@@ -3836,6 +3907,7 @@ App::get('/v1/databases/:databaseId/usage')
     ->desc('Get database usage stats')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getDatabaseUsage')
@@ -3923,6 +3995,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->desc('Get collection usage stats')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getCollectionUsage')

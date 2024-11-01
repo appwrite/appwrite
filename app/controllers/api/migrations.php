@@ -16,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Firebase;
@@ -120,7 +121,7 @@ App::post('/v1/migrations/firebase/oauth')
             Query::equal('provider', ['firebase']),
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
-        if ($identity === false || $identity->isEmpty()) {
+        if ($identity->isEmpty()) {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
@@ -409,6 +410,12 @@ App::get('/v1/migrations')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $migrationId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('migrations', $migrationId);
 
@@ -569,7 +576,7 @@ App::get('/v1/migrations/firebase/report/oauth')
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
 
-        if ($identity === false || $identity->isEmpty()) {
+        if ($identity->isEmpty()) {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
@@ -744,13 +751,13 @@ App::get('/v1/migrations/firebase/redirect')
                 Query::equal('providerEmail', [$email]),
             ]);
 
-            if ($identity !== false && !$identity->isEmpty()) {
+            if (!$identity->isEmpty()) {
                 if ($identity->getAttribute('userInternalId', '') !== $user->getInternalId()) {
                     throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
                 }
             }
 
-            if ($identity !== false && !$identity->isEmpty()) {
+            if (!$identity->isEmpty()) {
                 $identity = $identity
                     ->setAttribute('providerAccessToken', $accessToken)
                     ->setAttribute('providerRefreshToken', $refreshToken)
@@ -813,7 +820,7 @@ App::get('/v1/migrations/firebase/projects')
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
 
-        if ($identity === false || $identity->isEmpty()) {
+        if ($identity->isEmpty()) {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
@@ -893,7 +900,7 @@ App::get('/v1/migrations/firebase/deauthorize')
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
 
-        if ($identity === false || $identity->isEmpty()) {
+        if ($identity->isEmpty()) {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Not authenticated with Firebase'); //TODO: Replace with USER_IDENTITY_NOT_FOUND
         }
 
