@@ -1105,7 +1105,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($webhook === false || $webhook->isEmpty()) {
+        if ($webhook->isEmpty()) {
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
@@ -1148,7 +1148,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($webhook === false || $webhook->isEmpty()) {
+        if ($webhook->isEmpty()) {
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
@@ -1198,7 +1198,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($webhook === false || $webhook->isEmpty()) {
+        if ($webhook->isEmpty()) {
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
@@ -1236,7 +1236,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($webhook === false || $webhook->isEmpty()) {
+        if ($webhook->isEmpty()) {
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
@@ -1358,7 +1358,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($key === false || $key->isEmpty()) {
+        if ($key->isEmpty()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
@@ -1395,7 +1395,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($key === false || $key->isEmpty()) {
+        if ($key->isEmpty()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
@@ -1437,7 +1437,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($key === false || $key->isEmpty()) {
+        if ($key->isEmpty()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
@@ -1595,7 +1595,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($platform === false || $platform->isEmpty()) {
+        if ($platform->isEmpty()) {
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
@@ -1632,7 +1632,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($platform === false || $platform->isEmpty()) {
+        if ($platform->isEmpty()) {
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
@@ -1676,7 +1676,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($platform === false || $platform->isEmpty()) {
+        if ($platform->isEmpty()) {
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
