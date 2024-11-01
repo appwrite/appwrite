@@ -59,20 +59,14 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
 };
 
 $eventDatabaseListener = function (Document $document, Event $queueForEvents, Response $response, Func $queueForFunctions, Document $project) {
-    switch ($document->getCollection()) {
-        case 'users':
-            $queueForEvents
-                ->setEvent('users.[userId].update')
-                ->setParam('userId', $document->getId())
-                ->setPayload($response->output($document, Response::MODEL_USER))
-                ->trigger();
-            break;
-    }
-
-    // FIXME: This is a temporary solution, this should be moved to the shutdown hook
-    if (empty($queueForEvents->getEvent())) {
+    if (!$document->getCollection() === 'users') {
         return;
     }
+
+    $queueForEvents
+        ->setEvent('users.[userId].update')
+        ->setParam('userId', $document->getId())
+        ->setPayload($response->output($document, Response::MODEL_USER));
 
     // Trigger functions
     $queueForFunctions
@@ -85,9 +79,7 @@ $eventDatabaseListener = function (Document $document, Event $queueForEvents, Re
         ->setQueue(Event::WEBHOOK_QUEUE_NAME)
         ->trigger();
 
-    /**
-     * Trigger realtime.
-     */
+    // Trigger realtime
     if ($project->getId() !== 'console') {
         $allEvents = Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams());
         $payload = new Document($queueForEvents->getPayload());
