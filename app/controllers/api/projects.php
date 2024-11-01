@@ -649,7 +649,7 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/session-alerts')
+App::patch('/v1/projects/:projectId/auth/teams-hide-sensitive-fields')
     ->desc('Update project team hide sensitive fields')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
