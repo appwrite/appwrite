@@ -151,6 +151,12 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('teamHideSensitiveFields', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to hide sensitive data in the teams API.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('oAuthProviders', [
                 'type' => Response::MODEL_AUTH_PROVIDER,
                 'description' => 'List of Auth Providers.',
@@ -348,6 +354,7 @@ class Project extends Model
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
         $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
         $document->setAttribute('authSessionAlerts', $authValues['sessionAlerts'] ?? false);
+        $document->setAttribute('authTeamHideSensitiveFields', $authValues['teamHideSensitiveFields'] ?? false);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

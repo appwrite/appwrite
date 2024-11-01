@@ -727,8 +727,9 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
-    ->action(function (string $teamId, array $queries, string $search, Response $response, Database $dbForProject) {
+    ->action(function (string $teamId, array $queries, string $search, Response $response, Document $project, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -790,27 +791,30 @@ App::get('/v1/teams/:teamId/memberships')
 
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
-        $memberships = array_map(function ($membership) use ($dbForProject, $team) {
+        $hideSensitiveFields = $project->getAttribute('auths', [])['teamHideSensitiveFields'] ?? false;
+
+        $memberships = array_map(function ($membership) use ($dbForProject, $team, $hideSensitiveFields) {
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
+            $membership->setAttribute('teamName', $team->getAttribute('name'));
 
-            $mfa = $user->getAttribute('mfa', false);
-            if ($mfa) {
-                $totp = TOTP::getAuthenticatorFromUser($user);
-                $totpEnabled = $totp && $totp->getAttribute('verified', false);
-                $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
-                $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+            if (!$hideSensitiveFields) {
+                $mfa = $user->getAttribute('mfa', false);
+                if ($mfa) {
+                    $totp = TOTP::getAuthenticatorFromUser($user);
+                    $totpEnabled = $totp && $totp->getAttribute('verified', false);
+                    $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
+                    $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
 
-                if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
-                    $mfa = false;
+                    if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
+                        $mfa = false;
+                    }
                 }
-            }
 
-            $membership
-                ->setAttribute('mfa', $mfa)
-                ->setAttribute('teamName', $team->getAttribute('name'))
-                ->setAttribute('userName', $user->getAttribute('name'))
-                ->setAttribute('userEmail', $user->getAttribute('email'))
-            ;
+                $membership
+                    ->setAttribute('mfa', $mfa)
+                    ->setAttribute('userName', $user->getAttribute('name'))
+                    ->setAttribute('userEmail', $user->getAttribute('email'));
+            }
 
             return $membership;
         }, $memberships);
