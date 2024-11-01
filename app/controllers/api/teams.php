@@ -791,7 +791,7 @@ App::get('/v1/teams/:teamId/memberships')
 
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
-        $showSensitiveFields = $project->getAttribute('auths', [])['teamsShowSensitiveFields'] ?? false;
+        $showSensitiveFields = $project->getAttribute('auths', [])['teamsShowSensitiveFields'] ?? true;
 
         $memberships = array_map(function ($membership) use ($dbForProject, $team, $showSensitiveFields) {
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));

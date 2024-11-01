@@ -111,7 +111,7 @@ App::post('/v1/projects')
             'personalDataCheck' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,
-            'teamsShowSensitiveFields' => false,
+            'teamsShowSensitiveFields' => true,
         ];
 
         foreach ($auth as $method) {
@@ -660,7 +660,7 @@ App::patch('/v1/projects/:projectId/auth/teams-hide-sensitive-fields')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('teamsShowSensitiveFields', false, new Boolean(true), 'Set to true to hide sensitive fields from team members.')
+    ->param('teamsShowSensitiveFields', true, new Boolean(true), 'Set to true to hide sensitive fields from team members.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $teamsShowSensitiveFields, Response $response, Database $dbForConsole) {
