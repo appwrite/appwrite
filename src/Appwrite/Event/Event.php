@@ -552,34 +552,20 @@ class Event
     }
 
     /**
-     * Clone event.
+     * Generate a function event from a base event
+     *
+     * @param Event $event
+     *
+     * @return self
+     *
      */
-    public function __clone()
+    public function from(Event $event): self
     {
-        if ($this->project instanceof Document) {
-            $this->project = clone $this->project;
-        }
-
-        if ($this->user instanceof Document) {
-            $this->user = clone $this->user;
-        }
-
-        foreach ($this->context as $key => $value) {
-            if ($value instanceof Document) {
-                $this->context[$key] = clone $value;
-            }
-        }
-
-        foreach ($this->params as $key => $value) {
-            if (is_object($value)) {
-                $this->params[$key] = clone $value;
-            }
-        }
-
-        foreach ($this->payload as $key => $value) {
-            if (is_object($value)) {
-                $this->payload[$key] = clone $value;
-            }
-        }
+        $this->project = $event->getProject();
+        $this->user = $event->getUser();
+        $this->payload = $event->getPayload();
+        $this->event = $event->getEvent();
+        $this->params = $event->getParams();
+        return $this;
     }
 }

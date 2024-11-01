@@ -28,6 +28,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Queue\Connection;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
@@ -57,31 +58,28 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$eventDatabaseListener = function (string $event, Document $document, Event $queueForEvents, Response $response, Func $queueForFunctions, Document $project) {
-    // Set event empty to avoid triggering events by default
-    $queueForEvents->setEvent('');
-
-    if ($document->getCollection() === 'users' && $event === Database::EVENT_DOCUMENT_CREATE) {
-        $queueForEvents
-            ->setEvent('users.[userId].create')
-            ->setParam('userId', $document->getId())
-            ->setPayload($response->output($document, Response::MODEL_USER))
-            ->trigger();
+$eventDatabaseListener = function (Document $document, Event $queueForEvents, Response $response, Func $queueForFunctions, Document $project) {
+    switch ($document->getCollection()) {
+        case 'users':
+            $queueForEvents
+                ->setEvent('users.[userId].update')
+                ->setParam('userId', $document->getId())
+                ->setPayload($response->output($document, Response::MODEL_USER))
+                ->trigger();
+            break;
     }
 
     // FIXME: This is a temporary solution, this should be moved to the shutdown hook
-    /**
-     * Trigger functions.
-     */
-    if (!$queueForEvents->isPaused()) {
-        $queueForFunctions
-            ->from($queueForEvents)
-            ->trigger();
+    if (empty($queueForEvents->getEvent())) {
+        return;
     }
 
-    /**
-     * Trigger webhooks.
-     */
+    // Trigger functions
+    $queueForFunctions
+        ->from($queueForEvents)
+        ->trigger();
+
+    // Trigger webhooks
     $queueForEvents
         ->setClass(Event::WEBHOOK_CLASS_NAME)
         ->setQueue(Event::WEBHOOK_QUEUE_NAME)
@@ -417,6 +415,7 @@ App::init()
     ->inject('response')
     ->inject('project')
     ->inject('user')
+    ->inject('queue')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForAudits')
@@ -427,7 +426,7 @@ App::init()
     ->inject('queueForFunctions')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Func $queueForFunctions, Database $dbForProject, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Func $queueForFunctions, Database $dbForProject, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -521,10 +520,13 @@ App::init()
         $queueForBuilds->setProject($project);
         $queueForMessaging->setProject($project);
 
+        $queueForEventsClone = new Event($queue);
+        $queueForEventsClone->from($queueForEvents);
+
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'trigger-events', fn ($event, $document) => $eventDatabaseListener($event, $document, clone $queueForEvents, $response, $queueForFunctions, $project));
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'trigger-events', fn ($event, $document) => $eventDatabaseListener($document, clone $queueForEvents, $response, $queueForFunctions, $project));
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
