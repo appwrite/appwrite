@@ -139,7 +139,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => 'console',
             'x-appwrite-key' => $this->getRoot()['secret'],
         ]), [
-            'teamHideSensitiveFields' => true,
+            'teamsShowSensitiveFields' => true,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -169,7 +169,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => 'console',
             'x-appwrite-key' => $this->getRoot()['secret'],
         ]), [
-            'teamHideSensitiveFields' => false,
+            'teamsShowSensitiveFields' => false,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
