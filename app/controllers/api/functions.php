@@ -2327,7 +2327,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
                 Query::equal('active', [true]),
             ]);
 
-            if ($schedule && !$schedule->isEmpty()) {
+            if (!$schedule->isEmpty()) {
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('active', false);

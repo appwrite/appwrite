@@ -51,7 +51,7 @@
         "utopia-php/cache": "dev-feat-redis-sync as 0.10.2",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.53.8",
+        "utopia-php/database": "0.53.9",
         "utopia-php/domains": "0.5.*",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "0.33.*",
