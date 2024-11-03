@@ -115,7 +115,6 @@ class Build extends Event
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
-            'sourceRegion' =>  $this->getSourceRegion(),
             'project' => $this->project,
             'resource' => $this->resource,
             'deployment' => $this->deployment,

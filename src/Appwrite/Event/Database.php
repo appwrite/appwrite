@@ -122,7 +122,6 @@ class Database extends Event
 
         try {
             $result = $client->enqueue([
-                'sourceRegion' =>  $this->getSourceRegion(),
                 'project' => $this->project,
                 'user' => $this->user,
                 'type' => $this->type,

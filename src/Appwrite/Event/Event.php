@@ -111,14 +111,6 @@ class Event
         return $this->event;
     }
 
-
-
-    public function getSourceRegion(): string
-    {
-        var_dump('event Source Region='.System::getEnv('_APP_REGION'));
-        return System::getEnv('_APP_REGION');
-    }
-
     /**
      * Set project for this event.
      *
@@ -331,7 +323,6 @@ class Event
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
-            'sourceRegion' =>  $this->getSourceRegion(),
             'project' => $this->project,
             'user' => $this->user,
             'userId' => $this->userId,
