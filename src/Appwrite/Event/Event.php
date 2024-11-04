@@ -204,19 +204,6 @@ class Event
         return $this->payload;
     }
 
-    public function getRealtimePayload(): array
-    {
-        $payload = [];
-
-        foreach ($this->payload as $key => $value) {
-            if (!isset($this->sensitive[$key])) {
-                $payload[$key] = $value;
-            }
-        }
-
-        return $payload;
-    }
-
     /**
      * Set context for this event.
      *

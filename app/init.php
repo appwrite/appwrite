@@ -31,7 +31,9 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\Usage;
+use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\Specification;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
@@ -1134,6 +1136,12 @@ App::setResource('queueForDeletes', function (Connection $queue) {
 App::setResource('queueForEvents', function (Connection $queue) {
     return new Event($queue);
 }, ['queue']);
+App::setResource('queueForWebhooks', function (Connection $queue) {
+    return new Webhook($queue);
+}, ['queue']);
+App::setResource('queueForRealtime', function () {
+    return new Realtime();
+}, []);
 App::setResource('queueForAudits', function (Connection $queue) {
     return new Audit($queue);
 }, ['queue']);
