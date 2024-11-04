@@ -1607,7 +1607,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, fn (Database $dbForProject) => new DatetimeValidator($dbForProject->getAdapter()->getMinDateTime(), $dbForProject->getAdapter()->getMinDateTime()), 'Default value for the attribute in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Cannot be set when attribute is required.', true, ['dbForProject'])
+    ->param('default', null, fn (Database $dbForProject) => new DatetimeValidator($dbForProject->getAdapter()->getMinDateTime(), $dbForProject->getAdapter()->getMaxDateTime()), 'Default value for the attribute in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Cannot be set when attribute is required.', true, ['dbForProject'])
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -2295,7 +2295,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, fn (Database $dbForProject) => new Nullable(new DatetimeValidator($dbForProject->getAdapter()->getMinDateTime(), $dbForProject->getAdapter()->getMinDateTime())), 'Default value for attribute when not provided. Cannot be set when attribute is required.', injections: ['dbForProject'])
+    ->param('default', null, fn (Database $dbForProject) => new Nullable(new DatetimeValidator($dbForProject->getAdapter()->getMinDateTime(), $dbForProject->getAdapter()->getMaxDateTime())), 'Default value for attribute when not provided. Cannot be set when attribute is required.', injections: ['dbForProject'])
     ->param('newKey', null, new Key(), 'New attribute key.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -3451,7 +3451,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
-    ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
+    ->alias('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Update document')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
