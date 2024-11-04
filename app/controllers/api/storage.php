@@ -787,8 +787,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
                 $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries);
                 $total = $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
             } else {
-                $files = Authorization::skip(fn() => $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries));
-                $total = Authorization::skip(fn() => $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
+                $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries));
+                $total = Authorization::skip(fn () => $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
             }
         } catch (NotFoundException) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -1564,7 +1564,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             if ($fileSecurity && !$valid) {
                 $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
             } else {
-                $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+                $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
             }
         } catch (NotFoundException) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -1654,7 +1654,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
                 if ($fileSecurity && !$valid) {
                     $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
                 } else {
-                    $deleted = Authorization::skip(fn() => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
+                    $deleted = Authorization::skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
                 }
             } catch (NotFoundException) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
