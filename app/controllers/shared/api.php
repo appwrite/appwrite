@@ -11,11 +11,11 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Messaging;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\Usage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
@@ -59,9 +59,9 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$eventDatabaseListener = function (Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) use ($triggerEventQueues) {
-    // For now, we only use user creation events with the database listener.
-    if (!$document->getCollection() === 'users') {
+$eventDatabaseListener = function (Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
+    // Only trigger events for user creation with the database listener.
+    if ($document->getCollection() !== 'users') {
         return;
     }
 
@@ -71,12 +71,21 @@ $eventDatabaseListener = function (Document $document, Response $response, Event
         ->setPayload($response->output($document, Response::MODEL_USER));
 
     // Trigger functions, webhooks, and realtime events
-    $triggerEventQueues(
-        $queueForEvents,
-        $queueForFunctions,
-        $queueForWebhooks,
-        $queueForRealtime
-    );
+    $queueForFunctions
+        ->from($queueForEvents)
+        ->trigger();
+
+    $queueForWebhooks
+        ->from($queueForEvents)
+        ->trigger();
+
+    if ($queueForEvents->getProject()->getId() === 'console') {
+        return;
+    }
+
+    $queueForRealtime
+        ->from($queueForEvents)
+        ->trigger();
 };
 
 $usageDatabaseListener = function (string $event, Document $document, Usage $queueForUsage) {
@@ -367,29 +376,6 @@ App::init()
         }
     });
 
-$triggerEventQueues = function ($queueForEvents, $queueForFunctions, $queueForWebhooks, $queueForRealtime) {
-    if (empty($queueForEvents->getEvent())) {
-        return;
-    }
-
-    $queueForFunctions
-        ->from($queueForEvents)
-        ->trigger();
-
-    $queueForWebhooks
-        ->from($queueForEvents)
-        ->trigger();
-
-    // Console can listen to events from other projects, but it should not trigger events for them.
-    if ($queueForEvents->getProject()->getId() === 'console') {
-        return;
-    }
-
-    $queueForRealtime
-        ->from($queueForEvents)
-        ->trigger();
-};
-
 App::init()
     ->groups(['api'])
     ->inject('utopia')
@@ -650,20 +636,29 @@ App::shutdown()
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('dbForConsole')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, string $mode, Database $dbForConsole) use ($parseLabel, $triggerEventQueues) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, string $mode, Database $dbForConsole) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
-        if (empty($queueForEvents->getPayload())) {
-            $queueForEvents->setPayload($responsePayload);
-        }
+        if (!empty($queueForEvents->getEvent())) {
+            if (empty($queueForEvents->getPayload())) {
+                $queueForEvents->setPayload($responsePayload);
+            }
 
-        $triggerEventQueues(
-            $queueForEvents,
-            $queueForFunctions,
-            $queueForWebhooks,
-            $queueForRealtime
-        );
+            $queueForWebhooks
+                ->from($queueForEvents)
+                ->trigger();
+
+            $queueForFunctions
+                ->from($queueForEvents)
+                ->trigger();
+
+            if ($project->getId() !== 'console') {
+                $queueForRealtime
+                    ->from($queueForEvents)
+                    ->trigger();
+            }
+        }
 
         $route = $utopia->getRoute();
         $requestParams = $route->getParamsValues();

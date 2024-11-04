@@ -302,10 +302,6 @@ class Event
      */
     public function trigger(): string|bool
     {
-        if ($this->paused) {
-            return false;
-        }
-
         if (empty($this->event)) {
             return false;
         }
@@ -518,24 +514,6 @@ class Event
          * Force a non-assoc array.
          */
         return \array_values($events);
-    }
-
-    /**
-     * Get the value of paused
-     */
-    public function isPaused(): bool
-    {
-        return $this->paused;
-    }
-
-    /**
-     * Set the value of paused
-     */
-    public function setPaused(bool $paused): self
-    {
-        $this->paused = $paused;
-
-        return $this;
     }
 
     /**
