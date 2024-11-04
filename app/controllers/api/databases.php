@@ -1092,7 +1092,10 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
         $enabled ??= $collection->getAttribute('enabled', true);
 
-        $collection = $dbForProject->updateDocument('database_' . $database->getInternalId(), $collectionId, $collection
+        $collection = $dbForProject->updateDocument(
+            'database_' . $database->getInternalId(),
+            $collectionId,
+            $collection
             ->setAttribute('name', $name)
             ->setAttribute('$permissions', $permissions)
             ->setAttribute('documentSecurity', $documentSecurity)
