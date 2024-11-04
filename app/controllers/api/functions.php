@@ -2642,9 +2642,11 @@ App::get('/v1/functions/templates/:templateId')
     ->action(function (string $templateId, Response $response) {
         $templates = Config::getParam('function-templates', []);
 
-        $template = array_shift(\array_filter($templates, function ($template) use ($templateId) {
+        $filtered = \array_filter($templates, function ($template) use ($templateId) {
             return $template['id'] === $templateId;
-        }));
+        });
+
+        $template = array_shift($filtered);
 
         if (empty($template)) {
             throw new Exception(Exception::FUNCTION_TEMPLATE_NOT_FOUND);
