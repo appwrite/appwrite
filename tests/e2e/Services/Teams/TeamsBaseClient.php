@@ -138,7 +138,7 @@ trait TeamsBaseClient
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/teams-sensitive-attributes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-            'x-appwrite-key' => $this->getRoot()['secret'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'enabled' => false,
         ]);
@@ -166,7 +166,7 @@ trait TeamsBaseClient
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/teams-sensitive-attributes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-            'x-appwrite-key' => $this->getRoot()['secret'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'enabled' => true,
         ]);
