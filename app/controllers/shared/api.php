@@ -125,9 +125,9 @@ $databaseListener = function (string $event, Document $document, Document $proje
             $bucketInternalId  = $parts[1];
             $queueForUsage
                 ->addMetric(METRIC_FILES, $value) // per project
-                ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value) // per project
+                ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeActual') * $value) // per project
                 ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES), $value) // per bucket
-                ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES_STORAGE), $document->getAttribute('sizeOriginal') * $value); // per bucket
+                ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES_STORAGE), $document->getAttribute('sizeActual') * $value); // per bucket
             break;
         case $document->getCollection() === 'functions':
             $queueForUsage
