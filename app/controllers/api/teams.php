@@ -728,19 +728,12 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('project')
-    ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->action(function (string $teamId, array $queries, string $search, Response $response, Document $project, Database $dbForConsole, Database $dbForProject) {
+    ->action(function (string $teamId, array $queries, string $search, Response $response, Document $project, Database $dbForProject) {
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
-        }
-
-        $project = $dbForConsole->getDocument('projects', $project->getId());
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $sensitiveAttributes = $project->getAttribute('auths', [])['teamsSensitiveAttributes'] ?? true;
