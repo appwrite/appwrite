@@ -354,7 +354,7 @@ class Project extends Model
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
         $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
         $document->setAttribute('authSessionAlerts', $authValues['sessionAlerts'] ?? false);
-        $document->setAttribute('authTeamsSensistiveAttributes', $authValues['teamsSensistiveAttributes'] ?? true);
+        $document->setAttribute('authTeamsSensitiveAttributes', $authValues['teamsSensitiveAttributes'] ?? false);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];
