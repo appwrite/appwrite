@@ -302,10 +302,6 @@ class Event
      */
     public function trigger(): string|bool
     {
-        if (empty($this->event)) {
-            return false;
-        }
-
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
