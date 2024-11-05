@@ -391,12 +391,9 @@ App::init()
     ->inject('queueForDatabase')
     ->inject('queueForBuilds')
     ->inject('queueForUsage')
-    ->inject('queueForFunctions')
-    ->inject('queueForWebhooks')
-    ->inject('queueForRealtime')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -493,9 +490,9 @@ App::init()
         // Clone the queues, to prevent events triggered by the database listener
         // from overwriting the events that are supposed to be triggered in the shutdown hook.
         $queueForEventsClone = new Event($queue);
-        $queueForFunctionsClone = new Func($queue);
-        $queueForWebhooksClone = new Webhook($queue);
-        $queueForRealtimeClone = new Realtime($queue);
+        $queueForFunctions = new Func($queue);
+        $queueForWebhooks = new Webhook($queue);
+        $queueForRealtime = new Realtime();
 
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
@@ -504,9 +501,9 @@ App::init()
                 $document,
                 $response,
                 $queueForEventsClone->from($queueForEvents),
-                $queueForFunctionsClone->from($queueForEvents),
-                $queueForWebhooksClone->from($queueForEvents),
-                $queueForRealtimeClone->from($queueForEvents)
+                $queueForFunctions->from($queueForEvents),
+                $queueForWebhooks->from($queueForEvents),
+                $queueForRealtime->from($queueForEvents)
             ));
 
         $useCache = $route->getLabel('cache', false);

@@ -527,6 +527,7 @@ class Event
         $this->payload = $event->getPayload();
         $this->event = $event->getEvent();
         $this->params = $event->getParams();
+        $this->context = $event->context;
         return $this;
     }
 }
