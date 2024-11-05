@@ -625,8 +625,7 @@ class Response extends SwooleResponse
                 }
             }
 
-            if (!$data->isSet($key) && !$rule['required']) { // set output key null if data key is not set and required is false
-                $output[$key] = null;
+            if (!$data->isSet($key) && !$rule['required']) { // do nothing data key is not set and required is false
                 continue;
             }
 

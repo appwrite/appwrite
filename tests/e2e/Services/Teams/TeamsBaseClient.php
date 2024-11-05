@@ -138,10 +138,12 @@ trait TeamsBaseClient
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/teams-sensitive-attributes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
             'enabled' => false,
         ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         /**
          * Test that sensitive fields are hidden
@@ -156,7 +158,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
 
         // Assert that sensitive fields are not present
-        $this->assertArrayNotHasKey('userName', $response['body']['memberships'][0], 'userName was present: ' . $response['body']['memberships'][0]['userName']);
+        $this->assertArrayNotHasKey('userName', $response['body']['memberships'][0]);
         $this->assertArrayNotHasKey('userEmail', $response['body']['memberships'][0]);
         $this->assertArrayNotHasKey('mfa', $response['body']['memberships'][0]);
 
@@ -166,7 +168,7 @@ trait TeamsBaseClient
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/teams-sensitive-attributes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
             'enabled' => true,
         ]);

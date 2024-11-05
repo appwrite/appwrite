@@ -37,14 +37,14 @@ class Membership extends Model
             ->addRule('userName', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User name.',
-                'default' => '',
                 'example' => 'John Doe',
+                'required' => false,
             ])
             ->addRule('userEmail', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User email address.',
-                'default' => '',
                 'example' => 'john@appwrite.io',
+                'required' => false,
             ])
             ->addRule('teamId', [
                 'type' => self::TYPE_STRING,
@@ -79,8 +79,8 @@ class Membership extends Model
             ->addRule('mfa', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Multi factor authentication status, true if the user has MFA enabled or false otherwise.',
-                'default' => false,
                 'example' => false,
+                'required' => false,
             ])
             ->addRule('roles', [
                 'type' => self::TYPE_STRING,

@@ -20,6 +20,7 @@ use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -809,11 +810,13 @@ App::get('/v1/teams/:teamId/memberships')
                     }
                 }
 
-                $membership
-                    ->setAttribute('mfa', $mfa)
-                    ->setAttribute('userName', $user->getAttribute('name'))
-                    ->setAttribute('userEmail', $user->getAttribute('email'));
+
             }
+
+            $membership
+                ->setAttribute('mfa', $sensitiveAttributes ? $mfa : null)
+                ->setAttribute('userName', $sensitiveAttributes ? $user->getAttribute('name') : null)
+                ->setAttribute('userEmail', $sensitiveAttributes ? $user->getAttribute('email') : null);
 
             return $membership;
         }, $memberships);
