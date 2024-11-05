@@ -264,7 +264,7 @@ class UsageTest extends Scope
             $this->assertEquals(201, $response['headers']['status-code']);
             $this->assertNotEmpty($response['body']['$id']);
 
-            $fileSize = $response['body']['sizeOriginal'];
+            $fileSize = $response['body']['sizeActual'];
 
             $storageTotal += $fileSize;
             $filesTotal += 1;
