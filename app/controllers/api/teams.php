@@ -737,8 +737,6 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $sensitiveAttributes = $project->getAttribute('auths', [])['teamsSensitiveAttributes'] ?? true;
-
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -793,11 +791,16 @@ App::get('/v1/teams/:teamId/memberships')
 
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
-        $memberships = array_map(function ($membership) use ($dbForProject, $team, $sensitiveAttributes) {
-            $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
-            $membership->setAttribute('teamName', $team->getAttribute('name'));
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
+        $sensitiveAttributes = ($isPrivilegedUser || $isAppUser) || $project->getAttribute('auths', [])['teamsSensitiveAttributes'] ?? true;
+
+        $memberships = array_map(function ($membership) use ($dbForProject, $team, $sensitiveAttributes) {
             if ($sensitiveAttributes) {
+                $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
+
                 $mfa = $user->getAttribute('mfa', false);
                 if ($mfa) {
                     $totp = TOTP::getAuthenticatorFromUser($user);
@@ -808,16 +811,16 @@ App::get('/v1/teams/:teamId/memberships')
                     if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
                         $mfa = false;
                     }
+
+                    $membership->setAttribute('mfa', $mfa);
                 }
 
-
+                $membership
+                    ->setAttribute('userName', $user->getAttribute('name'))
+                    ->setAttribute('userEmail', $user->getAttribute('email'));
             }
 
-            $membership
-                ->setAttribute('mfa', $sensitiveAttributes ? $mfa : null)
-                ->setAttribute('userName', $sensitiveAttributes ? $user->getAttribute('name') : null)
-                ->setAttribute('userEmail', $sensitiveAttributes ? $user->getAttribute('email') : null);
-
+            $membership->setAttribute('teamName', $team->getAttribute('name'));
             return $membership;
         }, $memberships);
 
@@ -843,8 +846,9 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
-    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject) {
+    ->action(function (string $teamId, string $membershipId, Response $response, Document $project, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -858,27 +862,30 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
-        $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
-        $mfa = $user->getAttribute('mfa', false);
+        $sensitiveAttributes = ($isPrivilegedUser || $isAppUser) || $project->getAttribute('auths', [])['teamsSensitiveAttributes'] ?? true;
 
-        if ($mfa) {
-            $totp = TOTP::getAuthenticatorFromUser($user);
-            $totpEnabled = $totp && $totp->getAttribute('verified', false);
-            $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
-            $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+        if ($sensitiveAttributes) {
+            $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
-            if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
-                $mfa = false;
+            $mfa = $user->getAttribute('mfa', false);
+
+            if ($mfa) {
+                $totp = TOTP::getAuthenticatorFromUser($user);
+                $totpEnabled = $totp && $totp->getAttribute('verified', false);
+                $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
+                $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+
+                if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
+                    $mfa = false;
+                }
             }
         }
 
-        $membership
-            ->setAttribute('mfa', $mfa)
-            ->setAttribute('teamName', $team->getAttribute('name'))
-            ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email'))
-        ;
+        $membership->setAttribute('teamName', $team->getAttribute('name'));
 
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
     });
