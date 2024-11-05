@@ -137,7 +137,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
         }
 
-        if ($isResourceBlocked($project, 'functions', $functionId)) {
+        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $functionId)) {
             throw new AppwriteException(AppwriteException::GENERAL_RESOURCE_BLOCKED);
         }
 
@@ -519,7 +519,7 @@ App::init()
                     $mainDomain = $envDomain;
                 } else {
                     $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
-                    $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
+                    $mainDomain = !$domainDocument->isEmpty() ? $domainDocument->getAttribute('domain') : $domain->get();
                 }
 
                 if ($mainDomain !== $domain->get()) {
@@ -529,7 +529,7 @@ App::init()
                         Query::equal('domain', [$domain->get()])
                     ]);
 
-                    if (!$domainDocument) {
+                    if ($domainDocument->isEmpty()) {
                         $domainDocument = new Document([
                             'domain' => $domain->get(),
                             'resourceType' => 'api',

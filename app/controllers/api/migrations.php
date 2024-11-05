@@ -158,7 +158,7 @@ App::post('/v1/migrations/firebase/oauth')
             Query::equal('provider', ['firebase']),
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
-        if ($identity === false || $identity->isEmpty()) {
+        if ($identity->isEmpty()) {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
@@ -612,7 +612,7 @@ App::get('/v1/migrations/firebase/report/oauth')
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
 
-        if ($identity === false || $identity->isEmpty()) {
+        if ($identity->isEmpty()) {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
@@ -787,13 +787,13 @@ App::get('/v1/migrations/firebase/redirect')
                 Query::equal('providerEmail', [$email]),
             ]);
 
-            if ($identity !== false && !$identity->isEmpty()) {
+            if (!$identity->isEmpty()) {
                 if ($identity->getAttribute('userInternalId', '') !== $user->getInternalId()) {
                     throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
                 }
             }
 
-            if ($identity !== false && !$identity->isEmpty()) {
+            if (!$identity->isEmpty()) {
                 $identity = $identity
                     ->setAttribute('providerAccessToken', $accessToken)
                     ->setAttribute('providerRefreshToken', $refreshToken)
@@ -856,7 +856,7 @@ App::get('/v1/migrations/firebase/projects')
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
 
-        if ($identity === false || $identity->isEmpty()) {
+        if ($identity->isEmpty()) {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
@@ -936,7 +936,7 @@ App::get('/v1/migrations/firebase/deauthorize')
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
 
-        if ($identity === false || $identity->isEmpty()) {
+        if ($identity->isEmpty()) {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Not authenticated with Firebase'); //TODO: Replace with USER_IDENTITY_NOT_FOUND
         }
 
