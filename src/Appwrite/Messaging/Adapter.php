@@ -8,5 +8,5 @@ abstract class Adapter
 
     abstract public function unsubscribe(mixed $identifier): void;
 
-    abstract public static function send(\redis $redis, string $projectId, array $payload, array $events, array $channels, array $roles, array $options): void;
+    abstract public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options): void;
 }
