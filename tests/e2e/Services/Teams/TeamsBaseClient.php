@@ -140,7 +140,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => 'console',
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'enabled' => 'false',
+            'enabled' => false,
         ]);
 
         /**
@@ -156,7 +156,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
 
         // Assert that sensitive fields are not present
-        $this->assertArrayNotHasKey('userName', $response['body']['memberships'][0]);
+        $this->assertArrayNotHasKey('userName', $response['body']['memberships'][0], 'userName was present: ' . $response['body']['memberships'][0]['userName']);
         $this->assertArrayNotHasKey('userEmail', $response['body']['memberships'][0]);
         $this->assertArrayNotHasKey('mfa', $response['body']['memberships'][0]);
 

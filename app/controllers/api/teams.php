@@ -728,14 +728,22 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('project')
+    ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->action(function (string $teamId, array $queries, string $search, Response $response, Document $project, Database $dbForProject) {
-
+    ->action(function (string $teamId, array $queries, string $search, Response $response, Document $project, Database $dbForConsole, Database $dbForProject) {
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
+
+        $project = $dbForConsole->getDocument('projects', $project->getId());
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $sensitiveAttributes = $project->getAttribute('auths', [])['teamsSensitiveAttributes'] ?? true;
 
         try {
             $queries = Query::parseQueries($queries);
@@ -790,8 +798,6 @@ App::get('/v1/teams/:teamId/memberships')
         );
 
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
-
-        $sensitiveAttributes = $project->getAttribute('auths', [])['teamsSensitiveAttributes'] ?? true;
 
         $memberships = array_map(function ($membership) use ($dbForProject, $team, $sensitiveAttributes) {
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
