@@ -108,7 +108,6 @@ class Database extends Event
      */
     public function trigger(): string|bool
     {
-
         try {
             $dsn = new DSN($this->getProject()->getAttribute('database'));
         } catch (\InvalidArgumentException) {

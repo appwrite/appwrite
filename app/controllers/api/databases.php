@@ -3,6 +3,7 @@
 use Appwrite\Auth\Auth;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;

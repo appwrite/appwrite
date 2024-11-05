@@ -124,18 +124,12 @@ App::post('/v1/projects')
         }
 
         $databases = Config::getParam('pools-database', []);
+
         $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
         $index = \array_search($databaseOverride, $databases);
         if ($index !== false) {
             $dsn = $databases[$index];
         } else {
-
-            if ($region !== 'default') {
-                $databases = array_filter($databases, function ($value) use ($region) {
-                    return str_contains($value, $region);
-                });
-            }
-
             $dsn = $databases[array_rand($databases)];
         }
 

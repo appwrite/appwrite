@@ -6,7 +6,6 @@ use InvalidArgumentException;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
-use Utopia\System\System;
 
 class Event
 {
