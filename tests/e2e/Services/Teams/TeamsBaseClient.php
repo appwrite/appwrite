@@ -140,7 +140,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => 'console',
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'enabled' => false,
+            'enabled' => 'false',
         ]);
 
         /**

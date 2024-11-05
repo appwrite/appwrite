@@ -111,9 +111,7 @@ App::post('/v1/projects')
             'personalDataCheck' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,
-            'teamsShowMfa' => true,
-            'teamsShowName' => true,
-            'teamsShowEmail' => true,
+            'teamsSensitiveAttributes' => true,
         ];
 
         foreach ($auth as $method) {
