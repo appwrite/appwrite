@@ -490,14 +490,24 @@ App::init()
         $queueForBuilds->setProject($project);
         $queueForMessaging->setProject($project);
 
-        // Clone the queueForEvents, to prevent events triggered by the database listener
+        // Clone the queues, to prevent events triggered by the database listener
         // from overwriting the events that are supposed to be triggered in the shutdown hook.
         $queueForEventsClone = new Event($queue);
+        $queueForFunctionsClone = new Func($queue);
+        $queueForWebhooksClone = new Webhook($queue);
+        $queueForRealtimeClone = new Realtime($queue);
 
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener($document, $response, $queueForEventsClone->from($queueForEvents), $queueForFunctions, $queueForWebhooks, $queueForRealtime));
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
+                $document,
+                $response,
+                $queueForEventsClone->from($queueForEvents),
+                $queueForFunctionsClone->from($queueForEvents),
+                $queueForWebhooksClone->from($queueForEvents),
+                $queueForRealtimeClone->from($queueForEvents)
+            ));
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
