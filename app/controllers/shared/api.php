@@ -66,7 +66,7 @@ $eventDatabaseListener = function (Document $document, Response $response, Event
     }
 
     $queueForEvents
-        ->setEvent('users.[userId].update')
+        ->setEvent('users.[userId].create')
         ->setParam('userId', $document->getId())
         ->setPayload($response->output($document, Response::MODEL_USER));
 
