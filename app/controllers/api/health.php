@@ -6,7 +6,10 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Pools\Group;
 use Utopia\Queue\Client;
@@ -441,6 +444,37 @@ App::get('/v1/health/certificate')
             'validTo' => $certificatePayload['validTo_time_t'],
             'signatureTypeSN' => $certificatePayload['signatureTypeSN'],
         ]), Response::MODEL_HEALTH_CERTIFICATE);
+    }, ['response']);
+
+App::get('/v1/health/certificates/renewal')
+    ->desc('Get pending certificate renewals (certificates with a past renewDate)')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getCertificatesRenewals')
+    ->label('sdk.description', '/docs/references/health/get-certificates-renewals.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->inject('dbForConsole')
+    ->action(function (int|string $threshold, Database $dbForConsole, Response $response) {
+        $threshold = \intval($threshold);
+
+        $time = DateTime::now();
+        $certificates = $dbForConsole->find('certificates', [
+            Query::lessThan('attempts', 5), // Maximum 5 attempts
+            Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
+        ]);
+
+        $size = count($certificates);
+
+        if ($size >= $threshold) {
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Pending certificates renewal queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+        }
+
+        $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
