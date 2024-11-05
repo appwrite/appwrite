@@ -791,13 +791,13 @@ App::get('/v1/teams/:teamId/memberships')
 
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
-        $showSensitiveFields = $project->getAttribute('auths', [])['teamsShowSensitiveFields'] ?? true;
+        $sensitiveAttributes = $project->getAttribute('auths', [])['teamsSensitiveAttributes'] ?? true;
 
-        $memberships = array_map(function ($membership) use ($dbForProject, $team, $showSensitiveFields) {
+        $memberships = array_map(function ($membership) use ($dbForProject, $team, $sensitiveAttributes) {
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
             $membership->setAttribute('teamName', $team->getAttribute('name'));
 
-            if ($showSensitiveFields) {
+            if ($sensitiveAttributes) {
                 $mfa = $user->getAttribute('mfa', false);
                 if ($mfa) {
                     $totp = TOTP::getAuthenticatorFromUser($user);

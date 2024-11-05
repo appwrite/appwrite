@@ -151,9 +151,9 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('teamsShowSensitiveFields', [
+            ->addRule('teamsSensitiveAttributes', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether or not to hide sensitive data in the teams API.',
+                'description' => 'Whether or not to show sensitive attributes in the teams API.',
                 'default' => false,
                 'example' => true,
             ])

@@ -111,7 +111,9 @@ App::post('/v1/projects')
             'personalDataCheck' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,
-            'teamsShowSensitiveFields' => true,
+            'teamsShowMfa' => true,
+            'teamsShowName' => true,
+            'teamsShowEmail' => true,
         ];
 
         foreach ($auth as $method) {
@@ -649,21 +651,21 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/teams-hide-sensitive-fields')
-    ->desc('Update project team show sensitive fields')
+App::patch('/v1/projects/:projectId/auth/teams-sensitive-attributes')
+    ->desc('Update project team sensitive attributes')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateTeamsShowSensitiveFields')
+    ->label('sdk.method', 'updateTeamsSensitiveAttributes')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('teamsShowSensitiveFields', true, new Boolean(true), 'Set to true to hide sensitive fields from team members.')
+    ->param('enabled', true, new Boolean(true), 'Set to true to show sensitive attributes to team members.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, bool $teamsShowSensitiveFields, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -672,7 +674,8 @@ App::patch('/v1/projects/:projectId/auth/teams-hide-sensitive-fields')
         }
 
         $auths = $project->getAttribute('auths', []);
-        $auths['teamsShowSensitiveFields'] = $teamsShowSensitiveFields;
+
+        $auths['teamsSensitiveAttributes'] = $enabled;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));
