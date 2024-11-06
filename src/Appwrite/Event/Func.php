@@ -213,10 +213,6 @@ class Func extends Event
      */
     public function trigger(): string|bool
     {
-        if ($this->paused) {
-            return false;
-        }
-
         $client = new Client($this->queue, $this->connection);
 
         $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
@@ -237,23 +233,5 @@ class Func extends Event
             'headers' => $this->headers,
             'method' => $this->method,
         ]);
-    }
-
-    /**
-     * Generate a function event from a base event
-     *
-     * @param Event $event
-     *
-     * @return self
-     *
-     */
-    public function from(Event $event): self
-    {
-        $this->project = $event->getProject();
-        $this->user = $event->getUser();
-        $this->payload = $event->getPayload();
-        $this->event = $event->getEvent();
-        $this->params = $event->getParams();
-        return $this;
     }
 }

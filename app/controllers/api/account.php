@@ -274,7 +274,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 App::post('/v1/account')
     ->desc('Create account')
     ->groups(['api', 'account', 'auth'])
-    ->label('event', 'users.[userId].create')
     ->label('scope', 'sessions.write')
     ->label('auth.type', 'emailPassword')
     ->label('audits.event', 'user.create')
@@ -297,9 +296,8 @@ App::post('/v1/account')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Hooks $hooks) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -409,8 +407,6 @@ App::post('/v1/account')
         Authorization::setRole(Role::user($user->getId())->toString());
         Authorization::setRole(Role::users()->toString());
 
-        $queueForEvents->setParam('userId', $user->getId());
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_ACCOUNT);
@@ -442,7 +438,6 @@ App::get('/v1/account')
 App::delete('/v1/account')
     ->desc('Delete account')
     ->groups(['api', 'account'])
-    ->label('event', 'users.[userId].delete')
     ->label('scope', 'account')
     ->label('audits.event', 'user.delete')
     ->label('audits.resource', 'user/{response.$id}')
@@ -1499,6 +1494,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $email,
                     ]));
+
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
