@@ -87,7 +87,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 8,
+                    "weight": 9,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -140,7 +140,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 7,
+                    "weight": 8,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -222,7 +222,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Update currently logged in user account email address. After changing user address, the user confirmation status will get reset. A new confirmation email is not sent automatically however you can use the send confirmation email endpoint again to send the confirmation email. For security measures, user password is required to complete this request.\r\nThis endpoint can also be used to convert an anonymous account to a normal one, by passing an email address and a new password.\r\n",
+                "description": "Update currently logged in user account email address. After changing user address, the user confirmation status will get reset. A new confirmation email is not sent automatically however you can use the send confirmation email endpoint again to send the confirmation email. For security measures, user password is required to complete this request.\nThis endpoint can also be used to convert an anonymous account to a normal one, by passing an email address and a new password.\n",
                 "responses": {
                     "200": {
                         "description": "User",
@@ -233,7 +233,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
-                    "weight": 33,
+                    "weight": 34,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -315,7 +315,7 @@
                 },
                 "x-appwrite": {
                     "method": "listIdentities",
-                    "weight": 56,
+                    "weight": 57,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -379,7 +379,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteIdentity",
-                    "weight": 57,
+                    "weight": 58,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -444,7 +444,7 @@
                 },
                 "x-appwrite": {
                     "method": "createJWT",
-                    "weight": 28,
+                    "weight": 29,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -497,7 +497,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLogs",
-                    "weight": 30,
+                    "weight": 31,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -566,7 +566,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMFA",
-                    "weight": 43,
+                    "weight": 44,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -641,7 +641,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaAuthenticator",
-                    "weight": 45,
+                    "weight": 46,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -709,7 +709,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaAuthenticator",
-                    "weight": 46,
+                    "weight": 47,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -790,7 +790,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
-                    "weight": 50,
+                    "weight": 51,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -860,7 +860,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaChallenge",
-                    "weight": 51,
+                    "weight": 52,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -934,7 +934,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaChallenge",
-                    "weight": 52,
+                    "weight": 53,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1016,7 +1016,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMfaFactors",
-                    "weight": 44,
+                    "weight": 45,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1071,7 +1071,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
-                    "weight": 49,
+                    "weight": 50,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1124,7 +1124,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
-                    "weight": 47,
+                    "weight": 48,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1177,7 +1177,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
-                    "weight": 48,
+                    "weight": 49,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1232,7 +1232,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
-                    "weight": 31,
+                    "weight": 32,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1307,7 +1307,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePassword",
-                    "weight": 32,
+                    "weight": 33,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1388,7 +1388,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhone",
-                    "weight": 34,
+                    "weight": 35,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1470,7 +1470,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
-                    "weight": 29,
+                    "weight": 30,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1523,7 +1523,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
-                    "weight": 35,
+                    "weight": 36,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1598,7 +1598,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRecovery",
-                    "weight": 37,
+                    "weight": 38,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1670,7 +1670,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Use this endpoint to complete the user account password reset. Both the **userId** and **secret** arguments will be passed as query parameters to the redirect URL you have provided when sending your request to the [POST \/account\/recovery](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createRecovery) endpoint.\r\n\r\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.",
+                "description": "Use this endpoint to complete the user account password reset. Both the **userId** and **secret** arguments will be passed as query parameters to the redirect URL you have provided when sending your request to the [POST \/account\/recovery](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createRecovery) endpoint.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.",
                 "responses": {
                     "200": {
                         "description": "Token",
@@ -1681,7 +1681,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateRecovery",
-                    "weight": 38,
+                    "weight": 39,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1770,7 +1770,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSessions",
-                    "weight": 10,
+                    "weight": 11,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1818,7 +1818,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSessions",
-                    "weight": 11,
+                    "weight": 12,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1873,7 +1873,7 @@
                 },
                 "x-appwrite": {
                     "method": "createAnonymousSession",
-                    "weight": 16,
+                    "weight": 17,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -1915,7 +1915,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Allow the user to login into their account by providing a valid email and password combination. This route will create a new session for the user.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Allow the user to login into their account by providing a valid email and password combination. This route will create a new session for the user.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
                 "responses": {
                     "201": {
                         "description": "Session",
@@ -1926,7 +1926,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailPasswordSession",
-                    "weight": 15,
+                    "weight": 16,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2006,7 +2006,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMagicURLSession",
-                    "weight": 25,
+                    "weight": 26,
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
@@ -2075,7 +2075,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed.\r\n\r\nIf there is already an active session, the new session will be attached to the logged-in account. If there are no active sessions, the server will attempt to look for a user with the same email address as the email received from the OAuth2 provider and attach the new session to the existing user. If no matching user is found - the server will create a new user.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\r\n",
+                "description": "Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed.\n\nIf there is already an active session, the new session will be attached to the logged-in account. If there are no active sessions, the server will attempt to look for a user with the same email address as the email received from the OAuth2 provider and attach the new session to the existing user. If no matching user is found - the server will create a new user.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
                 "responses": {
                     "301": {
                         "description": "No content"
@@ -2083,7 +2083,7 @@
                 },
                 "x-appwrite": {
                     "method": "createOAuth2Session",
-                    "weight": 18,
+                    "weight": 19,
                     "cookies": false,
                     "type": "webAuth",
                     "deprecated": false,
@@ -2221,7 +2221,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhoneSession",
-                    "weight": 26,
+                    "weight": 27,
                     "cookies": false,
                     "type": "",
                     "deprecated": true,
@@ -2301,7 +2301,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSession",
-                    "weight": 17,
+                    "weight": 18,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2381,7 +2381,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSession",
-                    "weight": 12,
+                    "weight": 13,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2444,7 +2444,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSession",
-                    "weight": 14,
+                    "weight": 15,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2502,7 +2502,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSession",
-                    "weight": 13,
+                    "weight": 14,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2567,7 +2567,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateStatus",
-                    "weight": 36,
+                    "weight": 37,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2622,7 +2622,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPushTarget",
-                    "weight": 53,
+                    "weight": 54,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2708,7 +2708,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePushTarget",
-                    "weight": 54,
+                    "weight": 55,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2784,7 +2784,7 @@
                 },
                 "x-appwrite": {
                     "method": "deletePushTarget",
-                    "weight": 55,
+                    "weight": 56,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2836,7 +2836,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -2847,7 +2847,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmailToken",
-                    "weight": 24,
+                    "weight": 25,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -2922,7 +2922,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not been registered, a new user will be created. When the user clicks the link in the email, the user is redirected back to the URL you provided with the secret key and userId values attached to the URL query string. Use the query string parameters to submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The link sent to the user's email address is valid for 1 hour. If you are on a mobile device you can leave the URL parameter empty, so that the login completion will be handled by your Appwrite instance by default.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\r\n",
+                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not been registered, a new user will be created. When the user clicks the link in the email, the user is redirected back to the URL you provided with the secret key and userId values attached to the URL query string. Use the query string parameters to submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The link sent to the user's email address is valid for 1 hour. If you are on a mobile device you can leave the URL parameter empty, so that the login completion will be handled by your Appwrite instance by default.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -2933,7 +2933,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMagicURLToken",
-                    "weight": 23,
+                    "weight": 24,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -3017,7 +3017,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed. \r\n\r\nIf authentication succeeds, `userId` and `secret` of a token will be appended to the success URL as query parameters. These can be used to create a new session using the [Create session](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed. \n\nIf authentication succeeds, `userId` and `secret` of a token will be appended to the success URL as query parameters. These can be used to create a new session using the [Create session](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
                 "responses": {
                     "301": {
                         "description": "No content"
@@ -3025,7 +3025,7 @@
                 },
                 "x-appwrite": {
                     "method": "createOAuth2Token",
-                    "weight": 22,
+                    "weight": 23,
                     "cookies": false,
                     "type": "webAuth",
                     "deprecated": false,
@@ -3152,7 +3152,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an SMS with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's phone is valid for 15 minutes.\r\n\r\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Sends the user an SMS with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's phone is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -3163,7 +3163,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPhoneToken",
-                    "weight": 27,
+                    "weight": 28,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -3235,7 +3235,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\r\n\r\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\r\n",
+                "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -3246,7 +3246,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVerification",
-                    "weight": 39,
+                    "weight": 40,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -3319,7 +3319,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVerification",
-                    "weight": 40,
+                    "weight": 41,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -3401,7 +3401,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPhoneVerification",
-                    "weight": 41,
+                    "weight": 42,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -3457,7 +3457,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePhoneVerification",
-                    "weight": 42,
+                    "weight": 43,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -3528,7 +3528,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "You can use this endpoint to show different browser icons to your users. The code argument receives the browser code as it appears in your user [GET \/account\/sessions](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#getSessions) endpoint. Use width, height and quality arguments to change the output settings.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.",
+                "description": "You can use this endpoint to show different browser icons to your users. The code argument receives the browser code as it appears in your user [GET \/account\/sessions](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#getSessions) endpoint. Use width, height and quality arguments to change the output settings.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -3539,7 +3539,7 @@
                 },
                 "x-appwrite": {
                     "method": "getBrowser",
-                    "weight": 59,
+                    "weight": 60,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -3657,7 +3657,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "The credit card endpoint will return you the icon of the credit card provider you need. Use width, height and quality arguments to change the output settings.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\r\n",
+                "description": "The credit card endpoint will return you the icon of the credit card provider you need. Use width, height and quality arguments to change the output settings.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\n",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -3668,7 +3668,7 @@
                 },
                 "x-appwrite": {
                     "method": "getCreditCard",
-                    "weight": 58,
+                    "weight": 59,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -3790,7 +3790,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "Use this endpoint to fetch the favorite icon (AKA favicon) of any remote website URL.\r\n\r\nThis endpoint does not follow HTTP redirects.",
+                "description": "Use this endpoint to fetch the favorite icon (AKA favicon) of any remote website URL.\n\nThis endpoint does not follow HTTP redirects.",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -3801,7 +3801,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFavicon",
-                    "weight": 62,
+                    "weight": 63,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -3857,7 +3857,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "You can use this endpoint to show different country flags icons to your users. The code argument receives the 2 letter country code. Use width, height and quality arguments to change the output settings. Country codes follow the [ISO 3166-1](https:\/\/en.wikipedia.org\/wiki\/ISO_3166-1) standard.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\r\n",
+                "description": "You can use this endpoint to show different country flags icons to your users. The code argument receives the 2 letter country code. Use width, height and quality arguments to change the output settings. Country codes follow the [ISO 3166-1](https:\/\/en.wikipedia.org\/wiki\/ISO_3166-1) standard.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\n",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -3868,7 +3868,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFlag",
-                    "weight": 60,
+                    "weight": 61,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -4348,7 +4348,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop and display remote images in your app or in case you want to make sure a 3rd party image is properly served using a TLS protocol.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 400x400px.\r\n\r\nThis endpoint does not follow HTTP redirects.",
+                "description": "Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop and display remote images in your app or in case you want to make sure a 3rd party image is properly served using a TLS protocol.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 400x400px.\n\nThis endpoint does not follow HTTP redirects.",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -4359,7 +4359,7 @@
                 },
                 "x-appwrite": {
                     "method": "getImage",
-                    "weight": 61,
+                    "weight": 62,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -4435,7 +4435,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "Use this endpoint to show your user initials avatar icon on your website or app. By default, this route will try to print your logged-in user name or email initials. You can also overwrite the user name if you pass the 'name' parameter. If no name is given and no user is logged, an empty avatar will be returned.\r\n\r\nYou can use the color and background params to change the avatar colors. By default, a random theme will be selected. The random theme will persist for the user's initials when reloading the same theme will always return for the same initials.\r\n\r\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\r\n",
+                "description": "Use this endpoint to show your user initials avatar icon on your website or app. By default, this route will try to print your logged-in user name or email initials. You can also overwrite the user name if you pass the 'name' parameter. If no name is given and no user is logged, an empty avatar will be returned.\n\nYou can use the color and background params to change the avatar colors. By default, a random theme will be selected. The random theme will persist for the user's initials when reloading the same theme will always return for the same initials.\n\nWhen one dimension is specified and the other is 0, the image is scaled with preserved aspect ratio. If both dimensions are 0, the API provides an image at source quality. If dimensions are not specified, the default size of image returned is 100x100px.\n",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -4446,7 +4446,7 @@
                 },
                 "x-appwrite": {
                     "method": "getInitials",
-                    "weight": 64,
+                    "weight": 65,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -4530,7 +4530,7 @@
                 "tags": [
                     "avatars"
                 ],
-                "description": "Converts a given plain text to a QR code image. You can use the query parameters to change the size and style of the resulting image.\r\n",
+                "description": "Converts a given plain text to a QR code image. You can use the query parameters to change the size and style of the resulting image.\n",
                 "responses": {
                     "200": {
                         "description": "Image",
@@ -4541,7 +4541,7 @@
                 },
                 "x-appwrite": {
                     "method": "getQR",
-                    "weight": 63,
+                    "weight": 64,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -4636,7 +4636,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDocuments",
-                    "weight": 108,
+                    "weight": 109,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4720,7 +4720,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDocument",
-                    "weight": 107,
+                    "weight": 108,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4828,7 +4828,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDocument",
-                    "weight": 109,
+                    "weight": 110,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4920,7 +4920,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDocument",
-                    "weight": 111,
+                    "weight": 112,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5019,7 +5019,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDocument",
-                    "weight": 112,
+                    "weight": 113,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5101,7 +5101,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 304,
+                    "weight": 306,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5167,7 +5167,7 @@
                 "summary": "Create execution",
                 "operationId": "functionsCreateExecution",
                 "consumes": [
-                    "multipart\/form-data"
+                    "application\/json"
                 ],
                 "produces": [
                     "multipart\/form-data"
@@ -5186,7 +5186,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 303,
+                    "weight": 305,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5226,65 +5226,59 @@
                         "in": "path"
                     },
                     {
-                        "name": "body",
-                        "description": "HTTP body of execution. Default value is empty string.",
-                        "required": false,
-                        "type": "payload",
-                        "default": "",
-                        "in": "formData"
-                    },
-                    {
-                        "name": "async",
-                        "description": "Execute code in the background. Default value is false.",
-                        "required": false,
-                        "type": "boolean",
-                        "x-example": false,
-                        "default": false,
-                        "in": "formData"
-                    },
-                    {
-                        "name": "path",
-                        "description": "HTTP path of execution. Path can include query params. Default value is \/",
-                        "required": false,
-                        "type": "string",
-                        "x-example": "<PATH>",
-                        "default": "\/",
-                        "in": "formData"
-                    },
-                    {
-                        "name": "method",
-                        "description": "HTTP method of execution. Default value is GET.",
-                        "required": false,
-                        "type": "string",
-                        "x-example": "GET",
-                        "enum": [
-                            "GET",
-                            "POST",
-                            "PUT",
-                            "PATCH",
-                            "DELETE",
-                            "OPTIONS"
-                        ],
-                        "x-enum-name": "ExecutionMethod",
-                        "x-enum-keys": [],
-                        "default": "POST",
-                        "in": "formData"
-                    },
-                    {
-                        "name": "headers",
-                        "description": "HTTP headers of execution. Defaults to empty.",
-                        "required": false,
-                        "type": "object",
-                        "default": [],
-                        "x-example": "{}",
-                        "in": "formData"
-                    },
-                    {
-                        "name": "scheduledAt",
-                        "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
-                        "required": false,
-                        "type": "string",
-                        "in": "formData"
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "body": {
+                                    "type": "string",
+                                    "description": "HTTP body of execution. Default value is empty string.",
+                                    "default": "",
+                                    "x-example": "<BODY>"
+                                },
+                                "async": {
+                                    "type": "boolean",
+                                    "description": "Execute code in the background. Default value is false.",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "path": {
+                                    "type": "string",
+                                    "description": "HTTP path of execution. Path can include query params. Default value is \/",
+                                    "default": "\/",
+                                    "x-example": "<PATH>"
+                                },
+                                "method": {
+                                    "type": "string",
+                                    "description": "HTTP method of execution. Default value is GET.",
+                                    "default": "POST",
+                                    "x-example": "GET",
+                                    "enum": [
+                                        "GET",
+                                        "POST",
+                                        "PUT",
+                                        "PATCH",
+                                        "DELETE",
+                                        "OPTIONS"
+                                    ],
+                                    "x-enum-name": "ExecutionMethod",
+                                    "x-enum-keys": []
+                                },
+                                "headers": {
+                                    "type": "object",
+                                    "description": "HTTP headers of execution. Defaults to empty.",
+                                    "default": [],
+                                    "x-example": "{}"
+                                },
+                                "scheduledAt": {
+                                    "type": "string",
+                                    "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            }
+                        }
                     }
                 ]
             }
@@ -5313,7 +5307,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 305,
+                    "weight": 307,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5387,7 +5381,7 @@
                 },
                 "x-appwrite": {
                     "method": "query",
-                    "weight": 329,
+                    "weight": 331,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5463,7 +5457,7 @@
                 },
                 "x-appwrite": {
                     "method": "mutation",
-                    "weight": 328,
+                    "weight": 330,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5528,7 +5522,7 @@
                 "tags": [
                     "locale"
                 ],
-                "description": "Get the current user location based on IP. Returns an object with user country code, country name, continent name, continent code, ip address and suggested currency. You can use the locale header to get the data in a supported language.\r\n\r\n([IP Geolocation by DB-IP](https:\/\/db-ip.com))",
+                "description": "Get the current user location based on IP. Returns an object with user country code, country name, continent name, continent code, ip address and suggested currency. You can use the locale header to get the data in a supported language.\n\n([IP Geolocation by DB-IP](https:\/\/db-ip.com))",
                 "responses": {
                     "200": {
                         "description": "Locale",
@@ -5539,7 +5533,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 116,
+                    "weight": 117,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5595,7 +5589,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCodes",
-                    "weight": 117,
+                    "weight": 118,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5651,7 +5645,7 @@
                 },
                 "x-appwrite": {
                     "method": "listContinents",
-                    "weight": 121,
+                    "weight": 122,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5707,7 +5701,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountries",
-                    "weight": 118,
+                    "weight": 119,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5763,7 +5757,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesEU",
-                    "weight": 119,
+                    "weight": 120,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5819,7 +5813,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesPhones",
-                    "weight": 120,
+                    "weight": 121,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5875,7 +5869,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCurrencies",
-                    "weight": 122,
+                    "weight": 123,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5931,7 +5925,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLanguages",
-                    "weight": 123,
+                    "weight": 124,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5987,7 +5981,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 380,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6076,7 +6070,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 384,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6151,7 +6145,7 @@
                 },
                 "x-appwrite": {
                     "method": "listFiles",
-                    "weight": 206,
+                    "weight": 208,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6225,7 +6219,7 @@
                 "tags": [
                     "storage"
                 ],
-                "description": "Create a new file. Before using this route, you should create a new bucket resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/storage#storageCreateBucket) API or directly from your Appwrite console.\r\n\r\nLarger files should be uploaded using multiple requests with the [content-range](https:\/\/developer.mozilla.org\/en-US\/docs\/Web\/HTTP\/Headers\/Content-Range) header to send a partial request with a maximum supported chunk of `5MB`. The `content-range` header values should always be in bytes.\r\n\r\nWhen the first request is sent, the server will return the **File** object, and the subsequent part request must include the file's **id** in `x-appwrite-id` header to allow the server to know that the partial upload is for the existing file and not for a new one.\r\n\r\nIf you're creating a new file using one of the Appwrite SDKs, all the chunking logic will be managed by the SDK internally.\r\n",
+                "description": "Create a new file. Before using this route, you should create a new bucket resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/storage#storageCreateBucket) API or directly from your Appwrite console.\n\nLarger files should be uploaded using multiple requests with the [content-range](https:\/\/developer.mozilla.org\/en-US\/docs\/Web\/HTTP\/Headers\/Content-Range) header to send a partial request with a maximum supported chunk of `5MB`. The `content-range` header values should always be in bytes.\n\nWhen the first request is sent, the server will return the **File** object, and the subsequent part request must include the file's **id** in `x-appwrite-id` header to allow the server to know that the partial upload is for the existing file and not for a new one.\n\nIf you're creating a new file using one of the Appwrite SDKs, all the chunking logic will be managed by the SDK internally.\n",
                 "responses": {
                     "201": {
                         "description": "File",
@@ -6236,7 +6230,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFile",
-                    "weight": 205,
+                    "weight": 207,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -6330,7 +6324,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFile",
-                    "weight": 207,
+                    "weight": 209,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6402,7 +6396,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFile",
-                    "weight": 212,
+                    "weight": 214,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6493,7 +6487,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteFile",
-                    "weight": 213,
+                    "weight": 215,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6567,7 +6561,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFileDownload",
-                    "weight": 209,
+                    "weight": 211,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6641,7 +6635,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFilePreview",
-                    "weight": 208,
+                    "weight": 210,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6842,7 +6836,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFileView",
-                    "weight": 210,
+                    "weight": 212,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6916,7 +6910,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 217,
+                    "weight": 219,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6993,7 +6987,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 216,
+                    "weight": 218,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7087,7 +7081,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 218,
+                    "weight": 220,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7151,7 +7145,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
-                    "weight": 220,
+                    "weight": 222,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7228,7 +7222,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 222,
+                    "weight": 224,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7283,7 +7277,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Use this endpoint to list a team's members using the team's ID. All team members have read access to this endpoint.",
+                "description": "Use this endpoint to list a team's members using the team's ID. All team members have read access to this endpoint. Hide sensitive attributes (userName, userEmail and mfa) from the response by disabling teams sensitive data in the Console.",
                 "responses": {
                     "200": {
                         "description": "Memberships List",
@@ -7294,7 +7288,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMemberships",
-                    "weight": 224,
+                    "weight": 226,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7368,7 +7362,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Invite a new member to join your team. Provide an ID for existing users, or invite unregistered users using an email or phone number. If initiated from a Client SDK, Appwrite will send an email or sms with a link to join the team to the invited user, and an account will be created for them if one doesn't exist. If initiated from a Server SDK, the new member will be added automatically to the team.\r\n\r\nYou only need to provide one of a user ID, email, or phone number. Appwrite will prioritize accepting the user ID > email > phone number if you provide more than one of these parameters.\r\n\r\nUse the `url` parameter to redirect the user from the invitation email to your app. After the user is redirected, use the [Update Team Membership Status](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/teams#updateMembershipStatus) endpoint to allow the user to accept the invitation to the team. \r\n\r\nPlease note that to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) Appwrite will accept the only redirect URLs under the domains you have added as a platform on the Appwrite Console.\r\n",
+                "description": "Invite a new member to join your team. Provide an ID for existing users, or invite unregistered users using an email or phone number. If initiated from a Client SDK, Appwrite will send an email or sms with a link to join the team to the invited user, and an account will be created for them if one doesn't exist. If initiated from a Server SDK, the new member will be added automatically to the team.\n\nYou only need to provide one of a user ID, email, or phone number. Appwrite will prioritize accepting the user ID > email > phone number if you provide more than one of these parameters.\n\nUse the `url` parameter to redirect the user from the invitation email to your app. After the user is redirected, use the [Update Team Membership Status](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/teams#updateMembershipStatus) endpoint to allow the user to accept the invitation to the team. \n\nPlease note that to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) Appwrite will accept the only redirect URLs under the domains you have added as a platform on the Appwrite Console.\n",
                 "responses": {
                     "201": {
                         "description": "Membership",
@@ -7379,7 +7373,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMembership",
-                    "weight": 223,
+                    "weight": 225,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7485,7 +7479,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Get a team member by the membership unique id. All team members have read access for this resource.",
+                "description": "Get a team member by the membership unique id. All team members have read access for this resource. Hide sensitive attributes (userName, userEmail and mfa) from the response by disabling teams sensitive data in the Console.",
                 "responses": {
                     "200": {
                         "description": "Membership",
@@ -7496,7 +7490,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMembership",
-                    "weight": 225,
+                    "weight": 227,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7557,7 +7551,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Modify the roles of a team member. Only team members with the owner role have access to this endpoint. Learn more about [roles and permissions](https:\/\/appwrite.io\/docs\/permissions).\r\n",
+                "description": "Modify the roles of a team member. Only team members with the owner role have access to this endpoint. Learn more about [roles and permissions](https:\/\/appwrite.io\/docs\/permissions).\n",
                 "responses": {
                     "200": {
                         "description": "Membership",
@@ -7568,7 +7562,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembership",
-                    "weight": 226,
+                    "weight": 228,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7656,7 +7650,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMembership",
-                    "weight": 228,
+                    "weight": 230,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7719,7 +7713,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Use this endpoint to allow a user to accept an invitation to join a team after being redirected back to your app from the invitation email received by the user.\r\n\r\nIf the request is successful, a session for the user is automatically created.\r\n",
+                "description": "Use this endpoint to allow a user to accept an invitation to join a team after being redirected back to your app from the invitation email received by the user.\n\nIf the request is successful, a session for the user is automatically created.\n",
                 "responses": {
                     "200": {
                         "description": "Membership",
@@ -7730,7 +7724,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
-                    "weight": 227,
+                    "weight": 229,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7828,7 +7822,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
-                    "weight": 219,
+                    "weight": 221,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7891,7 +7885,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
-                    "weight": 221,
+                    "weight": 223,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9451,12 +9445,12 @@
                 },
                 "userName": {
                     "type": "string",
-                    "description": "User name.",
+                    "description": "User name. Hide this attribute by disabling teams sensitive data in the Console.",
                     "x-example": "John Doe"
                 },
                 "userEmail": {
                     "type": "string",
-                    "description": "User email address.",
+                    "description": "User email address. Hide this attribute by disabling teams sensitive data in the Console.",
                     "x-example": "john@appwrite.io"
                 },
                 "teamId": {
@@ -9486,7 +9480,7 @@
                 },
                 "mfa": {
                     "type": "boolean",
-                    "description": "Multi factor authentication status, true if the user has MFA enabled or false otherwise.",
+                    "description": "Multi factor authentication status, true if the user has MFA enabled or false otherwise. Hide this attribute by disabling teams sensitive data in the Console.",
                     "x-example": false
                 },
                 "roles": {
@@ -9590,7 +9584,7 @@
                     "format": "int32"
                 },
                 "responseBody": {
-                    "type": "payload",
+                    "type": "string",
                     "description": "HTTP response body. This will return empty unless execution is created as synchronous.",
                     "x-example": ""
                 },
@@ -10014,7 +10008,7 @@
                 "name": {
                     "type": "string",
                     "description": "Target Name.",
-                    "x-example": "Aegon apple token"
+                    "x-example": "Apple iPhone 12"
                 },
                 "userId": {
                     "type": "string",
@@ -10036,6 +10030,11 @@
                     "type": "string",
                     "description": "The target identifier.",
                     "x-example": "token"
+                },
+                "expired": {
+                    "type": "boolean",
+                    "description": "Is the target expired.",
+                    "x-example": false
                 }
             },
             "required": [
@@ -10045,7 +10044,8 @@
                 "name",
                 "userId",
                 "providerType",
-                "identifier"
+                "identifier",
+                "expired"
             ]
         }
     },
