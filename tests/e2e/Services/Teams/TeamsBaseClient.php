@@ -158,9 +158,9 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
 
         // Assert that sensitive fields are not present
-        $this->assertArrayNotHasKey('userName', $response['body']['memberships'][0]);
-        $this->assertArrayNotHasKey('userEmail', $response['body']['memberships'][0]);
-        $this->assertArrayNotHasKey('mfa', $response['body']['memberships'][0]);
+        $this->assertEmpty($response['body']['memberships'][0]['userName']);
+        $this->assertEmpty($response['body']['memberships'][0]['userEmail']);
+        $this->assertFalse($response['body']['memberships'][0]['mfa']);
 
         /**
          * Update project settings to show sensitive fields

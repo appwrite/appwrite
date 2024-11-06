@@ -20,7 +20,6 @@ use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -666,7 +665,6 @@ App::patch('/v1/projects/:projectId/auth/teams-sensitive-attributes')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForConsole) {
         $enabled = \strval($enabled) === 'true' || \strval($enabled) === '1';
-        Console::log('enabled was set to: ' . strval($enabled));
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
