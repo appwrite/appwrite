@@ -810,11 +810,10 @@ App::get('/v1/teams/:teamId/memberships')
                     if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
                         $mfa = false;
                     }
-
-                    $membership->setAttribute('mfa', $mfa);
                 }
 
                 $membership
+                    ->setAttribute('mfa', $mfa)
                     ->setAttribute('userName', $user->getAttribute('name'))
                     ->setAttribute('userEmail', $user->getAttribute('email'));
             }
@@ -882,6 +881,11 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
                     $mfa = false;
                 }
             }
+
+            $membership
+                ->setAttribute('mfa', $mfa)
+                ->setAttribute('userName', $user->getAttribute('name'))
+                ->setAttribute('userEmail', $user->getAttribute('email'));
         }
 
         $membership->setAttribute('teamName', $team->getAttribute('name'));

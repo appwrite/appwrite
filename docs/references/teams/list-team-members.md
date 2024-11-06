@@ -1,1 +1,1 @@
-Use this endpoint to list a team's members using the team's ID. All team members have read access to this endpoint.
+Use this endpoint to list a team's members using the team's ID. All team members have read access to this endpoint. Hide sensitive attributes (userName, userEmail and mfa) from the response by disabling teams sensitive data in the Console.

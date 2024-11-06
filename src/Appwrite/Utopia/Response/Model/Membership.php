@@ -36,13 +36,13 @@ class Membership extends Model
             ])
             ->addRule('userName', [
                 'type' => self::TYPE_STRING,
-                'description' => 'User name.',
+                'description' => 'User name. Hide this attribute by disabling teams sensitive data in the Console.',
                 'default' => '',
                 'example' => 'John Doe',
             ])
             ->addRule('userEmail', [
                 'type' => self::TYPE_STRING,
-                'description' => 'User email address.',
+                'description' => 'User email address. Hide this attribute by disabling teams sensitive data in the Console.',
                 'default' => '',
                 'example' => 'john@appwrite.io',
             ])
@@ -78,7 +78,7 @@ class Membership extends Model
             ])
             ->addRule('mfa', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Multi factor authentication status, true if the user has MFA enabled or false otherwise.',
+                'description' => 'Multi factor authentication status, true if the user has MFA enabled or false otherwise. Hide this attribute by disabling teams sensitive data in the Console.',
                 'default' => false,
                 'example' => false,
             ])
