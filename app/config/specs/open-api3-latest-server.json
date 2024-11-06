@@ -17,7 +17,7 @@
     },
     "servers": [
         {
-            "url": "https:\/\/cloud.appwrite.io\/v1"
+            "url": "https:\/\/<REGION>.cloud.appwrite.io\/v1"
         }
     ],
     "paths": {
