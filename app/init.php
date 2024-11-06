@@ -1828,9 +1828,9 @@ App::setResource(
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
 
-App::setResource('previewHost', function (Request $request) {
+App::setResource('previewHostname', function (Request $request) {
     if (App::isDevelopment()) {
-        $host = $request->getQuery('preview') ?? '';
+        $host = $request->getQuery('appwrite-hostname') ?? '';
         if (!empty($host)) {
             return $host;
         }
