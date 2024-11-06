@@ -1631,21 +1631,18 @@ App::setResource('geodb', function ($register) {
     return $register->get('geodb');
 }, ['register']);
 
-App::setResource('ip', function ($request) {
-    return $request->getIp();
-}, ['request']);
+App::setResource('geoRecord', function (Reader $geodb, Request $request, Locale $locale) {
+    $ip = $request->getIp();
+    $eu = Config::getParam('locale-eu');
+    $currencies = Config::getParam('locale-currencies');
 
-App::setResource('geodbClient', function () {
     $client = new Client();
     $client->addHeader('Authorization', 'Bearer ' . System::getEnv('_APP_GEO_SECRET'));
     $client->setBaseUrl('http://appwrite-geo/v1');
-    return $client;
-});
 
-App::setResource('geoRecordDocker', function (string $ip, Client $geodbClient) {
     $record = null;
     try {
-        $record = $geodbClient->fetch("/ips/{$ip}", Client::METHOD_GET);
+        $record = $client->fetch("/ips/{$ip}", Client::METHOD_GET);
         $record = $record->json();
     } catch (Throwable $th) {
         Console::error($th->getMessage());
@@ -1653,30 +1650,22 @@ App::setResource('geoRecordDocker', function (string $ip, Client $geodbClient) {
         $record = null;
     }
 
-    return $record;
-}, ['ip', 'geodbClient']);
-
-App::setResource('geoRecordEmbeded', function (string $ip, Reader $geodb) {
-    $record = $geodb->get($ip);
-    $output = null;
-    if ($record) {
-        $output['countryCode'] = $record['country']['iso_code'];
-        $output['country'] = $record['country']['names'];
-        $output['continent'] = $record['continent']['names'];
-        $output['continentCode'] = $record['continent']['code'];
+    if (empty($record)) {
+        // Fallback
+        $dbRecord = $geodb->get($ip);
+        if ($dbRecord) {
+            $record = [];
+            $record['countryCode'] = $dbRecord['country']['iso_code'];
+            $record['country'] = $dbRecord['country']['names'];
+            $record['continent'] = $dbRecord['continent']['names'];
+            $record['continentCode'] = $dbRecord['continent']['code'];
+        }
     }
-    return $output;
-}, ['ip', 'geodb']);
-
-App::setResource('geoRecord', function (?array $geoRecordDocker, ?array $geoRecordEmbeded, Locale $locale, string $ip) {
-    $record = $geoRecordDocker ??= $geoRecordEmbeded;
-    $eu = Config::getParam('locale-eu');
-    $currencies = Config::getParam('locale-currencies');
 
     $output = [];
     $output['ip'] = $ip;
     $currency = null;
-    if (!empty($geoRecord)) {
+    if (!empty($record)) {
         $output['countryCode'] = $record['countryCode'];
         $output['country'] = $locale->getText('countries.' . strtolower($record['countryCode']), $locale->getText('locale.country.unknown'));
         $output['continent'] = $locale->getText('continents.' . strtolower($record['continentCode']), $locale->getText('locale.country.unknown'));
@@ -1699,7 +1688,7 @@ App::setResource('geoRecord', function (?array $geoRecordDocker, ?array $geoReco
         $output['currency'] = $currency;
     }
     return $output;
-}, ['geoRecordDocker', 'geoRecordEmbeded', 'locale', 'ip']);
+}, ['geodb', 'request', 'locale']);
 
 App::setResource('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */
