@@ -9,7 +9,7 @@ import (
 func main() {
     client := client.NewClient()
 
-    client.SetEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
+    client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     client.SetProject("") // Your project ID
     client.SetKey("") // Your secret API key
 
