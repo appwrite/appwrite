@@ -60,12 +60,14 @@ trait TeamsBaseServer
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(true, $response['body']['confirm']);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/teams-sensitive-attributes', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/memberships-privacy', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'enabled' => false,
+            'userName' => false,
+            'userEmail' => false,
+            'mfa' => false,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -90,12 +92,14 @@ trait TeamsBaseServer
         /**
          * Update project settings to show sensitive fields
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/teams-sensitive-attributes', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/memberships-privacy', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'enabled' => true,
+            'userName' => true,
+            'userEmail' => true,
+            'mfa' => true,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);

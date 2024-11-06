@@ -21136,6 +21136,100 @@
                 ]
             }
         },
+        "\/projects\/{projectId}\/auth\/memberships-privacy": {
+            "patch": {
+                "summary": "Update project team sensitive attributes",
+                "operationId": "projectsUpdateMembershipsPrivacy",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "projects"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Project",
+                        "schema": {
+                            "$ref": "#\/definitions\/project"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "updateMembershipsPrivacy",
+                    "weight": 161,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "projects\/update-memberships-privacy.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<PROJECT_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "userName": {
+                                    "type": "boolean",
+                                    "description": "Set to true to show userName to members of a team.",
+                                    "default": null,
+                                    "x-example": false
+                                },
+                                "userEmail": {
+                                    "type": "boolean",
+                                    "description": "Set to true to show email to members of a team.",
+                                    "default": null,
+                                    "x-example": false
+                                },
+                                "mfa": {
+                                    "type": "boolean",
+                                    "description": "Set to true to show mfa to members of a team.",
+                                    "default": null,
+                                    "x-example": false
+                                }
+                            },
+                            "required": [
+                                "userName",
+                                "userEmail",
+                                "mfa"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
         "\/projects\/{projectId}\/auth\/mock-numbers": {
             "patch": {
                 "summary": "Update the mock numbers for the project",
@@ -21533,86 +21627,6 @@
                             },
                             "required": [
                                 "alerts"
-                            ]
-                        }
-                    }
-                ]
-            }
-        },
-        "\/projects\/{projectId}\/auth\/teams-sensitive-attributes": {
-            "patch": {
-                "summary": "Update project team sensitive attributes",
-                "operationId": "projectsUpdateTeamsSensitiveAttributes",
-                "consumes": [
-                    "application\/json"
-                ],
-                "produces": [
-                    "application\/json"
-                ],
-                "tags": [
-                    "projects"
-                ],
-                "description": "",
-                "responses": {
-                    "200": {
-                        "description": "Project",
-                        "schema": {
-                            "$ref": "#\/definitions\/project"
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "updateTeamsSensitiveAttributes",
-                    "weight": 161,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "projects\/update-teams-sensitive-attributes.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "projects.write",
-                    "platforms": [
-                        "console"
-                    ],
-                    "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "projectId",
-                        "description": "Project unique ID.",
-                        "required": true,
-                        "type": "string",
-                        "x-example": "<PROJECT_ID>",
-                        "in": "path"
-                    },
-                    {
-                        "name": "payload",
-                        "in": "body",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "type": "boolean",
-                                    "description": "Set to true to show sensitive attributes to team members.",
-                                    "default": null,
-                                    "x-example": false
-                                }
-                            },
-                            "required": [
-                                "enabled"
                             ]
                         }
                     }
@@ -36577,9 +36591,19 @@
                     "description": "Whether or not to send session alert emails to users.",
                     "x-example": true
                 },
-                "teamsSensitiveAttributes": {
+                "membershipsUserName": {
                     "type": "boolean",
-                    "description": "Whether or not to show sensitive attributes in the teams API.",
+                    "description": "Whether or not to show user names in the teams membership response.",
+                    "x-example": true
+                },
+                "membershipsUserEmail": {
+                    "type": "boolean",
+                    "description": "Whether or not to show user emails in the teams membership response.",
+                    "x-example": true
+                },
+                "membershipsMfa": {
+                    "type": "boolean",
+                    "description": "Whether or not to show user MFA status in the teams membership response.",
                     "x-example": true
                 },
                 "oAuthProviders": {
@@ -36791,7 +36815,9 @@
                 "authPersonalDataCheck",
                 "authMockNumbers",
                 "authSessionAlerts",
-                "teamsSensitiveAttributes",
+                "membershipsUserName",
+                "membershipsUserEmail",
+                "membershipsMfa",
                 "oAuthProviders",
                 "platforms",
                 "webhooks",

@@ -790,17 +790,25 @@ App::get('/v1/teams/:teamId/memberships')
 
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
+        $membershipsPrivacy = $project->getAttribute('auths', [])['membershipPrivacy'] ?? [
+            'userName' => true,
+            'userEmail' => true,
+            'mfa' => true,
+        ];
+
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $sensitiveAttributes = $isPrivilegedUser || $isAppUser || ($project->getAttribute('auths', [])['teamsSensitiveAttributes'] ?? true);
+        $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
+            return $privacy || $isPrivilegedUser || $isAppUser;
+        }, $membershipsPrivacy);
 
-        $memberships = array_map(function ($membership) use ($dbForProject, $team, $sensitiveAttributes) {
-            if ($sensitiveAttributes) {
+        $memberships = array_map(function ($membership) use ($dbForProject, $team, $membershipsPrivacy) {
+            if ($membershipsPrivacy['mfa']) {
                 $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
-
                 $mfa = $user->getAttribute('mfa', false);
+
                 if ($mfa) {
                     $totp = TOTP::getAuthenticatorFromUser($user);
                     $totpEnabled = $totp && $totp->getAttribute('verified', false);
@@ -812,13 +820,19 @@ App::get('/v1/teams/:teamId/memberships')
                     }
                 }
 
-                $membership
-                    ->setAttribute('mfa', $mfa)
-                    ->setAttribute('userName', $user->getAttribute('name'))
-                    ->setAttribute('userEmail', $user->getAttribute('email'));
+                $membership->setAttribute('mfa', $mfa);
+            }
+
+            if ($membershipsPrivacy['userName']) {
+                $membership->setAttribute('userName', $user->getAttribute('name'));
+            }
+
+            if ($membershipsPrivacy['userEmail']) {
+                $membership->setAttribute('userEmail', $user->getAttribute('email'));
             }
 
             $membership->setAttribute('teamName', $team->getAttribute('name'));
+
             return $membership;
         }, $memberships);
 
@@ -860,13 +874,21 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
+        $membershipsPrivacy = $project->getAttribute('auths', [])['membershipPrivacy'] ?? [
+            'userName' => true,
+            'userEmail' => true,
+            'mfa' => true,
+        ];
+
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $sensitiveAttributes = $isPrivilegedUser || $isAppUser || ($project->getAttribute('auths', [])['teamsSensitiveAttributes'] ?? true);
+        $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
+            return $privacy || $isPrivilegedUser || $isAppUser;
+        }, $membershipsPrivacy);
 
-        if ($sensitiveAttributes) {
+        if ($membershipsPrivacy['mfa']) {
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
             $mfa = $user->getAttribute('mfa', false);
@@ -882,10 +904,15 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
                 }
             }
 
-            $membership
-                ->setAttribute('mfa', $mfa)
-                ->setAttribute('userName', $user->getAttribute('name'))
-                ->setAttribute('userEmail', $user->getAttribute('email'));
+            $membership->setAttribute('mfa', $mfa);
+        }
+
+        if ($membershipsPrivacy['userName']) {
+            $membership->setAttribute('userName', $user->getAttribute('name'));
+        }
+
+        if ($membershipsPrivacy['userEmail']) {
+            $membership->setAttribute('userEmail', $user->getAttribute('email'));
         }
 
         $membership->setAttribute('teamName', $team->getAttribute('name'));

@@ -151,9 +151,21 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('teamsSensitiveAttributes', [
+            ->addRule('membershipsUserName', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether or not to show sensitive attributes in the teams API.',
+                'description' => 'Whether or not to show user names in the teams membership response.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('membershipsUserEmail', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to show user emails in the teams membership response.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('membershipsMfa', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to show user MFA status in the teams membership response.',
                 'default' => false,
                 'example' => true,
             ])
@@ -354,7 +366,9 @@ class Project extends Model
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
         $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
         $document->setAttribute('authSessionAlerts', $authValues['sessionAlerts'] ?? false);
-        $document->setAttribute('authTeamsSensitiveAttributes', $authValues['teamsSensitiveAttributes'] ?? true);
+        $document->setAttribute('authMembershipUserName', $authValues['membershipUserName'] ?? true);
+        $document->setAttribute('authMembershipUserEmail', $authValues['membershipUserEmail'] ?? true);
+        $document->setAttribute('authMembershipMfa', $authValues['membershipMfa'] ?? true);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

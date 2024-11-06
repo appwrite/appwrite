@@ -111,7 +111,9 @@ App::post('/v1/projects')
             'personalDataCheck' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,
-            'teamsSensitiveAttributes' => true,
+            'membershipsUserName' => true,
+            'membershipsUserEmail' => true,
+            'membershipsMfa' => true,
         ];
 
         foreach ($auth as $method) {
@@ -649,23 +651,23 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/teams-sensitive-attributes')
+App::patch('/v1/projects/:projectId/auth/memberships-privacy')
     ->desc('Update project team sensitive attributes')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateTeamsSensitiveAttributes')
+    ->label('sdk.method', 'updateMembershipsPrivacy')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('enabled', true, new Boolean(true), 'Set to true to show sensitive attributes to team members.')
+    ->param('userName', true, new Boolean(true), 'Set to true to show userName to members of a team.')
+    ->param('userEmail', true, new Boolean(true), 'Set to true to show email to members of a team.')
+    ->param('mfa', true, new Boolean(true), 'Set to true to show mfa to members of a team.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForConsole) {
-        $enabled = \strval($enabled) === 'true' || \strval($enabled) === '1';
-
+    ->action(function (string $projectId, bool $userName, bool $userEmail, bool $mfa, Response $response, Database $dbForConsole) {
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -674,7 +676,9 @@ App::patch('/v1/projects/:projectId/auth/teams-sensitive-attributes')
 
         $auths = $project->getAttribute('auths', []);
 
-        $auths['teamsSensitiveAttributes'] = $enabled;
+        $auths['membershipsUserName'] = $userName;
+        $auths['membershipsUserEmail'] = $userEmail;
+        $auths['membershipsMfa'] = $mfa;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));

@@ -23,12 +23,14 @@ class TeamsCustomClientTest extends Scope
 
         $projectId = $this->getProject()['$id'];
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/teams-sensitive-attributes', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/memberships-privacy', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'enabled' => false,
+            'userName' => false,
+            'userEmail' => false,
+            'mfa' => false,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -53,12 +55,14 @@ class TeamsCustomClientTest extends Scope
         /**
          * Update project settings to show sensitive fields
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/teams-sensitive-attributes', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/memberships-privacy', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'enabled' => true,
+            'userName' => true,
+            'userEmail' => true,
+            'mfa' => true,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
