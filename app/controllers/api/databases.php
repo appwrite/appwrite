@@ -816,22 +816,21 @@ App::post('/v1/databases/:databaseId/collections')
         $collectionId = $collectionId == 'unique()' ? ID::unique() : $collectionId;
 
         // Map aggregate permissions into the multiple permissions they represent.
-        $permissions = Permission::aggregate($permissions);
+        $permissions = Permission::aggregate($permissions) ?? [];
 
         try {
-            $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
+            $collection = $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
                 '$id' => $collectionId,
                 'databaseInternalId' => $database->getInternalId(),
                 'databaseId' => $databaseId,
-                '$permissions' => $permissions ?? [],
+                '$permissions' => $permissions,
                 'documentSecurity' => $documentSecurity,
                 'enabled' => $enabled,
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
             ]));
-            $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
-            $dbForProject->createCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), permissions: $permissions ?? [], documentSecurity: $documentSecurity);
+            $dbForProject->createCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), permissions: $permissions, documentSecurity: $documentSecurity);
         } catch (DuplicateException) {
             throw new Exception(Exception::COLLECTION_ALREADY_EXISTS);
         } catch (LimitException) {
