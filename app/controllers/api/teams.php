@@ -794,7 +794,7 @@ App::get('/v1/teams/:teamId/memberships')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $sensitiveAttributes = ($isPrivilegedUser || $isAppUser) || $project->getAttribute('auths', [])['teamsSensitiveAttributes'] ?? true;
+        $sensitiveAttributes = $isPrivilegedUser || $isAppUser || ($project->getAttribute('auths', [])['teamsSensitiveAttributes'] ?? true);
 
         $memberships = array_map(function ($membership) use ($dbForProject, $team, $sensitiveAttributes) {
             if ($sensitiveAttributes) {
@@ -864,7 +864,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $sensitiveAttributes = ($isPrivilegedUser || $isAppUser) || $project->getAttribute('auths', [])['teamsSensitiveAttributes'] ?? true;
+        $sensitiveAttributes = $isPrivilegedUser || $isAppUser || ($project->getAttribute('auths', [])['teamsSensitiveAttributes'] ?? true);
 
         if ($sensitiveAttributes) {
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));

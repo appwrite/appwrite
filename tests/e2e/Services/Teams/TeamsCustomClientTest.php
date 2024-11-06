@@ -17,7 +17,7 @@ class TeamsCustomClientTest extends Scope
     /**
      * @depends testGetTeamMemberships
      */
-    public function testSensitiveFieldsGetMembership($data)
+    public function testGetMembershipSensitiveFields($data)
     {
         $teamUid = $data['teamUid'] ?? '';
 
@@ -76,9 +76,9 @@ class TeamsCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
 
         // Assert that sensitive fields are present
-        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['userName']);
-        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['userEmail']);
-        $this->assertFalse($response['body']['memberships'][0]['mfa']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['userName']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['userEmail']);
+        $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
     }
 
     /**

@@ -29,7 +29,7 @@ trait TeamsBaseServer
          * Test for FAILURE
          */
 
-        return [];
+        return $data;
     }
 
     /**
@@ -59,6 +59,63 @@ trait TeamsBaseServer
         $this->assertCount(2, $response['body']['roles']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(true, $response['body']['confirm']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/teams-sensitive-attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'enabled' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test that sensitive fields are not hidden, as we are on console
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
+
+        // Assert that sensitive fields are present
+        $this->assertNotEmpty($response['body']['memberships'][0]['userName']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['userEmail']);
+        $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
+
+        /**
+         * Update project settings to show sensitive fields
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/teams-sensitive-attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test that sensitive fields are shown
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
+
+        // Assert that sensitive fields are present
+        $this->assertNotEmpty($response['body']['memberships'][0]['userName']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['userEmail']);
+        $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
 
         /**
          * Test for FAILURE
