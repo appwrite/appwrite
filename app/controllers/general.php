@@ -395,8 +395,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
         }
 
-        \var_dump($response->getSize());
-
         $queueForUsage
             ->addMetric(METRIC_NETWORK_REQUESTS, 1)
             ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
