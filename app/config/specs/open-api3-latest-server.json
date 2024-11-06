@@ -18626,7 +18626,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Use this endpoint to list a team's members using the team's ID. All team members have read access to this endpoint. Hide sensitive attributes (userName, userEmail and mfa) from the response by disabling teams sensitive data in the Console.",
+                "description": "Use this endpoint to list a team's members using the team's ID. All team members have read access to this endpoint. Hide sensitive attributes from the response by toggling membership privacy in the Console.",
                 "responses": {
                     "200": {
                         "description": "Memberships List",
@@ -18831,7 +18831,7 @@
                 "tags": [
                     "teams"
                 ],
-                "description": "Get a team member by the membership unique id. All team members have read access for this resource. Hide sensitive attributes (userName, userEmail and mfa) from the response by disabling teams sensitive data in the Console.",
+                "description": "Get a team member by the membership unique id. All team members have read access for this resource. Hide sensitive attributes from the response by toggling membership privacy in the Console.",
                 "responses": {
                     "200": {
                         "description": "Membership",
@@ -25598,12 +25598,12 @@
                     },
                     "userName": {
                         "type": "string",
-                        "description": "User name. Hide this attribute by disabling teams sensitive data in the Console.",
+                        "description": "User name. Hide this attribute by toggling membership privacy in the Console.",
                         "x-example": "John Doe"
                     },
                     "userEmail": {
                         "type": "string",
-                        "description": "User email address. Hide this attribute by disabling teams sensitive data in the Console.",
+                        "description": "User email address. Hide this attribute by toggling membership privacy in the Console.",
                         "x-example": "john@appwrite.io"
                     },
                     "teamId": {
@@ -25633,7 +25633,7 @@
                     },
                     "mfa": {
                         "type": "boolean",
-                        "description": "Multi factor authentication status, true if the user has MFA enabled or false otherwise. Hide this attribute by disabling teams sensitive data in the Console.",
+                        "description": "Multi factor authentication status, true if the user has MFA enabled or false otherwise. Hide this attribute by toggling membership privacy in the Console.",
                         "x-example": false
                     },
                     "roles": {
