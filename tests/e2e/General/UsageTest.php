@@ -294,7 +294,7 @@ class UsageTest extends Scope
             'bucketId' => $bucketId,
             'bucketsTotal' => $bucketsTotal,
             'requestsTotal' => $requestsTotal,
-            // 'storageTotal' => $storageTotal,
+            'storageTotal' => $storageTotal,
             'filesTotal' => $filesTotal,
         ]);
     }
