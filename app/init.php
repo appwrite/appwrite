@@ -1827,3 +1827,14 @@ App::setResource(
     'isResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
+
+App::setResource('previewHost', function (Request $request) {
+    if (App::isDevelopment()) {
+        $host = $request->getQuery('preview') ?? '';
+        if (!empty($host)) {
+            return $host;
+        }
+    }
+
+    return '';
+}, ['request']);
