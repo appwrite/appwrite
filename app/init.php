@@ -42,6 +42,7 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
@@ -973,7 +974,10 @@ $register->set('pools', function () {
                         $adapter->setDatabase($dsn->getPath());
                         break;
                     case 'pubsub':
-                        $adapter = $resource();
+                        $adapter = match ($dsn->getScheme()) {
+                            'redis' => new PubSub($resource()),
+                            default => null
+                        };
                         break;
                     case 'queue':
                         $adapter = match ($dsn->getScheme()) {
