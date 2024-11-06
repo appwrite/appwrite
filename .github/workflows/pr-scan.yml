@@ -26,27 +26,21 @@ jobs:
         tags: pr_image:${{ github.sha }}
 
     - name: Run Trivy vulnerability scanner on image
-      uses: aquasecurity/trivy-action@0.28.0
+      uses: aquasecurity/trivy-action@0.20.0
       with:
         image-ref: 'pr_image:${{ github.sha }}'
         format: 'json'
         output: 'trivy-image-results.json'
         severity: 'CRITICAL,HIGH'
-      env:
-        TRIVY_SKIP_DB_UPDATE: true
-        TRIVY_SKIP_JAVA_DB_UPDATE: true
 
     - name: Run Trivy vulnerability scanner on source code
-      uses: aquasecurity/trivy-action@0.28.0
+      uses: aquasecurity/trivy-action@0.20.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
         format: 'json'
         output: 'trivy-fs-results.json'
         severity: 'CRITICAL,HIGH'
-      env:
-        TRIVY_SKIP_DB_UPDATE: true
-        TRIVY_SKIP_JAVA_DB_UPDATE: true
 
     - name: Process Trivy scan results
       id: process-results

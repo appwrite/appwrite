@@ -5,36 +5,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  update-trivy-db:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup oras
-        uses: oras-project/setup-oras@v1
-
-      - name: Get current date
-        id: date
-        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
-      - name: Download and extract the vulnerability DB
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/.cache/trivy/db
-          oras pull ghcr.io/aquasecurity/trivy-db:2
-          tar -xzf db.tar.gz -C $GITHUB_WORKSPACE/.cache/trivy/db
-          rm db.tar.gz
-
-      - name: Download and extract the Java DB
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/.cache/trivy/java-db
-          oras pull ghcr.io/aquasecurity/trivy-java-db:1
-          tar -xzf javadb.tar.gz -C $GITHUB_WORKSPACE/.cache/trivy/java-db
-          rm javadb.tar.gz
-
-      - name: Cache DBs
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ github.workspace }}/.cache/trivy
-          key: cache-trivy-${{ steps.date.outputs.date }}
-
   scan-image:
     name: Scan Docker Image
     runs-on: ubuntu-latest
@@ -43,22 +13,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-
       - name: Build the Docker image
         run: docker build . -t appwrite_image:latest
-
       - name: Run Trivy vulnerability scanner on image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.20.0
         with:
           image-ref: 'appwrite_image:latest'
           format: 'sarif'
           output: 'trivy-image-results.sarif'
           ignore-unfixed: 'false'
           severity: 'CRITICAL,HIGH'
-        env:
-          TRIVY_SKIP_DB_UPDATE: true
-          TRIVY_SKIP_JAVA_DB_UPDATE: true
-
       - name: Upload Docker Image Scan Results
         uses: github/codeql-action/upload-sarif@v2
         with:
@@ -70,18 +34,13 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-
       - name: Run Trivy vulnerability scanner on filesystem
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.20.0
         with:
           scan-type: 'fs'
           format: 'sarif'
           output: 'trivy-fs-results.sarif'
           severity: 'CRITICAL,HIGH'
-        env:
-          TRIVY_SKIP_DB_UPDATE: true
-          TRIVY_SKIP_JAVA_DB_UPDATE: true
-
       - name: Upload Code Scan Results
         uses: github/codeql-action/upload-sarif@v2
         with:
