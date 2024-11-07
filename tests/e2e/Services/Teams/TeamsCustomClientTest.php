@@ -17,7 +17,7 @@ class TeamsCustomClientTest extends Scope
     /**
      * @depends testGetTeamMemberships
      */
-    public function testGetMembershipSensitiveFields($data)
+    public function testGetMembershipPrivacy($data)
     {
         $teamUid = $data['teamUid'] ?? '';
 
