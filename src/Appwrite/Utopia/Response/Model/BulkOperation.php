@@ -16,7 +16,6 @@ class BulkOperation extends Model
                 'default' => 0,
                 'example' => 64,
             ]);
-
     }
 
     /**
