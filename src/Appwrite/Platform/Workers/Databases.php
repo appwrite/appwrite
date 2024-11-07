@@ -92,6 +92,7 @@ class Databases extends Action
      * @throws Authorization
      * @throws Conflict
      * @throws \Exception
+     * @throws \Throwable
      */
     private function createAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
@@ -134,7 +135,6 @@ class Databases extends Action
         $options = $attribute->getAttribute('options', []);
         $project = $dbForConsole->getDocument('projects', $projectId);
 
-
         try {
             switch ($type) {
                 case Database::VAR_RELATIONSHIP:
@@ -170,7 +170,6 @@ class Databases extends Action
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
         } catch (\Throwable $e) {
-            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -193,6 +192,9 @@ class Databases extends Action
                     $relatedAttribute->setAttribute('status', 'failed')
                 );
             }
+
+            // TODO: Send non DatabaseExceptions to Sentry
+            throw $e;
         } finally {
             $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
         }
@@ -215,6 +217,7 @@ class Databases extends Action
      * @throws Authorization
      * @throws Conflict
      * @throws \Exception
+     * @throws \Throwable
      **/
     private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
@@ -273,7 +276,6 @@ class Databases extends Action
                 $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
             }
         } catch (\Throwable $e) {
-            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -294,6 +296,9 @@ class Databases extends Action
                     $relatedAttribute->setAttribute('status', 'stuck')
                 );
             }
+
+            // TODO: Send non DatabaseExceptions to Sentry
+            throw $e;
         } finally {
             $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
         }
@@ -370,6 +375,7 @@ class Databases extends Action
      * @throws Conflict
      * @throws Structure
      * @throws DatabaseException
+     * @throws \Throwable
      */
     private function createIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
@@ -401,7 +407,7 @@ class Databases extends Action
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
         } catch (\Throwable $e) {
-            // TODO: Send non DatabaseExceptions to Sentry
+
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -412,6 +418,9 @@ class Databases extends Action
                 $index->getId(),
                 $index->setAttribute('status', 'failed')
             );
+
+            // TODO: Send non DatabaseExceptions to Sentry
+            throw $e;
         } finally {
             $this->trigger($database, $collection, $index, $project, $projectId, $events);
         }
@@ -431,6 +440,7 @@ class Databases extends Action
      * @throws Conflict
      * @throws Structure
      * @throws DatabaseException
+     * @throws \Throwable
      */
     private function deleteIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
@@ -459,7 +469,6 @@ class Databases extends Action
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
         } catch (\Throwable $e) {
-            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -470,10 +479,15 @@ class Databases extends Action
                 $index->getId(),
                 $index->setAttribute('status', 'stuck')
             );
+
+            // TODO: Send non DatabaseExceptions to Sentry ?
+            throw $e;
+
         } finally {
             $this->trigger($database, $collection, $index, $project, $projectId, $events);
         }
 
+        // Do we want this in finally?
         $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collection->getId());
     }
 
