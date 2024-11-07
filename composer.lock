@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a81b69f9e1d6bae201c8c2491c7725c1",
+    "content-hash": "c9cb216c6ef0500ed6de9b54e359540b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1574,16 +1574,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.10.2",
+            "version": "0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "b22c6eb6d308de246b023efd0fc9758aee8b8247"
+                "reference": "8ebcab5aac7606331cef69b0081f6c9eff2e58bc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/b22c6eb6d308de246b023efd0fc9758aee8b8247",
-                "reference": "b22c6eb6d308de246b023efd0fc9758aee8b8247",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/8ebcab5aac7606331cef69b0081f6c9eff2e58bc",
+                "reference": "8ebcab5aac7606331cef69b0081f6c9eff2e58bc",
                 "shasum": ""
             },
             "require": {
@@ -1594,7 +1594,7 @@
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "1.9.x-dev",
+                "phpstan/phpstan": "^1.12",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.13.1"
             },
@@ -1618,9 +1618,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.10.2"
+                "source": "https://github.com/utopia-php/cache/tree/0.11.0"
             },
-            "time": "2024-06-25T20:36:35+00:00"
+            "time": "2024-11-05T16:53:58+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -1728,19 +1728,19 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "88b1975c8aed3493f11648621fba3d9a868f069d"
+                "reference": "31571bd6adaa9f6bfb31195c49237456b0742ec7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/88b1975c8aed3493f11648621fba3d9a868f069d",
-                "reference": "88b1975c8aed3493f11648621fba3d9a868f069d",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/31571bd6adaa9f6bfb31195c49237456b0742ec7",
+                "reference": "31571bd6adaa9f6bfb31195c49237456b0742ec7",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
                 "ext-pdo": "*",
                 "php": ">=8.3",
-                "utopia-php/cache": "0.10.*",
+                "utopia-php/cache": "0.11.*",
                 "utopia-php/framework": "0.33.*",
                 "utopia-php/mongo": "0.3.*"
             },
@@ -1776,7 +1776,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-migrations"
             },
-            "time": "2024-11-07T10:40:20+00:00"
+            "time": "2024-11-07T10:44:19+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2770,22 +2770,22 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.8.2",
+            "version": "0.8.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "eb9b7eade1a46a4f660e0d5a6304f7fa26ec9d18"
+                "reference": "a032ed0611a8f4467aeaa9484f73223074457337"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/eb9b7eade1a46a4f660e0d5a6304f7fa26ec9d18",
-                "reference": "eb9b7eade1a46a4f660e0d5a6304f7fa26ec9d18",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/a032ed0611a8f4467aeaa9484f73223074457337",
+                "reference": "a032ed0611a8f4467aeaa9484f73223074457337",
                 "shasum": ""
             },
             "require": {
                 "adhocore/jwt": "^1.1",
                 "php": ">=8.0",
-                "utopia-php/cache": "^0.10.0",
+                "utopia-php/cache": "^0.11.0",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
@@ -2813,9 +2813,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.8.2"
+                "source": "https://github.com/utopia-php/vcs/tree/0.8.3"
             },
-            "time": "2024-08-13T14:36:30+00:00"
+            "time": "2024-11-05T17:10:09+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -7007,8 +7007,8 @@
         {
             "package": "utopia-php/database",
             "version": "dev-feat-migrations",
-            "alias": "0.53.9",
-            "alias_normalized": "0.53.9.0"
+            "alias": "0.53.16",
+            "alias_normalized": "0.53.16.0"
         }
     ],
     "minimum-stability": "stable",
