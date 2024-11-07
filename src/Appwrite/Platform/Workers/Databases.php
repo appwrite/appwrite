@@ -197,13 +197,12 @@ class Databases extends Action
             throw $e;
         } finally {
             $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
-        }
+            if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
+                $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+            }
 
-        if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
-            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
         }
-
-        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
     }
 
     /**
@@ -426,9 +425,9 @@ class Databases extends Action
             throw $e;
         } finally {
             $this->trigger($database, $collection, $index, $project, $projectId, $events);
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
         }
 
-        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
     }
 
     /**
