@@ -21,6 +21,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Platform\Action;
@@ -88,6 +89,7 @@ class CreateFunction extends Base
                 App::getEnv('_APP_COMPUTE_CPUS', APP_COMPUTE_CPUS_DEFAULT),
                 App::getEnv('_APP_COMPUTE_MEMORY', APP_COMPUTE_MEMORY_DEFAULT)
             ), 'Runtime specification for the function and builds.', true, ['plan'])
+            ->param('subdomain', '', new CustomId(), 'Unique custom sub-domain. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -100,8 +102,27 @@ class CreateFunction extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
+    public function action(string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, string $subdomain, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
+        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $ruleId = '';
+        $routeSubdomain = '';
+        $domain = '';
+
+        if (!empty($functionsDomain)) {
+            $ruleId = ID::unique();
+            $routeSubdomain = $subdomain ?: ID::unique();
+            $domain = "{$routeSubdomain}.{$functionsDomain}";
+
+            $subdomain = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
+                Query::equal('domain', [$domain])
+            ]));
+
+            if (!empty($subdomain)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Subdomain already exists. Please choose a different subdomain.');
+            }
+        }
+
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
@@ -241,12 +262,7 @@ class CreateFunction extends Base
                 ->setTemplate($template);
         }
 
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         if (!empty($functionsDomain)) {
-            $ruleId = ID::unique();
-            $routeSubdomain = ID::unique();
-            $domain = "{$routeSubdomain}.{$functionsDomain}";
-
             $rule = Authorization::skip(
                 fn () => $dbForConsole->createDocument('rules', new Document([
                     '$id' => $ruleId,

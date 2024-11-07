@@ -173,6 +173,19 @@ return [
         'optional' => false,
         'icon' => '',
     ],
+    'sites' => [
+        'key' => 'sites',
+        'name' => 'Sites',
+        'subtitle' => 'The Sites Service allows you view, create and manage your Cloud Sites.',
+        'description' => '/docs/services/sites.md',
+        'controller' => 'api/sites.php',
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/sites',
+        'tests' => false,
+        'optional' => true,
+        'icon' => '', // TODO: Update icon later
+    ],
     'functions' => [
         'key' => 'functions',
         'name' => 'Functions',

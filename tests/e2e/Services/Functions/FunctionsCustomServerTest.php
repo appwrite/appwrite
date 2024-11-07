@@ -36,6 +36,7 @@ class FunctionsCustomServerTest extends Scope
                 'buckets.*.delete',
             ],
             'timeout' => 10,
+            'subdomain' => 'test'
         ]);
 
         $functionId = $functionId = $function['body']['$id'] ?? '';
@@ -1983,5 +1984,26 @@ class FunctionsCustomServerTest extends Scope
         }
 
         $this->cleanupFunction($functionId);
+    }
+
+    /**
+     * @depends testCreateFunction
+     */
+    public function testUniqueSubdomain(array $data): void
+    {
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'events' => [
+                'buckets.*.create',
+                'buckets.*.delete',
+            ],
+            'timeout' => 10,
+            'subdomain' => 'test'
+        ]);
+
+        $this->assertEquals(400, $function['headers']['status-code']);
     }
 }
