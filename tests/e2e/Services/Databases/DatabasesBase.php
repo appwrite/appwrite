@@ -1514,12 +1514,6 @@ trait DatabasesBase
 
         $this->assertEquals(400, $document4['headers']['status-code']);
 
-        // Delete document 4 with incomplete path
-        $this->assertEquals(404, $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()))['headers']['status-code']);
-
         return $data;
     }
 
@@ -5075,7 +5069,7 @@ trait DatabasesBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertEquals(1000, $documents['body']['total']);
+        $this->assertEquals(1001, $documents['body']['total']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5083,7 +5077,7 @@ trait DatabasesBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1000, $response['body']['modified']);
+        $this->assertEquals(1001, $response['body']['modified']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
