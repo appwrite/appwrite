@@ -197,6 +197,7 @@ class Databases extends Action
             throw $e;
         } finally {
             $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
+
             if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
             }
