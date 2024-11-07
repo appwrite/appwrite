@@ -151,19 +151,19 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('membershipsUserName', [
+            ->addRule('authMembershipsUserName', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to show user names in the teams membership response.',
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('membershipsUserEmail', [
+            ->addRule('authMembershipsUserEmail', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to show user emails in the teams membership response.',
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('membershipsMfa', [
+            ->addRule('authMembershipsMfa', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to show user MFA status in the teams membership response.',
                 'default' => false,
