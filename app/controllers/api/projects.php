@@ -111,9 +111,9 @@ App::post('/v1/projects')
             'personalDataCheck' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,
-            'membershipsUserName' => true,
-            'membershipsUserEmail' => true,
-            'membershipsMfa' => true,
+            'membershipsUserName' => false,
+            'membershipsUserEmail' => false,
+            'membershipsMfa' => false,
         ];
 
         foreach ($auth as $method) {
