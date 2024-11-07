@@ -3809,6 +3809,75 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $response->noContent();
     });
 
+App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
+    ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
+    ->desc('Delete documents')
+    ->groups(['api', 'database'])
+    ->label('scope', 'documents.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.delete')
+    ->label('audits.event', 'documents.delete')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'deleteDocuments')
+    ->label('sdk.description', '/docs/references/databases/delete-documents.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
+    ->label('sdk.offline.key', '{documentId}')
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->inject('queueForUsage')
+    ->inject('mode')
+    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, Usage $queueForUsage, string $mode) {
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+
+        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        var_dump($queries);
+
+        try {
+            $modified = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $queries) {
+                return $dbForProject->deleteDocuments(
+                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                    $queries
+                );
+            });
+        } catch (NotFoundException $e) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        return $response->dynamic(new Document([
+            'modified' => $modified,
+        ]), Response::MODEL_BULK_OPERATION);
+    });
+
 App::get('/v1/databases/usage')
     ->desc('Get databases usage stats')
     ->groups(['api', 'database', 'usage'])

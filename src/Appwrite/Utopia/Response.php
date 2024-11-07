@@ -31,6 +31,7 @@ use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
 use Appwrite\Utopia\Response\Model\Bucket;
 use Appwrite\Utopia\Response\Model\Build;
+use Appwrite\Utopia\Response\Model\BulkOperation;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\ConsoleVariables;
 use Appwrite\Utopia\Response\Model\Continent;
@@ -151,6 +152,7 @@ class Response extends SwooleResponse
     public const MODEL_INDEX_LIST = 'indexList';
     public const MODEL_DOCUMENT = 'document';
     public const MODEL_DOCUMENT_LIST = 'documentList';
+    public const MODEL_BULK_OPERATION = 'bulkOperation';
 
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';
@@ -482,6 +484,7 @@ class Response extends SwooleResponse
             ->setModel(new Migration())
             ->setModel(new MigrationReport())
             ->setModel(new MigrationFirebaseProject())
+            ->setModel(new BulkOperation())
             // Tests (keep last)
             ->setModel(new Mock());
 
