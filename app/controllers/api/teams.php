@@ -791,9 +791,9 @@ App::get('/v1/teams/:teamId/memberships')
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
         $membershipsPrivacy =  [
-            'userName' => $project->getAttribute('auths', [])['authMembershipUserName'] ?? true,
-            'userEmail' => $project->getAttribute('auths', [])['authMembershipUserEmail'] ?? true,
-            'mfa' => $project->getAttribute('auths', [])['authMembershipMfa'] ?? true,
+            'userName' => $project->getAttribute('auths', [])['authMembershipsUserName'] ?? true,
+            'userEmail' => $project->getAttribute('auths', [])['authMembershipsUserEmail'] ?? true,
+            'mfa' => $project->getAttribute('auths', [])['authMembershipsMfa'] ?? true,
         ];
 
         $roles = Authorization::getRoles();
@@ -875,9 +875,9 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         }
 
         $membershipsPrivacy =  [
-            'userName' => $project->getAttribute('auths', [])['authMembershipUserName'] ?? true,
-            'userEmail' => $project->getAttribute('auths', [])['authMembershipUserEmail'] ?? true,
-            'mfa' => $project->getAttribute('auths', [])['authMembershipMfa'] ?? true,
+            'userName' => $project->getAttribute('auths', [])['authMembershipsUserName'] ?? true,
+            'userEmail' => $project->getAttribute('auths', [])['authMembershipsUserEmail'] ?? true,
+            'mfa' => $project->getAttribute('auths', [])['authMembershipsMfa'] ?? true,
         ];
 
         $roles = Authorization::getRoles();
