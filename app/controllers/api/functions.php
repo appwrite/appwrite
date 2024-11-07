@@ -1753,7 +1753,7 @@ App::post('/v1/functions/:functionId/executions')
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
     ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
-    ->param('scheduledAt', null, new DatetimeValidator(true, DateTimeValidator::PRECISION_MINUTES, 60), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
+    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true, precision: DateTimeValidator::PRECISION_MINUTES, offset: 60), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
     ->inject('response')
     ->inject('request')
     ->inject('project')
@@ -2642,9 +2642,11 @@ App::get('/v1/functions/templates/:templateId')
     ->action(function (string $templateId, Response $response) {
         $templates = Config::getParam('function-templates', []);
 
-        $template = array_shift(\array_filter($templates, function ($template) use ($templateId) {
+        $filtered = \array_filter($templates, function ($template) use ($templateId) {
             return $template['id'] === $templateId;
-        }));
+        });
+
+        $template = array_shift($filtered);
 
         if (empty($template)) {
             throw new Exception(Exception::FUNCTION_TEMPLATE_NOT_FOUND);

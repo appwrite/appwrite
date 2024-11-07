@@ -11,10 +11,11 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Messaging;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\Usage;
+use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
@@ -28,6 +29,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Queue\Connection;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
@@ -57,8 +59,36 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$databaseListener = function (string $event, Document $document, Document $project, Usage $queueForUsage, Database $dbForProject) {
+$eventDatabaseListener = function (Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
+    // Only trigger events for user creation with the database listener.
+    if ($document->getCollection() !== 'users') {
+        return;
+    }
 
+    $queueForEvents
+        ->setEvent('users.[userId].create')
+        ->setParam('userId', $document->getId())
+        ->setPayload($response->output($document, Response::MODEL_USER));
+
+    // Trigger functions, webhooks, and realtime events
+    $queueForFunctions
+        ->from($queueForEvents)
+        ->trigger();
+
+    $queueForWebhooks
+        ->from($queueForEvents)
+        ->trigger();
+
+    if ($queueForEvents->getProject()->getId() === 'console') {
+        return;
+    }
+
+    $queueForRealtime
+        ->from($queueForEvents)
+        ->trigger();
+};
+
+$usageDatabaseListener = function (string $event, Document $document, Usage $queueForUsage) {
     $value = 1;
     if ($event === Database::EVENT_DOCUMENT_DELETE) {
         $value = -1;
@@ -353,6 +383,7 @@ App::init()
     ->inject('response')
     ->inject('project')
     ->inject('user')
+    ->inject('queue')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForAudits')
@@ -362,7 +393,7 @@ App::init()
     ->inject('queueForUsage')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -456,9 +487,24 @@ App::init()
         $queueForBuilds->setProject($project);
         $queueForMessaging->setProject($project);
 
+        // Clone the queues, to prevent events triggered by the database listener
+        // from overwriting the events that are supposed to be triggered in the shutdown hook.
+        $queueForEventsClone = new Event($queue);
+        $queueForFunctions = new Func($queue);
+        $queueForWebhooks = new Webhook($queue);
+        $queueForRealtime = new Realtime();
+
         $dbForProject
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject));
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
+                $document,
+                $response,
+                $queueForEventsClone->from($queueForEvents),
+                $queueForFunctions->from($queueForEvents),
+                $queueForWebhooks->from($queueForEvents),
+                $queueForRealtime->from($queueForEvents)
+            ));
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
@@ -591,11 +637,13 @@ App::shutdown()
     ->inject('queueForDatabase')
     ->inject('queueForBuilds')
     ->inject('queueForMessaging')
-    ->inject('dbForProject')
     ->inject('queueForFunctions')
+    ->inject('queueForWebhooks')
+    ->inject('queueForRealtime')
+    ->inject('dbForProject')
     ->inject('mode')
     ->inject('dbForConsole')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, string $mode, Database $dbForConsole) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -604,54 +652,18 @@ App::shutdown()
                 $queueForEvents->setPayload($responsePayload);
             }
 
-            /**
-             * Trigger functions.
-             */
-            if (!$queueForEvents->isPaused()) {
-                $queueForFunctions
-                    ->from($queueForEvents)
-                    ->trigger();
-            }
-            /**
-             * Trigger webhooks.
-             */
-            $queueForEvents
-                ->setClass(Event::WEBHOOK_CLASS_NAME)
-                ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+            $queueForWebhooks
+                ->from($queueForEvents)
                 ->trigger();
 
-            /**
-             * Trigger realtime.
-             */
+            $queueForFunctions
+                ->from($queueForEvents)
+                ->trigger();
+
             if ($project->getId() !== 'console') {
-                $allEvents = Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams());
-                $payload = new Document($queueForEvents->getPayload());
-
-                $db = $queueForEvents->getContext('database');
-                $collection = $queueForEvents->getContext('collection');
-                $bucket = $queueForEvents->getContext('bucket');
-
-                $target = Realtime::fromPayload(
-                    // Pass first, most verbose event pattern
-                    event: $allEvents[0],
-                    payload: $payload,
-                    project: $project,
-                    database: $db,
-                    collection: $collection,
-                    bucket: $bucket,
-                );
-
-                Realtime::send(
-                    projectId: $target['projectId'] ?? $project->getId(),
-                    payload: $queueForEvents->getRealtimePayload(),
-                    events: $allEvents,
-                    channels: $target['channels'],
-                    roles: $target['roles'],
-                    options: [
-                        'permissionsChanged' => $target['permissionsChanged'],
-                        'userId' => $queueForEvents->getParam('userId')
-                    ]
-                );
+                $queueForRealtime
+                    ->from($queueForEvents)
+                    ->trigger();
             }
         }
 
