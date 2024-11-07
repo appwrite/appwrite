@@ -652,7 +652,7 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
     });
 
 App::patch('/v1/projects/:projectId/auth/memberships-privacy')
-    ->desc('Update project team memberships privacy attributes')
+    ->desc('Update project memberships privacy attributes')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
