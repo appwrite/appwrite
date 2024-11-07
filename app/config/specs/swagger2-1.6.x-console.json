@@ -21138,7 +21138,7 @@
         },
         "\/projects\/{projectId}\/auth\/memberships-privacy": {
             "patch": {
-                "summary": "Update project team sensitive attributes",
+                "summary": "Update project memberships privacy attributes",
                 "operationId": "projectsUpdateMembershipsPrivacy",
                 "consumes": [
                     "application\/json"
@@ -36591,17 +36591,17 @@
                     "description": "Whether or not to send session alert emails to users.",
                     "x-example": true
                 },
-                "membershipsUserName": {
+                "authMembershipsUserName": {
                     "type": "boolean",
                     "description": "Whether or not to show user names in the teams membership response.",
                     "x-example": true
                 },
-                "membershipsUserEmail": {
+                "authMembershipsUserEmail": {
                     "type": "boolean",
                     "description": "Whether or not to show user emails in the teams membership response.",
                     "x-example": true
                 },
-                "membershipsMfa": {
+                "authMembershipsMfa": {
                     "type": "boolean",
                     "description": "Whether or not to show user MFA status in the teams membership response.",
                     "x-example": true
@@ -36815,9 +36815,9 @@
                 "authPersonalDataCheck",
                 "authMockNumbers",
                 "authSessionAlerts",
-                "membershipsUserName",
-                "membershipsUserEmail",
-                "membershipsMfa",
+                "authMembershipsUserName",
+                "authMembershipsUserEmail",
+                "authMembershipsMfa",
                 "oAuthProviders",
                 "platforms",
                 "webhooks",
