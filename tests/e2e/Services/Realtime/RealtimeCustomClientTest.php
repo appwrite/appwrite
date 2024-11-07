@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -15,6 +16,7 @@ use WebSocket\ConnectionException;
 
 class RealtimeCustomClientTest extends Scope
 {
+    use FunctionsBase;
     use RealtimeBase;
     use ProjectCustom;
     use SideClient;
@@ -106,6 +108,30 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains('collections.1.documents.1', $response['data']['channels']);
         $this->assertContains('collections.2.documents.2', $response['data']['channels']);
         $this->assertEquals($userId, $response['data']['user']['$id']);
+
+        $client->close();
+    }
+
+    public function testPingPong()
+    {
+        $client = $this->getWebsocket(['files'], [
+            'origin' => 'http://localhost'
+        ]);
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('files', $response['data']['channels']);
+
+        $client->send(\json_encode([
+            'type' => 'ping'
+        ]));
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('pong', $response['type']);
 
         $client->close();
     }
