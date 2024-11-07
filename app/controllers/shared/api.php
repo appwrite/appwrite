@@ -754,13 +754,10 @@ App::shutdown()
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                 }
 
-                $cache = new Cache(
-                    new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-                );
-
-                $timestamp = 60 * 60 * 24 * 30;
-                $cacheFile = $cache->load($key, $timestamp);
-                if ($signature !== $cacheLog->getAttribute('signature') || empty($cacheFile)) {
+                if ($signature !== $cacheLog->getAttribute('signature')) {
+                    $cache = new Cache(
+                        new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+                    );
                     $cache->save($key, $data['payload']);
                 }
             }
