@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3c8f6c1184b149d8640d4e00394e2c62",
+    "content-hash": "1b8dd5d381483eb11e28015fc75cdbd7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1574,16 +1574,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "dev-feat-redis-sync",
+            "version": "0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "572f3224f963a5fbd4bbb79d815b7e798a1666ed"
+                "reference": "8ebcab5aac7606331cef69b0081f6c9eff2e58bc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/572f3224f963a5fbd4bbb79d815b7e798a1666ed",
-                "reference": "572f3224f963a5fbd4bbb79d815b7e798a1666ed",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/8ebcab5aac7606331cef69b0081f6c9eff2e58bc",
+                "reference": "8ebcab5aac7606331cef69b0081f6c9eff2e58bc",
                 "shasum": ""
             },
             "require": {
@@ -1594,7 +1594,7 @@
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "1.9.x-dev",
+                "phpstan/phpstan": "^1.12",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.13.1"
             },
@@ -1618,9 +1618,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/feat-redis-sync"
+                "source": "https://github.com/utopia-php/cache/tree/0.11.0"
             },
-            "time": "2024-10-06T13:11:23+00:00"
+            "time": "2024-11-05T16:53:58+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -7005,12 +7005,6 @@
     ],
     "aliases": [
         {
-            "package": "utopia-php/cache",
-            "version": "dev-feat-redis-sync",
-            "alias": "0.11.0",
-            "alias_normalized": "0.11.0.0"
-        },
-        {
             "package": "utopia-php/database",
             "version": "dev-feat-migrations",
             "alias": "0.53.9",
@@ -7019,7 +7013,6 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/cache": 20,
         "utopia-php/database": 20
     },
     "prefer-stable": false,
