@@ -31,7 +31,6 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -201,8 +200,7 @@ App::post('/v1/projects')
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $dbForProject
                 ->setSharedTables(true)
-                ->setTenant($project->getInternalId())
-                //->setTenant($globalCollections ? null : $project->getInternalId())
+                ->setTenant($globalCollections ? null : $project->getInternalId())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $dbForProject
@@ -213,50 +211,46 @@ App::post('/v1/projects')
 
         $create = true;
 
-       // try {
+        try {
             $dbForProject->create();
-       // } catch (Duplicate) {
-         //   $create = false;
-        //}
+        } catch (Duplicate) {
+            $create = false;
+        }
 
-        $audit = new Audit($dbForProject);
-        $audit->setup();
+        if ($create || !$globalCollections) {
+            $audit = new Audit($dbForProject);
+            $audit->setup();
 
-        $abuse = new TimeLimit('', 0, 1, $dbForProject);
-        $abuse->setup();
+            $abuse = new TimeLimit('', 0, 1, $dbForProject);
+            $abuse->setup();
 
-        /** @var array $collections */
-        $collections = Config::getParam('collections', [])['projects'] ?? [];
+            /** @var array $collections */
+            $collections = Config::getParam('collections', [])['projects'] ?? [];
 
-        foreach ($collections as $key => $collection) {
-            if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                continue;
-            }
+            foreach ($collections as $key => $collection) {
+                if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                    continue;
+                }
 
-            $attributes = \array_map(function (array $attribute) {
-                return new Document($attribute);
-            }, $collection['attributes']);
-
-            $indexes = \array_map(function (array $index) {
-                return new Document($index);
-            }, $collection['indexes']);
+                $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
+                $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
 
                 try {
                     $dbForProject->createCollection($key, $attributes, $indexes);
                 } catch (Duplicate) {
-//                    if (!$globalCollections) {
-//                        $dbForProject->createDocument(Database::METADATA, new Document([
-//                            '$id' => ID::custom($key),
-//                            '$permissions' => [Permission::create(Role::any())],
-//                            'name' => $key,
-//                            'attributes' => $attributes,
-//                            'indexes' => $indexes,
-//                            'documentSecurity' => true
-//                        ]));
-//                    }
+                    if (!$globalCollections) {
+                        $dbForProject->createDocument(Database::METADATA, new Document([
+                            '$id' => ID::custom($key),
+                            '$permissions' => [Permission::create(Role::any())],
+                            'name' => $key,
+                            'attributes' => $attributes,
+                            'indexes' => $indexes,
+                            'documentSecurity' => true
+                        ]));
+                    }
                 }
             }
-       // }
+        }
 
         // Hook allowing instant project mirroring during migration
         // Outside of migration, hook is not registered and has no effect
@@ -302,12 +296,6 @@ App::get('/v1/projects')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
-
-            $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
-            }
-
             $projectId = $cursor->getValue();
             $cursorDocument = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1082,7 +1070,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($webhook->isEmpty()) {
+        if ($webhook === false || $webhook->isEmpty()) {
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
@@ -1125,7 +1113,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($webhook->isEmpty()) {
+        if ($webhook === false || $webhook->isEmpty()) {
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
@@ -1175,7 +1163,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($webhook->isEmpty()) {
+        if ($webhook === false || $webhook->isEmpty()) {
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
@@ -1213,7 +1201,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($webhook->isEmpty()) {
+        if ($webhook === false || $webhook->isEmpty()) {
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
@@ -1335,7 +1323,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($key->isEmpty()) {
+        if ($key === false || $key->isEmpty()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
@@ -1372,7 +1360,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($key->isEmpty()) {
+        if ($key === false || $key->isEmpty()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
@@ -1414,7 +1402,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($key->isEmpty()) {
+        if ($key === false || $key->isEmpty()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
@@ -1572,7 +1560,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($platform->isEmpty()) {
+        if ($platform === false || $platform->isEmpty()) {
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
@@ -1609,7 +1597,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($platform->isEmpty()) {
+        if ($platform === false || $platform->isEmpty()) {
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
@@ -1653,7 +1641,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($platform->isEmpty()) {
+        if ($platform === false || $platform->isEmpty()) {
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
