@@ -244,6 +244,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     }
 
     $app = new App('UTC');
+    $app->setCompression(true);
 
     $pools = $register->get('pools');
     App::setResource('pools', fn () => $pools);
