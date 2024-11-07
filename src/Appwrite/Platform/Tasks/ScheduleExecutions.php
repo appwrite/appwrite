@@ -22,7 +22,12 @@ class ScheduleExecutions extends ScheduleBase
         return 'execution';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole): void
+    public static function getCollectionId(): string
+    {
+        return 'executions';
+    }
+
+    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         $queue = $pools->get('queue')->pop();
         $connection = $queue->getResource();

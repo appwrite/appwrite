@@ -901,6 +901,17 @@ trait WebhooksBase
         $teamId = $data['teamId'] ?? '';
         $email = uniqid() . 'friend@localhost.test';
 
+        // Create user to ensure team event is triggered after user event
+        $user = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'Friend User',
+        ]);
+
         /**
          * Test for SUCCESS
          */
@@ -909,7 +920,6 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'email' => $email,
-            'name' => 'Friend User',
             'roles' => ['admin', 'editor'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);

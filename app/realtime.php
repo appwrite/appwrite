@@ -40,7 +40,7 @@ require_once __DIR__ . '/init.php';
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 // Allows overriding
-if (!function_exists("getConsoleDB")) {
+if (!function_exists('getConsoleDB')) {
     function getConsoleDB(): Database
     {
         global $register;
@@ -66,7 +66,7 @@ if (!function_exists("getConsoleDB")) {
 }
 
 // Allows overriding
-if (!function_exists("getProjectDB")) {
+if (!function_exists('getProjectDB')) {
     function getProjectDB(Document $project): Database
     {
         global $register;
@@ -113,7 +113,7 @@ if (!function_exists("getProjectDB")) {
 }
 
 // Allows overriding
-if (!function_exists("getCache")) {
+if (!function_exists('getCache')) {
     function getCache(): Cache
     {
         global $register;
@@ -135,7 +135,14 @@ if (!function_exists("getCache")) {
     }
 }
 
-$realtime = new Realtime();
+if (!function_exists('getRealtime')) {
+    function getRealtime(): Realtime
+    {
+        return new Realtime();
+    }
+}
+
+$realtime = getRealtime();
 
 /**
  * Table for statistics across all workers.
@@ -184,8 +191,12 @@ $logError = function (Throwable $error, string $action) use ($register) {
         $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
         $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-        $responseCode = $logger->addLog($log);
-        Console::info('Realtime log pushed with status code: ' . $responseCode);
+        try {
+            $responseCode = $logger->addLog($log);
+            Console::info('Error log pushed with status code: ' . $responseCode);
+        } catch (Throwable $th) {
+            Console::error('Error pushing log: ' . $th->getMessage());
+        }
     }
 
     Console::error('[Error] Type: ' . get_class($error));
@@ -354,17 +365,16 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
             $start = time();
 
-            $redis = $register->get('pools')->get('pubsub')->pop()->getResource(); /** @var Redis $redis */
-            $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
-
-            if ($redis->ping(true)) {
+            /** @var \Appwrite\PubSub\Adapter $pubsub */
+            $pubsub = $register->get('pools')->get('pubsub')->pop()->getResource();
+            if ($pubsub->ping(true)) {
                 $attempts = 0;
                 Console::success('Pub/sub connection established (worker: ' . $workerId . ')');
             } else {
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $redis->subscribe(['realtime'], function (Redis $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
+            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
                 $event = json_decode($payload, true);
 
                 if ($event['permissionsChanged'] && isset($event['userId'])) {
