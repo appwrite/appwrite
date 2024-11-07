@@ -204,19 +204,6 @@ class Event
         return $this->payload;
     }
 
-    public function getRealtimePayload(): array
-    {
-        $payload = [];
-
-        foreach ($this->payload as $key => $value) {
-            if (!isset($this->sensitive[$key])) {
-                $payload[$key] = $value;
-            }
-        }
-
-        return $payload;
-    }
-
     /**
      * Set context for this event.
      *
@@ -315,10 +302,6 @@ class Event
      */
     public function trigger(): string|bool
     {
-        if ($this->paused) {
-            return false;
-        }
-
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
@@ -530,20 +513,21 @@ class Event
     }
 
     /**
-     * Get the value of paused
+     * Generate a function event from a base event
+     *
+     * @param Event $event
+     *
+     * @return self
+     *
      */
-    public function isPaused(): bool
+    public function from(Event $event): self
     {
-        return $this->paused;
-    }
-
-    /**
-     * Set the value of paused
-     */
-    public function setPaused(bool $paused): self
-    {
-        $this->paused = $paused;
-
+        $this->project = $event->getProject();
+        $this->user = $event->getUser();
+        $this->payload = $event->getPayload();
+        $this->event = $event->getEvent();
+        $this->params = $event->getParams();
+        $this->context = $event->context;
         return $this;
     }
 }
