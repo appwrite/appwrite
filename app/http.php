@@ -39,8 +39,7 @@ $http
     ->set([
         'worker_num' => $workerNumber,
         'open_http2_protocol' => true,
-        'http_compression' => true,
-        'http_compression_level' => 6,
+        'http_compression' => false,
         'package_max_length' => $payloadSize,
         'buffer_output_size' => $payloadSize,
     ]);
@@ -61,6 +60,7 @@ include __DIR__ . '/controllers/general.php';
 
 $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
+    $app->setCompression(true);
 
     go(function () use ($register, $app) {
         $pools = $register->get('pools');
@@ -244,6 +244,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     }
 
     $app = new App('UTC');
+    $app->setCompression(true);
 
     $pools = $register->get('pools');
     App::setResource('pools', fn () => $pools);
