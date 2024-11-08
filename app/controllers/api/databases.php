@@ -46,6 +46,7 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
@@ -3853,24 +3854,15 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
+        $queries = Query::parseQueries($queries);
 
-        var_dump($queries);
-
-        try {
-            $modified = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $queries) {
-                return $dbForProject->deleteDocuments(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $queries
-                );
-            });
-        } catch (NotFoundException $e) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
-        }
+        $modified = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $queries) {
+            return $dbForProject->deleteDocuments(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $queries,
+                intval(System::getEnv('_APP_DATABASE_BATCH_SIZE', 10_000))
+            );
+        });
 
         return $response->dynamic(new Document([
             'modified' => $modified,
