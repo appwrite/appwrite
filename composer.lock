@@ -1673,16 +1673,16 @@
         },
         {
             "name": "utopia-php/compression",
-            "version": "0.1.0",
+            "version": "0.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/compression.git",
-                "reference": "8c6d9bcb5b0972faa27e5bf70923c20403aaf25c"
+                "reference": "2ac5709e39823dbccb9fa66099ccebe809078c2e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/compression/zipball/8c6d9bcb5b0972faa27e5bf70923c20403aaf25c",
-                "reference": "8c6d9bcb5b0972faa27e5bf70923c20403aaf25c",
+                "url": "https://api.github.com/repos/utopia-php/compression/zipball/2ac5709e39823dbccb9fa66099ccebe809078c2e",
+                "reference": "2ac5709e39823dbccb9fa66099ccebe809078c2e",
                 "shasum": ""
             },
             "require": {
@@ -1713,9 +1713,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/compression/issues",
-                "source": "https://github.com/utopia-php/compression/tree/0.1.0"
+                "source": "https://github.com/utopia-php/compression/tree/0.1.1"
             },
-            "time": "2024-10-23T10:17:46+00:00"
+            "time": "2024-11-08T12:22:15+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -1976,12 +1976,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "72239fb95a65fc65e3a8e435f1645e234b00ea04"
+                "reference": "58851dc88c4d8ac32757f30f1508cdf55a26cb4a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/72239fb95a65fc65e3a8e435f1645e234b00ea04",
-                "reference": "72239fb95a65fc65e3a8e435f1645e234b00ea04",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/58851dc88c4d8ac32757f30f1508cdf55a26cb4a",
+                "reference": "58851dc88c4d8ac32757f30f1508cdf55a26cb4a",
                 "shasum": ""
             },
             "require": {
@@ -2014,7 +2014,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/feat-compression-0.33.x"
             },
-            "time": "2024-11-07T17:00:49+00:00"
+            "time": "2024-11-08T12:23:25+00:00"
         },
         {
             "name": "utopia-php/image",
