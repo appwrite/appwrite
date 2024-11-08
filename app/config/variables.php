@@ -100,7 +100,7 @@ return [
             [
                 'name' => '_APP_COMPRESSION_MIN_SIZE_BYTES',
                 'description' => 'The minimum size of the response body to be compressed. The default value is 1024 bytes. To disable compression, set the value to 0.',
-                'introduction' => '1.6.0',
+                'introduction' => '1.6.1',
                 'default' => '1024',
                 'required' => false,
                 'question' => '',
