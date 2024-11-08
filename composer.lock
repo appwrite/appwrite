@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6786247bf3743103412df3642d68dbb5",
+    "content-hash": "5be1b916c221b97b77b0e7f14491aabf",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1972,16 +1972,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-feat-compression-0.33.x",
+            "version": "0.33.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "58851dc88c4d8ac32757f30f1508cdf55a26cb4a"
+                "reference": "82c7252c02ae39a027592175f2732df27c167db4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/58851dc88c4d8ac32757f30f1508cdf55a26cb4a",
-                "reference": "58851dc88c4d8ac32757f30f1508cdf55a26cb4a",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/82c7252c02ae39a027592175f2732df27c167db4",
+                "reference": "82c7252c02ae39a027592175f2732df27c167db4",
                 "shasum": ""
             },
             "require": {
@@ -2012,9 +2012,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/feat-compression-0.33.x"
+                "source": "https://github.com/utopia-php/http/tree/0.33.9"
             },
-            "time": "2024-11-08T12:23:25+00:00"
+            "time": "2024-11-08T12:39:51+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -7050,18 +7050,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/framework",
-            "version": "dev-feat-compression-0.33.x",
-            "alias": "0.33.9",
-            "alias_normalized": "0.33.9.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/framework": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
