@@ -31,6 +31,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -110,6 +111,9 @@ App::post('/v1/projects')
             'personalDataCheck' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,
+            'membershipsUserName' => false,
+            'membershipsUserEmail' => false,
+            'membershipsMfa' => false,
         ];
 
         foreach ($auth as $method) {
@@ -117,6 +121,10 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
+
+        if ($projectId === 'console') {
+            throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
+        }
 
         $databases = Config::getParam('pools-database', []);
 
@@ -126,10 +134,6 @@ App::post('/v1/projects')
             $dsn = $databases[$index];
         } else {
             $dsn = $databases[array_rand($databases)];
-        }
-
-        if ($projectId === 'console') {
-            throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
         // TODO: Temporary until all projects are using shared tables.
@@ -195,12 +199,16 @@ App::post('/v1/projects')
         $dbForProject = new Database($adapter, $cache);
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-        $globalCollections = !\in_array($dsn->getHost(), $sharedTablesV1);
 
-        if (\in_array($dsn->getHost(), $sharedTables)) {
+        $projectTables = !\in_array($dsn->getHost(), $sharedTables);
+        $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
+        $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
+        $sharedTables = $sharedTablesV1 || $sharedTablesV2;
+
+        if ($sharedTables) {
             $dbForProject
                 ->setSharedTables(true)
-                ->setTenant($globalCollections ? null : $project->getInternalId())
+                ->setTenant($sharedTablesV1 ? $project->getInternalId() : null)
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $dbForProject
@@ -217,37 +225,66 @@ App::post('/v1/projects')
             $create = false;
         }
 
-        if ($create || !$globalCollections) {
+        if ($create || $projectTables) {
             $audit = new Audit($dbForProject);
             $audit->setup();
 
             $abuse = new TimeLimit('', 0, 1, $dbForProject);
             $abuse->setup();
+        }
 
+        if (!$create && $sharedTablesV1) {
+            $attributes = \array_map(fn ($attribute) => new Document($attribute), Audit::ATTRIBUTES);
+            $indexes = \array_map(fn (array $index) => new Document($index), Audit::INDEXES);
+            $dbForProject->createDocument(Database::METADATA, new Document([
+                '$id' => ID::custom('audit'),
+                '$permissions' => [Permission::create(Role::any())],
+                'name' => 'audit',
+                'attributes' => $attributes,
+                'indexes' => $indexes,
+                'documentSecurity' => true
+            ]));
+
+            $attributes = \array_map(fn ($attribute) => new Document($attribute), TimeLimit::ATTRIBUTES);
+            $indexes = \array_map(fn (array $index) => new Document($index), TimeLimit::INDEXES);
+            $dbForProject->createDocument(Database::METADATA, new Document([
+                '$id' => ID::custom('abuse'),
+                '$permissions' => [Permission::create(Role::any())],
+                'name' => 'abuse',
+                'attributes' => $attributes,
+                'indexes' => $indexes,
+                'documentSecurity' => true
+            ]));
+        }
+
+        if ($create || $sharedTablesV1) {
             /** @var array $collections */
             $collections = Config::getParam('collections', [])['projects'] ?? [];
 
-            foreach ($collections as $key => $collection) {
-                if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                    continue;
-                }
+        foreach ($collections as $key => $collection) {
+            if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                continue;
+            }
 
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+            $attributes = \array_map(function (array $attribute) {
+                return new Document($attribute);
+            }, $collection['attributes']);
+
+            $indexes = \array_map(function (array $index) {
+                return new Document($index);
+            }, $collection['indexes']);
 
                 try {
                     $dbForProject->createCollection($key, $attributes, $indexes);
                 } catch (Duplicate) {
-                    if (!$globalCollections) {
-                        $dbForProject->createDocument(Database::METADATA, new Document([
-                            '$id' => ID::custom($key),
-                            '$permissions' => [Permission::create(Role::any())],
-                            'name' => $key,
-                            'attributes' => $attributes,
-                            'indexes' => $indexes,
-                            'documentSecurity' => true
-                        ]));
-                    }
+                    $dbForProject->createDocument(Database::METADATA, new Document([
+                        '$id' => ID::custom($key),
+                        '$permissions' => [Permission::create(Role::any())],
+                        'name' => $key,
+                        'attributes' => $attributes,
+                        'indexes' => $indexes,
+                        'documentSecurity' => true
+                    ]));
                 }
             }
         }
@@ -296,6 +333,12 @@ App::get('/v1/projects')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $projectId = $cursor->getValue();
             $cursorDocument = $dbForConsole->getDocument('projects', $projectId);
 
@@ -651,6 +694,41 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
 
         $auths = $project->getAttribute('auths', []);
         $auths['sessionAlerts'] = $alerts;
+
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/auth/memberships-privacy')
+    ->desc('Update project memberships privacy attributes')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateMembershipsPrivacy')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('userName', true, new Boolean(true), 'Set to true to show userName to members of a team.')
+    ->param('userEmail', true, new Boolean(true), 'Set to true to show email to members of a team.')
+    ->param('mfa', true, new Boolean(true), 'Set to true to show mfa to members of a team.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, bool $userName, bool $userEmail, bool $mfa, Response $response, Database $dbForConsole) {
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+
+        $auths['membershipsUserName'] = $userName;
+        $auths['membershipsUserEmail'] = $userEmail;
+        $auths['membershipsMfa'] = $mfa;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));

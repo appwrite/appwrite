@@ -114,9 +114,10 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         if (isset($databases[$dsn->getHost()])) {
             $database = $databases[$dsn->getHost()];
+            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
-            $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-            if (in_array($dsn->getHost(), $sharedTablesKeys)) {                $database
+            if (\in_array($dsn->getHost(), $sharedTables)) {
+                $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
                     ->setNamespace($dsn->getParam('namespace'));
@@ -136,11 +137,11 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
-
         $databases[$dsn->getHost()] = $database;
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
-        $sharedTablesKeys = explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        if (in_array($dsn->getHost(), $sharedTablesKeys)) {            $database
+        if (\in_array($dsn->getHost(), $sharedTables)) {
+            $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
                 ->setNamespace($dsn->getParam('namespace'));

@@ -494,6 +494,7 @@ class Deletes extends Action
         ];
 
         $limit = \count($projectCollectionIds) + 25;
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         while (true) {
             $collections = $dbForProject->listCollections($limit);

@@ -16,6 +16,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -224,7 +225,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
     });
 });
 
-$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
+$http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
     App::setResource('swooleRequest', fn () => $swooleRequest);
     App::setResource('swooleResponse', fn () => $swooleResponse);
 
