@@ -1972,16 +1972,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.10",
+            "version": "0.33.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "247b934529ab9bcde7d39d6e6212cefcccfc3b20"
+                "reference": "354ff0d23bfc6e82bea0fe8e89e115cff1af8466"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/247b934529ab9bcde7d39d6e6212cefcccfc3b20",
-                "reference": "247b934529ab9bcde7d39d6e6212cefcccfc3b20",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/354ff0d23bfc6e82bea0fe8e89e115cff1af8466",
+                "reference": "354ff0d23bfc6e82bea0fe8e89e115cff1af8466",
                 "shasum": ""
             },
             "require": {
@@ -2012,9 +2012,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.10"
+                "source": "https://github.com/utopia-php/http/tree/0.33.11"
             },
-            "time": "2024-11-08T15:02:59+00:00"
+            "time": "2024-11-08T18:47:43+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -3560,16 +3560,16 @@
         },
         {
             "name": "myclabs/deep-copy",
-            "version": "1.12.0",
+            "version": "1.12.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "3a6b9a42cd8f8771bd4295d13e1423fa7f3d942c"
+                "reference": "123267b2c49fbf30d78a7b2d333f6be754b94845"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/3a6b9a42cd8f8771bd4295d13e1423fa7f3d942c",
-                "reference": "3a6b9a42cd8f8771bd4295d13e1423fa7f3d942c",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/123267b2c49fbf30d78a7b2d333f6be754b94845",
+                "reference": "123267b2c49fbf30d78a7b2d333f6be754b94845",
                 "shasum": ""
             },
             "require": {
@@ -3608,7 +3608,7 @@
             ],
             "support": {
                 "issues": "https://github.com/myclabs/DeepCopy/issues",
-                "source": "https://github.com/myclabs/DeepCopy/tree/1.12.0"
+                "source": "https://github.com/myclabs/DeepCopy/tree/1.12.1"
             },
             "funding": [
                 {
@@ -3616,7 +3616,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-06-12T14:39:25+00:00"
+            "time": "2024-11-08T17:47:46+00:00"
         },
         {
             "name": "nikic/php-parser",
