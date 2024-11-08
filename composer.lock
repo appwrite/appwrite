@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5f00a8b5cad77e66ad39ca2638d0cd7a",
+    "content-hash": "bd9b8f5f8fe295deb07002ca0a953949",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1724,16 +1724,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-migrations",
+            "version": "0.53.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "31571bd6adaa9f6bfb31195c49237456b0742ec7"
+                "reference": "895176b61b969d326bf2e36695606b8a33132094"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/31571bd6adaa9f6bfb31195c49237456b0742ec7",
-                "reference": "31571bd6adaa9f6bfb31195c49237456b0742ec7",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/895176b61b969d326bf2e36695606b8a33132094",
+                "reference": "895176b61b969d326bf2e36695606b8a33132094",
                 "shasum": ""
             },
             "require": {
@@ -1774,9 +1774,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-migrations"
+                "source": "https://github.com/utopia-php/database/tree/0.53.18"
             },
-            "time": "2024-11-07T10:44:19+00:00"
+            "time": "2024-11-08T04:02:13+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -7003,18 +7003,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-feat-migrations",
-            "alias": "0.53.16",
-            "alias_normalized": "0.53.16.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
