@@ -98,6 +98,15 @@ return [
                 'filter' => 'domainTarget'
             ],
             [
+                'name' => '_APP_COMPRESSION_MIN_SIZE_BYTES',
+                'description' => 'The minimum size of the response body to be compressed. The default value is 1024 bytes. To disable compression, set the value to 0.',
+                'introduction' => '1.6.0',
+                'default' => '1024',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
                 'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by inviting them to your project. By default this option is enabled.',
                 'introduction' => '0.8.0',
