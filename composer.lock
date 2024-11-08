@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5be1b916c221b97b77b0e7f14491aabf",
+    "content-hash": "b358198535c1867eabed7c0f99135a57",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1770,16 +1770,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.53.19",
+            "version": "0.53.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "48951885f2787df30ad8581a0e94423558619daa"
+                "reference": "6661edffeef05b59e16d102b989a72f7f78cf7de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/48951885f2787df30ad8581a0e94423558619daa",
-                "reference": "48951885f2787df30ad8581a0e94423558619daa",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/6661edffeef05b59e16d102b989a72f7f78cf7de",
+                "reference": "6661edffeef05b59e16d102b989a72f7f78cf7de",
                 "shasum": ""
             },
             "require": {
@@ -1820,9 +1820,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.53.19"
+                "source": "https://github.com/utopia-php/database/tree/0.53.16"
             },
-            "time": "2024-11-08T07:00:24+00:00"
+            "time": "2024-11-06T03:07:16+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6923,16 +6923,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.14.2",
+            "version": "v3.14.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "0b6f9d8370bb3b7f1ce5313ed8feb0fafd6e399a"
+                "reference": "f405356d20fb43603bcadc8b09bfb676cb04a379"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/0b6f9d8370bb3b7f1ce5313ed8feb0fafd6e399a",
-                "reference": "0b6f9d8370bb3b7f1ce5313ed8feb0fafd6e399a",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/f405356d20fb43603bcadc8b09bfb676cb04a379",
+                "reference": "f405356d20fb43603bcadc8b09bfb676cb04a379",
                 "shasum": ""
             },
             "require": {
@@ -6986,7 +6986,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.14.2"
+                "source": "https://github.com/twigphp/Twig/tree/v3.14.1"
             },
             "funding": [
                 {
@@ -6998,7 +6998,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-11-07T12:36:22+00:00"
+            "time": "2024-11-06T18:17:38+00:00"
         },
         {
             "name": "webmozart/glob",
