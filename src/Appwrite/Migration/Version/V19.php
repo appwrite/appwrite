@@ -72,6 +72,7 @@ class V19 extends Migration
                 }
 
                 $ruleDocument = new Document([
+                    '$id' => md5($domain->getAttribute('domain')),
                     'projectId' => $domain->getAttribute('projectId'),
                     'projectInternalId' => $domain->getAttribute('projectInternalId'),
                     'domain' => $domain->getAttribute('domain'),

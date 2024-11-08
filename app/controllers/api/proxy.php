@@ -103,7 +103,7 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
-        $ruleId = ID::unique();
+        $ruleId = md5($domain->get());
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),

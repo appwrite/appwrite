@@ -52,14 +52,10 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
     $host = $request->getHostname() ?? '';
 
-    $route = Authorization::skip(
-        fn () => $dbForConsole->find('rules', [
-            Query::equal('domain', [$host]),
-            Query::limit(1)
-        ])
-    )[0] ?? null;
+    $ruleId = md5($host);
+    $route = Authorization::skip(fn () => $dbForConsole->getDocument('rules', $ruleId));
 
-    if ($route === null) {
+    if ($route->isEmpty()) {
         if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
         }
@@ -531,6 +527,7 @@ App::init()
 
                     if ($domainDocument->isEmpty()) {
                         $domainDocument = new Document([
+                            '$id' => md5($domain->get()),
                             'domain' => $domain->get(),
                             'resourceType' => 'api',
                             'status' => 'verifying',
