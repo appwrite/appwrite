@@ -32,7 +32,7 @@ class Realtime extends Event
      */
     public function trigger(): string|bool
     {
-        if (empty($this->event)) {
+        if ($this->paused || empty($this->event)) {
             return false;
         }
 
