@@ -59,9 +59,8 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
 
-        $document = $dbForConsole->findOne('rules', [
-            Query::equal('domain', [$domain]),
-        ]);
+        $ruleId = md5($domain);
+        $document = $dbForConsole->getDocument('rules', $ruleId);
 
         if (!$document->isEmpty()) {
             if ($document->getAttribute('projectId') === $project->getId()) {

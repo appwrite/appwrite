@@ -521,9 +521,7 @@ App::init()
                 if ($mainDomain !== $domain->get()) {
                     Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
                 } else {
-                    $domainDocument = $dbForConsole->findOne('rules', [
-                        Query::equal('domain', [$domain->get()])
-                    ]);
+                    $domainDocument = $dbForConsole->getDocument('rules', md5($domain->get()));
 
                     if ($domainDocument->isEmpty()) {
                         $domainDocument = new Document([
