@@ -52,8 +52,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
     $host = $request->getHostname() ?? '';
 
-    $ruleId = md5($host);
-    $route = Authorization::skip(fn () => $dbForConsole->getDocument('rules', $ruleId));
+    $route = Authorization::skip(fn () => $dbForConsole->getDocument('rules', md5($host)));
 
     if ($route->isEmpty()) {
         if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
