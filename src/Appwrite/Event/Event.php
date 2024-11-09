@@ -66,6 +66,24 @@ class Event
     }
 
     /**
+     * Set paused state for this event.
+     */
+    public function setPaused(bool $paused): self
+    {
+        $this->paused = $paused;
+
+        return $this;
+    }
+
+    /**
+     * Get paused state for this event.
+     */
+    public function getPaused(): bool
+    {
+        return $this->paused;
+    }
+
+    /**
      * Set queue used for this event.
      *
      * @param string $queue
@@ -302,6 +320,10 @@ class Event
      */
     public function trigger(): string|bool
     {
+        if ($this->paused) {
+            return false;
+        }
+
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([

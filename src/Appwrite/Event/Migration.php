@@ -75,6 +75,9 @@ class Migration extends Event
      */
     public function trigger(): string|bool
     {
+        if ($this->paused) {
+            return false;
+        }
 
         $client = new Client($this->queue, $this->connection);
 
