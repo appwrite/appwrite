@@ -478,9 +478,7 @@ class Certificates extends Action
     private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions): void
     {
 
-        $rule = $dbForConsole->findOne('rules', [
-            Query::equal('domain', [$domain]),
-        ]);
+        $rule = $dbForConsole->getDocument('rules', md5($domain));
 
         if (!$rule->isEmpty()) {
             $rule->setAttribute('certificateId', $certificateId);
