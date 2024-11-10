@@ -410,13 +410,7 @@ class Databases extends Action
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
         } catch (\Throwable $e) {
             Console::error($e->getMessage());
-            Console::error('shmuel::createIndex');
             if ($e instanceof DatabaseException) {
-                Console::error('shmuel::createIndex' . $e->getMessage());
-                Console::error('shmuel::createIndex' . $e->getMessage());
-                Console::error('shmuel::createIndex' . $e->getMessage());
-                Console::error('shmuel::createIndex' . $e->getMessage());
-                Console::error('shmuel::createIndex' . $e->getMessage());
                 $index->setAttribute('error', $e->getMessage());
             }
             $dbForProject->updateDocument(
