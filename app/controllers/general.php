@@ -20,7 +20,6 @@ use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
 use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
 use Appwrite\Utopia\View;
 use Executor\Executor;
-use MaxMind\Db\Reader;
 use Swoole\Http\Request as SwooleRequest;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -185,7 +184,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         $headers['x-appwrite-user-jwt'] = '';
         $headers['x-appwrite-country-code'] = $geoRecord['countryCode'];
         $headers['x-appwrite-continent-code'] = $geoRecord['contenentCode'];
-        
+
         $eu = Config::getParam('locale-eu');
         $headers['x-appwrite-continent-eu'] = (\in_array($geoRecord['country']['iso_code'], $eu)) ? 'true' : 'false';
 

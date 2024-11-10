@@ -22,7 +22,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Functions;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Executor\Executor;
-use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -1763,8 +1762,8 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('queueForFunctions')
-    ->inject('geodb')
-    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForConsole, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
+    ->inject('geoRecord')
+    ->action(function (string $functionId, string $body, mixed $async, string $path, string $method, mixed $headers, ?string $scheduledAt, Response $response, Request $request, Document $project, Database $dbForProject, Database $dbForConsole, Document $user, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, array $geoRecord) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
         if (!$async && !is_null($scheduledAt)) {
@@ -1872,22 +1871,10 @@ App::post('/v1/functions/:functionId/executions')
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';
-        $headers['x-appwrite-country-code'] = '';
-        $headers['x-appwrite-continent-code'] = '';
-        $headers['x-appwrite-continent-eu'] = 'false';
-
-        $ip = $headers['x-real-ip'] ?? '';
-        if (!empty($ip)) {
-            $record = $geodb->get($ip);
-
-            if ($record) {
-                $eu = Config::getParam('locale-eu');
-
-                $headers['x-appwrite-country-code'] = $record['country']['iso_code'] ?? '';
-                $headers['x-appwrite-continent-code'] = $record['continent']['code'] ?? '';
-                $headers['x-appwrite-continent-eu'] = (\in_array($record['country']['iso_code'], $eu)) ? 'true' : 'false';
-            }
-        }
+        $headers['x-appwrite-country-code'] = $geoRecord['countryCode'];
+        $headers['x-appwrite-continent-code'] = $geoRecord['contenentCode'];
+        $eu = Config::getParam('locale-eu');
+        $headers['x-appwrite-continent-eu'] = (\in_array($record['countryCode'], $eu)) ? 'true' : 'false';
 
         $headersFiltered = [];
         foreach ($headers as $key => $value) {

@@ -27,7 +27,6 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
