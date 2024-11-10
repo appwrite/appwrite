@@ -29,7 +29,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
@@ -52,14 +51,9 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
     $host = $request->getHostname() ?? '';
 
-    $route = Authorization::skip(
-        fn () => $dbForConsole->find('rules', [
-            Query::equal('domain', [$host]),
-            Query::limit(1)
-        ])
-    )[0] ?? null;
+    $route = Authorization::skip(fn () => $dbForConsole->getDocument('rules', md5($host)));
 
-    if ($route === null) {
+    if ($route->isEmpty()) {
         if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
         }
@@ -137,7 +131,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
         }
 
-        if ($isResourceBlocked($project, 'functions', $functionId)) {
+        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $functionId)) {
             throw new AppwriteException(AppwriteException::GENERAL_RESOURCE_BLOCKED);
         }
 
@@ -518,19 +512,18 @@ App::init()
                 if (!empty($envDomain) && $envDomain !== 'localhost') {
                     $mainDomain = $envDomain;
                 } else {
-                    $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
-                    $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
+                    $domainDocument = $dbForConsole->getDocument('rules', md5($envDomain));
+                    $mainDomain = !$domainDocument->isEmpty() ? $domainDocument->getAttribute('domain') : $domain->get();
                 }
 
                 if ($mainDomain !== $domain->get()) {
                     Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
                 } else {
-                    $domainDocument = $dbForConsole->findOne('rules', [
-                        Query::equal('domain', [$domain->get()])
-                    ]);
+                    $domainDocument = $dbForConsole->getDocument('rules', md5($domain->get()));
 
-                    if (!$domainDocument) {
+                    if ($domainDocument->isEmpty()) {
                         $domainDocument = new Document([
+                            '$id' => md5($domain->get()),
                             'domain' => $domain->get(),
                             'resourceType' => 'api',
                             'status' => 'verifying',
@@ -775,6 +768,8 @@ App::error()
             case 'Utopia\Database\Exception\Relationship':
                 $error = new AppwriteException(AppwriteException::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
                 break;
+            case 'Utopia\Database\Exception\NotFound':
+                $error = new AppwriteException(AppwriteException::COLLECTION_NOT_FOUND, $error->getMessage(), previous: $error);
         }
 
         $code = $error->getCode();

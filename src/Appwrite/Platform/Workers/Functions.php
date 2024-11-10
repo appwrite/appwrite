@@ -52,21 +52,6 @@ class Functions extends Action
             ->callback(fn (Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, callable $isResourceBlocked) => $this->action($project, $message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log, $isResourceBlocked));
     }
 
-    /**
-     * @param Document $project
-     * @param Message $message
-     * @param Database $dbForProject
-     * @param Func $queueForFunctions
-     * @param Event $queueForEvents
-     * @param Usage $queueForUsage
-     * @param Log $log
-     * @param callable $isResourceBlocked
-     * @return void
-     * @throws Authorization
-     * @throws Structure
-     * @throws \Utopia\Database\Exception
-     * @throws Conflict
-     */
     public function action(Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, callable $isResourceBlocked): void
     {
         $payload = $message->getPayload() ?? [];
@@ -84,9 +69,41 @@ class Functions extends Action
             return;
         }
 
-        $eventData = $payload['payload'] ?? '';
-        $user = new Document($payload['user'] ?? []);
         $events = $payload['events'] ?? [];
+        $data = $payload['body'] ?? '';
+        $eventData = $payload['payload'] ?? '';
+        $function = new Document($payload['function'] ?? []);
+        $functionId = $payload['functionId'] ?? '';
+        $user = new Document($payload['user'] ?? []);
+        $userId = $payload['userId'] ?? '';
+        $method = $payload['method'] ?? 'POST';
+        $headers = $payload['headers'] ?? [];
+        $path = $payload['path'] ?? '/';
+        $jwt = $payload['jwt'] ?? '';
+
+        if ($user->isEmpty() && !empty($userId)) {
+            $user = $dbForProject->getDocument('users', $userId);
+        }
+
+        if (empty($jwt) && !$user->isEmpty()) {
+            $jwtExpiry = $function->getAttribute('timeout', 900);
+            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+            $jwt = $jwtObj->encode([
+                'userId' => $user->getId(),
+            ]);
+        }
+
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        if ($function->isEmpty() && !empty($functionId)) {
+            $function = $dbForProject->getDocument('functions', $functionId);
+        }
+
+        $log->addTag('functionId', $function->getId());
+        $log->addTag('projectId', $project->getId());
+        $log->addTag('type', $type);
 
         if (!empty($events)) {
             $limit = 30;
@@ -109,7 +126,7 @@ class Functions extends Action
                         continue;
                     }
 
-                    if ($isResourceBlocked($project, 'functions', $function->getId())) {
+                    if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
                         Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
                         continue;
                     }
@@ -144,49 +161,10 @@ class Functions extends Action
             return;
         }
 
-        $data = $payload['body'] ?? '';
-        $function = new Document($payload['function'] ?? []);
-        $functionId = $payload['functionId'] ?? '';
-        $userId = $payload['userId'] ?? '';
-        $method = $payload['method'] ?? 'POST';
-        $headers = $payload['headers'] ?? [];
-        $path = $payload['path'] ?? '/';
-        $jwt = $payload['jwt'] ?? '';
-
-        if ($user->isEmpty() && !empty($userId)) {
-            $user = $dbForProject->getDocument('users', $userId);
-        }
-
-        if (empty($jwt) && !$user->isEmpty()) {
-            $jwtExpiry = $function->getAttribute('timeout', 900);
-            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
-            $jwt = $jwtObj->encode([
-                'userId' => $user->getId(),
-            ]);
-        }
-
-        if ($project->getId() === 'console') {
-            return;
-        }
-
-        if ($function->isEmpty() && !empty($functionId)) {
-            $function = $dbForProject->getDocument('functions', $functionId);
-        }
-
-        // $function still empty, we can't execute this
-        if ($function->isEmpty()) {
-            Console::warning('Got empty function without functionId.');
-            return;
-        }
-
-        if ($isResourceBlocked($project, 'functions', $function->getId())) {
+        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
             Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
             return;
         }
-
-        $log->addTag('functionId', $function->getId());
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
 
         /**
          * Handle Schedule and HTTP execution.

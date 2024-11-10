@@ -11,7 +11,6 @@ use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
@@ -60,11 +59,10 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
 
-        $document = $dbForConsole->findOne('rules', [
-            Query::equal('domain', [$domain]),
-        ]);
+        $ruleId = md5($domain);
+        $document = $dbForConsole->getDocument('rules', $ruleId);
 
-        if ($document && !$document->isEmpty()) {
+        if (!$document->isEmpty()) {
             if ($document->getAttribute('projectId') === $project->getId()) {
                 $resourceType = $document->getAttribute('resourceType');
                 $resourceId = $document->getAttribute('resourceId');
@@ -103,7 +101,7 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
-        $ruleId = ID::unique();
+        $ruleId = md5($domain->get());
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
