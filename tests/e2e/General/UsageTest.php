@@ -328,8 +328,7 @@ class UsageTest extends Scope
         $this->assertEquals(1, count($response['body']['requests']));
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
         $this->validateDates($response['body']['requests']);
-        // CANNOT check as now we use sizeActual which is not available in response
-        $this->assertLessThan($storageTotal, $response['body']['filesStorageTotal']);
+        $this->assertGreaterThan($storageTotal, $response['body']['filesStorageTotal']);
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -337,7 +336,7 @@ class UsageTest extends Scope
             $this->getConsoleHeaders()
         );
 
-        $this->assertLessThan($storageTotal, $response['body']['storage'][array_key_last($response['body']['storage'])]['value']);
+        $this->assertGreaterThan($storageTotal, $response['body']['storage'][array_key_last($response['body']['storage'])]['value']);
         $this->validateDates($response['body']['storage']);
         $this->assertEquals($bucketsTotal, $response['body']['buckets'][array_key_last($response['body']['buckets'])]['value']);
         $this->validateDates($response['body']['buckets']);
@@ -350,8 +349,7 @@ class UsageTest extends Scope
             $this->getConsoleHeaders()
         );
 
-        // CANNOT check as now we use sizeActual which is not available in response
-        $this->assertLessThan($storageTotal, $response['body']['storage'][array_key_last($response['body']['storage'])]['value']);
+        $this->assertGreaterThan($storageTotal, $response['body']['storage'][array_key_last($response['body']['storage'])]['value']);
         $this->assertEquals($filesTotal, $response['body']['files'][array_key_last($response['body']['files'])]['value']);
 
         return $data;
