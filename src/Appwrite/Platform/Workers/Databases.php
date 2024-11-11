@@ -193,7 +193,6 @@ class Databases extends Action
                 );
             }
 
-            // TODO: Send non DatabaseExceptions to Sentry
             throw $e;
         } finally {
             $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
@@ -298,7 +297,6 @@ class Databases extends Action
                     );
                 }
 
-                // TODO: Send non DatabaseExceptions to Sentry
                 throw $e;
             } finally {
                 $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
@@ -419,7 +417,6 @@ class Databases extends Action
                 $index->setAttribute('status', 'failed')
             );
 
-            // TODO: Send non DatabaseExceptions to Sentry
             throw $e;
         } finally {
             $this->trigger($database, $collection, $index, $project, $projectId, $events);
