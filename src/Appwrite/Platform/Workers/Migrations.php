@@ -268,8 +268,6 @@ class Migrations extends Action
         $transfer = $source = $destination = null;
 
         try {
-            $migration = $this->dbForProject->getDocument('migrations', $migration->getId());
-
             if (
                 $migration->getAttribute('source') === SourceAppwrite::getName() &&
                 empty($migration->getAttribute('credentials', []))
