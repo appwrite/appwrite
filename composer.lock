@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bd9b8f5f8fe295deb07002ca0a953949",
+    "content-hash": "73a05899db73e80a2b9c66dbbfb8562e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1770,16 +1770,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.53.18",
+            "version": "0.53.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "895176b61b969d326bf2e36695606b8a33132094"
+                "reference": "48951885f2787df30ad8581a0e94423558619daa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/895176b61b969d326bf2e36695606b8a33132094",
-                "reference": "895176b61b969d326bf2e36695606b8a33132094",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/48951885f2787df30ad8581a0e94423558619daa",
+                "reference": "48951885f2787df30ad8581a0e94423558619daa",
                 "shasum": ""
             },
             "require": {
@@ -1820,9 +1820,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.53.18"
+                "source": "https://github.com/utopia-php/database/tree/0.53.19"
             },
-            "time": "2024-11-08T04:02:13+00:00"
+            "time": "2024-11-08T07:00:24+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2542,16 +2542,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.7.1",
+            "version": "0.7.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "94c240d9f6383829807ce7b2d737f04b159fd3e8"
+                "reference": "40fdd9799d0a11dd33fca06f8223032a47dce2f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/94c240d9f6383829807ce7b2d737f04b159fd3e8",
-                "reference": "94c240d9f6383829807ce7b2d737f04b159fd3e8",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/40fdd9799d0a11dd33fca06f8223032a47dce2f6",
+                "reference": "40fdd9799d0a11dd33fca06f8223032a47dce2f6",
                 "shasum": ""
             },
             "require": {
@@ -2597,9 +2597,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.7.1"
+                "source": "https://github.com/utopia-php/queue/tree/0.7.2"
             },
-            "time": "2024-11-05T17:00:38+00:00"
+            "time": "2024-11-11T10:04:02+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -7052,7 +7052,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
