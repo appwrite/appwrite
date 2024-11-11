@@ -73,6 +73,24 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $variable2['headers']['status-code']);
         $this->assertEquals(201, $variable3['headers']['status-code']);
 
+        /**
+         * Test for FAILURE
+         */
+        $function2 = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'events' => [
+                'buckets.*.create',
+                'buckets.*.delete',
+            ],
+            'timeout' => 10,
+            'subdomain' => 'test'
+        ]);
+
+        $this->assertEquals(400, $function2['headers']['status-code']);
+
         return [
             'functionId' => $functionId,
         ];
@@ -1984,26 +2002,5 @@ class FunctionsCustomServerTest extends Scope
         }
 
         $this->cleanupFunction($functionId);
-    }
-
-    /**
-     * @depends testCreateFunction
-     */
-    public function testUniqueSubdomain(array $data): void
-    {
-        $function = $this->createFunction([
-            'functionId' => ID::unique(),
-            'name' => 'Test',
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
-            'events' => [
-                'buckets.*.create',
-                'buckets.*.delete',
-            ],
-            'timeout' => 10,
-            'subdomain' => 'test'
-        ]);
-
-        $this->assertEquals(400, $function['headers']['status-code']);
     }
 }

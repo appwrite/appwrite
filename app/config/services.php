@@ -176,7 +176,7 @@ return [
     'sites' => [
         'key' => 'sites',
         'name' => 'Sites',
-        'subtitle' => 'The Sites Service allows you view, create and manage your Cloud Sites.',
+        'subtitle' => 'The Sites Service allows you view, create and manage your web applications.',
         'description' => '/docs/services/sites.md',
         'controller' => 'api/sites.php',
         'sdk' => true,
