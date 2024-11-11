@@ -2013,6 +2013,7 @@ App::post('/v1/functions/:functionId/executions')
             'APPWRITE_VCS_COMMIT_MESSAGE' => $deployment->getAttribute('providerCommitMessage', ''),
             'APPWRITE_VCS_COMMIT_URL' => $deployment->getAttribute('providerCommitUrl', ''),
             'APPWRITE_VCS_COMMIT_AUTHOR_NAME' => $deployment->getAttribute('providerCommitAuthor', ''),
+            'APPWRITE_VCS_COMMIT_AUTHOR_AVATAR' => $deployment->getAttribute('providerCommitAuthorAvatar', ''),
             'APPWRITE_VCS_COMMIT_AUTHOR_URL' => $deployment->getAttribute('providerCommitAuthorUrl', ''),
             'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
         ]);
