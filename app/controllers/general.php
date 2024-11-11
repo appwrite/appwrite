@@ -186,7 +186,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         $headers['x-appwrite-continent-code'] = $geoRecord['contenentCode'];
 
         $eu = Config::getParam('locale-eu');
-        $headers['x-appwrite-continent-eu'] = (\in_array($geoRecord['country']['iso_code'], $eu)) ? 'true' : 'false';
+        $headers['x-appwrite-continent-eu'] = (\in_array($geoRecord['countryCode'], $eu)) ? 'true' : 'false';
 
         $headersFiltered = [];
         foreach ($headers as $key => $value) {
