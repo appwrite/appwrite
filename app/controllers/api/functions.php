@@ -326,9 +326,9 @@ App::post('/v1/functions')
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         if (!empty($functionsDomain)) {
-            $ruleId = ID::unique();
             $routeSubdomain = ID::unique();
             $domain = "{$routeSubdomain}.{$functionsDomain}";
+            $ruleId = md5($domain);
 
             $rule = Authorization::skip(
                 fn () => $dbForConsole->createDocument('rules', new Document([
