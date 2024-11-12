@@ -1432,7 +1432,9 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+    if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
@@ -1487,7 +1489,9 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
                 ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+            if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())

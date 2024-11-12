@@ -127,6 +127,11 @@ jobs:
             Messaging,
             Migrations
           ]
+        tables-mode: [
+          'Project',
+          'Shared V1',
+          'Shared V2',
+        ]
 
     steps:
       - name: checkout
@@ -145,11 +150,11 @@ jobs:
           docker compose up -d
           sleep 30
 
-      - name: Run ${{matrix.service}} Tests
-        run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.service}} --debug
-
-      - name: Run ${{matrix.service}} Shared Tables Tests
-        run: _APP_DATABASE_SHARED_TABLES=database_db_main docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.service}} --debug
+      - name: Run ${{ matrix.service }} tests with ${{ matrix.tables-mode }} table mode
+        run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug
+        env:
+          _APP_DATABASE_SHARED_TABLES: ${{ matrix.table_mode == 'Shared V1' || matrix.table_mode == 'Shared V2' && 'database_db_main' || '' }}
+          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.table_mode == 'Shared V1' && 'database_db_main' || '' }}
 
   benchmarking:
     name: Benchmark
