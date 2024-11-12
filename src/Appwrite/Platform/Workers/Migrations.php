@@ -413,7 +413,8 @@ class Migrations extends Action
         }
     }
 
-    public function triggerExceptionLog(Document $migration, MigrationException $error) {
+    public function triggerExceptionLog(Document $migration, MigrationException $error)
+    {
         if (empty($this->logger)) {
             return;
         }
@@ -425,7 +426,7 @@ class Migrations extends Action
         $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
         $log->setType(Log::TYPE_ERROR);
         $log->setMessage($error->getMessage());
-        $log->setAction('appwrite-queue-' . Self::getName());
+        $log->setAction('appwrite-queue-' . self::getName());
         $log->addTag('verboseType', get_class($error));
         $log->addTag('projectId', $this->project->getId() ?? 'n/a');
         $log->addExtra('file', $error->getFile());
@@ -444,5 +445,5 @@ class Migrations extends Action
         } catch (\Throwable $th) {
             Console::error('Error pushing log: ' . $th->getMessage());
         }
-    } 
+    }
 }
