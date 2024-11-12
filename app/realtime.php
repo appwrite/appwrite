@@ -592,9 +592,12 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         }
 
         switch ($message['type']) {
-            /**
-             * This type is used to authenticate.
-             */
+            case 'ping':
+                $server->send([$connection], json_encode([
+                    'type' => 'pong'
+                ]));
+
+                break;
             case 'authentication':
                 if (!array_key_exists('session', $message['data'])) {
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
