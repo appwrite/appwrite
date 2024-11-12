@@ -70,6 +70,7 @@
         "utopia-php/storage": "0.18.*",
         "utopia-php/swoole": "0.8.*",
         "utopia-php/system": "0.9.*",
+        "utopia-php/telemetry": "dev-initial-commit",
         "utopia-php/vcs": "0.8.*",
         "utopia-php/websocket": "0.1.*",
         "matomo/device-detector": "6.1.*",
@@ -96,6 +97,16 @@
     "config": {
         "platform": {
             "php": "8.3"
+        },
+        "allow-plugins": {
+            "php-http/discovery": false,
+            "tbachert/spi": false
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/telemetry"
+        }
+    ]
 }
