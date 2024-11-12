@@ -148,7 +148,10 @@ jobs:
       - name: Run ${{matrix.service}} Tests
         run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.service}} --debug
 
-      - name: Run ${{matrix.service}} Shared Tables Tests
+      - name: Run ${{matrix.service}} Shared Tables V1 Tests
+        run: _APP_DATABASE_SHARED_TABLES=database_db_main _APP_DATABASE_SHARED_TABLES_V1=database_db_main docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.service}} --debug
+
+      - name: Run ${{matrix.service}} Shared Tables V2 Tests
         run: _APP_DATABASE_SHARED_TABLES=database_db_main docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.service}} --debug
 
   benchmarking:
