@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -20,11 +19,9 @@ App::get('/v1/locale')
     ->label('sdk.response.model', Response::MODEL_LOCALE)
     ->label('sdk.offline.model', '/localed')
     ->label('sdk.offline.key', 'current')
-    ->inject('request')
     ->inject('response')
-    ->inject('locale')
     ->inject('geoRecord')
-    ->action(function (Request $request, Response $response, Locale $locale, array $geoRecord) {
+    ->action(function (Response $response, array $geoRecord) {
         $time = (60 * 60 * 24 * 45); // 45 days cache
         $output = $geoRecord;
         $response
