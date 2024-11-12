@@ -39,7 +39,7 @@ class Migrations extends Action
 
     protected Document $project;
 
-    protected Logger $logger;
+    protected ?Logger $logger;
 
     public static function getName(): string
     {
@@ -58,13 +58,13 @@ class Migrations extends Action
             ->inject('dbForConsole')
             ->inject('log')
             ->inject('logger')
-            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log, Logger $logger) => $this->action($message, $dbForProject, $dbForConsole, $log, $logger));
+            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log, ?Logger $logger) => $this->action($message, $dbForProject, $dbForConsole, $log, $logger));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log, Logger $logger): void
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log, ?Logger $logger): void
     {
         $payload = $message->getPayload() ?? [];
 
