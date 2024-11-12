@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c56db8736d679aff6e2b275ec59f1dbf",
+    "content-hash": "ae3b9a491c9870a4897cdf712caba1e3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3135,16 +3135,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.43.0",
+            "version": "0.43.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "6346a3b4c5177a43160035a7289e30fdfb0790d6"
+                "reference": "e404c21e8dcf6a310bc83cf1d74e716b105598fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/6346a3b4c5177a43160035a7289e30fdfb0790d6",
-                "reference": "6346a3b4c5177a43160035a7289e30fdfb0790d6",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/e404c21e8dcf6a310bc83cf1d74e716b105598fa",
+                "reference": "e404c21e8dcf6a310bc83cf1d74e716b105598fa",
                 "shasum": ""
             },
             "require": {
@@ -3180,9 +3180,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.43.0"
+                "source": "https://github.com/utopia-php/abuse/tree/0.43.1"
             },
-            "time": "2024-08-30T05:17:23+00:00"
+            "time": "2024-10-23T04:29:12+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -3232,16 +3232,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.43.0",
+            "version": "0.43.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "cef22b5dc6a6d28fcd522f41c7bf7ded4a4dfd3e"
+                "reference": "04a47dd1f5f92e2d50e971a06bcc9e759325d277"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/cef22b5dc6a6d28fcd522f41c7bf7ded4a4dfd3e",
-                "reference": "cef22b5dc6a6d28fcd522f41c7bf7ded4a4dfd3e",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/04a47dd1f5f92e2d50e971a06bcc9e759325d277",
+                "reference": "04a47dd1f5f92e2d50e971a06bcc9e759325d277",
                 "shasum": ""
             },
             "require": {
@@ -3273,9 +3273,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.43.0"
+                "source": "https://github.com/utopia-php/audit/tree/0.43.1"
             },
-            "time": "2024-08-30T05:17:36+00:00"
+            "time": "2024-10-23T04:27:59+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -3475,16 +3475,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.53.16",
+            "version": "0.53.20",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "6661edffeef05b59e16d102b989a72f7f78cf7de"
+                "reference": "e43f8ee26e06ee8812737e63642dbd7ee7c9dc04"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/6661edffeef05b59e16d102b989a72f7f78cf7de",
-                "reference": "6661edffeef05b59e16d102b989a72f7f78cf7de",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/e43f8ee26e06ee8812737e63642dbd7ee7c9dc04",
+                "reference": "e43f8ee26e06ee8812737e63642dbd7ee7c9dc04",
                 "shasum": ""
             },
             "require": {
@@ -3525,9 +3525,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.53.16"
+                "source": "https://github.com/utopia-php/database/tree/0.53.20"
             },
-            "time": "2024-11-06T03:07:16+00:00"
+            "time": "2024-11-12T00:23:36+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3677,16 +3677,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.13",
+            "version": "0.33.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "4ecab88e424a136ffaa27cdf3db3c60f76c777e4"
+                "reference": "45a5a2db3602fa054096f378482c7da9936f5850"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/4ecab88e424a136ffaa27cdf3db3c60f76c777e4",
-                "reference": "4ecab88e424a136ffaa27cdf3db3c60f76c777e4",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/45a5a2db3602fa054096f378482c7da9936f5850",
+                "reference": "45a5a2db3602fa054096f378482c7da9936f5850",
                 "shasum": ""
             },
             "require": {
@@ -3718,9 +3718,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.13"
+                "source": "https://github.com/utopia-php/http/tree/0.33.14"
             },
-            "time": "2024-11-15T08:37:31+00:00"
+            "time": "2024-11-20T12:39:10+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -8557,7 +8557,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
