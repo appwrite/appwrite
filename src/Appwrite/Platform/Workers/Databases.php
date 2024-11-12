@@ -92,6 +92,7 @@ class Databases extends Action
      * @throws Authorization
      * @throws Conflict
      * @throws \Exception
+     * @throws \Throwable
      */
     private function createAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
@@ -169,7 +170,6 @@ class Databases extends Action
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
         } catch (\Throwable $e) {
-            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -192,15 +192,17 @@ class Databases extends Action
                     $relatedAttribute->setAttribute('status', 'failed')
                 );
             }
+
+            throw $e;
         } finally {
             $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
-        }
 
-        if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
-            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
-        }
+            if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
+                $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+            }
 
-        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        }
     }
 
     /**
@@ -214,6 +216,7 @@ class Databases extends Action
      * @throws Authorization
      * @throws Conflict
      * @throws \Exception
+     * @throws \Throwable
      **/
     private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
@@ -247,113 +250,116 @@ class Databases extends Action
         // - stuck: attribute was available but cannot be removed
 
         try {
-            if ($status !== 'failed') {
-                if ($type === Database::VAR_RELATIONSHIP) {
-                    if ($options['twoWay']) {
-                        $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
-                        if ($relatedCollection->isEmpty()) {
-                            throw new DatabaseException('Collection not found');
+            try {
+                if ($status !== 'failed') {
+                    if ($type === Database::VAR_RELATIONSHIP) {
+                        if ($options['twoWay']) {
+                            $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
+                            if ($relatedCollection->isEmpty()) {
+                                throw new DatabaseException('Collection not found');
+                            }
+                            $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
                         }
-                        $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
-                    }
 
-                    if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
-                        throw new DatabaseException('Failed to delete Relationship');
+                        if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                            $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
+                            throw new DatabaseException('Failed to delete Relationship');
+                        }
+                    } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                        throw new DatabaseException('Failed to delete Attribute');
                     }
-                } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                    throw new DatabaseException('Failed to delete Attribute');
                 }
-            }
 
-            $dbForProject->deleteDocument('attributes', $attribute->getId());
+                $dbForProject->deleteDocument('attributes', $attribute->getId());
 
-            if (!$relatedAttribute->isEmpty()) {
-                $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
-            }
-        } catch (\Throwable $e) {
-            // TODO: Send non DatabaseExceptions to Sentry
-            Console::error($e->getMessage());
-
-            if ($e instanceof DatabaseException) {
-                $attribute->setAttribute('error', $e->getMessage());
                 if (!$relatedAttribute->isEmpty()) {
-                    $relatedAttribute->setAttribute('error', $e->getMessage());
+                    $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
                 }
-            }
-            $dbForProject->updateDocument(
-                'attributes',
-                $attribute->getId(),
-                $attribute->setAttribute('status', 'stuck')
-            );
-            if (!$relatedAttribute->isEmpty()) {
+            } catch (\Throwable $e) {
+                Console::error($e->getMessage());
+
+                if ($e instanceof DatabaseException) {
+                    $attribute->setAttribute('error', $e->getMessage());
+                    if (!$relatedAttribute->isEmpty()) {
+                        $relatedAttribute->setAttribute('error', $e->getMessage());
+                    }
+                }
                 $dbForProject->updateDocument(
                     'attributes',
-                    $relatedAttribute->getId(),
-                    $relatedAttribute->setAttribute('status', 'stuck')
+                    $attribute->getId(),
+                    $attribute->setAttribute('status', 'stuck')
                 );
+                if (!$relatedAttribute->isEmpty()) {
+                    $dbForProject->updateDocument(
+                        'attributes',
+                        $relatedAttribute->getId(),
+                        $relatedAttribute->setAttribute('status', 'stuck')
+                    );
+                }
+
+                throw $e;
+            } finally {
+                $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
             }
-        } finally {
-            $this->trigger($database, $collection, $attribute, $project, $projectId, $events);
-        }
 
-        // The underlying database removes/rebuilds indexes when attribute is removed
-        // Update indexes table with changes
-        /** @var Document[] $indexes */
-        $indexes = $collection->getAttribute('indexes', []);
+            // The underlying database removes/rebuilds indexes when attribute is removed
+            // Update indexes table with changes
+            /** @var Document[] $indexes */
+            $indexes = $collection->getAttribute('indexes', []);
 
-        foreach ($indexes as $index) {
-            /** @var string[] $attributes */
-            $attributes = $index->getAttribute('attributes');
-            $lengths = $index->getAttribute('lengths');
-            $orders = $index->getAttribute('orders');
+            foreach ($indexes as $index) {
+                /** @var string[] $attributes */
+                $attributes = $index->getAttribute('attributes');
+                $lengths = $index->getAttribute('lengths');
+                $orders = $index->getAttribute('orders');
 
-            $found = \array_search($key, $attributes);
+                $found = \array_search($key, $attributes);
 
-            if ($found !== false) {
-                // If found, remove entry from attributes, lengths, and orders
-                // array_values wraps array_diff to reindex array keys
-                // when found attribute is removed from array
-                $attributes = \array_values(\array_diff($attributes, [$attributes[$found]]));
-                $lengths = \array_values(\array_diff($lengths, isset($lengths[$found]) ? [$lengths[$found]] : []));
-                $orders = \array_values(\array_diff($orders, isset($orders[$found]) ? [$orders[$found]] : []));
+                if ($found !== false) {
+                    // If found, remove entry from attributes, lengths, and orders
+                    // array_values wraps array_diff to reindex array keys
+                    // when found attribute is removed from array
+                    $attributes = \array_values(\array_diff($attributes, [$attributes[$found]]));
+                    $lengths = \array_values(\array_diff($lengths, isset($lengths[$found]) ? [$lengths[$found]] : []));
+                    $orders = \array_values(\array_diff($orders, isset($orders[$found]) ? [$orders[$found]] : []));
 
-                if (empty($attributes)) {
-                    $dbForProject->deleteDocument('indexes', $index->getId());
-                } else {
-                    $index
-                        ->setAttribute('attributes', $attributes, Document::SET_TYPE_ASSIGN)
-                        ->setAttribute('lengths', $lengths, Document::SET_TYPE_ASSIGN)
-                        ->setAttribute('orders', $orders, Document::SET_TYPE_ASSIGN);
-
-                    // Check if an index exists with the same attributes and orders
-                    $exists = false;
-                    foreach ($indexes as $existing) {
-                        if (
-                            $existing->getAttribute('key') !== $index->getAttribute('key') // Ignore itself
-                            && $existing->getAttribute('attributes') === $index->getAttribute('attributes')
-                            && $existing->getAttribute('orders') === $index->getAttribute('orders')
-                        ) {
-                            $exists = true;
-                            break;
-                        }
-                    }
-
-                    if ($exists) { // Delete the duplicate if created, else update in db
-                        $this->deleteIndex($database, $collection, $index, $project, $dbForConsole, $dbForProject);
+                    if (empty($attributes)) {
+                        $dbForProject->deleteDocument('indexes', $index->getId());
                     } else {
-                        $dbForProject->updateDocument('indexes', $index->getId(), $index);
+                        $index
+                            ->setAttribute('attributes', $attributes, Document::SET_TYPE_ASSIGN)
+                            ->setAttribute('lengths', $lengths, Document::SET_TYPE_ASSIGN)
+                            ->setAttribute('orders', $orders, Document::SET_TYPE_ASSIGN);
+
+                        // Check if an index exists with the same attributes and orders
+                        $exists = false;
+                        foreach ($indexes as $existing) {
+                            if (
+                                $existing->getAttribute('key') !== $index->getAttribute('key') // Ignore itself
+                                && $existing->getAttribute('attributes') === $index->getAttribute('attributes')
+                                && $existing->getAttribute('orders') === $index->getAttribute('orders')
+                            ) {
+                                $exists = true;
+                                break;
+                            }
+                        }
+
+                        if ($exists) { // Delete the duplicate if created, else update in db
+                            $this->deleteIndex($database, $collection, $index, $project, $dbForConsole, $dbForProject);
+                        } else {
+                            $dbForProject->updateDocument('indexes', $index->getId(), $index);
+                        }
                     }
                 }
             }
-        }
+        } finally {
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
+            $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 
-        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
-        $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
-
-        if (!$relatedCollection->isEmpty() && !$relatedAttribute->isEmpty()) {
-            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
-            $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+            if (!$relatedCollection->isEmpty() && !$relatedAttribute->isEmpty()) {
+                $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+                $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+            }
         }
     }
 
@@ -369,6 +375,7 @@ class Databases extends Action
      * @throws Conflict
      * @throws Structure
      * @throws DatabaseException
+     * @throws \Throwable
      */
     private function createIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
@@ -400,9 +407,7 @@ class Databases extends Action
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
         } catch (\Throwable $e) {
-            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
-
             if ($e instanceof DatabaseException) {
                 $index->setAttribute('error', $e->getMessage());
             }
@@ -411,11 +416,12 @@ class Databases extends Action
                 $index->getId(),
                 $index->setAttribute('status', 'failed')
             );
+
+            throw $e;
         } finally {
             $this->trigger($database, $collection, $index, $project, $projectId, $events);
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
         }
-
-        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
     }
 
     /**
@@ -430,6 +436,7 @@ class Databases extends Action
      * @throws Conflict
      * @throws Structure
      * @throws DatabaseException
+     * @throws \Throwable
      */
     private function deleteIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
@@ -458,7 +465,6 @@ class Databases extends Action
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
         } catch (\Throwable $e) {
-            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -469,11 +475,13 @@ class Databases extends Action
                 $index->getId(),
                 $index->setAttribute('status', 'stuck')
             );
+
+            throw $e;
+
         } finally {
             $this->trigger($database, $collection, $index, $project, $projectId, $events);
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collection->getId());
         }
-
-        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collection->getId());
     }
 
     /**
