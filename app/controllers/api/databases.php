@@ -14,7 +14,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Databases;
 use Appwrite\Utopia\Database\Validator\Queries\Indexes;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
@@ -617,8 +616,8 @@ App::get('/v1/databases/:databaseId/logs')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('geodb')
-    ->action(function (string $databaseId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('geoRecord')
+    ->action(function (string $databaseId, array $queries, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -674,15 +673,8 @@ App::get('/v1/databases/:databaseId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($geoRecord['countryCode']), false) ? \strtolower($geoRecord['countryCode']) : '--';
+            $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($geoRecord['countryCountry']), $locale->getText('locale.country.unknown'));
         }
 
         $response->dynamic(new Document([
@@ -967,8 +959,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('geodb')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('geoRecord')
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1026,15 +1018,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($geoRecord['countryCode']), false) ? \strtolower($geoRecord['countryCode']) : '--';
+            $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($geoRecord['countryCode']), $locale->getText('locale.country.unknown'));
         }
 
         $response->dynamic(new Document([
@@ -3364,8 +3349,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('geodb')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('geoRecord')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -3433,15 +3418,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($geoRecord['countryCode']), false) ? \strtolower($geoRecord['countryCode']) : '--';
+            $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($geoRecord['countryCode']), $locale->getText('locale.country.unknown'));
         }
         $response->dynamic(new Document([
             'total' => $audit->countLogsByResource($resource),

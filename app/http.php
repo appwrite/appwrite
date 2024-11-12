@@ -60,8 +60,6 @@ include __DIR__ . '/controllers/general.php';
 
 $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
-    $app->setCompression(true);
-    $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
     go(function () use ($register, $app) {
         $pools = $register->get('pools');

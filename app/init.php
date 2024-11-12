@@ -44,6 +44,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Utopia\Fetch\Client;
 use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -1055,6 +1056,7 @@ $register->set('smtp', function () {
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-09.mmdb');
 });
+
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
     $content = explode("\n", $content);
@@ -1651,6 +1653,65 @@ App::setResource('geodb', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
 }, ['register']);
+
+App::setResource('geoRecord', function (Reader $geodb, Request $request, Locale $locale) {
+    $ip = $request->getIp();
+    $eu = Config::getParam('locale-eu');
+    $currencies = Config::getParam('locale-currencies');
+
+    $client = new Client();
+    $client->addHeader('Authorization', 'Bearer ' . System::getEnv('_APP_GEO_SECRET'));
+    $client->setBaseUrl('http://appwrite-geo/v1');
+
+    $record = null;
+    try {
+        $record = $client->fetch("/ips/{$ip}", Client::METHOD_GET);
+        $record = $record->json();
+    } catch (Throwable $th) {
+        Console::error($th->getMessage());
+        Console::error($th->getTraceAsString());
+        $record = null;
+    }
+
+    if (empty($record)) {
+        // Fallback
+        $dbRecord = $geodb->get($ip);
+        if ($dbRecord) {
+            $record = [];
+            $record['countryCode'] = $dbRecord['country']['iso_code'];
+            $record['country'] = $dbRecord['country']['names'];
+            $record['continent'] = $dbRecord['continent']['names'];
+            $record['continentCode'] = $dbRecord['continent']['code'];
+        }
+    }
+
+    $output = [];
+    $output['ip'] = $ip;
+    $currency = null;
+    if (!empty($record)) {
+        $output['countryCode'] = $record['countryCode'];
+        $output['country'] = $locale->getText('countries.' . strtolower($record['countryCode']), $locale->getText('locale.country.unknown'));
+        $output['continent'] = $locale->getText('continents.' . strtolower($record['continentCode']), $locale->getText('locale.country.unknown'));
+        $output['continentCode'] = $record['continentCode'];
+        $output['eu'] = (\in_array($record['countryCode'], $eu)) ? true : false;
+
+        foreach ($currencies as $code => $element) {
+            if (isset($element['locations']) && isset($element['code']) && \in_array($record['countryCode'], $element['locations'])) {
+                $currency = $element['code'];
+            }
+        }
+
+        $output['currency'] = $currency;
+    } else {
+        $output['countryCode'] = '--';
+        $output['country'] = $locale->getText('locale.country.unknown');
+        $output['continent'] = $locale->getText('locale.country.unknown');
+        $output['continentCode'] = '--';
+        $output['eu'] = false;
+        $output['currency'] = $currency;
+    }
+    return $output;
+}, ['geodb', 'request', 'locale']);
 
 App::setResource('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */
