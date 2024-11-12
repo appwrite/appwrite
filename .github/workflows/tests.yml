@@ -128,9 +128,9 @@ jobs:
             Migrations
           ]
         tables-mode: [
-          Project,
-          Shared-V1,
-          Shared-V2,
+          'Project',
+          'Shared V1',
+          'Shared V2',
         ]
 
     steps:
