@@ -17,6 +17,7 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
@@ -28,6 +29,7 @@ use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Migrations extends Action
 {
@@ -36,6 +38,8 @@ class Migrations extends Action
     protected Database $dbForConsole;
 
     protected Document $project;
+
+    protected Logger $logger;
 
     public static function getName(): string
     {
@@ -53,13 +57,14 @@ class Migrations extends Action
             ->inject('dbForProject')
             ->inject('dbForConsole')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $log));
+            ->inject('logger')
+            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log, Logger $logger) => $this->action($message, $dbForProject, $dbForConsole, $log, $logger));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log): void
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log, Logger $logger): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -78,6 +83,7 @@ class Migrations extends Action
         $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
         $this->project = $project;
+        $this->logger = $logger;
 
         /**
          * Handle Event execution.
@@ -324,7 +330,6 @@ class Migrations extends Action
 
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
-                    /** @var $sourceErrors $error */
                     $message = "Error occurred while fetching '{$error->getResourceName()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
                     if ($error->getPrevious()) {
                         $message .= " Message: ".$error->getPrevious()->getMessage() . " File: ".$error->getPrevious()->getFile() . " Line: ".$error->getPrevious()->getLine();
@@ -359,7 +364,6 @@ class Migrations extends Action
             if (! $migration->isEmpty()) {
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
-                $migration->setAttribute('errors', [$th->getMessage()]);
 
                 return;
             }
@@ -379,7 +383,6 @@ class Migrations extends Action
                 }
 
                 $migration->setAttribute('errors', $errorMessages);
-                $log->addTag('migrationErrors', json_encode($errorMessages));
             }
         } finally {
             if (! $tempAPIKey->isEmpty()) {
@@ -394,7 +397,13 @@ class Migrations extends Action
                 $destination->error();
                 $source->error();
 
-                throw new Exception('Migration failed');
+                foreach ($source->getErrors() as $error) {
+                    $this->triggerExceptionLog($migration, $error);
+                }
+
+                foreach ($destination->getErrors() as $error) {
+                    $this->triggerExceptionLog($migration, $error);
+                }
             }
 
             if ($migration->getAttribute('status', '') === 'completed') {
@@ -403,4 +412,37 @@ class Migrations extends Action
             }
         }
     }
+
+    public function triggerExceptionLog(Document $migration, MigrationException $error) {
+        if (empty($this->logger)) {
+            return;
+        }
+
+        $log = new Log();
+
+        $log->setNamespace("appwrite-worker");
+        $log->setServer(\gethostname());
+        $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
+        $log->setType(Log::TYPE_ERROR);
+        $log->setMessage($error->getMessage());
+        $log->setAction('appwrite-queue-' . Self::getName());
+        $log->addTag('verboseType', get_class($error));
+        $log->addTag('projectId', $this->project->getId() ?? 'n/a');
+        $log->addExtra('file', $error->getFile());
+        $log->addExtra('line', $error->getLine());
+        $log->addExtra('trace', $error->getTraceAsString());
+        $log->addExtra('migrationId', $migration->getId() ?? 'n/a');
+        $log->addExtra('source', $migration->getAttribute('source') ?? 'n/a');
+        $log->addExtra('resourceName', $error->getResourceName());
+        $log->addExtra('resourceGroup', $error->getResourceGroup());
+        $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+        $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+        try {
+            $responseCode = $this->logger->addLog($log);
+            Console::info('Error log pushed with status code: ' . $responseCode);
+        } catch (\Throwable $th) {
+            Console::error('Error pushing log: ' . $th->getMessage());
+        }
+    } 
 }
