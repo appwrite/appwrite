@@ -4799,4 +4799,126 @@ trait DatabasesBase
 
         $this->assertEquals(408, $response['headers']['status-code']);
     }
+
+    public function testBulkCreate(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Bulk Create'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Bulk Create',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::delete(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+
+        $data = [
+            '$id' => $collection['body']['$id'],
+            'databaseId' => $collection['body']['databaseId']
+        ];
+
+        // Await attribute
+        $numberAttribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['$id'] . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'number',
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $numberAttribute['headers']['status-code']);
+
+        sleep(1);
+
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'number' => 1,
+                ],
+                [
+                    '$id' => ID::unique(),
+                    'number' => 2,
+                ],
+                [
+                    '$id' => ID::unique(),
+                    'number' => 3,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(3, $response['body']['modified']);
+
+        $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(3, $response['body']['documents']);
+
+        // TEST FAIL - Can't use data and document together
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'number' => 5
+            ],
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'number' => 1,
+                ]
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('You can only send one of the following parameters: data, documents', $response['body']['message']);
+
+        // TEST FAIL - Can't use $documentId and create bulk documents
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'number' => 1,
+                ]
+            ],
+        ]); 
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+    }
 }
