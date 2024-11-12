@@ -136,6 +136,16 @@ App::post('/v1/projects')
             $dsn = $databases[array_rand($databases)];
         }
 
+        $dsns = [
+            'fra' => 'database_db_fra1_self_hosted_0_0',
+            'syd' => 'database_db_syd1_self_hosted_0_0',
+            'nyc' => 'database_db_nyc1_self_hosted_0_0',
+        ];
+
+        if (isset($dsns[$region])) {
+            $dsn = $dsns[$region];
+        }
+
         // TODO: Temporary until all projects are using shared tables.
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
