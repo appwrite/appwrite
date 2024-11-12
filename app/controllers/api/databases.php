@@ -3689,14 +3689,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
-    ->alias('/v1/database/collections/:collectionId/documents')
     ->desc('Update documents')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.update')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'documents.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -3706,7 +3705,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.description', '/docs/references/databases/update-documents.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
+    ->label('sdk.response.model', Response::MODEL_BULK_OPERATION)
     ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
@@ -3740,11 +3739,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
+        $queries = Query::parseQueries($queries);
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions, [
@@ -3793,16 +3788,15 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $response->dynamic(new Document([
-            'modified' => $modified
-        ]), Response::MODEL_BULK_OPERATION);
-
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setContext('collection', $collection)
-            ->setContext('database', $database)
-            ->setPayload($response->getPayload());
+            ->setContext('database', $database);
+
+        $response->dynamic(new Document([
+            'modified' => $modified
+        ]), Response::MODEL_BULK_OPERATION);
     });
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
