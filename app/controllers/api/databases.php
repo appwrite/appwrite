@@ -3810,7 +3810,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     });
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
-    ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
     ->desc('Delete documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
@@ -3826,7 +3825,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.method', 'deleteDocuments')
     ->label('sdk.description', '/docs/references/databases/delete-documents.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.response.model', Response::MODEL_BULK_OPERATION)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
     ->label('sdk.offline.key', '{documentId}')
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -3863,6 +3863,12 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
                 intval(System::getEnv('_APP_DATABASE_BATCH_SIZE', 10_000))
             );
         });
+
+        $queueForEvents
+            ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collection->getId())
+            ->setContext('collection', $collection)
+            ->setContext('database', $database);
 
         return $response->dynamic(new Document([
             'modified' => $modified,

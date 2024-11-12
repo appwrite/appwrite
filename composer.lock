@@ -2222,16 +2222,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.6.11",
+            "version": "0.6.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "4d167914d3f7fa1fe816b2b2c6f221e70166bfd7"
+                "reference": "9a8c905af4cece5c5ec9542a5b534befce067260"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/4d167914d3f7fa1fe816b2b2c6f221e70166bfd7",
-                "reference": "4d167914d3f7fa1fe816b2b2c6f221e70166bfd7",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/9a8c905af4cece5c5ec9542a5b534befce067260",
+                "reference": "9a8c905af4cece5c5ec9542a5b534befce067260",
                 "shasum": ""
             },
             "require": {
@@ -2272,9 +2272,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.11"
+                "source": "https://github.com/utopia-php/migration/tree/0.6.12"
             },
-            "time": "2024-10-31T06:19:57+00:00"
+            "time": "2024-11-12T00:31:53+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -2542,16 +2542,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.7.1",
+            "version": "0.7.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "94c240d9f6383829807ce7b2d737f04b159fd3e8"
+                "reference": "40fdd9799d0a11dd33fca06f8223032a47dce2f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/94c240d9f6383829807ce7b2d737f04b159fd3e8",
-                "reference": "94c240d9f6383829807ce7b2d737f04b159fd3e8",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/40fdd9799d0a11dd33fca06f8223032a47dce2f6",
+                "reference": "40fdd9799d0a11dd33fca06f8223032a47dce2f6",
                 "shasum": ""
             },
             "require": {
@@ -2597,9 +2597,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.7.1"
+                "source": "https://github.com/utopia-php/queue/tree/0.7.2"
             },
-            "time": "2024-11-05T17:00:38+00:00"
+            "time": "2024-11-11T10:04:02+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -2817,16 +2817,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.8.3",
+            "version": "0.8.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "a032ed0611a8f4467aeaa9484f73223074457337"
+                "reference": "7622330628d53844a3873ca873338150756bab82"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/a032ed0611a8f4467aeaa9484f73223074457337",
-                "reference": "a032ed0611a8f4467aeaa9484f73223074457337",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/7622330628d53844a3873ca873338150756bab82",
+                "reference": "7622330628d53844a3873ca873338150756bab82",
                 "shasum": ""
             },
             "require": {
@@ -2860,9 +2860,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.8.3"
+                "source": "https://github.com/utopia-php/vcs/tree/0.8.5"
             },
-            "time": "2024-11-05T17:10:09+00:00"
+            "time": "2024-11-11T18:33:10+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -6923,16 +6923,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.14.1",
+            "version": "v3.14.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "f405356d20fb43603bcadc8b09bfb676cb04a379"
+                "reference": "0b6f9d8370bb3b7f1ce5313ed8feb0fafd6e399a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/f405356d20fb43603bcadc8b09bfb676cb04a379",
-                "reference": "f405356d20fb43603bcadc8b09bfb676cb04a379",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/0b6f9d8370bb3b7f1ce5313ed8feb0fafd6e399a",
+                "reference": "0b6f9d8370bb3b7f1ce5313ed8feb0fafd6e399a",
                 "shasum": ""
             },
             "require": {
@@ -6986,7 +6986,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.14.1"
+                "source": "https://github.com/twigphp/Twig/tree/v3.14.2"
             },
             "funding": [
                 {
@@ -6998,7 +6998,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-11-06T18:17:38+00:00"
+            "time": "2024-11-07T12:36:22+00:00"
         },
         {
             "name": "webmozart/glob",
