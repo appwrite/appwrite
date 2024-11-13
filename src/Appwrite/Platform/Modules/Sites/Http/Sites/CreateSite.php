@@ -18,7 +18,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -46,7 +45,7 @@ class CreateSite extends Base
             ->setHttpPath('/v1/sites')
             ->desc('Create site')
             ->groups(['api', 'sites'])
-            ->label('scope', 'sites.write')
+            ->label('scope', 'functions.write')
             ->label('event', 'sites.[siteId].create')
             ->label('audits.event', 'site.create')
             ->label('audits.resource', 'site/{response.$id}')
@@ -103,15 +102,13 @@ class CreateSite extends Base
         $domain = '';
 
         if (!empty($sitesDomain)) {
-            $ruleId = ID::unique();
             $routeSubdomain = $subdomain ?: ID::unique();
             $domain = "{$routeSubdomain}.{$sitesDomain}";
+            $ruleId = md5($domain);
 
-            $subdomain = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
-                Query::equal('domain', [$domain])
-            ]));
+            $subdomain = Authorization::skip(fn () => $dbForConsole->getDocument('rules', $ruleId));
 
-            if (!empty($subdomain)) {
+            if ($subdomain && !$subdomain->isEmpty()) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Subdomain already exists. Please choose a different subdomain.');
             }
         }
