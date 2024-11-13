@@ -298,7 +298,7 @@ Server::setResource('logError', function (Registry $register, Document $project)
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
-            
+
 
             foreach ($extras as $key => $value) {
                 $log->addExtra($key, $value);
