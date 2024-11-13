@@ -992,7 +992,8 @@ class DatabasesCustomClientTest extends Scope
                 'number' => 6,
             ],
             'permissions' => [
-                Permission::update(Role::user('user2'))
+                Permission::update(Role::user('user2')),
+                Permission::read(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1012,9 +1013,8 @@ class DatabasesCustomClientTest extends Scope
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
             'queries' => [Query::notEqual('number', 100)->toString()]
         ]);
 

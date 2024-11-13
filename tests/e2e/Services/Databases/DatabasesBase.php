@@ -4901,23 +4901,52 @@ trait DatabasesBase
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(10, $documents['body']['total']);
 
-        if ($this->getSide() === 'client') {
-            foreach ($documents['body']['documents'] as $document) {
-                $this->assertEquals([
-                    Permission::read(Role::user($this->getUser()['$id'])),
-                    Permission::update(Role::user($this->getUser()['$id'])),
-                    Permission::delete(Role::user($this->getUser()['$id'])),
-                ], $document['$permissions']);
-            }
+        foreach ($documents['body']['documents'] as $document) {
+            $this->assertEquals([
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ], $document['$permissions']);
         }
 
-        // TEST: Update documents with query
+        // TEST: Check permissions persist
         $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
                 'number' => 200
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(10, $response['body']['modified']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            Query::equal('number', [200])->toString(),
+        ]);
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertEquals(10, $documents['body']['total']);
+
+        foreach ($documents['body']['documents'] as $document) {
+            $this->assertEquals([
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ], $document['$permissions']);
+        }
+
+        // TEST: Update documents with limit
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'number' => 300
             ],
             'queries' => [
                 Query::limit(5)->toString(),
@@ -4943,7 +4972,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'number' => 200
+                'number' => 300
             ],
             'queries' => [
                 Query::offset(5)->toString(),
@@ -4957,7 +4986,33 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::equal('number', [200])->toString()]
+            'queries' => [Query::equal('number', [300])->toString()]
+        ]);
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertEquals(10, $documents['body']['total']);
+
+        // TEST: Update documents with equals filter
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'number' => 400
+            ],
+            'queries' => [
+                Query::equal('number', [300])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(10, $response['body']['modified']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::equal('number', [400])->toString()]
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);

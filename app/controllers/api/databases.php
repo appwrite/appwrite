@@ -3769,6 +3769,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
+        if (!\is_null($permissions)) {
+            $data['$permissions'] = $permissions;
+        }
         $partialDocument = new Document($data);
 
         try {
