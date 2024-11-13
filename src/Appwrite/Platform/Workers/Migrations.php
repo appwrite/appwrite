@@ -56,15 +56,14 @@ class Migrations extends Action
             ->inject('message')
             ->inject('dbForProject')
             ->inject('dbForConsole')
-            ->inject('log')
             ->inject('logger')
-            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, Log $log, ?Logger $logger) => $this->action($message, $dbForProject, $dbForConsole, $log, $logger));
+            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, ?Logger $logger) => $this->action($message, $dbForProject, $dbForConsole, $logger));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log, ?Logger $logger): void
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole, ?Logger $logger): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -92,10 +91,7 @@ class Migrations extends Action
             return;
         }
 
-        $log->addTag('migrationId', $migration->getId());
-        $log->addTag('projectId', $project->getId());
-
-        $this->processMigration($migration, $log);
+        $this->processMigration($migration);
     }
 
     /**
@@ -265,7 +261,7 @@ class Migrations extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function processMigration(Document $migration, Log $log): void
+    protected function processMigration(Document $migration): void
     {
         $project = $this->project;
         $projectDocument = $this->dbForConsole->getDocument('projects', $project->getId());
@@ -290,8 +286,6 @@ class Migrations extends Action
             $migration->setAttribute('stage', 'processing');
             $migration->setAttribute('status', 'processing');
             $this->updateMigrationDocument($migration, $projectDocument);
-
-            $log->addTag('type', $migration->getAttribute('source'));
 
             $source = $this->processSource($migration);
             $destination = $this->processDestination($migration, $tempAPIKey->getAttribute('secret'));
@@ -349,7 +343,6 @@ class Migrations extends Action
                 }
 
                 $migration->setAttribute('errors', $errorMessages);
-                $log->addExtra('migrationErrors', json_encode($errorMessages));
                 $this->updateMigrationDocument($migration, $projectDocument);
 
                 return;
@@ -428,12 +421,12 @@ class Migrations extends Action
         $log->setMessage($error->getMessage());
         $log->setAction('appwrite-queue-' . self::getName());
         $log->addTag('verboseType', get_class($error));
-        $log->addTag('projectId', $this->project->getId() ?? 'n/a');
+        $log->addTag('projectId', $this->project->getId() ?? '');
         $log->addExtra('file', $error->getFile());
         $log->addExtra('line', $error->getLine());
         $log->addExtra('trace', $error->getTraceAsString());
-        $log->addExtra('migrationId', $migration->getId() ?? 'n/a');
-        $log->addExtra('source', $migration->getAttribute('source') ?? 'n/a');
+        $log->addExtra('migrationId', $migration->getId() ?? '');
+        $log->addExtra('source', $migration->getAttribute('source') ?? '');
         $log->addExtra('resourceName', $error->getResourceName());
         $log->addExtra('resourceGroup', $error->getResourceGroup());
         $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
