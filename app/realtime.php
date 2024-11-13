@@ -365,17 +365,16 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
             $start = time();
 
-            $redis = $register->get('pools')->get('pubsub')->pop()->getResource(); /** @var Redis $redis */
-            $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
-
-            if ($redis->ping(true)) {
+            /** @var \Appwrite\PubSub\Adapter $pubsub */
+            $pubsub = $register->get('pools')->get('pubsub')->pop()->getResource();
+            if ($pubsub->ping(true)) {
                 $attempts = 0;
                 Console::success('Pub/sub connection established (worker: ' . $workerId . ')');
             } else {
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $redis->subscribe(['realtime'], function (Redis $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
+            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
                 $event = json_decode($payload, true);
 
                 if ($event['permissionsChanged'] && isset($event['userId'])) {
@@ -593,9 +592,12 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         }
 
         switch ($message['type']) {
-            /**
-             * This type is used to authenticate.
-             */
+            case 'ping':
+                $server->send([$connection], json_encode([
+                    'type' => 'pong'
+                ]));
+
+                break;
             case 'authentication':
                 if (!array_key_exists('session', $message['data'])) {
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
