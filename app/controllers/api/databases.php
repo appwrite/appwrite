@@ -2609,6 +2609,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Attribute not available: ' . $oldAttributes[$attributeIndex]['key']);
             }
 
+            // todo: Think of a better solution
             $lengths[$i] = null;
 
             if ($attributeType === Database::VAR_STRING) {
