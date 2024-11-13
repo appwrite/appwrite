@@ -7636,11 +7636,11 @@
                 "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "201": {
-                        "description": "Document",
+                        "description": "BulkOperation",
                         "content": {
                             "application\/json": {
                                 "schema": {
-                                    "$ref": "#\/components\/schemas\/document"
+                                    "$ref": "#\/components\/schemas\/bulkOperation"
                                 }
                             }
                         }
@@ -7718,6 +7718,14 @@
                                         "description": "Document data as JSON object.",
                                         "x-example": "{}"
                                     },
+                                    "documents": {
+                                        "type": "array",
+                                        "description": "Array of documents data as JSON object.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
                                     "permissions": {
                                         "type": "array",
                                         "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
@@ -7726,11 +7734,7 @@
                                             "type": "string"
                                         }
                                     }
-                                },
-                                "required": [
-                                    "documentId",
-                                    "data"
-                                ]
+                                }
                             }
                         }
                     }
@@ -27096,6 +27100,21 @@
                     "providerType",
                     "identifier",
                     "expired"
+                ]
+            },
+            "bulkOperation": {
+                "description": "BulkOperation",
+                "type": "object",
+                "properties": {
+                    "modified": {
+                        "type": "integer",
+                        "description": "Total number of documents affected by the operation.",
+                        "x-example": 64,
+                        "format": "int32"
+                    }
+                },
+                "required": [
+                    "modified"
                 ]
             }
         },

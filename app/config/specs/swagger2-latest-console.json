@@ -8268,9 +8268,9 @@
                 "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "201": {
-                        "description": "Document",
+                        "description": "BulkOperation",
                         "schema": {
-                            "$ref": "#\/definitions\/document"
+                            "$ref": "#\/definitions\/bulkOperation"
                         }
                     }
                 },
@@ -8332,14 +8332,23 @@
                                 "documentId": {
                                     "type": "string",
                                     "description": "Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
-                                    "default": null,
+                                    "default": "",
                                     "x-example": "<DOCUMENT_ID>"
                                 },
                                 "data": {
                                     "type": "object",
                                     "description": "Document data as JSON object.",
-                                    "default": {},
+                                    "default": [],
                                     "x-example": "{}"
+                                },
+                                "documents": {
+                                    "type": "array",
+                                    "description": "Array of documents data as JSON object.",
+                                    "default": [],
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "object"
+                                    }
                                 },
                                 "permissions": {
                                     "type": "array",
@@ -8350,11 +8359,7 @@
                                         "type": "string"
                                     }
                                 }
-                            },
-                            "required": [
-                                "documentId",
-                                "data"
-                            ]
+                            }
                         }
                     }
                 ]
@@ -21138,7 +21143,7 @@
         },
         "\/projects\/{projectId}\/auth\/memberships-privacy": {
             "patch": {
-                "summary": "Update project team sensitive attributes",
+                "summary": "Update project memberships privacy attributes",
                 "operationId": "projectsUpdateMembershipsPrivacy",
                 "consumes": [
                     "application\/json"
@@ -36591,17 +36596,17 @@
                     "description": "Whether or not to send session alert emails to users.",
                     "x-example": true
                 },
-                "membershipsUserName": {
+                "authMembershipsUserName": {
                     "type": "boolean",
                     "description": "Whether or not to show user names in the teams membership response.",
                     "x-example": true
                 },
-                "membershipsUserEmail": {
+                "authMembershipsUserEmail": {
                     "type": "boolean",
                     "description": "Whether or not to show user emails in the teams membership response.",
                     "x-example": true
                 },
-                "membershipsMfa": {
+                "authMembershipsMfa": {
                     "type": "boolean",
                     "description": "Whether or not to show user MFA status in the teams membership response.",
                     "x-example": true
@@ -36815,9 +36820,9 @@
                 "authPersonalDataCheck",
                 "authMockNumbers",
                 "authSessionAlerts",
-                "membershipsUserName",
-                "membershipsUserEmail",
-                "membershipsMfa",
+                "authMembershipsUserName",
+                "authMembershipsUserEmail",
+                "authMembershipsMfa",
                 "oAuthProviders",
                 "platforms",
                 "webhooks",
@@ -39293,6 +39298,21 @@
             "required": [
                 "projectId",
                 "displayName"
+            ]
+        },
+        "bulkOperation": {
+            "description": "BulkOperation",
+            "type": "object",
+            "properties": {
+                "modified": {
+                    "type": "integer",
+                    "description": "Total number of documents affected by the operation.",
+                    "x-example": 64,
+                    "format": "int32"
+                }
+            },
+            "required": [
+                "modified"
             ]
         }
     },
