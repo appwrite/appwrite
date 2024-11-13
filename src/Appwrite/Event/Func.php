@@ -238,22 +238,4 @@ class Func extends Event
             'method' => $this->method,
         ]);
     }
-
-    /**
-     * Generate a function event from a base event
-     *
-     * @param Event $event
-     *
-     * @return self
-     *
-     */
-    public function from(Event $event): self
-    {
-        $this->project = $event->getProject();
-        $this->user = $event->getUser();
-        $this->payload = $event->getPayload();
-        $this->event = $event->getEvent();
-        $this->params = $event->getParams();
-        return $this;
-    }
 }

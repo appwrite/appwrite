@@ -52,6 +52,7 @@ class UpdateFunction extends Base
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('event', 'functions.[functionId].update')
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'function.update')
             ->label('audits.resource', 'function/{response.$id}')
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY])

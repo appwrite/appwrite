@@ -58,7 +58,7 @@ Server::setResource('project', function (Message $message, Database $dbForConsol
     $payload = $message->getPayload() ?? [];
     $project = new Document($payload['project'] ?? []);
 
-    if ($project->getId() === 'console' || $project->isEmpty() || ! empty($project->getInternalId())) {
+    if ($project->getId() === 'console') {
         return $project;
     }
 
@@ -275,6 +275,11 @@ Server::setResource('deviceForBuilds', function (Document $project) {
 Server::setResource('deviceForCache', function (Document $project) {
     return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 }, ['project']);
+
+Server::setResource(
+    'isResourceBlocked',
+    fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
+);
 
 
 $pools = $register->get('pools');

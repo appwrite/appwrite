@@ -52,6 +52,7 @@ class CreateFunction extends Base
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('event', 'functions.[functionId].create')
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'function.create')
             ->label('audits.resource', 'function/{response.$id}')
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -243,9 +244,9 @@ class CreateFunction extends Base
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         if (!empty($functionsDomain)) {
-            $ruleId = ID::unique();
             $routeSubdomain = ID::unique();
             $domain = "{$routeSubdomain}.{$functionsDomain}";
+            $ruleId = md5($domain);
 
             $rule = Authorization::skip(
                 fn () => $dbForConsole->createDocument('rules', new Document([

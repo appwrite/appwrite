@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\ClamAV\Network;
+use Appwrite\PubSub\Adapter;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -158,6 +159,7 @@ class Doctor extends Action
         foreach ($configs as $key => $config) {
             foreach ($config as $pool) {
                 try {
+                    /** @var Adapter $adapter */
                     $adapter = $pools->get($pool)->pop()->getResource();
 
                     if ($adapter->ping()) {
