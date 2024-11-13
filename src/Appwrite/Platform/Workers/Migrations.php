@@ -39,7 +39,7 @@ class Migrations extends Action
 
     protected Document $project;
 
-    protected ?Logger $logger;
+    protected $logError;
 
     public static function getName(): string
     {
@@ -56,14 +56,14 @@ class Migrations extends Action
             ->inject('message')
             ->inject('dbForProject')
             ->inject('dbForConsole')
-            ->inject('logger')
-            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, ?Logger $logger) => $this->action($message, $dbForProject, $dbForConsole, $logger));
+            ->inject('logError')
+            ->callback(fn (Message $message, Database $dbForProject, Database $dbForConsole, callable $logError) => $this->action($message, $dbForProject, $dbForConsole, $logError));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForConsole, ?Logger $logger): void
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole, callable $logError): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -82,7 +82,7 @@ class Migrations extends Action
         $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
         $this->project = $project;
-        $this->logger = $logger;
+        $this->logError = $logError;
 
         /**
          * Handle Event execution.
@@ -391,11 +391,21 @@ class Migrations extends Action
                 $source->error();
 
                 foreach ($source->getErrors() as $error) {
-                    $this->triggerExceptionLog($migration, $error);
+                    call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                        'migrationId' => $migration->getId() ?? '',
+                        'source' => $migration->getAttribute('source') ?? '',
+                        'resourceName' => $error->getResourceName(),
+                        'resourceGroup' => $error->getResourceGroup()
+                    ]);
                 }
 
                 foreach ($destination->getErrors() as $error) {
-                    $this->triggerExceptionLog($migration, $error);
+                    call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                        'migrationId' => $migration->getId() ?? '',
+                        'source' => $migration->getAttribute('source') ?? '',
+                        'resourceName' => $error->getResourceName(),
+                        'resourceGroup' => $error->getResourceGroup()
+                    ]);
                 }
             }
 
@@ -403,40 +413,6 @@ class Migrations extends Action
                 $destination->success();
                 $source->success();
             }
-        }
-    }
-
-    public function triggerExceptionLog(Document $migration, MigrationException $error)
-    {
-        if (empty($this->logger)) {
-            return;
-        }
-
-        $log = new Log();
-
-        $log->setNamespace("appwrite-worker");
-        $log->setServer(\gethostname());
-        $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
-        $log->setType(Log::TYPE_ERROR);
-        $log->setMessage($error->getMessage());
-        $log->setAction('appwrite-queue-' . self::getName());
-        $log->addTag('verboseType', get_class($error));
-        $log->addTag('projectId', $this->project->getId() ?? '');
-        $log->addExtra('file', $error->getFile());
-        $log->addExtra('line', $error->getLine());
-        $log->addExtra('trace', $error->getTraceAsString());
-        $log->addExtra('migrationId', $migration->getId() ?? '');
-        $log->addExtra('source', $migration->getAttribute('source') ?? '');
-        $log->addExtra('resourceName', $error->getResourceName());
-        $log->addExtra('resourceGroup', $error->getResourceGroup());
-        $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-        $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-        try {
-            $responseCode = $this->logger->addLog($log);
-            Console::info('Error log pushed with status code: ' . $responseCode);
-        } catch (\Throwable $th) {
-            Console::error('Error pushing log: ' . $th->getMessage());
         }
     }
 }
