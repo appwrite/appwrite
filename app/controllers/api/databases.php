@@ -396,8 +396,6 @@ function updateAttribute(
         }
     }
 
-    $purge = false;
-
     if (!empty($newKey) && $key !== $newKey) {
         $originalUid = $attribute->getId();
 
@@ -417,15 +415,10 @@ function updateAttribute(
             $attributes = $index->getAttribute('attributes', []);
             $found = \array_search($key, $attributes);
 
-            var_dump($attributes);
-            var_dump('found===');
-            var_dump($found);
-
             if ($found !== false) {
                 $attributes[$found] = $newKey;
                 $index->setAttribute('attributes', $attributes);
                 $dbForProject->updateDocument('indexes', $index->getId(), $index);
-                $purge = true;
             }
         }
     } else {
@@ -433,11 +426,6 @@ function updateAttribute(
     }
 
     $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collection->getId());
-
-    if($purge){
-        // I think we are missing this?
-        $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
-    }
 
     $queueForEvents
         ->setContext('collection', $collection)

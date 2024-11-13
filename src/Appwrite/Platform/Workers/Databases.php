@@ -350,11 +350,9 @@ class Databases extends Action
         }
 
         $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
-        $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 
         if (!$relatedCollection->isEmpty() && !$relatedAttribute->isEmpty()) {
             $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
-            $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
         }
     }
 
