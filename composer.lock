@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2f4d6d3242be92cb63e0668c2dbc5b61",
+    "content-hash": "c56db8736d679aff6e2b275ec59f1dbf",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3677,21 +3677,22 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.11",
+            "version": "0.33.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "354ff0d23bfc6e82bea0fe8e89e115cff1af8466"
+                "reference": "bfb7812df9e489b3cba7d5504a49ce578c71af1f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/354ff0d23bfc6e82bea0fe8e89e115cff1af8466",
-                "reference": "354ff0d23bfc6e82bea0fe8e89e115cff1af8466",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/bfb7812df9e489b3cba7d5504a49ce578c71af1f",
+                "reference": "bfb7812df9e489b3cba7d5504a49ce578c71af1f",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0",
-                "utopia-php/compression": "0.1.*"
+                "php": ">=8.1",
+                "utopia-php/compression": "0.1.*",
+                "utopia-php/telemetry": "0.1.*"
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
@@ -3717,9 +3718,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.11"
+                "source": "https://github.com/utopia-php/http/tree/0.33.12"
             },
-            "time": "2024-11-08T18:47:43+00:00"
+            "time": "2024-11-13T12:45:45+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -4247,22 +4248,23 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.7.2",
+            "version": "0.7.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "40fdd9799d0a11dd33fca06f8223032a47dce2f6"
+                "reference": "16074a98ee7d6212bc1228de200e13db470c098a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/40fdd9799d0a11dd33fca06f8223032a47dce2f6",
-                "reference": "40fdd9799d0a11dd33fca06f8223032a47dce2f6",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/16074a98ee7d6212bc1228de200e13db470c098a",
+                "reference": "16074a98ee7d6212bc1228de200e13db470c098a",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0",
+                "php": ">=8.1",
                 "utopia-php/cli": "0.15.*",
-                "utopia-php/framework": "0.*.*"
+                "utopia-php/framework": "0.*.*",
+                "utopia-php/telemetry": "0.1.*"
             },
             "require-dev": {
                 "laravel/pint": "^0.2.3",
@@ -4302,9 +4304,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.7.2"
+                "source": "https://github.com/utopia-php/queue/tree/0.7.3"
             },
-            "time": "2024-11-11T10:04:02+00:00"
+            "time": "2024-11-13T12:47:48+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -4522,16 +4524,16 @@
         },
         {
             "name": "utopia-php/telemetry",
-            "version": "dev-initial-commit",
+            "version": "0.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/telemetry.git",
-                "reference": "a51fd18289921fc81f69d98e51f73ebb381eeeb9"
+                "reference": "d35f2f0632f4ee0be63fb7ace6a94a6adda71a80"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/telemetry/zipball/a51fd18289921fc81f69d98e51f73ebb381eeeb9",
-                "reference": "a51fd18289921fc81f69d98e51f73ebb381eeeb9",
+                "url": "https://api.github.com/repos/utopia-php/telemetry/zipball/d35f2f0632f4ee0be63fb7ace6a94a6adda71a80",
+                "reference": "d35f2f0632f4ee0be63fb7ace6a94a6adda71a80",
                 "shasum": ""
             },
             "require": {
@@ -4555,23 +4557,7 @@
                     "Utopia\\": "src/"
                 }
             },
-            "scripts": {
-                "lint": [
-                    "vendor/bin/pint --test"
-                ],
-                "format": [
-                    "vendor/bin/pint"
-                ],
-                "check": [
-                    "vendor/bin/phpstan analyse -c phpstan.neon"
-                ],
-                "test": [
-                    "vendor/bin/phpunit --configuration phpunit.xml"
-                ],
-                "bench": [
-                    "vendor/bin/phpbench run --report=benchmark"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -4581,10 +4567,10 @@
                 "upf"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/telemetry/tree/initial-commit",
-                "issues": "https://github.com/utopia-php/telemetry/issues"
+                "issues": "https://github.com/utopia-php/telemetry/issues",
+                "source": "https://github.com/utopia-php/telemetry/tree/0.1.0"
             },
-            "time": "2024-11-11T17:36:02+00:00"
+            "time": "2024-11-13T10:29:53+00:00"
         },
         {
             "name": "utopia-php/vcs",
@@ -5822,16 +5808,16 @@
         },
         {
             "name": "phpdocumentor/reflection-docblock",
-            "version": "5.5.1",
+            "version": "5.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "0c70d2c566e899666f367ab7b80986beb3581e6f"
+                "reference": "f3558a4c23426d12bffeaab463f8a8d8b681193c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/0c70d2c566e899666f367ab7b80986beb3581e6f",
-                "reference": "0c70d2c566e899666f367ab7b80986beb3581e6f",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/f3558a4c23426d12bffeaab463f8a8d8b681193c",
+                "reference": "f3558a4c23426d12bffeaab463f8a8d8b681193c",
                 "shasum": ""
             },
             "require": {
@@ -5840,7 +5826,7 @@
                 "php": "^7.4 || ^8.0",
                 "phpdocumentor/reflection-common": "^2.2",
                 "phpdocumentor/type-resolver": "^1.7",
-                "phpstan/phpdoc-parser": "^1.7",
+                "phpstan/phpdoc-parser": "^1.7|^2.0",
                 "webmozart/assert": "^1.9.1"
             },
             "require-dev": {
@@ -5880,9 +5866,9 @@
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
             "support": {
                 "issues": "https://github.com/phpDocumentor/ReflectionDocBlock/issues",
-                "source": "https://github.com/phpDocumentor/ReflectionDocBlock/tree/5.5.1"
+                "source": "https://github.com/phpDocumentor/ReflectionDocBlock/tree/5.6.0"
             },
-            "time": "2024-11-06T11:58:54+00:00"
+            "time": "2024-11-12T11:25:25+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -6013,30 +5999,30 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.33.0",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "82a311fd3690fb2bf7b64d5c98f912b3dd746140"
+                "reference": "c00d78fb6b29658347f9d37ebe104bffadf36299"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/82a311fd3690fb2bf7b64d5c98f912b3dd746140",
-                "reference": "82a311fd3690fb2bf7b64d5c98f912b3dd746140",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/c00d78fb6b29658347f9d37ebe104bffadf36299",
+                "reference": "c00d78fb6b29658347f9d37ebe104bffadf36299",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.2 || ^8.0"
+                "php": "^7.4 || ^8.0"
             },
             "require-dev": {
                 "doctrine/annotations": "^2.0",
-                "nikic/php-parser": "^4.15",
+                "nikic/php-parser": "^5.3.0",
                 "php-parallel-lint/php-parallel-lint": "^1.2",
                 "phpstan/extension-installer": "^1.0",
-                "phpstan/phpstan": "^1.5",
-                "phpstan/phpstan-phpunit": "^1.1",
-                "phpstan/phpstan-strict-rules": "^1.0",
-                "phpunit/phpunit": "^9.5",
+                "phpstan/phpstan": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpunit": "^9.6",
                 "symfony/process": "^5.2"
             },
             "type": "library",
@@ -6054,9 +6040,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.33.0"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.0.0"
             },
-            "time": "2024-10-13T11:25:22+00:00"
+            "time": "2024-10-13T11:29:49+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -8570,9 +8556,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/telemetry": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
