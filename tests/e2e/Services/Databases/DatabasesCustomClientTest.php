@@ -890,4 +890,193 @@ class DatabasesCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
     }
+
+    public function testBulkCreatePermissions(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Bulk Create'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Bulk Create',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::delete(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+
+        $data = [
+            '$id' => $collection['body']['$id'],
+            'databaseId' => $collection['body']['databaseId']
+        ];
+
+        // Await attribute
+        $numberAttribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['$id'] . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'number',
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $numberAttribute['headers']['status-code']);
+
+        sleep(2);
+
+        // TEST FAIL - Can't create document with missing collection level permissions
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'number' => 1,
+                ],
+                [
+                    '$id' => ID::unique(),
+                    'number' => 2,
+                ],
+                [
+                    '$id' => ID::unique(),
+                    'number' => 3,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('The current user is not authorized to perform the requested action.', $response['body']['message']);
+
+        // TEST FAIL - Can't create document with missing document level permissions
+        $collection = $this->client->call(Client::METHOD_PUT, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Bulk Creates Perms',
+            'documentSecurity' => true
+        ]);
+
+        $this->assertEquals(200, $collection['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'number' => 1,
+                ],
+                [
+                    '$id' => ID::unique(),
+                    'number' => 2,
+                ],
+                [
+                    '$id' => ID::unique(),
+                    'number' => 3,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('The current user is not authorized to perform the requested action.', $response['body']['message']);
+
+        // TEST FAIL - Can't create document with permissions that aren't our own.
+        $collection = $this->client->call(Client::METHOD_PUT, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Bulk Creates Perms',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $this->assertEquals(200, $collection['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'number' => 1,
+                ],
+                [
+                    '$id' => ID::unique(),
+                    'number' => 2,
+                ],
+                [
+                    '$id' => ID::unique(),
+                    'number' => 3,
+                ],
+            ],
+            'permissions' => [
+                Permission::write(Role::user('aaaaaa')),
+                Permission::read(Role::user('aaaaaa')),
+                Permission::update(Role::user('aaaaaa')),
+                Permission::delete(Role::user('aaaaaa')),
+            ]
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // TEST SUCCESS - Can create document with our own permissions.
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'number' => 1,
+                ],
+                [
+                    '$id' => ID::unique(),
+                    'number' => 2,
+                ],
+                [
+                    '$id' => ID::unique(),
+                    'number' => 3,
+                ],
+            ],
+            'permissions' => [
+                Permission::write(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(3, $response['body']['modified']);
+    }
 }

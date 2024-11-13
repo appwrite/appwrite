@@ -2886,11 +2886,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         if (!empty($data) && empty($documentId)) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Document ID is required when creating a single document'); // TODO: Make into normal error type
+            throw new Exception(Exception::DOCUMENT_MISSING_DATA, 'Document ID is required when creating a single document');
         }
-        
+
         if (!empty($documents) && !empty($documentId)) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Document ID is not required when creating multiple documents'); // TODO: Make into normal error type
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "documentId" is disallowed when creating multiple documents, use $id inside the documents');
         }
 
         if (!empty($data)) {

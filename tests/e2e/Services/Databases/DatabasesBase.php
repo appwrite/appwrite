@@ -4809,7 +4809,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Bulk Create'
+            'name' => 'Bulk Create Perms',
         ]);
 
         $this->assertNotEmpty($database['body']['$id']);
@@ -4822,7 +4822,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'collectionId' => ID::unique(),
-            'name' => 'Bulk Create',
+            'name' => 'Bulk Create Perms',
             'documentSecurity' => true,
             'permissions' => [
                 Permission::create(Role::any()),
@@ -4916,9 +4916,160 @@ trait DatabasesBase
                     'number' => 1,
                 ]
             ],
-        ]); 
+        ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
+        // TEST FAIL - Can't miss $id in bulk documents
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    'number' => 1,
+                ]
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('$id is required inside documents when creating bulk documents', $response['body']['message']);
+    }
+
+    public function testBulkCreateRelationships(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Bulk Creates Relationships'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Collection1',
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Collection2',
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $collection1 = $collection1['body']['$id'];
+        $collection2 = $collection2['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1 . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedCollectionId' => $collection2,
+            'type' => Database::RELATION_ONE_TO_MANY,
+            'key' => 'collection2',
+            'onDelete' => Database::RELATION_MUTATE_RESTRICT,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1 . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection2 . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        sleep(3);
+
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collection1}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'name' => 'Document 1',
+                    'collection2' => [
+                        [
+                            '$id' => ID::unique(),
+                            'name' => 'Document 2',
+                        ],
+                        [
+                            '$id' => ID::unique(),
+                            'name' => 'Document 3',
+                        ],
+                    ],
+                ],
+                [
+                    '$id' => ID::unique(),
+                    'name' => 'Document 2',
+                    'collection2' => [
+                        [
+                            '$id' => ID::unique(),
+                            'name' => 'Document 4',
+                        ],
+                        [
+                            '$id' => ID::unique(),
+                            'name' => 'Document 5',
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['modified']);
+
+        $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collection1}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['total']);
+
+        $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collection2}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(4, $response['body']['total']);
     }
 }
