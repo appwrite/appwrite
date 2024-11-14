@@ -1,0 +1,35 @@
+name: "SDK Preview"
+
+on:
+  push:
+    paths:
+      - 'app/config/specs/*-latest-console.json'
+  pull_request:
+    paths:
+      - 'app/config/specs/*-latest-console.json'
+
+
+jobs:
+  setup:
+    name: Setup & Build Appwrite Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Load and Start Appwrite
+        run: |
+          docker compose build
+          docker compose up -d
+          docker compose exec appwrite sdks --platform=console --sdk=web --version=latest --git=no
+          
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build and Publish SDK
+        working-directory: :/app/sdks/console-web
+        run: |
+            npm install
+            npm run build
+            pnpx pkg-pr-new publish
