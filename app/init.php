@@ -1814,14 +1814,14 @@ App::setResource('plan', function (array $plan = []) {
     return [];
 });
 
-App::setResource('hasDevelopmentKey', function ($request, $project, $dbForConsole) {
+App::setResource('developmentKey', function ($request, $project, $dbForConsole) {
     $developmentKey = $request->getHeader('x-appwrite-development-key', '');
     // Check if given key match project's development keys
     $key = $project->find('secret', $developmentKey, 'developmentKeys');
     if ($key) {
         $expire = $key->getAttribute('expire');
         if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
-            return false;
+            return new Document([]);
         }
 
         $accessedAt = $key->getAttribute('accessedAt', '');
@@ -1830,9 +1830,9 @@ App::setResource('hasDevelopmentKey', function ($request, $project, $dbForConsol
             Authorization::skip(fn () => $dbForConsole->updateDocument('keys', $key->getId(), $key));
             $dbForConsole->purgeCachedDocument('projects', $project->getId());
         }
-        return true;
+        return $key;
     }
-    return false;
+    return new Document([]);
 }, ['request', 'project', 'dbForConsole']);
 
 App::setResource('team', function (Document $project, Database $dbForConsole, App $utopia, Request $request) {
@@ -1867,4 +1867,3 @@ App::setResource(
     'isResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
-
