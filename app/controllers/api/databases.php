@@ -3774,22 +3774,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
         $partialDocument = new Document($data);
 
-        try {
-            $modified = $dbForProject->withRequestTimestamp(
-                $requestTimestamp,
-                fn () => $dbForProject->updateDocuments(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $partialDocument,
-                    $queries
-                )
-            );
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (StructureException $e) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
-        } catch (NotFoundException $e) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
-        }
+        $modified = $dbForProject->withRequestTimestamp(
+            $requestTimestamp,
+            fn () => $dbForProject->updateDocuments(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $partialDocument,
+                $queries
+            )
+        );
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)
