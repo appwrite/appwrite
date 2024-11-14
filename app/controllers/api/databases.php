@@ -2844,7 +2844,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
     ->desc('Create document')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.create')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].create')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'document.create')
@@ -3063,6 +3063,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+        $queueForEvents
+            ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collection->getId())
+            ->setContext('collection', $collection)
+            ->setContext('database', $database);
+
         if ($isBulk) {
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3071,7 +3077,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 ]), Response::MODEL_BULK_OPERATION);
         } else {
             // Add $collectionId and $databaseId for all documents
-            $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+            $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $queueForEvents) {
                 $document->removeAttribute('$collection');
                 $document->setAttribute('$databaseId', $database->getId());
                 $document->setAttribute('$collectionId', $collection->getId());
@@ -3102,6 +3108,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                         }
                     }
                 }
+
+                $queueForEvents
+                    ->setParam('documentId', $document->getId());
             };
 
             $document = $documents[0];
@@ -3111,13 +3120,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
                 ->dynamic($document, Response::MODEL_DOCUMENT);
         }
-
-        $queueForEvents
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $database)
-            ->setPayload($response->getPayload());
 
         $queueForUsage
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
