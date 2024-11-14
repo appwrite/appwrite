@@ -110,7 +110,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     Query::orderDesc('$createdAt'),
                 ]));
 
-                if ($latestComment !== false && !$latestComment->isEmpty()) {
+                if (!$latestComment->isEmpty()) {
                     $latestCommentId = $latestComment->getAttribute('providerCommentId', '');
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
@@ -371,13 +371,11 @@ App::get('/v1/vcs/github/callback')
             $identity = $dbForConsole->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
-            if ($identity !== false && !$identity->isEmpty()) {
+            if (!$identity->isEmpty()) {
                 if ($identity->getAttribute('userInternalId', '') !== $user->getInternalId()) {
                     throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
                 }
-            }
 
-            if ($identity !== false && !$identity->isEmpty()) {
                 $identity = $identity
                     ->setAttribute('providerAccessToken', $accessToken)
                     ->setAttribute('providerRefreshToken', $refreshToken)
@@ -418,7 +416,7 @@ App::get('/v1/vcs/github/callback')
                 Query::equal('projectInternalId', [$projectInternalId])
             ]);
 
-            if ($installation === false || $installation->isEmpty()) {
+            if ($installation->isEmpty()) {
                 $teamId = $project->getAttribute('teamId', '');
 
                 $installation = new Document([
@@ -726,7 +724,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
                 Query::equal('provider', ['github']),
                 Query::equal('userInternalId', [$user->getInternalId()]),
             ]);
-            if ($identity === false || $identity->isEmpty()) {
+            if ($identity->isEmpty()) {
                 throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
             }
 

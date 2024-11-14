@@ -48,10 +48,10 @@
         "utopia-php/abuse": "0.43.0",
         "utopia-php/analytics": "0.10.*",
         "utopia-php/audit": "0.43.0",
-        "utopia-php/cache": "0.10.*",
+        "utopia-php/cache": "0.11.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.53.8",
+        "utopia-php/database": "0.53.16",
         "utopia-php/domains": "0.5.*",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "0.33.*",
@@ -70,6 +70,7 @@
         "utopia-php/storage": "0.18.*",
         "utopia-php/swoole": "0.8.*",
         "utopia-php/system": "0.9.*",
+        "utopia-php/telemetry": "0.1.*",
         "utopia-php/vcs": "0.8.*",
         "utopia-php/websocket": "0.1.*",
         "matomo/device-detector": "6.1.*",
@@ -96,6 +97,10 @@
     "config": {
         "platform": {
             "php": "8.3"
+        },
+        "allow-plugins": {
+            "php-http/discovery": false,
+            "tbachert/spi": false
         }
     }
 }
