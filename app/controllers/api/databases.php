@@ -397,19 +397,29 @@ function updateAttribute(
     }
 
     if (!empty($newKey) && $key !== $newKey) {
-        // Delete attribute and recreate since we can't modify IDs
-        $original = clone $attribute;
-
-        $dbForProject->deleteDocument('attributes', $attribute->getId());
+        $originalUid = $attribute->getId();
 
         $attribute
             ->setAttribute('$id', ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $newKey))
             ->setAttribute('key', $newKey);
 
-        try {
-            $attribute = $dbForProject->createDocument('attributes', $attribute);
-        } catch (DatabaseException|PDOException) {
-            $attribute = $dbForProject->createDocument('attributes', $original);
+        $dbForProject->updateDocument('attributes', $originalUid, $attribute);
+
+        /**
+         * @var Document $index
+         */
+        foreach ($collection->getAttribute('indexes') as $index) {
+            /**
+             * @var string[] $attributes
+             */
+            $attributes = $index->getAttribute('attributes', []);
+            $found = \array_search($key, $attributes);
+
+            if ($found !== false) {
+                $attributes[$found] = $newKey;
+                $index->setAttribute('attributes', $attributes);
+                $dbForProject->updateDocument('indexes', $index->getId(), $index);
+            }
         }
     } else {
         $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
@@ -2598,6 +2608,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Attribute not available: ' . $oldAttributes[$attributeIndex]['key']);
             }
 
+            // todo: Think of a better solution
             $lengths[$i] = null;
 
             if ($attributeArray === true) {
