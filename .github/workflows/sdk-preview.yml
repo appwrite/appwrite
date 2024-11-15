@@ -1,9 +1,6 @@
-name: "SDK Preview"
+name: "Console SDK Preview"
 
 on:
-  push:
-    paths:
-      - 'app/config/specs/*-latest-console.json'
   pull_request:
     paths:
       - 'app/config/specs/*-latest-console.json'
@@ -11,7 +8,7 @@ on:
 
 jobs:
   setup:
-    name: Setup & Build Appwrite Image
+    name: Setup & Build Console SDK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -22,6 +19,7 @@ jobs:
           docker compose build
           docker compose up -d
           docker compose exec appwrite sdks --platform=console --sdk=web --version=latest --git=no
+          sudo chown -R $USER:$USER ./app/sdks/console-web
           
       - uses: actions/setup-node@v4
         with:
@@ -32,4 +30,4 @@ jobs:
         run: |
             npm install
             npm run build
-            pnpx pkg-pr-new publish
+            npx pkg-pr-new publish --comment=update

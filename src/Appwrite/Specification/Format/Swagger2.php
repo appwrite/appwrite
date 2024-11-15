@@ -336,6 +336,7 @@ class Swagger2 extends Format
                     case 'Utopia\Validator\JSON':
                     case 'Utopia\Validator\Mock':
                     case 'Utopia\Validator\Assoc':
+                    case 'Appwrite\Functions\Validator\Payload':
                         $node['type'] = 'object';
                         $node['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['x-example'] = '{}';
