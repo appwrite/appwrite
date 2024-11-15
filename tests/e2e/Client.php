@@ -75,6 +75,10 @@ class Client
      */
     public function setKey(string $value): self
     {
+        if( !isset($value) || $value === '') {
+            Console::warning("Empty or missing secret key.");
+        }
+
         $this->addHeader('X-Appwrite-Key', $value);
 
         return $this;
