@@ -1,9 +1,6 @@
 name: "SDK Preview"
 
 on:
-  push:
-    paths:
-      - 'app/config/specs/*-latest-console.json'
   pull_request:
     paths:
       - 'app/config/specs/*-latest-console.json'
