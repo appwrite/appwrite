@@ -26,12 +26,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          
+      - name: Fix permissions
+        run: sudo chown -R $USER:$USER ./app/sdks/console-web
 
       - name: Build and Publish SDK
         working-directory: ./app/sdks/console-web
         run: |
-            npm config set cache ~/.npm --global
-            npm config set prefix ~/.npm-global
             npm install
             npm run build
             pnpx pkg-pr-new publish
