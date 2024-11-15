@@ -3882,13 +3882,13 @@ class ProjectsConsoleClientTest extends Scope
         \sleep(3);
 
         // Ensure project 2 user is still there
-        $database2 = $this->client->call(Client::METHOD_GET, '/users/' . $user2['body']['$id'], [
+        $user2 = $this->client->call(Client::METHOD_GET, '/users/' . $user2['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $project2Id,
             'x-appwrite-key' => $key2['body']['secret'],
         ]);
 
-        $this->assertEquals(200, $database2['headers']['status-code']);
+        $this->assertEquals(200, $user2['headers']['status-code']);
     }
 
     /**
