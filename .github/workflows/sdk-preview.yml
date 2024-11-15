@@ -11,7 +11,7 @@ on:
 
 jobs:
   setup:
-    name: Setup & Build Appwrite Image
+    name: Setup & Build Console SDK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -30,6 +30,8 @@ jobs:
       - name: Build and Publish SDK
         working-directory: ./app/sdks/console-web
         run: |
+            npm config set cache ~/.npm --global
+            npm config set prefix ~/.npm-global
             npm install
             npm run build
             pnpx pkg-pr-new publish
