@@ -9939,9 +9939,9 @@
                                 "type": "object",
                                 "properties": {
                                     "body": {
-                                        "type": "string",
+                                        "type": "object",
                                         "description": "HTTP body of execution. Default value is empty string.",
-                                        "x-example": null
+                                        "x-example": "{}"
                                     },
                                     "async": {
                                         "type": "boolean",

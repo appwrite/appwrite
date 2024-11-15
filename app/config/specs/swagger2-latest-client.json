@@ -5167,7 +5167,7 @@
                 "summary": "Create execution",
                 "operationId": "functionsCreateExecution",
                 "consumes": [
-                    "multipart\/form-data"
+                    "application\/json"
                 ],
                 "produces": [
                     "multipart\/form-data"
@@ -5226,65 +5226,59 @@
                         "in": "path"
                     },
                     {
-                        "name": "body",
-                        "description": "HTTP body of execution. Default value is empty string.",
-                        "required": false,
-                        "type": "payload",
-                        "default": "",
-                        "in": "formData"
-                    },
-                    {
-                        "name": "async",
-                        "description": "Execute code in the background. Default value is false.",
-                        "required": false,
-                        "type": "boolean",
-                        "x-example": false,
-                        "default": false,
-                        "in": "formData"
-                    },
-                    {
-                        "name": "path",
-                        "description": "HTTP path of execution. Path can include query params. Default value is \/",
-                        "required": false,
-                        "type": "string",
-                        "x-example": "<PATH>",
-                        "default": "\/",
-                        "in": "formData"
-                    },
-                    {
-                        "name": "method",
-                        "description": "HTTP method of execution. Default value is GET.",
-                        "required": false,
-                        "type": "string",
-                        "x-example": "GET",
-                        "enum": [
-                            "GET",
-                            "POST",
-                            "PUT",
-                            "PATCH",
-                            "DELETE",
-                            "OPTIONS"
-                        ],
-                        "x-enum-name": "ExecutionMethod",
-                        "x-enum-keys": [],
-                        "default": "POST",
-                        "in": "formData"
-                    },
-                    {
-                        "name": "headers",
-                        "description": "HTTP headers of execution. Defaults to empty.",
-                        "required": false,
-                        "type": "object",
-                        "default": [],
-                        "x-example": "{}",
-                        "in": "formData"
-                    },
-                    {
-                        "name": "scheduledAt",
-                        "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
-                        "required": false,
-                        "type": "string",
-                        "in": "formData"
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "body": {
+                                    "type": "object",
+                                    "description": "HTTP body of execution. Default value is empty string.",
+                                    "default": "",
+                                    "x-example": "{}"
+                                },
+                                "async": {
+                                    "type": "boolean",
+                                    "description": "Execute code in the background. Default value is false.",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "path": {
+                                    "type": "string",
+                                    "description": "HTTP path of execution. Path can include query params. Default value is \/",
+                                    "default": "\/",
+                                    "x-example": "<PATH>"
+                                },
+                                "method": {
+                                    "type": "string",
+                                    "description": "HTTP method of execution. Default value is GET.",
+                                    "default": "POST",
+                                    "x-example": "GET",
+                                    "enum": [
+                                        "GET",
+                                        "POST",
+                                        "PUT",
+                                        "PATCH",
+                                        "DELETE",
+                                        "OPTIONS"
+                                    ],
+                                    "x-enum-name": "ExecutionMethod",
+                                    "x-enum-keys": []
+                                },
+                                "headers": {
+                                    "type": "object",
+                                    "description": "HTTP headers of execution. Defaults to empty.",
+                                    "default": [],
+                                    "x-example": "{}"
+                                },
+                                "scheduledAt": {
+                                    "type": "string",
+                                    "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            }
+                        }
                     }
                 ]
             }
