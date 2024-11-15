@@ -3837,8 +3837,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
-    ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, Usage $queueForUsage, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, Usage $queueForUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -3870,7 +3869,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setContext('collection', $collection)
             ->setContext('database', $database);
 
-        return $response->dynamic(new Document([
+        $queueForUsage
+            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+
+        $response->dynamic(new Document([
             'modified' => $modified,
         ]), Response::MODEL_BULK_OPERATION);
     });
