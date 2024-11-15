@@ -182,7 +182,7 @@
                                 },
                                 "email": {
                                     "type": "string",
-                                    "description": "User email.",
+                                    "description": "I changed something.",
                                     "default": null,
                                     "x-example": "email@example.com"
                                 },

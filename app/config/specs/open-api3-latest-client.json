@@ -134,7 +134,7 @@
                                     },
                                     "email": {
                                         "type": "string",
-                                        "description": "User email.",
+                                        "description": "I changed something.",
                                         "x-example": "email@example.com"
                                     },
                                     "password": {
