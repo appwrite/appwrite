@@ -20374,7 +20374,7 @@
                                 },
                                 "teamId": {
                                     "type": "string",
-                                    "description": "I am a change.",
+                                    "description": "Team unique ID.",
                                     "default": null,
                                     "x-example": "<TEAM_ID>"
                                 },

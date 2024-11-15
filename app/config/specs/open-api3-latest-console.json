@@ -19924,7 +19924,7 @@
                                     },
                                     "teamId": {
                                         "type": "string",
-                                        "description": "I am a change.",
+                                        "description": "Team unique ID.",
                                         "x-example": "<TEAM_ID>"
                                     },
                                     "region": {

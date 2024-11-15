@@ -8,6 +8,7 @@ on:
 
 jobs:
   setup:
+    name: Setup & Build Console SDK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -18,13 +19,11 @@ jobs:
           docker compose build
           docker compose up -d
           docker compose exec appwrite sdks --platform=console --sdk=web --version=latest --git=no
+          sudo chown -R $USER:$USER ./app/sdks/console-web
           
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          
-      - name: Fix permissions
-        run: sudo chown -R $USER:$USER ./app/sdks/console-web
 
       - name: Build and Publish SDK
         working-directory: ./app/sdks/console-web
