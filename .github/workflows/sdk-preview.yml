@@ -32,4 +32,4 @@ jobs:
         run: |
             npm install
             npm run build
-            pnpx pkg-pr-new publish
+            npx pkg-pr-new publish
