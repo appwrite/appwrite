@@ -25,13 +25,7 @@ export class Databases extends Service {
          * @returns {Promise}
          */
         async listDocuments<Document extends Models.Document>(databaseId: string, collectionId: string, queries?: string[]): Promise<Models.DocumentList<Document>> {
-            if (typeof databaseId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "databaseId"');
-            }
-
-            if (typeof collectionId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "collectionId"');
-            }
+            Service.validateRequiredParameters({ databaseId, collectionId });
 
             let path = '/databases/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
             let payload: Payload = {};
@@ -63,21 +57,7 @@ export class Databases extends Service {
          * @returns {Promise}
          */
         async createDocument<Document extends Models.Document>(databaseId: string, collectionId: string, documentId: string, data: Omit<Document, keyof Models.Document>, permissions?: string[]): Promise<Document> {
-            if (typeof databaseId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "databaseId"');
-            }
-
-            if (typeof collectionId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "collectionId"');
-            }
-
-            if (typeof documentId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "documentId"');
-            }
-
-            if (typeof data === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "data"');
-            }
+            Service.validateRequiredParameters({ databaseId, collectionId, documentId, data });
 
             let path = '/databases/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
             let payload: Payload = {};
@@ -113,17 +93,7 @@ export class Databases extends Service {
          * @returns {Promise}
          */
         async getDocument<Document extends Models.Document>(databaseId: string, collectionId: string, documentId: string): Promise<Document> {
-            if (typeof databaseId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "databaseId"');
-            }
-
-            if (typeof collectionId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "collectionId"');
-            }
-
-            if (typeof documentId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "documentId"');
-            }
+            Service.validateRequiredParameters({ databaseId, collectionId, documentId });
 
             let path = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
             let payload: Payload = {};
@@ -149,17 +119,7 @@ export class Databases extends Service {
          * @returns {Promise}
          */
         async updateDocument<Document extends Models.Document>(databaseId: string, collectionId: string, documentId: string, data?: Partial<Omit<Document, keyof Models.Document>>, permissions?: string[]): Promise<Document> {
-            if (typeof databaseId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "databaseId"');
-            }
-
-            if (typeof collectionId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "collectionId"');
-            }
-
-            if (typeof documentId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "documentId"');
-            }
+            Service.validateRequiredParameters({ databaseId, collectionId, documentId });
 
             let path = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
             let payload: Payload = {};
@@ -190,17 +150,7 @@ export class Databases extends Service {
          * @returns {Promise}
          */
         async deleteDocument(databaseId: string, collectionId: string, documentId: string): Promise<{}> {
-            if (typeof databaseId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "databaseId"');
-            }
-
-            if (typeof collectionId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "collectionId"');
-            }
-
-            if (typeof documentId === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "documentId"');
-            }
+            Service.validateRequiredParameters({ databaseId, collectionId, documentId });
 
             let path = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
             let payload: Payload = {};
