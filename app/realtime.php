@@ -29,6 +29,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
@@ -92,7 +93,9 @@ if (!function_exists('getProjectDB')) {
 
         $database = new Database($adapter, getCache());
 
-        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+        if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
@@ -139,6 +142,13 @@ if (!function_exists('getRealtime')) {
     function getRealtime(): Realtime
     {
         return new Realtime();
+    }
+}
+
+if (!function_exists('getTelemetry')) {
+    function getTelemetry(int $workerId): Utopia\Telemetry\Adapter
+    {
+        return new NoTelemetry();
     }
 }
 
@@ -273,6 +283,12 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
 
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
     Console::success('Worker ' . $workerId . ' started successfully');
+
+    $telemetry = getTelemetry($workerId);
+    $register->set('telemetry', fn () => $telemetry);
+    $register->set('telemetry.connectionCounter', fn () => $telemetry->createUpDownCounter('realtime.server.open_connections'));
+    $register->set('telemetry.connectionCreatedCounter', fn () => $telemetry->createCounter('realtime.server.connection.created'));
+    $register->set('telemetry.messageSentCounter', fn () => $telemetry->createCounter('realtime.server.message.sent'));
 
     $attempts = 0;
     $start = time();
@@ -416,6 +432,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 );
 
                 if (($num = count($receivers)) > 0) {
+                    $register->get('telemetry.messageSentCounter')->add($num);
                     $stats->incr($event['project'], 'messages', $num);
                 }
             });
@@ -519,6 +536,9 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             ]
         ]));
 
+        $register->get('telemetry.connectionCounter')->add(1);
+        $register->get('telemetry.connectionCreatedCounter')->add(1);
+
         $stats->set($project->getId(), [
             'projectId' => $project->getId(),
             'teamId' => $project->getAttribute('teamId')
@@ -592,9 +612,12 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         }
 
         switch ($message['type']) {
-            /**
-             * This type is used to authenticate.
-             */
+            case 'ping':
+                $server->send([$connection], json_encode([
+                    'type' => 'pong'
+                ]));
+
+                break;
             case 'authentication':
                 if (!array_key_exists('session', $message['data'])) {
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
@@ -652,11 +675,13 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
     }
 });
 
-$server->onClose(function (int $connection) use ($realtime, $stats) {
+$server->onClose(function (int $connection) use ($realtime, $stats, $register) {
     if (array_key_exists($connection, $realtime->connections)) {
         $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
     }
     $realtime->unsubscribe($connection);
+
+    $register->get('telemetry.connectionCounter')->add(-1);
 
     Console::info('Connection close: ' . $connection);
 });

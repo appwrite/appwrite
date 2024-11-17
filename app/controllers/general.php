@@ -63,7 +63,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         }
 
         if (System::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
-            if ($host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
+            if ($host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL && $host !== System::getEnv('_APP_CONSOLE_DOMAIN', '')) {
                 throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite over this domain. Please add it as custom domain to your project or disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.');
             }
         }
@@ -438,7 +438,7 @@ App::init()
     });
 
 App::init()
-    ->groups(['api', 'web'])
+    ->groups(['api'])
     ->inject('utopia')
     ->inject('swooleRequest')
     ->inject('request')

@@ -494,30 +494,24 @@ class Deletes extends Action
         ];
 
         $limit = \count($projectCollectionIds) + 25;
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         while (true) {
             $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
-                if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
-                    try {
+                try {
+                    if (!\in_array($dsn->getHost(), $sharedTables) || !\in_array($collection->getId(), $projectCollectionIds)) {
                         $dbForProject->deleteCollection($collection->getId());
-                    } catch (Throwable $e) {
-                        Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
-
-                        /**
-                         * Ignore junction tables;
-                         */
-                        if (!preg_match('/^_\d+_\d+$/', $collection->getId())) {
-                            throw $e;
-                        }
+                    } else {
+                        $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                     }
-                } else {
-                    $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
+                } catch (Throwable $e) {
+                    Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
                 }
             }
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            if (\in_array($dsn->getHost(), $sharedTables)) {
                 $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
 
                 if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
@@ -571,10 +565,10 @@ class Deletes extends Action
         ], $dbForConsole);
 
         // Delete metadata table
-        if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
-            $dbForProject->deleteCollection('_metadata');
+        if (!\in_array($dsn->getHost(), $sharedTables)) {
+            $dbForProject->deleteCollection(Database::METADATA);
         } else {
-            $this->deleteByGroup('_metadata', [], $dbForProject);
+            $this->deleteByGroup(Database::METADATA, [], $dbForProject);
         }
 
         // Delete all storage directories
