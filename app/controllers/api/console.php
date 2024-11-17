@@ -114,30 +114,30 @@ App::post('/v1/console/assistant')
         $response->chunk('', true);
     });
 
-App::get('v1/console/resources')
-    ->desc('Check resource availability')
+App::get('v1/console/resources/:resourceId')
+    ->desc('Check resource ID availability')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'console')
-    ->label('sdk.method', 'resources')
+    ->label('sdk.method', 'checkResourceAvailability')
     ->label('sdk.description', '/docs/references/console/resources.md') //TODO: add this file
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('resourceId', '', new UID(), 'ID of the resource.')
     ->param('type', '', new WhiteList(['rules']), 'Resource type.')
-    ->param('id', '', new UID(), 'ID of the resource.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $type, string $id, Response $response, Database $dbForConsole) {
+    ->action(function (string $type, string $resourceId, Response $response, Database $dbForConsole) {
         if ($type !== 'rules') {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid resource type.');
         }
 
-        $document = Authorization::skip(fn () => $dbForConsole->getDocument('rules', $id));
+        $document = Authorization::skip(fn() => $dbForConsole->getDocument('rules', $resourceId));
 
         if ($document && !$document->isEmpty()) {
-            throw new Exception(Exception::RULE_ALREADY_EXISTS, 'Subdomain already assigned to different resource.');
+            throw new Exception(Exception::RESOURCE_ALREADY_EXISTS, 'Resource ID is already in use.');
         }
 
         $response->noContent();
