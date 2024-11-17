@@ -23,7 +23,7 @@ class Insight extends Event
     }
 
     /**
-     * Sets build for the ininsights event.
+     * Sets build for the insights event.
      *
      * @param Document $build
      * @return self
