@@ -62,11 +62,12 @@ services:
       - redis
       # - clamav
     environment:
+      - _APP_COMPRESSION_MIN_SIZE_BYTES
       - _APP_ENV
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPTIONS_FORCE_HTTPS
-      - _APP_OPTIONS_FUNCTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_COMPUTE_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_FUNCTIONS
@@ -81,11 +82,9 @@ services:
       - _APP_USAGE_STATS
       - _APP_STORAGE_ANTIVIRUS=disabled
       - _APP_STORAGE_LIMIT
-      - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_CONTAINERS
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
-      - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_COMPUTE_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
       - _APP_EXECUTOR_HOST
 
   appwrite-worker-usage:
@@ -239,11 +238,9 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_CONTAINERS
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
-      - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_COMPUTE_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
       - _APP_EXECUTOR_HOST
 
   appwrite-worker-mails:

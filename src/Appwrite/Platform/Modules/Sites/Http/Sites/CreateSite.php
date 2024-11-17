@@ -18,12 +18,14 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -44,7 +46,7 @@ class CreateSite extends Base
             ->setHttpPath('/v1/sites')
             ->desc('Create site')
             ->groups(['api', 'sites'])
-            ->label('scope', 'functions.write') // TODO: Update scope to sites.write
+            ->label('scope', 'sites.write')
             ->label('event', 'sites.[siteId].create')
             ->label('audits.event', 'site.create')
             ->label('audits.resource', 'site/{response.$id}')
@@ -59,10 +61,13 @@ class CreateSite extends Base
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true) // TODO: Add logging param later
+            ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_COMPUTE_TIMEOUT', 900)), 'Maximum request time in seconds.', true)
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
-            ->param('fallbackRedirect', '', new Text(8192, 0), 'Fallback Redirect URL for site in case a route is not found.', true)
+            ->param('subdomain', '', new CustomId(), 'Unique custom sub-domain. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
+            ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.')
+            ->param('serveRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use when serving site.')
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
@@ -72,11 +77,11 @@ class CreateSite extends Base
             ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true)
             ->param('templateRootDirectory', '', new Text(128, 0), 'Path to site code in the template repo.', true)
             ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the site template.', true)
-            ->param('specification', APP_SITE_SPECIFICATION_DEFAULT, fn (array $plan) => new FrameworkSpecification(
+            ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new FrameworkSpecification(
                 $plan,
                 Config::getParam('framework-specifications', []),
-                App::getEnv('_APP_SITES_CPUS', APP_SITE_CPUS_DEFAULT),
-                App::getEnv('_APP_SITES_MEMORY', APP_SITE_MEMORY_DEFAULT)
+                App::getEnv('_APP_COMPUTE_CPUS', APP_COMPUTE_CPUS_DEFAULT),
+                App::getEnv('_APP_COMPUTE_MEMORY', APP_COMPUTE_MEMORY_DEFAULT)
             ), 'Framework specification for the site and builds.', true, ['plan'])
             ->inject('request')
             ->inject('response')
@@ -90,8 +95,27 @@ class CreateSite extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $name, string $framework, bool $enabled, string $installCommand, string $buildCommand, string $outputDirectory, string $fallbackRedirect, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
+    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $subdomain, string $buildRuntime, string $serveRuntime, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $ruleId = '';
+        $routeSubdomain = '';
+        $domain = '';
+
+        if (!empty($sitesDomain)) {
+            $ruleId = ID::unique();
+            $routeSubdomain = $subdomain ?: ID::unique();
+            $domain = "{$routeSubdomain}.{$sitesDomain}";
+
+            $subdomain = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
+                Query::equal('domain', [$domain])
+            ]));
+
+            if (!empty($subdomain)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Subdomain already exists. Please choose a different subdomain.');
+            }
+        }
+
         $siteId = ($siteId == 'unique()') ? ID::unique() : $siteId;
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_SITES_FRAMEWORKS', '')));
@@ -132,10 +156,10 @@ class CreateSite extends Base
             'framework' => $framework,
             'deploymentInternalId' => '',
             'deploymentId' => '',
+            'timeout' => $timeout,
             'installCommand' => $installCommand,
             'buildCommand' => $buildCommand,
             'outputDirectory' => $outputDirectory,
-            'fallbackRedirect' => $fallbackRedirect,
             'search' => implode(' ', [$siteId, $name, $framework]),
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),
@@ -146,8 +170,8 @@ class CreateSite extends Base
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
             'specification' => $specification,
-            'buildRuntime' => Config::getParam('frameworks', [])[$framework]['defaultBuildRuntime'],
-            'serveRuntime' => Config::getParam('frameworks', [])[$framework]['defaultServeRuntime'],
+            'buildRuntime' => $buildRuntime,
+            'serveRuntime' => $serveRuntime,
         ]));
 
         // Git connect logic
@@ -211,12 +235,7 @@ class CreateSite extends Base
                 ->setTemplate($template);
         }
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         if (!empty($sitesDomain)) {
-            $ruleId = ID::unique();
-            $routeSubdomain = ID::unique();
-            $domain = "{$routeSubdomain}.{$sitesDomain}";
-
             $rule = Authorization::skip(
                 fn () => $dbForConsole->createDocument('rules', new Document([
                     '$id' => $ruleId,

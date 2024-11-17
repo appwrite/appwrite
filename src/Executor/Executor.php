@@ -62,6 +62,7 @@ class Executor
         string $version,
         float $cpus,
         int $memory,
+        int $timeout,
         bool $remove = false,
         string $entrypoint = '',
         string $destination = '',
@@ -71,7 +72,6 @@ class Executor
     ) {
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
-        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
         // Remove after migration
         if ($version == 'v3') {
@@ -115,10 +115,9 @@ class Executor
     public function getLogs(
         string $deploymentId,
         string $projectId,
+        string $timeout,
         callable $callback
     ) {
-        $timeout = (int) System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
-
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes/{$runtimeId}/logs";
         $params = [

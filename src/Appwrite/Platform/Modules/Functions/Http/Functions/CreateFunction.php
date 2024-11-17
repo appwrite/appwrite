@@ -52,6 +52,7 @@ class CreateFunction extends Base
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('event', 'functions.[functionId].create')
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'function.create')
             ->label('audits.resource', 'function/{response.$id}')
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -67,7 +68,7 @@ class CreateFunction extends Base
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
             ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
             ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-            ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
+            ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_COMPUTE_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
             ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
             ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
             ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
@@ -82,11 +83,11 @@ class CreateFunction extends Base
             ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true)
             ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true)
             ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true)
-            ->param('specification', APP_FUNCTION_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
+            ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new RuntimeSpecification(
                 $plan,
                 Config::getParam('runtime-specifications', []),
-                App::getEnv('_APP_FUNCTIONS_CPUS', APP_FUNCTION_CPUS_DEFAULT),
-                App::getEnv('_APP_FUNCTIONS_MEMORY', APP_FUNCTION_MEMORY_DEFAULT)
+                App::getEnv('_APP_COMPUTE_CPUS', APP_COMPUTE_CPUS_DEFAULT),
+                App::getEnv('_APP_COMPUTE_MEMORY', APP_COMPUTE_MEMORY_DEFAULT)
             ), 'Runtime specification for the function and builds.', true, ['plan'])
             ->inject('request')
             ->inject('response')
@@ -243,9 +244,9 @@ class CreateFunction extends Base
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         if (!empty($functionsDomain)) {
-            $ruleId = ID::unique();
             $routeSubdomain = ID::unique();
             $domain = "{$routeSubdomain}.{$functionsDomain}";
+            $ruleId = md5($domain);
 
             $rule = Authorization::skip(
                 fn () => $dbForConsole->createDocument('rules', new Document([

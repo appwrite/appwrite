@@ -26,7 +26,7 @@ class ListFrameworks extends Base
             ->setHttpPath('/v1/sites/frameworks')
             ->desc('List frameworks')
             ->groups(['api', 'sites'])
-            ->label('scope', 'functions.read') // TODO: Update scope to sites.read
+            ->label('scope', 'sites.read')
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
             ->label('sdk.namespace', 'sites')
             ->label('sdk.method', 'listFrameworks')
@@ -50,7 +50,6 @@ class ListFrameworks extends Base
                 continue;
             }
 
-            $framework['$id'] = $id;
             $allowed[] = $framework;
         }
 

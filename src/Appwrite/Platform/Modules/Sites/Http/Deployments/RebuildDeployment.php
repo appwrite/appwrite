@@ -29,7 +29,7 @@ class RebuildDeployment extends Action
             ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId/build')
             ->desc('Rebuild deployment')
             ->groups(['api', 'sites'])
-            ->label('scope', 'functions.write') //TODO: Update the scope to sites later
+            ->label('scope', 'sites.write')
             ->label('event', 'sites.[siteId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')

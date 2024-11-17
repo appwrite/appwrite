@@ -30,7 +30,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
@@ -48,20 +47,15 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForConsole, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb)
+function router(App $utopia, Database $dbForConsole, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked)
 {
     $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
 
     $host = $request->getHostname() ?? '';
 
-    $rule = Authorization::skip(
-        fn () => $dbForConsole->find('rules', [
-            Query::equal('domain', [$host]),
-            Query::limit(1)
-        ])
-    )[0] ?? null;
+    $rule = Authorization::skip(fn () => $dbForConsole->getDocument('rules', md5($host)));
 
-    if ($rule === null) {
+    if ($rule->isEmpty()) {
         if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '') || $host === System::getEnv('_APP_DOMAIN_SITES', '')) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
         }
@@ -99,16 +93,17 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
     $type = $rule->getAttribute('resourceType');
 
-    if ($type === 'function' || $type === 'site') {
+    if ($type === 'function' || $type === 'site' || $type === 'deployment') {
         $resourceCollection = match($type) {
             'function' => 'functions',
-            'site' => 'sites'
+            'site' => 'sites',
+            'deployment' => 'deployments',
         };
 
         $utopia->getRoute()?->label('sdk.namespace', 'functions');
         $utopia->getRoute()?->label('sdk.method', 'createExecution');
 
-        if (System::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+        if (System::getEnv('_APP_OPTIONS_COMPUTE_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https') {
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
@@ -136,23 +131,34 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $resource = Authorization::skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+        if ($resourceCollection === 'deployments') {
+            $subResource = Authorization::skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+            $resource = Authorization::skip(fn () => $dbForProject->getDocument($subResource->getAttribute('resourceType'), $subResource->getAttribute('resourceId')));
+        } else {
+            $resource = Authorization::skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+        }
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
             throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
         }
 
+        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $resourceId)) {
+            throw new AppwriteException(AppwriteException::GENERAL_RESOURCE_BLOCKED);
+        }
+
         $version = match($type) {
             'function' => $resource->getAttribute('version', 'v2'),
-            'site' => 'v4'
+            'site' => 'v4',
+            'deployment' => 'v4'
         };
 
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         $runtime = match($type) {
             'function' => $runtimes[$resource->getAttribute('runtime')] ?? null,
             'site' => $runtimes[$resource->getAttribute('serveRuntime')] ?? null,
+            'deployment' => $runtimes[$resource->getAttribute('serveRuntime')] ?? null,
             default => null
         };
 
@@ -162,7 +168,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $deploymentId = match($type) {
             'function' => $resource->getAttribute('deployment', ''),
-            'site' => $resource->getAttribute('deploymentId', '')
+            'site' => $resource->getAttribute('deploymentId', ''),
+            'deployment' => $subResource->getId()
         };
 
         $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
@@ -297,8 +304,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_CPUS' => $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
-            'APPWRITE_FUNCTION_MEMORY' => $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
+            'APPWRITE_COMPUTE_CPUS' => $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+            'APPWRITE_COMPUTE_MEMORY' => $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
             'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
@@ -321,12 +328,13 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         try {
             $version = match($type) {
                 'function' => $resource->getAttribute('version', 'v2'),
-                'site' => 'v4'
+                'site' => 'v4',
+                'deployment' => 'v4'
             };
             $entrypoint = match($type) {
                 'function' => $deployment->getAttribute('entrypoint', ''),
-                //todo: check if null works
-                'site' => 'placeholder' // entrypoint is required in api, but not needed with site
+                'site' => '',
+                'deployment' => ''
             };
             $runtimeEntrypoint = match ($version) {
                 'v2' => '',
@@ -338,7 +346,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 deploymentId: $deployment->getId(),
                 body: \strlen($body) > 0 ? $body : null,
                 variables: $vars,
-                // todo: figure out timeouts for sites
                 timeout: $resource->getAttribute('timeout', 30),
                 image: $runtime['image'],
                 source: $build->getAttribute('path', ''),
@@ -348,8 +355,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 method: $method,
                 headers: $headers,
                 runtimeEntrypoint: $runtimeEntrypoint,
-                cpus: $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
-                memory: $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
+                cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+                memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
                 logging: $resource->getAttribute('logging', true),
                 requestTimeout: 30
             );
@@ -400,8 +407,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                     ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                     ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
                     ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                    ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                    ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)));
+                    ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+                    ->addMetric(str_replace('{functionInternalId}', $resource->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)));
             }
 
             $queueForUsage
@@ -499,7 +506,8 @@ App::init()
     ->inject('queueForEvents')
     ->inject('queueForCertificates')
     ->inject('queueForFunctions')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, Usage $queueForUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions) {
+    ->inject('isResourceBlocked')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, Usage $queueForUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, callable $isResourceBlocked) {
         /*
         * Appwrite Router
         */
@@ -507,7 +515,7 @@ App::init()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
-            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb)) {
+            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked)) {
                 return;
             }
         }
@@ -555,19 +563,18 @@ App::init()
                 if (!empty($envDomain) && $envDomain !== 'localhost') {
                     $mainDomain = $envDomain;
                 } else {
-                    $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
-                    $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
+                    $domainDocument = $dbForConsole->getDocument('rules', md5($envDomain));
+                    $mainDomain = !$domainDocument->isEmpty() ? $domainDocument->getAttribute('domain') : $domain->get();
                 }
 
                 if ($mainDomain !== $domain->get()) {
                     Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
                 } else {
-                    $domainDocument = $dbForConsole->findOne('rules', [
-                        Query::equal('domain', [$domain->get()])
-                    ]);
+                    $domainDocument = $dbForConsole->getDocument('rules', md5($domain->get()));
 
-                    if (!$domainDocument) {
+                    if ($domainDocument->isEmpty()) {
                         $domainDocument = new Document([
+                            '$id' => md5($domain->get()),
                             'domain' => $domain->get(),
                             'resourceType' => 'api',
                             'status' => 'verifying',
@@ -717,7 +724,8 @@ App::options()
     ->inject('queueForUsage')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
+    ->inject('isResourceBlocked')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked) {
         /*
         * Appwrite Router
         */
@@ -725,7 +733,7 @@ App::options()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
-            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb)) {
+            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked)) {
                 return;
             }
         }
@@ -811,6 +819,8 @@ App::error()
             case 'Utopia\Database\Exception\Relationship':
                 $error = new AppwriteException(AppwriteException::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
                 break;
+            case 'Utopia\Database\Exception\NotFound':
+                $error = new AppwriteException(AppwriteException::COLLECTION_NOT_FOUND, $error->getMessage(), previous: $error);
         }
 
         $code = $error->getCode();
@@ -1009,7 +1019,8 @@ App::get('/robots.txt')
     ->inject('queueForUsage')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
+    ->inject('isResourceBlocked')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -1017,7 +1028,7 @@ App::get('/robots.txt')
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
-            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb);
+            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked);
         }
     });
 
@@ -1035,7 +1046,8 @@ App::get('/humans.txt')
     ->inject('queueForUsage')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb) {
+    ->inject('isResourceBlocked')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -1043,7 +1055,7 @@ App::get('/humans.txt')
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
-            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb);
+            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked);
         }
     });
 

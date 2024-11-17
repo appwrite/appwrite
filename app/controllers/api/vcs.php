@@ -111,16 +111,17 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     Query::orderDesc('$createdAt'),
                 ]));
 
-                if ($latestComment !== false && !$latestComment->isEmpty()) {
+                if (!$latestComment->isEmpty()) {
                     $latestCommentId = $latestComment->getAttribute('providerCommentId', '');
+
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $resource, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '', '');
 
                     $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                 } else {
                     $comment = new Comment();
-                    $comment->addBuild($project, $resource, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '', '');
                     $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
                     if (!empty($latestCommentId)) {
@@ -157,7 +158,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $latestCommentId = $comment->getAttribute('providerCommentId', '');
                     $comment = new Comment();
                     $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $resource, $commentStatus, $deploymentId, $action);
+                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '', '');
 
                     $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                 }
@@ -200,11 +201,10 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'resourceInternalId' => $resourceInternalId,
                 'resourceType' => $resourceCollection,
                 'entrypoint' => $resource->getAttribute('entrypoint', ''),
-                'commands' => $resource->getAttribute('commands', []),
+                'commands' => $resource->getAttribute('commands', ''),
                 'installCommand' => $resource->getAttribute('installCommand', ''),
                 'buildCommand' => $resource->getAttribute('buildCommand', ''),
                 'outputDirectory' => $resource->getAttribute('outputDirectory', ''),
-                'fallbackRedirect' => $resource->getAttribute('fallbackRedirect', ''),
                 'type' => 'vcs',
                 'installationId' => $installationId,
                 'installationInternalId' => $installationInternalId,
@@ -376,13 +376,11 @@ App::get('/v1/vcs/github/callback')
             $identity = $dbForConsole->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
-            if ($identity !== false && !$identity->isEmpty()) {
+            if (!$identity->isEmpty()) {
                 if ($identity->getAttribute('userInternalId', '') !== $user->getInternalId()) {
                     throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
                 }
-            }
 
-            if ($identity !== false && !$identity->isEmpty()) {
                 $identity = $identity
                     ->setAttribute('providerAccessToken', $accessToken)
                     ->setAttribute('providerRefreshToken', $refreshToken)
@@ -423,7 +421,7 @@ App::get('/v1/vcs/github/callback')
                 Query::equal('projectInternalId', [$projectInternalId])
             ]);
 
-            if ($installation === false || $installation->isEmpty()) {
+            if ($installation->isEmpty()) {
                 $teamId = $project->getAttribute('teamId', '');
 
                 $installation = new Document([
@@ -731,7 +729,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
                 Query::equal('provider', ['github']),
                 Query::equal('userInternalId', [$user->getInternalId()]),
             ]);
-            if ($identity === false || $identity->isEmpty()) {
+            if ($identity->isEmpty()) {
                 throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
             }
 

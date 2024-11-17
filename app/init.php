@@ -31,7 +31,9 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\Usage;
+use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\Specification;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
@@ -40,6 +42,7 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
@@ -151,12 +154,9 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 const APP_HOSTNAME_INTERNAL = 'appwrite';
-const APP_FUNCTION_SPECIFICATION_DEFAULT = Specification::S_05VCPU_512MB;
-const APP_FUNCTION_CPUS_DEFAULT = 0.5;
-const APP_FUNCTION_MEMORY_DEFAULT = 512;
-const APP_SITE_SPECIFICATION_DEFAULT = Specification::S_05VCPU_512MB;
-const APP_SITE_CPUS_DEFAULT = 0.5;
-const APP_SITE_MEMORY_DEFAULT = 512;
+const APP_COMPUTE_CPUS_DEFAULT = 0.5;
+const APP_COMPUTE_MEMORY_DEFAULT = 512;
+const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
 const APP_PLATFORM_SERVER = 'server';
 const APP_PLATFORM_CLIENT = 'client';
 const APP_PLATFORM_CONSOLE = 'console';
@@ -305,6 +305,17 @@ const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 
+// Resource types
+
+const RESOURCE_TYPE_PROJECTS = 'projects';
+const RESOURCE_TYPE_FUNCTIONS = 'functions';
+const RESOURCE_TYPE_DATABASES = 'databases';
+const RESOURCE_TYPE_BUCKETS = 'buckets';
+const RESOURCE_TYPE_PROVIDERS = 'providers';
+const RESOURCE_TYPE_TOPICS = 'topics';
+const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
+const RESOURCE_TYPE_MESSAGES = 'messages';
+
 $register = new Registry();
 
 App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
@@ -318,6 +329,7 @@ if (!App::isProduction()) {
 /*
  * ENV vars
  */
+Config::load('template-runtimes', __DIR__ . '/config/template-runtimes.php');
 Config::load('events', __DIR__ . '/config/events.php');
 Config::load('auth', __DIR__ . '/config/auth.php');
 Config::load('apis', __DIR__ . '/config/apis.php');  // List of APIs
@@ -981,7 +993,10 @@ $register->set('pools', function () {
                         $adapter->setDatabase($dsn->getPath());
                         break;
                     case 'pubsub':
-                        $adapter = $resource();
+                        $adapter = match ($dsn->getScheme()) {
+                            'redis' => new PubSub($resource()),
+                            default => null
+                        };
                         break;
                     case 'queue':
                         $adapter = match ($dsn->getScheme()) {
@@ -1144,6 +1159,12 @@ App::setResource('queueForDeletes', function (Connection $queue) {
 App::setResource('queueForEvents', function (Connection $queue) {
     return new Event($queue);
 }, ['queue']);
+App::setResource('queueForWebhooks', function (Connection $queue) {
+    return new Webhook($queue);
+}, ['queue']);
+App::setResource('queueForRealtime', function () {
+    return new Realtime();
+}, []);
 App::setResource('queueForAudits', function (Connection $queue) {
     return new Audit($queue);
 }, ['queue']);
@@ -1796,10 +1817,10 @@ App::setResource('requestTimestamp', function ($request) {
     }
     return $requestTimestamp;
 }, ['request']);
+
 App::setResource('plan', function (array $plan = []) {
     return [];
 });
-
 
 App::setResource('team', function (Document $project, Database $dbForConsole, App $utopia, Request $request) {
     $teamInternalId = '';
@@ -1826,8 +1847,10 @@ App::setResource('team', function (Document $project, Database $dbForConsole, Ap
         ]);
     });
 
-    if (!$team) {
-        $team = new Document([]);
-    }
     return $team;
 }, ['project', 'dbForConsole', 'utopia', 'request']);
+
+App::setResource(
+    'isResourceBlocked',
+    fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
+);

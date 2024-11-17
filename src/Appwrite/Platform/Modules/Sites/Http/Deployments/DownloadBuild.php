@@ -27,7 +27,7 @@ class DownloadBuild extends Action
             ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId/build/download')
             ->desc('Download build')
             ->groups(['api', 'sites'])
-            ->label('scope', 'functions.read') //TODO: Update the scope to sites later
+            ->label('scope', 'sites.read')
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
             ->label('sdk.namespace', 'sites')
             ->label('sdk.method', 'getBuildDownload')

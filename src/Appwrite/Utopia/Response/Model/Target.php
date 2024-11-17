@@ -32,7 +32,7 @@ class Target extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Target Name.',
                 'default' => '',
-                'example' => 'Aegon apple token',
+                'example' => 'Apple iPhone 12',
             ])
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,
@@ -58,6 +58,12 @@ class Target extends Model
                 'description' => 'The target identifier.',
                 'default' => '',
                 'example' => 'token',
+            ])
+            ->addRule('expired', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Is the target expired.',
+                'default' => false,
+                'example' => false,
             ]);
     }
 

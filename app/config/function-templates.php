@@ -1,39 +1,8 @@
 <?php
 
-const TEMPLATE_RUNTIMES = [
-    'NODE' => [
-        'name' => 'node',
-        'versions' => ['22', '21.0', '20.0', '19.0', '18.0', '16.0', '14.5']
-    ],
-    'PYTHON' => [
-        'name' => 'python',
-        'versions' => ['3.12', '3.11', '3.10', '3.9', '3.8']
-    ],
-    'DART' => [
-        'name' => 'dart',
-        'versions' => ['3.5', '3.3', '3.1', '3.0', '2.19', '2.18', '2.17', '2.16', '2.16']
-    ],
-    'GO' => [
-        'name' => 'go',
-        'versions' => ['1.23']
-    ],
-    'PHP' => [
-        'name' => 'php',
-        'versions' => ['8.3', '8.2', '8.1', '8.0']
-    ],
-    'DENO' => [
-        'name' => 'deno',
-        'versions' => ['2.0', '1.46', '1.40', '1.35', '1.24', '1.21']
-    ],
-    'BUN' => [
-        'name' => 'bun',
-        'versions' => ['1.1', '1.0']
-    ],
-    'RUBY' => [
-        'name' => 'ruby',
-        'versions' => ['3.3', '3.2', '3.1', '3.0']
-    ],
-];
+use Utopia\Config\Config;
+
+$templateRuntimes = Config::getParam('template-runtimes');
 
 function getRuntimes($runtime, $commands, $entrypoint, $providerRootDirectory, $versionsDenyList = [])
 {
@@ -62,24 +31,24 @@ return [
         'timeout' => 15,
         'useCases' => ['starter'],
         'runtimes' => [
-            ...getRuntimes(TEMPLATE_RUNTIMES['NODE'], 'npm install', 'src/main.js', 'node/starter'),
+            ...getRuntimes($templateRuntimes['NODE'], 'npm install', 'src/main.js', 'node/starter'),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PYTHON'],
+                $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
                 'python/starter'
             ),
-            ...getRuntimes(TEMPLATE_RUNTIMES['DART'], 'dart pub get', 'lib/main.dart', 'dart/starter'),
-            ...getRuntimes(TEMPLATE_RUNTIMES['GO'], '', 'main.go', 'go/starter'),
+            ...getRuntimes($templateRuntimes['DART'], 'dart pub get', 'lib/main.dart', 'dart/starter'),
+            ...getRuntimes($templateRuntimes['GO'], '', 'main.go', 'go/starter'),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PHP'],
+                $templateRuntimes['PHP'],
                 'composer install',
                 'src/index.php',
                 'php/starter'
             ),
-            ...getRuntimes(TEMPLATE_RUNTIMES['DENO'], 'deno cache src/main.ts', 'src/main.ts', 'deno/starter'),
-            ...getRuntimes(TEMPLATE_RUNTIMES['BUN'], 'bun install', 'src/main.ts', 'bun/starter'),
-            ...getRuntimes(TEMPLATE_RUNTIMES['RUBY'], 'bundle install', 'lib/main.rb', 'ruby/starter'),
+            ...getRuntimes($templateRuntimes['DENO'], 'deno cache src/main.ts', 'src/main.ts', 'deno/starter'),
+            ...getRuntimes($templateRuntimes['BUN'], 'bun install', 'src/main.ts', 'bun/starter'),
+            ...getRuntimes($templateRuntimes['RUBY'], 'bundle install', 'lib/main.rb', 'ruby/starter'),
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/starter">file</a>.',
         'vcsProvider' => 'github',
@@ -101,7 +70,7 @@ return [
         'useCases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/query-upstash-vector'
@@ -145,7 +114,7 @@ return [
         'useCases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/query-redis-labs'
@@ -188,7 +157,7 @@ return [
         'useCases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/query-neo4j-auradb'
@@ -240,7 +209,7 @@ return [
         'useCases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/query-mongo-atlas'
@@ -277,7 +246,7 @@ return [
         'useCases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/query-neon-postgres'
@@ -344,25 +313,25 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/prompt-chatgpt'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PYTHON'],
+                $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
                 'python/prompt_chatgpt'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PHP'],
+                $templateRuntimes['PHP'],
                 'composer install',
                 'src/index.php',
                 'php/prompt-chatgpt'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['DART'],
+                $templateRuntimes['DART'],
                 'dart pub get',
                 'lib/main.dart',
                 'dart/prompt_chatgpt'
@@ -405,19 +374,19 @@ return [
         'useCases' => ['messaging'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install && npm run setup',
                 'src/main.js',
                 'node/discord-command-bot'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PYTHON'],
+                $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt && python src/setup.py',
                 'src/main.py',
                 'python/discord_command_bot'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['GO'],
+                $templateRuntimes['GO'],
                 '',
                 'main.go',
                 'go/discord-command-bot'
@@ -468,7 +437,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/analyze-with-perspectiveapi'
@@ -504,19 +473,19 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/censor-with-redact'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PYTHON'],
+                $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
                 'python/censor_with_redact'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['DART'],
+                $templateRuntimes['DART'],
                 'dart pub get',
                 'lib/main.dart',
                 'dart/censor_with_redact'
@@ -550,7 +519,7 @@ return [
         'timeout' => 15,
         'useCases' => ['utilities'],
         'runtimes' => [
-            ...getRuntimes(TEMPLATE_RUNTIMES['NODE'], 'npm install', 'src/main.js', 'node/generate-pdf')
+            ...getRuntimes($templateRuntimes['NODE'], 'npm install', 'src/main.js', 'node/generate-pdf')
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/generate-pdf">file</a>.',
         'vcsProvider' => 'github',
@@ -573,7 +542,7 @@ return [
         'useCases' => ['dev-tools'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/github-issue-bot'
@@ -616,7 +585,7 @@ return [
         'useCases' => ['utilities'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/url-shortener'
@@ -667,19 +636,19 @@ return [
         'useCases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/sync-with-algolia'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PYTHON'],
+                $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
                 'python/sync_with_algolia'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PHP'],
+                $templateRuntimes['PHP'],
                 'composer install',
                 'src/index.php',
                 'php/sync-with-algolia'
@@ -748,31 +717,31 @@ return [
         'useCases' => ['databases'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/sync-with-meilisearch'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PYTHON'],
+                $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
                 'python/sync-with-meilisearch'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PHP'],
+                $templateRuntimes['PHP'],
                 'composer install',
                 'src/index.php',
                 'php/sync-with-meilisearch'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['BUN'],
+                $templateRuntimes['BUN'],
                 'bun install',
                 'src/main.ts',
                 'bun/sync-with-meilisearch'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['RUBY'],
+                $templateRuntimes['RUBY'],
                 'bundle install',
                 'lib/main.rb',
                 'ruby/sync-with-meilisearch'
@@ -841,37 +810,37 @@ return [
         'useCases' => ['messaging'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/whatsapp-with-vonage'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PYTHON'],
+                $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
                 'python/whatsapp_with_vonage'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['DART'],
+                $templateRuntimes['DART'],
                 'dart pub get',
                 'lib/main.dart',
                 'dart/whatsapp-with-vonage'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PHP'],
+                $templateRuntimes['PHP'],
                 'composer install',
                 'src/index.php',
                 'php/whatsapp-with-vonage'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['BUN'],
+                $templateRuntimes['BUN'],
                 'bun install',
                 'src/main.ts',
                 'bun/whatsapp-with-vonage'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['RUBY'],
+                $templateRuntimes['RUBY'],
                 'bundle install',
                 'lib/main.rb',
                 'ruby/whatsapp-with-vonage'
@@ -927,7 +896,7 @@ return [
         'useCases' => ['messaging'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/push-notification-with-fcm'
@@ -983,19 +952,19 @@ return [
         'useCases' => ['utilities'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/email-contact-form'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PYTHON'],
+                $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
                 'python/email_contact_form'
             ),
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['PHP'],
+                $templateRuntimes['PHP'],
                 'composer install',
                 'src/index.php',
                 'php/email-contact-form'
@@ -1066,7 +1035,7 @@ return [
         'useCases' => ['utilities'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/subscriptions-with-stripe'
@@ -1107,7 +1076,7 @@ return [
         'useCases' => ['utilities'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/payments-with-stripe'
@@ -1164,7 +1133,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/text-generation-with-huggingface'
@@ -1198,7 +1167,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/language-translation-with-huggingface'
@@ -1232,7 +1201,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install && npm run setup',
                 'src/main.js',
                 'node/image-classification-with-huggingface'
@@ -1290,7 +1259,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install && npm run setup',
                 'src/main.js',
                 'node/object-detection-with-huggingface'
@@ -1348,7 +1317,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install && npm run setup',
                 'src/main.js',
                 'node/speech-recognition-with-huggingface'
@@ -1406,7 +1375,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install && npm run setup',
                 'src/main.js',
                 'node/text-to-speech-with-huggingface'
@@ -1464,7 +1433,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/generate-with-replicate'
@@ -1499,7 +1468,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/generate-with-together-ai'
@@ -1541,7 +1510,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/chat-with-perplexity-ai'
@@ -1581,7 +1550,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/generate-with-replicate'
@@ -1616,7 +1585,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/sync-with-pinecone'
@@ -1679,7 +1648,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/rag-with-langchain'
@@ -1742,7 +1711,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/speak-with-elevenlabs'
@@ -1797,7 +1766,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/speak-with-lmnt'
@@ -1838,7 +1807,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/chat-with-anyscale'
@@ -1879,7 +1848,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install && npm run setup',
                 'src/main.js',
                 'node/music-generation-with-huggingface'
@@ -1921,7 +1890,7 @@ return [
         'useCases' => ['ai'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/generate-with-fal-ai'
@@ -1956,7 +1925,7 @@ return [
         'useCases' => ['utilities'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/subscriptions-with-lemon-squeezy'
@@ -2011,7 +1980,7 @@ return [
         'useCases' => ['utilities'],
         'runtimes' => [
             ...getRuntimes(
-                TEMPLATE_RUNTIMES['NODE'],
+                $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
                 'node/payments-with-lemon-squeezy'

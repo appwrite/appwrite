@@ -10,13 +10,7 @@ class TemplateSite extends Model
     public function __construct()
     {
         $this
-            ->addRule('icon', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Site Template Icon.',
-                'default' => '',
-                'example' => 'icon-lightning-bolt',
-            ])
-            ->addRule('id', [
+            ->addRule('key', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Site Template ID.',
                 'default' => '',
@@ -27,12 +21,6 @@ class TemplateSite extends Model
                 'description' => 'Site Template Name.',
                 'default' => '',
                 'example' => 'Starter site',
-            ])
-            ->addRule('tagline', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Site Template Tagline.',
-                'default' => '',
-                'example' => 'A simple site to get started.',
             ])
             ->addRule('useCases', [
                 'type' => self::TYPE_STRING,
@@ -47,12 +35,6 @@ class TemplateSite extends Model
                 'default' => [],
                 'example' => [],
                 'array' => true
-            ])
-            ->addRule('instructions', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Site Template Instructions.',
-                'default' => '',
-                'example' => 'For documentation and instructions check out <link>.',
             ])
             ->addRule('vcsProvider', [
                 'type' => self::TYPE_STRING,
@@ -85,13 +67,7 @@ class TemplateSite extends Model
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('scopes', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Site scopes.',
-                'default' => [],
-                'example' => 'users.read',
-                'array' => true,
-            ]);
+        ;
     }
 
     /**

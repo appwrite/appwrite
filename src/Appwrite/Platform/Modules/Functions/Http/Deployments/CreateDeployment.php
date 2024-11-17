@@ -43,6 +43,7 @@ class CreateDeployment extends Action
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
+            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -105,7 +106,7 @@ class CreateDeployment extends Action
         }
 
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000'));
+        $fileSizeValidator = new FileSize(System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000'));
         $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way

@@ -41,7 +41,7 @@ class CreateDeployment extends Action
             ->setHttpPath('/v1/sites/:siteId/deployments')
             ->desc('Create deployment')
             ->groups(['api', 'sites'])
-            ->label('scope', 'functions.write') //TODO: Update the scope to sites later
+            ->label('scope', 'sites.write')
             ->label('event', 'sites.[siteId].deployments.[deploymentId].create')
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'site/{request.siteId}')
@@ -106,7 +106,7 @@ class CreateDeployment extends Action
         }
 
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(System::getEnv('_APP_SITES_SIZE_LIMIT', '30000000'));
+        $fileSizeValidator = new FileSize(System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000'));
         $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way

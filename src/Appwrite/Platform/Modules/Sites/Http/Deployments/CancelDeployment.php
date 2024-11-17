@@ -32,7 +32,7 @@ class CancelDeployment extends Action
             ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId/build')
             ->desc('Cancel deployment')
             ->groups(['api', 'sites'])
-            ->label('scope', 'functions.write') //TODO: Update the scope to sites later
+            ->label('scope', 'sites.write')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY])

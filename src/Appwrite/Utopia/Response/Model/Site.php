@@ -65,6 +65,12 @@ class Site extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('timeout', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Site request timeout in seconds.',
+                'default' => 15,
+                'example' => 300,
+            ])
             ->addRule('installCommand', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The install command used to install the site dependencies.',
@@ -82,12 +88,6 @@ class Site extends Model
                 'description' => 'The directory where the site build output is located.',
                 'default' => '',
                 'example' => 'build',
-            ])
-            ->addRule('fallbackRedirect', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The URL to redirect to if the route is not found.', //TODO: Update the description
-                'default' => '',
-                'example' => 'https://appwrite.io',
             ])
             ->addRule('installationId', [
                 'type' => self::TYPE_STRING,
@@ -122,8 +122,8 @@ class Site extends Model
             ->addRule('specification', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Machine specification for builds and executions.',
-                'default' => APP_SITE_SPECIFICATION_DEFAULT,
-                'example' => APP_SITE_SPECIFICATION_DEFAULT,
+                'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
+                'example' => APP_COMPUTE_SPECIFICATION_DEFAULT,
             ])
             ->addRule('buildRuntime', [
                 'type' => self::TYPE_STRING,

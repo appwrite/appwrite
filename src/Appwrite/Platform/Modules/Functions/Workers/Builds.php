@@ -23,6 +23,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -119,6 +120,7 @@ class Builds extends Action
      * @param Log $log
      * @return void
      * @throws \Utopia\Database\Exception
+     *
      * @throws Exception
      */
     protected function buildDeployment(Device $deviceForFunctions, Insight $queueForInsights, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, Log $log): void
@@ -152,7 +154,7 @@ class Builds extends Action
 
         $version = $this->getVersion($resource);
         $runtime = $this->getRuntime($resource, $version);
-        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specifications', APP_FUNCTION_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('runtime-specifications')[$resource->getAttribute('specifications', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         // Realtime preparation
         $allEvents = Event::generateEvents("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update", [
@@ -178,7 +180,7 @@ class Builds extends Action
                 'runtime' => $resource->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
                 'sourceType' => strtolower($deviceForFunctions->getType()),
-                'logs' => '',
+                'logs' => [],
                 'endTime' => null,
                 'duration' => 0,
                 'size' => 0
@@ -397,9 +399,10 @@ class Builds extends Action
                 }
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
-                $functionsSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
-                if ($directorySize > $functionsSizeLimit) {
-                    throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
+                $sizeLimit = (int)System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000');
+
+                if ($directorySize > $sizeLimit) {
+                    throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / 1048576, 2) . ' MBs.');
                 }
 
                 $tarParamDirectory = '/tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory);
@@ -477,16 +480,22 @@ class Builds extends Action
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
-            $cpus = $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT;
-            $memory = max($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT, 1024); // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
+            $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
+            $memory =  max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, 1024); // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
+            $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
-            $jwtExpiry = (int)System::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
-            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
-            //todo: not needed for sites yet, might be useful as a build variable but too shortlived
-            $apiKey = $jwtObj->encode([
-                'projectId' => $project->getId(),
-                'scopes' => $resource->getAttribute('scopes', [])
-            ]);
+            // JWT and API key generation for functions only
+            if ($resource->getCollection() === 'functions') {
+                $jwtExpiry = (int)System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
+                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+
+                $apiKey = $jwtObj->encode([
+                    'projectId' => $project->getId(),
+                    'scopes' => $resource->getAttribute('scopes', [])
+                ]);
+
+                $vars = array_merge($vars, ['APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey]);
+            }
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_DOMAIN');
@@ -516,15 +525,14 @@ class Builds extends Action
                     $vars = [
                         ...$vars,
                         'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
-                        'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                         'APPWRITE_FUNCTION_ID' => $resource->getId(),
                         'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
                         'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
                         'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
                         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
                         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-                        'APPWRITE_FUNCTION_CPUS' => $cpus,
-                        'APPWRITE_FUNCTION_MEMORY' => $memory
+                        'APPWRITE_COMPUTE_CPUS' => $cpus,
+                        'APPWRITE_COMPUTE_MEMORY' => $memory
                     ];
                     break;
                 case 'sites':
@@ -536,8 +544,8 @@ class Builds extends Action
                         'APPWRITE_SITE_PROJECT_ID' => $project->getId(),
                         'APPWRITE_SITE_RUNTIME_NAME' => $runtime['name'] ?? '',
                         'APPWRITE_SITE_RUNTIME_VERSION' => $runtime['version'] ?? '',
-                        'APPWRITE_SITE_CPUS' => $cpus,
-                        'APPWRITE_SITE_MEMORY' => $memory
+                        'APPWRITE_COMPUTE_CPUS' => $cpus,
+                        'APPWRITE_COMPUTE_MEMORY' => $memory
                     ];
                     break;
             }
@@ -558,7 +566,7 @@ class Builds extends Action
             $isCanceled = false;
 
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, &$err, $version) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, $timeout, &$err, $version) {
                     try {
                         $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
 
@@ -570,6 +578,7 @@ class Builds extends Action
                             version: $version,
                             cpus: $cpus,
                             memory: $memory,
+                            timeout: $timeout,
                             remove: true,
                             entrypoint: $deployment->getAttribute('entrypoint', 'package.json'), // TODO: change this later so that sites don't need to have an entrypoint
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
@@ -581,11 +590,12 @@ class Builds extends Action
                         $err = $error;
                     }
                 }),
-                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err, &$isCanceled) {
+                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, $timeout, &$err, &$isCanceled) {
                     try {
                         $executor->getLogs(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
+                            timeout: $timeout,
                             callback: function ($logs) use (&$response, &$err, &$build, $dbForProject, $allEvents, $project, &$isCanceled) {
                                 if ($isCanceled) {
                                     return;
@@ -605,9 +615,29 @@ class Builds extends Action
                                         return;
                                     }
 
-                                    $logs = \mb_substr($logs, 0, null, 'UTF-8'); // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
+                                    // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
+                                    $logs = \mb_substr($logs, 0, null, 'UTF-8');
 
-                                    $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
+                                    $currentChunks = $build->getAttribute('logs', []);
+
+                                    // Parse styled&timestamped logs
+                                    $streamChunks = [];
+                                    $streamLogs = \str_replace("\\n", "{APPWRITE_LINEBREAK_PLACEHOLDER}", $logs);
+                                    foreach (\explode("\n", $streamLogs) as $streamLog) {
+                                        if (empty($streamLog)) {
+                                            continue;
+                                        }
+
+                                        $streamLog = \str_replace("{APPWRITE_LINEBREAK_PLACEHOLDER}", "\n", $streamLog);
+                                        $streamParts = \explode(" ", $streamLog, 2);
+
+                                        $currentChunks[] = [
+                                            'timestamp' => $streamParts[0] ?? '',
+                                            'content' => $streamParts[1] ?? ''
+                                        ];
+                                    }
+
+                                    $build = $build->setAttribute('logs', $currentChunks);
                                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
 
                                     /**
@@ -649,7 +679,7 @@ class Builds extends Action
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
 
-            $buildSizeLimit = (int)System::getEnv('_APP_FUNCTIONS_BUILD_SIZE_LIMIT', '2000000000');
+            $buildSizeLimit = (int)System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
             if ($response['size'] > $buildSizeLimit) {
                 throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / 1048576, 2) . ' MBs.');
             }
@@ -661,9 +691,34 @@ class Builds extends Action
             $build->setAttribute('status', 'ready');
             $build->setAttribute('path', $response['path']);
             $build->setAttribute('size', $response['size']);
-            $build->setAttribute('logs', $response['output']);
+            // $build->setAttribute('logs', $response['output']); // TODO: Figure out how to write them all at the end
 
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
+
+            // Preview deployments for sites
+            if ($resource->getCollection() === 'sites') {
+                $ruleId = ID::unique();
+
+                $deploymentId = $deployment->getId();
+                $projectId = $project->getId();
+
+                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+
+                $rule = Authorization::skip(
+                    fn () => $dbForConsole->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getInternalId(),
+                        'domain' => $domain,
+                        'resourceType' => 'deployment',
+                        'resourceId' => $deployment->getId(),
+                        'resourceInternalId' => $deployment->getInternalId(),
+                        'status' => 'verified',
+                        'certificateId' => '',
+                    ]))
+                );
+            }
 
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
@@ -714,7 +769,14 @@ class Builds extends Action
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'failed');
-            $build->setAttribute('logs', $th->getMessage());
+
+            $datetime = new \DateTime();
+            $build->setAttribute('logs', [
+                [
+                    'timestamp' => $datetime->format('Y-m-d\TH:i:s.vP'),
+                    'content' => "[31m" . $th->getMessage() . "[0m"
+                ]
+            ]);
 
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
@@ -808,11 +870,11 @@ class Builds extends Action
             ->addMetric(METRIC_BUILDS, 1) // per project
             ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
             ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
-            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['builds']), 1) // per function
             ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsStorage']), $build->getAttribute('size', 0))
             ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsCompute']), (int)$build->getAttribute('duration', 0) * 1000)
-            ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsMbSeconds']), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+            ->addMetric(str_replace($key, $resource->getInternalId(), $metrics['buildsMbSeconds']), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $build->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->setProject($project)
             ->trigger();
     }
@@ -928,9 +990,34 @@ class Builds extends Action
 
             // Wrap in try/finally to ensure lock file gets deleted
             try {
+                $resourceType = match($resource->getCollection()) {
+                    'functions' => 'function',
+                    'sites' => 'site',
+                    default => throw new \Exception('Invalid resource type')
+                };
+
+                $rule = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
+                    Query::equal("projectInternalId", [$project->getInternalId()]),
+                    Query::equal("resourceType", ["deployment"]),
+                    Query::equal("resourceInternalId", [$deployment->getInternalId()])
+                ]));
+
+                $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+                $previewUrl = match($resource->getCollection()) {
+                    'functions' => '',
+                    'sites' => !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '',
+                    default => throw new \Exception('Invalid resource type')
+                };
+
+                $previweQrCode = match($resource->getCollection()) {
+                    'functions' => '',
+                    'sites' => 'https://cloud.appwrite.io/v1/avatars/qr?text=' . $previewUrl,
+                    default => throw new \Exception('Invalid resource type')
+                };
+
                 $comment = new Comment();
                 $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                $comment->addBuild($project, $resource, $status, $deployment->getId(), ['type' => 'logs']);
+                $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl, $previweQrCode);
                 $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
             } finally {
                 $dbForConsole->deleteDocument('vcsCommentLocks', $commentId);

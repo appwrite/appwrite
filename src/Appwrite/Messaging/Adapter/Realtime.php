@@ -7,7 +7,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
-use Utopia\System\System;
 
 class Realtime extends Adapter
 {
@@ -139,20 +138,26 @@ class Realtime extends Adapter
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
-        $redis = new \Redis(); //TODO: make this part of the constructor
-        $redis->connect(System::getEnv('_APP_REDIS_HOST', ''), System::getEnv('_APP_REDIS_PORT', ''));
-        $redis->publish('realtime', json_encode([
-            'project' => $projectId,
-            'roles' => $roles,
-            'permissionsChanged' => $permissionsChanged,
-            'userId' => $userId,
-            'data' => [
-                'events' => $events,
-                'channels' => $channels,
-                'timestamp' => DateTime::formatTz(DateTime::now()),
-                'payload' => $payload
-            ]
-        ]));
+        global $register;
+        $pubsub = $register->get('pools')->get('pubsub')->pop();
+        try {
+            /** @var \Appwrite\PubSub\Adapter $redis */
+            $redis = $pubsub->getResource();
+            $redis->publish('realtime', json_encode([
+                'project' => $projectId,
+                'roles' => $roles,
+                'permissionsChanged' => $permissionsChanged,
+                'userId' => $userId,
+                'data' => [
+                    'events' => $events,
+                    'channels' => $channels,
+                    'timestamp' => DateTime::formatTz(DateTime::now()),
+                    'payload' => $payload
+                ]
+            ]));
+        } finally {
+            $pubsub->reclaim();
+        }
     }
 
     /**
@@ -338,6 +343,16 @@ class Realtime extends Adapter
                         $roles = $payload->getRead();
                     }
                 } elseif ($parts[2] === 'deployments') {
+                    $channels[] = 'console';
+                    $channels[] = 'projects.' . $project->getId();
+                    $projectId = 'console';
+                    $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                }
+
+                break;
+
+            case 'sites':
+                if ($parts[2] === 'deployments') {
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
