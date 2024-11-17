@@ -380,6 +380,13 @@ return [
         'code' => 409,
     ],
 
+    /** Console */
+    Exception::RESOURCE_ALREADY_EXISTS => [
+        'name' => Exception::RESOURCE_ALREADY_EXISTS,
+        'description' => 'Resource with the requested ID already exists. Please choose a different ID and try again.',
+        'code' => 409,
+    ],
+
     /** Membership */
     Exception::MEMBERSHIP_NOT_FOUND => [
         'name' => Exception::MEMBERSHIP_NOT_FOUND,
