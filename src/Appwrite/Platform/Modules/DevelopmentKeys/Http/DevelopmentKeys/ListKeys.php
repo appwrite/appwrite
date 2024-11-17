@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\DevelopmentKeys\Http;
+namespace Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
@@ -11,12 +11,12 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class XList extends Action
+class ListKeys extends Action
 {
     use HTTP;
     public static function getName()
     {
-        return 'list';
+        return 'listKeys';
     }
 
     public function __construct()

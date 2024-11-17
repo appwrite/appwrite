@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\DevelopmentKeys\Http;
+namespace Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
@@ -15,12 +15,12 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
 
-class Create extends Action
+class CreateKey extends Action
 {
     use HTTP;
     public static function getName()
     {
-        return 'create';
+        return 'createKey';
     }
 
     public function __construct()

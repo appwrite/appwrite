@@ -11,6 +11,6 @@ class Appwrite extends Platform
     public function __construct()
     {
         parent::__construct(new Core());
-        $this->addModule(new DevelopmentKeys());
+        $this->addModule(new DevelopmentKeys\Module());
     }
 }

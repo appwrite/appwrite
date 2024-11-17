@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Modules\DevelopmentKeys\Services;
 
-use Appwrite\Platform\Modules\DevelopmentKeys\Http\Create;
-use Appwrite\Platform\Modules\DevelopmentKeys\Http\Delete;
-use Appwrite\Platform\Modules\DevelopmentKeys\Http\Get;
-use Appwrite\Platform\Modules\DevelopmentKeys\Http\Update;
-use Appwrite\Platform\Modules\DevelopmentKeys\Http\XList;
+use Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys\CreateKey;
+use Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys\DeleteKey;
+use Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys\GetKey;
+use Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys\ListKeys;
+use Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys\UpdateKey;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -14,10 +14,10 @@ class Http extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_HTTP;
-        $this->addAction(Create::getName(), new Create());
-        $this->addAction(Update::getName(), new Update());
-        $this->addAction(Get::getName(), new Get());
-        $this->addAction(XList::getName(), new XList());
-        $this->addAction(Delete::getName(), new Delete());
+        $this->addAction(CreateKey::getName(), new CreateKey());
+        $this->addAction(UpdateKey::getName(), new UpdateKey());
+        $this->addAction(GetKey::getName(), new GetKey());
+        $this->addAction(ListKeys::getName(), new ListKeys());
+        $this->addAction(DeleteKey::getName(), new DeleteKey());
     }
 }
