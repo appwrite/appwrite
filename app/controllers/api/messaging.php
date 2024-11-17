@@ -32,6 +32,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Roles;
@@ -866,6 +867,11 @@ App::get('/v1/messaging/providers')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $providerId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
@@ -1998,6 +2004,11 @@ App::get('/v1/messaging/topics')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $topicId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
@@ -2352,6 +2363,11 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $subscriberId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
 
@@ -2697,7 +2713,7 @@ App::post('/v1/messaging/messages/email')
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
-                    'schedule'  => $scheduledAt,
+                    'schedule' => $scheduledAt,
                     'active' => true,
                 ]));
 
@@ -2813,7 +2829,7 @@ App::post('/v1/messaging/messages/sms')
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
-                    'schedule'  => $scheduledAt,
+                    'schedule' => $scheduledAt,
                     'active' => true,
                 ]));
 
@@ -2939,11 +2955,9 @@ App::post('/v1/messaging/messages/push')
                 $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'));
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
 
             $jwt = $encoder->encode([
-                'iat' => \time(),
-                'exp' => $expiry,
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
                 'projectId' => $project->getId(),
@@ -2991,7 +3005,7 @@ App::post('/v1/messaging/messages/push')
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
-                    'schedule'  => $scheduledAt,
+                    'schedule' => $scheduledAt,
                     'active' => true,
                 ]));
 
@@ -3050,6 +3064,11 @@ App::get('/v1/messaging/messages')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $messageId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('messages', $messageId));
 
@@ -3204,6 +3223,11 @@ App::get('/v1/messaging/messages/:messageId/targets')
         $cursor = reset($cursor);
 
         if ($cursor) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $targetId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('targets', $targetId);
 
@@ -3801,11 +3825,9 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
             }
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'));
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
 
             $jwt = $encoder->encode([
-                'iat' => \time(),
-                'exp' => $expiry,
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
                 'projectId' => $project->getId(),

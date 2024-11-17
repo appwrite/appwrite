@@ -5,9 +5,11 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
-use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Request as AppwriteRequest;
+use Appwrite\Utopia\Response as AppwriteResponse;
 use Exception;
-use Swoole\Http\Response as HttpResponse;
+use Swoole\Http\Request as SwooleRequest;
+use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
@@ -17,7 +19,8 @@ use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
-use Utopia\Request;
+use Utopia\Request as UtopiaRequest;
+use Utopia\Response as UtopiaResponse;
 use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -27,6 +30,16 @@ class Specs extends Action
     public static function getName(): string
     {
         return 'specs';
+    }
+
+    public function getRequest(): UtopiaRequest
+    {
+        return new AppwriteRequest(new SwooleRequest());
+    }
+
+    public function getResponse(): UtopiaResponse
+    {
+        return new AppwriteResponse(new SwooleResponse());
     }
 
     public function __construct()
@@ -42,11 +55,11 @@ class Specs extends Action
     public function action(string $version, string $mode, Registry $register): void
     {
         $appRoutes = App::getRoutes();
-        $response = new Response(new HttpResponse());
+        $response = $this->getResponse();
         $mocks = ($mode === 'mocks');
 
         // Mock dependencies
-        App::setResource('request', fn () => new Request());
+        App::setResource('request', fn () => $this->getRequest());
         App::setResource('response', fn () => $response);
         App::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
         App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
@@ -183,10 +196,8 @@ class Specs extends Action
                             case APP_AUTH_TYPE_SESSION:
                                 $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                                 break;
-                            case APP_AUTH_TYPE_KEY:
-                                $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                                break;
                             case APP_AUTH_TYPE_JWT:
+                            case APP_AUTH_TYPE_KEY:
                                 $sdkPlatforms[] = APP_PLATFORM_SERVER;
                                 break;
                             case APP_AUTH_TYPE_ADMIN:
@@ -259,7 +270,7 @@ class Specs extends Action
 
                 $specs = new Specification($formatInstance);
                 $endpoint = System::getEnv('_APP_HOME', '[HOSTNAME]');
-                $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $email = System::getEnv('_APP_SYSTEM_TEAM_EMAIL', APP_EMAIL_TEAM);
 
                 $formatInstance
                     ->setParam('name', APP_NAME)
@@ -280,7 +291,7 @@ class Specs extends Action
                 if ($mocks) {
                     $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-mocks-' . $platform . '.json';
 
-                    if (!file_put_contents($path, json_encode($specs->parse()))) {
+                    if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
                         throw new Exception('Failed to save mocks spec file: ' . $path);
                     }
 
@@ -291,7 +302,7 @@ class Specs extends Action
 
                 $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
 
-                if (!file_put_contents($path, json_encode($specs->parse()))) {
+                if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
                     throw new Exception('Failed to save spec file: ' . $path);
                 }
 

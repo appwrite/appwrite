@@ -21,7 +21,12 @@ class ScheduleMessages extends ScheduleBase
         return 'message';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole): void
+    public static function getCollectionId(): string
+    {
+        return 'messages';
+    }
+
+    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
@@ -35,7 +40,7 @@ class ScheduleMessages extends ScheduleBase
                 continue;
             }
 
-            \go(function () use ($now, $schedule, $pools, $dbForConsole) {
+            \go(function () use ($schedule, $pools, $dbForConsole) {
                 $queue = $pools->get('queue')->pop();
                 $connection = $queue->getResource();
                 $queueForMessaging = new Messaging($connection);
@@ -53,7 +58,7 @@ class ScheduleMessages extends ScheduleBase
 
                 $queue->reclaim();
 
-                unset($this->schedules[$schedule['resourceId']]);
+                unset($this->schedules[$schedule['$internalId']]);
             });
         }
     }
