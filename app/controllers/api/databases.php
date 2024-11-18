@@ -20,7 +20,6 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -2597,7 +2596,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
             $attributeStatus = $oldAttributes[$attributeIndex]['status'];
             $attributeType = $oldAttributes[$attributeIndex]['type'];
-            $attributeSize = $oldAttributes[$attributeIndex]['size'];
             $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
             if ($attributeType === Database::VAR_RELATIONSHIP) {
@@ -2609,12 +2607,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Attribute not available: ' . $oldAttributes[$attributeIndex]['key']);
             }
 
-            // todo: Think of a better solution
             $lengths[$i] = null;
-
-            if ($attributeType === Database::VAR_STRING) {
-                $lengths[$i] = $attributeSize; // set attribute size as index length only for strings
-            }
 
             if ($attributeArray === true) {
                 $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
