@@ -29,7 +29,7 @@ class CreateToken extends Action
 
     public function __construct()
     {
-        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
+        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
         ->setHttpPath('/v1/tokens')
         ->desc('Create token')
         ->groups(['api', 'token'])
