@@ -3,8 +3,8 @@
 namespace Appwrite\Platform;
 
 use Appwrite\Platform\Modules\Core;
-use Utopia\Platform\Platform;
 use Appwrite\Platform\Modules\Tokens;
+use Utopia\Platform\Platform;
 
 class Appwrite extends Platform
 {
