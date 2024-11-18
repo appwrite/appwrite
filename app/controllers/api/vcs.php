@@ -226,6 +226,29 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'activate' => $activate,
             ]));
 
+            // Preview deployments for sites
+            if ($resource->getCollection() === 'sites') {
+                $projectId = $project->getId();
+
+                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+                $ruleId = md5($domain);
+
+                $rule = Authorization::skip(
+                    fn() => $dbForConsole->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getInternalId(),
+                        'domain' => $domain,
+                        'resourceType' => 'deployment',
+                        'resourceId' => $deploymentId,
+                        'resourceInternalId' => $deployment->getInternalId(),
+                        'status' => 'verified',
+                        'certificateId' => '',
+                    ]))
+                );
+            }
+
             if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
                 $resourceName = $resource->getAttribute('name');
                 $projectName = $project->getAttribute('name');

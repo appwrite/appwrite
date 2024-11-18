@@ -103,15 +103,13 @@ class CreateSite extends Base
         $domain = '';
 
         if (!empty($sitesDomain)) {
-            $ruleId = ID::unique();
             $routeSubdomain = $subdomain ?: ID::unique();
             $domain = "{$routeSubdomain}.{$sitesDomain}";
+            $ruleId = md5($domain);
 
-            $subdomain = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
-                Query::equal('domain', [$domain])
-            ]));
+            $subdomain = Authorization::skip(fn () => $dbForConsole->getDocument('rules', $ruleId));
 
-            if (!empty($subdomain)) {
+            if ($subdomain && !$subdomain->isEmpty()) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Subdomain already exists. Please choose a different subdomain.');
             }
         }
@@ -206,7 +204,7 @@ class CreateSite extends Base
 
         if (!empty($providerRepositoryId)) {
             // Deploy VCS
-            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
+            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForConsole, $queueForBuilds, $template, $github);
         } elseif (!$template->isEmpty()) {
             // Deploy non-VCS from template
             $deploymentId = ID::unique();
@@ -227,6 +225,27 @@ class CreateSite extends Base
                 'search' => implode(' ', [$deploymentId]),
                 'activate' => true,
             ]));
+
+            // Preview deployments url
+            $projectId = $project->getId();
+
+            $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+            $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+            $ruleId = md5($domain);
+
+            $rule = Authorization::skip(
+                fn() => $dbForConsole->createDocument('rules', new Document([
+                    '$id' => $ruleId,
+                    'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getInternalId(),
+                    'domain' => $domain,
+                    'resourceType' => 'deployment',
+                    'resourceId' => $deploymentId,
+                    'resourceInternalId' => $deployment->getInternalId(),
+                    'status' => 'verified',
+                    'certificateId' => '',
+                ]))
+            );
 
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)

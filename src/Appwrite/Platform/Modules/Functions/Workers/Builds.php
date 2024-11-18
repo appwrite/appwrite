@@ -691,31 +691,6 @@ class Builds extends Action
 
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
-            // Preview deployments for sites
-            if ($resource->getCollection() === 'sites') {
-                $ruleId = ID::unique();
-
-                $deploymentId = $deployment->getId();
-                $projectId = $project->getId();
-
-                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
-
-                $rule = Authorization::skip(
-                    fn () => $dbForConsole->createDocument('rules', new Document([
-                        '$id' => $ruleId,
-                        'projectId' => $project->getId(),
-                        'projectInternalId' => $project->getInternalId(),
-                        'domain' => $domain,
-                        'resourceType' => 'deployment',
-                        'resourceId' => $deployment->getId(),
-                        'resourceInternalId' => $deployment->getInternalId(),
-                        'status' => 'verified',
-                        'certificateId' => '',
-                    ]))
-                );
-            }
-
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
             }
