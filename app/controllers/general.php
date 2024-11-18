@@ -355,26 +355,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 throw $th;
             }
         } finally {
-            $fileSize = 0;
-            $file = $request->getFiles('file');
-            if (!empty($file)) {
-                $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
-            }
-
-            $queueForUsage
-                ->addMetric(METRIC_NETWORK_REQUESTS, 1)
-                ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
-                ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize())
-                ->addMetric(METRIC_EXECUTIONS, 1)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
-                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
-                ->setProject($project)
-                ->trigger()
-            ;
-
             $queueForFunctions
                 ->setType(Func::TYPE_ASYNC_WRITE)
                 ->setExecution($execution)
@@ -408,6 +388,26 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             ->setContentType($contentType)
             ->setStatusCode($execution['responseStatusCode'] ?? 200)
             ->send($body);
+
+        $fileSize = 0;
+        $file = $request->getFiles('file');
+        if (!empty($file)) {
+            $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+        }
+
+        $queueForUsage
+            ->addMetric(METRIC_NETWORK_REQUESTS, 1)
+            ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
+            ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize())
+            ->addMetric(METRIC_EXECUTIONS, 1)
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+            ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
+            ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+            ->setProject($project)
+            ->trigger()
+        ;
 
         return true;
     } elseif ($type === 'api') {
