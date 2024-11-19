@@ -94,6 +94,10 @@ $usageDatabaseListener = function (string $event, Document $document, Usage $que
         $value = -1;
     }
 
+    if ($event === Database::EVENT_DOCUMENTS_CREATE) {
+        $value = \count($document->getAttribute('modified', []));
+    }
+
     switch (true) {
         case $document->getCollection() === 'teams':
             $queueForUsage
@@ -497,6 +501,8 @@ App::init()
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
+            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
+            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
             ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
                 $document,
                 $response,
