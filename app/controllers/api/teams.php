@@ -1121,19 +1121,19 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                     name: Auth::$cookieName . '_legacy',
                     value: Auth::encodeSession($user->getId(), $secret),
                     expire: (new \DateTime($expire))->getTimestamp(),
-                    path:'/',
+                    path: '/',
                     domain: Config::getParam('cookieDomain'),
                     secure: ('https' === $protocol),
-                    httponly:true
+                    httponly: true
                 )
                 ->addCookie(
-                    name:Auth::$cookieName,
-                    value:Auth::encodeSession($user->getId(), $secret),
+                    name: Auth::$cookieName,
+                    value: Auth::encodeSession($user->getId(), $secret),
                     expire: (new \DateTime($expire))->getTimestamp(),
-                    path:'/',
-                    domain:Config::getParam('cookieDomain'),
-                    secure:('https' === $protocol),
-                    httponly:true,
+                    path: '/',
+                    domain: Config::getParam('cookieDomain'),
+                    secure: ('https' === $protocol),
+                    httponly: true,
                     sameSite: Config::getParam('cookieSamesite')
                 )
             ;
