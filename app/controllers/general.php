@@ -702,6 +702,22 @@ App::error()
     ->inject('log')
     ->inject('queueForUsage')
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Usage $queueForUsage) {
+        /**
+         * Update project last activity
+         */
+        if (!$project->isEmpty() && $project->getId() !== 'console') {
+            try {
+                $accessedAt = $project->getAttribute('accessedAt', '');
+                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+                    $project->setAttribute('accessedAt', DateTime::now());
+                    Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
+                }
+            } catch(Throwable $th) {
+                Console::error('[Error] updating project\'s last activity');
+                Console::error($th->getMessage());
+            }
+        }
+
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
