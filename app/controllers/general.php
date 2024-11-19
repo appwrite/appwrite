@@ -712,7 +712,7 @@ App::error()
                     $project->setAttribute('accessedAt', DateTime::now());
                     Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
                 }
-            } catch(Throwable $th) {
+            } catch (Throwable $th) {
                 Console::error('[Error] updating project\'s last activity');
                 Console::error($th->getMessage());
             }
