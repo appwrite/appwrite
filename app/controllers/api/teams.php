@@ -1060,7 +1060,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
         }
 
-        if ($user->isEmpty()) {
+        $hasSession = !$user->isEmpty();
+        if (!$hasSession) {
             $user->setAttributes($dbForProject->getDocument('users', $userId)->getArrayCopy()); // Get user
         }
 
@@ -1079,39 +1080,64 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         Authorization::skip(fn () => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
 
-        // Log user in
+        // Create session for the user if not logged in
+        if (!$hasSession) {
+            Authorization::setRole(Role::user($user->getId())->toString());
 
-        Authorization::setRole(Role::user($user->getId())->toString());
+            $detector = new Detector($request->getUserAgent('UNKNOWN'));
+            $record = $geodb->get($request->getIP());
+            $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
+            $secret = Auth::tokenGenerator();
+            $session = new Document(array_merge([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'providerUid' => $user->getAttribute('email'),
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'factors' => ['email'],
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
+            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
-        $secret = Auth::tokenGenerator();
-        $session = new Document(array_merge([
-            '$id' => ID::unique(),
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
-            'provider' => Auth::SESSION_PROVIDER_EMAIL,
-            'providerUid' => $user->getAttribute('email'),
-            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
-            'factors' => ['email'],
-            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-            'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
-        ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+            $session = $dbForProject->createDocument('sessions', $session);
 
-        $session = $dbForProject->createDocument('sessions', $session
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+            Authorization::setRole(Role::user($userId)->toString());
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+            if (!Config::getParam('domainVerification')) {
+                $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+            }
 
-        Authorization::setRole(Role::user($userId)->toString());
+            $response
+                ->addCookie(
+                    name: Auth::$cookieName . '_legacy',
+                    value: Auth::encodeSession($user->getId(), $secret),
+                    expire: (new \DateTime($expire))->getTimestamp(),
+                    path:'/',
+                    domain: Config::getParam('cookieDomain'),
+                    secure: ('https' === $protocol),
+                    httponly:true
+                )
+                ->addCookie(
+                    name:Auth::$cookieName,
+                    value:Auth::encodeSession($user->getId(), $secret),
+                    expire: (new \DateTime($expire))->getTimestamp(),
+                    path:'/',
+                    domain:Config::getParam('cookieDomain'),
+                    secure:('https' === $protocol),
+                    httponly:true,
+                    sameSite: Config::getParam('cookieSamesite')
+                )
+            ;
+        }
 
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 
@@ -1125,22 +1151,11 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setParam('membershipId', $membership->getId())
         ;
 
-        if (!Config::getParam('domainVerification')) {
-            $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
-            ;
-        }
-
-        $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-        ;
-
         $response->dynamic(
             $membership
-            ->setAttribute('teamName', $team->getAttribute('name'))
-            ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email')),
+                ->setAttribute('teamName', $team->getAttribute('name'))
+                ->setAttribute('userName', $user->getAttribute('name'))
+                ->setAttribute('userEmail', $user->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
     });
