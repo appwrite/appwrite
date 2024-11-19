@@ -3873,6 +3873,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
         $response->dynamic(new Document([
+            '$databaseId' => $databaseId,
+            '$collectionId' => $collectionId,
             'modified' => $modified,
         ]), Response::MODEL_BULK_OPERATION);
     });

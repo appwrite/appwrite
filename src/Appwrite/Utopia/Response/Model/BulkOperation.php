@@ -10,6 +10,18 @@ class BulkOperation extends Model
     public function __construct()
     {
         $this
+            ->addRule('$collectionId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Collection ID.',
+                'default' => '',
+                'example' => '5e5ea5c15117e',
+            ])
+            ->addRule('$databaseId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Database ID.',
+                'default' => '',
+                'example' => '5e5ea5c15117e',
+            ])
             ->addRule('modified', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total number of documents affected by the operation.',
