@@ -235,7 +235,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $ruleId = md5($domain);
 
                 $rule = Authorization::skip(
-                    fn() => $dbForConsole->createDocument('rules', new Document([
+                    fn () => $dbForConsole->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
                         'projectInternalId' => $project->getInternalId(),

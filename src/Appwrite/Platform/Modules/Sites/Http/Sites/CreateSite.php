@@ -18,7 +18,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -233,7 +232,7 @@ class CreateSite extends Base
             $previewDomain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
 
             $rule = Authorization::skip(
-                fn() => $dbForConsole->createDocument('rules', new Document([
+                fn () => $dbForConsole->createDocument('rules', new Document([
                     '$id' => \md5($previewDomain),
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getInternalId(),
