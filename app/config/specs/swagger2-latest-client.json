@@ -5101,7 +5101,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 306,
+                    "weight": 303,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5186,7 +5186,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 305,
+                    "weight": 302,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5307,7 +5307,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 307,
+                    "weight": 304,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5381,7 +5381,7 @@
                 },
                 "x-appwrite": {
                     "method": "query",
-                    "weight": 331,
+                    "weight": 329,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5457,7 +5457,7 @@
                 },
                 "x-appwrite": {
                     "method": "mutation",
-                    "weight": 330,
+                    "weight": 328,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5981,7 +5981,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 382,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6070,7 +6070,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 386,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
