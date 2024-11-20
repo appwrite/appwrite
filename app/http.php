@@ -39,8 +39,7 @@ $http
     ->set([
         'worker_num' => $workerNumber,
         'open_http2_protocol' => true,
-        'http_compression' => true,
-        'http_compression_level' => 6,
+        'http_compression' => false,
         'package_max_length' => $payloadSize,
         'buffer_output_size' => $payloadSize,
     ]);
@@ -61,6 +60,8 @@ include __DIR__ . '/controllers/general.php';
 
 $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
+    $app->setCompression(true);
+    $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
     go(function () use ($register, $app) {
         $pools = $register->get('pools');
@@ -244,6 +245,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     }
 
     $app = new App('UTC');
+    $app->setCompression(true);
+    $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
     $pools = $register->get('pools');
     App::setResource('pools', fn () => $pools);
@@ -298,8 +301,12 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $responseCode = $logger->addLog($log);
-            Console::info('Log pushed with status code: ' . $responseCode);
+            try {
+                $responseCode = $logger->addLog($log);
+                Console::info('Error log pushed with status code: ' . $responseCode);
+            } catch (Throwable $th) {
+                Console::error('Error pushing log: ' . $th->getMessage());
+            }
         }
 
         Console::error('[Error] Type: ' . get_class($th));

@@ -31,6 +31,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -110,6 +111,9 @@ App::post('/v1/projects')
             'personalDataCheck' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,
+            'membershipsUserName' => false,
+            'membershipsUserEmail' => false,
+            'membershipsMfa' => false,
         ];
 
         foreach ($auth as $method) {
@@ -279,6 +283,12 @@ App::get('/v1/projects')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $projectId = $cursor->getValue();
             $cursorDocument = $dbForConsole->getDocument('projects', $projectId);
 
@@ -641,6 +651,41 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
+App::patch('/v1/projects/:projectId/auth/memberships-privacy')
+    ->desc('Update project memberships privacy attributes')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateMembershipsPrivacy')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('userName', true, new Boolean(true), 'Set to true to show userName to members of a team.')
+    ->param('userEmail', true, new Boolean(true), 'Set to true to show email to members of a team.')
+    ->param('mfa', true, new Boolean(true), 'Set to true to show mfa to members of a team.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, bool $userName, bool $userEmail, bool $mfa, Response $response, Database $dbForConsole) {
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+
+        $auths['membershipsUserName'] = $userName;
+        $auths['membershipsUserEmail'] = $userEmail;
+        $auths['membershipsMfa'] = $mfa;
+
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
 App::patch('/v1/projects/:projectId/auth/limit')
     ->desc('Update project users limit')
     ->groups(['api', 'projects'])
@@ -923,6 +968,7 @@ App::delete('/v1/projects/:projectId')
         }
 
         $queueForDeletes
+            ->setProject($project)
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($project);
 
@@ -1052,7 +1098,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($webhook === false || $webhook->isEmpty()) {
+        if ($webhook->isEmpty()) {
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
@@ -1095,7 +1141,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($webhook === false || $webhook->isEmpty()) {
+        if ($webhook->isEmpty()) {
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
@@ -1145,7 +1191,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($webhook === false || $webhook->isEmpty()) {
+        if ($webhook->isEmpty()) {
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
@@ -1183,7 +1229,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($webhook === false || $webhook->isEmpty()) {
+        if ($webhook->isEmpty()) {
             throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
@@ -1199,7 +1245,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 App::post('/v1/projects/:projectId/keys')
     ->desc('Create key')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'keys.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createKey')
@@ -1249,7 +1295,7 @@ App::post('/v1/projects/:projectId/keys')
 App::get('/v1/projects/:projectId/keys')
     ->desc('List keys')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->label('scope', 'keys.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listKeys')
@@ -1281,7 +1327,7 @@ App::get('/v1/projects/:projectId/keys')
 App::get('/v1/projects/:projectId/keys/:keyId')
     ->desc('Get key')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->label('scope', 'keys.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getKey')
@@ -1305,7 +1351,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($key === false || $key->isEmpty()) {
+        if ($key->isEmpty()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
@@ -1315,7 +1361,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
 App::put('/v1/projects/:projectId/keys/:keyId')
     ->desc('Update key')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'keys.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateKey')
@@ -1342,7 +1388,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($key === false || $key->isEmpty()) {
+        if ($key->isEmpty()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
@@ -1361,7 +1407,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 App::delete('/v1/projects/:projectId/keys/:keyId')
     ->desc('Delete key')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'keys.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteKey')
@@ -1384,7 +1430,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($key === false || $key->isEmpty()) {
+        if ($key->isEmpty()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
@@ -1436,7 +1482,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->desc('Create platform')
     ->groups(['api', 'projects'])
     ->label('audits.event', 'platforms.create')
-    ->label('scope', 'projects.write')
+    ->label('scope', 'platforms.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createPlatform')
@@ -1486,7 +1532,7 @@ App::post('/v1/projects/:projectId/platforms')
 App::get('/v1/projects/:projectId/platforms')
     ->desc('List platforms')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->label('scope', 'platforms.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listPlatforms')
@@ -1518,7 +1564,7 @@ App::get('/v1/projects/:projectId/platforms')
 App::get('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Get platform')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->label('scope', 'platforms.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getPlatform')
@@ -1542,7 +1588,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($platform === false || $platform->isEmpty()) {
+        if ($platform->isEmpty()) {
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
@@ -1552,7 +1598,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
 App::put('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Update platform')
     ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'platforms.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updatePlatform')
@@ -1579,7 +1625,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($platform === false || $platform->isEmpty()) {
+        if ($platform->isEmpty()) {
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
@@ -1600,7 +1646,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete platform')
     ->groups(['api', 'projects'])
     ->label('audits.event', 'platforms.delete')
-    ->label('scope', 'projects.write')
+    ->label('scope', 'platforms.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deletePlatform')
@@ -1623,7 +1669,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
-        if ($platform === false || $platform->isEmpty()) {
+        if ($platform->isEmpty()) {
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
@@ -1744,7 +1790,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->param('port', 587, new Integer(), 'SMTP server port', true)
     ->param('username', '', new Text(0, 0), 'SMTP server username', true)
     ->param('password', '', new Text(0, 0), 'SMTP server password', true)
-    ->param('secure', '', new WhiteList(['tls'], true), 'Does SMTP server use secure connection', true)
+    ->param('secure', '', new WhiteList(['tls', 'ssl'], true), 'Does SMTP server use secure connection', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('queueForMails')

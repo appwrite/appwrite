@@ -133,7 +133,7 @@ class HTTPTest extends Scope
 
             $this->assertEquals(200, $response['headers']['status-code']);
             // looks like recent change in the validator
-            $this->assertTrue(empty($response['body']['schemaValidationMessages']));
+            $this->assertEmpty($response['body']['schemaValidationMessages'], 'Schema validation failed for ' . $file . ': ' . json_encode($response['body']['schemaValidationMessages'], JSON_PRETTY_PRINT));
         }
     }
 
