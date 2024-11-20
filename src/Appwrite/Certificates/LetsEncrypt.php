@@ -1,8 +1,7 @@
 <?php
 
-namespace Appwrite\Certificates\Adapter;
+namespace Appwrite\Certificates;
 
-use Appwrite\Certificates\Adapter;
 use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
