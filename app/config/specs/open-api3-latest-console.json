@@ -25487,6 +25487,11 @@
                                         "description": "Appwrite Installation ID for VCS (Version Control System) deployment.",
                                         "x-example": "<INSTALLATION_ID>"
                                     },
+                                    "fallbackFile": {
+                                        "type": "string",
+                                        "description": "Fallback file for single page application sites.",
+                                        "x-example": "<FALLBACK_FILE>"
+                                    },
                                     "providerRepositoryId": {
                                         "type": "string",
                                         "description": "Repository ID of the repo linked to the site.",
@@ -26138,6 +26143,11 @@
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
+                                    },
+                                    "fallbackFile": {
+                                        "type": "string",
+                                        "description": "Fallback file for single page application sites.",
+                                        "x-example": "<FALLBACK_FILE>"
                                     },
                                     "installationId": {
                                         "type": "string",
