@@ -5082,9 +5082,13 @@
                                 "type": "object",
                                 "properties": {
                                     "body": {
-                                        "type": "string",
+                                        "type": "object",
                                         "description": "HTTP body of execution. Default value is empty string.",
+<<<<<<< HEAD
                                         "x-example": "<BODY>"
+=======
+                                        "x-example": "{}"
+>>>>>>> 8e021158286cd04b64b391afe86975e23368a52c
                                     },
                                     "async": {
                                         "type": "boolean",

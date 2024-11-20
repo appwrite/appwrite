@@ -5232,10 +5232,17 @@
                             "type": "object",
                             "properties": {
                                 "body": {
+<<<<<<< HEAD
                                     "type": "string",
                                     "description": "HTTP body of execution. Default value is empty string.",
                                     "default": "",
                                     "x-example": "<BODY>"
+=======
+                                    "type": "object",
+                                    "description": "HTTP body of execution. Default value is empty string.",
+                                    "default": "",
+                                    "x-example": "{}"
+>>>>>>> 8e021158286cd04b64b391afe86975e23368a52c
                                 },
                                 "async": {
                                     "type": "boolean",

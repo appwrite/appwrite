@@ -16,4 +16,8 @@ dev/yasd_init.php
 .phpunit.result.cache
 Makefile
 appwrite.json
+<<<<<<< HEAD
 .zed/
+=======
+/.zed/
+>>>>>>> 8e021158286cd04b64b391afe86975e23368a52c
