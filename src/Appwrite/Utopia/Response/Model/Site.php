@@ -137,6 +137,12 @@ class Site extends Model
                 'default' => '',
                 'example' => 'static-1',
             ])
+            ->addRule('fallbackFile', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Name of fallback file to use instead of 404 page. If null, Appwrite 404 page will be displayed.',
+                'default' => null,
+                'example' => 'index.html',
+            ])
         ;
     }
 

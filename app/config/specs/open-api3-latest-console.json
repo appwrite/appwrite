@@ -37506,6 +37506,11 @@
                         "type": "string",
                         "description": "Site serve runtime.",
                         "x-example": "static-1"
+                    },
+                    "fallbackFile": {
+                        "type": "string",
+                        "description": "Name of fallback file to use instead of 404 page. If null, Appwrite 404 page will be displayed.",
+                        "x-example": "index.html"
                     }
                 },
                 "required": [
@@ -37529,7 +37534,8 @@
                     "providerSilentMode",
                     "specification",
                     "buildRuntime",
-                    "serveRuntime"
+                    "serveRuntime",
+                    "fallbackFile"
                 ]
             },
             "templateSite": {
