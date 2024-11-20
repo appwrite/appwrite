@@ -57,7 +57,16 @@ class ConsoleVariables extends Model
                 'description' => 'A domain to use for site URLs.',
                 'default' => '',
                 'example' => 'sites.localhost',
-            ]);
+            ])
+            ->addRule(
+                '_APP_OPTIONS_FORCE_HTTPS',
+                [
+                    'type' => self::TYPE_STRING,
+                    'description' => 'Defines if HTTPS is enforced for all requests.',
+                    'default' => '',
+                    'example' => 'enabled',
+                ]
+            );
     }
 
     /**
