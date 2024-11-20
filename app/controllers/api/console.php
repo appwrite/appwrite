@@ -50,7 +50,9 @@ App::get('/v1/console/variables')
             '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS'),
             '_APP_VCS_ENABLED' => $isVcsEnabled,
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
-            '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled
+            '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled,
+            '_APP_DOMAIN_SITES' => System::getEnv('_APP_DOMAIN_SITES'),
+            '_APP_OPTIONS_FORCE_HTTPS' => System::getEnv('_APP_OPTIONS_FORCE_HTTPS')
         ]);
 
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);
