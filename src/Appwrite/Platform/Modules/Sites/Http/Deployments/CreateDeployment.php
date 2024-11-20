@@ -12,6 +12,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -64,6 +65,8 @@ class CreateDeployment extends Action
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForConsole')
+            ->inject('project')
             ->inject('queueForEvents')
             ->inject('deviceForSites')
             ->inject('deviceForFunctions') // TODO: Remove this later once volume is added to executor
@@ -72,7 +75,7 @@ class CreateDeployment extends Action
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, ?string $installCommand, ?string $buildCommand, ?string $outputDirectory, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds)
+    public function action(string $siteId, ?string $installCommand, ?string $buildCommand, ?string $outputDirectory, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Event $queueForEvents, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds)
     {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -213,6 +216,27 @@ class CreateDeployment extends Action
                     'metadata' => $metadata,
                     'type' => $type
                 ]));
+
+                // Preview deployments for sites
+                $projectId = $project->getId();
+
+                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+                $ruleId = md5($domain);
+
+                $rule = Authorization::skip(
+                    fn () => $dbForConsole->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getInternalId(),
+                        'domain' => $domain,
+                        'resourceType' => 'deployment',
+                        'resourceId' => $deploymentId,
+                        'resourceInternalId' => $deployment->getInternalId(),
+                        'status' => 'verified',
+                        'certificateId' => '',
+                    ]))
+                );
             } else {
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
             }
@@ -247,6 +271,27 @@ class CreateDeployment extends Action
                     'metadata' => $metadata,
                     'type' => $type
                 ]));
+
+                // Preview deployments for sites
+                $projectId = $project->getId();
+
+                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+                $ruleId = md5($domain);
+
+                $rule = Authorization::skip(
+                    fn () => $dbForConsole->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getInternalId(),
+                        'domain' => $domain,
+                        'resourceType' => 'deployment',
+                        'resourceId' => $deploymentId,
+                        'resourceInternalId' => $deployment->getInternalId(),
+                        'status' => 'verified',
+                        'certificateId' => '',
+                    ]))
+                );
             } else {
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('chunksUploaded', $chunksUploaded)->setAttribute('metadata', $metadata));
             }
