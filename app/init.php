@@ -21,8 +21,6 @@ if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
-use Appwrite\Certificates\Adapter\LetsEncrypt;
-use Appwrite\Certificates\AdapterProvider;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
@@ -1532,19 +1530,6 @@ App::setResource('cache', function (Group $pools) {
 
     return new Cache(new Sharding($adapters));
 }, ['pools']);
-
-App::setResource('letsEncryptCertificateAdapter', function () {
-    $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
-    if (empty($email)) {
-        throw new Exception('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
-    }
-
-    return new LetsEncrypt($email);
-});
-
-App::setResource('adapterForCertificates', function ($letsEncrypt) {
-    return new AdapterProvider(fn (string $domain) => $letsEncrypt);
-}, ['letsEncryptCertificateAdapter']);
 
 App::setResource('deviceForLocal', function () {
     return new Local();

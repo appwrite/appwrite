@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Certificates\AdapterProvider;
+use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
@@ -48,10 +48,10 @@ class Certificates extends Action
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
             ->inject('log')
-            ->inject('adapterForCertificates')
+            ->inject('certificates')
             ->callback(
-                fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, AdapterProvider $adapterForCertificates) =>
-                    $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $adapterForCertificates)
+                fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates) =>
+                    $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $certificates)
             );
     }
 
@@ -62,12 +62,12 @@ class Certificates extends Action
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
      * @param Log $log
-     * @param AdapterProvider $adapterForCertificates Retrieve the certificate adapter for the domain
+     * @param CertificatesAdapter $certificates
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, AdapterProvider $adapterForCertificates): void
+    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -81,7 +81,7 @@ class Certificates extends Action
 
         $log->addTag('domain', $domain->get());
 
-        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $adapterForCertificates, $skipRenewCheck);
+        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $certificates, $skipRenewCheck);
     }
 
     /**
@@ -90,13 +90,13 @@ class Certificates extends Action
      * @param Mail $queueForMails
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
-     * @param AdapterProvider $adapterForCertificates Retrieve the certificate adapter for the domain
+     * @param CertificatesAdapter $certificates
      * @param bool $skipRenewCheck
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, AdapterProvider $adapterForCertificates, bool $skipRenewCheck = false): void
+    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates, bool $skipRenewCheck = false): void
     {
         /**
          * 1. Read arguments and validate domain
@@ -136,8 +136,6 @@ class Certificates extends Action
             $certificate->setAttribute('domain', $domain->get());
         }
 
-        $certificateAdapter = $adapterForCertificates->get($domain->get());
-
         $success = false;
 
         try {
@@ -148,14 +146,14 @@ class Certificates extends Action
                 $this->validateDomain($domain, $isMainDomain, $log);
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
-                if (!$certificateAdapter->isRenewRequired($domain->get(), $log)) {
+                if (!$certificates->isRenewRequired($domain->get(), $log)) {
                     throw new Exception('Renew isn\'t required.');
                 }
             }
 
             // Prepare unique cert name. Using this helps prevent miss-match in configuration when renewing certificates.
             $certName = ID::unique();
-            $renewDate = $certificateAdapter->issueCertificate($certName, $domain->get());
+            $renewDate = $certificates->issueCertificate($certName, $domain->get());
 
             // Command succeeded, store all data into document
             $certificate->setAttribute('logs', 'Certificate successfully generated.');
