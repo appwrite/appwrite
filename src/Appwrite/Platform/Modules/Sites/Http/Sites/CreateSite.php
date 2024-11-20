@@ -98,16 +98,14 @@ class CreateSite extends Base
     public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $subdomain, string $buildRuntime, string $serveRuntime, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $ruleId = '';
         $routeSubdomain = '';
         $domain = '';
 
         if (!empty($sitesDomain)) {
             $routeSubdomain = $subdomain ?: ID::unique();
             $domain = "{$routeSubdomain}.{$sitesDomain}";
-            $ruleId = md5($domain);
 
-            $subdomain = Authorization::skip(fn () => $dbForConsole->getDocument('rules', $ruleId));
+            $subdomain = Authorization::skip(fn () => $dbForConsole->getDocument('rules', \md5($domain)));
 
             if ($subdomain && !$subdomain->isEmpty()) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Subdomain already exists. Please choose a different subdomain.');
@@ -230,15 +228,14 @@ class CreateSite extends Base
             $projectId = $project->getId();
 
             $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-            $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
-            $ruleId = md5($domain);
+            $previewDomain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
 
             $rule = Authorization::skip(
                 fn() => $dbForConsole->createDocument('rules', new Document([
-                    '$id' => $ruleId,
+                    '$id' => \md5($previewDomain),
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getInternalId(),
-                    'domain' => $domain,
+                    'domain' => $previewDomain,
                     'resourceType' => 'deployment',
                     'resourceId' => $deploymentId,
                     'resourceInternalId' => $deployment->getInternalId(),
@@ -257,7 +254,7 @@ class CreateSite extends Base
         if (!empty($sitesDomain)) {
             $rule = Authorization::skip(
                 fn () => $dbForConsole->createDocument('rules', new Document([
-                    '$id' => $ruleId,
+                    '$id' => \md5($domain),
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getInternalId(),
                     'domain' => $domain,
