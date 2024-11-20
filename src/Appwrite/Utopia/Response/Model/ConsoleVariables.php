@@ -51,6 +51,12 @@ class ConsoleVariables extends Model
                 'description' => 'Defines if AI assistant is enabled.',
                 'default' => false,
                 'example' => true,
+            ])
+            ->addRule('_APP_DOMAIN_SITES', [
+                'type' => self::TYPE_STRING,
+                'description' => 'A domain to use for site URLs.',
+                'default' => '',
+                'example' => 'sites.localhost',
             ]);
     }
 
