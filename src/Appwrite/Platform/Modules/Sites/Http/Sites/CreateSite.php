@@ -99,20 +99,16 @@ class CreateSite extends Base
     public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $subdomain, string $buildRuntime, string $serveRuntime, string $installationId, string $fallbackFile, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $ruleId = '';
         $routeSubdomain = '';
         $domain = '';
 
         if (!empty($sitesDomain)) {
-            $ruleId = ID::unique();
             $routeSubdomain = $subdomain ?: ID::unique();
             $domain = "{$routeSubdomain}.{$sitesDomain}";
 
-            $subdomain = Authorization::skip(fn () => $dbForConsole->findOne('rules', [
-                Query::equal('domain', [$domain])
-            ]));
+            $subdomain = Authorization::skip(fn () => $dbForConsole->getDocument('rules', \md5($domain)));
 
-            if (!empty($subdomain)) {
+            if ($subdomain && !$subdomain->isEmpty()) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Subdomain already exists. Please choose a different subdomain.');
             }
         }
@@ -208,7 +204,7 @@ class CreateSite extends Base
 
         if (!empty($providerRepositoryId)) {
             // Deploy VCS
-            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
+            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForConsole, $queueForBuilds, $template, $github);
         } elseif (!$template->isEmpty()) {
             // Deploy non-VCS from template
             $deploymentId = ID::unique();
@@ -230,6 +226,26 @@ class CreateSite extends Base
                 'activate' => true,
             ]));
 
+            // Preview deployments url
+            $projectId = $project->getId();
+
+            $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+            $previewDomain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
+
+            $rule = Authorization::skip(
+                fn() => $dbForConsole->createDocument('rules', new Document([
+                    '$id' => \md5($previewDomain),
+                    'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getInternalId(),
+                    'domain' => $previewDomain,
+                    'resourceType' => 'deployment',
+                    'resourceId' => $deploymentId,
+                    'resourceInternalId' => $deployment->getInternalId(),
+                    'status' => 'verified',
+                    'certificateId' => '',
+                ]))
+            );
+
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($site)
@@ -240,7 +256,7 @@ class CreateSite extends Base
         if (!empty($sitesDomain)) {
             $rule = Authorization::skip(
                 fn () => $dbForConsole->createDocument('rules', new Document([
-                    '$id' => $ruleId,
+                    '$id' => \md5($domain),
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getInternalId(),
                     'domain' => $domain,
