@@ -1030,7 +1030,7 @@ App::get('/robots.txt')
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
-            if(router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked)) {
+            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked)) {
                 $utopia->getRoute()?->label('router', 'true');
             }
         }
@@ -1059,7 +1059,7 @@ App::get('/humans.txt')
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
-            if(router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked)) {
+            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked)) {
                 $utopia->getRoute()?->label('router', 'true');
             }
         }
@@ -1156,7 +1156,7 @@ App::wildcard()
     ->inject('utopia')
     ->action(function (App $utopia) {
         $handeledByRouter = $utopia->getRoute()?->getLabel('router', 'false');
-        if(\boolval($handeledByRouter)) {
+        if (\boolval($handeledByRouter)) {
             return;
         }
 
