@@ -99,8 +99,8 @@
             "php": "8.3"
         },
         "allow-plugins": {
-            "php-http/discovery": false,
-            "tbachert/spi": false
+            "php-http/discovery": true,
+            "tbachert/spi": true
         }
     }
 }
