@@ -32,5 +32,6 @@ class ConsoleConsoleClientTest extends Scope
         $this->assertIsBool($response['body']['_APP_DOMAIN_ENABLED']);
         $this->assertIsBool($response['body']['_APP_VCS_ENABLED']);
         $this->assertIsBool($response['body']['_APP_ASSISTANT_ENABLED']);
+        $this->assertIsString($response['body']['_APP_DOMAIN_SITES']);
     }
 }
