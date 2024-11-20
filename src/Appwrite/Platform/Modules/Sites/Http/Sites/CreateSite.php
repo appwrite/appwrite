@@ -68,6 +68,7 @@ class CreateSite extends Base
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.')
             ->param('serveRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use when serving site.')
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
+            ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
@@ -94,7 +95,7 @@ class CreateSite extends Base
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $subdomain, string $buildRuntime, string $serveRuntime, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
+    public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $subdomain, string $buildRuntime, string $serveRuntime, string $installationId, string $fallbackFile, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $routeSubdomain = '';
@@ -156,6 +157,7 @@ class CreateSite extends Base
             'buildCommand' => $buildCommand,
             'outputDirectory' => $outputDirectory,
             'search' => implode(' ', [$siteId, $name, $framework]),
+            'fallbackFile' => $fallbackFile,
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),
             'providerRepositoryId' => $providerRepositoryId,
