@@ -494,31 +494,31 @@ class Deletes extends Action
         ];
 
         $limit = \count($projectCollectionIds) + 25;
+
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
+
+        $projectTables = !\in_array($dsn->getHost(), $sharedTables);
+        $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
+        $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
+        $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
         while (true) {
             $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
-                if (\in_array($dsn->getHost(), $sharedTables) || !\in_array($collection->getId(), $projectCollectionIds)) {
-                    try {
+                try {
+                    if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
                         $dbForProject->deleteCollection($collection->getId());
-                    } catch (Throwable $e) {
-                        Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
-
-                        /**
-                         * Ignore junction tables;
-                         */
-                        if (!preg_match('/^_\d+_\d+$/', $collection->getId())) {
-                            throw $e;
-                        }
+                    } else {
+                        $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
                     }
-                } else {
-                    $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
+                } catch (Throwable $e) {
+                    Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
                 }
             }
 
-            if (\in_array($dsn->getHost(), $sharedTables)) {
+            if ($sharedTables) {
                 $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
 
                 if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
@@ -572,10 +572,17 @@ class Deletes extends Action
         ], $dbForConsole);
 
         // Delete metadata table
-        if (\in_array($dsn->getHost(), $sharedTables)) {
-            $dbForProject->deleteCollection('_metadata');
-        } else {
-            $this->deleteByGroup('_metadata', [], $dbForProject);
+        if ($projectTables) {
+            $dbForProject->deleteCollection(Database::METADATA);
+        } elseif ($sharedTablesV1) {
+            $this->deleteByGroup(Database::METADATA, [], $dbForProject);
+        } elseif ($sharedTablesV2) {
+            $queries = \array_map(
+                fn ($id) => Query::notEqual('$id', $id),
+                $projectCollectionIds
+            );
+
+            $this->deleteByGroup(Database::METADATA, $queries, $dbForProject);
         }
 
         // Delete all storage directories

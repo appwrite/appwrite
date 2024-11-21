@@ -1405,7 +1405,7 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForPltroject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
+App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
     }
@@ -1429,13 +1429,6 @@ App::setResource('dbForPltroject', function (Group $pools, Database $dbForConsol
         ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS)
         ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
-
-    try {
-        $dsn = new DSN($project->getAttribute('database'));
-    } catch (\InvalidArgumentException) {
-        // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-    }
 
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
