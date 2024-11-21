@@ -494,14 +494,21 @@ class Deletes extends Action
         ];
 
         $limit = \count($projectCollectionIds) + 25;
+
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
+
+        $projectTables = !\in_array($dsn->getHost(), $sharedTables);
+        $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
+        $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
+        $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
         while (true) {
             $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
                 try {
-                    if (!\in_array($dsn->getHost(), $sharedTables) || !\in_array($collection->getId(), $projectCollectionIds)) {
+                    if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
                         $dbForProject->deleteCollection($collection->getId());
                     } else {
                         $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
@@ -511,7 +518,7 @@ class Deletes extends Action
                 }
             }
 
-            if (\in_array($dsn->getHost(), $sharedTables)) {
+            if ($sharedTables) {
                 $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
 
                 if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
@@ -565,10 +572,17 @@ class Deletes extends Action
         ], $dbForConsole);
 
         // Delete metadata table
-        if (!\in_array($dsn->getHost(), $sharedTables)) {
+        if ($projectTables) {
             $dbForProject->deleteCollection(Database::METADATA);
-        } else {
+        } elseif ($sharedTablesV1) {
             $this->deleteByGroup(Database::METADATA, [], $dbForProject);
+        } elseif ($sharedTablesV2) {
+            $queries = \array_map(
+                fn ($id) => Query::notEqual('$id', $id),
+                $projectCollectionIds
+            );
+
+            $this->deleteByGroup(Database::METADATA, $queries, $dbForProject);
         }
 
         // Delete all storage directories

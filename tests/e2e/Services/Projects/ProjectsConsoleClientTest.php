@@ -3889,6 +3889,18 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $user2['headers']['status-code']);
+
+        // Create another user in project 2 in case read hits stale cache
+        $user3 = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project2Id,
+            'x-appwrite-key' => $key2['body']['secret'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'test3@appwrite.io'
+        ]);
+
+        $this->assertEquals(201, $user3['headers']['status-code']);
     }
 
     /**

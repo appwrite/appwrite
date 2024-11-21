@@ -205,81 +205,83 @@ App::post('/v1/projects')
         $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
         $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
-        if ($sharedTables) {
-            $dbForProject
-                ->setSharedTables(true)
-                ->setTenant($sharedTablesV1 ? $project->getInternalId() : null)
-                ->setNamespace($dsn->getParam('namespace'));
-        } else {
-            $dbForProject
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getInternalId());
-        }
+        if (!$sharedTablesV2) {
+            if ($sharedTables) {
+                $dbForProject
+                    ->setSharedTables(true)
+                    ->setTenant($sharedTablesV1 ? $project->getInternalId() : null)
+                    ->setNamespace($dsn->getParam('namespace'));
+            } else {
+                $dbForProject
+                    ->setSharedTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getInternalId());
+            }
 
-        $create = true;
+            $create = true;
 
-        try {
-            $dbForProject->create();
-        } catch (Duplicate) {
-            $create = false;
-        }
+            try {
+                $dbForProject->create();
+            } catch (Duplicate) {
+                $create = false;
+            }
 
-        if ($create || $projectTables) {
-            $audit = new Audit($dbForProject);
-            $audit->setup();
+            if ($create || $projectTables) {
+                $audit = new Audit($dbForProject);
+                $audit->setup();
 
-            $abuse = new TimeLimit('', 0, 1, $dbForProject);
-            $abuse->setup();
-        }
+                $abuse = new TimeLimit('', 0, 1, $dbForProject);
+                $abuse->setup();
+            }
 
-        if (!$create && $sharedTablesV1) {
-            $attributes = \array_map(fn ($attribute) => new Document($attribute), Audit::ATTRIBUTES);
-            $indexes = \array_map(fn (array $index) => new Document($index), Audit::INDEXES);
-            $dbForProject->createDocument(Database::METADATA, new Document([
-                '$id' => ID::custom('audit'),
-                '$permissions' => [Permission::create(Role::any())],
-                'name' => 'audit',
-                'attributes' => $attributes,
-                'indexes' => $indexes,
-                'documentSecurity' => true
-            ]));
+            if (!$create && $sharedTablesV1) {
+                $attributes = \array_map(fn ($attribute) => new Document($attribute), Audit::ATTRIBUTES);
+                $indexes = \array_map(fn (array $index) => new Document($index), Audit::INDEXES);
+                $dbForProject->createDocument(Database::METADATA, new Document([
+                    '$id' => ID::custom('audit'),
+                    '$permissions' => [Permission::create(Role::any())],
+                    'name' => 'audit',
+                    'attributes' => $attributes,
+                    'indexes' => $indexes,
+                    'documentSecurity' => true
+                ]));
 
-            $attributes = \array_map(fn ($attribute) => new Document($attribute), TimeLimit::ATTRIBUTES);
-            $indexes = \array_map(fn (array $index) => new Document($index), TimeLimit::INDEXES);
-            $dbForProject->createDocument(Database::METADATA, new Document([
-                '$id' => ID::custom('abuse'),
-                '$permissions' => [Permission::create(Role::any())],
-                'name' => 'abuse',
-                'attributes' => $attributes,
-                'indexes' => $indexes,
-                'documentSecurity' => true
-            ]));
-        }
+                $attributes = \array_map(fn ($attribute) => new Document($attribute), TimeLimit::ATTRIBUTES);
+                $indexes = \array_map(fn (array $index) => new Document($index), TimeLimit::INDEXES);
+                $dbForProject->createDocument(Database::METADATA, new Document([
+                    '$id' => ID::custom('abuse'),
+                    '$permissions' => [Permission::create(Role::any())],
+                    'name' => 'abuse',
+                    'attributes' => $attributes,
+                    'indexes' => $indexes,
+                    'documentSecurity' => true
+                ]));
+            }
 
-        if ($create || $sharedTablesV1) {
-            /** @var array $collections */
-            $collections = Config::getParam('collections', [])['projects'] ?? [];
+            if ($create || $sharedTablesV1) {
+                /** @var array $collections */
+                $collections = Config::getParam('collections', [])['projects'] ?? [];
 
-            foreach ($collections as $key => $collection) {
-                if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                    continue;
-                }
+                foreach ($collections as $key => $collection) {
+                    if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                        continue;
+                    }
 
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+                    $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
+                    $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
 
-                try {
-                    $dbForProject->createCollection($key, $attributes, $indexes);
-                } catch (Duplicate) {
-                    $dbForProject->createDocument(Database::METADATA, new Document([
-                        '$id' => ID::custom($key),
-                        '$permissions' => [Permission::create(Role::any())],
-                        'name' => $key,
-                        'attributes' => $attributes,
-                        'indexes' => $indexes,
-                        'documentSecurity' => true
-                    ]));
+                    try {
+                        $dbForProject->createCollection($key, $attributes, $indexes);
+                    } catch (Duplicate) {
+                        $dbForProject->createDocument(Database::METADATA, new Document([
+                            '$id' => ID::custom($key),
+                            '$permissions' => [Permission::create(Role::any())],
+                            'name' => $key,
+                            'attributes' => $attributes,
+                            'indexes' => $indexes,
+                            'documentSecurity' => true
+                        ]));
+                    }
                 }
             }
         }
