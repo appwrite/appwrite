@@ -20,7 +20,6 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -399,19 +398,29 @@ function updateAttribute(
     }
 
     if (!empty($newKey) && $key !== $newKey) {
-        // Delete attribute and recreate since we can't modify IDs
-        $original = clone $attribute;
-
-        $dbForProject->deleteDocument('attributes', $attribute->getId());
+        $originalUid = $attribute->getId();
 
         $attribute
             ->setAttribute('$id', ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $newKey))
             ->setAttribute('key', $newKey);
 
-        try {
-            $attribute = $dbForProject->createDocument('attributes', $attribute);
-        } catch (DatabaseException|PDOException) {
-            $attribute = $dbForProject->createDocument('attributes', $original);
+        $dbForProject->updateDocument('attributes', $originalUid, $attribute);
+
+        /**
+         * @var Document $index
+         */
+        foreach ($collection->getAttribute('indexes') as $index) {
+            /**
+             * @var string[] $attributes
+             */
+            $attributes = $index->getAttribute('attributes', []);
+            $found = \array_search($key, $attributes);
+
+            if ($found !== false) {
+                $attributes[$found] = $newKey;
+                $index->setAttribute('attributes', $attributes);
+                $dbForProject->updateDocument('indexes', $index->getId(), $index);
+            }
         }
     } else {
         $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
@@ -2589,7 +2598,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
             $attributeStatus = $oldAttributes[$attributeIndex]['status'];
             $attributeType = $oldAttributes[$attributeIndex]['type'];
-            $attributeSize = $oldAttributes[$attributeIndex]['size'];
             $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
             if ($attributeType === Database::VAR_RELATIONSHIP) {
@@ -2602,10 +2610,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             }
 
             $lengths[$i] = null;
-
-            if ($attributeType === Database::VAR_STRING) {
-                $lengths[$i] = $attributeSize; // set attribute size as index length only for strings
-            }
 
             if ($attributeArray === true) {
                 $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
