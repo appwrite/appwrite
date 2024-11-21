@@ -27,7 +27,8 @@ return [
             getFramework('SVELTEKIT', [
                 'serveRuntime' => 'static-1',
                 'installCommand' => 'npm install --force',
-                'providerRootDirectory' => './'
+                'providerRootDirectory' => './',
+                'fallbackFile' => null
             ])
         ],
         'vcsProvider' => 'github',

@@ -58,6 +58,12 @@ class TemplateFramework extends Model
                 'default' => '',
                 'example' => 'node-22',
             ])
+            ->addRule('fallbackFile', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Fallback file for SPA. Only relevant for static serve runtime.',
+                'default' => null,
+                'example' => 'index.html',
+            ])
         ;
     }
 

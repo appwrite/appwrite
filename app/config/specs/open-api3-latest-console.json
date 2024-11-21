@@ -37652,6 +37652,11 @@
                         "type": "string",
                         "description": "Runtime used during build step of template.",
                         "x-example": "node-22"
+                    },
+                    "fallbackFile": {
+                        "type": "string",
+                        "description": "Fallback file for SPA. Only relevant for static serve runtime.",
+                        "x-example": "index.html"
                     }
                 },
                 "required": [
@@ -37662,7 +37667,8 @@
                     "outputDirectory",
                     "providerRootDirectory",
                     "serveRuntime",
-                    "buildRuntime"
+                    "buildRuntime",
+                    "fallbackFile"
                 ]
             },
             "function": {
