@@ -686,7 +686,7 @@ return [
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
         'name' => Exception::ATTRIBUTE_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of attributes has been reached.',
+        'description' => 'The maximum number or size of attributes for this collection has been reached.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_VALUE_INVALID => [

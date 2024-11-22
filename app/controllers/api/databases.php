@@ -20,7 +20,6 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -153,7 +152,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     } catch (DuplicateException) {
         throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
     } catch (LimitException) {
-        throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
+        throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
     } catch (\Throwable $e) {
         $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
         $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
@@ -197,7 +196,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
         } catch (LimitException) {
             $dbForProject->deleteDocument('attributes', $attribute->getId());
-            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
+            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
         } catch (\Throwable $e) {
             $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
             $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
@@ -393,23 +392,35 @@ function updateAttribute(
             throw new Exception(Exception::ATTRIBUTE_INVALID_RESIZE);
         } catch (NotFoundException) {
             throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+        } catch (LimitException) {
+            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
         }
     }
 
     if (!empty($newKey) && $key !== $newKey) {
-        // Delete attribute and recreate since we can't modify IDs
-        $original = clone $attribute;
-
-        $dbForProject->deleteDocument('attributes', $attribute->getId());
+        $originalUid = $attribute->getId();
 
         $attribute
             ->setAttribute('$id', ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $newKey))
             ->setAttribute('key', $newKey);
 
-        try {
-            $attribute = $dbForProject->createDocument('attributes', $attribute);
-        } catch (DatabaseException|PDOException) {
-            $attribute = $dbForProject->createDocument('attributes', $original);
+        $dbForProject->updateDocument('attributes', $originalUid, $attribute);
+
+        /**
+         * @var Document $index
+         */
+        foreach ($collection->getAttribute('indexes') as $index) {
+            /**
+             * @var string[] $attributes
+             */
+            $attributes = $index->getAttribute('attributes', []);
+            $found = \array_search($key, $attributes);
+
+            if ($found !== false) {
+                $attributes[$found] = $newKey;
+                $index->setAttribute('attributes', $attributes);
+                $dbForProject->updateDocument('indexes', $index->getId(), $index);
+            }
         }
     } else {
         $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
@@ -2587,7 +2598,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
             $attributeStatus = $oldAttributes[$attributeIndex]['status'];
             $attributeType = $oldAttributes[$attributeIndex]['type'];
-            $attributeSize = $oldAttributes[$attributeIndex]['size'];
             $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
             if ($attributeType === Database::VAR_RELATIONSHIP) {
@@ -2600,10 +2610,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             }
 
             $lengths[$i] = null;
-
-            if ($attributeType === Database::VAR_STRING) {
-                $lengths[$i] = $attributeSize; // set attribute size as index length only for strings
-            }
 
             if ($attributeArray === true) {
                 $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
@@ -2627,7 +2633,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
-            $dbForProject->getAdapter()->getMaxIndexLength()
+            $dbForProject->getAdapter()->getMaxIndexLength(),
+            $dbForProject->getAdapter()->getInternalIndexesKeys(),
         );
         if (!$validator->isValid($index)) {
             throw new Exception(Exception::INDEX_INVALID, $validator->getDescription());
