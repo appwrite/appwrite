@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys;
+namespace Appwrite\Platform\Modules\DevKeys\Http\DevKeys;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
@@ -28,7 +28,7 @@ class DeleteKey extends Action
             ->label('scope', 'projects.write')
             ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
             ->label('sdk.namespace', 'projects')
-            ->label('sdk.method', 'deleteDevelopmentKey')
+            ->label('sdk.method', 'deleteDevKey')
             ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
             ->label('sdk.response.model', Response::MODEL_NONE)
             ->param('projectId', '', new UID(), 'Project unique ID.')
@@ -47,7 +47,7 @@ class DeleteKey extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $key = $dbForConsole->findOne('developmentKeys', [
+        $key = $dbForConsole->findOne('devKeys', [
             Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
@@ -56,7 +56,7 @@ class DeleteKey extends Action
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        $dbForConsole->deleteDocument('developmentKeys', $key->getId());
+        $dbForConsole->deleteDocument('devKeys', $key->getId());
 
         $dbForConsole->purgeCachedDocument('projects', $project->getId());
 

@@ -19,10 +19,10 @@ class ProjectsConsoleClientTest extends Scope
     use ProjectsBase;
     use ProjectConsole;
     use SideClient;
-    use ProjectsDevelopmentKeys;
+    use ProjectsDevKeys;
 
     /**
-     * @group developmentKeys
+     * @group devKeys
      * @group smtpAndTemplates
      * @group projectsCRUD */
     public function testCreateProject(): array

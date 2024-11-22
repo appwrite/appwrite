@@ -1,45 +1,47 @@
 <?php
 
-namespace Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys;
+namespace Appwrite\Platform\Modules\DevKeys\Http\DevKeys;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Text;
 
-class GetKey extends Action
+class UpdateKey extends Action
 {
     use HTTP;
     public static function getName()
     {
-        return 'getKey';
+        return 'updateKey';
     }
 
     public function __construct()
     {
-        $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
+        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/projects/:projectId/development-keys/:keyId')
-            ->desc('Get key')
+            ->desc('Update key')
             ->groups(['api', 'projects'])
-            ->label('scope', 'projects.read')
+            ->label('scope', 'projects.write')
             ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
             ->label('sdk.namespace', 'projects')
-            ->label('sdk.method', 'getDevelopmentKey')
+            ->label('sdk.method', 'updateDevKey')
             ->label('sdk.response.code', Response::STATUS_CODE_OK)
             ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
             ->label('sdk.response.model', Response::MODEL_KEY)
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('keyId', '', new UID(), 'Key unique ID.')
+            ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
+            ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.', true)
             ->inject('response')
             ->inject('dbForConsole')
-            ->callback(fn ($projectId, $keyId, $response, $dbForConsole) => $this->action($projectId, $keyId, $response, $dbForConsole));
+            ->callback(fn ($projectId, $keyId, $name, $expire, $response, $dbForConsole) => $this->action($projectId, $keyId, $name, $expire, $response, $dbForConsole));
     }
-
-    public function action(string $projectId, string $keyId, Response $response, Database $dbForConsole)
+    public function action(string $projectId, string $keyId, string $name, ?string $expire, Response $response, Database $dbForConsole)
     {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
@@ -48,7 +50,7 @@ class GetKey extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $key = $dbForConsole->findOne('developmentKeys', [
+        $key = $dbForConsole->findOne('devKeys', [
             Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
@@ -56,6 +58,14 @@ class GetKey extends Action
         if ($key === false || $key->isEmpty()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
+
+        $key
+            ->setAttribute('name', $name)
+            ->setAttribute('expire', $expire ?? $key->getAttribute('expire'));
+
+        $dbForConsole->updateDocument('devKeys', $key->getId(), $key);
+
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($key, Response::MODEL_KEY);
     }

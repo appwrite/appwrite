@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys;
+namespace Appwrite\Platform\Modules\DevKeys\Http\DevKeys;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
@@ -48,7 +48,7 @@ class ListKeys extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $keys = $dbForConsole->find('developmentKeys', [
+        $keys = $dbForConsole->find('devKeys', [
             Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::limit(5000),
         ]);

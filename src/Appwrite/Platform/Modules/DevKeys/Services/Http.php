@@ -1,12 +1,12 @@
 <?php
 
-namespace Appwrite\Platform\Modules\DevelopmentKeys\Services;
+namespace Appwrite\Platform\Modules\DevKeys\Services;
 
-use Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys\CreateKey;
-use Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys\DeleteKey;
-use Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys\GetKey;
-use Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys\ListKeys;
-use Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys\UpdateKey;
+use Appwrite\Platform\Modules\DevKeys\Http\DevKeys\CreateKey;
+use Appwrite\Platform\Modules\DevKeys\Http\DevKeys\DeleteKey;
+use Appwrite\Platform\Modules\DevKeys\Http\DevKeys\GetKey;
+use Appwrite\Platform\Modules\DevKeys\Http\DevKeys\ListKeys;
+use Appwrite\Platform\Modules\DevKeys\Http\DevKeys\UpdateKey;
 use Utopia\Platform\Service;
 
 class Http extends Service

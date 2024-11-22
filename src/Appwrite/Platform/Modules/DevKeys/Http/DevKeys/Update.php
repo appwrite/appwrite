@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\DevelopmentKeys\Http;
+namespace Appwrite\Platform\Modules\DevKeys\Http;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
@@ -29,7 +29,7 @@ class UpdateKey extends Action
             ->label('scope', 'projects.write')
             ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
             ->label('sdk.namespace', 'projects')
-            ->label('sdk.method', 'updateDevelopmentKey')
+            ->label('sdk.method', 'updateDevKey')
             ->label('sdk.response.code', Response::STATUS_CODE_OK)
             ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
             ->label('sdk.response.model', Response::MODEL_KEY)
@@ -50,7 +50,7 @@ class UpdateKey extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $key = $dbForConsole->findOne('developmentKeys', [
+        $key = $dbForConsole->findOne('devKeys', [
             Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
@@ -63,7 +63,7 @@ class UpdateKey extends Action
             ->setAttribute('name', $name)
             ->setAttribute('expire', $expire ?? $key->getAttribute('expire'));
 
-        $dbForConsole->updateDocument('developmentKeys', $key->getId(), $key);
+        $dbForConsole->updateDocument('devKeys', $key->getId(), $key);
 
         $dbForConsole->purgeCachedDocument('projects', $project->getId());
 

@@ -477,13 +477,13 @@ Database::addFilter(
 );
 
 Database::addFilter(
-    'subQueryDevelopmentKeys',
+    'subQueryDevKeys',
     function (mixed $value) {
         return;
     },
     function (mixed $value, Document $document, Database $database) {
         return $database
-            ->find('developmentKeys', [
+            ->find('devKeys', [
                 Query::equal('projectInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
@@ -1814,10 +1814,10 @@ App::setResource('plan', function (array $plan = []) {
     return [];
 });
 
-App::setResource('developmentKey', function ($request, $project, $dbForConsole) {
-    $developmentKey = $request->getHeader('x-appwrite-development-key', '');
+App::setResource('devKey', function ($request, $project, $dbForConsole) {
+    $devKey = $request->getHeader('x-appwrite-development-key', '');
     // Check if given key match project's development keys
-    $key = $project->find('secret', $developmentKey, 'developmentKeys');
+    $key = $project->find('secret', $devKey, 'devKeys');
     if ($key) {
         $expire = $key->getAttribute('expire');
         if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {

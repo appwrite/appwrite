@@ -5,13 +5,13 @@ namespace Tests\E2E\Services\Projects;
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
 
-trait ProjectsDevelopmentKeys
+trait ProjectsDevKeys
 {
     /**
      * @depends testCreateProject
-     * @group developmentKeys
+     * @group devKeys
      */
-    public function testCreateProjectDevelopmentKey($data): array
+    public function testCreateProjectDevKey($data): array
     {
         $id = $data['projectId'] ?? '';
 
@@ -52,10 +52,10 @@ trait ProjectsDevelopmentKeys
 
 
     /**
-     * @depends testCreateProjectDevelopmentKey
-     * @group developmentKeys
+     * @depends testCreateProjectDevKey
+     * @group devKeys
      */
-    public function testListProjectDevelopmentKey($data): array
+    public function testListProjectDevKey($data): array
     {
         $id = $data['projectId'] ?? '';
 
@@ -73,10 +73,10 @@ trait ProjectsDevelopmentKeys
 
 
     /**
-     * @depends testCreateProjectDevelopmentKey
-     * @group developmentKeys
+     * @depends testCreateProjectDevKey
+     * @group devKeys
      */
-    public function testGetProjectDevelopmentKey($data): array
+    public function testGetProjectDevKey($data): array
     {
         $id = $data['projectId'] ?? '';
         $keyId = $data['keyId'] ?? '';
@@ -111,9 +111,9 @@ trait ProjectsDevelopmentKeys
 
     /**
      * @depends testCreateProject
-     * @group developmentKeys
+     * @group devKeys
      */
-    public function testNoRateLimitWithDevelopmentKey($data): void
+    public function testNoRateLimitWithDevKey($data): void
     {
         $id = $data['projectId'] ?? '';
 
@@ -128,7 +128,7 @@ trait ProjectsDevelopmentKeys
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
         ]);
 
-        $developmentKey = $response['body']['secret'];
+        $devKey = $response['body']['secret'];
 
         //
         for ($i = 0; $i < 11; $i++) {
@@ -152,7 +152,7 @@ trait ProjectsDevelopmentKeys
         $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
-            'x-appwrite-development-key' => $developmentKey
+            'x-appwrite-development-key' => $devKey
         ], [
             'email' => 'user@appwrite.io',
             'password' => 'password'
@@ -184,10 +184,10 @@ trait ProjectsDevelopmentKeys
 
 
     /**
-     * @depends testCreateProjectDevelopmentKey
-     * @group developmentKeys
+     * @depends testCreateProjectDevKey
+     * @group devKeys
      */
-    public function testUpdateProjectDevelopmentKey($data): array
+    public function testUpdateProjectDevKey($data): array
     {
         $id = $data['projectId'] ?? '';
         $keyId = $data['keyId'] ?? '';
@@ -227,10 +227,10 @@ trait ProjectsDevelopmentKeys
     }
 
     /**
-     * @depends testCreateProjectDevelopmentKey
-     * @group developmentKeys
+     * @depends testCreateProjectDevKey
+     * @group devKeys
      */
-    public function testDeleteProjectDevelopmentKey($data): array
+    public function testDeleteProjectDevKey($data): array
     {
         $id = $data['projectId'] ?? '';
         $keyId = $data['keyId'] ?? '';

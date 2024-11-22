@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\DevelopmentKeys\Http\DevelopmentKeys;
+namespace Appwrite\Platform\Modules\DevKeys\Http\DevKeys;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
@@ -69,7 +69,7 @@ class CreateKey extends Action
             'secret' => \bin2hex(\random_bytes(128)),
         ]);
 
-        $key = $dbForConsole->createDocument('developmentKeys', $key);
+        $key = $dbForConsole->createDocument('devKeys', $key);
 
         $dbForConsole->purgeCachedDocument('projects', $project->getId());
 

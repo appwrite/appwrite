@@ -4520,7 +4520,7 @@ $consoleCollections = array_merge([
                 'filters' => ['subQueryKeys'],
             ],
             [
-                '$id' => ID::custom('developmentKeys'),
+                '$id' => ID::custom('devKeys'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -4528,7 +4528,7 @@ $consoleCollections = array_merge([
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['subQueryDevelopmentKeys'],
+                'filters' => ['subQueryDevKeys'],
             ],
             [
                 '$id' => ID::custom('search'),
@@ -4932,10 +4932,10 @@ $consoleCollections = array_merge([
         ],
     ],
 
-    'developmentKeys' => [
+    'devKeys' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('developmentKeys'),
-        'name' => 'keys',
+        '$id' => ID::custom('devKeys'),
+        'name' => 'Dev keys',
         'attributes' => [
             [
                 '$id' => ID::custom('projectInternalId'),
