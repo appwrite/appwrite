@@ -71,25 +71,97 @@ function getFramework(string $frameworkEnum, array $overrides)
 
 return [
     [
-        'key' => 'starter',
-        'name' => 'Starter website',
+        'key' => 'nextjs-starter',
+        'name' => 'Next.js Starter website',
         'useCases' => ['starter'],
+        'demoUrl' => 'https://nextjs-starter.sites.qa17.appwrite.org/',
+        'demoImage' => 'https://qa17.appwrite.org/images/sites/nextjs-starter.png',
         'frameworks' => [
             getFramework('NEXTJS', [
                 'providerRootDirectory' => './nextjs/starter',
             ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'nuxt-starter',
+        'name' => 'Nuxt Starter website',
+        'useCases' => ['starter'],
+        'demoUrl' => 'https://nuxt-starter.sites.qa17.appwrite.org/',
+        'demoImage' => 'https://qa17.appwrite.org/images/sites/nuxt-starter.png',
+        'frameworks' => [
             getFramework('NUXT', [
                 'providerRootDirectory' => './nuxt/starter',
             ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'sveltekit-starter',
+        'name' => 'SvelteKit Starter website',
+        'useCases' => ['starter'],
+        'demoUrl' => 'https://sveltekit-starter.sites.qa17.appwrite.org/',
+        'demoImage' => 'https://qa17.appwrite.org/images/sites/sveltekit-starter.png',
+        'frameworks' => [
             getFramework('SVELTEKIT', [
                 'providerRootDirectory' => './sveltekit/starter',
             ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'astro-starter',
+        'name' => 'Astro Starter website',
+        'useCases' => ['starter'],
+        'demoUrl' => 'https://astro-starter.sites.qa17.appwrite.org/',
+        'demoImage' => 'https://qa17.appwrite.org/images/sites/astro-starter.png',
+        'frameworks' => [
             getFramework('ASTRO', [
                 'providerRootDirectory' => './astro/starter',
             ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'remix-starter',
+        'name' => 'Remix Starter website',
+        'useCases' => ['starter'],
+        'demoUrl' => 'https://remix-starter.sites.qa17.appwrite.org/',
+        'demoImage' => 'https://qa17.appwrite.org/images/sites/remix-starter.png',
+        'frameworks' => [
             getFramework('REMIX', [
                 'providerRootDirectory' => './remix/starter',
             ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'angular-starter',
+        'name' => 'Angular Starter website',
+        'useCases' => ['starter'],
+        'demoUrl' => 'https://angular-starter.sites.qa17.appwrite.org/',
+        'demoImage' => 'https://qa17.appwrite.org/images/sites/angular-starter.png',
+        'frameworks' => [
             getFramework('ANGULAR', [
                 'providerRootDirectory' => './angular/starter',
             ]),
