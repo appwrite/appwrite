@@ -25790,6 +25790,10 @@
                                     "enum": [
                                         "sveltekit",
                                         "nextjs",
+                                        "nuxt",
+                                        "angular",
+                                        "astro",
+                                        "remix",
                                         "static"
                                     ],
                                     "x-enum-name": null,
@@ -26474,6 +26478,10 @@
                                     "enum": [
                                         "sveltekit",
                                         "nextjs",
+                                        "nuxt",
+                                        "angular",
+                                        "astro",
+                                        "remix",
                                         "static"
                                     ],
                                     "x-enum-name": null,
@@ -38845,11 +38853,6 @@
                     "description": "Name of the logo image.",
                     "x-example": "sveltekit.png"
                 },
-                "defaultServeRuntime": {
-                    "type": "string",
-                    "description": "Default runtime version.",
-                    "x-example": "static-1"
-                },
                 "serveRuntimes": {
                     "type": "array",
                     "description": "List of supported runtime versions.",
@@ -38858,11 +38861,6 @@
                     },
                     "x-example": "static-1"
                 },
-                "defaultBuildRuntime": {
-                    "type": "string",
-                    "description": "Default runtime version.",
-                    "x-example": "node-22"
-                },
                 "buildRuntimes": {
                     "type": "array",
                     "description": "List of supported runtime versions.",
@@ -38870,16 +38868,44 @@
                         "type": "string"
                     },
                     "x-example": "node-21.0"
+                },
+                "defaultServeRuntime": {
+                    "type": "string",
+                    "description": "Default runtime version.",
+                    "x-example": "static-1"
+                },
+                "defaultBuildRuntime": {
+                    "type": "string",
+                    "description": "Default runtime version.",
+                    "x-example": "node-22"
+                },
+                "defaultInstallCommand": {
+                    "type": "string",
+                    "description": "Default command to download dependencies.",
+                    "x-example": "npm install"
+                },
+                "defaultBuildCommand": {
+                    "type": "string",
+                    "description": "Default command to build site into output directory.",
+                    "x-example": "npm run build"
+                },
+                "defaultOutputDirectory": {
+                    "type": "string",
+                    "description": "Default output directory of build.",
+                    "x-example": ".\/dist"
                 }
             },
             "required": [
                 "key",
                 "name",
                 "logo",
-                "defaultServeRuntime",
                 "serveRuntimes",
+                "buildRuntimes",
+                "defaultServeRuntime",
                 "defaultBuildRuntime",
-                "buildRuntimes"
+                "defaultInstallCommand",
+                "defaultBuildCommand",
+                "defaultOutputDirectory"
             ]
         },
         "deployment": {

@@ -10,18 +10,18 @@ class TemplateFramework extends Model
     public function __construct()
     {
         $this
-        ->addRule('key', [
-            'type' => self::TYPE_STRING,
-            'description' => 'Parent framework key.',
-            'default' => '',
-            'example' => 'sveltekit',
-        ])
-        ->addRule('name', [
-            'type' => self::TYPE_STRING,
-            'description' => 'Framework Name.',
-            'default' => '',
-            'example' => 'SvelteKit'
-        ])
+            ->addRule('key', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Parent framework key.',
+                'default' => '',
+                'example' => 'sveltekit',
+            ])
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Framework Name.',
+                'default' => '',
+                'example' => 'SvelteKit'
+            ])
             ->addRule('installCommand', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The install command used to install the dependencies.',

@@ -24,7 +24,10 @@ return [
             'static-1'
         ],
         'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run build',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './build',
     ],
     'nextjs' => [
         'key' => 'nextjs',
@@ -34,7 +37,10 @@ return [
             'static-1'
         ],
         'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run build',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './out',
     ],
     'nuxt' => [
         'key' => 'nuxt',
@@ -44,7 +50,10 @@ return [
             'static-1'
         ],
         'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run generate',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './dist',
     ],
     'angular' => [
         'key' => 'angular',
@@ -54,7 +63,10 @@ return [
             'static-1'
         ],
         'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run build',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './dist/starter/browser',
     ],
     'astro' => [
         'key' => 'astro',
@@ -64,7 +76,10 @@ return [
             'static-1'
         ],
         'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run build',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './dist',
     ],
     'remix' => [
         'key' => 'remix',
@@ -74,7 +89,10 @@ return [
             'static-1'
         ],
         'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run build',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './build/client',
     ],
     'static' => [
         'key' => 'static',
@@ -84,6 +102,9 @@ return [
             'static-1'
         ],
         'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run build',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './build',
     ]
 ];
