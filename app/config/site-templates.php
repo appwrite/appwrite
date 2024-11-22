@@ -7,8 +7,59 @@ const TEMPLATE_FRAMEWORKS = [
         'installCommand' => 'npm install',
         'buildCommand' => 'npm run build',
         'outputDirectory' => './build',
-        'serveRuntime' => 'node-22',
         'buildRuntime' => 'node-22',
+        'serveRuntime' => 'static-1',
+        'fallbackFile' => null,
+    ],
+    'NEXTJS' => [
+        'key' => 'nextjs',
+        'name' => 'Next.js',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'outputDirectory' => './out',
+        'buildRuntime' => 'node-22',
+        'serveRuntime' => 'static-1',
+        'fallbackFile' => null,
+    ],
+    'NUXT' => [
+        'key' => 'nuxt',
+        'name' => 'Nuxt',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run generate',
+        'outputDirectory' => './dist',
+        'buildRuntime' => 'node-22',
+        'serveRuntime' => 'static-1',
+        'fallbackFile' => null,
+    ],
+    'REMIX' => [
+        'key' => 'remix',
+        'name' => 'Remix',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'outputDirectory' => './build/client',
+        'buildRuntime' => 'node-22',
+        'serveRuntime' => 'static-1',
+        'fallbackFile' => null,
+    ],
+    'ASTRO' => [
+        'key' => 'astro',
+        'name' => 'Astro',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'outputDirectory' => './dist',
+        'buildRuntime' => 'node-22',
+        'serveRuntime' => 'static-1',
+        'fallbackFile' => null,
+    ],
+    'ANGULAR' => [
+        'key' => 'angular',
+        'name' => 'Angular',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'outputDirectory' => './dist/starter/browser',
+        'buildRuntime' => 'node-22',
+        'serveRuntime' => 'static-1',
+        'fallbackFile' => null,
     ],
 ];
 
@@ -24,14 +75,24 @@ return [
         'name' => 'Starter website',
         'useCases' => ['starter'],
         'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/starter',
+            ]),
+            getFramework('NUXT', [
+                'providerRootDirectory' => './nuxt/starter',
+            ]),
             getFramework('SVELTEKIT', [
-                'serveRuntime' => 'static-1',
-                'installCommand' => 'npm install',
-                'buildCommand' => 'npm run build',
                 'providerRootDirectory' => './sveltekit/starter',
-                'outputDirectory' => 'build',
-                'fallbackFile' => null
-            ])
+            ]),
+            getFramework('ASTRO', [
+                'providerRootDirectory' => './astro/starter',
+            ]),
+            getFramework('REMIX', [
+                'providerRootDirectory' => './remix/starter',
+            ]),
+            getFramework('ANGULAR', [
+                'providerRootDirectory' => './angular/starter',
+            ]),
         ],
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
