@@ -21,19 +21,21 @@ function getFramework(string $frameworkEnum, array $overrides)
 return [
     [
         'key' => 'starter',
-        'name' => 'Personal portfolio',
+        'name' => 'Starter website',
         'useCases' => ['starter'],
         'frameworks' => [
             getFramework('SVELTEKIT', [
                 'serveRuntime' => 'static-1',
-                'installCommand' => 'npm install --force',
-                'providerRootDirectory' => './',
+                'installCommand' => 'npm install',
+                'buildCommand' => 'npm run build',
+                'providerRootDirectory' => './sveltekit/starter',
+                'outputDirectory' => 'build',
                 'fallbackFile' => null
             ])
         ],
         'vcsProvider' => 'github',
-        'providerRepositoryId' => 'portfolio-walter-o-brien',
-        'providerOwner' => 'adityaoberai',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
         'providerVersion' => '0.1.*',
         'variables' => [],
     ],
