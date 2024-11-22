@@ -3874,7 +3874,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         // DB Storage Calculation
         $queueForUsage
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
-        
+
         // Trigger all events, we do this manually since we have to trigger multiple.
         foreach ($documents as $document) {
             $document->setAttribute('$databaseId', $database->getId());
