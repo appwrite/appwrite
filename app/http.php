@@ -2,62 +2,64 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Swoole\Process;
-use Swoole\Http\Server;
+use Swoole\Constant;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
+use Swoole\Http\Server;
+use Swoole\Process;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
+use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Audit\Audit;
-use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Swoole\Files;
-use Appwrite\Utopia\Request;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
+use Utopia\Swoole\Files;
+use Utopia\System\System;
 
-$http = new Server("0.0.0.0", App::getEnv('PORT', 80));
+$http = new Server(
+    host: "0.0.0.0",
+    port: System::getEnv('PORT', 80),
+    mode: SWOOLE_PROCESS,
+);
 
-$payloadSize = 6 * (1024 * 1024); // 6MB
-$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+$payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
+$workerNumber = swoole_cpu_num() * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $http
     ->set([
         'worker_num' => $workerNumber,
         'open_http2_protocol' => true,
-        // 'document_root' => __DIR__.'/../public',
-        // 'enable_static_handler' => true,
         'http_compression' => true,
         'http_compression_level' => 6,
         'package_max_length' => $payloadSize,
         'buffer_output_size' => $payloadSize,
     ]);
 
-$http->on('WorkerStart', function ($server, $workerId) {
+$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
     Console::success('Worker ' . ++$workerId . ' started successfully');
 });
 
-$http->on('BeforeReload', function ($server, $workerId) {
+$http->on(Constant::EVENT_BEFORE_RELOAD, function ($server, $workerId) {
     Console::success('Starting reload...');
 });
 
-$http->on('AfterReload', function ($server, $workerId) {
+$http->on(Constant::EVENT_AFTER_RELOAD, function ($server, $workerId) {
     Console::success('Reload completed...');
 });
 
-Files::load(__DIR__ . '/../console');
-
 include __DIR__ . '/controllers/general.php';
 
-$http->on('start', function (Server $http) use ($payloadSize, $register) {
+$http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
     go(function () use ($register, $app) {
@@ -76,7 +78,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 $dbForConsole = $app->getResource('dbForConsole');
                 /** @var Utopia\Database\Database $dbForConsole */
                 break; // leave the do-while if successful
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
                 if ($attempts >= $max) {
                     throw new \Exception('Failed to connect to database: ' . $e->getMessage());
@@ -90,7 +92,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         try {
             Console::success('[Setup] - Creating database: appwrite...');
             $dbForConsole->create();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::success('[Setup] - Skip: metadata table already exists');
         }
 
@@ -147,13 +149,13 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection($key, $attributes, $indexes);
         }
 
-        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists($dbForConsole->getDefaultDatabase(), 'bucket_1')) {
+        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists($dbForConsole->getDatabase(), 'bucket_1')) {
             Console::success('[Setup] - Creating default bucket...');
             $dbForConsole->createDocument('buckets', new Document([
                 '$id' => ID::custom('default'),
                 '$collection' => ID::custom('buckets'),
                 'name' => 'Default',
-                'maximumFileSize' => (int) App::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
+                'maximumFileSize' => (int) System::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
                 'allowedFileExtensions' => [],
                 'enabled' => true,
                 'compression' => 'gzip',
@@ -252,7 +254,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $app->run($request, $response);
     } catch (\Throwable $th) {
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $logger = $app->getResource("logger");
         if ($logger) {
@@ -263,10 +265,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
                 // All good, user is optional information for logger
             }
 
-            $loggerBreadcrumbs = $app->getResource("loggerBreadcrumbs");
             $route = $app->getRoute();
 
-            $log = new Utopia\Logger\Log();
+            $log = $app->getResource("log");
 
             if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
@@ -289,18 +290,13 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $log->addExtra('file', $th->getFile());
             $log->addExtra('line', $th->getLine());
             $log->addExtra('trace', $th->getTraceAsString());
-            $log->addExtra('detailedTrace', $th->getTrace());
             $log->addExtra('roles', Authorization::getRoles());
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
             $log->setAction($action);
 
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            foreach ($loggerBreadcrumbs as $loggerBreadcrumb) {
-                $log->addBreadcrumb($loggerBreadcrumb);
-            }
 
             $responseCode = $logger->addLog($log);
             Console::info('Log pushed with status code: ' . $responseCode);

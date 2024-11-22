@@ -142,6 +142,7 @@ return [
     'pw' => ['name' => 'Palau', 'path' => __DIR__ . '/flags/pw.png'],
     'pg' => ['name' => 'Papua New Guinea', 'path' => __DIR__ . '/flags/pg.png'],
     'pl' => ['name' => 'Poland', 'path' => __DIR__ . '/flags/pl.png'],
+    'pf' => ['name' => 'French Polynesia', 'path' => __DIR__ . '/flags/pf.png'],
     'kp' => ['name' => 'North Korea', 'path' => __DIR__ . '/flags/kp.png'],
     'pt' => ['name' => 'Portugal', 'path' => __DIR__ . '/flags/pt.png'],
     'py' => ['name' => 'Paraguay', 'path' => __DIR__ . '/flags/py.png'],

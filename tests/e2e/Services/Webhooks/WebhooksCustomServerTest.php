@@ -8,7 +8,6 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\CLI\Console;
-use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -502,7 +501,7 @@ class WebhooksCustomServerTest extends Scope
             'activate' => true
         ]);
 
-        $id = $data['functionId'] ?? '';
+        $functionId = $data['functionId'] ?? '';
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         $this->assertEquals($deployment['headers']['status-code'], 202);
@@ -524,7 +523,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
 
-        sleep(5);
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId);
 
         return array_merge($data, ['deploymentId' => $deploymentId]);
     }

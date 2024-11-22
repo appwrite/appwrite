@@ -2,6 +2,7 @@
 
 namespace Tests\E2E;
 
+use Appwrite\Utopia\Fetch\BodyMultipart;
 use Exception;
 
 class Client
@@ -163,16 +164,18 @@ class Client
      * @return array
      * @throws Exception
      */
-    public function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true): array
+    public function call(string $method, string $path = '', array $headers = [], mixed $params = [], bool $decode = true): array
     {
         $headers            = array_merge($this->headers, $headers);
         $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
         $responseHeaders    = [];
+        $cookies = [];
 
         $query = match ($headers['content-type']) {
             'application/json' => json_encode($params),
             'multipart/form-data' => $this->flatten($params),
             'application/graphql' => $params[0],
+            'text/plain' => $params,
             default => http_build_query($params),
         };
 
@@ -189,12 +192,18 @@ class Client
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
         curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders, &$cookies) {
             $len = strlen($header);
             $header = explode(':', $header, 2);
 
             if (count($header) < 2) { // ignore invalid headers
                 return $len;
+            }
+
+            if (strtolower(trim($header[0])) == 'set-cookie') {
+                $parsed = $this->parseCookie((string)trim($header[1]));
+                $name = array_key_first($parsed);
+                $cookies[$name] = $parsed[$name];
             }
 
             $responseHeaders[strtolower(trim($header[0]))] = trim($header[1]);
@@ -216,18 +225,35 @@ class Client
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if ($decode && substr($responseType, 0, strpos($responseType, ';')) == 'application/json') {
-            $json = json_decode($responseBody, true);
+        if ($decode) {
+            $strpos = strpos($responseType, ';');
+            $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
+            switch (substr($responseType, 0, $strpos)) {
+                case 'multipart/form-data':
+                    $boundary = \explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '';
+                    $multipartResponse = new BodyMultipart($boundary);
+                    $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
 
-            if ($json === null) {
-                throw new Exception('Failed to parse response: ' . $responseBody);
+                    $responseBody = $multipartResponse->getParts();
+                    break;
+                case 'application/json':
+                    if (\is_bool($responseBody)) {
+                        throw new Exception('Response is not a valid JSON.');
+                    }
+
+                    $json = json_decode($responseBody, true);
+
+                    if ($json === null) {
+                        throw new Exception('Failed to parse response: ' . $responseBody);
+                    }
+
+                    $responseBody = $json;
+                    $json = null;
+                    break;
             }
-
-            $responseBody = $json;
-            $json = null;
         }
 
-        if ((curl_errno($ch))) {
+        if ((curl_errno($ch)/* || 200 != $responseStatus*/)) {
             throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
         }
 
@@ -236,11 +262,12 @@ class Client
         $responseHeaders['status-code'] = $responseStatus;
 
         if ($responseStatus === 500) {
-            echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . "\n";
+            echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . '\n';
         }
 
         return [
             'headers' => $responseHeaders,
+            'cookies' => $cookies,
             'body' => $responseBody
         ];
     }

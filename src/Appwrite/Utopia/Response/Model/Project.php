@@ -138,9 +138,22 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('providers', [
-                'type' => Response::MODEL_PROVIDER,
-                'description' => 'List of Providers.',
+            ->addRule('authMockNumbers', [
+                'type' => Response::MODEL_MOCK_NUMBER,
+                'description' => 'An array of mock numbers and their corresponding verification codes (OTPs).',
+                'default' => [],
+                'array' => true,
+                'example' => [new \stdClass()],
+            ])
+            ->addRule('authSessionAlerts', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to send session alert emails to users.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('oAuthProviders', [
+                'type' => Response::MODEL_AUTH_PROVIDER,
+                'description' => 'List of Auth Providers.',
                 'default' => [],
                 'example' => [new \stdClass()],
                 'array' => true,
@@ -321,6 +334,8 @@ class Project extends Model
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
+        $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
+        $document->setAttribute('authSessionAlerts', $authValues['sessionAlerts'] ?? false);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];
@@ -328,9 +343,9 @@ class Project extends Model
             $document->setAttribute('auth' . ucfirst($key), $value);
         }
 
-        // Providers
-        $providers = Config::getParam('providers', []);
-        $providerValues = $document->getAttribute('authProviders', []);
+        // OAuth Providers
+        $providers = Config::getParam('oAuthProviders', []);
+        $providerValues = $document->getAttribute('oAuthProviders', []);
         $projectProviders = [];
 
         foreach ($providers as $key => $provider) {
@@ -348,7 +363,7 @@ class Project extends Model
             ]);
         }
 
-        $document->setAttribute("providers", $projectProviders);
+        $document->setAttribute('oAuthProviders', $projectProviders);
 
         return $document;
     }

@@ -1,0 +1,1 @@
+Delete a message. If the message is not a draft or scheduled, but has been sent, this will not recall the message.

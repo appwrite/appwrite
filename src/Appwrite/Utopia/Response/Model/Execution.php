@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\Role;
 
 class Execution extends Model
@@ -84,7 +85,7 @@ class Execution extends Model
                 'description' => 'HTTP response body. This will return empty unless execution is created as synchronous.',
                 'default' => '',
                 'example' => 'Developers are awesome.',
-                ])
+            ])
             ->addRule('responseHeaders', [
                 'type' => Response::MODEL_HEADERS,
                 'description' => 'HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.',
@@ -109,6 +110,13 @@ class Execution extends Model
                 'description' => 'Function execution duration in seconds.',
                 'default' => 0,
                 'example' => 0.400,
+            ])
+            ->addRule('scheduledAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'The scheduled time for execution. If left empty, execution will be queued immediately.',
+                'required' => false,
+                'default' => DateTime::now(),
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
         ;
     }

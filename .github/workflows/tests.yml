@@ -75,8 +75,32 @@ jobs:
       - name: Run Unit Tests
         run: docker compose exec appwrite test /usr/src/code/tests/unit
 
-  e2e_test:
-    name: E2E Test
+  e2e_general_test:
+    name: E2E General Test
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Load Cache
+        uses: actions/cache@v3
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose up -d
+          sleep 10
+
+      - name: Run General Tests
+        run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/General --debug
+
+  e2e_service_test:
+    name: E2E Service Test
     runs-on: ubuntu-latest
     needs: setup
     strategy:
@@ -99,6 +123,7 @@ jobs:
             Users,
             Webhooks,
             VCS,
+            Messaging,
           ]
 
     steps:
@@ -116,7 +141,88 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
-          sleep 10
+          sleep 25
 
       - name: Run ${{matrix.service}} Tests
         run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.service}} --debug
+
+      - name: Run ${{matrix.service}} Shared Tables Tests
+        run: _APP_DATABASE_SHARED_TABLES=database_db_main docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.service}} --debug
+
+  benchamrking:
+    name: Benchmark
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Load Cache
+        uses: actions/cache@v3
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+      - name: Load and Start Appwrite
+        run: |
+          sed -i 's/traefik/localhost/g' .env 
+          docker load --input /tmp/${{ env.IMAGE }}.tar          
+          docker compose up -d
+          sleep 10
+      - name: Install Oha
+        run: |
+          echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
+          sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg https://azlux.fr/repo.gpg
+          sudo apt update
+          sudo apt install oha
+      - name: Benchmark PR
+        run: oha -z 180s  http://localhost/v1/health/version -j > benchmark.json
+      - name: Cleaning
+        run: docker compose down -v
+      - name: Installing latest version
+        run: |
+          rm docker-compose.yml
+          rm .env
+          curl https://appwrite.io/install/compose -o docker-compose.yml
+          curl https://appwrite.io/install/env -o .env
+          sed -i 's/_APP_OPTIONS_ABUSE=enabled/_APP_OPTIONS_ABUSE=disabled/g' .env
+          docker compose up -d
+          sleep 10
+      - name: Benchmark Latest
+        run: oha -z 180s  http://localhost/v1/health/version -j > benchmark-latest.json
+      - name: Prepare comment
+        run: |
+          echo '## :sparkles: Benchmark results' > benchmark.txt
+          echo ' ' >> benchmark.txt
+          echo "- Requests per second: $(jq -r '.summary.requestsPerSec|tonumber?|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json)" >> benchmark.txt
+          echo "- Requests with 200 status code: $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json)" >> benchmark.txt
+          echo "- P99 latency: $(jq -r '.latencyPercentiles.p99' benchmark.json )" >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo "## :zap:  Benchmark Comparison" >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo "| Metric | This PR | Latest version | "  >> benchmark.txt
+          echo "| --- | --- | --- | "  >> benchmark.txt
+          echo "| RPS | $(jq -r '.summary.requestsPerSec|tonumber?|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.summary.requestsPerSec|tonumber|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
+          echo "| 200 | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
+          echo "| P99 | $(jq -r '.latencyPercentiles.p99' benchmark.json ) | $(jq -r '.latencyPercentiles.p99' benchmark-latest.json ) | "  >> benchmark.txt
+      - name: Save results
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: benchmark.json
+          path: benchmark.json
+          retention-days: 7
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Benchmark results
+      - name: Comment on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: benchmark.txt
+          edit-mode: replace

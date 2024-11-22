@@ -1,4 +1,4 @@
-require 'Appwrite'
+require 'appwrite'
 
 include Appwrite
 

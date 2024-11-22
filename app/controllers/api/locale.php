@@ -1,7 +1,7 @@
 <?php
 
-use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -69,7 +69,7 @@ App::get('/v1/locale')
     });
 
 App::get('/v1/locale/codes')
-    ->desc('List Locale Codes')
+    ->desc('List locale codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])

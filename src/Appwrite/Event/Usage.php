@@ -2,9 +2,9 @@
 
 namespace Appwrite\Event;
 
+use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
-use Utopia\Database\Document;
 
 class Usage extends Event
 {
@@ -58,7 +58,6 @@ class Usage extends Event
     public function trigger(): string|bool
     {
         $client = new Client($this->queue, $this->connection);
-
         return $client->enqueue([
             'project' => $this->getProject(),
             'reduce'  => $this->reduce,
