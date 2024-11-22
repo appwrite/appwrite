@@ -69,7 +69,7 @@ App::post('/v1/proxy/rules')
             $ruleId = md5($domain);
             $document = $dbForConsole->getDocument('rules', $ruleId);
         }
-        
+
 
         if (!$document->isEmpty()) {
             if ($document->getAttribute('projectId') === $project->getId()) {
@@ -112,7 +112,7 @@ App::post('/v1/proxy/rules')
 
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         $ruleId = version_compare(APP_VERSION_STABLE, '1.7.0', '<') ? ID::unique() : md5($domain->get());
-        
+
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
