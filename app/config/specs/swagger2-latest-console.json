@@ -38106,6 +38106,16 @@
                     "description": "Site Template Name.",
                     "x-example": "Starter site"
                 },
+                "demoUrl": {
+                    "type": "string",
+                    "description": "URL hosting a template demo.",
+                    "x-example": "https:\/\/nextjs-starter.appwrite.network\/"
+                },
+                "demoImage": {
+                    "type": "string",
+                    "description": "File URL with preview screenshot.",
+                    "x-example": "https:\/\/cloud.appwrite.io\/images\/sites\/nextjs-starter.png"
+                },
                 "useCases": {
                     "type": "array",
                     "description": "Site use cases.",
@@ -38156,6 +38166,8 @@
             "required": [
                 "key",
                 "name",
+                "demoUrl",
+                "demoImage",
                 "useCases",
                 "frameworks",
                 "vcsProvider",
