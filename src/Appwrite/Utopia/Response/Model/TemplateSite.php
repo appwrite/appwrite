@@ -32,7 +32,7 @@ class TemplateSite extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'File URL with preview screenshot.',
                 'default' => '',
-                'example' => 'https://cloud.appwrite.io/images/sites/templates/nextjs-starter.png',
+                'example' => 'https://cloud.appwrite.io/console/images/sites/templates/nextjs-starter.png',
             ])
             ->addRule('useCases', [
                 'type' => self::TYPE_STRING,
