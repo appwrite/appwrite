@@ -4,6 +4,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
@@ -3705,7 +3706,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.description', '/docs/references/databases/update-documents.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_BULK_OPERATION)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
     ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
@@ -3716,8 +3717,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string|array $data, ?array $permissions, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, string $mode) {
+    ->inject('queueForRealtime')
+    ->inject('project')
+    ->action(function (string $databaseId, string $collectionId, string|array $data, ?array $permissions, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, Realtime $queueForRealtime, Document $project) {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
@@ -3774,7 +3776,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
         $partialDocument = new Document($data);
 
-        $modified = $dbForProject->withRequestTimestamp(
+        $documents = $dbForProject->withRequestTimestamp(
             $requestTimestamp,
             fn () => $dbForProject->updateDocuments(
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
@@ -3789,9 +3791,29 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setContext('collection', $collection)
             ->setContext('database', $database);
 
+        // Trigger all events, we do this manually since we have to trigger multiple.
+        foreach ($documents as $document) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $queueForEvents
+                ->setProject($project)
+                ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].update')
+                ->setParam('documentId', $document->getId())
+                ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
+                ->trigger();
+
+            if ($project->getId() !== 'console') {
+                $queueForRealtime
+                    ->from($queueForEvents)
+                    ->trigger();
+            }
+        }
+
         $response->dynamic(new Document([
-            'modified' => $modified
-        ]), Response::MODEL_BULK_OPERATION);
+            'total' => \count($documents),
+            'documents' => $documents
+        ]), Response::MODEL_DOCUMENT_LIST);
     });
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')

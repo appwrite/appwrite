@@ -1009,7 +1009,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(6, $response['body']['modified']);
+        $this->assertCount(6, $response['body']['documents']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -1139,7 +1139,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['modified']);
+        $this->assertCount(1, $response['body']['documents']);
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection2 . '/documents', array_merge([
             'content-type' => 'application/json',
