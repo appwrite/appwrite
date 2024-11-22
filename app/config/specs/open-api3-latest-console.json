@@ -37560,7 +37560,7 @@
                     "demoImage": {
                         "type": "string",
                         "description": "File URL with preview screenshot.",
-                        "x-example": "https:\/\/cloud.appwrite.io\/images\/sites\/nextjs-starter.png"
+                        "x-example": "https:\/\/cloud.appwrite.io\/images\/sites\/templates\/nextjs-starter.png"
                     },
                     "useCases": {
                         "type": "array",

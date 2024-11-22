@@ -75,7 +75,7 @@ return [
         'name' => 'Next.js Starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://nextjs-starter.sites.qa17.appwrite.org/',
-        'demoImage' => 'https://qa17.appwrite.org/images/sites/nextjs-starter.png',
+        'demoImage' => 'https://qa17.appwrite.org/images/sites/templates/nextjs-starter.png',
         'frameworks' => [
             getFramework('NEXTJS', [
                 'providerRootDirectory' => './nextjs/starter',
@@ -92,7 +92,7 @@ return [
         'name' => 'Nuxt Starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://nuxt-starter.sites.qa17.appwrite.org/',
-        'demoImage' => 'https://qa17.appwrite.org/images/sites/nuxt-starter.png',
+        'demoImage' => 'https://qa17.appwrite.org/images/sites/templates/nuxt-starter.png',
         'frameworks' => [
             getFramework('NUXT', [
                 'providerRootDirectory' => './nuxt/starter',
@@ -109,7 +109,7 @@ return [
         'name' => 'SvelteKit Starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://sveltekit-starter.sites.qa17.appwrite.org/',
-        'demoImage' => 'https://qa17.appwrite.org/images/sites/sveltekit-starter.png',
+        'demoImage' => 'https://qa17.appwrite.org/images/sites/templates/sveltekit-starter.png',
         'frameworks' => [
             getFramework('SVELTEKIT', [
                 'providerRootDirectory' => './sveltekit/starter',
@@ -126,7 +126,7 @@ return [
         'name' => 'Astro Starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://astro-starter.sites.qa17.appwrite.org/',
-        'demoImage' => 'https://qa17.appwrite.org/images/sites/astro-starter.png',
+        'demoImage' => 'https://qa17.appwrite.org/images/sites/templates/astro-starter.png',
         'frameworks' => [
             getFramework('ASTRO', [
                 'providerRootDirectory' => './astro/starter',
@@ -143,7 +143,7 @@ return [
         'name' => 'Remix Starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://remix-starter.sites.qa17.appwrite.org/',
-        'demoImage' => 'https://qa17.appwrite.org/images/sites/remix-starter.png',
+        'demoImage' => 'https://qa17.appwrite.org/images/sites/templates/remix-starter.png',
         'frameworks' => [
             getFramework('REMIX', [
                 'providerRootDirectory' => './remix/starter',
@@ -160,7 +160,7 @@ return [
         'name' => 'Angular Starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://angular-starter.sites.qa17.appwrite.org/',
-        'demoImage' => 'https://qa17.appwrite.org/images/sites/angular-starter.png',
+        'demoImage' => 'https://qa17.appwrite.org/images/sites/templates/angular-starter.png',
         'frameworks' => [
             getFramework('ANGULAR', [
                 'providerRootDirectory' => './angular/starter',
