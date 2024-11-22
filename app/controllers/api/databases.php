@@ -4,6 +4,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
@@ -3814,7 +3815,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.delete')
     ->label('audits.event', 'documents.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
@@ -3825,7 +3825,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.method', 'deleteDocuments')
     ->label('sdk.description', '/docs/references/databases/delete-documents.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_BULK_OPERATION)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
     ->label('sdk.offline.key', '{documentId}')
@@ -3836,8 +3836,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
+    ->inject('queueForRealtime')
     ->inject('queueForUsage')
-    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, Usage $queueForUsage) {
+    ->inject('project')
+    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, Realtime $queueForRealtime, Usage $queueForUsage, Document $project) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -3855,7 +3857,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $queries = Query::parseQueries($queries);
 
-        $modified = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $queries) {
+        $documents = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $queries) {
             return $dbForProject->deleteDocuments(
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                 $queries,
@@ -3869,14 +3871,33 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setContext('collection', $collection)
             ->setContext('database', $database);
 
+        // DB Storage Calculation
         $queueForUsage
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+        
+        // Trigger all events, we do this manually since we have to trigger multiple.
+        foreach ($documents as $document) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $queueForEvents
+                ->setProject($project)
+                ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].delete')
+                ->setParam('documentId', $document->getId())
+                ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
+                ->trigger();
+
+            if ($project->getId() !== 'console') {
+                $queueForRealtime
+                    ->from($queueForEvents)
+                    ->trigger();
+            }
+        }
 
         $response->dynamic(new Document([
-            '$databaseId' => $databaseId,
-            '$collectionId' => $collectionId,
-            'modified' => $modified,
-        ]), Response::MODEL_BULK_OPERATION);
+            "total" => \count($documents),
+            "documents" => $documents,
+        ]), Response::MODEL_DOCUMENT_LIST);
     });
 
 App::get('/v1/databases/usage')
