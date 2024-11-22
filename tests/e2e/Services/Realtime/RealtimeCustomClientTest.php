@@ -865,6 +865,140 @@ class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
+    //TODO: Move all bulk operations into this test
+    public function testChannelDatabaseBulkOperations()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $documentIds = [];
+
+        $client = $this->getWebsocket(['documents', 'collections'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session
+        ]);
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('documents', $response['data']['channels']);
+        $this->assertContains('collections', $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($user['$id'], $response['data']['user']['$id']);
+
+        /**
+         * Database Create
+         */
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Actors DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        /**
+         * Collection Create
+         */
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Actors',
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $actorsId = $actors['body']['$id'];
+
+        $name = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals($name['headers']['status-code'], 202);
+        $this->assertEquals($name['body']['key'], 'name');
+        $this->assertEquals($name['body']['type'], 'string');
+        $this->assertEquals($name['body']['size'], 256);
+        $this->assertEquals($name['body']['required'], true);
+
+        sleep(2);
+
+        /**
+         * Bulk Document Create
+         */
+        $documents = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => array_map(function ($id) use (&$documentIds) {
+                $documentIds[] = $id;
+                return [
+                    '$id' => $id,
+                    'name' => 'Chris Evans',
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                ];
+            }, [ID::unique(), ID::unique(), ID::unique(), ID::unique(), ID::unique()]),
+        ]);
+
+        $createDocumentIds = $documentIds;
+
+        while (!empty($createDocumentIds)) {
+            $response = json_decode($client->receive(), true);
+
+            $this->assertArrayHasKey('type', $response);
+            $this->assertArrayHasKey('data', $response);
+            $this->assertEquals('event', $response['type']);
+            $this->assertNotEmpty($response['data']);
+            $this->assertArrayHasKey('timestamp', $response['data']);
+            $this->assertCount(3, $response['data']['channels']);
+            $this->assertNotEmpty($response['data']['payload']);
+
+            if (!in_array($response['data']['payload']['$id'], $documentIds)) {
+                $this->fail('Document ID not found in the payload');
+            }
+            $documentId = $response['data']['payload']['$id'];
+
+            $this->assertContains('documents', $response['data']['channels']);
+            $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
+            $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
+            $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.create", $response['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*.create", $response['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.*", $response['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}.create", $response['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.*.documents.{$documentId}", $response['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.*.documents.*.create", $response['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.*.documents.*", $response['data']['events']);
+            $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
+            $this->assertContains("databases.{$databaseId}", $response['data']['events']);
+            $this->assertContains("databases.*", $response['data']['events']);
+
+            unset($createDocumentIds[array_search($documentId, $createDocumentIds)]);
+        }
+    }
+
     public function testChannelDatabaseCollectionPermissions()
     {
         $user = $this->getUser();

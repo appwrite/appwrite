@@ -7782,9 +7782,9 @@
                 "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "201": {
-                        "description": "BulkOperation",
+                        "description": "Document",
                         "schema": {
-                            "$ref": "#\/definitions\/bulkOperation"
+                            "$ref": "#\/definitions\/document"
                         }
                     }
                 },
@@ -27593,21 +27593,6 @@
                 "providerType",
                 "identifier",
                 "expired"
-            ]
-        },
-        "bulkOperation": {
-            "description": "BulkOperation",
-            "type": "object",
-            "properties": {
-                "modified": {
-                    "type": "integer",
-                    "description": "Total number of documents affected by the operation.",
-                    "x-example": 64,
-                    "format": "int32"
-                }
-            },
-            "required": [
-                "modified"
             ]
         }
     },

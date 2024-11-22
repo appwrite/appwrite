@@ -4,6 +4,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
@@ -2844,7 +2845,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
     ->desc('Create document')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].create')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'document.create')
@@ -2872,8 +2872,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
+    ->inject('queueForRealtime')
+    ->inject('project')
     ->inject('mode')
-    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, string $mode) {
+    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, Realtime $queueForRealtime, Document $project, string $mode) {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
         $isBulk = true;
 
@@ -3069,49 +3071,68 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setContext('collection', $collection)
             ->setContext('database', $database);
 
+        // Add $collectionId and $databaseId for all documents
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $queueForEvents) {
+            $document->removeAttribute('$collection');
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
+
+                foreach ($related as $relation) {
+                    if ($relation instanceof Document) {
+                        $processDocument($relatedCollection, $relation);
+                    }
+                }
+            }
+        };
+
+        foreach ($documents as $document) {
+            $processDocument($collection, $document);
+
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $queueForEvents
+                ->setProject($project)
+                ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create')
+                ->setParam('documentId', $document->getId())
+                ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
+                ->trigger();
+
+            if ($project->getId() !== 'console') {
+                $queueForRealtime
+                    ->from($queueForEvents)
+                    ->trigger();
+            }
+        }
+
         if ($isBulk) {
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
                 ->dynamic(new Document([
-                    'modified' => count($documents),
-                ]), Response::MODEL_BULK_OPERATION);
+                    'total' => count($documents),
+                    'documents' => $documents,
+                ]), Response::MODEL_DOCUMENT_LIST);
         } else {
-            // Add $collectionId and $databaseId for all documents
-            $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $queueForEvents) {
-                $document->removeAttribute('$collection');
-                $document->setAttribute('$databaseId', $database->getId());
-                $document->setAttribute('$collectionId', $collection->getId());
-
-                $relationships = \array_filter(
-                    $collection->getAttribute('attributes', []),
-                    fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-                );
-
-                foreach ($relationships as $relationship) {
-                    $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                    if (empty($related)) {
-                        continue;
-                    }
-                    if (!\is_array($related)) {
-                        $related = [$related];
-                    }
-
-                    $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                    $relatedCollection = Authorization::skip(
-                        fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
-                    );
-
-                    foreach ($related as $relation) {
-                        if ($relation instanceof Document) {
-                            $processDocument($relatedCollection, $relation);
-                        }
-                    }
-                }
-
-                $queueForEvents
-                    ->setParam('documentId', $document->getId());
-            };
 
             $document = $documents[0];
             $processDocument($collection, $document);
