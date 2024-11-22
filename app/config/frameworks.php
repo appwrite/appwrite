@@ -19,16 +19,60 @@ return [
     'sveltekit' => [
         'key' => 'sveltekit',
         'name' => 'SvelteKit',
-        'defaultServeRuntime' => 'node-22',
-        'serveRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
         'defaultBuildRuntime' => 'node-22',
         'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
     ],
     'nextjs' => [
         'key' => 'nextjs',
         'name' => 'Next.js',
-        'defaultServeRuntime' => 'node-22',
-        'serveRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
+        'defaultBuildRuntime' => 'node-22',
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+    ],
+    'nuxt' => [
+        'key' => 'nuxt',
+        'name' => 'Nuxt',
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
+        'defaultBuildRuntime' => 'node-22',
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+    ],
+    'angular' => [
+        'key' => 'angular',
+        'name' => 'Angular',
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
+        'defaultBuildRuntime' => 'node-22',
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+    ],
+    'astro' => [
+        'key' => 'astro',
+        'name' => 'Astro',
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
+        'defaultBuildRuntime' => 'node-22',
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+    ],
+    'remix' => [
+        'key' => 'remix',
+        'name' => 'Remix',
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
         'defaultBuildRuntime' => 'node-22',
         'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
     ],
