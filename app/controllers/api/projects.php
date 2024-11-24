@@ -208,7 +208,6 @@ App::post('/v1/projects')
         $dbForProject = new Database($adapter, $cache);
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-
         $projectTables = !\in_array($dsn->getHost(), $sharedTables);
         $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
         $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
@@ -234,6 +233,11 @@ App::post('/v1/projects')
             } catch (Duplicate) {
                 $create = false;
             }
+
+            var_dump($create);
+            var_dump($projectTables);
+            var_dump($sharedTablesV2);
+            var_dump($sharedTablesV2);
 
             if ($create || $projectTables) {
                 $audit = new Audit($dbForProject);
