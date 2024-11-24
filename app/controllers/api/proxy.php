@@ -11,6 +11,7 @@ use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
@@ -59,8 +60,16 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
 
-        $ruleId = md5($domain);
-        $document = $dbForConsole->getDocument('rules', $ruleId);
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        if (version_compare(APP_VERSION_STABLE, '1.7.0', '<')) {
+            $document = $dbForConsole->findOne('rules', [
+                Query::equal('domain', [$domain]),
+            ]);
+        } else {
+            $ruleId = md5($domain);
+            $document = $dbForConsole->getDocument('rules', $ruleId);
+        }
+
 
         if (!$document->isEmpty()) {
             if ($document->getAttribute('projectId') === $project->getId()) {
@@ -101,7 +110,9 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
-        $ruleId = md5($domain->get());
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        $ruleId = version_compare(APP_VERSION_STABLE, '1.7.0', '<') ? ID::unique() : md5($domain->get());
+
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
