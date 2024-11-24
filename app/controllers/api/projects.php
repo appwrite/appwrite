@@ -128,14 +128,13 @@ App::post('/v1/projects')
 
         $databases = Config::getParam('pools-database', []);
 
+
         if ($region !== 'default') {
-            $databases = System::getEnv('_APP_DATABASE_KEYS', '');
-            if ($region !== 'default') {
-                $databases = array_filter($databases, function ($value) use ($region) {
-                    return str_contains($value, $region);
-                });
-                var_dump($databases);
-            }
+            $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
+            $keys = explode(',', $databaseKeys);
+            $databases = array_filter($keys, function ($value) use ($region) {
+                        return str_contains($value, $region);
+            });
         }
 
         $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
