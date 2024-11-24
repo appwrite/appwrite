@@ -213,6 +213,10 @@ App::post('/v1/projects')
         $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
         $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
+        var_dump($projectTables);
+        var_dump($sharedTablesV2);
+        var_dump($sharedTablesV2);
+
         if (!$sharedTablesV2) {
             if ($sharedTables) {
                 $dbForProject
@@ -234,10 +238,7 @@ App::post('/v1/projects')
                 $create = false;
             }
 
-            var_dump($create);
-            var_dump($projectTables);
-            var_dump($sharedTablesV2);
-            var_dump($sharedTablesV2);
+
 
             if ($create || $projectTables) {
                 $audit = new Audit($dbForProject);
