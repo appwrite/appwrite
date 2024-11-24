@@ -134,6 +134,7 @@ App::post('/v1/projects')
                 $databases = array_filter($databases, function ($value) use ($region) {
                     return str_contains($value, $region);
                 });
+                var_dump($databases);
             }
         }
 
