@@ -1077,6 +1077,6 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertEquals(3, $response['body']['modified']);
+        $this->assertCount(3, $response['body']['documents']);
     }
 }

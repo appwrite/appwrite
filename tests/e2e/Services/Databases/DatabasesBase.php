@@ -4875,7 +4875,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertEquals(3, $response['body']['modified']);
+        $this->assertCount(3, $response['body']['documents']);
 
         $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
             'content-type' => 'application/json',
@@ -5054,7 +5054,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertEquals(2, $response['body']['modified']);
+        $this->assertCount(2, $response['body']['documents']);
 
         $response = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collection1}/documents", array_merge([
             'content-type' => 'application/json',
