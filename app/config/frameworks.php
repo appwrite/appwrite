@@ -104,7 +104,7 @@ return [
             'static-1'
         ],
         'defaultBuildRuntime' => 'flutter-3.24',
-        'buildRuntimes' => getVersions($templateRuntimes['FLUTTER']['versions'], 'node'),
+        'buildRuntimes' => getVersions($templateRuntimes['FLUTTER']['versions'], 'flutter'),
         'defaultBuildCommand' => 'flutter build web',
         'defaultInstallCommand' => '',
         'defaultOutputDirectory' => './build/web',
