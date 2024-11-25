@@ -3895,8 +3895,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $response->dynamic(new Document([
-            "total" => \count($documents),
-            "documents" => $documents,
+            'total' => \count($documents),
+            'documents' => $documents,
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 
