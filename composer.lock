@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "71370f3036cd4e3d2e19783319850e0c",
+    "content-hash": "ae8931fbd64214cd6f1a8688b37f696d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3475,16 +3475,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.53.22",
+            "version": "0.53.24",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "1f7cbd456f09f66049ede1cab0815775eb946dbf"
+                "reference": "19231e6aeebb17cc6a8590dfbcd73dca2c5c9219"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/1f7cbd456f09f66049ede1cab0815775eb946dbf",
-                "reference": "1f7cbd456f09f66049ede1cab0815775eb946dbf",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/19231e6aeebb17cc6a8590dfbcd73dca2c5c9219",
+                "reference": "19231e6aeebb17cc6a8590dfbcd73dca2c5c9219",
                 "shasum": ""
             },
             "require": {
@@ -3525,9 +3525,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.53.22"
+                "source": "https://github.com/utopia-php/database/tree/0.53.24"
             },
-            "time": "2024-11-18T03:58:10+00:00"
+            "time": "2024-11-25T04:27:54+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3677,16 +3677,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.13",
+            "version": "0.33.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "4ecab88e424a136ffaa27cdf3db3c60f76c777e4"
+                "reference": "45a5a2db3602fa054096f378482c7da9936f5850"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/4ecab88e424a136ffaa27cdf3db3c60f76c777e4",
-                "reference": "4ecab88e424a136ffaa27cdf3db3c60f76c777e4",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/45a5a2db3602fa054096f378482c7da9936f5850",
+                "reference": "45a5a2db3602fa054096f378482c7da9936f5850",
                 "shasum": ""
             },
             "require": {
@@ -3718,9 +3718,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.13"
+                "source": "https://github.com/utopia-php/http/tree/0.33.14"
             },
-            "time": "2024-11-15T08:37:31+00:00"
+            "time": "2024-11-20T12:39:10+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5127,16 +5127,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.18.1",
+            "version": "v1.18.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "35c00c05ec43e6b46d295efc0f4386ceb30d50d9"
+                "reference": "f55daaf7eb6c2f49ddf6702fb42e3091c64d8a64"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/35c00c05ec43e6b46d295efc0f4386ceb30d50d9",
-                "reference": "35c00c05ec43e6b46d295efc0f4386ceb30d50d9",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/f55daaf7eb6c2f49ddf6702fb42e3091c64d8a64",
+                "reference": "f55daaf7eb6c2f49ddf6702fb42e3091c64d8a64",
                 "shasum": ""
             },
             "require": {
@@ -5189,7 +5189,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2024-09-24T17:22:50+00:00"
+            "time": "2024-11-20T09:33:46+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -5930,26 +5930,27 @@
         },
         {
             "name": "phpspec/prophecy",
-            "version": "v1.19.0",
+            "version": "v1.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpspec/prophecy.git",
-                "reference": "67a759e7d8746d501c41536ba40cd9c0a07d6a87"
+                "reference": "a0165c648cab6a80311c74ffc708a07bb53ecc93"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/67a759e7d8746d501c41536ba40cd9c0a07d6a87",
-                "reference": "67a759e7d8746d501c41536ba40cd9c0a07d6a87",
+                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/a0165c648cab6a80311c74ffc708a07bb53ecc93",
+                "reference": "a0165c648cab6a80311c74ffc708a07bb53ecc93",
                 "shasum": ""
             },
             "require": {
                 "doctrine/instantiator": "^1.2 || ^2.0",
-                "php": "^7.2 || 8.0.* || 8.1.* || 8.2.* || 8.3.*",
+                "php": "^7.2 || 8.0.* || 8.1.* || 8.2.* || 8.3.* || 8.4.*",
                 "phpdocumentor/reflection-docblock": "^5.2",
                 "sebastian/comparator": "^3.0 || ^4.0 || ^5.0 || ^6.0",
                 "sebastian/recursion-context": "^3.0 || ^4.0 || ^5.0 || ^6.0"
             },
             "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.40",
                 "phpspec/phpspec": "^6.0 || ^7.0",
                 "phpstan/phpstan": "^1.9",
                 "phpunit/phpunit": "^8.0 || ^9.0 || ^10.0"
@@ -5993,9 +5994,9 @@
             ],
             "support": {
                 "issues": "https://github.com/phpspec/prophecy/issues",
-                "source": "https://github.com/phpspec/prophecy/tree/v1.19.0"
+                "source": "https://github.com/phpspec/prophecy/tree/v1.20.0"
             },
-            "time": "2024-02-29T11:52:51+00:00"
+            "time": "2024-11-19T13:12:41+00:00"
         },
         {
             "name": "phpstan/phpdoc-parser",
