@@ -3122,6 +3122,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
+        // We don't want to double trigger events
+        $queueForEvents->setEvent('');
+
         if ($isBulk) {
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
