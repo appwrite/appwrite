@@ -54,6 +54,7 @@ $http
         'http_compression' => false,
         'package_max_length' => $payloadSize,
         'buffer_output_size' => $payloadSize,
+        'task_worker_num' => 1, // required for the task to fetch domains background
     ]);
 
 $http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
