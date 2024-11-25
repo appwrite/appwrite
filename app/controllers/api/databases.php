@@ -3876,9 +3876,54 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
         // Trigger all events, we do this manually since we have to trigger multiple.
-        foreach ($documents as $document) {
+        $processDocument  = (function (Document $collection, Document &$document) use (&$processDocument, $dbForProject, $database): bool {
+            if ($document->isEmpty()) {
+                return false;
+            }
+
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $relations = [$related];
+                } else {
+                    $relations = $related;
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
+
+                foreach ($relations as $index => $doc) {
+                    if ($doc instanceof Document) {
+                        if (!$processDocument($relatedCollection, $doc)) {
+                            unset($relations[$index]);
+                        }
+                    }
+                }
+
+                if (\is_array($related)) {
+                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+                } elseif (empty($relations)) {
+                    $document->setAttribute($relationship->getAttribute('key'), null);
+                }
+            }
+
+            return true;
+        });
+
+        foreach ($documents as $document) {
+            $processDocument($collection, $document);
 
             $queueForEvents
                 ->setProject($project)
@@ -3893,6 +3938,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
                     ->trigger();
             }
         }
+
+        $queueForEvents->setEvent('');
+        $queueForRealtime->setEvent('');
 
         $response->dynamic(new Document([
             'total' => \count($documents),
