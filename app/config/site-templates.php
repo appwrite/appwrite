@@ -167,6 +167,7 @@ return [
         'providerVersion' => '0.1.*',
         'variables' => [],
     ],
+    /*
     [
         'key' => 'angular-starter',
         'name' => 'Angular Starter website',
@@ -184,6 +185,7 @@ return [
         'providerVersion' => '0.1.*',
         'variables' => [],
     ],
+    */
     [
         'key' => 'flutter-starter',
         'name' => 'Flutter Starter website',

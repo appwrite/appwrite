@@ -55,6 +55,7 @@ return [
         'defaultInstallCommand' => 'npm install',
         'defaultOutputDirectory' => './dist',
     ],
+    /*
     'angular' => [
         'key' => 'angular',
         'name' => 'Angular',
@@ -68,6 +69,7 @@ return [
         'defaultInstallCommand' => 'npm install',
         'defaultOutputDirectory' => './dist/starter/browser',
     ],
+    */
     'astro' => [
         'key' => 'astro',
         'name' => 'Astro',
