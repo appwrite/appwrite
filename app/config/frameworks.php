@@ -94,6 +94,19 @@ return [
         'defaultInstallCommand' => 'npm install',
         'defaultOutputDirectory' => './build/client',
     ],
+    'flutter' => [
+        'key' => 'flutter',
+        'name' => 'Flutter',
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
+        'defaultBuildRuntime' => 'flutter-3.24',
+        'buildRuntimes' => getVersions($templateRuntimes['FLUTTER']['versions'], 'node'),
+        'defaultBuildCommand' => 'flutter build web',
+        'defaultInstallCommand' => '',
+        'defaultOutputDirectory' => './build/web',
+    ],
     'static' => [
         'key' => 'static',
         'name' => 'Static',

@@ -867,13 +867,26 @@ class Builds extends Action
 
     protected function getCommand(Document $resource, Document $deployment): string
     {
-        return match($resource->getCollection()) {
-            'functions' => $deployment->getAttribute('commands', ''),
-            'sites' => implode(' && ', array_filter([
-                $deployment->getAttribute('installCommand'),
-                $deployment->getAttribute('buildCommand')
-            ]))
-        };
+        if($resource->getCollection() === 'functions') {
+            return $deployment->getAttribute('commands', '');
+        } else if($resource->getCollection() === 'sites') {
+            $command = '';
+
+            $installCommand = $deployment->getAttribute('installCommand', '');
+            $buildCommand = $deployment->getAttribute('buildCommand', '');
+
+            $command .= $installCommand;
+
+            if(!empty($installCommand) && !empty($buildCommand)) {
+                $command .= ' && ';
+            }
+
+            $command .= $buildCommand;
+
+            return $command;
+        }
+
+        return '';
     }
 
     /**

@@ -51,6 +51,7 @@ const TEMPLATE_FRAMEWORKS = [
         'serveRuntime' => 'static-1',
         'fallbackFile' => null,
     ],
+    /*
     'ANGULAR' => [
         'key' => 'angular',
         'name' => 'Angular',
@@ -58,6 +59,17 @@ const TEMPLATE_FRAMEWORKS = [
         'buildCommand' => 'npm run build',
         'outputDirectory' => './dist/starter/browser',
         'buildRuntime' => 'node-22',
+        'serveRuntime' => 'static-1',
+        'fallbackFile' => null,
+    ],
+    */
+    'FLUTTER' => [
+        'key' => 'flutter',
+        'name' => 'Flutter',
+        'installCommand' => '',
+        'buildCommand' => 'flutter build web',
+        'outputDirectory' => './build/web',
+        'buildRuntime' => 'flutter-3.24',
         'serveRuntime' => 'static-1',
         'fallbackFile' => null,
     ],
@@ -164,6 +176,23 @@ return [
         'frameworks' => [
             getFramework('ANGULAR', [
                 'providerRootDirectory' => './angular/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'flutter-starter',
+        'name' => 'Flutter Starter website',
+        'useCases' => ['starter'],
+        'demoUrl' => 'https://flutter-starter.sites.qa17.appwrite.org/',
+        'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/flutter-starter.png',
+        'frameworks' => [
+            getFramework('FLUTTER', [
+                'providerRootDirectory' => './flutter/starter',
             ]),
         ],
         'vcsProvider' => 'github',
