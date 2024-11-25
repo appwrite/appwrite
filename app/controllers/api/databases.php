@@ -3072,7 +3072,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setContext('database', $database);
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $queueForEvents) {
+        $processDocument = function (Document $collection, Document &$document) use (&$processDocument, $dbForProject, $database, $queueForEvents) {
             $document->removeAttribute('$collection');
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
@@ -3108,9 +3108,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         foreach ($documents as $document) {
             $processDocument($collection, $document);
 
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
-
             $queueForEvents
                 ->setProject($project)
                 ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create')
@@ -3133,13 +3130,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     'documents' => $documents,
                 ]), Response::MODEL_DOCUMENT_LIST);
         } else {
-
-            $document = $documents[0];
-            $processDocument($collection, $document);
-
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->dynamic($document, Response::MODEL_DOCUMENT);
+                ->dynamic($documents[0], Response::MODEL_DOCUMENT);
         }
 
         $queueForUsage
@@ -3223,7 +3216,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 return false;
             }
 
-            $document->removeAttribute('$collection');
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
