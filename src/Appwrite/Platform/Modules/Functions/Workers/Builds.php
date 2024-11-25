@@ -867,9 +867,9 @@ class Builds extends Action
 
     protected function getCommand(Document $resource, Document $deployment): string
     {
-        if($resource->getCollection() === 'functions') {
+        if ($resource->getCollection() === 'functions') {
             return $deployment->getAttribute('commands', '');
-        } else if($resource->getCollection() === 'sites') {
+        } elseif ($resource->getCollection() === 'sites') {
             $command = '';
 
             $installCommand = $deployment->getAttribute('installCommand', '');
@@ -877,7 +877,7 @@ class Builds extends Action
 
             $command .= $installCommand;
 
-            if(!empty($installCommand) && !empty($buildCommand)) {
+            if (!empty($installCommand) && !empty($buildCommand)) {
                 $command .= ' && ';
             }
 
