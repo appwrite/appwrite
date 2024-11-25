@@ -211,6 +211,7 @@ App::post('/v1/projects')
         $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
         $sharedTables = $sharedTablesV1 || $sharedTablesV2;
         var_dump($dsn->getHost());
+        var_dump($sharedTables);
         var_dump($projectTables);
         var_dump($sharedTablesV1);
         var_dump($sharedTablesV2);
