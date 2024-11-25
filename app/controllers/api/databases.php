@@ -3124,6 +3124,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         // We don't want to double trigger events
         $queueForEvents->setEvent('');
+        $queueForRealtime->setEvent('');
 
         if ($isBulk) {
             $response
