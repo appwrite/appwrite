@@ -91,10 +91,6 @@ $eventDatabaseListener = function (Document $document, Response $response, Event
 $usageDatabaseListener = function (string $event, Document $document, Usage $queueForUsage) {
     $value = 1;
 
-    if ($event === Database::EVENT_DOCUMENTS_DELETE) {
-        $value = -1 * count($document->getAttribute('$ids', []));
-    }
-
     if ($event === Database::EVENT_DOCUMENT_DELETE) {
         $value = -1;
     }
@@ -502,7 +498,6 @@ App::init()
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
-            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForUsage))
             ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
                 $document,
                 $response,
