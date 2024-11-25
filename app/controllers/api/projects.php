@@ -210,7 +210,10 @@ App::post('/v1/projects')
         $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
         $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
         $sharedTables = $sharedTablesV1 || $sharedTablesV2;
-
+        var_dump($dsn->getHost());
+        var_dump($projectTables);
+        var_dump($sharedTablesV1);
+        var_dump($sharedTablesV2);
         if (!$sharedTablesV2) {
             $adapter = $pools->get($dsn->getHost())->pop()->getResource();
             $dbForProject = new Database($adapter, $cache);
