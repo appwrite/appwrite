@@ -1334,6 +1334,10 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
 
     $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
+    if($project->getAttribute('region') !== System::getEnv('_APP_REGION')){
+        throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
+    }
+
     return $project;
 }, ['dbForConsole', 'request', 'console']);
 
@@ -1397,6 +1401,7 @@ App::setResource('console', function () {
             'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
             'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
         ],
+        'region' =>  System::getEnv('_APP_REGION', 'default')
     ]);
 }, []);
 

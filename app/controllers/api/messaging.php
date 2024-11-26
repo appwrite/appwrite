@@ -2743,7 +2743,7 @@ App::post('/v1/messaging/messages/email')
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
-                    'region' => System::getEnv('_APP_REGION', 'default'),
+                    'region' => $project->getAttribute('region'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
@@ -2860,7 +2860,7 @@ App::post('/v1/messaging/messages/sms')
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
-                    'region' => System::getEnv('_APP_REGION', 'default'),
+                    'region' => $project->getAttribute('region'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
@@ -3757,7 +3757,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForConsole->createDocument('schedules', new Document([
-                'region' => System::getEnv('_APP_REGION', 'default'),
+                'region' => $project->getAttribute('region'),
                 'resourceType' => 'message',
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getInternalId(),
