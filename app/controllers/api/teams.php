@@ -1092,6 +1092,18 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             'ip' => $request->getIP(),
             'factors' => ['email'],
             'countryCode' => \strtolower($geoRecord['countryCode']),
+            'continentCode' => strtolower($geoRecord['continentCode']),
+            'latitude' => $geoRecord['latitude'],
+            'longitude' => $geoRecord['longitude'],
+            'timeZone' => $geoRecord['timeZone'],
+            'weatherCode' => $geoRecord['weatherCode'],
+            'postalCode' => $geoRecord['postalCode'],
+            'isp' => $geoRecord['isp'],
+            'autonomousSystemNumber' => $geoRecord['autonomousSystemNumber'],
+            'autonomousSystemOrganization' => $geoRecord['autonomousSystemOrganization'],
+            'connectionType' => $geoRecord['connectionType'],
+            'userType' => $geoRecord['userType'],
+            'organization' => $geoRecord['organization'],
             'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
