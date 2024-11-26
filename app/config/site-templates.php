@@ -84,7 +84,7 @@ function getFramework(string $frameworkEnum, array $overrides)
 return [
     [
         'key' => 'nextjs-starter',
-        'name' => 'Next.js Starter website',
+        'name' => 'Next.js starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://nextjs-starter.sites.qa17.appwrite.org/',
         'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/nextjs-starter.png',
@@ -101,7 +101,7 @@ return [
     ],
     [
         'key' => 'nuxt-starter',
-        'name' => 'Nuxt Starter website',
+        'name' => 'Nuxt starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://nuxt-starter.sites.qa17.appwrite.org/',
         'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/nuxt-starter.png',
@@ -118,7 +118,7 @@ return [
     ],
     [
         'key' => 'sveltekit-starter',
-        'name' => 'SvelteKit Starter website',
+        'name' => 'SvelteKit starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://sveltekit-starter.sites.qa17.appwrite.org/',
         'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/sveltekit-starter.png',
@@ -135,7 +135,7 @@ return [
     ],
     [
         'key' => 'astro-starter',
-        'name' => 'Astro Starter website',
+        'name' => 'Astro starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://astro-starter.sites.qa17.appwrite.org/',
         'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/astro-starter.png',
@@ -152,7 +152,7 @@ return [
     ],
     [
         'key' => 'remix-starter',
-        'name' => 'Remix Starter website',
+        'name' => 'Remix starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://remix-starter.sites.qa17.appwrite.org/',
         'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/remix-starter.png',
@@ -170,7 +170,7 @@ return [
     /*
     [
         'key' => 'angular-starter',
-        'name' => 'Angular Starter website',
+        'name' => 'Angular starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://angular-starter.sites.qa17.appwrite.org/',
         'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/angular-starter.png',
@@ -188,7 +188,7 @@ return [
     */
     [
         'key' => 'flutter-starter',
-        'name' => 'Flutter Starter website',
+        'name' => 'Flutter starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://flutter-starter.sites.qa17.appwrite.org/',
         'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/flutter-starter.png',
