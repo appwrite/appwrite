@@ -8,6 +8,8 @@ use Utopia\Queue\Connection;
 
 class Func extends Event
 {
+    public const TYPE_ASYNC_WRITE = 'async_write';
+
     protected string $jwt = '';
     protected string $type = '';
     protected string $body = '';
@@ -235,23 +237,5 @@ class Func extends Event
             'headers' => $this->headers,
             'method' => $this->method,
         ]);
-    }
-
-    /**
-     * Generate a function event from a base event
-     *
-     * @param Event $event
-     *
-     * @return self
-     *
-     */
-    public function from(Event $event): self
-    {
-        $this->project = $event->getProject();
-        $this->user = $event->getUser();
-        $this->payload = $event->getPayload();
-        $this->event = $event->getEvent();
-        $this->params = $event->getParams();
-        return $this;
     }
 }

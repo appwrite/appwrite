@@ -11,7 +11,6 @@ use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
-use Appwrite\Functions\Validator\Payload;
 use Appwrite\Functions\Validator\RuntimeSpecification;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
@@ -38,6 +37,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Device;
@@ -138,6 +138,7 @@ App::post('/v1/functions')
     ->desc('Create function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].create')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'function.create')
     ->label('audits.resource', 'function/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -325,9 +326,10 @@ App::post('/v1/functions')
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         if (!empty($functionsDomain)) {
-            $ruleId = ID::unique();
             $routeSubdomain = ID::unique();
             $domain = "{$routeSubdomain}.{$functionsDomain}";
+            // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+            $ruleId = version_compare(APP_VERSION_STABLE, '1.7.0', '<') ? ID::unique() : md5($domain);
 
             $rule = Authorization::skip(
                 fn () => $dbForConsole->createDocument('rules', new Document([
@@ -400,6 +402,7 @@ App::get('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('List functions')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'list')
@@ -432,6 +435,12 @@ App::get('/v1/functions')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $functionId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('functions', $functionId);
 
@@ -454,6 +463,7 @@ App::get('/v1/functions/runtimes')
     ->groups(['api', 'functions'])
     ->desc('List runtimes')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listRuntimes')
@@ -487,6 +497,7 @@ App::get('/v1/functions/specifications')
     ->groups(['api', 'functions'])
     ->desc('List available function runtime specifications')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listSpecifications')
@@ -523,6 +534,7 @@ App::get('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Get function')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'get')
@@ -547,6 +559,7 @@ App::get('/v1/functions/:functionId/usage')
     ->desc('Get function usage')
     ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getFunctionUsage')
@@ -651,6 +664,7 @@ App::get('/v1/functions/usage')
     ->desc('Get functions usage')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getUsage')
@@ -750,6 +764,7 @@ App::put('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Update function')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].update')
     ->label('audits.event', 'function.update')
     ->label('audits.resource', 'function/{response.$id}')
@@ -952,6 +967,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->groups(['api', 'functions'])
     ->desc('Download deployment')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getDeploymentDownload')
@@ -988,7 +1004,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
 
         $response
             ->setContentType('application/gzip')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"');
 
@@ -1037,6 +1053,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Update deployment')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
@@ -1099,6 +1116,7 @@ App::delete('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Delete function')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].delete')
     ->label('audits.event', 'function.delete')
     ->label('audits.resource', 'function/{request.functionId}')
@@ -1146,6 +1164,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('Create deployment')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
     ->label('audits.event', 'deployment.create')
     ->label('audits.resource', 'function/{request.functionId}')
@@ -1365,6 +1384,7 @@ App::get('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('List deployments')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listDeployments')
@@ -1408,6 +1428,12 @@ App::get('/v1/functions/:functionId/deployments')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $deploymentId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('deployments', $deploymentId);
 
@@ -1442,6 +1468,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Get deployment')
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getDeployment')
@@ -1485,6 +1512,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Delete deployment')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].deployments.[deploymentId].delete')
     ->label('audits.event', 'deployment.delete')
     ->label('audits.resource', 'function/{request.functionId}')
@@ -1550,6 +1578,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->groups(['api', 'functions'])
     ->desc('Rebuild deployment')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
@@ -1618,6 +1647,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->groups(['api', 'functions'])
     ->desc('Cancel deployment')
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -1707,7 +1737,9 @@ App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create execution')
     ->label('scope', 'execution.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].executions.[executionId].create')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createExecution')
@@ -1717,12 +1749,12 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
     ->label('sdk.request.type', Response::CONTENT_TYPE_JSON)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('body', '', new Payload(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
+    ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(true), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
     ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
-    ->param('scheduledAt', null, new DatetimeValidator(true, DateTimeValidator::PRECISION_MINUTES, 60), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
+    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true, precision: DateTimeValidator::PRECISION_MINUTES, offset: 60), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
     ->inject('response')
     ->inject('request')
     ->inject('project')
@@ -2109,6 +2141,7 @@ App::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('List executions')
     ->label('scope', 'execution.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listExecutions')
@@ -2154,6 +2187,12 @@ App::get('/v1/functions/:functionId/executions')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $executionId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('executions', $executionId);
 
@@ -2190,6 +2229,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
     ->desc('Get execution')
     ->label('scope', 'execution.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getExecution')
@@ -2237,6 +2277,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
     ->desc('Delete execution')
     ->label('scope', 'execution.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('event', 'functions.[functionId].executions.[executionId].delete')
     ->label('audits.event', 'executions.delete')
     ->label('audits.resource', 'function/{request.functionId}')
@@ -2284,7 +2325,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
                 Query::equal('active', [true]),
             ]);
 
-            if ($schedule && !$schedule->isEmpty()) {
+            if (!$schedule->isEmpty()) {
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('active', false);
@@ -2307,6 +2348,7 @@ App::post('/v1/functions/:functionId/variables')
     ->desc('Create variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'variable.create')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -2371,6 +2413,7 @@ App::get('/v1/functions/:functionId/variables')
     ->desc('List variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listVariables')
@@ -2398,6 +2441,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
     ->desc('Get variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getVariable')
@@ -2437,6 +2481,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->desc('Update variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'variable.update')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -2498,6 +2543,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->desc('Delete variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'variable.delete')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -2546,6 +2592,7 @@ App::get('/v1/functions/templates')
     ->groups(['api'])
     ->desc('List function templates')
     ->label('scope', 'public')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listTemplates')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -2583,6 +2630,7 @@ App::get('/v1/functions/templates')
 App::get('/v1/functions/templates/:templateId')
     ->desc('Get function template')
     ->label('scope', 'public')
+    ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getTemplate')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -2595,9 +2643,11 @@ App::get('/v1/functions/templates/:templateId')
     ->action(function (string $templateId, Response $response) {
         $templates = Config::getParam('function-templates', []);
 
-        $template = array_shift(\array_filter($templates, function ($template) use ($templateId) {
+        $filtered = \array_filter($templates, function ($template) use ($templateId) {
             return $template['id'] === $templateId;
-        }));
+        });
+
+        $template = array_shift($filtered);
 
         if (empty($template)) {
             throw new Exception(Exception::FUNCTION_TEMPLATE_NOT_FOUND);

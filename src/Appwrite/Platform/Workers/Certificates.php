@@ -126,7 +126,7 @@ class Certificates extends Action
         $certificate = $dbForConsole->findOne('certificates', [Query::equal('domain', [$domain->get()])]);
 
         // If we don't have certificate for domain yet, let's create new document. At the end we save it
-        if (!$certificate) {
+        if ($certificate->isEmpty()) {
             $certificate = new Document();
             $certificate->setAttribute('domain', $domain->get());
         }
@@ -216,7 +216,7 @@ class Certificates extends Action
     {
         // Check if update or insert required
         $certificateDocument = $dbForConsole->findOne('certificates', [Query::equal('domain', [$domain])]);
-        if (!empty($certificateDocument) && !$certificateDocument->isEmpty()) {
+        if (!$certificateDocument->isEmpty()) {
             // Merge new data with current data
             $certificate = new Document(\array_merge($certificateDocument->getArrayCopy(), $certificate->getArrayCopy()));
             $certificate = $dbForConsole->updateDocument('certificates', $certificate->getId(), $certificate);
@@ -477,12 +477,16 @@ class Certificates extends Action
      */
     private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions): void
     {
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        if (version_compare(APP_VERSION_STABLE, '1.7.0', '<')) {
+            $rule = $dbForConsole->findOne('rules', [
+                Query::equal('domain', [$domain]),
+            ]);
+        } else {
+            $rule = $dbForConsole->getDocument('rules', md5($domain));
+        }
 
-        $rule = $dbForConsole->findOne('rules', [
-            Query::equal('domain', [$domain]),
-        ]);
-
-        if ($rule !== false && !$rule->isEmpty()) {
+        if (!$rule->isEmpty()) {
             $rule->setAttribute('certificateId', $certificateId);
             $rule->setAttribute('status', $success ? 'verified' : 'unverified');
             $dbForConsole->updateDocument('rules', $rule->getId(), $rule);
