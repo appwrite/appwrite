@@ -1335,6 +1335,8 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
     if ($project->getAttribute('region') !== System::getEnv('_APP_REGION')) {
+        var_dump(System::getEnv('_APP_REGION'));
+        var_dump($project->getAttribute('region'));
         throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
     }
 
