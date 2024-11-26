@@ -301,7 +301,7 @@ Server::setResource('logError', function (Registry $register, Document $project)
 
             $log = new Log();
             $log->setNamespace($namespace);
-            $log->setServer(\gethostname());
+            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
@@ -394,7 +394,7 @@ $worker
 
         if ($logger) {
             $log->setNamespace("appwrite-worker");
-            $log->setServer(\gethostname());
+            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
