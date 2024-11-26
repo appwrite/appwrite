@@ -264,9 +264,15 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
         $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
 
+        $region = System::getEnv('_APP_REGION', 'fra');
         $cache = $app->getResource('cache');
 
-        foreach ($sharedTablesV2 as $hostname) {
+        $regionDatabases = \array_filter(
+            $sharedTablesV2,
+            fn ($hostname) => \str_contains($hostname, $region)
+        );
+
+        foreach ($regionDatabases as $hostname) {
             $adapter = $pools
                 ->get($hostname)
                 ->pop()

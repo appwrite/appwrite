@@ -133,7 +133,7 @@ App::post('/v1/projects')
             $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
             $keys = explode(',', $databaseKeys);
             $databases = array_filter($keys, function ($value) use ($region) {
-                        return str_contains($value, $region);
+                return str_contains($value, $region);
             });
         }
 
