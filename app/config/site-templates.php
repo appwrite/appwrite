@@ -84,7 +84,7 @@ function getFramework(string $frameworkEnum, array $overrides)
 return [
     [
         'key' => 'nextjs-starter',
-        'name' => 'Next.Js starter website',
+        'name' => 'Next.js starter website',
         'useCases' => ['starter'],
         'demoUrl' => 'https://nextjs-starter.sites.qa17.appwrite.org/',
         'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/nextjs-starter.png',
