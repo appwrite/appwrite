@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ae3b9a491c9870a4897cdf712caba1e3",
+    "content-hash": "8e458c412c8a8ce3ce018b7a2c690832",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -157,16 +157,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.16.4",
+            "version": "0.16.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "7e4741337b9373f77210396e68eca539018cabd1"
+                "reference": "1e430646fdf847a7caf3c611dcf3d6d5a28c3fd9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/7e4741337b9373f77210396e68eca539018cabd1",
-                "reference": "7e4741337b9373f77210396e68eca539018cabd1",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/1e430646fdf847a7caf3c611dcf3d6d5a28c3fd9",
+                "reference": "1e430646fdf847a7caf3c611dcf3d6d5a28c3fd9",
                 "shasum": ""
             },
             "require": {
@@ -206,9 +206,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.16.4"
+                "source": "https://github.com/appwrite/runtimes/tree/0.16.5"
             },
-            "time": "2024-10-26T10:39:59+00:00"
+            "time": "2024-11-25T15:17:06+00:00"
         },
         {
             "name": "beberlei/assert",
@@ -3928,16 +3928,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.6.12",
+            "version": "dev-0.6.x-fix-structore-validation",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "9a8c905af4cece5c5ec9542a5b534befce067260"
+                "reference": "ed735136dd10a88ab8601a9831e9cbcf3b6d6560"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/9a8c905af4cece5c5ec9542a5b534befce067260",
-                "reference": "9a8c905af4cece5c5ec9542a5b534befce067260",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/ed735136dd10a88ab8601a9831e9cbcf3b6d6560",
+                "reference": "ed735136dd10a88ab8601a9831e9cbcf3b6d6560",
                 "shasum": ""
             },
             "require": {
@@ -3978,9 +3978,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.12"
+                "source": "https://github.com/utopia-php/migration/tree/0.6.x-fix-structore-validation"
             },
-            "time": "2024-11-12T00:31:53+00:00"
+            "time": "2024-11-26T11:04:12+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8555,9 +8555,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-0.6.x-fix-structore-validation",
+            "alias": "0.6.13",
+            "alias_normalized": "0.6.13.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/migration": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
