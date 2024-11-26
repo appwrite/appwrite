@@ -861,6 +861,8 @@ App::error()
 
             if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
+            } else {
+                $log->setUser(new User('guest-' . hash('sha256', $request->getIP())));
             }
 
             try {
@@ -871,7 +873,7 @@ App::error()
             }
 
             $log->setNamespace("http");
-            $log->setServer(\gethostname());
+            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
@@ -892,6 +894,7 @@ App::error()
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
             $log->setAction($action);
+            $log->addTag('service', $action);
 
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
