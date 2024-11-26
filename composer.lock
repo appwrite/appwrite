@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8e458c412c8a8ce3ce018b7a2c690832",
+    "content-hash": "ae3b9a491c9870a4897cdf712caba1e3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3928,16 +3928,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-0.6.x-fix-structore-validation",
+            "version": "0.6.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "ed735136dd10a88ab8601a9831e9cbcf3b6d6560"
+                "reference": "68d9b0a9477755afcda607e7e8109785cae17a13"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/ed735136dd10a88ab8601a9831e9cbcf3b6d6560",
-                "reference": "ed735136dd10a88ab8601a9831e9cbcf3b6d6560",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/68d9b0a9477755afcda607e7e8109785cae17a13",
+                "reference": "68d9b0a9477755afcda607e7e8109785cae17a13",
                 "shasum": ""
             },
             "require": {
@@ -3978,9 +3978,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.6.x-fix-structore-validation"
+                "source": "https://github.com/utopia-php/migration/tree/0.6.13"
             },
-            "time": "2024-11-26T11:04:12+00:00"
+            "time": "2024-11-26T13:57:53+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8555,18 +8555,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/migration",
-            "version": "dev-0.6.x-fix-structore-validation",
-            "alias": "0.6.13",
-            "alias_normalized": "0.6.13.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/migration": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
