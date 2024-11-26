@@ -316,7 +316,7 @@ App::init()
         /**
          * Update user last activity
          */
-        if (!$user->isEmpty()) {
+        if (!empty($user->getId())) {
             $accessedAt = $user->getAttribute('accessedAt', '');
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
