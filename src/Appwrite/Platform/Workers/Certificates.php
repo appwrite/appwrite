@@ -339,14 +339,8 @@ class Certificates extends Action
      */
     private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions): void
     {
-        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        if (version_compare(APP_VERSION_STABLE, '1.7.0', '<')) {
-            $rule = $dbForConsole->findOne('rules', [
-                Query::equal('domain', [$domain]),
-            ]);
-        } else {
-            $rule = $dbForConsole->getDocument('rules', md5($domain));
-        }
+
+        $rule = $dbForConsole->getDocument('rules', md5($domain));
 
         if (!$rule->isEmpty()) {
             $rule->setAttribute('certificateId', $certificateId);

@@ -29,7 +29,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
@@ -52,17 +51,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
     $host = $request->getHostname() ?? '';
 
-    // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-    if (version_compare(APP_VERSION_STABLE, '1.7.0', '<')) {
-        $route = Authorization::skip(
-            fn () => $dbForConsole->find('rules', [
-                Query::equal('domain', [$host]),
-                Query::limit(1)
-            ])
-        )[0] ?? new Document();
-    } else {
-        $route = Authorization::skip(fn () => $dbForConsole->getDocument('rules', md5($host)));
-    }
+    $route = Authorization::skip(fn () => $dbForConsole->getDocument('rules', md5($host)));
 
     if ($route->isEmpty()) {
         if ($host === System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
@@ -523,31 +512,18 @@ App::init()
                 if (!empty($envDomain) && $envDomain !== 'localhost') {
                     $mainDomain = $envDomain;
                 } else {
-                    // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                    if (version_compare(APP_VERSION_STABLE, '1.7.0', '<')) {
-                        $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
-                    } else {
-                        $domainDocument = $dbForConsole->getDocument('rules', md5($envDomain));
-                    }
+                    $domainDocument = $dbForConsole->getDocument('rules', md5($envDomain));
                     $mainDomain = !$domainDocument->isEmpty() ? $domainDocument->getAttribute('domain') : $domain->get();
                 }
 
                 if ($mainDomain !== $domain->get()) {
                     Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
                 } else {
-                    // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                    if (version_compare(APP_VERSION_STABLE, '1.7.0', '<')) {
-                        $domainDocument = $dbForConsole->findOne('rules', [
-                            Query::equal('domain', [$domain->get()])
-                        ]);
-                    } else {
-                        $domainDocument = $dbForConsole->getDocument('rules', md5($domain->get()));
-                    }
+                    $domainDocument = $dbForConsole->getDocument('rules', md5($domain->get()));
 
                     if ($domainDocument->isEmpty()) {
                         $domainDocument = new Document([
-                            // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                            '$id' => version_compare(APP_VERSION_STABLE, '1.7.0', '<') ? ID::unique() : md5($domain->get()),
+                            '$id' => md5($domain->get()),
                             'domain' => $domain->get(),
                             'resourceType' => 'api',
                             'status' => 'verifying',
