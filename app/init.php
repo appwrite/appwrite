@@ -1828,3 +1828,14 @@ App::setResource(
     'isResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
+
+App::setResource('previewHostname', function (Request $request) {
+    if (App::isDevelopment()) {
+        $host = $request->getQuery('appwrite-hostname') ?? '';
+        if (!empty($host)) {
+            return $host;
+        }
+    }
+
+    return '';
+}, ['request']);
