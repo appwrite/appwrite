@@ -290,15 +290,9 @@ function updateAttribute(
         $attribute->setAttribute('size', $size);
     }
 
-    $formatOptions = $attribute->getAttribute('formatOptions');
-
     switch ($attribute->getAttribute('format')) {
         case APP_DATABASE_ATTRIBUTE_INT_RANGE:
         case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
-            if ($min === $formatOptions['min'] && $max === $formatOptions['max']) {
-                break;
-            }
-
             if ($min > $max) {
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
             }
@@ -385,7 +379,7 @@ function updateAttribute(
                 size: $size,
                 required: $required,
                 default: $default,
-                formatOptions: $options ?? null,
+                formatOptions: $options,
                 newKey: $newKey ?? null
             );
         } catch (TruncateException) {
