@@ -28,6 +28,8 @@ return [
         'defaultBuildCommand' => 'npm run build',
         'defaultInstallCommand' => 'npm install',
         'defaultOutputDirectory' => './build',
+        'startCommand' => 'cd src/function && node index.js',
+        'bundleCommand' => 'cp package*.json build/ && cp -R node_modules/ build/node_modules/',
     ],
     'nextjs' => [
         'key' => 'nextjs',
@@ -73,15 +75,20 @@ return [
     'astro' => [
         'key' => 'astro',
         'name' => 'Astro',
-        'defaultServeRuntime' => 'static-1',
+        'defaultServeRuntime' => 'node-22',
         'serveRuntimes' => [
-            'static-1'
+            ...getVersions($templateRuntimes['NODE']['versions'], 'node'),
+            'static-1',
         ],
         'defaultBuildRuntime' => 'node-22',
         'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
         'defaultBuildCommand' => 'npm run build',
         'defaultInstallCommand' => 'npm install',
         'defaultOutputDirectory' => './dist',
+        // 'startCommand' => 'sh helpers/server-astro.sh',
+        // 'bundleCommand' => 'sh helpers/bundle-astro.sh',
+        'startCommand' => 'cd src/function && HOST=0.0.0.0 PORT=3000 node server/entry.mjs',
+        'bundleCommand' => 'cp package*.json dist/server/ && cp -R node_modules/ dist/server/node_modules/',
     ],
     'remix' => [
         'key' => 'remix',

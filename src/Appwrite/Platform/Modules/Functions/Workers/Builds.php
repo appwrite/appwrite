@@ -870,20 +870,21 @@ class Builds extends Action
         if ($resource->getCollection() === 'functions') {
             return $deployment->getAttribute('commands', '');
         } elseif ($resource->getCollection() === 'sites') {
-            $command = '';
+            $commands = [];
+            
+            $commands[] = $deployment->getAttribute('installCommand', '');
+            $commands[] = $deployment->getAttribute('buildCommand', '');
 
-            $installCommand = $deployment->getAttribute('installCommand', '');
-            $buildCommand = $deployment->getAttribute('buildCommand', '');
-
-            $command .= $installCommand;
-
-            if (!empty($installCommand) && !empty($buildCommand)) {
-                $command .= ' && ';
+            $frameworks = Config::getParam('frameworks', []);
+            $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
+            
+            if(!is_null($framework) && !empty($framework['bundleCommand'])) {
+                $commands[] = $framework['bundleCommand'];
             }
 
-            $command .= $buildCommand;
+            $commands = array_filter($commands, fn($command) => !empty($command));
 
-            return $command;
+            return implode(' && ', $commands);
         }
 
         return '';

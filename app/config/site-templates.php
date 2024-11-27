@@ -8,7 +8,7 @@ const TEMPLATE_FRAMEWORKS = [
         'buildCommand' => 'npm run build',
         'outputDirectory' => './build',
         'buildRuntime' => 'node-22',
-        'serveRuntime' => 'static-1',
+        'serveRuntime' => 'node-22',
         'fallbackFile' => null,
     ],
     'NEXTJS' => [
@@ -48,7 +48,7 @@ const TEMPLATE_FRAMEWORKS = [
         'buildCommand' => 'npm run build',
         'outputDirectory' => './dist',
         'buildRuntime' => 'node-22',
-        'serveRuntime' => 'static-1',
+        'serveRuntime' => 'node-22',
         'fallbackFile' => null,
     ],
     /*
@@ -130,7 +130,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.1.*',
+        'providerVersion' => '0.2.*',
         'variables' => [],
     ],
     [
@@ -141,12 +141,12 @@ return [
         'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/astro-starter.png',
         'frameworks' => [
             getFramework('ASTRO', [
-                'providerRootDirectory' => './astro/starter',
+                'providerRootDirectory' => './',
             ]),
         ],
         'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
+        'providerRepositoryId' => 'astro-ssr-test-template',
+        'providerOwner' => 'Meldiron',
         'providerVersion' => '0.1.*',
         'variables' => [],
     ],

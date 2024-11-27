@@ -336,9 +336,28 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 'site' => '',
                 'deployment' => ''
             };
-            $runtimeEntrypoint = match ($version) {
-                'v2' => '',
-                default => 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $runtime['startCommand'] . '"'
+
+            if($type === 'function') {
+                $runtimeEntrypoint = match ($version) {
+                    'v2' => '',
+                    default => 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $runtime['startCommand'] . '"'
+                };
+            } else if($type === 'site' || $type === 'deployment') {
+                $frameworks = Config::getParam('frameworks', []);
+                $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
+                
+                $startCommand = $runtime['startCommand'];
+                if(!is_null($framework) && !empty($framework['startCommand'])) {
+                    $startCommand = $framework['startCommand'];
+                }
+                
+                $runtimeEntrypoint = 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $startCommand . '"';
+            }
+
+            $entrypoint = match($type) {
+                'function' => $deployment->getAttribute('entrypoint', ''),
+                'site' => '',
+                'deployment' => ''
             };
 
             $executionResponse = $executor->createExecution(
@@ -445,6 +464,9 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
             $response->setHeader($header['name'], $header['value']);
         }
+
+        // TODO: Figoure out situation with transfer-encoding
+        // TODO: Dont double-compress
 
         $response
             ->setContentType($contentType)
