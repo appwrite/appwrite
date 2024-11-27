@@ -12,6 +12,7 @@ use Swoole\Process;
 use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -90,7 +91,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         Console::success('[Setup] - Server database init started...');
 
         try {
-            Console::success('[Setup] - Creating database: appwrite...');
+            Console::success('[Setup] - Creating console database...');
             $dbForConsole->create();
         } catch (Duplicate) {
             Console::success('[Setup] - Skip: metadata table already exists');
@@ -117,34 +118,10 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 continue;
             }
 
-            Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
+            Console::success('[Setup] - Creating console collection: ' . $collection['$id'] . '...');
 
-            $attributes = [];
-            $indexes = [];
-
-            foreach ($collection['attributes'] as $attribute) {
-                $attributes[] = new Document([
-                    '$id' => ID::custom($attribute['$id']),
-                    'type' => $attribute['type'],
-                    'size' => $attribute['size'],
-                    'required' => $attribute['required'],
-                    'signed' => $attribute['signed'],
-                    'array' => $attribute['array'],
-                    'filters' => $attribute['filters'],
-                    'default' => $attribute['default'] ?? null,
-                    'format' => $attribute['format'] ?? ''
-                ]);
-            }
-
-            foreach ($collection['indexes'] as $index) {
-                $indexes[] = new Document([
-                    '$id' => ID::custom($index['$id']),
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]);
-            }
+            $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
+            $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
 
             $dbForConsole->createCollection($key, $attributes, $indexes);
         }
@@ -179,34 +156,53 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 throw new Exception('Files collection is not configured.');
             }
 
-            $attributes = [];
-            $indexes = [];
-
-            foreach ($files['attributes'] as $attribute) {
-                $attributes[] = new Document([
-                    '$id' => ID::custom($attribute['$id']),
-                    'type' => $attribute['type'],
-                    'size' => $attribute['size'],
-                    'required' => $attribute['required'],
-                    'signed' => $attribute['signed'],
-                    'array' => $attribute['array'],
-                    'filters' => $attribute['filters'],
-                    'default' => $attribute['default'] ?? null,
-                    'format' => $attribute['format'] ?? ''
-                ]);
-            }
-
-            foreach ($files['indexes'] as $index) {
-                $indexes[] = new Document([
-                    '$id' => ID::custom($index['$id']),
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]);
-            }
+            $attributes = \array_map(fn ($attribute) => new Document($attribute), $files['attributes']);
+            $indexes = \array_map(fn (array $index) => new Document($index), $files['indexes']);
 
             $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+        }
+
+        $projectCollections = $collections['projects'];
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
+        $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
+
+        $cache = $app->getResource('cache');
+
+        foreach ($sharedTablesV2 as $hostname) {
+            $adapter = $pools
+                ->get($hostname)
+                ->pop()
+                ->getResource();
+
+            $dbForProject = (new Database($adapter, $cache))
+                ->setDatabase('appwrite')
+                ->setSharedTables(true)
+                ->setTenant(null)
+                ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
+
+            try {
+                Console::success('[Setup] - Creating project database: ' . $hostname . '...');
+                $dbForProject->create();
+            } catch (Duplicate) {
+                Console::success('[Setup] - Skip: metadata table already exists');
+            }
+
+            foreach ($projectCollections as $key => $collection) {
+                if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                    continue;
+                }
+                if (!$dbForProject->getCollection($key)->isEmpty()) {
+                    continue;
+                }
+
+                $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
+                $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+
+                Console::success('[Setup] - Creating project collection: ' . $collection['$id'] . '...');
+
+                $dbForProject->createCollection($key, $attributes, $indexes);
+            }
         }
 
         $pools->reclaim();
