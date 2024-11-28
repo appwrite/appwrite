@@ -56,15 +56,15 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     }
 
     // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-    if (version_compare(APP_VERSION_STABLE, '1.7.0', '<')) {
+    if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+        $route = Authorization::skip(fn () => $dbForConsole->getDocument('rules', md5($host)));
+    } else {
         $route = Authorization::skip(
             fn () => $dbForConsole->find('rules', [
                 Query::equal('domain', [$host]),
                 Query::limit(1)
             ])
         )[0] ?? new Document();
-    } else {
-        $route = Authorization::skip(fn () => $dbForConsole->getDocument('rules', md5($host)));
     }
 
     if ($route->isEmpty()) {
@@ -528,10 +528,10 @@ App::init()
                     $mainDomain = $envDomain;
                 } else {
                     // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                    if (version_compare(APP_VERSION_STABLE, '1.7.0', '<')) {
-                        $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
-                    } else {
+                    if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
                         $domainDocument = $dbForConsole->getDocument('rules', md5($envDomain));
+                    } else {
+                        $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
                     }
                     $mainDomain = !$domainDocument->isEmpty() ? $domainDocument->getAttribute('domain') : $domain->get();
                 }
@@ -540,18 +540,18 @@ App::init()
                     Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
                 } else {
                     // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                    if (version_compare(APP_VERSION_STABLE, '1.7.0', '<')) {
+                    if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+                        $domainDocument = $dbForConsole->getDocument('rules', md5($domain->get()));
+                    } else {
                         $domainDocument = $dbForConsole->findOne('rules', [
                             Query::equal('domain', [$domain->get()])
                         ]);
-                    } else {
-                        $domainDocument = $dbForConsole->getDocument('rules', md5($domain->get()));
                     }
 
                     if ($domainDocument->isEmpty()) {
                         $domainDocument = new Document([
                             // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                            '$id' => version_compare(APP_VERSION_STABLE, '1.7.0', '<') ? ID::unique() : md5($domain->get()),
+                            '$id' => System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique(),
                             'domain' => $domain->get(),
                             'resourceType' => 'api',
                             'status' => 'verifying',
