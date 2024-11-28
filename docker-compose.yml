@@ -83,7 +83,6 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
-      - ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - redis
