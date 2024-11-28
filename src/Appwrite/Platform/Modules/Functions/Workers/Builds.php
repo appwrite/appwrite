@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Functions\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Insight;
 use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Deployment;
@@ -48,6 +49,7 @@ class Builds extends Action
             ->desc('Builds worker')
             ->inject('message')
             ->inject('dbForConsole')
+            ->inject('queueForInsights')
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
             ->inject('queueForUsage')
@@ -61,6 +63,7 @@ class Builds extends Action
     /**
      * @param Message $message
      * @param Database $dbForConsole
+     * @param Insight $queueForInsights
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
      * @param Usage $queueForUsage
@@ -71,7 +74,7 @@ class Builds extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log): void
+    public function action(Message $message, Database $dbForConsole, Insight $queueForInsights, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -93,7 +96,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
+                $this->buildDeployment($deviceForFunctions, $queueForInsights, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
                 break;
 
             default:
@@ -103,6 +106,7 @@ class Builds extends Action
 
     /**
      * @param Device $deviceForFunctions
+     * @param Insight $queueForInsights
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
      * @param Usage $queueForUsage
@@ -119,7 +123,7 @@ class Builds extends Action
      *
      * @throws Exception
      */
-    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Insight $queueForInsights, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $resource, Document $deployment, Document $template, Log $log): void
     {
         $resourceKey = match($resource->getCollection()) {
             'functions' => 'functionId',
@@ -777,6 +781,15 @@ class Builds extends Action
                 project: $project,
                 queue: $queueForUsage
             );
+
+            if ($resource->getCollection() === 'sites' && $build->getAttribute('status') === 'ready') {
+                $queueForInsights
+                    ->setResource($resource)
+                    ->setBuild($build)
+                    ->setDeployment($deployment)
+                    ->setProject($project)
+                    ->trigger();
+            }
         }
     }
 
