@@ -185,13 +185,14 @@ App::init()
     ->inject('utopia')
     ->inject('request')
     ->inject('dbForConsole')
+    ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('session')
     ->inject('servers')
     ->inject('mode')
     ->inject('team')
-    ->action(function (App $utopia, Request $request, Database $dbForConsole, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
+    ->action(function (App $utopia, Request $request, Database $dbForConsole, Database $dbForProject, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
         $route = $utopia->getRoute();
 
         if ($project->isEmpty()) {
@@ -333,6 +334,33 @@ App::init()
         Authorization::setRole($role);
         foreach (Auth::getRoles($user) as $authRole) {
             Authorization::setRole($authRole);
+        }
+
+        /**
+         * Update project last activity
+         */
+        if (!$project->isEmpty() && $project->getId() !== 'console') {
+            $accessedAt = $project->getAttribute('accessedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+                $project->setAttribute('accessedAt', DateTime::now());
+                Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
+            }
+        }
+
+        /**
+         * Update user last activity
+         */
+        if (!empty($user->getId())) {
+            $accessedAt = $user->getAttribute('accessedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
+                $user->setAttribute('accessedAt', DateTime::now());
+
+                if (APP_MODE_ADMIN !== $mode) {
+                    $dbForProject->updateDocument('users', $user->getId(), $user);
+                } else {
+                    $dbForConsole->updateDocument('users', $user->getId(), $user);
+                }
+            }
         }
 
         /** Do not allow access to disabled services */
@@ -643,9 +671,7 @@ App::shutdown()
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
     ->inject('dbForProject')
-    ->inject('mode')
-    ->inject('dbForConsole')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, string $mode, Database $dbForConsole) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -765,8 +791,6 @@ App::shutdown()
             }
         }
 
-
-
         if ($project->getId() !== 'console') {
             if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
                 $fileSize = 0;
@@ -784,33 +808,6 @@ App::shutdown()
             $queueForUsage
                 ->setProject($project)
                 ->trigger();
-        }
-
-        /**
-         * Update project last activity
-         */
-        if (!$project->isEmpty() && $project->getId() !== 'console') {
-            $accessedAt = $project->getAttribute('accessedAt', '');
-            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $project->setAttribute('accessedAt', DateTime::now());
-                Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
-            }
-        }
-
-        /**
-         * Update user last activity
-         */
-        if (!$user->isEmpty()) {
-            $accessedAt = $user->getAttribute('accessedAt', '');
-            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
-                $user->setAttribute('accessedAt', DateTime::now());
-
-                if (APP_MODE_ADMIN !== $mode) {
-                    $dbForProject->updateDocument('users', $user->getId(), $user);
-                } else {
-                    $dbForConsole->updateDocument('users', $user->getId(), $user);
-                }
-            }
         }
     });
 
