@@ -59,8 +59,15 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
 
-        $ruleId = md5($domain);
-        $document = $dbForConsole->getDocument('rules', $ruleId);
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            $document = $dbForConsole->getDocument('rules', md5($domain));
+        } else {
+            $document = $dbForConsole->findOne('rules', [
+                Query::equal('domain', [$domain]),
+            ]);
+        }
+
 
         if (!$document->isEmpty()) {
             if ($document->getAttribute('projectId') === $project->getId()) {
@@ -101,7 +108,9 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
-        $ruleId = md5($domain->get());
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
+
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
