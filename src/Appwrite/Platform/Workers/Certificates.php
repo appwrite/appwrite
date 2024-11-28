@@ -22,7 +22,6 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
-use Utopia\Fetch\Client;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -44,7 +43,6 @@ class Certificates extends Action
         $this
             ->desc('Certificates worker')
             ->inject('message')
-            ->inject('project')
             ->inject('dbForConsole')
             ->inject('queueForMails')
             ->inject('queueForEvents')
@@ -59,7 +57,6 @@ class Certificates extends Action
 
     /**
      * @param Message $message
-     * @param Document $project
      * @param Database $dbForConsole
      * @param Mail $queueForMails
      * @param Event $queueForEvents
@@ -189,35 +186,6 @@ class Certificates extends Action
 
             // Save all changes we made to certificate document into database
             $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForConsole, $queueForEvents, $queueForFunctions);
-        }
-    }
-
-    /**
-     * Add custom hostname to Cloudflare registrar
-     *
-     * @param Document $project
-     * @param string $hostname
-     * @return void
-     * @throws Exception
-     */
-    private function addCustomHostnameToRegistrar(Document $project, string $hostname): void
-    {
-        $client = new Client();
-        $client
-            ->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON)
-             ->addHeader('Authorization', 'Bearer ' . System::getEnv('_APP_SYSTEM_CLOUDFLARE_TOKEN'));
-
-        $response = $client->fetch("https://api.cloudflare.com/client/v4/zones/b2d0e62383d3c0f6299efab107af2c7a/custom_hostnames", Client::METHOD_POST, [
-            'hostname' => $hostname,
-            'ssl' => [
-                "method" => "http",
-                "type" => "dv",
-                "wildcard" => false
-            ]
-        ]);
-
-        if ($response->getStatusCode() !== 201) {
-            throw new Exception('Failed to add custom hostname to Cloudflare: ' . $response->getBody());
         }
     }
 
