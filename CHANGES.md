@@ -1,3 +1,117 @@
+# Version 1.6.1
+
+## What's Changed
+
+### Notable changes
+
+* Remove JPEG fallback for webp by @lohanidamodar in https://github.com/appwrite/appwrite/pull/8746
+* Add heic and avif support by @lohanidamodar in https://github.com/appwrite/appwrite/pull/7718
+* Add new runtimes by @Meldiron in https://github.com/appwrite/appwrite/pull/8771
+* Remove audits deletion by @shimonewman in https://github.com/appwrite/appwrite/pull/8766
+* Bump assistant by @loks0n in https://github.com/appwrite/appwrite/pull/8801
+* Change max queries values to 500 by @fogelito in https://github.com/appwrite/appwrite/pull/8802
+* Allow '.wav' as 'audio/x-wav' as well by @basert in https://github.com/appwrite/appwrite/pull/8846
+* Use 1 instead of 0.5 cpu for default function specification by @loks0n in https://github.com/appwrite/appwrite/pull/8848
+* Update function runtimes by @christyjacob4 in https://github.com/appwrite/appwrite/pull/8781
+* Add a realtime heartbeat by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/8943
+
+### Fixes
+
+* Trigger functions event only if event is not paused by @lohanidamodar in https://github.com/appwrite/appwrite/pull/8526
+* Update docker-compose to restart usage-dump by @feschaffa in https://github.com/appwrite/appwrite/pull/8642
+* Fix typo in scheduler base by @fogelito in https://github.com/appwrite/appwrite/pull/8691
+* Add domain and force HTTPS env vars to mail worker by @stnguyen90 in https://github.com/appwrite/appwrite/pull/8722
+* Fix webp by @lohanidamodar in https://github.com/appwrite/appwrite/pull/8732
+* Ignore junction tables by @fogelito in https://github.com/appwrite/appwrite/pull/8728
+* Fix logger throwing fatal error by @lohanidamodar in https://github.com/appwrite/appwrite/pull/8724
+* Fix missing protocol for testing SMTP by @byawitz in https://github.com/appwrite/appwrite/pull/8749
+* Make create execution async loose by @loks0n in https://github.com/appwrite/appwrite/pull/8707
+* Fix invalid cursor value by @fogelito in https://github.com/appwrite/appwrite/pull/8109
+* Fix target deletes by @abnegate in https://github.com/appwrite/appwrite/pull/8833
+* Fix translation commas by @loks0n in https://github.com/appwrite/appwrite/pull/8892
+* Fix Migrations having source creds being overwritten and add Migration tests by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/8897
+* Fix validator usage for updating string size by @abnegate in https://github.com/appwrite/appwrite/pull/8890
+* Fix create user event not triggering by @loks0n in https://github.com/appwrite/appwrite/pull/8718
+* Improve error handling and logging in the database worker by @fogelito in https://github.com/appwrite/appwrite/pull/8944
+* Remove inaccurate info about leaving the URL parameter empty by @ebenezerdon in https://github.com/appwrite/appwrite/pull/8963
+* Ensure indexes are updated when updating an attribute key by @fogelito in https://github.com/appwrite/appwrite/pull/8971
+* Remove duplicate dart-2.16 runtime template by @stnguyen90 in https://github.com/appwrite/appwrite/pull/8972
+* Fix team invites with existing session by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/9006
+* Improve handling of HTTP requests by dispatching to safe workers by @Meldiron in https://github.com/appwrite/appwrite/pull/9016
+* Fix users create session secret by @stnguyen90 in https://github.com/appwrite/appwrite/pull/9019
+* Fix swoole task warning by @Meldiron in https://github.com/appwrite/appwrite/pull/9025
+
+### Miscellaneous
+
+* Update Init copy by @adityaoberai in https://github.com/appwrite/appwrite/pull/8557
+* Fix security scan permissions and comment by @EVDOG4LIFE in https://github.com/appwrite/appwrite/pull/8525
+* Add Trivy security scans by @btme0011 in https://github.com/appwrite/appwrite/pull/6876
+* Update database stack by @abnegate in https://github.com/appwrite/appwrite/pull/8564
+* Bump database by @abnegate in https://github.com/appwrite/appwrite/pull/8573
+* Sync main with 1.5.x by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/8589
+* Add AWS to one-click installs by @byawitz in https://github.com/appwrite/appwrite/pull/8593
+* Update Init copy in readme by @adityaoberai in https://github.com/appwrite/appwrite/pull/8618
+* Sync main into 1.6.x by @stnguyen90 in https://github.com/appwrite/appwrite/pull/8685
+* Sync 1.6.x into main by @stnguyen90 in https://github.com/appwrite/appwrite/pull/8686
+* Feat coroutines by @Meldiron in https://github.com/appwrite/appwrite/pull/7826
+* Sync main into 1.6.x by @Meldiron in https://github.com/appwrite/appwrite/pull/8719
+* Sentence casing endpoint API reference by @choir241 in https://github.com/appwrite/appwrite/pull/8617
+* DB storage metrics by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/8404
+* Fix exception thrown when optional array attribute does not exist by @lohanidamodar in https://github.com/appwrite/appwrite/pull/8391
+* Add projects channels to realtime by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/8735
+* Base for console roles support by @lohanidamodar in https://github.com/appwrite/appwrite/pull/8565
+* Remove DB disk storage calculation by @christyjacob4 in https://github.com/appwrite/appwrite/pull/8745
+* Messaging adapter default values by @shimonewman in https://github.com/appwrite/appwrite/pull/8742
+* Add payload response type by @loks0n in https://github.com/appwrite/appwrite/pull/8720
+* Fix flaky functions tests by @loks0n in https://github.com/appwrite/appwrite/pull/8682
+* Migrations Backups by @fogelito in https://github.com/appwrite/appwrite/pull/8186
+* Add test for response and request filters by @vermakhushboo in https://github.com/appwrite/appwrite/pull/8697
+* Bump version in SECURITY.md by @EVDOG4LIFE in https://github.com/appwrite/appwrite/pull/8755
+* Add originalId attribute to databases collection by @fogelito in https://github.com/appwrite/appwrite/pull/8764
+* Fix Walter References by @ItzNotABug in https://github.com/appwrite/appwrite/pull/8757
+* Update database by @abnegate in https://github.com/appwrite/appwrite/pull/8769
+* Move new attributes by @abnegate in https://github.com/appwrite/appwrite/pull/8777
+* Add ping endpoint by @loks0n in https://github.com/appwrite/appwrite/pull/8761
+* Fix GitHub action caching by @loks0n in https://github.com/appwrite/appwrite/pull/8772
+* Chore release ruby SDK by @abnegate in https://github.com/appwrite/appwrite/pull/8767
+* Call migration success on success by @abnegate in https://github.com/appwrite/appwrite/pull/8782
+* Update utopia-php/system to 0.9.0 by @basert in https://github.com/appwrite/appwrite/pull/8780
+* Move createDocument from api to worker by @vermakhushboo in https://github.com/appwrite/appwrite/pull/8776
+* Add missing indexes by @christyjacob4 in https://github.com/appwrite/appwrite/pull/8803
+* Update database by @abnegate in https://github.com/appwrite/appwrite/pull/8809
+* Fix typo in BLR region by @stnguyen90 in https://github.com/appwrite/appwrite/pull/8756
+* Add tests for project variables by @vermakhushboo in https://github.com/appwrite/appwrite/pull/8815
+* Replace 'Expires' with 'Cache-Control: private' header to avoid CDN caching by @basert in https://github.com/appwrite/appwrite/pull/8836
+* Allow blocking based on resource attributes by @basert in https://github.com/appwrite/appwrite/pull/8812
+* Check if resource is blocked inside functions worker by @basert in https://github.com/appwrite/appwrite/pull/8855
+* Fix missing allow attribute by @abnegate in https://github.com/appwrite/appwrite/pull/8889
+* Revert function execution order by @basert in https://github.com/appwrite/appwrite/pull/8857
+* Use resource type constants by @basert in https://github.com/appwrite/appwrite/pull/8895
+* Update Database lib by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/8680
+* Update database by @abnegate in https://github.com/appwrite/appwrite/pull/8917
+* Update database by @abnegate in https://github.com/appwrite/appwrite/pull/8923
+* Update database for transaction counter fixes with retries by @abnegate in https://github.com/appwrite/appwrite/pull/8927
+* Validate string permissions  by @fogelito in https://github.com/appwrite/appwrite/pull/8929
+* Add PubSub adapter support by @basert in https://github.com/appwrite/appwrite/pull/8905
+* List memberships as client by @loks0n in https://github.com/appwrite/appwrite/pull/8913
+* Fix XDebug Extension not being removed by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/8891
+* Update database by @abnegate in https://github.com/appwrite/appwrite/pull/8946
+* Use utopia compression by @loks0n in https://github.com/appwrite/appwrite/pull/8938
+* Make compression minimum size configurable by @loks0n in https://github.com/appwrite/appwrite/pull/8947
+* Revert "Update database" by @christyjacob4 in https://github.com/appwrite/appwrite/pull/8949
+* Fix setpaused by @loks0n in https://github.com/appwrite/appwrite/pull/8948
+* Use getDocument instead of find() for rules by @christyjacob4 in https://github.com/appwrite/appwrite/pull/8951
+* Remove double fetch from migrations worker by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/8956
+* Fix memberships privacy MFA by @loks0n in https://github.com/appwrite/appwrite/pull/8969
+* Add telemetry by @basert in https://github.com/appwrite/appwrite/pull/8960
+* Send migration errors individually by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/8959
+* Add console sdk previews by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/8990
+* Unset index length by @fogelito in https://github.com/appwrite/appwrite/pull/8978
+* Update base to 0.9.5 by @basert in https://github.com/appwrite/appwrite/pull/9005
+* Sync main into 1.6.x by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/9011
+* Improved shared tables V2 by @abnegate in https://github.com/appwrite/appwrite/pull/9013
+* Ensure backwards compatibility for 1.6.x by @christyjacob4 in https://github.com/appwrite/appwrite/pull/9018
+
 # Version 1.6.0
 
 ## What's Changed
