@@ -18,6 +18,7 @@ use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -3056,7 +3057,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }, $documents);
 
         try {
+            $time = \microtime(true);
             $dbForProject->createDocuments('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documents);
+            Console::log('Document creation time: ' . (\microtime(true) - $time) . 's');
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
         } catch (DuplicateException $e) {
