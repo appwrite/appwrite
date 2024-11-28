@@ -61,7 +61,7 @@ App::post('/v1/proxy/rules')
         }
 
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        if (System::getEnv('_APP_RULES_FORMAT', null) === 'md5') {
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
             $document = $dbForConsole->getDocument('rules', md5($domain));
         } else {
             $document = $dbForConsole->findOne('rules', [
@@ -110,7 +110,7 @@ App::post('/v1/proxy/rules')
         }
 
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        $ruleId = System::getEnv('_APP_RULES_FORMAT', null) === 'md5' ? md5($domain->get()) : ID::unique();
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
 
         $rule = new Document([
             '$id' => $ruleId,

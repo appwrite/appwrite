@@ -329,7 +329,7 @@ App::post('/v1/functions')
             $routeSubdomain = ID::unique();
             $domain = "{$routeSubdomain}.{$functionsDomain}";
             // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-            $ruleId = System::getEnv('_APP_RULES_FORMAT', null) === 'md5' ? md5($domain) : ID::unique();
+            $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
 
             $rule = Authorization::skip(
                 fn () => $dbForConsole->createDocument('rules', new Document([

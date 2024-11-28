@@ -56,7 +56,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     }
 
     // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-    if (System::getEnv('_APP_RULES_FORMAT', null) === 'md5') {
+    if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
         $route = Authorization::skip(fn () => $dbForConsole->getDocument('rules', md5($host)));
     } else {
         $route = Authorization::skip(
@@ -528,7 +528,7 @@ App::init()
                     $mainDomain = $envDomain;
                 } else {
                     // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                    if (System::getEnv('_APP_RULES_FORMAT', null) === 'md5') {
+                    if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
                         $domainDocument = $dbForConsole->getDocument('rules', md5($envDomain));
                     } else {
                         $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
@@ -540,7 +540,7 @@ App::init()
                     Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
                 } else {
                     // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                    if (System::getEnv('_APP_RULES_FORMAT', null) === 'md5') {
+                    if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
                         $domainDocument = $dbForConsole->getDocument('rules', md5($domain->get()));
                     } else {
                         $domainDocument = $dbForConsole->findOne('rules', [
@@ -551,7 +551,7 @@ App::init()
                     if ($domainDocument->isEmpty()) {
                         $domainDocument = new Document([
                             // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                            '$id' => System::getEnv('_APP_RULES_FORMAT', null) === 'md5' ? md5($domain->get()): ID::unique(),
+                            '$id' => System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique(),
                             'domain' => $domain->get(),
                             'resourceType' => 'api',
                             'status' => 'verifying',

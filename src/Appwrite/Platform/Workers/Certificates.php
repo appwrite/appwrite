@@ -340,7 +340,7 @@ class Certificates extends Action
     private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions): void
     {
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        if (System::getEnv('_APP_RULES_FORMAT', null) === 'md5') {
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
             $rule = $dbForConsole->getDocument('rules', md5($domain));
         } else {
             $rule = $dbForConsole->findOne('rules', [
