@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/init.php';
 
+use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
@@ -16,7 +17,6 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
-use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -283,6 +283,15 @@ Server::setResource(
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
 
+Server::setResource('certificates', function () {
+    $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
+    if (empty($email)) {
+        throw new Exception('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
+    }
+
+    return new LetsEncrypt($email);
+});
+
 Server::setResource('logError', function (Registry $register, Document $project) {
     return function (Throwable $error, string $namespace, string $action, ?array $extras) use ($register, $project) {
         $logger = $register->get('logger');
@@ -292,7 +301,7 @@ Server::setResource('logError', function (Registry $register, Document $project)
 
             $log = new Log();
             $log->setNamespace($namespace);
-            $log->setServer(\gethostname());
+            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
@@ -385,7 +394,7 @@ $worker
 
         if ($logger) {
             $log->setNamespace("appwrite-worker");
-            $log->setServer(\gethostname());
+            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());

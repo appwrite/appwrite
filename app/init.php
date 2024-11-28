@@ -123,7 +123,7 @@ const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4318;
-const APP_VERSION_STABLE = '1.6.0';
+const APP_VERSION_STABLE = '1.6.1';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -1828,3 +1828,14 @@ App::setResource(
     'isResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
+
+App::setResource('previewHostname', function (Request $request) {
+    if (App::isDevelopment()) {
+        $host = $request->getQuery('appwrite-hostname') ?? '';
+        if (!empty($host)) {
+            return $host;
+        }
+    }
+
+    return '';
+}, ['request']);

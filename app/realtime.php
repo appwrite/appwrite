@@ -184,7 +184,7 @@ $logError = function (Throwable $error, string $action) use ($register) {
 
         $log = new Log();
         $log->setNamespace("realtime");
-        $log->setServer(gethostname());
+        $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
         $log->setVersion($version);
         $log->setType(Log::TYPE_ERROR);
         $log->setMessage($error->getMessage());
