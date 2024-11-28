@@ -2795,7 +2795,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not been registered, a new user will be created. When the user clicks the link in the email, the user is redirected back to the URL you provided with the secret key and userId values attached to the URL query string. Use the query string parameters to submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The link sent to the user's email address is valid for 1 hour. If you are on a mobile device you can leave the URL parameter empty, so that the login completion will be handled by your Appwrite instance by default.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
+                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not been registered, a new user will be created. When the user clicks the link in the email, the user is redirected back to the URL you provided with the secret key and userId values attached to the URL query string. Use the query string parameters to submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The link sent to the user's email address is valid for 1 hour.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -4465,7 +4465,7 @@
                 },
                 "x-appwrite": {
                     "method": "chat",
-                    "weight": 333,
+                    "weight": 331,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -4534,7 +4534,7 @@
                 },
                 "x-appwrite": {
                     "method": "variables",
-                    "weight": 332,
+                    "weight": 330,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9308,7 +9308,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 289,
+                    "weight": 288,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9383,7 +9383,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 288,
+                    "weight": 396,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9488,7 +9488,8 @@
                                             "bun-1.0",
                                             "bun-1.1",
                                             "go-1.23",
-                                            "static-1"
+                                            "static-1",
+                                            "flutter-3.24"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -9631,7 +9632,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRuntimes",
-                    "weight": 290,
+                    "weight": 289,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9682,7 +9683,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSpecifications",
-                    "weight": 291,
+                    "weight": 290,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9734,7 +9735,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTemplates",
-                    "weight": 314,
+                    "weight": 311,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9836,7 +9837,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTemplate",
-                    "weight": 315,
+                    "weight": 312,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9898,7 +9899,7 @@
                 },
                 "x-appwrite": {
                     "method": "getUsage",
-                    "weight": 294,
+                    "weight": 293,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9972,7 +9973,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 292,
+                    "weight": 291,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10033,7 +10034,7 @@
                 },
                 "x-appwrite": {
                     "method": "update",
-                    "weight": 295,
+                    "weight": 397,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10145,7 +10146,8 @@
                                             "bun-1.0",
                                             "bun-1.1",
                                             "go-1.23",
-                                            "static-1"
+                                            "static-1",
+                                            "flutter-3.24"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -10258,7 +10260,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 298,
+                    "weight": 296,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10321,7 +10323,7 @@
                 },
                 "x-appwrite": {
                     "method": "listDeployments",
-                    "weight": 300,
+                    "weight": 297,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10406,7 +10408,7 @@
                 },
                 "x-appwrite": {
                     "method": "createDeployment",
-                    "weight": 299,
+                    "weight": 398,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -10504,7 +10506,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeployment",
-                    "weight": 301,
+                    "weight": 298,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10575,7 +10577,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeployment",
-                    "weight": 297,
+                    "weight": 295,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10639,7 +10641,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteDeployment",
-                    "weight": 302,
+                    "weight": 299,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10705,7 +10707,7 @@
                 },
                 "x-appwrite": {
                     "method": "createBuild",
-                    "weight": 303,
+                    "weight": 300,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10792,7 +10794,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateDeploymentBuild",
-                    "weight": 304,
+                    "weight": 301,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10858,7 +10860,7 @@
                 },
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
-                    "weight": 296,
+                    "weight": 294,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -10933,7 +10935,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 306,
+                    "weight": 303,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11021,7 +11023,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 305,
+                    "weight": 302,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11138,7 +11140,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 307,
+                    "weight": 304,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11205,7 +11207,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteExecution",
-                    "weight": 308,
+                    "weight": 305,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11278,7 +11280,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFunctionUsage",
-                    "weight": 293,
+                    "weight": 292,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11362,7 +11364,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
-                    "weight": 310,
+                    "weight": 307,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11423,7 +11425,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
-                    "weight": 309,
+                    "weight": 306,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11477,6 +11479,11 @@
                                         "type": "string",
                                         "description": "Variable value. Max length: 8192 chars.",
                                         "x-example": "<VALUE>"
+                                    },
+                                    "secret": {
+                                        "type": "boolean",
+                                        "description": "Is secret? Secret variables can only be updated or deleted, they cannot be read.",
+                                        "x-example": false
                                     }
                                 },
                                 "required": [
@@ -11511,7 +11518,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
-                    "weight": 311,
+                    "weight": 308,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11582,7 +11589,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
-                    "weight": 312,
+                    "weight": 309,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11670,7 +11677,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
-                    "weight": 313,
+                    "weight": 310,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11743,7 +11750,7 @@
                 },
                 "x-appwrite": {
                     "method": "query",
-                    "weight": 331,
+                    "weight": 329,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -11797,7 +11804,7 @@
                 },
                 "x-appwrite": {
                     "method": "mutation",
-                    "weight": 330,
+                    "weight": 328,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -13673,7 +13680,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessages",
-                    "weight": 390,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13751,7 +13758,7 @@
                 },
                 "x-appwrite": {
                     "method": "createEmail",
-                    "weight": 387,
+                    "weight": 385,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13897,7 +13904,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateEmail",
-                    "weight": 394,
+                    "weight": 392,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14045,7 +14052,7 @@
                 },
                 "x-appwrite": {
                     "method": "createPush",
-                    "weight": 389,
+                    "weight": 387,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14202,7 +14209,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePush",
-                    "weight": 396,
+                    "weight": 394,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14361,7 +14368,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSms",
-                    "weight": 388,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14472,7 +14479,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSms",
-                    "weight": 395,
+                    "weight": 393,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14586,7 +14593,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMessage",
-                    "weight": 393,
+                    "weight": 391,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14641,7 +14648,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 397,
+                    "weight": 395,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14705,7 +14712,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMessageLogs",
-                    "weight": 391,
+                    "weight": 389,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14782,7 +14789,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTargets",
-                    "weight": 392,
+                    "weight": 390,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14859,7 +14866,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviders",
-                    "weight": 362,
+                    "weight": 360,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14937,7 +14944,7 @@
                 },
                 "x-appwrite": {
                     "method": "createApnsProvider",
-                    "weight": 361,
+                    "weight": 359,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15044,7 +15051,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateApnsProvider",
-                    "weight": 374,
+                    "weight": 372,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15154,7 +15161,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFcmProvider",
-                    "weight": 360,
+                    "weight": 358,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15241,7 +15248,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFcmProvider",
-                    "weight": 373,
+                    "weight": 371,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15331,7 +15338,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMailgunProvider",
-                    "weight": 352,
+                    "weight": 350,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15448,7 +15455,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMailgunProvider",
-                    "weight": 365,
+                    "weight": 363,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15568,7 +15575,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMsg91Provider",
-                    "weight": 355,
+                    "weight": 353,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15665,7 +15672,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMsg91Provider",
-                    "weight": 368,
+                    "weight": 366,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15765,7 +15772,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSendgridProvider",
-                    "weight": 353,
+                    "weight": 351,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15872,7 +15879,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSendgridProvider",
-                    "weight": 366,
+                    "weight": 364,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15982,7 +15989,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSmtpProvider",
-                    "weight": 354,
+                    "weight": 352,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16127,7 +16134,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateSmtpProvider",
-                    "weight": 367,
+                    "weight": 365,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16274,7 +16281,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTelesignProvider",
-                    "weight": 356,
+                    "weight": 354,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16371,7 +16378,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTelesignProvider",
-                    "weight": 369,
+                    "weight": 367,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16471,7 +16478,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTextmagicProvider",
-                    "weight": 357,
+                    "weight": 355,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16568,7 +16575,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTextmagicProvider",
-                    "weight": 370,
+                    "weight": 368,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16668,7 +16675,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTwilioProvider",
-                    "weight": 358,
+                    "weight": 356,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16765,7 +16772,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTwilioProvider",
-                    "weight": 371,
+                    "weight": 369,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16865,7 +16872,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVonageProvider",
-                    "weight": 359,
+                    "weight": 357,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16962,7 +16969,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVonageProvider",
-                    "weight": 372,
+                    "weight": 370,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17062,7 +17069,7 @@
                 },
                 "x-appwrite": {
                     "method": "getProvider",
-                    "weight": 364,
+                    "weight": 362,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17117,7 +17124,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteProvider",
-                    "weight": 375,
+                    "weight": 373,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17181,7 +17188,7 @@
                 },
                 "x-appwrite": {
                     "method": "listProviderLogs",
-                    "weight": 363,
+                    "weight": 361,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17258,7 +17265,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscriberLogs",
-                    "weight": 384,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17335,7 +17342,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopics",
-                    "weight": 377,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17411,7 +17418,7 @@
                 },
                 "x-appwrite": {
                     "method": "createTopic",
-                    "weight": 376,
+                    "weight": 374,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17496,7 +17503,7 @@
                 },
                 "x-appwrite": {
                     "method": "getTopic",
-                    "weight": 379,
+                    "weight": 377,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17558,7 +17565,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateTopic",
-                    "weight": 380,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17637,7 +17644,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteTopic",
-                    "weight": 381,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17701,7 +17708,7 @@
                 },
                 "x-appwrite": {
                     "method": "listTopicLogs",
-                    "weight": 378,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17778,7 +17785,7 @@
                 },
                 "x-appwrite": {
                     "method": "listSubscribers",
-                    "weight": 383,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17864,7 +17871,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 382,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17956,7 +17963,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSubscriber",
-                    "weight": 385,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18021,7 +18028,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 386,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18098,7 +18105,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 339,
+                    "weight": 337,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18174,7 +18181,7 @@
                 },
                 "x-appwrite": {
                     "method": "createAppwriteMigration",
-                    "weight": 334,
+                    "weight": 332,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18264,7 +18271,7 @@
                 },
                 "x-appwrite": {
                     "method": "getAppwriteReport",
-                    "weight": 341,
+                    "weight": 339,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18359,7 +18366,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFirebaseMigration",
-                    "weight": 336,
+                    "weight": 334,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18430,7 +18437,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteFirebaseAuth",
-                    "weight": 347,
+                    "weight": 345,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18480,7 +18487,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFirebaseOAuthMigration",
-                    "weight": 335,
+                    "weight": 333,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18558,7 +18565,7 @@
                 },
                 "x-appwrite": {
                     "method": "listFirebaseProjects",
-                    "weight": 346,
+                    "weight": 344,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18608,7 +18615,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFirebaseReport",
-                    "weight": 342,
+                    "weight": 340,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18682,7 +18689,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFirebaseReportOAuth",
-                    "weight": 343,
+                    "weight": 341,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18756,7 +18763,7 @@
                 },
                 "x-appwrite": {
                     "method": "createNHostMigration",
-                    "weight": 338,
+                    "weight": 336,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18869,7 +18876,7 @@
                 },
                 "x-appwrite": {
                     "method": "getNHostReport",
-                    "weight": 349,
+                    "weight": 347,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19004,7 +19011,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSupabaseMigration",
-                    "weight": 337,
+                    "weight": 335,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19111,7 +19118,7 @@
                 },
                 "x-appwrite": {
                     "method": "getSupabaseReport",
-                    "weight": 348,
+                    "weight": 346,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19237,7 +19244,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 340,
+                    "weight": 338,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19297,7 +19304,7 @@
                 },
                 "x-appwrite": {
                     "method": "retry",
-                    "weight": 350,
+                    "weight": 348,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19350,7 +19357,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 351,
+                    "weight": 349,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19591,6 +19598,11 @@
                                         "type": "string",
                                         "description": "Variable value. Max length: 8192 chars.",
                                         "x-example": "<VALUE>"
+                                    },
+                                    "secret": {
+                                        "type": "boolean",
+                                        "description": "Is secret? Secret variables can only be updated or deleted, they cannot be read.",
+                                        "x-example": false
                                     }
                                 },
                                 "required": [
@@ -20672,7 +20684,7 @@
         },
         "\/projects\/{projectId}\/auth\/memberships-privacy": {
             "patch": {
-                "summary": "Update project team sensitive attributes",
+                "summary": "Update project memberships privacy attributes",
                 "operationId": "projectsUpdateMembershipsPrivacy",
                 "tags": [
                     "projects"
@@ -24772,7 +24784,7 @@
                 },
                 "x-appwrite": {
                     "method": "listRules",
-                    "weight": 317,
+                    "weight": 314,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24846,7 +24858,7 @@
                 },
                 "x-appwrite": {
                     "method": "createRule",
-                    "weight": 316,
+                    "weight": 313,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24885,11 +24897,12 @@
                                     },
                                     "resourceType": {
                                         "type": "string",
-                                        "description": "Action definition for the rule. Possible values are \"api\", \"function\"",
+                                        "description": "Action definition for the rule. Possible values are \"api\", \"function\" and \"site\"",
                                         "x-example": "api",
                                         "enum": [
                                             "api",
-                                            "function"
+                                            "function",
+                                            "site"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -24932,7 +24945,7 @@
                 },
                 "x-appwrite": {
                     "method": "getRule",
-                    "weight": 318,
+                    "weight": 315,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24985,7 +24998,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteRule",
-                    "weight": 319,
+                    "weight": 316,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25047,7 +25060,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateRuleVerification",
-                    "weight": 320,
+                    "weight": 317,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25081,6 +25094,2303 @@
                         "schema": {
                             "type": "string",
                             "x-example": "<RULE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/proxy\/subdomains": {
+            "get": {
+                "summary": "Check if subdomain is available",
+                "operationId": "proxyCheckSubdomain",
+                "tags": [
+                    "proxy"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "File"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "checkSubdomain",
+                    "weight": 318,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "proxy\/check-subdomain.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/proxy\/check-subdomain.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rules.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "resourceType",
+                        "description": "Action definition for the rule. Possible values are \"function\" and \"site\"",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "function",
+                            "enum": [
+                                "function",
+                                "site"
+                            ],
+                            "x-enum-name": null,
+                            "x-enum-keys": []
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "subdomain",
+                        "description": "Subdomain name.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SUBDOMAIN>"
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/sites": {
+            "get": {
+                "summary": "List sites",
+                "operationId": "sitesList",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Sites List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/siteList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "list",
+                    "weight": 401,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/list.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/list-sites.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, enabled, framework, deploymentId, buildCommand, installCommand, outputDirectory, installationId",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": []
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SEARCH>",
+                            "default": ""
+                        },
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create site",
+                "operationId": "sitesCreate",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "201": {
+                        "description": "Site",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/site"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "create",
+                    "weight": 399,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/create.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/create-site.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "siteId": {
+                                        "type": "string",
+                                        "description": "Site ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "x-example": "<SITE_ID>"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Site name. Max length: 128 chars.",
+                                        "x-example": "<NAME>"
+                                    },
+                                    "framework": {
+                                        "type": "string",
+                                        "description": "Sites framework.",
+                                        "x-example": "sveltekit",
+                                        "enum": [
+                                            "sveltekit",
+                                            "nextjs",
+                                            "nuxt",
+                                            "astro",
+                                            "remix",
+                                            "flutter",
+                                            "static"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
+                                    },
+                                    "enabled": {
+                                        "type": "boolean",
+                                        "description": "Is site enabled? When set to 'disabled', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.",
+                                        "x-example": false
+                                    },
+                                    "timeout": {
+                                        "type": "integer",
+                                        "description": "Maximum request time in seconds.",
+                                        "x-example": 1
+                                    },
+                                    "installCommand": {
+                                        "type": "string",
+                                        "description": "Install Command.",
+                                        "x-example": "<INSTALL_COMMAND>"
+                                    },
+                                    "buildCommand": {
+                                        "type": "string",
+                                        "description": "Build Command.",
+                                        "x-example": "<BUILD_COMMAND>"
+                                    },
+                                    "outputDirectory": {
+                                        "type": "string",
+                                        "description": "Output Directory for site.",
+                                        "x-example": "<OUTPUT_DIRECTORY>"
+                                    },
+                                    "subdomain": {
+                                        "type": "string",
+                                        "description": "Unique custom sub-domain. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "x-example": "<SUBDOMAIN>"
+                                    },
+                                    "buildRuntime": {
+                                        "type": "string",
+                                        "description": "Runtime to use during build step.",
+                                        "x-example": "node-14.5",
+                                        "enum": [
+                                            "node-14.5",
+                                            "node-16.0",
+                                            "node-18.0",
+                                            "node-19.0",
+                                            "node-20.0",
+                                            "node-21.0",
+                                            "node-22",
+                                            "php-8.0",
+                                            "php-8.1",
+                                            "php-8.2",
+                                            "php-8.3",
+                                            "ruby-3.0",
+                                            "ruby-3.1",
+                                            "ruby-3.2",
+                                            "ruby-3.3",
+                                            "python-3.8",
+                                            "python-3.9",
+                                            "python-3.10",
+                                            "python-3.11",
+                                            "python-3.12",
+                                            "python-ml-3.11",
+                                            "deno-1.21",
+                                            "deno-1.24",
+                                            "deno-1.35",
+                                            "deno-1.40",
+                                            "deno-1.46",
+                                            "deno-2.0",
+                                            "dart-2.15",
+                                            "dart-2.16",
+                                            "dart-2.17",
+                                            "dart-2.18",
+                                            "dart-3.0",
+                                            "dart-3.1",
+                                            "dart-3.3",
+                                            "dart-3.5",
+                                            "dotnet-6.0",
+                                            "dotnet-7.0",
+                                            "dotnet-8.0",
+                                            "java-8.0",
+                                            "java-11.0",
+                                            "java-17.0",
+                                            "java-18.0",
+                                            "java-21.0",
+                                            "java-22",
+                                            "swift-5.5",
+                                            "swift-5.8",
+                                            "swift-5.9",
+                                            "swift-5.10",
+                                            "kotlin-1.6",
+                                            "kotlin-1.8",
+                                            "kotlin-1.9",
+                                            "kotlin-2.0",
+                                            "cpp-17",
+                                            "cpp-20",
+                                            "bun-1.0",
+                                            "bun-1.1",
+                                            "go-1.23",
+                                            "static-1",
+                                            "flutter-3.24"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
+                                    },
+                                    "serveRuntime": {
+                                        "type": "string",
+                                        "description": "Runtime to use when serving site.",
+                                        "x-example": "node-14.5",
+                                        "enum": [
+                                            "node-14.5",
+                                            "node-16.0",
+                                            "node-18.0",
+                                            "node-19.0",
+                                            "node-20.0",
+                                            "node-21.0",
+                                            "node-22",
+                                            "php-8.0",
+                                            "php-8.1",
+                                            "php-8.2",
+                                            "php-8.3",
+                                            "ruby-3.0",
+                                            "ruby-3.1",
+                                            "ruby-3.2",
+                                            "ruby-3.3",
+                                            "python-3.8",
+                                            "python-3.9",
+                                            "python-3.10",
+                                            "python-3.11",
+                                            "python-3.12",
+                                            "python-ml-3.11",
+                                            "deno-1.21",
+                                            "deno-1.24",
+                                            "deno-1.35",
+                                            "deno-1.40",
+                                            "deno-1.46",
+                                            "deno-2.0",
+                                            "dart-2.15",
+                                            "dart-2.16",
+                                            "dart-2.17",
+                                            "dart-2.18",
+                                            "dart-3.0",
+                                            "dart-3.1",
+                                            "dart-3.3",
+                                            "dart-3.5",
+                                            "dotnet-6.0",
+                                            "dotnet-7.0",
+                                            "dotnet-8.0",
+                                            "java-8.0",
+                                            "java-11.0",
+                                            "java-17.0",
+                                            "java-18.0",
+                                            "java-21.0",
+                                            "java-22",
+                                            "swift-5.5",
+                                            "swift-5.8",
+                                            "swift-5.9",
+                                            "swift-5.10",
+                                            "kotlin-1.6",
+                                            "kotlin-1.8",
+                                            "kotlin-1.9",
+                                            "kotlin-2.0",
+                                            "cpp-17",
+                                            "cpp-20",
+                                            "bun-1.0",
+                                            "bun-1.1",
+                                            "go-1.23",
+                                            "static-1",
+                                            "flutter-3.24"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
+                                    },
+                                    "installationId": {
+                                        "type": "string",
+                                        "description": "Appwrite Installation ID for VCS (Version Control System) deployment.",
+                                        "x-example": "<INSTALLATION_ID>"
+                                    },
+                                    "fallbackFile": {
+                                        "type": "string",
+                                        "description": "Fallback file for single page application sites.",
+                                        "x-example": "<FALLBACK_FILE>"
+                                    },
+                                    "providerRepositoryId": {
+                                        "type": "string",
+                                        "description": "Repository ID of the repo linked to the site.",
+                                        "x-example": "<PROVIDER_REPOSITORY_ID>"
+                                    },
+                                    "providerBranch": {
+                                        "type": "string",
+                                        "description": "Production branch for the repo linked to the site.",
+                                        "x-example": "<PROVIDER_BRANCH>"
+                                    },
+                                    "providerSilentMode": {
+                                        "type": "boolean",
+                                        "description": "Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.",
+                                        "x-example": false
+                                    },
+                                    "providerRootDirectory": {
+                                        "type": "string",
+                                        "description": "Path to site code in the linked repo.",
+                                        "x-example": "<PROVIDER_ROOT_DIRECTORY>"
+                                    },
+                                    "templateRepository": {
+                                        "type": "string",
+                                        "description": "Repository name of the template.",
+                                        "x-example": "<TEMPLATE_REPOSITORY>"
+                                    },
+                                    "templateOwner": {
+                                        "type": "string",
+                                        "description": "The name of the owner of the template.",
+                                        "x-example": "<TEMPLATE_OWNER>"
+                                    },
+                                    "templateRootDirectory": {
+                                        "type": "string",
+                                        "description": "Path to site code in the template repo.",
+                                        "x-example": "<TEMPLATE_ROOT_DIRECTORY>"
+                                    },
+                                    "templateVersion": {
+                                        "type": "string",
+                                        "description": "Version (tag) for the repo linked to the site template.",
+                                        "x-example": "<TEMPLATE_VERSION>"
+                                    },
+                                    "specification": {
+                                        "type": "string",
+                                        "description": "Framework specification for the site and builds.",
+                                        "x-example": null
+                                    }
+                                },
+                                "required": [
+                                    "siteId",
+                                    "name",
+                                    "framework",
+                                    "buildRuntime",
+                                    "serveRuntime"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/sites\/frameworks": {
+            "get": {
+                "summary": "List frameworks",
+                "operationId": "sitesListFrameworks",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Frameworks List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/frameworkList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "listFrameworks",
+                    "weight": 404,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/list-frameworks.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/list-frameworks.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ]
+            }
+        },
+        "\/sites\/templates": {
+            "get": {
+                "summary": "List templates",
+                "operationId": "sitesListTemplates",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Site Templates List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/templateSiteList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "listTemplates",
+                    "weight": 419,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/list-templates.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/list-templates.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "public",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "frameworks",
+                        "description": "List of frameworks allowed for filtering site templates. Maximum of 100 frameworks are allowed.",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": []
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "useCases",
+                        "description": "List of use cases allowed for filtering site templates. Maximum of 100 use cases are allowed.",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": []
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "limit",
+                        "description": "Limit the number of templates returned in the response. Default limit is 25, and maximum limit is 5000.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "x-example": 1,
+                            "default": 25
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "offset",
+                        "description": "Offset the list of returned templates. Maximum offset is 5000.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "x-example": 0,
+                            "default": 0
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/sites\/templates\/{templateId}": {
+            "get": {
+                "summary": "Get site template",
+                "operationId": "sitesGetTemplate",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Template Site",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/templateSite"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getTemplate",
+                    "weight": 420,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/get-template.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/get-template.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "public",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "templateId",
+                        "description": "Template ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TEMPLATE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/sites\/usage": {
+            "get": {
+                "summary": "Get sites usage",
+                "operationId": "sitesGetUsage",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "UsageSites",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/usageSites"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getUsage",
+                    "weight": 422,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/get-usage.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "range",
+                        "description": "Date range.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "24h",
+                            "enum": [
+                                "24h",
+                                "30d",
+                                "90d"
+                            ],
+                            "x-enum-name": "SiteUsageRange",
+                            "x-enum-keys": [
+                                "Twenty Four Hours",
+                                "Thirty Days",
+                                "Ninety Days"
+                            ],
+                            "default": "30d"
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/sites\/{siteId}": {
+            "get": {
+                "summary": "Get site",
+                "operationId": "sitesGet",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Site",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/site"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "get",
+                    "weight": 400,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/get.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/get-site.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Update site",
+                "operationId": "sitesUpdate",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Site",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/site"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "update",
+                    "weight": 402,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/update.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/update-site.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Site name. Max length: 128 chars.",
+                                        "x-example": "<NAME>"
+                                    },
+                                    "framework": {
+                                        "type": "string",
+                                        "description": "Sites framework.",
+                                        "x-example": "sveltekit",
+                                        "enum": [
+                                            "sveltekit",
+                                            "nextjs",
+                                            "nuxt",
+                                            "astro",
+                                            "remix",
+                                            "flutter",
+                                            "static"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
+                                    },
+                                    "enabled": {
+                                        "type": "boolean",
+                                        "description": "Is site enabled? When set to 'disabled', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.",
+                                        "x-example": false
+                                    },
+                                    "timeout": {
+                                        "type": "integer",
+                                        "description": "Maximum request time in seconds.",
+                                        "x-example": 1
+                                    },
+                                    "installCommand": {
+                                        "type": "string",
+                                        "description": "Install Command.",
+                                        "x-example": "<INSTALL_COMMAND>"
+                                    },
+                                    "buildCommand": {
+                                        "type": "string",
+                                        "description": "Build Command.",
+                                        "x-example": "<BUILD_COMMAND>"
+                                    },
+                                    "outputDirectory": {
+                                        "type": "string",
+                                        "description": "Output Directory for site.",
+                                        "x-example": "<OUTPUT_DIRECTORY>"
+                                    },
+                                    "buildRuntime": {
+                                        "type": "string",
+                                        "description": "Runtime to use during build step.",
+                                        "x-example": "node-14.5",
+                                        "enum": [
+                                            "node-14.5",
+                                            "node-16.0",
+                                            "node-18.0",
+                                            "node-19.0",
+                                            "node-20.0",
+                                            "node-21.0",
+                                            "node-22",
+                                            "php-8.0",
+                                            "php-8.1",
+                                            "php-8.2",
+                                            "php-8.3",
+                                            "ruby-3.0",
+                                            "ruby-3.1",
+                                            "ruby-3.2",
+                                            "ruby-3.3",
+                                            "python-3.8",
+                                            "python-3.9",
+                                            "python-3.10",
+                                            "python-3.11",
+                                            "python-3.12",
+                                            "python-ml-3.11",
+                                            "deno-1.21",
+                                            "deno-1.24",
+                                            "deno-1.35",
+                                            "deno-1.40",
+                                            "deno-1.46",
+                                            "deno-2.0",
+                                            "dart-2.15",
+                                            "dart-2.16",
+                                            "dart-2.17",
+                                            "dart-2.18",
+                                            "dart-3.0",
+                                            "dart-3.1",
+                                            "dart-3.3",
+                                            "dart-3.5",
+                                            "dotnet-6.0",
+                                            "dotnet-7.0",
+                                            "dotnet-8.0",
+                                            "java-8.0",
+                                            "java-11.0",
+                                            "java-17.0",
+                                            "java-18.0",
+                                            "java-21.0",
+                                            "java-22",
+                                            "swift-5.5",
+                                            "swift-5.8",
+                                            "swift-5.9",
+                                            "swift-5.10",
+                                            "kotlin-1.6",
+                                            "kotlin-1.8",
+                                            "kotlin-1.9",
+                                            "kotlin-2.0",
+                                            "cpp-17",
+                                            "cpp-20",
+                                            "bun-1.0",
+                                            "bun-1.1",
+                                            "go-1.23",
+                                            "static-1",
+                                            "flutter-3.24"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
+                                    },
+                                    "serveRuntime": {
+                                        "type": "string",
+                                        "description": "Runtime to use when serving site.",
+                                        "x-example": "node-14.5",
+                                        "enum": [
+                                            "node-14.5",
+                                            "node-16.0",
+                                            "node-18.0",
+                                            "node-19.0",
+                                            "node-20.0",
+                                            "node-21.0",
+                                            "node-22",
+                                            "php-8.0",
+                                            "php-8.1",
+                                            "php-8.2",
+                                            "php-8.3",
+                                            "ruby-3.0",
+                                            "ruby-3.1",
+                                            "ruby-3.2",
+                                            "ruby-3.3",
+                                            "python-3.8",
+                                            "python-3.9",
+                                            "python-3.10",
+                                            "python-3.11",
+                                            "python-3.12",
+                                            "python-ml-3.11",
+                                            "deno-1.21",
+                                            "deno-1.24",
+                                            "deno-1.35",
+                                            "deno-1.40",
+                                            "deno-1.46",
+                                            "deno-2.0",
+                                            "dart-2.15",
+                                            "dart-2.16",
+                                            "dart-2.17",
+                                            "dart-2.18",
+                                            "dart-3.0",
+                                            "dart-3.1",
+                                            "dart-3.3",
+                                            "dart-3.5",
+                                            "dotnet-6.0",
+                                            "dotnet-7.0",
+                                            "dotnet-8.0",
+                                            "java-8.0",
+                                            "java-11.0",
+                                            "java-17.0",
+                                            "java-18.0",
+                                            "java-21.0",
+                                            "java-22",
+                                            "swift-5.5",
+                                            "swift-5.8",
+                                            "swift-5.9",
+                                            "swift-5.10",
+                                            "kotlin-1.6",
+                                            "kotlin-1.8",
+                                            "kotlin-1.9",
+                                            "kotlin-2.0",
+                                            "cpp-17",
+                                            "cpp-20",
+                                            "bun-1.0",
+                                            "bun-1.1",
+                                            "go-1.23",
+                                            "static-1",
+                                            "flutter-3.24"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
+                                    },
+                                    "fallbackFile": {
+                                        "type": "string",
+                                        "description": "Fallback file for single page application sites.",
+                                        "x-example": "<FALLBACK_FILE>"
+                                    },
+                                    "installationId": {
+                                        "type": "string",
+                                        "description": "Appwrite Installation ID for VCS (Version Control System) deployment.",
+                                        "x-example": "<INSTALLATION_ID>"
+                                    },
+                                    "providerRepositoryId": {
+                                        "type": "string",
+                                        "description": "Repository ID of the repo linked to the site.",
+                                        "x-example": "<PROVIDER_REPOSITORY_ID>"
+                                    },
+                                    "providerBranch": {
+                                        "type": "string",
+                                        "description": "Production branch for the repo linked to the site.",
+                                        "x-example": "<PROVIDER_BRANCH>"
+                                    },
+                                    "providerSilentMode": {
+                                        "type": "boolean",
+                                        "description": "Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.",
+                                        "x-example": false
+                                    },
+                                    "providerRootDirectory": {
+                                        "type": "string",
+                                        "description": "Path to site code in the linked repo.",
+                                        "x-example": "<PROVIDER_ROOT_DIRECTORY>"
+                                    },
+                                    "specification": {
+                                        "type": "string",
+                                        "description": "Framework specification for the site and builds.",
+                                        "x-example": null
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "framework"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete site",
+                "operationId": "sitesDelete",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "delete",
+                    "weight": 403,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/delete.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/delete-site.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/sites\/{siteId}\/deployments": {
+            "get": {
+                "summary": "List deployments",
+                "operationId": "sitesListDeployments",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Deployments List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/deploymentList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "listDeployments",
+                    "weight": 407,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/list-deployments.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/list-deployments.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: size, buildId, activate, entrypoint, commands, type, size",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": []
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SEARCH>",
+                            "default": ""
+                        },
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create deployment",
+                "operationId": "sitesCreateDeployment",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "202": {
+                        "description": "Deployment",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/deployment"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createDeployment",
+                    "weight": 405,
+                    "cookies": false,
+                    "type": "upload",
+                    "deprecated": false,
+                    "demo": "sites\/create-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/create-deployment.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": true,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart\/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "installCommand": {
+                                        "type": "string",
+                                        "description": "Install Commands.",
+                                        "x-example": "<INSTALL_COMMAND>"
+                                    },
+                                    "buildCommand": {
+                                        "type": "string",
+                                        "description": "Build Commands.",
+                                        "x-example": "<BUILD_COMMAND>"
+                                    },
+                                    "outputDirectory": {
+                                        "type": "string",
+                                        "description": "Output Directory.",
+                                        "x-example": "<OUTPUT_DIRECTORY>"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "description": "Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.",
+                                        "x-example": null
+                                    },
+                                    "activate": {
+                                        "type": "boolean",
+                                        "description": "Automatically activate the deployment when it is finished building.",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "code",
+                                    "activate"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/sites\/{siteId}\/deployments\/{deploymentId}": {
+            "get": {
+                "summary": "Get deployment",
+                "operationId": "sitesGetDeployment",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Deployment",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/deployment"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getDeployment",
+                    "weight": 406,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/get-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/get-deployment.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "deploymentId",
+                        "description": "Deployment ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DEPLOYMENT_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "patch": {
+                "summary": "Update deployment",
+                "operationId": "sitesUpdateDeployment",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Site",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/site"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "updateDeployment",
+                    "weight": 408,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/update-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/update-site-deployment.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "deploymentId",
+                        "description": "Deployment ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DEPLOYMENT_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete deployment",
+                "operationId": "sitesDeleteDeployment",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "deleteDeployment",
+                    "weight": 409,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/delete-deployment.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/delete-deployment.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "deploymentId",
+                        "description": "Deployment ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DEPLOYMENT_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/sites\/{siteId}\/deployments\/{deploymentId}\/build": {
+            "post": {
+                "summary": "Rebuild deployment",
+                "operationId": "sitesCreateBuild",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createBuild",
+                    "weight": 412,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/create-build.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "deploymentId",
+                        "description": "Deployment ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DEPLOYMENT_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "patch": {
+                "summary": "Cancel deployment",
+                "operationId": "sitesUpdateDeploymentBuild",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Build",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/build"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "updateDeploymentBuild",
+                    "weight": 413,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/update-deployment-build.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "deploymentId",
+                        "description": "Deployment ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DEPLOYMENT_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/sites\/{siteId}\/deployments\/{deploymentId}\/build\/download": {
+            "get": {
+                "summary": "Download build",
+                "operationId": "sitesGetBuildDownload",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "File"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getBuildDownload",
+                    "weight": 411,
+                    "cookies": false,
+                    "type": "location",
+                    "deprecated": false,
+                    "demo": "sites\/get-build-download.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/get-build-download.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.read",
+                    "platforms": [
+                        "server",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "deploymentId",
+                        "description": "Deployment ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DEPLOYMENT_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/sites\/{siteId}\/deployments\/{deploymentId}\/download": {
+            "get": {
+                "summary": "Download deployment",
+                "operationId": "sitesGetDeploymentDownload",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "File"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getDeploymentDownload",
+                    "weight": 410,
+                    "cookies": false,
+                    "type": "location",
+                    "deprecated": false,
+                    "demo": "sites\/get-deployment-download.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/get-deployment-download.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.read",
+                    "platforms": [
+                        "server",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "deploymentId",
+                        "description": "Deployment ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DEPLOYMENT_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/sites\/{siteId}\/usage": {
+            "get": {
+                "summary": "Get site usage",
+                "operationId": "sitesGetSiteUsage",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "UsageSite",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/usageSite"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getSiteUsage",
+                    "weight": 421,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/get-site-usage.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "range",
+                        "description": "Date range.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "24h",
+                            "enum": [
+                                "24h",
+                                "30d",
+                                "90d"
+                            ],
+                            "x-enum-name": "SiteUsageRange",
+                            "x-enum-keys": [
+                                "Twenty Four Hours",
+                                "Thirty Days",
+                                "Ninety Days"
+                            ],
+                            "default": "30d"
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/sites\/{siteId}\/variables": {
+            "get": {
+                "summary": "List variables",
+                "operationId": "sitesListVariables",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Variables List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/variableList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "listVariables",
+                    "weight": 416,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/list-variables.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/list-variables.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create variable",
+                "operationId": "sitesCreateVariable",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "201": {
+                        "description": "Variable",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/variable"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createVariable",
+                    "weight": 414,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/create-variable.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/create-variable.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string",
+                                        "description": "Variable key. Max length: 255 chars.",
+                                        "x-example": "<KEY>"
+                                    },
+                                    "value": {
+                                        "type": "string",
+                                        "description": "Variable value. Max length: 8192 chars.",
+                                        "x-example": "<VALUE>"
+                                    },
+                                    "secret": {
+                                        "type": "boolean",
+                                        "description": "Is secret? Secret variables can only be updated or deleted, they cannot be read.",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "key",
+                                    "value"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/sites\/{siteId}\/variables\/{variableId}": {
+            "get": {
+                "summary": "Get variable",
+                "operationId": "sitesGetVariable",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Variable",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/variable"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getVariable",
+                    "weight": 415,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/get-variable.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/get-variable.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "variableId",
+                        "description": "Variable unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<VARIABLE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Update variable",
+                "operationId": "sitesUpdateVariable",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Variable",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/variable"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "updateVariable",
+                    "weight": 417,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/update-variable.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/update-variable.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "variableId",
+                        "description": "Variable unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<VARIABLE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string",
+                                        "description": "Variable key. Max length: 255 chars.",
+                                        "x-example": "<KEY>"
+                                    },
+                                    "value": {
+                                        "type": "string",
+                                        "description": "Variable value. Max length: 8192 chars.",
+                                        "x-example": "<VALUE>"
+                                    }
+                                },
+                                "required": [
+                                    "key"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete variable",
+                "operationId": "sitesDeleteVariable",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "deleteVariable",
+                    "weight": 418,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/delete-variable.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/delete-variable.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "sites.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "variableId",
+                        "description": "Variable unique ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<VARIABLE_ID>"
                         },
                         "in": "path"
                     }
@@ -32125,6 +34435,54 @@
                     "memberships"
                 ]
             },
+            "siteList": {
+                "description": "Sites List",
+                "type": "object",
+                "properties": {
+                    "total": {
+                        "type": "integer",
+                        "description": "Total number of sites documents that matched your query.",
+                        "x-example": 5,
+                        "format": "int32"
+                    },
+                    "sites": {
+                        "type": "array",
+                        "description": "List of sites.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/site"
+                        },
+                        "x-example": ""
+                    }
+                },
+                "required": [
+                    "total",
+                    "sites"
+                ]
+            },
+            "templateSiteList": {
+                "description": "Site Templates List",
+                "type": "object",
+                "properties": {
+                    "total": {
+                        "type": "integer",
+                        "description": "Total number of templates documents that matched your query.",
+                        "x-example": 5,
+                        "format": "int32"
+                    },
+                    "templates": {
+                        "type": "array",
+                        "description": "List of templates.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/templateSite"
+                        },
+                        "x-example": ""
+                    }
+                },
+                "required": [
+                    "total",
+                    "templates"
+                ]
+            },
             "functionList": {
                 "description": "Functions List",
                 "type": "object",
@@ -32243,6 +34601,30 @@
                 "required": [
                     "total",
                     "branches"
+                ]
+            },
+            "frameworkList": {
+                "description": "Frameworks List",
+                "type": "object",
+                "properties": {
+                    "total": {
+                        "type": "integer",
+                        "description": "Total number of frameworks documents that matched your query.",
+                        "x-example": 5,
+                        "format": "int32"
+                    },
+                    "frameworks": {
+                        "type": "array",
+                        "description": "List of frameworks.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/framework"
+                        },
+                        "x-example": ""
+                    }
+                },
+                "required": [
+                    "total",
+                    "frameworks"
                 ]
             },
             "runtimeList": {
@@ -35026,6 +37408,295 @@
                     "roles"
                 ]
             },
+            "site": {
+                "description": "Site",
+                "type": "object",
+                "properties": {
+                    "$id": {
+                        "type": "string",
+                        "description": "Site ID.",
+                        "x-example": "5e5ea5c16897e"
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Site creation date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Site update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Site name.",
+                        "x-example": "My Site"
+                    },
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Site enabled.",
+                        "x-example": false
+                    },
+                    "live": {
+                        "type": "boolean",
+                        "description": "Is the site deployed with the latest configuration? This is set to false if you've changed an environment variables, entrypoint, commands, or other settings that needs redeploy to be applied. When the value is false, redeploy the site to update it with the latest configuration.",
+                        "x-example": false
+                    },
+                    "framework": {
+                        "type": "string",
+                        "description": "Site framework.",
+                        "x-example": "react"
+                    },
+                    "deploymentId": {
+                        "type": "string",
+                        "description": "Site's active deployment ID.",
+                        "x-example": "5e5ea5c16897e"
+                    },
+                    "vars": {
+                        "type": "array",
+                        "description": "Site variables.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/variable"
+                        },
+                        "x-example": []
+                    },
+                    "timeout": {
+                        "type": "integer",
+                        "description": "Site request timeout in seconds.",
+                        "x-example": 300,
+                        "format": "int32"
+                    },
+                    "installCommand": {
+                        "type": "string",
+                        "description": "The install command used to install the site dependencies.",
+                        "x-example": "npm install"
+                    },
+                    "buildCommand": {
+                        "type": "string",
+                        "description": "The build command used to build the site.",
+                        "x-example": "npm run build"
+                    },
+                    "outputDirectory": {
+                        "type": "string",
+                        "description": "The directory where the site build output is located.",
+                        "x-example": "build"
+                    },
+                    "installationId": {
+                        "type": "string",
+                        "description": "Site VCS (Version Control System) installation id.",
+                        "x-example": "6m40at4ejk5h2u9s1hboo"
+                    },
+                    "providerRepositoryId": {
+                        "type": "string",
+                        "description": "VCS (Version Control System) Repository ID",
+                        "x-example": "appwrite"
+                    },
+                    "providerBranch": {
+                        "type": "string",
+                        "description": "VCS (Version Control System) branch name",
+                        "x-example": "main"
+                    },
+                    "providerRootDirectory": {
+                        "type": "string",
+                        "description": "Path to site in VCS (Version Control System) repository",
+                        "x-example": "sites\/helloWorld"
+                    },
+                    "providerSilentMode": {
+                        "type": "boolean",
+                        "description": "Is VCS (Version Control System) connection is in silent mode? When in silence mode, no comments will be posted on the repository pull or merge requests",
+                        "x-example": false
+                    },
+                    "specification": {
+                        "type": "string",
+                        "description": "Machine specification for builds and executions.",
+                        "x-example": "s-1vcpu-512mb"
+                    },
+                    "buildRuntime": {
+                        "type": "string",
+                        "description": "Site build runtime.",
+                        "x-example": "node-22"
+                    },
+                    "serveRuntime": {
+                        "type": "string",
+                        "description": "Site serve runtime.",
+                        "x-example": "static-1"
+                    },
+                    "fallbackFile": {
+                        "type": "string",
+                        "description": "Name of fallback file to use instead of 404 page. If null, Appwrite 404 page will be displayed.",
+                        "x-example": "index.html"
+                    }
+                },
+                "required": [
+                    "$id",
+                    "$createdAt",
+                    "$updatedAt",
+                    "name",
+                    "enabled",
+                    "live",
+                    "framework",
+                    "deploymentId",
+                    "vars",
+                    "timeout",
+                    "installCommand",
+                    "buildCommand",
+                    "outputDirectory",
+                    "installationId",
+                    "providerRepositoryId",
+                    "providerBranch",
+                    "providerRootDirectory",
+                    "providerSilentMode",
+                    "specification",
+                    "buildRuntime",
+                    "serveRuntime",
+                    "fallbackFile"
+                ]
+            },
+            "templateSite": {
+                "description": "Template Site",
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Site Template ID.",
+                        "x-example": "starter"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Site Template Name.",
+                        "x-example": "Starter site"
+                    },
+                    "demoUrl": {
+                        "type": "string",
+                        "description": "URL hosting a template demo.",
+                        "x-example": "https:\/\/nextjs-starter.appwrite.network\/"
+                    },
+                    "demoImage": {
+                        "type": "string",
+                        "description": "File URL with preview screenshot.",
+                        "x-example": "https:\/\/cloud.appwrite.io\/console\/images\/sites\/templates\/nextjs-starter.png"
+                    },
+                    "useCases": {
+                        "type": "array",
+                        "description": "Site use cases.",
+                        "items": {
+                            "type": "string"
+                        },
+                        "x-example": "Starter"
+                    },
+                    "frameworks": {
+                        "type": "array",
+                        "description": "List of frameworks that can be used with this template.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/templateFramework"
+                        },
+                        "x-example": []
+                    },
+                    "vcsProvider": {
+                        "type": "string",
+                        "description": "VCS (Version Control System) Provider.",
+                        "x-example": "github"
+                    },
+                    "providerRepositoryId": {
+                        "type": "string",
+                        "description": "VCS (Version Control System) Repository ID",
+                        "x-example": "templates"
+                    },
+                    "providerOwner": {
+                        "type": "string",
+                        "description": "VCS (Version Control System) Owner.",
+                        "x-example": "appwrite"
+                    },
+                    "providerVersion": {
+                        "type": "string",
+                        "description": "VCS (Version Control System) branch version (tag).",
+                        "x-example": "main"
+                    },
+                    "variables": {
+                        "type": "array",
+                        "description": "Site variables.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/templateVariable"
+                        },
+                        "x-example": []
+                    }
+                },
+                "required": [
+                    "key",
+                    "name",
+                    "demoUrl",
+                    "demoImage",
+                    "useCases",
+                    "frameworks",
+                    "vcsProvider",
+                    "providerRepositoryId",
+                    "providerOwner",
+                    "providerVersion",
+                    "variables"
+                ]
+            },
+            "templateFramework": {
+                "description": "Template Framework",
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Parent framework key.",
+                        "x-example": "sveltekit"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Framework Name.",
+                        "x-example": "SvelteKit"
+                    },
+                    "installCommand": {
+                        "type": "string",
+                        "description": "The install command used to install the dependencies.",
+                        "x-example": "npm install"
+                    },
+                    "buildCommand": {
+                        "type": "string",
+                        "description": "The build command used to build the deployment.",
+                        "x-example": "npm run build"
+                    },
+                    "outputDirectory": {
+                        "type": "string",
+                        "description": "The output directory to store the build output.",
+                        "x-example": ".\/build"
+                    },
+                    "providerRootDirectory": {
+                        "type": "string",
+                        "description": "Path to site in VCS (Version Control System) repository",
+                        "x-example": ".\/svelte-kit\/starter"
+                    },
+                    "serveRuntime": {
+                        "type": "string",
+                        "description": "Runtime used during serve of template deployment.",
+                        "x-example": "static-1"
+                    },
+                    "buildRuntime": {
+                        "type": "string",
+                        "description": "Runtime used during build step of template.",
+                        "x-example": "node-22"
+                    },
+                    "fallbackFile": {
+                        "type": "string",
+                        "description": "Fallback file for SPA. Only relevant for static serve runtime.",
+                        "x-example": "index.html"
+                    }
+                },
+                "required": [
+                    "key",
+                    "name",
+                    "installCommand",
+                    "buildCommand",
+                    "outputDirectory",
+                    "providerRootDirectory",
+                    "serveRuntime",
+                    "buildRuntime",
+                    "fallbackFile"
+                ]
+            },
             "function": {
                 "description": "Function",
                 "type": "object",
@@ -35075,7 +37746,7 @@
                     },
                     "runtime": {
                         "type": "string",
-                        "description": "Function execution runtime.",
+                        "description": "Function execution and build runtime.",
                         "x-example": "python-3.8"
                     },
                     "deployment": {
@@ -35371,6 +38042,11 @@
                         "description": "Variable Value.",
                         "x-example": "512"
                     },
+                    "secret": {
+                        "type": "boolean",
+                        "description": "Variable secret flag. Secret variables can only be updated or deleted, but never read.",
+                        "x-example": false
+                    },
                     "placeholder": {
                         "type": "string",
                         "description": "Variable Placeholder.",
@@ -35391,6 +38067,7 @@
                     "name",
                     "description",
                     "value",
+                    "secret",
                     "placeholder",
                     "required",
                     "type"
@@ -35604,6 +38281,80 @@
                     "supports"
                 ]
             },
+            "framework": {
+                "description": "Framework",
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Parent framework key.",
+                        "x-example": "sveltekit"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Framework Name.",
+                        "x-example": "SvelteKit"
+                    },
+                    "logo": {
+                        "type": "string",
+                        "description": "Name of the logo image.",
+                        "x-example": "sveltekit.png"
+                    },
+                    "serveRuntimes": {
+                        "type": "array",
+                        "description": "List of supported runtime versions.",
+                        "items": {
+                            "type": "string"
+                        },
+                        "x-example": "static-1"
+                    },
+                    "buildRuntimes": {
+                        "type": "array",
+                        "description": "List of supported runtime versions.",
+                        "items": {
+                            "type": "string"
+                        },
+                        "x-example": "node-21.0"
+                    },
+                    "defaultServeRuntime": {
+                        "type": "string",
+                        "description": "Default runtime version.",
+                        "x-example": "static-1"
+                    },
+                    "defaultBuildRuntime": {
+                        "type": "string",
+                        "description": "Default runtime version.",
+                        "x-example": "node-22"
+                    },
+                    "defaultInstallCommand": {
+                        "type": "string",
+                        "description": "Default command to download dependencies.",
+                        "x-example": "npm install"
+                    },
+                    "defaultBuildCommand": {
+                        "type": "string",
+                        "description": "Default command to build site into output directory.",
+                        "x-example": "npm run build"
+                    },
+                    "defaultOutputDirectory": {
+                        "type": "string",
+                        "description": "Default output directory of build.",
+                        "x-example": ".\/dist"
+                    }
+                },
+                "required": [
+                    "key",
+                    "name",
+                    "logo",
+                    "serveRuntimes",
+                    "buildRuntimes",
+                    "defaultServeRuntime",
+                    "defaultBuildRuntime",
+                    "defaultInstallCommand",
+                    "defaultBuildCommand",
+                    "defaultOutputDirectory"
+                ]
+            },
             "deployment": {
                 "description": "Deployment",
                 "type": "object",
@@ -35681,6 +38432,11 @@
                         "x-example": 128,
                         "format": "int32"
                     },
+                    "domain": {
+                        "type": "string",
+                        "description": "Preview domain.",
+                        "x-example": "deploy1-project1.appwrite.site"
+                    },
                     "providerRepositoryName": {
                         "type": "string",
                         "description": "The name of the vcs provider repository",
@@ -35747,6 +38503,7 @@
                     "status",
                     "buildLogs",
                     "buildTime",
+                    "domain",
                     "providerRepositoryName",
                     "providerRepositoryOwner",
                     "providerRepositoryUrl",
@@ -36077,17 +38834,17 @@
                         "description": "Whether or not to send session alert emails to users.",
                         "x-example": true
                     },
-                    "membershipsUserName": {
+                    "authMembershipsUserName": {
                         "type": "boolean",
                         "description": "Whether or not to show user names in the teams membership response.",
                         "x-example": true
                     },
-                    "membershipsUserEmail": {
+                    "authMembershipsUserEmail": {
                         "type": "boolean",
                         "description": "Whether or not to show user emails in the teams membership response.",
                         "x-example": true
                     },
-                    "membershipsMfa": {
+                    "authMembershipsMfa": {
                         "type": "boolean",
                         "description": "Whether or not to show user MFA status in the teams membership response.",
                         "x-example": true
@@ -36297,9 +39054,9 @@
                     "authPersonalDataCheck",
                     "authMockNumbers",
                     "authSessionAlerts",
-                    "membershipsUserName",
-                    "membershipsUserEmail",
-                    "membershipsMfa",
+                    "authMembershipsUserName",
+                    "authMembershipsUserEmail",
+                    "authMembershipsMfa",
                     "oAuthProviders",
                     "platforms",
                     "webhooks",
@@ -36648,6 +39405,11 @@
                         "description": "Variable value.",
                         "x-example": "myPa$$word1"
                     },
+                    "secret": {
+                        "type": "boolean",
+                        "description": "Variable secret flag. Secret variables can only be updated or deleted, but never read.",
+                        "x-example": false
+                    },
                     "resourceType": {
                         "type": "string",
                         "description": "Service to which the variable belongs. Possible values are \"project\", \"function\"",
@@ -36665,6 +39427,7 @@
                     "$updatedAt",
                     "key",
                     "value",
+                    "secret",
                     "resourceType",
                     "resourceId"
                 ]
@@ -37652,6 +40415,242 @@
                     "executionsMbSeconds"
                 ]
             },
+            "usageSites": {
+                "description": "UsageSites",
+                "type": "object",
+                "properties": {
+                    "range": {
+                        "type": "string",
+                        "description": "Time range of the usage stats.",
+                        "x-example": "30d"
+                    },
+                    "sitesTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of sites.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "deploymentsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of sites deployments.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "deploymentsStorageTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of sites deployment storage.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of sites build.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsStorageTotal": {
+                        "type": "integer",
+                        "description": "total aggregated sum of sites build storage.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsTimeTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of sites build compute time.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsMbSecondsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of sites build mbSeconds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "sites": {
+                        "type": "array",
+                        "description": "Aggregated number of sites per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": 0
+                    },
+                    "deployments": {
+                        "type": "array",
+                        "description": "Aggregated number of sites deployment per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "deploymentsStorage": {
+                        "type": "array",
+                        "description": "Aggregated number of sites deployment storage per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "builds": {
+                        "type": "array",
+                        "description": "Aggregated number of sites build per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsStorage": {
+                        "type": "array",
+                        "description": "Aggregated sum of sites build storage per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsTime": {
+                        "type": "array",
+                        "description": "Aggregated sum of sites build compute time per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsMbSeconds": {
+                        "type": "array",
+                        "description": "Aggregated sum of sites build mbSeconds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    }
+                },
+                "required": [
+                    "range",
+                    "sitesTotal",
+                    "deploymentsTotal",
+                    "deploymentsStorageTotal",
+                    "buildsTotal",
+                    "buildsStorageTotal",
+                    "buildsTimeTotal",
+                    "buildsMbSecondsTotal",
+                    "sites",
+                    "deployments",
+                    "deploymentsStorage",
+                    "builds",
+                    "buildsStorage",
+                    "buildsTime",
+                    "buildsMbSeconds"
+                ]
+            },
+            "usageSite": {
+                "description": "UsageSite",
+                "type": "object",
+                "properties": {
+                    "range": {
+                        "type": "string",
+                        "description": "The time range of the usage stats.",
+                        "x-example": "30d"
+                    },
+                    "deploymentsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of site deployments.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "deploymentsStorageTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of site deployments storage.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of site builds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsStorageTotal": {
+                        "type": "integer",
+                        "description": "total aggregated sum of site builds storage.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsTimeTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of site builds compute time.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "buildsMbSecondsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of site builds mbSeconds.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "deployments": {
+                        "type": "array",
+                        "description": "Aggregated number of site deployments per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "deploymentsStorage": {
+                        "type": "array",
+                        "description": "Aggregated number of site deployments storage per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "builds": {
+                        "type": "array",
+                        "description": "Aggregated number of site builds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsStorage": {
+                        "type": "array",
+                        "description": "Aggregated sum of site builds storage per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsTime": {
+                        "type": "array",
+                        "description": "Aggregated sum of site builds compute time per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "buildsMbSeconds": {
+                        "type": "array",
+                        "description": "Aggregated number of site builds mbSeconds per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    }
+                },
+                "required": [
+                    "range",
+                    "deploymentsTotal",
+                    "deploymentsStorageTotal",
+                    "buildsTotal",
+                    "buildsStorageTotal",
+                    "buildsTimeTotal",
+                    "buildsMbSecondsTotal",
+                    "deployments",
+                    "deploymentsStorage",
+                    "builds",
+                    "buildsStorage",
+                    "buildsTime",
+                    "buildsMbSeconds"
+                ]
+            },
             "usageProject": {
                 "description": "UsageProject",
                 "type": "object",
@@ -38041,7 +41040,7 @@
                         "x-example": "30000000",
                         "format": "int32"
                     },
-                    "_APP_FUNCTIONS_SIZE_LIMIT": {
+                    "_APP_COMPUTE_SIZE_LIMIT": {
                         "type": "integer",
                         "description": "Maximum file size allowed for deployment in bytes.",
                         "x-example": "30000000",
@@ -38066,16 +41065,28 @@
                         "type": "boolean",
                         "description": "Defines if AI assistant is enabled.",
                         "x-example": true
+                    },
+                    "_APP_DOMAIN_SITES": {
+                        "type": "string",
+                        "description": "A domain to use for site URLs.",
+                        "x-example": "sites.localhost"
+                    },
+                    "_APP_OPTIONS_FORCE_HTTPS": {
+                        "type": "string",
+                        "description": "Defines if HTTPS is enforced for all requests.",
+                        "x-example": "enabled"
                     }
                 },
                 "required": [
                     "_APP_DOMAIN_TARGET",
                     "_APP_STORAGE_LIMIT",
-                    "_APP_FUNCTIONS_SIZE_LIMIT",
+                    "_APP_COMPUTE_SIZE_LIMIT",
                     "_APP_USAGE_STATS",
                     "_APP_VCS_ENABLED",
                     "_APP_DOMAIN_ENABLED",
-                    "_APP_ASSISTANT_ENABLED"
+                    "_APP_ASSISTANT_ENABLED",
+                    "_APP_DOMAIN_SITES",
+                    "_APP_OPTIONS_FORCE_HTTPS"
                 ]
             },
             "mfaChallenge": {

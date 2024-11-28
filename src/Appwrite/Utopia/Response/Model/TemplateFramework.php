@@ -10,18 +10,18 @@ class TemplateFramework extends Model
     public function __construct()
     {
         $this
-        ->addRule('key', [
-            'type' => self::TYPE_STRING,
-            'description' => 'Parent framework key.',
-            'default' => '',
-            'example' => 'sveltekit',
-        ])
-        ->addRule('name', [
-            'type' => self::TYPE_STRING,
-            'description' => 'Framework Name.',
-            'default' => '',
-            'example' => 'SvelteKit'
-        ])
+            ->addRule('key', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Parent framework key.',
+                'default' => '',
+                'example' => 'sveltekit',
+            ])
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Framework Name.',
+                'default' => '',
+                'example' => 'SvelteKit'
+            ])
             ->addRule('installCommand', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The install command used to install the dependencies.',
@@ -57,6 +57,12 @@ class TemplateFramework extends Model
                 'description' => 'Runtime used during build step of template.',
                 'default' => '',
                 'example' => 'node-22',
+            ])
+            ->addRule('fallbackFile', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Fallback file for SPA. Only relevant for static serve runtime.',
+                'default' => null,
+                'example' => 'index.html',
             ])
         ;
     }

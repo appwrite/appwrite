@@ -19,18 +19,95 @@ return [
     'sveltekit' => [
         'key' => 'sveltekit',
         'name' => 'SvelteKit',
-        'defaultServeRuntime' => 'node-22',
-        'serveRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
         'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run build',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './build',
     ],
     'nextjs' => [
         'key' => 'nextjs',
         'name' => 'Next.js',
-        'defaultServeRuntime' => 'node-22',
-        'serveRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
         'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run build',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './out',
+    ],
+    'nuxt' => [
+        'key' => 'nuxt',
+        'name' => 'Nuxt',
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
+        'defaultBuildRuntime' => 'node-22',
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run generate',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './dist',
+    ],
+    /*
+    'angular' => [
+        'key' => 'angular',
+        'name' => 'Angular',
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
+        'defaultBuildRuntime' => 'node-22',
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run build',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './dist/starter/browser',
+    ],
+    */
+    'astro' => [
+        'key' => 'astro',
+        'name' => 'Astro',
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
+        'defaultBuildRuntime' => 'node-22',
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run build',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './dist',
+    ],
+    'remix' => [
+        'key' => 'remix',
+        'name' => 'Remix',
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
+        'defaultBuildRuntime' => 'node-22',
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run build',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './build/client',
+    ],
+    'flutter' => [
+        'key' => 'flutter',
+        'name' => 'Flutter',
+        'defaultServeRuntime' => 'static-1',
+        'serveRuntimes' => [
+            'static-1'
+        ],
+        'defaultBuildRuntime' => 'flutter-3.24',
+        'buildRuntimes' => getVersions($templateRuntimes['FLUTTER']['versions'], 'flutter'),
+        'defaultBuildCommand' => 'flutter build web',
+        'defaultInstallCommand' => '',
+        'defaultOutputDirectory' => './build/web',
     ],
     'static' => [
         'key' => 'static',
@@ -40,6 +117,9 @@ return [
             'static-1'
         ],
         'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node')
+        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'defaultBuildCommand' => 'npm run build',
+        'defaultInstallCommand' => 'npm install',
+        'defaultOutputDirectory' => './build',
     ]
 ];

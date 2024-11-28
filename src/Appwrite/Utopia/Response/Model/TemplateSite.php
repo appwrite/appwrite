@@ -22,6 +22,18 @@ class TemplateSite extends Model
                 'default' => '',
                 'example' => 'Starter site',
             ])
+            ->addRule('demoUrl', [
+                'type' => self::TYPE_STRING,
+                'description' => 'URL hosting a template demo.',
+                'default' => '',
+                'example' => 'https://nextjs-starter.appwrite.network/',
+            ])
+            ->addRule('demoImage', [
+                'type' => self::TYPE_STRING,
+                'description' => 'File URL with preview screenshot.',
+                'default' => '',
+                'example' => 'https://cloud.appwrite.io/console/images/sites/templates/nextjs-starter.png',
+            ])
             ->addRule('useCases', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Site use cases.',

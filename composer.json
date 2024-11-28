@@ -70,6 +70,7 @@
         "utopia-php/storage": "0.18.*",
         "utopia-php/swoole": "0.8.*",
         "utopia-php/system": "0.9.*",
+        "utopia-php/telemetry": "0.1.*",
         "utopia-php/vcs": "0.8.*",
         "utopia-php/websocket": "0.1.*",
         "matomo/device-detector": "6.1.*",
@@ -96,6 +97,10 @@
     "config": {
         "platform": {
             "php": "8.3"
+        },
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
         }
     }
 }

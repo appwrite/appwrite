@@ -695,31 +695,6 @@ class Builds extends Action
 
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
-            // Preview deployments for sites
-            if ($resource->getCollection() === 'sites') {
-                $ruleId = ID::unique();
-
-                $deploymentId = $deployment->getId();
-                $projectId = $project->getId();
-
-                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                $domain = "{$deploymentId}-{$projectId}.{$sitesDomain}";
-
-                $rule = Authorization::skip(
-                    fn () => $dbForConsole->createDocument('rules', new Document([
-                        '$id' => $ruleId,
-                        'projectId' => $project->getId(),
-                        'projectInternalId' => $project->getInternalId(),
-                        'domain' => $domain,
-                        'resourceType' => 'deployment',
-                        'resourceId' => $deployment->getId(),
-                        'resourceInternalId' => $deployment->getInternalId(),
-                        'status' => 'verified',
-                        'certificateId' => '',
-                    ]))
-                );
-            }
-
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForConsole);
             }
@@ -905,13 +880,26 @@ class Builds extends Action
 
     protected function getCommand(Document $resource, Document $deployment): string
     {
-        return match($resource->getCollection()) {
-            'functions' => $deployment->getAttribute('commands', ''),
-            'sites' => implode(' && ', array_filter([
-                $deployment->getAttribute('installCommand'),
-                $deployment->getAttribute('buildCommand')
-            ]))
-        };
+        if ($resource->getCollection() === 'functions') {
+            return $deployment->getAttribute('commands', '');
+        } elseif ($resource->getCollection() === 'sites') {
+            $command = '';
+
+            $installCommand = $deployment->getAttribute('installCommand', '');
+            $buildCommand = $deployment->getAttribute('buildCommand', '');
+
+            $command .= $installCommand;
+
+            if (!empty($installCommand) && !empty($buildCommand)) {
+                $command .= ' && ';
+            }
+
+            $command .= $buildCommand;
+
+            return $command;
+        }
+
+        return '';
     }
 
     /**

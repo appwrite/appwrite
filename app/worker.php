@@ -285,6 +285,50 @@ Server::setResource(
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
 
+Server::setResource('logError', function (Registry $register, Document $project) {
+    return function (Throwable $error, string $namespace, string $action, ?array $extras) use ($register, $project) {
+        $logger = $register->get('logger');
+
+        if ($logger) {
+            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
+
+            $log = new Log();
+            $log->setNamespace($namespace);
+            $log->setServer(\gethostname());
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($error->getMessage());
+
+            $log->addTag('code', $error->getCode());
+            $log->addTag('verboseType', get_class($error));
+            $log->addTag('projectId', $project->getId() ?? '');
+
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+
+
+            foreach ($extras as $key => $value) {
+                $log->addExtra($key, $value);
+            }
+
+            $log->setAction($action);
+
+            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            try {
+                $responseCode = $logger->addLog($log);
+                Console::info('Error log pushed with status code: ' . $responseCode);
+            } catch (Throwable $th) {
+                Console::error('Error pushing log: ' . $th->getMessage());
+            }
+        }
+
+        Console::warning("Failed: {$error->getMessage()}");
+        Console::warning($error->getTraceAsString());
+    };
+}, ['register', 'project']);
 
 $pools = $register->get('pools');
 $platform = new Appwrite();

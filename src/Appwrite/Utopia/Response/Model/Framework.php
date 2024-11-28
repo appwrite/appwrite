@@ -28,12 +28,6 @@ class Framework extends Model
                 'default' => '',
                 'example' => 'sveltekit.png',
             ])
-            ->addRule('defaultServeRuntime', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Default runtime version.',
-                'default' => '',
-                'example' => 'static-1',
-            ])
             ->addRule('serveRuntimes', [
                 'type' => self::TYPE_STRING,
                 'description' => 'List of supported runtime versions.',
@@ -41,18 +35,42 @@ class Framework extends Model
                 'example' => 'static-1',
                 'array' => true,
             ])
-            ->addRule('defaultBuildRuntime', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Default runtime version.',
-                'default' => '',
-                'example' => 'node-22',
-            ])
             ->addRule('buildRuntimes', [
                 'type' => self::TYPE_STRING,
                 'description' => 'List of supported runtime versions.',
                 'default' => '',
                 'example' => 'node-21.0',
                 'array' => true,
+            ])
+            ->addRule('defaultServeRuntime', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Default runtime version.',
+                'default' => '',
+                'example' => 'static-1',
+            ])
+            ->addRule('defaultBuildRuntime', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Default runtime version.',
+                'default' => '',
+                'example' => 'node-22',
+            ])
+            ->addRule('defaultInstallCommand', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Default command to download dependencies.',
+                'default' => '',
+                'example' => 'npm install',
+            ])
+            ->addRule('defaultBuildCommand', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Default command to build site into output directory.',
+                'default' => '',
+                'example' => 'npm run build',
+            ])
+            ->addRule('defaultOutputDirectory', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Default output directory of build.',
+                'default' => '',
+                'example' => './dist',
             ])
         ;
     }
