@@ -583,6 +583,7 @@ App::init()
         $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
         $refDomainOrigin = 'localhost';
+        var_dump($clients);
         $validator = new Hostname($clients);
         if ($validator->isValid($origin)) {
             $refDomainOrigin = $origin;
