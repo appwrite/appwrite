@@ -28,6 +28,7 @@ class DeleteLog extends Base
             ->desc('Delete log')
             ->groups(['api', 'sites'])
             ->label('scope', 'log.write')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('event', 'sites.[siteId].logs.[logId].delete')
             ->label('audits.event', 'logs.delete')
             ->label('audits.resource', 'site/{request.siteId}')

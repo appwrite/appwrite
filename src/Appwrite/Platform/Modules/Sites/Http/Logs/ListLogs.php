@@ -34,6 +34,7 @@ class ListLogs extends Base
             ->desc('List logs')
             ->groups(['api', 'sites'])
             ->label('scope', 'log.read')
+            ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
             ->label('sdk.namespace', 'sites')
             ->label('sdk.method', 'listLogs')

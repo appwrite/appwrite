@@ -309,6 +309,7 @@ const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 
 const RESOURCE_TYPE_PROJECTS = 'projects';
 const RESOURCE_TYPE_FUNCTIONS = 'functions';
+const RESOURCE_TYPE_SITES = 'sites';
 const RESOURCE_TYPE_DATABASES = 'databases';
 const RESOURCE_TYPE_BUCKETS = 'buckets';
 const RESOURCE_TYPE_PROVIDERS = 'providers';
