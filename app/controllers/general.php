@@ -587,7 +587,6 @@ App::init()
         $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
         $refDomainOrigin = 'localhost';
-        var_dump($clients);
         $validator = new Hostname($clients);
         if ($validator->isValid($origin)) {
             $refDomainOrigin = $origin;
@@ -663,6 +662,7 @@ App::init()
         if ($request->getProtocol() === 'https') {
             $response->addHeader('Strict-Transport-Security', 'max-age=' . (60 * 60 * 24 * 126)); // 126 days
         }
+        var_dump('origin='.$origin);
         var_dump('refDomain='.$refDomain);
         $response
             ->addHeader('Server', 'Appwrite')
