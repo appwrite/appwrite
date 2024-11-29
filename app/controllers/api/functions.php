@@ -1904,8 +1904,9 @@ App::post('/v1/functions/:functionId/executions')
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
-            'functionInternalId' => $function->getInternalId(),
-            'functionId' => $function->getId(),
+            'resourceInternalId' => $function->getInternalId(),
+            'resourceId' => $function->getId(),
+            'resourceType' => 'functions',
             'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => (!is_null($scheduledAt)) ? 'schedule' : 'http',
@@ -2172,7 +2173,8 @@ App::get('/v1/functions/:functionId/executions')
         }
 
         // Set internal queries
-        $queries[] = Query::equal('functionId', [$function->getId()]);
+        $queries[] = Query::equal('resourceId', [$function->getId()]);
+        $queries[] = Query::equal('resourceType', ['functions']);
 
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
@@ -2250,7 +2252,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
 
         $execution = $dbForProject->getDocument('executions', $executionId);
 
-        if ($execution->getAttribute('functionId') !== $function->getId()) {
+        if ($execution->getAttribute('resourceType') !== 'functions' && $execution->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
@@ -2301,7 +2303,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
-        if ($execution->getAttribute('functionId') !== $function->getId()) {
+        if ($execution->getAttribute('resourceType') !== 'functions' && $execution->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
         $status = $execution->getAttribute('status');
