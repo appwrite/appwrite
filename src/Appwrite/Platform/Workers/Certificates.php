@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
@@ -11,7 +12,6 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
 use Exception;
 use Throwable;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -48,7 +48,11 @@ class Certificates extends Action
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
+            ->inject('certificates')
+            ->callback(
+                fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates) =>
+                    $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $certificates)
+            );
     }
 
     /**
@@ -58,11 +62,12 @@ class Certificates extends Action
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
      * @param Log $log
+     * @param CertificatesAdapter $certificates
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log): void
+    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -76,7 +81,7 @@ class Certificates extends Action
 
         $log->addTag('domain', $domain->get());
 
-        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $skipRenewCheck);
+        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $certificates, $skipRenewCheck);
     }
 
     /**
@@ -85,24 +90,24 @@ class Certificates extends Action
      * @param Mail $queueForMails
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
+     * @param CertificatesAdapter $certificates
      * @param bool $skipRenewCheck
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, bool $skipRenewCheck = false): void
+    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, CertificatesAdapter $certificates, bool $skipRenewCheck = false): void
     {
         /**
          * 1. Read arguments and validate domain
          * 2. Get main domain
          * 3. Validate CNAME DNS if parameter is not main domain (meaning it's custom domain)
-         * 4. Validate security email. Cannot be empty, required by LetsEncrypt
-         * 5. Validate renew date with certificate file, unless requested to skip by parameter
-         * 6. Issue a certificate using certbot CLI
-         * 7. Update 'log' attribute on certificate document with Certbot message
-         * 8. Create storage folder for certificate, if not ready already
-         * 9. Move certificates from Certbot location to our Storage
-         * 10. Create/Update our Storage with new Traefik config with new certificate paths
+         * 4. Validate renew date with certificate file, unless requested to skip by parameter
+         * 5. Issue a certificate using certbot CLI
+         * 6. Update 'log' attribute on certificate document with Certbot message
+         * 7. Create storage folder for certificate, if not ready already
+         * 8. Move certificates from Certbot location to our Storage
+         * 9. Create/Update our Storage with new Traefik config with new certificate paths
          * 11. Read certificate file and update 'renewDate' on certificate document
          * 12. Update 'issueDate' and 'attempts' on certificate
          *
@@ -119,7 +124,7 @@ class Certificates extends Action
          * 2. Save document to database
          * 3. Update all domains documents with current certificate ID
          *
-         * Note: Renewals are checked and scheduled from maintenence worker
+         * Note: Renewals are checked and scheduled from maintenance worker
          */
 
         // Get current certificate
@@ -134,40 +139,27 @@ class Certificates extends Action
         $success = false;
 
         try {
-            // Email for alerts is required by LetsEncrypt
-            $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
-            if (empty($email)) {
-                throw new Exception('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue an SSL certificate.');
-            }
-
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
                 $mainDomain = $this->getMainDomain();
                 $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
                 $this->validateDomain($domain, $isMainDomain, $log);
+
+                // If certificate exists already, double-check expiry date. Skip if job is forced
+                if (!$certificates->isRenewRequired($domain->get(), $log)) {
+                    throw new Exception('Renew isn\'t required.');
+                }
             }
 
-            // If certificate exists already, double-check expiry date. Skip if job is forced
-            if (!$skipRenewCheck && !$this->isRenewRequired($domain->get(), $log)) {
-                throw new Exception('Renew isn\'t required.');
-            }
-
-            // Prepare folder name for certbot. Using this helps prevent miss-match in LetsEncrypt configuration when renewing certificate
-            $folder = ID::unique();
-
-            // Generate certificate files using Let's Encrypt
-            $letsEncryptData = $this->issueCertificate($folder, $domain->get(), $email);
+            // Prepare unique cert name. Using this helps prevent miss-match in configuration when renewing certificates.
+            $certName = ID::unique();
+            $renewDate = $certificates->issueCertificate($certName, $domain->get());
 
             // Command succeeded, store all data into document
-            $logs = 'Certificate successfully generated.';
-            $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
-
-
-            // Give certificates to Traefik
-            $this->applyCertificateFiles($folder, $domain->get(), $letsEncryptData);
+            $certificate->setAttribute('logs', 'Certificate successfully generated.');
 
             // Update certificate info stored in database
-            $certificate->setAttribute('renewDate', $this->getRenewDate($domain->get()));
+            $certificate->setAttribute('renewDate', $renewDate);
             $certificate->setAttribute('attempts', 0);
             $certificate->setAttribute('issueDate', DateTime::now());
             $success = true;
@@ -181,7 +173,7 @@ class Certificates extends Action
             $attempts = $certificate->getAttribute('attempts', 0) + 1;
             $certificate->setAttribute('attempts', $attempts);
 
-            // Store cuttent time as renew date to ensure another attempt in next maintenance cycle
+            // Store current time as renew date to ensure another attempt in next maintenance cycle.
             $certificate->setAttribute('renewDate', DateTime::now());
 
             // Send email to security email
@@ -245,8 +237,8 @@ class Certificates extends Action
     }
 
     /**
-     * Internal domain validation functionality to prevent unnecessary attempts failed from Let's Encrypt side. We check:
-     * - Domain needs to be public and valid (prevents NFT domains that are not supported by Let's Encrypt)
+     * Internal domain validation functionality to prevent unnecessary attempts. We check:
+     * - Domain needs to be public and valid (prevents NFT domains that are not supported)
      * - Domain must have proper DNS record
      *
      * @param Domain $domain Domain which we validate
@@ -289,136 +281,6 @@ class Certificates extends Action
         } else {
             // Main domain validation
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
-        }
-    }
-
-    /**
-     * Reads expiry date of certificate from file and decides if renewal is required or not.
-     *
-     * @param string $domain Domain for which we check certificate file
-     * @return bool True, if certificate needs to be renewed
-     * @throws Exception
-     */
-    private function isRenewRequired(string $domain, Log $log): bool
-    {
-        $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
-        if (\file_exists($certPath)) {
-            $validTo = null;
-
-            $certData = openssl_x509_parse(file_get_contents($certPath));
-            $validTo = $certData['validTo_time_t'] ?? 0;
-
-            if (empty($validTo)) {
-                $log->addTag('certificateDomain', $domain);
-                throw new Exception('Unable to read certificate file (cert.pem).');
-            }
-
-            // LetsEncrypt allows renewal 30 days before expiry
-            $expiryInAdvance = (60 * 60 * 24 * 30);
-            if ($validTo - $expiryInAdvance > \time()) {
-                $log->addTag('certificateDomain', $domain);
-                $log->addExtra('certificateData', \is_array($certData) ? \json_encode($certData) : \strval($certData));
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * LetsEncrypt communication to issue certificate (using certbot CLI)
-     *
-     * @param string $folder Folder into which certificates should be generated
-     * @param string $domain Domain to generate certificate for
-     * @return array Named array with keys 'stdout' and 'stderr', both string
-     * @throws Exception
-     */
-    private function issueCertificate(string $folder, string $domain, string $email): array
-    {
-        $stdout = '';
-        $stderr = '';
-
-        $staging = (App::isProduction()) ? '' : ' --dry-run';
-        $exit = Console::execute("certbot certonly -v --webroot --noninteractive --agree-tos{$staging}"
-            . " --email " . $email
-            . " --cert-name " . $folder
-            . " -w " . APP_STORAGE_CERTIFICATES
-            . " -d {$domain}", '', $stdout, $stderr);
-
-        // Unexpected error, usually 5XX, API limits, ...
-        if ($exit !== 0) {
-            throw new Exception('Failed to issue a certificate with message: ' . $stderr);
-        }
-
-        return [
-            'stdout' => $stdout,
-            'stderr' => $stderr
-        ];
-    }
-
-    /**
-     * Read new renew date from certificate file generated by Let's Encrypt
-     *
-     * @param string $domain Domain which certificate was generated for
-     * @return string
-     * @throws \Utopia\Database\Exception
-     */
-    private function getRenewDate(string $domain): string
-    {
-        $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
-        $certData = openssl_x509_parse(file_get_contents($certPath));
-        $validTo = $certData['validTo_time_t'] ?? null;
-        $dt = (new \DateTime())->setTimestamp($validTo);
-        return DateTime::addSeconds($dt, -60 * 60 * 24 * 30); // -30 days
-    }
-
-    /**
-     * Method to take files from Let's Encrypt, and put it into Traefik.
-     *
-     * @param string $domain Domain which certificate was generated for
-     * @param string $folder Folder in which certificates were generated
-     * @param array $letsEncryptData Let's Encrypt logs to use for additional info when throwing error
-     * @return void
-     * @throws Exception
-     */
-    private function applyCertificateFiles(string $folder, string $domain, array $letsEncryptData): void
-    {
-
-        // Prepare folder in storage for domain
-        $path = APP_STORAGE_CERTIFICATES . '/' . $domain;
-        if (!\is_readable($path)) {
-            if (!\mkdir($path, 0755, true)) {
-                throw new Exception('Failed to create path for certificate.');
-            }
-        }
-
-        // Move generated files
-        if (!@\rename('/etc/letsencrypt/live/' . $folder . '/cert.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem')) {
-            throw new Exception('Failed to rename certificate cert.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
-        }
-
-        if (!@\rename('/etc/letsencrypt/live/' . $folder . '/chain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/chain.pem')) {
-            throw new Exception('Failed to rename certificate chain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
-        }
-
-        if (!@\rename('/etc/letsencrypt/live/' . $folder . '/fullchain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/fullchain.pem')) {
-            throw new Exception('Failed to rename certificate fullchain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
-        }
-
-        if (!@\rename('/etc/letsencrypt/live/' . $folder . '/privkey.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/privkey.pem')) {
-            throw new Exception('Failed to rename certificate privkey.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
-        }
-
-        $config = \implode(PHP_EOL, [
-            "tls:",
-            "  certificates:",
-            "    - certFile: /storage/certificates/{$domain}/fullchain.pem",
-            "      keyFile: /storage/certificates/{$domain}/privkey.pem"
-        ]);
-
-        // Save configuration into Traefik using our new cert files
-        if (!\file_put_contents(APP_STORAGE_CONFIG . '/' . $domain . '.yml', $config)) {
-            throw new Exception('Failed to save Traefik configuration.');
         }
     }
 
@@ -478,12 +340,12 @@ class Certificates extends Action
     private function updateDomainDocuments(string $certificateId, string $domain, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions): void
     {
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        if (version_compare(APP_VERSION_STABLE, '1.7.0', '<')) {
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            $rule = $dbForConsole->getDocument('rules', md5($domain));
+        } else {
             $rule = $dbForConsole->findOne('rules', [
                 Query::equal('domain', [$domain]),
             ]);
-        } else {
-            $rule = $dbForConsole->getDocument('rules', md5($domain));
         }
 
         if (!$rule->isEmpty()) {
@@ -499,6 +361,10 @@ class Certificates extends Action
             }
 
             $project = $dbForConsole->getDocument('projects', $projectId);
+
+            if ($project->isEmpty()) {
+                return;
+            }
 
             /** Trigger Webhook */
             $ruleModel = new Rule();
