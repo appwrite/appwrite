@@ -602,11 +602,7 @@ App::init()
         $endDomain = new Domain((string)$origin);
 
 
-        var_dump($clients);
-        var_dump($request->getOrigin());
-        var_dump(\parse_url($request->getOrigin(), PHP_URL_HOST));
-        var_dump($request->getReferer());
-        var_dump(\parse_url($request->getOrigin($referrer), PHP_URL_HOST));
+        var_dump('origin='.$origin);
         var_dump('refDomain='.$refDomain);
 
 
