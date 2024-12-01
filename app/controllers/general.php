@@ -601,6 +601,15 @@ App::init()
         $selfDomain = new Domain($request->getHostname());
         $endDomain = new Domain((string)$origin);
 
+
+        var_dump($clients);
+        var_dump($request->getOrigin());
+        var_dump(\parse_url($request->getOrigin(), PHP_URL_HOST));
+        var_dump($request->getReferer());
+        var_dump(\parse_url($request->getOrigin($referrer), PHP_URL_HOST));
+        var_dump('refDomain='.$refDomain);
+
+
         Config::setParam(
             'domainVerification',
             ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
@@ -662,8 +671,7 @@ App::init()
         if ($request->getProtocol() === 'https') {
             $response->addHeader('Strict-Transport-Security', 'max-age=' . (60 * 60 * 24 * 126)); // 126 days
         }
-        var_dump('origin='.$origin);
-        var_dump('refDomain='.$refDomain);
+
         $response
             ->addHeader('Server', 'Appwrite')
             ->addHeader('X-Content-Type-Options', 'nosniff')
