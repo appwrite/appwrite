@@ -66,7 +66,7 @@ class CreateSite extends Base
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
             ->param('subdomain', '', new CustomId(), 'Unique custom sub-domain. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.')
-            ->param('adapter', '', new Text(8192, 0), 'Framework adapter. Usuallly allows: static, ssr', true)
+            ->param('adapter', '', new Text(8192, 0), 'Framework adapter. Allows: static, ssr', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)

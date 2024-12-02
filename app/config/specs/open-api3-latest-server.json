@@ -17240,7 +17240,7 @@
                                     },
                                     "adapter": {
                                         "type": "string",
-                                        "description": "Framework adapter. Usuallly allows: static, ssr",
+                                        "description": "Framework adapter. Allows: static, ssr",
                                         "x-example": "<ADAPTER>"
                                     },
                                     "installationId": {
