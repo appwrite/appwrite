@@ -3692,7 +3692,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->desc('Update documents')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.update')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'documents.update')
@@ -3719,7 +3718,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('queueForEvents')
     ->inject('queueForRealtime')
     ->inject('project')
-    ->action(function (string $databaseId, string $collectionId, string|array $data, ?array $permissions, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, Realtime $queueForRealtime, Document $project) {
+    ->action(function (string $databaseId, string $collectionId, string|array $data, ?array $permissions, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Document $project) {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
@@ -3784,31 +3783,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
                 $queries
             )
         );
-
-        $queueForEvents
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $database);
-
-        // Trigger all events, we do this manually since we have to trigger multiple.
-        foreach ($documents as $document) {
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
-
-            $queueForEvents
-                ->setProject($project)
-                ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].update')
-                ->setParam('documentId', $document->getId())
-                ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
-                ->trigger();
-
-            if ($project->getId() !== 'console') {
-                $queueForRealtime
-                    ->from($queueForEvents)
-                    ->trigger();
-            }
-        }
 
         $response->dynamic(new Document([
             'total' => \count($documents),
