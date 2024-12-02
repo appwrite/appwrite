@@ -89,10 +89,13 @@ class UpdateSite extends Base
 
     public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $buildRuntime, string $adapter, ?string $fallbackFile, string $installationId, ?string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
-        $adapters = \array_keys($framework['adapters'] ?? []);
-        $validator = new WhiteList($adapters, true);
-        if (!$validator->isValid($adapter)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Adapter not supported for the selected framework.');
+        if(!empty($adapter)) {
+            $configFramework = Config::getParam('frameworks')[$framework] ?? [];
+            $adapters = \array_keys($configFramework['adapters'] ?? []);
+            $validator = new WhiteList($adapters, true);
+            if (!$validator->isValid($adapter)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Adapter not supported for the selected framework.');
+            }
         }
 
         // TODO: If only branch changes, re-deploy

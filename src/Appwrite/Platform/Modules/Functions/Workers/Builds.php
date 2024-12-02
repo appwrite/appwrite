@@ -566,6 +566,7 @@ class Builds extends Action
                     try {
                         $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . \trim(\escapeshellarg($command), "\'") . '"';
 
+                        // TODO: Detect adapter if adapter is empty
                         $response = $executor->createRuntime(
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),

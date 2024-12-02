@@ -97,11 +97,13 @@ class CreateSite extends Base
 
     public function action(string $siteId, string $name, string $framework, bool $enabled, int $timeout, string $installCommand, string $buildCommand, string $outputDirectory, string $subdomain, string $buildRuntime, string $adapter, string $installationId, ?string $fallbackFile, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github)
     {
-        $configFramework = Config::getParam('frameworks')[$framework] ?? [];
-        $adapters = \array_keys($configFramework['adapters'] ?? []);
-        $validator = new WhiteList($adapters, true);
-        if (!$validator->isValid($adapter)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Adapter not supported for the selected framework.');
+        if(!empty($adapter)) {
+            $configFramework = Config::getParam('frameworks')[$framework] ?? [];
+            $adapters = \array_keys($configFramework['adapters'] ?? []);
+            $validator = new WhiteList($adapters, true);
+            if (!$validator->isValid($adapter)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Adapter not supported for the selected framework.');
+            }
         }
 
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
