@@ -153,5 +153,21 @@ return [
                 'bundleCommand' => '',
             ],
         ],
-    ]
+    ],
+    'other' => [
+        'key' => 'other',
+        'name' => 'Other',
+        'buildRuntime' => 'node-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => '',
+                'installCommand' => '',
+                'outputDirectory' => './',
+                'startCommand' => 'sh helpers/server.sh',
+                'bundleCommand' => '',
+            ],
+        ]
+    ],
 ];

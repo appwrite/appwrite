@@ -25795,7 +25795,8 @@
                                         "remix",
                                         "nuxt",
                                         "nextjs",
-                                        "flutter"
+                                        "flutter",
+                                        "other"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -25908,7 +25909,7 @@
                                 "adapter": {
                                     "type": "string",
                                     "description": "Framework adapter. Usuallly allows: static, ssr",
-                                    "default": null,
+                                    "default": "",
                                     "x-example": "<ADAPTER>"
                                 },
                                 "installationId": {
@@ -25982,8 +25983,7 @@
                                 "siteId",
                                 "name",
                                 "framework",
-                                "buildRuntime",
-                                "adapter"
+                                "buildRuntime"
                             ]
                         }
                     }
@@ -26421,7 +26421,8 @@
                                         "remix",
                                         "nuxt",
                                         "nextjs",
-                                        "flutter"
+                                        "flutter",
+                                        "other"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -26528,7 +26529,7 @@
                                 "adapter": {
                                     "type": "string",
                                     "description": "Framework adapter. Usuallly allows: static, ssr",
-                                    "default": null,
+                                    "default": "",
                                     "x-example": "<ADAPTER>"
                                 },
                                 "fallbackFile": {
@@ -26576,8 +26577,7 @@
                             },
                             "required": [
                                 "name",
-                                "framework",
-                                "adapter"
+                                "framework"
                             ]
                         }
                     }

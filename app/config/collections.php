@@ -3442,7 +3442,7 @@ $projectCollections = array_merge([
                 'size' => 128,
                 'signed' => true,
                 'required' => false,
-                'default' => null,
+                'default' => '',
                 'array' => false,
                 'filters' => [],
             ],

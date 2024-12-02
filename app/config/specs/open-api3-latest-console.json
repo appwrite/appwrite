@@ -25318,7 +25318,8 @@
                                             "remix",
                                             "nuxt",
                                             "nextjs",
-                                            "flutter"
+                                            "flutter",
+                                            "other"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -25486,8 +25487,7 @@
                                     "siteId",
                                     "name",
                                     "framework",
-                                    "buildRuntime",
-                                    "adapter"
+                                    "buildRuntime"
                                 ]
                             }
                         }
@@ -25927,7 +25927,8 @@
                                             "remix",
                                             "nuxt",
                                             "nextjs",
-                                            "flutter"
+                                            "flutter",
+                                            "other"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -26068,8 +26069,7 @@
                                 },
                                 "required": [
                                     "name",
-                                    "framework",
-                                    "adapter"
+                                    "framework"
                                 ]
                             }
                         }
