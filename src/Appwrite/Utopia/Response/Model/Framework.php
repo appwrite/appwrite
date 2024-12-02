@@ -22,6 +22,12 @@ class Framework extends Model
                 'default' => '',
                 'example' => 'SvelteKit'
             ])
+            ->addRule('buildRuntime', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Default runtime version.',
+                'default' => '',
+                'example' => 'node-22',
+            ])
             ->addRule('runtimes', [
                 'type' => self::TYPE_STRING,
                 'description' => 'List of supported runtime versions.',

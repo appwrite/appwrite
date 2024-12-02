@@ -25788,13 +25788,13 @@
                                     "type": "string",
                                     "description": "Sites framework.",
                                     "default": null,
-                                    "x-example": "sveltekit",
+                                    "x-example": "nextjs",
                                     "enum": [
+                                        "nextjs",
+                                        "nuxt",
                                         "sveltekit",
                                         "astro",
                                         "remix",
-                                        "nuxt",
-                                        "nextjs",
                                         "flutter",
                                         "other"
                                     ],
@@ -26414,13 +26414,13 @@
                                     "type": "string",
                                     "description": "Sites framework.",
                                     "default": null,
-                                    "x-example": "sveltekit",
+                                    "x-example": "nextjs",
                                     "enum": [
+                                        "nextjs",
+                                        "nuxt",
                                         "sveltekit",
                                         "astro",
                                         "remix",
-                                        "nuxt",
-                                        "nextjs",
                                         "flutter",
                                         "other"
                                     ],
@@ -38727,6 +38727,11 @@
                     "description": "Framework Name.",
                     "x-example": "SvelteKit"
                 },
+                "buildRuntime": {
+                    "type": "string",
+                    "description": "Default runtime version.",
+                    "x-example": "node-22"
+                },
                 "runtimes": {
                     "type": "array",
                     "description": "List of supported runtime versions.",
@@ -38759,6 +38764,7 @@
             "required": [
                 "key",
                 "name",
+                "buildRuntime",
                 "runtimes",
                 "adapters"
             ]
@@ -38771,11 +38777,6 @@
                     "type": "string",
                     "description": "Adapter key.",
                     "x-example": "static"
-                },
-                "buildRuntime": {
-                    "type": "string",
-                    "description": "Default runtime version.",
-                    "x-example": "node-22"
                 },
                 "installCommand": {
                     "type": "string",
@@ -38795,7 +38796,6 @@
             },
             "required": [
                 "key",
-                "buildRuntime",
                 "installCommand",
                 "buildCommand",
                 "outputDirectory"

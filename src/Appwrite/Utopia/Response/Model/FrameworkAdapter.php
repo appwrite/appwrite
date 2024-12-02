@@ -16,12 +16,6 @@ class FrameworkAdapter extends Model
                 'default' => '',
                 'example' => 'static',
             ])
-            ->addRule('buildRuntime', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Default runtime version.',
-                'default' => '',
-                'example' => 'node-22',
-            ])
             ->addRule('installCommand', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Default command to download dependencies.',
