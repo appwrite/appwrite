@@ -878,8 +878,11 @@ class Builds extends Action
             $frameworks = Config::getParam('frameworks', []);
             $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
             
-            if(!is_null($framework) && !empty($framework['bundleCommand'])) {
-                $commands[] = $framework['bundleCommand'];
+            if(!is_null($framework)) {
+                $adapter = ($framework['adapters'] ?? [])[$resource->getAttribute('adapter', '')] ?? null;
+                if(!is_null($adapter) && isset($adapter['bundleCommand'])) {
+                    $commands[] = $adapter['bundleCommand'];
+                }
             }
 
             $commands = array_filter($commands, fn($command) => !empty($command));

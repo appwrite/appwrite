@@ -3425,7 +3425,7 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('serveRuntime'),
+                '$id' => ID::custom('buildRuntime'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -3436,13 +3436,13 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('buildRuntime'),
+                '$id' => ID::custom('adapter'), // ssr or static
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 2048,
+                'size' => 128,
                 'signed' => true,
-                'required' => true,
-                'default' => '',
+                'required' => false,
+                'default' => null,
                 'array' => false,
                 'filters' => [],
             ],

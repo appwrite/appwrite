@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * List of Appwrite Sites templates
+ */
+
+// TODO: @Meldiron Angular
+
 const TEMPLATE_FRAMEWORKS = [
     'SVELTEKIT' => [
         'key' => 'sveltekit',
@@ -8,7 +14,7 @@ const TEMPLATE_FRAMEWORKS = [
         'buildCommand' => 'npm run build',
         'outputDirectory' => './build',
         'buildRuntime' => 'node-22',
-        'serveRuntime' => 'node-22',
+        'adapter' => 'ssr',
         'fallbackFile' => null,
     ],
     'NEXTJS' => [
@@ -16,19 +22,19 @@ const TEMPLATE_FRAMEWORKS = [
         'name' => 'Next.js',
         'installCommand' => 'npm install',
         'buildCommand' => 'npm run build',
-        'outputDirectory' => './out',
+        'outputDirectory' => './.next',
         'buildRuntime' => 'node-22',
-        'serveRuntime' => 'static-1',
+        'adapter' => 'ssr',
         'fallbackFile' => null,
     ],
     'NUXT' => [
         'key' => 'nuxt',
         'name' => 'Nuxt',
         'installCommand' => 'npm install',
-        'buildCommand' => 'npm run generate',
-        'outputDirectory' => './dist',
+        'buildCommand' => 'npm run build',
+        'outputDirectory' => './.output',
         'buildRuntime' => 'node-22',
-        'serveRuntime' => 'static-1',
+        'adapter' => 'ssr',
         'fallbackFile' => null,
     ],
     'REMIX' => [
@@ -36,9 +42,9 @@ const TEMPLATE_FRAMEWORKS = [
         'name' => 'Remix',
         'installCommand' => 'npm install',
         'buildCommand' => 'npm run build',
-        'outputDirectory' => './build/client',
+        'outputDirectory' => './build',
         'buildRuntime' => 'node-22',
-        'serveRuntime' => 'static-1',
+        'adapter' => 'ssr',
         'fallbackFile' => null,
     ],
     'ASTRO' => [
@@ -48,21 +54,9 @@ const TEMPLATE_FRAMEWORKS = [
         'buildCommand' => 'npm run build',
         'outputDirectory' => './dist',
         'buildRuntime' => 'node-22',
-        'serveRuntime' => 'node-22',
+        'adapter' => 'ssr',
         'fallbackFile' => null,
     ],
-    /*
-    'ANGULAR' => [
-        'key' => 'angular',
-        'name' => 'Angular',
-        'installCommand' => 'npm install',
-        'buildCommand' => 'npm run build',
-        'outputDirectory' => './dist/starter/browser',
-        'buildRuntime' => 'node-22',
-        'serveRuntime' => 'static-1',
-        'fallbackFile' => null,
-    ],
-    */
     'FLUTTER' => [
         'key' => 'flutter',
         'name' => 'Flutter',
@@ -70,7 +64,7 @@ const TEMPLATE_FRAMEWORKS = [
         'buildCommand' => 'flutter build web',
         'outputDirectory' => './build/web',
         'buildRuntime' => 'flutter-3.24',
-        'serveRuntime' => 'static-1',
+        'adapter' => 'static',
         'fallbackFile' => null,
     ],
 ];
@@ -167,25 +161,6 @@ return [
         'providerVersion' => '0.1.*',
         'variables' => [],
     ],
-    /*
-    [
-        'key' => 'angular-starter',
-        'name' => 'Angular starter website',
-        'useCases' => ['starter'],
-        'demoUrl' => 'https://angular-starter.sites.qa17.appwrite.org/',
-        'demoImage' => 'https://qa17.appwrite.org/console/images/sites/templates/angular-starter.png',
-        'frameworks' => [
-            getFramework('ANGULAR', [
-                'providerRootDirectory' => './angular/starter',
-            ]),
-        ],
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates-for-sites',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '0.1.*',
-        'variables' => [],
-    ],
-    */
     [
         'key' => 'flutter-starter',
         'name' => 'Flutter starter website',

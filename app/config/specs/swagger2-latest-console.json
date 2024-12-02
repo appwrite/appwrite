@@ -25791,12 +25791,11 @@
                                     "x-example": "sveltekit",
                                     "enum": [
                                         "sveltekit",
-                                        "nextjs",
-                                        "nuxt",
                                         "astro",
                                         "remix",
-                                        "flutter",
-                                        "static"
+                                        "nuxt",
+                                        "nextjs",
+                                        "flutter"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -25906,74 +25905,11 @@
                                     "x-enum-name": null,
                                     "x-enum-keys": []
                                 },
-                                "serveRuntime": {
+                                "adapter": {
                                     "type": "string",
-                                    "description": "Runtime to use when serving site.",
+                                    "description": "Framework adapter. Usuallly allows: static, ssr",
                                     "default": null,
-                                    "x-example": "node-14.5",
-                                    "enum": [
-                                        "node-14.5",
-                                        "node-16.0",
-                                        "node-18.0",
-                                        "node-19.0",
-                                        "node-20.0",
-                                        "node-21.0",
-                                        "node-22",
-                                        "php-8.0",
-                                        "php-8.1",
-                                        "php-8.2",
-                                        "php-8.3",
-                                        "ruby-3.0",
-                                        "ruby-3.1",
-                                        "ruby-3.2",
-                                        "ruby-3.3",
-                                        "python-3.8",
-                                        "python-3.9",
-                                        "python-3.10",
-                                        "python-3.11",
-                                        "python-3.12",
-                                        "python-ml-3.11",
-                                        "deno-1.21",
-                                        "deno-1.24",
-                                        "deno-1.35",
-                                        "deno-1.40",
-                                        "deno-1.46",
-                                        "deno-2.0",
-                                        "dart-2.15",
-                                        "dart-2.16",
-                                        "dart-2.17",
-                                        "dart-2.18",
-                                        "dart-3.0",
-                                        "dart-3.1",
-                                        "dart-3.3",
-                                        "dart-3.5",
-                                        "dotnet-6.0",
-                                        "dotnet-7.0",
-                                        "dotnet-8.0",
-                                        "java-8.0",
-                                        "java-11.0",
-                                        "java-17.0",
-                                        "java-18.0",
-                                        "java-21.0",
-                                        "java-22",
-                                        "swift-5.5",
-                                        "swift-5.8",
-                                        "swift-5.9",
-                                        "swift-5.10",
-                                        "kotlin-1.6",
-                                        "kotlin-1.8",
-                                        "kotlin-1.9",
-                                        "kotlin-2.0",
-                                        "cpp-17",
-                                        "cpp-20",
-                                        "bun-1.0",
-                                        "bun-1.1",
-                                        "go-1.23",
-                                        "static-1",
-                                        "flutter-3.24"
-                                    ],
-                                    "x-enum-name": null,
-                                    "x-enum-keys": []
+                                    "x-example": "<ADAPTER>"
                                 },
                                 "installationId": {
                                     "type": "string",
@@ -26047,7 +25983,7 @@
                                 "name",
                                 "framework",
                                 "buildRuntime",
-                                "serveRuntime"
+                                "adapter"
                             ]
                         }
                     }
@@ -26481,12 +26417,11 @@
                                     "x-example": "sveltekit",
                                     "enum": [
                                         "sveltekit",
-                                        "nextjs",
-                                        "nuxt",
                                         "astro",
                                         "remix",
-                                        "flutter",
-                                        "static"
+                                        "nuxt",
+                                        "nextjs",
+                                        "flutter"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -26590,74 +26525,11 @@
                                     "x-enum-name": null,
                                     "x-enum-keys": []
                                 },
-                                "serveRuntime": {
+                                "adapter": {
                                     "type": "string",
-                                    "description": "Runtime to use when serving site.",
-                                    "default": "",
-                                    "x-example": "node-14.5",
-                                    "enum": [
-                                        "node-14.5",
-                                        "node-16.0",
-                                        "node-18.0",
-                                        "node-19.0",
-                                        "node-20.0",
-                                        "node-21.0",
-                                        "node-22",
-                                        "php-8.0",
-                                        "php-8.1",
-                                        "php-8.2",
-                                        "php-8.3",
-                                        "ruby-3.0",
-                                        "ruby-3.1",
-                                        "ruby-3.2",
-                                        "ruby-3.3",
-                                        "python-3.8",
-                                        "python-3.9",
-                                        "python-3.10",
-                                        "python-3.11",
-                                        "python-3.12",
-                                        "python-ml-3.11",
-                                        "deno-1.21",
-                                        "deno-1.24",
-                                        "deno-1.35",
-                                        "deno-1.40",
-                                        "deno-1.46",
-                                        "deno-2.0",
-                                        "dart-2.15",
-                                        "dart-2.16",
-                                        "dart-2.17",
-                                        "dart-2.18",
-                                        "dart-3.0",
-                                        "dart-3.1",
-                                        "dart-3.3",
-                                        "dart-3.5",
-                                        "dotnet-6.0",
-                                        "dotnet-7.0",
-                                        "dotnet-8.0",
-                                        "java-8.0",
-                                        "java-11.0",
-                                        "java-17.0",
-                                        "java-18.0",
-                                        "java-21.0",
-                                        "java-22",
-                                        "swift-5.5",
-                                        "swift-5.8",
-                                        "swift-5.9",
-                                        "swift-5.10",
-                                        "kotlin-1.6",
-                                        "kotlin-1.8",
-                                        "kotlin-1.9",
-                                        "kotlin-2.0",
-                                        "cpp-17",
-                                        "cpp-20",
-                                        "bun-1.0",
-                                        "bun-1.1",
-                                        "go-1.23",
-                                        "static-1",
-                                        "flutter-3.24"
-                                    ],
-                                    "x-enum-name": null,
-                                    "x-enum-keys": []
+                                    "description": "Framework adapter. Usuallly allows: static, ssr",
+                                    "default": null,
+                                    "x-example": "<ADAPTER>"
                                 },
                                 "fallbackFile": {
                                     "type": "string",
@@ -26704,7 +26576,8 @@
                             },
                             "required": [
                                 "name",
-                                "framework"
+                                "framework",
+                                "adapter"
                             ]
                         }
                     }
@@ -38070,10 +37943,10 @@
                     "description": "Site build runtime.",
                     "x-example": "node-22"
                 },
-                "serveRuntime": {
+                "adapter": {
                     "type": "string",
-                    "description": "Site serve runtime.",
-                    "x-example": "static-1"
+                    "description": "Site framework adapter.",
+                    "x-example": "static"
                 },
                 "fallbackFile": {
                     "type": "string",
@@ -38102,7 +37975,7 @@
                 "providerSilentMode",
                 "specification",
                 "buildRuntime",
-                "serveRuntime",
+                "adapter",
                 "fallbackFile"
             ]
         },
@@ -38225,15 +38098,15 @@
                     "description": "Path to site in VCS (Version Control System) repository",
                     "x-example": ".\/svelte-kit\/starter"
                 },
-                "serveRuntime": {
-                    "type": "string",
-                    "description": "Runtime used during serve of template deployment.",
-                    "x-example": "static-1"
-                },
                 "buildRuntime": {
                     "type": "string",
                     "description": "Runtime used during build step of template.",
                     "x-example": "node-22"
+                },
+                "adapter": {
+                    "type": "string",
+                    "description": "Site framework runtime",
+                    "x-example": "ssr"
                 },
                 "fallbackFile": {
                     "type": "string",
@@ -38248,8 +38121,8 @@
                 "buildCommand",
                 "outputDirectory",
                 "providerRootDirectory",
-                "serveRuntime",
                 "buildRuntime",
+                "adapter",
                 "fallbackFile"
             ]
         },
@@ -38846,7 +38719,7 @@
             "properties": {
                 "key": {
                     "type": "string",
-                    "description": "Parent framework key.",
+                    "description": "Framework key.",
                     "x-example": "sveltekit"
                 },
                 "name": {
@@ -38854,48 +38727,67 @@
                     "description": "Framework Name.",
                     "x-example": "SvelteKit"
                 },
-                "logo": {
-                    "type": "string",
-                    "description": "Name of the logo image.",
-                    "x-example": "sveltekit.png"
-                },
-                "serveRuntimes": {
+                "runtimes": {
                     "type": "array",
                     "description": "List of supported runtime versions.",
                     "items": {
                         "type": "string"
                     },
-                    "x-example": "static-1"
+                    "x-example": [
+                        "static-1",
+                        "node-22"
+                    ]
                 },
-                "buildRuntimes": {
+                "adapters": {
                     "type": "array",
-                    "description": "List of supported runtime versions.",
+                    "description": "List of supported adapters.",
                     "items": {
-                        "type": "string"
+                        "type": "object",
+                        "$ref": "#\/definitions\/frameworkAdapter"
                     },
-                    "x-example": "node-21.0"
-                },
-                "defaultServeRuntime": {
+                    "x-example": [
+                        {
+                            "key": "static",
+                            "buildRuntime": "node-22",
+                            "buildCommand": "npm run build",
+                            "installCommand": "npm install",
+                            "outputDirectory": ".\/dist"
+                        }
+                    ]
+                }
+            },
+            "required": [
+                "key",
+                "name",
+                "runtimes",
+                "adapters"
+            ]
+        },
+        "frameworkAdapter": {
+            "description": "Framework Adapter",
+            "type": "object",
+            "properties": {
+                "key": {
                     "type": "string",
-                    "description": "Default runtime version.",
-                    "x-example": "static-1"
+                    "description": "Adapter key.",
+                    "x-example": "static"
                 },
-                "defaultBuildRuntime": {
+                "buildRuntime": {
                     "type": "string",
                     "description": "Default runtime version.",
                     "x-example": "node-22"
                 },
-                "defaultInstallCommand": {
+                "installCommand": {
                     "type": "string",
                     "description": "Default command to download dependencies.",
                     "x-example": "npm install"
                 },
-                "defaultBuildCommand": {
+                "buildCommand": {
                     "type": "string",
                     "description": "Default command to build site into output directory.",
                     "x-example": "npm run build"
                 },
-                "defaultOutputDirectory": {
+                "outputDirectory": {
                     "type": "string",
                     "description": "Default output directory of build.",
                     "x-example": ".\/dist"
@@ -38903,15 +38795,10 @@
             },
             "required": [
                 "key",
-                "name",
-                "logo",
-                "serveRuntimes",
-                "buildRuntimes",
-                "defaultServeRuntime",
-                "defaultBuildRuntime",
-                "defaultInstallCommand",
-                "defaultBuildCommand",
-                "defaultOutputDirectory"
+                "buildRuntime",
+                "installCommand",
+                "buildCommand",
+                "outputDirectory"
             ]
         },
         "deployment": {

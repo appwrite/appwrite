@@ -4,6 +4,8 @@
  * List of Appwrite Sites supported frameworks
  */
 
+// TODO: @Meldiron Angular
+
 use Utopia\Config\Config;
 
 $templateRuntimes = Config::getParam('template-runtimes');
@@ -19,114 +21,137 @@ return [
     'sveltekit' => [
         'key' => 'sveltekit',
         'name' => 'SvelteKit',
-        'defaultServeRuntime' => 'static-1',
-        'serveRuntimes' => [
-            'static-1'
-        ],
-        'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'defaultBuildCommand' => 'npm run build',
-        'defaultInstallCommand' => 'npm install',
-        'defaultOutputDirectory' => './build',
-        'startCommand' => 'cd src/function && node index.js',
-        'bundleCommand' => 'cp package*.json build/ && cp -R node_modules/ build/node_modules/',
+        'buildRuntime' => 'node-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './build',
+                'startCommand' => 'sh helpers/server.sh',
+                'bundleCommand' => '',
+            ],
+            'ssr' => [
+                'key' => 'ssr',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './build',
+                'startCommand' => 'sh helpers/sveltekit/server.sh',
+                'bundleCommand' => 'sh /usr/local/server/helpers/sveltekit/bundle.sh',
+            ]
+        ]
     ],
-    'nextjs' => [
-        'key' => 'nextjs',
-        'name' => 'Next.js',
-        'defaultServeRuntime' => 'static-1',
-        'serveRuntimes' => [
-            'static-1'
-        ],
-        'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'defaultBuildCommand' => 'npm run build',
-        'defaultInstallCommand' => 'npm install',
-        'defaultOutputDirectory' => './out',
-    ],
-    'nuxt' => [
-        'key' => 'nuxt',
-        'name' => 'Nuxt',
-        'defaultServeRuntime' => 'static-1',
-        'serveRuntimes' => [
-            'static-1'
-        ],
-        'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'defaultBuildCommand' => 'npm run generate',
-        'defaultInstallCommand' => 'npm install',
-        'defaultOutputDirectory' => './dist',
-    ],
-    /*
-    'angular' => [
-        'key' => 'angular',
-        'name' => 'Angular',
-        'defaultServeRuntime' => 'static-1',
-        'serveRuntimes' => [
-            'static-1'
-        ],
-        'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'defaultBuildCommand' => 'npm run build',
-        'defaultInstallCommand' => 'npm install',
-        'defaultOutputDirectory' => './dist/starter/browser',
-    ],
-    */
     'astro' => [
         'key' => 'astro',
         'name' => 'Astro',
-        'defaultServeRuntime' => 'node-22',
-        'serveRuntimes' => [
-            ...getVersions($templateRuntimes['NODE']['versions'], 'node'),
-            'static-1',
-        ],
-        'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'defaultBuildCommand' => 'npm run build',
-        'defaultInstallCommand' => 'npm install',
-        'defaultOutputDirectory' => './dist',
-        // 'startCommand' => 'sh helpers/server-astro.sh',
-        // 'bundleCommand' => 'sh helpers/bundle-astro.sh',
-        'startCommand' => 'cd src/function && HOST=0.0.0.0 PORT=3000 node server/entry.mjs',
-        'bundleCommand' => 'cp package*.json dist/server/ && cp -R node_modules/ dist/server/node_modules/',
+        'buildRuntime' => 'node-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './dist',
+                'startCommand' => 'sh helpers/server.sh',
+                'bundleCommand' => '',
+            ],
+            'ssr' => [
+                'key' => 'ssr',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './dist',
+                'startCommand' => 'sh helpers/astro/server.sh',
+                'bundleCommand' => 'sh /usr/local/server/helpers/astro/bundle.sh',
+            ]
+        ]
     ],
     'remix' => [
         'key' => 'remix',
         'name' => 'Remix',
-        'defaultServeRuntime' => 'static-1',
-        'serveRuntimes' => [
-            'static-1'
-        ],
-        'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'defaultBuildCommand' => 'npm run build',
-        'defaultInstallCommand' => 'npm install',
-        'defaultOutputDirectory' => './build/client',
+        'buildRuntime' => 'node-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './build/client',
+                'startCommand' => 'sh helpers/server.sh',
+                'bundleCommand' => '',
+            ],
+            'ssr' => [
+                'key' => 'ssr',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './build',
+                'startCommand' => 'sh helpers/remix/server.sh',
+                'bundleCommand' => 'sh /usr/local/server/helpers/remix/bundle.sh',
+            ]
+        ]
+    ],
+    'nuxt' => [
+        'key' => 'nuxt',
+        'name' => 'Nuxt',
+        'buildRuntime' => 'node-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'npm run generate',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './dist',
+                'startCommand' => 'sh helpers/server.sh',
+                'bundleCommand' => '',
+            ],
+            'ssr' => [
+                'key' => 'ssr',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './.output',
+                'startCommand' => 'sh helpers/nuxt/server.sh',
+                'bundleCommand' => 'sh /usr/local/server/helpers/nuxt/bundle.sh',
+            ]
+        ]
+    ],
+    'nextjs' => [
+        'key' => 'nextjs',
+        'name' => 'Next.js',
+        'buildRuntime' => 'node-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './out',
+                'startCommand' => 'sh helpers/server.sh',
+                'bundleCommand' => '',
+            ],
+            'ssr' => [
+                'key' => 'ssr',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './.next',
+                'startCommand' => 'sh helpers/next-js/server.sh',
+                'bundleCommand' => 'sh /usr/local/server/helpers/next-js/bundle.sh',
+            ]
+        ]
     ],
     'flutter' => [
         'key' => 'flutter',
         'name' => 'Flutter',
-        'defaultServeRuntime' => 'static-1',
-        'serveRuntimes' => [
-            'static-1'
+        'buildRuntime' => 'flutter-3.24',
+        'runtimes' => getVersions($templateRuntimes['FLUTTER']['versions'], 'flutter'),
+        'adapters' => [
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'flutter build web',
+                'installCommand' => '',
+                'outputDirectory' => './build/web',
+                'startCommand' => 'sh helpers/server.sh',
+                'bundleCommand' => '',
+            ],
         ],
-        'defaultBuildRuntime' => 'flutter-3.24',
-        'buildRuntimes' => getVersions($templateRuntimes['FLUTTER']['versions'], 'flutter'),
-        'defaultBuildCommand' => 'flutter build web',
-        'defaultInstallCommand' => '',
-        'defaultOutputDirectory' => './build/web',
-    ],
-    'static' => [
-        'key' => 'static',
-        'name' => 'Static',
-        'defaultServeRuntime' => 'static-1',
-        'serveRuntimes' => [
-            'static-1'
-        ],
-        'defaultBuildRuntime' => 'node-22',
-        'buildRuntimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
-        'defaultBuildCommand' => 'npm run build',
-        'defaultInstallCommand' => 'npm install',
-        'defaultOutputDirectory' => './build',
     ]
 ];
