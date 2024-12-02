@@ -2874,7 +2874,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('queueForUsage')
     ->inject('project')
     ->inject('mode')
-    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, Realtime $queueForRealtime, Document $project, string $mode) {
+    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, Document $project, string $mode) {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
         $isBulk = true;
 
