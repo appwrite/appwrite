@@ -3839,7 +3839,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('queueForRealtime')
     ->inject('queueForUsage')
     ->inject('project')
-    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, Realtime $queueForRealtime, Usage $queueForUsage, Document $project) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Usage $queueForUsage, Document $project) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -3864,12 +3864,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
                 intval(System::getEnv('_APP_DATABASE_BATCH_SIZE', 10_000))
             );
         });
-
-        $queueForEvents
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $database);
 
         // DB Storage Calculation
         $queueForUsage
@@ -3921,26 +3915,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             return true;
         });
-
-        foreach ($documents as $document) {
-            $processDocument($collection, $document);
-
-            $queueForEvents
-                ->setProject($project)
-                ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].delete')
-                ->setParam('documentId', $document->getId())
-                ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
-                ->trigger();
-
-            if ($project->getId() !== 'console') {
-                $queueForRealtime
-                    ->from($queueForEvents)
-                    ->trigger();
-            }
-        }
-
-        $queueForEvents->setEvent('');
-        $queueForRealtime->setEvent('');
 
         $response->dynamic(new Document([
             'total' => \count($documents),

@@ -95,6 +95,12 @@ $usageDatabaseListener = function (string $event, Document $document, Usage $que
         $value = -1;
     }
 
+    if ($event === Database::EVENT_DOCUMENTS_DELETE) {
+        $value = -1 * count($document->getAttribute('modified', []));
+    } else if ($event === Database::EVENT_DOCUMENTS_CREATE) {
+        $value = count($document->getAttribute('modified', []));
+    }
+
     switch (true) {
         case $document->getCollection() === 'teams':
             $queueForUsage
