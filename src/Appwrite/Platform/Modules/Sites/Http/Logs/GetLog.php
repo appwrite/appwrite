@@ -51,7 +51,7 @@ class GetLog extends Base
 
         $log = $dbForProject->getDocument('executions', $logId);
 
-        if ($log->getAttribute('resourceType') !== 'sites' && $log->getAttribute('resourceId') !== $site->getId()) {
+        if ($log->getAttribute('resourceType') !== 'sites' && $log->getAttribute('resourceInternalId') !== $site->getInternalId()) {
             throw new Exception(Exception::LOG_NOT_FOUND);
         }
 

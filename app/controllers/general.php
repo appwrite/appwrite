@@ -254,6 +254,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             'requestPath' => $path,
             'requestMethod' => $method,
             'requestHeaders' => $headersFiltered,
+            'errors' => '',
+            'logs' => '',
             'duration' => 0.0,
             'search' => implode(' ', [$resourceId, $executionId]),
         ]);
@@ -262,8 +264,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             $execution->setAttribute('resourceType', 'functions');
             $execution->setAttribute('trigger', 'http'); // http / schedule / event
             $execution->setAttribute('status', 'processing'); // waiting / processing / completed / failed
-            $execution->setAttribute('errors', '');
-            $execution->setAttribute('logs', '');
         } elseif ($type === 'site') {
             $execution->setAttribute('resourceType', 'sites');
         }
@@ -378,9 +378,9 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
             if ($type === 'function') {
                 $execution->setAttribute('status', $status);
-                $execution->setAttribute('logs', $executionResponse['logs']);
-                $execution->setAttribute('errors', $executionResponse['errors']);
             }
+            $execution->setAttribute('logs', $executionResponse['logs']);
+            $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
             $execution->setAttribute('duration', $executionResponse['duration']);

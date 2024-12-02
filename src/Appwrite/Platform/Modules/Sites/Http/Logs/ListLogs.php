@@ -69,7 +69,7 @@ class ListLogs extends Base
         }
 
         // Set internal queries
-        $queries[] = Query::equal('resourceId', [$site->getId()]);
+        $queries[] = Query::equal('resourceInternalId', [$site->getInternalId()]);
         $queries[] = Query::equal('resourceType', ['sites']);
 
         /**

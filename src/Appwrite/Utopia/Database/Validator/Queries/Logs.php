@@ -18,6 +18,6 @@ class Logs extends Base
      */
     public function __construct()
     {
-        parent::__construct('executions', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('executions', self::ALLOWED_ATTRIBUTES); //TODO: Update this later
     }
 }

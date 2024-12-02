@@ -59,7 +59,7 @@ class DeleteLog extends Base
             throw new Exception(Exception::LOG_NOT_FOUND);
         }
 
-        if ($log->getAttribute('resourceType') !== 'sites' && $log->getAttribute('resourceId') !== $site->getId()) {
+        if ($log->getAttribute('resourceType') !== 'sites' && $log->getAttribute('resourceInternalId') !== $site->getInternalId()) {
             throw new Exception(Exception::LOG_NOT_FOUND);
         }
 

@@ -2173,7 +2173,7 @@ App::get('/v1/functions/:functionId/executions')
         }
 
         // Set internal queries
-        $queries[] = Query::equal('resourceId', [$function->getId()]);
+        $queries[] = Query::equal('resourceInternalId', [$function->getInternalId()]);
         $queries[] = Query::equal('resourceType', ['functions']);
 
         /**
@@ -2252,7 +2252,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
 
         $execution = $dbForProject->getDocument('executions', $executionId);
 
-        if ($execution->getAttribute('resourceType') !== 'functions' && $execution->getAttribute('resourceId') !== $function->getId()) {
+        if ($execution->getAttribute('resourceType') !== 'functions' && $execution->getAttribute('resourceInternalId') !== $function->getInternalId()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
@@ -2303,7 +2303,7 @@ App::delete('/v1/functions/:functionId/executions/:executionId')
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
-        if ($execution->getAttribute('resourceType') !== 'functions' && $execution->getAttribute('resourceId') !== $function->getId()) {
+        if ($execution->getAttribute('resourceType') !== 'functions' && $execution->getAttribute('resourceInternalId') !== $function->getInternalId()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
         $status = $execution->getAttribute('status');
