@@ -9360,10 +9360,15 @@
                             "any"
                         ]
                     },
-                    "functionId": {
+                    "resourceId": {
                         "type": "string",
-                        "description": "Function ID.",
+                        "description": "Resource ID.",
                         "x-example": "5e5ea6g16897e"
+                    },
+                    "resourceType": {
+                        "type": "string",
+                        "description": "Resource type.",
+                        "x-example": "sites"
                     },
                     "trigger": {
                         "type": "string",
@@ -9432,7 +9437,7 @@
                     },
                     "duration": {
                         "type": "number",
-                        "description": "Function execution duration in seconds.",
+                        "description": "Resource(function\/site) execution duration in seconds.",
                         "x-example": 0.4,
                         "format": "double"
                     },
@@ -9448,7 +9453,8 @@
                     "$createdAt",
                     "$updatedAt",
                     "$permissions",
-                    "functionId",
+                    "resourceId",
+                    "resourceType",
                     "trigger",
                     "status",
                     "requestMethod",
