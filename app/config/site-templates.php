@@ -90,7 +90,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.1.*',
+        'providerVersion' => '0.2.*',
         'variables' => [],
     ],
     [
@@ -107,7 +107,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.1.*',
+        'providerVersion' => '0.2.*',
         'variables' => [],
     ],
     [
@@ -141,7 +141,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'astro-ssr-test-template',
         'providerOwner' => 'Meldiron',
-        'providerVersion' => '0.1.*',
+        'providerVersion' => '0.2.*',
         'variables' => [],
     ],
     [
@@ -158,7 +158,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.1.*',
+        'providerVersion' => '0.2.*',
         'variables' => [],
     ],
     [
@@ -175,7 +175,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.1.*',
+        'providerVersion' => '0.2.*',
         'variables' => [],
     ],
 ];
