@@ -545,6 +545,10 @@ App::init()
             $data = $cache->load($key, $timestamp);
 
             if (!empty($data) && !$cacheLog->isEmpty()) {
+                var_dump($request->getURI());
+                var_dump($request->getParams());
+                var_dump($cacheLog);
+                var_dump($data);
                 $parts = explode('/', $cacheLog->getAttribute('resourceType'));
                 $type = $parts[0] ?? null;
 
