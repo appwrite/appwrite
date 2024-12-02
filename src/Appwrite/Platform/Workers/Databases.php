@@ -11,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
@@ -251,23 +252,21 @@ class Databases extends Action
 
         try {
             try {
-                if ($status !== 'failed') {
-                    if ($type === Database::VAR_RELATIONSHIP) {
-                        if ($options['twoWay']) {
-                            $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
-                            if ($relatedCollection->isEmpty()) {
-                                throw new DatabaseException('Collection not found');
-                            }
-                            $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+                if ($type === Database::VAR_RELATIONSHIP) {
+                    if ($options['twoWay']) {
+                        $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
+                        if ($relatedCollection->isEmpty()) {
+                            throw new DatabaseException('Collection not found');
                         }
-
-                        if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                            $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
-                            throw new DatabaseException('Failed to delete Relationship');
-                        }
-                    } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                        throw new DatabaseException('Failed to delete Attribute');
+                        $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
                     }
+
+                    if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
+                        throw new DatabaseException('Failed to delete Relationship');
+                    }
+                } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                    throw new DatabaseException('Failed to delete Attribute');
                 }
 
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
@@ -275,6 +274,18 @@ class Databases extends Action
                 if (!$relatedAttribute->isEmpty()) {
                     $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
                 }
+
+            } catch (NotFound $e) {
+                Console::error($e->getMessage());
+
+                $dbForProject->deleteDocument('attributes', $attribute->getId());
+
+                if (!$relatedAttribute->isEmpty()) {
+                    $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
+                }
+
+                throw $e;
+
             } catch (\Throwable $e) {
                 Console::error($e->getMessage());
 
