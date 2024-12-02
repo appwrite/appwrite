@@ -3834,8 +3834,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->inject('queueForRealtime')
     ->inject('queueForUsage')
     ->inject('project')
     ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Usage $queueForUsage, Document $project) {

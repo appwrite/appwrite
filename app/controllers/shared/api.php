@@ -96,9 +96,9 @@ $usageDatabaseListener = function (string $event, Document $document, Usage $que
     }
 
     if ($event === Database::EVENT_DOCUMENTS_DELETE) {
-        $value = -1 * count($document->getAttribute('modified', []));
+        $value = -1 * $document->getAttribute('modified', 0);
     } elseif ($event === Database::EVENT_DOCUMENTS_CREATE) {
-        $value = count($document->getAttribute('modified', []));
+        $value = $document->getAttribute('modified', 0);
     }
 
     switch (true) {
