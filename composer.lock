@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c56db8736d679aff6e2b275ec59f1dbf",
+    "content-hash": "026d47ead39933ab29b2ea7046bfec4f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3678,16 +3678,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.14",
+            "version": "dev-fix-prevent-duplicate-compression",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "45a5a2db3602fa054096f378482c7da9936f5850"
+                "reference": "0d535f3820a0a73b5ba03c5af27b83c0694d8368"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/45a5a2db3602fa054096f378482c7da9936f5850",
-                "reference": "45a5a2db3602fa054096f378482c7da9936f5850",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/0d535f3820a0a73b5ba03c5af27b83c0694d8368",
+                "reference": "0d535f3820a0a73b5ba03c5af27b83c0694d8368",
                 "shasum": ""
             },
             "require": {
@@ -3719,9 +3719,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.14"
+                "source": "https://github.com/utopia-php/http/tree/fix-prevent-duplicate-compression"
             },
-            "time": "2024-11-20T12:39:10+00:00"
+            "time": "2024-12-02T16:47:45+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -8556,9 +8556,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/framework",
+            "version": "dev-fix-prevent-duplicate-compression",
+            "alias": "0.33.99",
+            "alias_normalized": "0.33.99.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/framework": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

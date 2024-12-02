@@ -488,7 +488,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 continue;
             }
 
-            $response->setHeader($header['name'], $header['value']);
+            $response->addHeader(\strtolower($header['name']), $header['value']);
         }
 
         $response
