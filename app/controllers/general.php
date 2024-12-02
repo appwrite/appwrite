@@ -162,8 +162,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             default => null
         };
 
-        if($resource->getAttribute('adapter', '') === 'static') {
-            $runtime = $runtimes['static'] ?? null;
+        if ($resource->getAttribute('adapter', '') === 'static') {
+            $runtime = $runtimes['static-1'] ?? null;
         }
 
         if (\is_null($runtime)) {
@@ -341,24 +341,24 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 'deployment' => ''
             };
 
-            if($type === 'function') {
+            if ($type === 'function') {
                 $runtimeEntrypoint = match ($version) {
                     'v2' => '',
                     default => 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $runtime['startCommand'] . '"'
                 };
-            } else if($type === 'site' || $type === 'deployment') {
+            } elseif ($type === 'site' || $type === 'deployment') {
                 $frameworks = Config::getParam('frameworks', []);
                 $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
-                
+
                 $startCommand = $runtime['startCommand'];
 
-                if(!is_null($framework)) {
+                if (!is_null($framework)) {
                     $adapter = ($framework['adapters'] ?? [])[$resource->getAttribute('adapter', '')] ?? null;
-                    if(!is_null($adapter) && isset($adapter['startCommand'])) {
+                    if (!is_null($adapter) && isset($adapter['startCommand'])) {
                         $startCommand = $adapter['startCommand'];
                     }
                 }
-                
+
                 $runtimeEntrypoint = 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $startCommand . '"';
             }
 
