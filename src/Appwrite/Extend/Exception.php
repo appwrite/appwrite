@@ -177,6 +177,9 @@ class Exception extends \Exception
     public const EXECUTION_NOT_FOUND               = 'execution_not_found';
     public const EXECUTION_IN_PROGRESS             = 'execution_in_progress';
 
+    /** Log */
+    public const LOG_NOT_FOUND                     = 'log_not_found';
+
     /** Databases */
     public const DATABASE_NOT_FOUND                = 'database_not_found';
     public const DATABASE_ALREADY_EXISTS           = 'database_already_exists';

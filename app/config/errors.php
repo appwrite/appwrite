@@ -599,6 +599,13 @@ return [
         'code' => 400,
     ],
 
+    /** Logs */
+    Exception::LOG_NOT_FOUND => [
+        'name' => Exception::LOG_NOT_FOUND,
+        'description' => 'Log with the requested ID could not be found.',
+        'code' => 404,
+    ],
+
     /** Databases */
     Exception::DATABASE_NOT_FOUND => [
         'name' => Exception::DATABASE_NOT_FOUND,

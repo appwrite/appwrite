@@ -249,12 +249,10 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => [],
-            'functionInternalId' => $resource->getInternalId(),
-            'functionId' => $resource->getId(),
+            'resourceInternalId' => $resource->getInternalId(),
+            'resourceId' => $resource->getId(),
             'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
-            'trigger' => 'http', // http / schedule / event
-            'status' =>  'processing', // waiting / processing / completed / failed
             'responseStatusCode' => 0,
             'responseHeaders' => [],
             'requestPath' => $path,
@@ -265,6 +263,14 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             'duration' => 0.0,
             'search' => implode(' ', [$resourceId, $executionId]),
         ]);
+
+        if ($type === 'function') {
+            $execution->setAttribute('resourceType', 'functions');
+            $execution->setAttribute('trigger', 'http'); // http / schedule / event
+            $execution->setAttribute('status', 'processing'); // waiting / processing / completed / failed
+        } elseif ($type === 'site') {
+            $execution->setAttribute('resourceType', 'sites');
+        }
 
         $queueForEvents
             ->setParam('functionId', $resource->getId())
@@ -397,20 +403,26 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
-            $execution->setAttribute('status', $status);
-            $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
-            $execution->setAttribute('responseHeaders', $headersFiltered);
+            if ($type === 'function') {
+                $execution->setAttribute('status', $status);
+            }
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
+            $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
+            $execution->setAttribute('responseHeaders', $headersFiltered);
             $execution->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 
             $execution
                 ->setAttribute('duration', $durationEnd - $durationStart)
+                ->setAttribute('responseStatusCode', 500);
+
+            if ($type === 'function') {
+                $execution
                 ->setAttribute('status', 'failed')
-                ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
+            }
             Console::error($th->getMessage());
 
             if ($th instanceof AppwriteException) {
@@ -448,6 +460,8 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                     ->setExecution($execution)
                     ->setProject($project)
                     ->trigger();
+            } elseif ($type === 'site') { // TODO: Move it to logs worker later
+                $dbForProject->createDocument('executions', $execution);
             }
         }
 

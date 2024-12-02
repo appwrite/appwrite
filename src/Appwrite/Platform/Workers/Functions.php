@@ -256,8 +256,9 @@ class Functions extends Action
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
-            'functionInternalId' => $function->getInternalId(),
-            'functionId' => $function->getId(),
+            'resourceInternalId' => $function->getInternalId(),
+            'resourceId' => $function->getId(),
+            'resourceType' => 'functions',
             'deploymentInternalId' => '',
             'deploymentId' => '',
             'trigger' => $trigger,
@@ -403,8 +404,9 @@ class Functions extends Action
             $execution = new Document([
                 '$id' => $executionId,
                 '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
-                'functionInternalId' => $function->getInternalId(),
-                'functionId' => $function->getId(),
+                'resourceInternalId' => $function->getInternalId(),
+                'resourceId' => $function->getId(),
+                'resourceType' => 'functions',
                 'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
                 'trigger' => $trigger,
