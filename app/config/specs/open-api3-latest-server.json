@@ -17127,15 +17127,15 @@
                                     "framework": {
                                         "type": "string",
                                         "description": "Sites framework.",
-                                        "x-example": "sveltekit",
+                                        "x-example": "nextjs",
                                         "enum": [
-                                            "sveltekit",
                                             "nextjs",
                                             "nuxt",
+                                            "sveltekit",
                                             "astro",
                                             "remix",
                                             "flutter",
-                                            "static"
+                                            "other"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -17238,73 +17238,10 @@
                                         "x-enum-name": null,
                                         "x-enum-keys": []
                                     },
-                                    "serveRuntime": {
+                                    "adapter": {
                                         "type": "string",
-                                        "description": "Runtime to use when serving site.",
-                                        "x-example": "node-14.5",
-                                        "enum": [
-                                            "node-14.5",
-                                            "node-16.0",
-                                            "node-18.0",
-                                            "node-19.0",
-                                            "node-20.0",
-                                            "node-21.0",
-                                            "node-22",
-                                            "php-8.0",
-                                            "php-8.1",
-                                            "php-8.2",
-                                            "php-8.3",
-                                            "ruby-3.0",
-                                            "ruby-3.1",
-                                            "ruby-3.2",
-                                            "ruby-3.3",
-                                            "python-3.8",
-                                            "python-3.9",
-                                            "python-3.10",
-                                            "python-3.11",
-                                            "python-3.12",
-                                            "python-ml-3.11",
-                                            "deno-1.21",
-                                            "deno-1.24",
-                                            "deno-1.35",
-                                            "deno-1.40",
-                                            "deno-1.46",
-                                            "deno-2.0",
-                                            "dart-2.15",
-                                            "dart-2.16",
-                                            "dart-2.17",
-                                            "dart-2.18",
-                                            "dart-3.0",
-                                            "dart-3.1",
-                                            "dart-3.3",
-                                            "dart-3.5",
-                                            "dotnet-6.0",
-                                            "dotnet-7.0",
-                                            "dotnet-8.0",
-                                            "java-8.0",
-                                            "java-11.0",
-                                            "java-17.0",
-                                            "java-18.0",
-                                            "java-21.0",
-                                            "java-22",
-                                            "swift-5.5",
-                                            "swift-5.8",
-                                            "swift-5.9",
-                                            "swift-5.10",
-                                            "kotlin-1.6",
-                                            "kotlin-1.8",
-                                            "kotlin-1.9",
-                                            "kotlin-2.0",
-                                            "cpp-17",
-                                            "cpp-20",
-                                            "bun-1.0",
-                                            "bun-1.1",
-                                            "go-1.23",
-                                            "static-1",
-                                            "flutter-3.24"
-                                        ],
-                                        "x-enum-name": null,
-                                        "x-enum-keys": []
+                                        "description": "Framework adapter. Usuallly allows: static, ssr",
+                                        "x-example": "<ADAPTER>"
                                     },
                                     "installationId": {
                                         "type": "string",
@@ -17366,8 +17303,7 @@
                                     "siteId",
                                     "name",
                                     "framework",
-                                    "buildRuntime",
-                                    "serveRuntime"
+                                    "buildRuntime"
                                 ]
                             }
                         }
@@ -17565,15 +17501,15 @@
                                     "framework": {
                                         "type": "string",
                                         "description": "Sites framework.",
-                                        "x-example": "sveltekit",
+                                        "x-example": "nextjs",
                                         "enum": [
-                                            "sveltekit",
                                             "nextjs",
                                             "nuxt",
+                                            "sveltekit",
                                             "astro",
                                             "remix",
                                             "flutter",
-                                            "static"
+                                            "other"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -17671,73 +17607,10 @@
                                         "x-enum-name": null,
                                         "x-enum-keys": []
                                     },
-                                    "serveRuntime": {
+                                    "adapter": {
                                         "type": "string",
-                                        "description": "Runtime to use when serving site.",
-                                        "x-example": "node-14.5",
-                                        "enum": [
-                                            "node-14.5",
-                                            "node-16.0",
-                                            "node-18.0",
-                                            "node-19.0",
-                                            "node-20.0",
-                                            "node-21.0",
-                                            "node-22",
-                                            "php-8.0",
-                                            "php-8.1",
-                                            "php-8.2",
-                                            "php-8.3",
-                                            "ruby-3.0",
-                                            "ruby-3.1",
-                                            "ruby-3.2",
-                                            "ruby-3.3",
-                                            "python-3.8",
-                                            "python-3.9",
-                                            "python-3.10",
-                                            "python-3.11",
-                                            "python-3.12",
-                                            "python-ml-3.11",
-                                            "deno-1.21",
-                                            "deno-1.24",
-                                            "deno-1.35",
-                                            "deno-1.40",
-                                            "deno-1.46",
-                                            "deno-2.0",
-                                            "dart-2.15",
-                                            "dart-2.16",
-                                            "dart-2.17",
-                                            "dart-2.18",
-                                            "dart-3.0",
-                                            "dart-3.1",
-                                            "dart-3.3",
-                                            "dart-3.5",
-                                            "dotnet-6.0",
-                                            "dotnet-7.0",
-                                            "dotnet-8.0",
-                                            "java-8.0",
-                                            "java-11.0",
-                                            "java-17.0",
-                                            "java-18.0",
-                                            "java-21.0",
-                                            "java-22",
-                                            "swift-5.5",
-                                            "swift-5.8",
-                                            "swift-5.9",
-                                            "swift-5.10",
-                                            "kotlin-1.6",
-                                            "kotlin-1.8",
-                                            "kotlin-1.9",
-                                            "kotlin-2.0",
-                                            "cpp-17",
-                                            "cpp-20",
-                                            "bun-1.0",
-                                            "bun-1.1",
-                                            "go-1.23",
-                                            "static-1",
-                                            "flutter-3.24"
-                                        ],
-                                        "x-enum-name": null,
-                                        "x-enum-keys": []
+                                        "description": "Framework adapter. Usuallly allows: static, ssr",
+                                        "x-example": "<ADAPTER>"
                                     },
                                     "fallbackFile": {
                                         "type": "string",
@@ -18518,6 +18391,230 @@
                 ]
             }
         },
+        "\/sites\/{siteId}\/logs": {
+            "get": {
+                "summary": "List logs",
+                "operationId": "sitesListLogs",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Executions List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/executionList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "listLogs",
+                    "weight": 415,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/list-logs.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/list-logs.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "log.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: trigger, status, responseStatusCode, duration, requestMethod, requestPath, deploymentId",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": []
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SEARCH>",
+                            "default": ""
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/sites\/{siteId}\/logs\/{logId}": {
+            "get": {
+                "summary": "Get log",
+                "operationId": "sitesGetLog",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "200": {
+                        "description": "Execution",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/execution"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "getLog",
+                    "weight": 414,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/get-log.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/get-log.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "log.read",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "logId",
+                        "description": "Log ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<LOG_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete log",
+                "operationId": "sitesDeleteLog",
+                "tags": [
+                    "sites"
+                ],
+                "description": "",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "x-appwrite": {
+                    "method": "deleteLog",
+                    "weight": 416,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "sites\/delete-log.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/sites\/delete-log.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "log.write",
+                    "platforms": [
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "",
+                    "offline-key": "",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "siteId",
+                        "description": "Site ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SITE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "logId",
+                        "description": "Log ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<LOG_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
         "\/sites\/{siteId}\/variables": {
             "get": {
                 "summary": "List variables",
@@ -18540,7 +18637,7 @@
                 },
                 "x-appwrite": {
                     "method": "listVariables",
-                    "weight": 416,
+                    "weight": 419,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18602,7 +18699,7 @@
                 },
                 "x-appwrite": {
                     "method": "createVariable",
-                    "weight": 414,
+                    "weight": 417,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18696,7 +18793,7 @@
                 },
                 "x-appwrite": {
                     "method": "getVariable",
-                    "weight": 415,
+                    "weight": 418,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18768,7 +18865,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateVariable",
-                    "weight": 417,
+                    "weight": 420,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18857,7 +18954,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteVariable",
-                    "weight": 418,
+                    "weight": 421,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -27750,10 +27847,10 @@
                         "description": "Site build runtime.",
                         "x-example": "node-22"
                     },
-                    "serveRuntime": {
+                    "adapter": {
                         "type": "string",
-                        "description": "Site serve runtime.",
-                        "x-example": "static-1"
+                        "description": "Site framework adapter.",
+                        "x-example": "static"
                     },
                     "fallbackFile": {
                         "type": "string",
@@ -27782,7 +27879,7 @@
                     "providerSilentMode",
                     "specification",
                     "buildRuntime",
-                    "serveRuntime",
+                    "adapter",
                     "fallbackFile"
                 ]
             },
@@ -28016,7 +28113,7 @@
                 "properties": {
                     "key": {
                         "type": "string",
-                        "description": "Parent framework key.",
+                        "description": "Framework key.",
                         "x-example": "sveltekit"
                     },
                     "name": {
@@ -28024,48 +28121,67 @@
                         "description": "Framework Name.",
                         "x-example": "SvelteKit"
                     },
-                    "logo": {
-                        "type": "string",
-                        "description": "Name of the logo image.",
-                        "x-example": "sveltekit.png"
-                    },
-                    "serveRuntimes": {
-                        "type": "array",
-                        "description": "List of supported runtime versions.",
-                        "items": {
-                            "type": "string"
-                        },
-                        "x-example": "static-1"
-                    },
-                    "buildRuntimes": {
-                        "type": "array",
-                        "description": "List of supported runtime versions.",
-                        "items": {
-                            "type": "string"
-                        },
-                        "x-example": "node-21.0"
-                    },
-                    "defaultServeRuntime": {
-                        "type": "string",
-                        "description": "Default runtime version.",
-                        "x-example": "static-1"
-                    },
-                    "defaultBuildRuntime": {
+                    "buildRuntime": {
                         "type": "string",
                         "description": "Default runtime version.",
                         "x-example": "node-22"
                     },
-                    "defaultInstallCommand": {
+                    "runtimes": {
+                        "type": "array",
+                        "description": "List of supported runtime versions.",
+                        "items": {
+                            "type": "string"
+                        },
+                        "x-example": [
+                            "static-1",
+                            "node-22"
+                        ]
+                    },
+                    "adapters": {
+                        "type": "array",
+                        "description": "List of supported adapters.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/frameworkAdapter"
+                        },
+                        "x-example": [
+                            {
+                                "key": "static",
+                                "buildRuntime": "node-22",
+                                "buildCommand": "npm run build",
+                                "installCommand": "npm install",
+                                "outputDirectory": ".\/dist"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "key",
+                    "name",
+                    "buildRuntime",
+                    "runtimes",
+                    "adapters"
+                ]
+            },
+            "frameworkAdapter": {
+                "description": "Framework Adapter",
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Adapter key.",
+                        "x-example": "static"
+                    },
+                    "installCommand": {
                         "type": "string",
                         "description": "Default command to download dependencies.",
                         "x-example": "npm install"
                     },
-                    "defaultBuildCommand": {
+                    "buildCommand": {
                         "type": "string",
                         "description": "Default command to build site into output directory.",
                         "x-example": "npm run build"
                     },
-                    "defaultOutputDirectory": {
+                    "outputDirectory": {
                         "type": "string",
                         "description": "Default output directory of build.",
                         "x-example": ".\/dist"
@@ -28073,15 +28189,9 @@
                 },
                 "required": [
                     "key",
-                    "name",
-                    "logo",
-                    "serveRuntimes",
-                    "buildRuntimes",
-                    "defaultServeRuntime",
-                    "defaultBuildRuntime",
-                    "defaultInstallCommand",
-                    "defaultBuildCommand",
-                    "defaultOutputDirectory"
+                    "installCommand",
+                    "buildCommand",
+                    "outputDirectory"
                 ]
             },
             "deployment": {
@@ -28274,10 +28384,15 @@
                             "any"
                         ]
                     },
-                    "functionId": {
+                    "resourceId": {
                         "type": "string",
-                        "description": "Function ID.",
+                        "description": "Resource ID.",
                         "x-example": "5e5ea6g16897e"
+                    },
+                    "resourceType": {
+                        "type": "string",
+                        "description": "Resource type.",
+                        "x-example": "sites"
                     },
                     "trigger": {
                         "type": "string",
@@ -28346,7 +28461,7 @@
                     },
                     "duration": {
                         "type": "number",
-                        "description": "Function execution duration in seconds.",
+                        "description": "Resource(function\/site) execution duration in seconds.",
                         "x-example": 0.4,
                         "format": "double"
                     },
@@ -28362,7 +28477,8 @@
                     "$createdAt",
                     "$updatedAt",
                     "$permissions",
-                    "functionId",
+                    "resourceId",
+                    "resourceType",
                     "trigger",
                     "status",
                     "requestMethod",

@@ -46,17 +46,17 @@ class TemplateFramework extends Model
                 'default' => '',
                 'example' => './svelte-kit/starter',
             ])
-            ->addRule('serveRuntime', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Runtime used during serve of template deployment.',
-                'default' => '',
-                'example' => 'static-1',
-            ])
             ->addRule('buildRuntime', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Runtime used during build step of template.',
                 'default' => '',
                 'example' => 'node-22',
+            ])
+            ->addRule('adapter', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Site framework runtime',
+                'default' => '',
+                'example' => 'ssr',
             ])
             ->addRule('fallbackFile', [
                 'type' => self::TYPE_STRING,

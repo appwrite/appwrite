@@ -157,10 +157,14 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $runtime = match($type) {
             'function' => $runtimes[$resource->getAttribute('runtime')] ?? null,
-            'site' => $runtimes[$resource->getAttribute('serveRuntime')] ?? null,
-            'deployment' => $runtimes[$resource->getAttribute('serveRuntime')] ?? null,
+            'site' => $runtimes[$resource->getAttribute('buildRuntime')] ?? null,
+            'deployment' => $runtimes[$resource->getAttribute('buildRuntime')] ?? null,
             default => null
         };
+
+        if ($resource->getAttribute('adapter', '') === 'static') {
+            $runtime = $runtimes['static-1'] ?? null;
+        }
 
         if (\is_null($runtime)) {
             throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
@@ -342,9 +346,32 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
                 'site' => '',
                 'deployment' => ''
             };
-            $runtimeEntrypoint = match ($version) {
-                'v2' => '',
-                default => 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $runtime['startCommand'] . '"'
+
+            if ($type === 'function') {
+                $runtimeEntrypoint = match ($version) {
+                    'v2' => '',
+                    default => 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $runtime['startCommand'] . '"'
+                };
+            } elseif ($type === 'site' || $type === 'deployment') {
+                $frameworks = Config::getParam('frameworks', []);
+                $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
+
+                $startCommand = $runtime['startCommand'];
+
+                if (!is_null($framework)) {
+                    $adapter = ($framework['adapters'] ?? [])[$resource->getAttribute('adapter', '')] ?? null;
+                    if (!is_null($adapter) && isset($adapter['startCommand'])) {
+                        $startCommand = $adapter['startCommand'];
+                    }
+                }
+
+                $runtimeEntrypoint = 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $startCommand . '"';
+            }
+
+            $entrypoint = match($type) {
+                'function' => $deployment->getAttribute('entrypoint', ''),
+                'site' => '',
+                'deployment' => ''
             };
 
             $executionResponse = $executor->createExecution(
@@ -455,6 +482,10 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         foreach ($execution['responseHeaders'] as $header) {
             if (\strtolower($header['name']) === 'content-type') {
                 $contentType = $header['value'];
+            }
+
+            if (\strtolower($header['name']) === 'transfer-encoding') {
+                continue;
             }
 
             $response->setHeader($header['name'], $header['value']);

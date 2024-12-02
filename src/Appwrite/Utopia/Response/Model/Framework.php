@@ -12,7 +12,7 @@ class Framework extends Model
         $this
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Parent framework key.',
+                'description' => 'Framework key.',
                 'default' => '',
                 'example' => 'sveltekit',
             ])
@@ -22,55 +22,25 @@ class Framework extends Model
                 'default' => '',
                 'example' => 'SvelteKit'
             ])
-            ->addRule('logo', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Name of the logo image.',
-                'default' => '',
-                'example' => 'sveltekit.png',
-            ])
-            ->addRule('serveRuntimes', [
-                'type' => self::TYPE_STRING,
-                'description' => 'List of supported runtime versions.',
-                'default' => '',
-                'example' => 'static-1',
-                'array' => true,
-            ])
-            ->addRule('buildRuntimes', [
-                'type' => self::TYPE_STRING,
-                'description' => 'List of supported runtime versions.',
-                'default' => '',
-                'example' => 'node-21.0',
-                'array' => true,
-            ])
-            ->addRule('defaultServeRuntime', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Default runtime version.',
-                'default' => '',
-                'example' => 'static-1',
-            ])
-            ->addRule('defaultBuildRuntime', [
+            ->addRule('buildRuntime', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Default runtime version.',
                 'default' => '',
                 'example' => 'node-22',
             ])
-            ->addRule('defaultInstallCommand', [
+            ->addRule('runtimes', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Default command to download dependencies.',
+                'description' => 'List of supported runtime versions.',
                 'default' => '',
-                'example' => 'npm install',
+                'example' => ['static-1', 'node-22'],
+                'array' => true,
             ])
-            ->addRule('defaultBuildCommand', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Default command to build site into output directory.',
+            ->addRule('adapters', [
+                'type' => Response::MODEL_FRAMEWORK_ADAPTER,
+                'description' => 'List of supported adapters.',
                 'default' => '',
-                'example' => 'npm run build',
-            ])
-            ->addRule('defaultOutputDirectory', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Default output directory of build.',
-                'default' => '',
-                'example' => './dist',
+                'example' => [[ 'key' => 'static', 'buildRuntime' => 'node-22', 'buildCommand' => 'npm run build', 'installCommand' => 'npm install', 'outputDirectory' => './dist' ]],
+                'array' => true,
             ])
         ;
     }
