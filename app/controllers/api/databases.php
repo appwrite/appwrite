@@ -2872,7 +2872,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
-    ->inject('queueForRealtime')
     ->inject('project')
     ->inject('mode')
     ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, Realtime $queueForRealtime, Document $project, string $mode) {
