@@ -60,6 +60,8 @@ $admins = [
     'functions.write',
     'sites.read',
     'sites.write',
+    'log.read',
+    'log.write',
     'execution.read',
     'execution.write',
     'rules.read',
