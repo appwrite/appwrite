@@ -866,7 +866,7 @@ class RealtimeCustomClientTest extends Scope
     }
 
     public function testChannelDatabaseCollectionPermissions()
-    { 
+    {
         $user = $this->getUser();
         $session = $user['session'] ?? '';
         $projectId = $this->getProject()['$id'];

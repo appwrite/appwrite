@@ -1,9 +1,9 @@
 import { check } from "k6";
 import http from "k6/http";
 
-const amount = 10000;
-const databaseId = "674818e2000070c94275";
-const collectionId = "674818e3002f22da5fab";
+const amount = 100_000;
+const databaseId = "674918b20017411b94b2";
+const collectionId = "674918b4002b46c47d5d";
 
 const documents = Array(amount).fill({
     $id: "unique()",
