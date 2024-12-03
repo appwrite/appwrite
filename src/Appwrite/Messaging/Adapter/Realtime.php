@@ -3,6 +3,7 @@
 namespace Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter;
+use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -132,6 +133,7 @@ class Realtime extends Adapter
     public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
         if (empty($channels) || empty($roles) || empty($projectId)) {
+            Console::error('Missing required parameters for Realtime event');
             return;
         }
 

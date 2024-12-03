@@ -90,8 +90,15 @@ $eventDatabaseListener = function (Document $document, Response $response, Event
 
 $usageDatabaseListener = function (string $event, Document $document, Usage $queueForUsage) {
     $value = 1;
+
     if ($event === Database::EVENT_DOCUMENT_DELETE) {
         $value = -1;
+    }
+
+    if ($event === Database::EVENT_DOCUMENTS_DELETE) {
+        $value = -1 * $document->getAttribute('modified', 0);
+    } elseif ($event === Database::EVENT_DOCUMENTS_CREATE) {
+        $value = $document->getAttribute('modified', 0);
     }
 
     switch (true) {
