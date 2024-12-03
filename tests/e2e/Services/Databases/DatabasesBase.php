@@ -5554,6 +5554,8 @@ trait DatabasesBase
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
             ], $document['$permissions']);
+            $this->assertEquals($collection['body']['$id'], $document['$collectionId']);
+            $this->assertEquals($data['databaseId'], $document['$databaseId']);
         }
 
         // TEST: Check permissions persist
