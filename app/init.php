@@ -950,6 +950,7 @@ $register->set('pools', function () {
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new Redis();
+                    var_dump('RedisHost='.$dsnHost);
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
                     if ($dsnPass) {
                         $redis->auth($dsnPass);

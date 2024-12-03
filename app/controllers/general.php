@@ -601,11 +601,6 @@ App::init()
         $selfDomain = new Domain($request->getHostname());
         $endDomain = new Domain((string)$origin);
 
-
-        var_dump('origin='.$origin);
-        var_dump('refDomain='.$refDomain);
-
-
         Config::setParam(
             'domainVerification',
             ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
@@ -714,6 +709,9 @@ App::options()
         */
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
+        var_dump('host='.$host);
+        var_dump('mainDomain='.$mainDomain);
+        var_dump('previewHostname='.$previewHostname);
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
             if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
