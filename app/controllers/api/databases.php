@@ -207,8 +207,6 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
     }
 
-    var_dump('**pushing to queue**');
-
     $queueForDatabase
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setDatabase($db)
@@ -2897,7 +2895,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
-
+        var_dump('database_' . $database->getInternalId());
+        var_dump($collectionId);
+        var_dump($collection);
+        var_dump($isAPIKey);
+        var_dump($isPrivilegedUser);
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
