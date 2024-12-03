@@ -3781,7 +3781,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
                 $queries
             )
         );
-        
+
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
