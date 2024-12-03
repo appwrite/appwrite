@@ -686,6 +686,7 @@ class Messaging extends Action
         $color = $message['data']['color'] ?? null;
         $tag = $message['data']['tag'] ?? null;
         $badge = $message['data']['badge'] ?? null;
+        $contentAvailable = $message['data']['contentAvailable'] ?? false;
 
         return new Push(
             $to,
@@ -698,7 +699,8 @@ class Messaging extends Action
             $icon,
             $color,
             $tag,
-            $badge
+            $badge,
+            $contentAvailable
         );
     }
 

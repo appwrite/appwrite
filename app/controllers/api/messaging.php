@@ -2915,10 +2915,11 @@ App::post('/v1/messaging/messages/push')
     ->param('action', '', new Text(256), 'Action for push notification.', true)
     ->param('image', '', new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
-    ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and IOS Platform.', true)
+    ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and iOS Platform.', true)
     ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
-    ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)
+    ->param('badge', '', new Text(256), 'Badge for push notification. Available only for iOS Platform.', true)
+    ->param('contentAvailable', false, new Boolean(), 'Content available for push notification. Available only for iOS Platform.', true)
     ->param('draft', false, new Boolean(), 'Is message a draft', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
@@ -2927,7 +2928,7 @@ App::post('/v1/messaging/messages/push')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, string $badge, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, string $badge, bool $contentAvailable, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3010,7 +3011,7 @@ App::post('/v1/messaging/messages/push')
 
         $pushData = [];
 
-        $keys = ['title', 'body', 'data', 'action', 'image', 'icon', 'sound', 'color', 'tag', 'badge'];
+        $keys = ['title', 'body', 'data', 'action', 'image', 'icon', 'sound', 'color', 'tag', 'badge', 'contentAvailable'];
 
         foreach ($keys as $key) {
             if (!empty($$key)) {

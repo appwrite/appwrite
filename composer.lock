@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fae350df93342992edd8f639948e1570",
+    "content-hash": "04b9739820be8136d62de48c6325e763",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3878,16 +3878,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.12.2",
+            "version": "dev-feat-apns-content-available",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "f6790fba1fcee12163d51c65d2c226a7856295d9"
+                "reference": "2580b8357d2dde6ed567a52e5164cfe58fb9b6dd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/f6790fba1fcee12163d51c65d2c226a7856295d9",
-                "reference": "f6790fba1fcee12163d51c65d2c226a7856295d9",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/2580b8357d2dde6ed567a52e5164cfe58fb9b6dd",
+                "reference": "2580b8357d2dde6ed567a52e5164cfe58fb9b6dd",
                 "shasum": ""
             },
             "require": {
@@ -3898,9 +3898,9 @@
                 "phpmailer/phpmailer": "6.9.1"
             },
             "require-dev": {
-                "laravel/pint": "1.13.11",
-                "phpstan/phpstan": "1.10.58",
-                "phpunit/phpunit": "10.5.10"
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "1.*",
+                "phpunit/phpunit": "11.*"
             },
             "type": "library",
             "autoload": {
@@ -3923,9 +3923,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.12.2"
+                "source": "https://github.com/utopia-php/messaging/tree/feat-apns-content-available"
             },
-            "time": "2024-10-22T01:02:20+00:00"
+            "time": "2024-12-03T04:09:05+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -8556,9 +8556,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/messaging",
+            "version": "dev-feat-apns-content-available",
+            "alias": "0.12.2",
+            "alias_normalized": "0.12.2.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/messaging": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
