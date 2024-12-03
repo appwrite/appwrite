@@ -5781,7 +5781,7 @@ trait DatabasesBase
         $createBulkDocuments = function ($amount = 10) use ($data) {
             $documents = [];
 
-            for ($x = 0; $x <= $amount; $x++) {
+            for ($x = 1; $x <= $amount; $x++) {
                 $documents[] = [
                     '$id' => ID::unique(),
                     'number' => $x,
