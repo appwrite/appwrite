@@ -333,7 +333,6 @@ class Messaging extends Action
             $message->setAttribute('status', MessageStatus::SENT);
         }
 
-
         $message->removeAttribute('to');
 
         foreach ($providers as $provider) {
