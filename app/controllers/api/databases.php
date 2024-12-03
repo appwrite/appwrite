@@ -3715,8 +3715,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->inject('queueForRealtime')
     ->inject('project')
     ->action(function (string $databaseId, string $collectionId, string|array $data, ?array $permissions, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Document $project) {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
