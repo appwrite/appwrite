@@ -914,7 +914,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'Bulk Create',
-            'documentSecurity' => true,
+            'documentSecurity' => false,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::delete(Role::any()),
@@ -1029,22 +1029,34 @@ class DatabasesCustomClientTest extends Scope
                 [
                     '$id' => ID::unique(),
                     'number' => 1,
+                    '$permissions' => [
+                        Permission::create(Role::user('aaaaaa')),
+                        Permission::read(Role::user('aaaaaa')),
+                        Permission::update(Role::user('aaaaaa')),
+                        Permission::delete(Role::user('aaaaaa')),
+                    ]
                 ],
                 [
                     '$id' => ID::unique(),
                     'number' => 2,
+                    '$permissions' => [
+                        Permission::create(Role::user('aaaaaa')),
+                        Permission::read(Role::user('aaaaaa')),
+                        Permission::update(Role::user('aaaaaa')),
+                        Permission::delete(Role::user('aaaaaa')),
+                    ]
                 ],
                 [
                     '$id' => ID::unique(),
                     'number' => 3,
+                    '$permissions' => [
+                        Permission::create(Role::user('aaaaaa')),
+                        Permission::read(Role::user('aaaaaa')),
+                        Permission::update(Role::user('aaaaaa')),
+                        Permission::delete(Role::user('aaaaaa')),
+                    ]
                 ],
             ],
-            'permissions' => [
-                Permission::write(Role::user('aaaaaa')),
-                Permission::read(Role::user('aaaaaa')),
-                Permission::update(Role::user('aaaaaa')),
-                Permission::delete(Role::user('aaaaaa')),
-            ]
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
@@ -1058,22 +1070,34 @@ class DatabasesCustomClientTest extends Scope
                 [
                     '$id' => ID::unique(),
                     'number' => 1,
+                    '$permissions' => [
+                        Permission::create(Role::user($this->getUser()['$id'])),
+                        Permission::read(Role::user($this->getUser()['$id'])),
+                        Permission::update(Role::user($this->getUser()['$id'])),
+                        Permission::delete(Role::user($this->getUser()['$id'])),
+                    ]
                 ],
                 [
                     '$id' => ID::unique(),
                     'number' => 2,
+                    '$permissions' => [
+                        Permission::create(Role::user($this->getUser()['$id'])),
+                        Permission::read(Role::user($this->getUser()['$id'])),
+                        Permission::update(Role::user($this->getUser()['$id'])),
+                        Permission::delete(Role::user($this->getUser()['$id'])),
+                    ]
                 ],
                 [
                     '$id' => ID::unique(),
                     'number' => 3,
+                    '$permissions' => [
+                        Permission::create(Role::user($this->getUser()['$id'])),
+                        Permission::read(Role::user($this->getUser()['$id'])),
+                        Permission::update(Role::user($this->getUser()['$id'])),
+                        Permission::delete(Role::user($this->getUser()['$id'])),
+                    ]
                 ],
             ],
-            'permissions' => [
-                Permission::write(Role::user($this->getUser()['$id'])),
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);

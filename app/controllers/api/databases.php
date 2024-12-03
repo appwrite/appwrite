@@ -2919,38 +2919,46 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             Database::PERMISSION_DELETE,
         ];
 
-        // Map aggregate permissions to into the set of individual permissions they represent.
-        $permissions = Permission::aggregate($permissions, $allowedPermissions);
-
-        // Add permissions for current the user if none were provided.
-        if (\is_null($permissions)) {
-            $permissions = [];
-            if (!empty($user->getId())) {
-                foreach ($allowedPermissions as $permission) {
-                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
-                }
+        $setPermissions = function (Document $document, ?array $permissions) use ($user, $allowedPermissions, $isAPIKey, $isPrivilegedUser, $isBulk) {
+            // Map aggregate permissions to into the set of individual permissions they represent.
+            if ($isBulk) {
+                $permissions = $document['$permissions'] ?? null;
             }
-        }
 
-        // Users can only manage their own roles, API keys and Admin users can manage any
-        if (!$isAPIKey && !$isPrivilegedUser) {
-            foreach (Database::PERMISSIONS as $type) {
-                foreach ($permissions as $permission) {
-                    $permission = Permission::parse($permission);
-                    if ($permission->getPermission() != $type) {
-                        continue;
-                    }
-                    $role = (new Role(
-                        $permission->getRole(),
-                        $permission->getIdentifier(),
-                        $permission->getDimension()
-                    ))->toString();
-                    if (!Authorization::isRole($role)) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
+            $permissions = Permission::aggregate($permissions, $allowedPermissions);
+
+            // Add permissions for current the user if none were provided.
+            if (\is_null($permissions)) {
+                $permissions = [];
+                if (!empty($user->getId())) {
+                    foreach ($allowedPermissions as $permission) {
+                        $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
                     }
                 }
             }
-        }
+
+            // Users can only manage their own roles, API keys and Admin users can manage any
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                foreach (Database::PERMISSIONS as $type) {
+                    foreach ($permissions as $permission) {
+                        $permission = Permission::parse($permission);
+                        if ($permission->getPermission() != $type) {
+                            continue;
+                        }
+                        $role = (new Role(
+                            $permission->getRole(),
+                            $permission->getIdentifier(),
+                            $permission->getDimension()
+                        ))->toString();
+                        if (!Authorization::isRole($role)) {
+                            throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
+                        }
+                    }
+                }
+            }
+
+            $document->setAttribute('$permissions', $permissions);
+        };
 
         $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database) {
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
@@ -3032,9 +3040,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         };
 
-        $documents = array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId) {
+        $documents = array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions) {
             $document['$collection'] = $collection->getId();
-            $document['$permissions'] = $permissions;
 
             if (!$isBulk) {
                 $document['$id'] = $documentId == 'unique()' ? ID::unique() : $documentId;
@@ -3048,6 +3055,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $document = new Document($document);
 
+            $setPermissions($document, $permissions);
             $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
 
             return $document;
