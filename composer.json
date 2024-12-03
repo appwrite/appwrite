@@ -96,6 +96,10 @@
     "config": {
         "platform": {
             "php": "8.3"
+        },
+        "allow-plugins": {
+            "php-http/discovery": false,
+            "tbachert/spi": false
         }
     }
 }
