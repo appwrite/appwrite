@@ -22,6 +22,13 @@
     "emails.recovery.thanks": "",
     "emails.recovery.signature": "",
     "emails.invitation.subject": "",
+    "emails.sessionAlert.hello": "Բարև {{user}}",
+    "emails.sessionAlert.body": "Նոր սեսիա է ստեղծվել Ձեր {{b}}{{project}}{{/b}} հաշվում, {{b}}{{date}}, {{year}} թվականին, ժամը {{time}} UTC{{/b}}.\nՍտորև ներկայացված են նոր սեսիայի մանրամասները: ",
+    "emails.sessionAlert.listDevice": "Ապրանք: {{b}}{{device}}{{/b}}",
+    "emails.sessionAlert.listIpAddress": "IP հասցե: {{b}}{{ipAddress}}{{/b}}",
+    "emails.sessionAlert.listCountry": "Երկիր: {{b}}{{country}}{{/b}}",     "emails.sessionAlert.footer": "Եթե դա դուք եք եղել, լրացուցիչ գործողություններ կատարելու կարիք չկա.\nԵթե դուք չեք սկսել այս սեսիան կամ կասկածում եք ոչ թույլատրված գործողությունների վրա, խնդրում ենք ապահովել ձեր հաշիվը:",
+    "emails.sessionAlert.thanks": "Շնորհակալություն,",
+    "emails.sessionAlert.signature": "{{project}} թիմ"
     "emails.invitation.hello": "",
     "emails.invitation.body": "",
     "emails.invitation.footer": "",
