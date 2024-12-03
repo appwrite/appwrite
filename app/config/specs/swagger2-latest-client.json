@@ -4907,6 +4907,96 @@
                         }
                     }
                 ]
+            },
+            "delete": {
+                "summary": "Delete documents",
+                "operationId": "databasesDeleteDocuments",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "databases"
+                ],
+                "description": "Bulk delete documents using queries, if no queries are passed then all documents are deleted.",
+                "responses": {
+                    "200": {
+                        "description": "Documents List",
+                        "schema": {
+                            "$ref": "#\/definitions\/documentList"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "deleteDocuments",
+                    "weight": 115,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "databases\/delete-documents.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-documents.md",
+                    "rate-limit": 60,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
+                    "offline-key": "{documentId}",
+                    "offline-response-key": "$id",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<COLLECTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "queries": {
+                                    "type": "array",
+                                    "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                                    "default": [],
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
             }
         },
         "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}": {
@@ -5206,7 +5296,7 @@
                 },
                 "x-appwrite": {
                     "method": "listExecutions",
-                    "weight": 307,
+                    "weight": 308,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5291,7 +5381,7 @@
                 },
                 "x-appwrite": {
                     "method": "createExecution",
-                    "weight": 306,
+                    "weight": 307,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5412,7 +5502,7 @@
                 },
                 "x-appwrite": {
                     "method": "getExecution",
-                    "weight": 308,
+                    "weight": 309,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5486,7 +5576,7 @@
                 },
                 "x-appwrite": {
                     "method": "query",
-                    "weight": 332,
+                    "weight": 333,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5562,7 +5652,7 @@
                 },
                 "x-appwrite": {
                     "method": "mutation",
-                    "weight": 331,
+                    "weight": 332,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5638,7 +5728,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 118,
+                    "weight": 119,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5694,7 +5784,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCodes",
-                    "weight": 119,
+                    "weight": 120,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5750,7 +5840,7 @@
                 },
                 "x-appwrite": {
                     "method": "listContinents",
-                    "weight": 123,
+                    "weight": 124,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5806,7 +5896,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountries",
-                    "weight": 120,
+                    "weight": 121,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5862,7 +5952,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesEU",
-                    "weight": 121,
+                    "weight": 122,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5918,7 +6008,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCountriesPhones",
-                    "weight": 122,
+                    "weight": 123,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5974,7 +6064,7 @@
                 },
                 "x-appwrite": {
                     "method": "listCurrencies",
-                    "weight": 124,
+                    "weight": 125,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6030,7 +6120,7 @@
                 },
                 "x-appwrite": {
                     "method": "listLanguages",
-                    "weight": 125,
+                    "weight": 126,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6086,7 +6176,7 @@
                 },
                 "x-appwrite": {
                     "method": "createSubscriber",
-                    "weight": 383,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6175,7 +6265,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteSubscriber",
-                    "weight": 387,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6250,7 +6340,7 @@
                 },
                 "x-appwrite": {
                     "method": "listFiles",
-                    "weight": 209,
+                    "weight": 210,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6335,7 +6425,7 @@
                 },
                 "x-appwrite": {
                     "method": "createFile",
-                    "weight": 208,
+                    "weight": 209,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -6429,7 +6519,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFile",
-                    "weight": 210,
+                    "weight": 211,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6501,7 +6591,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateFile",
-                    "weight": 215,
+                    "weight": 216,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6592,7 +6682,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteFile",
-                    "weight": 216,
+                    "weight": 217,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6666,7 +6756,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFileDownload",
-                    "weight": 212,
+                    "weight": 213,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6740,7 +6830,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFilePreview",
-                    "weight": 211,
+                    "weight": 212,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6941,7 +7031,7 @@
                 },
                 "x-appwrite": {
                     "method": "getFileView",
-                    "weight": 213,
+                    "weight": 214,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -7015,7 +7105,7 @@
                 },
                 "x-appwrite": {
                     "method": "list",
-                    "weight": 220,
+                    "weight": 221,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7092,7 +7182,7 @@
                 },
                 "x-appwrite": {
                     "method": "create",
-                    "weight": 219,
+                    "weight": 220,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7186,7 +7276,7 @@
                 },
                 "x-appwrite": {
                     "method": "get",
-                    "weight": 221,
+                    "weight": 222,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7250,7 +7340,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateName",
-                    "weight": 223,
+                    "weight": 224,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7327,7 +7417,7 @@
                 },
                 "x-appwrite": {
                     "method": "delete",
-                    "weight": 225,
+                    "weight": 226,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7393,7 +7483,7 @@
                 },
                 "x-appwrite": {
                     "method": "listMemberships",
-                    "weight": 227,
+                    "weight": 228,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7478,7 +7568,7 @@
                 },
                 "x-appwrite": {
                     "method": "createMembership",
-                    "weight": 226,
+                    "weight": 227,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7595,7 +7685,7 @@
                 },
                 "x-appwrite": {
                     "method": "getMembership",
-                    "weight": 228,
+                    "weight": 229,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7667,7 +7757,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembership",
-                    "weight": 229,
+                    "weight": 230,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7755,7 +7845,7 @@
                 },
                 "x-appwrite": {
                     "method": "deleteMembership",
-                    "weight": 231,
+                    "weight": 232,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7829,7 +7919,7 @@
                 },
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
-                    "weight": 230,
+                    "weight": 231,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7927,7 +8017,7 @@
                 },
                 "x-appwrite": {
                     "method": "getPrefs",
-                    "weight": 222,
+                    "weight": 223,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7990,7 +8080,7 @@
                 },
                 "x-appwrite": {
                     "method": "updatePrefs",
-                    "weight": 224,
+                    "weight": 225,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,

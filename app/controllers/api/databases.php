@@ -47,6 +47,7 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
@@ -3906,6 +3907,115 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
 
         $response->noContent();
+    });
+
+App::delete('/v1/databases/:databaseId/collections/:collectionId/documents')
+    ->desc('Delete documents')
+    ->groups(['api', 'database'])
+    ->label('scope', 'documents.write')
+    ->label('resourceType', RESOURCE_TYPE_DATABASES)
+    ->label('audits.event', 'documents.delete')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'deleteDocuments')
+    ->label('sdk.description', '/docs/references/databases/delete-documents.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
+    ->label('sdk.offline.key', '{documentId}')
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForUsage')
+    ->inject('project')
+    ->action(function (string $databaseId, string $collectionId, array $queries, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Usage $queueForUsage, Document $project) {
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+
+        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $queries = Query::parseQueries($queries);
+
+        $documents = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $queries) {
+            return $dbForProject->deleteDocuments(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $queries,
+                intval(System::getEnv('_APP_DATABASE_BATCH_SIZE', 10_000))
+            );
+        });
+
+        // DB Storage Calculation
+        $queueForUsage
+            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
+
+        $processDocument  = (function (Document $collection, Document &$document) use (&$processDocument, $dbForProject, $database): bool {
+            if ($document->isEmpty()) {
+                return false;
+            }
+
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $relations = [$related];
+                } else {
+                    $relations = $related;
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
+
+                foreach ($relations as $index => $doc) {
+                    if ($doc instanceof Document) {
+                        if (!$processDocument($relatedCollection, $doc)) {
+                            unset($relations[$index]);
+                        }
+                    }
+                }
+
+                if (\is_array($related)) {
+                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+                } elseif (empty($relations)) {
+                    $document->setAttribute($relationship->getAttribute('key'), null);
+                }
+            }
+
+            return true;
+        });
+
+        $response->dynamic(new Document([
+            'total' => \count($documents),
+            'documents' => $documents,
+        ]), Response::MODEL_DOCUMENT_LIST);
     });
 
 App::get('/v1/databases/usage')
