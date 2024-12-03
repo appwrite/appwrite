@@ -90,6 +90,7 @@ $eventDatabaseListener = function (Document $document, Response $response, Event
 
 $usageDatabaseListener = function (string $event, Document $document, Usage $queueForUsage) {
     $value = 1;
+
     if ($event === Database::EVENT_DOCUMENT_DELETE) {
         $value = -1;
     }
