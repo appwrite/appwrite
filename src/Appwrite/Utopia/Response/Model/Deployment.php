@@ -154,6 +154,12 @@ class Deployment extends Model
                 'default' => '',
                 'example' => 'https://github.com/vermakhushboo/g4-node-function/commit/60c0416257a9cbcdd96b2d370c38d8f8d150ccfb',
             ])
+            ->addRule('providerCommitAuthorAvatar', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The avatar of vcs commit author',
+                'default' => '',
+                'example' => 'https://avatars.githubusercontent.com/u/1234567',
+            ])
             ->addRule('providerBranch', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The branch of the vcs repository',
