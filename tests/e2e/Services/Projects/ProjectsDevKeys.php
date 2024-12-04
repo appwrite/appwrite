@@ -255,14 +255,14 @@ trait ProjectsDevKeys
             'password' => 'password'
         ]);
         $this->assertEquals(429, $res['headers']['status-code']);
-        
+
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/development-keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
-        
+
 
         /**
          * Test for FAILURE
