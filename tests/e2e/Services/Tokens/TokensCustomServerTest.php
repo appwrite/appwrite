@@ -61,14 +61,11 @@ class TokensCustomServerTest extends Scope
 
         $fileId = $file['body']['$id'];
 
-        $res = $this->client->call(Client::METHOD_POST, '/tokens', array_merge([
+        $res = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $this->getHeaders()), [
-            'resourceType' => 'files',
-            'resourceId' => $bucketId . ':' . $fileId
-        ]);
+        ], $this->getHeaders()), []);
 
         $this->assertEquals(201, $res['headers']['status-code']);
         $this->assertEquals('files', $res['body']['resourceType']);
@@ -85,8 +82,6 @@ class TokensCustomServerTest extends Scope
      */
     public function testUpdateToken(array $data): array
     {
-        $bucketId = $data['bucketId'];
-        $fileId = $data['fileId'];
         $tokenId = $data['tokenId'];
 
         $expiry = DateTime::now();
@@ -106,7 +101,14 @@ class TokensCustomServerTest extends Scope
      */
     public function testDeleteToken(array $data): array
     {
+        $tokenId = $data['tokenId'];
 
+        $res = $this->client->call(Client::METHOD_DELETE, '/tokens/' . $tokenId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $res['headers']['status-code']);
         return $data;
     }
 }
