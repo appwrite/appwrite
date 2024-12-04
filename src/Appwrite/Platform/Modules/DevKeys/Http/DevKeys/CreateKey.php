@@ -28,15 +28,15 @@ class CreateKey extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/projects/:projectId/development-keys')
-            ->desc('Create key')
+            ->desc('Create dev key')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.write')
             ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
             ->label('sdk.namespace', 'projects')
-            ->label('sdk.method', 'createKey')
+            ->label('sdk.method', 'createDevKey')
             ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
             ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_KEY)
+            ->label('sdk.response.model', Response::MODEL_DEV_KEY)
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
             ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.', false)
@@ -75,6 +75,6 @@ class CreateKey extends Action
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($key, Response::MODEL_KEY);
+            ->dynamic($key, Response::MODEL_DEV_KEY);
     }
 }

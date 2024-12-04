@@ -39,6 +39,7 @@ use Appwrite\Utopia\Response\Model\Currency;
 use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\Detection;
+use Appwrite\Utopia\Response\Model\DevKey;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
@@ -282,6 +283,8 @@ class Response extends SwooleResponse
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
+    public const MODEL_DEV_KEY = 'devKey';
+    public const MODEL_DEV_KEY_LIST = 'devKeyList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
@@ -363,6 +366,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
+            ->setModel(new BaseList('Dev Keys List', self::MODEL_DEV_KEY_LIST, 'keys', self::MODEL_DEV_KEY, true, false))
             ->setModel(new BaseList('Auth Providers List', self::MODEL_AUTH_PROVIDER_LIST, 'platforms', self::MODEL_AUTH_PROVIDER, true, false))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
@@ -438,6 +442,7 @@ class Response extends SwooleResponse
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
+            ->setModel(new DevKey())
             ->setModel(new MockNumber())
             ->setModel(new AuthProvider())
             ->setModel(new Platform())

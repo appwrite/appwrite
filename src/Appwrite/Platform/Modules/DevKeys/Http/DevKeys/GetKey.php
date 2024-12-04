@@ -23,7 +23,7 @@ class GetKey extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/projects/:projectId/development-keys/:keyId')
-            ->desc('Get key')
+            ->desc('Get dev key')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.read')
             ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -31,7 +31,7 @@ class GetKey extends Action
             ->label('sdk.method', 'getDevKey')
             ->label('sdk.response.code', Response::STATUS_CODE_OK)
             ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_KEY)
+            ->label('sdk.response.model', Response::MODEL_DEV_KEY)
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('keyId', '', new UID(), 'Key unique ID.')
             ->inject('response')
@@ -57,6 +57,6 @@ class GetKey extends Action
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        $response->dynamic($key, Response::MODEL_KEY);
+        $response->dynamic($key, Response::MODEL_DEV_KEY);
     }
 }

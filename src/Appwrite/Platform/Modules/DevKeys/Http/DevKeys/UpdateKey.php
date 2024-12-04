@@ -24,7 +24,7 @@ class UpdateKey extends Action
     {
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/projects/:projectId/development-keys/:keyId')
-            ->desc('Update key')
+            ->desc('Update dev key')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.write')
             ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -32,7 +32,7 @@ class UpdateKey extends Action
             ->label('sdk.method', 'updateDevKey')
             ->label('sdk.response.code', Response::STATUS_CODE_OK)
             ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_KEY)
+            ->label('sdk.response.model', Response::MODEL_DEV_KEY)
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('keyId', '', new UID(), 'Key unique ID.')
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
@@ -67,6 +67,6 @@ class UpdateKey extends Action
 
         $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
-        $response->dynamic($key, Response::MODEL_KEY);
+        $response->dynamic($key, Response::MODEL_DEV_KEY);
     }
 }

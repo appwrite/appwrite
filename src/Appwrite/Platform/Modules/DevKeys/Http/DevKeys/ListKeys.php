@@ -24,15 +24,15 @@ class ListKeys extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/projects/:projectId/development-keys')
-            ->desc('List keys')
+            ->desc('List dev keys')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.read')
             ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
             ->label('sdk.namespace', 'projects')
-            ->label('sdk.method', 'listKeys')
+            ->label('sdk.method', 'listDevKeys')
             ->label('sdk.response.code', Response::STATUS_CODE_OK)
             ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-            ->label('sdk.response.model', Response::MODEL_KEY_LIST)
+            ->label('sdk.response.model', Response::MODEL_DEV_KEY_LIST)
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->inject('response')
             ->inject('dbForConsole')
@@ -56,6 +56,6 @@ class ListKeys extends Action
         $response->dynamic(new Document([
             'keys' => $keys,
             'total' => count($keys),
-        ]), Response::MODEL_KEY_LIST);
+        ]), Response::MODEL_DEV_KEY_LIST);
     }
 }
