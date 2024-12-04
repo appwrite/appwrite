@@ -1811,8 +1811,8 @@ App::setResource('plan', function (array $plan = []) {
     return [];
 });
 
-App::setResource('devKey', function ($request, $project, $dbForConsole) {
-    $devKey = $request->getHeader('x-appwrite-development-key', '');
+App::setResource('devKey', function (Request $request, Document $project, Database $dbForConsole) {
+    $devKey = $request->getHeader('x-appwrite-dev-key', $request->getParam('devKey', ''));
     // Check if given key match project's development keys
     $key = $project->find('secret', $devKey, 'devKeys');
     if ($key) {

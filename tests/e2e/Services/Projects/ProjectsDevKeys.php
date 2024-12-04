@@ -152,7 +152,7 @@ trait ProjectsDevKeys
         $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
-            'x-appwrite-development-key' => $devKey
+            'x-appwrite-dev-key' => $devKey
         ], [
             'email' => 'user@appwrite.io',
             'password' => 'password'
@@ -174,7 +174,7 @@ trait ProjectsDevKeys
         $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
-            'x-appwrite-development-key' => $response['body']['secret']
+            'x-appwrite-dev-key' => $response['body']['secret']
         ], [
             'email' => 'user@appwrite.io',
             'password' => 'password'
