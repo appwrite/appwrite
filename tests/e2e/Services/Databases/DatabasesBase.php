@@ -4933,6 +4933,38 @@ trait DatabasesBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('$id is required inside documents when creating bulk documents', $response['body']['message']);
+
+        // TEST FAIL - Can't miss number in bulk documents
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => [
+                [
+                    '$id' => ID::unique(),
+                    'number' => 1,
+                ],
+                [
+                    '$id' => ID::unique(),
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // TEST FAIL - Can't push more than 10000 documents
+        $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documents' => array_fill(0, 10001, [
+                '$id' => ID::unique(),
+                'number' => 1,
+            ]),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `documents` param: Value must a valid array no longer than 10000 items and Value must be a valid JSON string', $response['body']['message']);
     }
 
     public function testBulkCreateRelationships(): void
