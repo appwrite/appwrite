@@ -36,7 +36,7 @@ class UpdateKey extends Action
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('keyId', '', new UID(), 'Key unique ID.')
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-            ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.', true)
+            ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.')
             ->inject('response')
             ->inject('dbForConsole')
             ->callback(fn ($projectId, $keyId, $name, $expire, $response, $dbForConsole) => $this->action($projectId, $keyId, $name, $expire, $response, $dbForConsole));
@@ -61,7 +61,7 @@ class UpdateKey extends Action
 
         $key
             ->setAttribute('name', $name)
-            ->setAttribute('expire', $expire ?? $key->getAttribute('expire'));
+            ->setAttribute('expire', $expire);
 
         $dbForConsole->updateDocument('devKeys', $key->getId(), $key);
 
