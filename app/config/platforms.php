@@ -1,9 +1,5 @@
 <?php
 
-const APP_PLATFORM_SERVER = 'server';
-const APP_PLATFORM_CLIENT = 'client';
-const APP_PLATFORM_CONSOLE = 'console';
-
 return [
     APP_PLATFORM_CLIENT => [
         'key' => APP_PLATFORM_CLIENT,
@@ -15,7 +11,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '16.0.0',
+                'version' => '16.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-web',
                 'package' => 'https://www.npmjs.com/package/appwrite',
                 'enabled' => true,
@@ -203,7 +199,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Console',
-                'version' => '1.1.0',
+                'version' => '1.2.1',
                 'url' => 'https://github.com/appwrite/sdk-for-console',
                 'package' => '',
                 'enabled' => true,
@@ -285,7 +281,7 @@ return [
             [
                 'key' => 'php',
                 'name' => 'PHP',
-                'version' => '12.0.0',
+                'version' => '12.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-php',
                 'package' => 'https://packagist.org/packages/appwrite/appwrite',
                 'enabled' => true,
@@ -321,7 +317,7 @@ return [
             [
                 'key' => 'ruby',
                 'name' => 'Ruby',
-                'version' => '12.1.0',
+                'version' => '12.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-ruby',
                 'package' => 'https://rubygems.org/gems/appwrite',
                 'enabled' => true,
@@ -357,7 +353,7 @@ return [
             [
                 'key' => 'dotnet',
                 'name' => '.NET',
-                'version' => '0.10.0',
+                'version' => '0.10.1',
                 'url' => 'https://github.com/appwrite/sdk-for-dotnet',
                 'package' => 'https://www.nuget.org/packages/Appwrite',
                 'enabled' => true,

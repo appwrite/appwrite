@@ -55,7 +55,7 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $output = (empty($output)) ? $type : $output;
     $data = $image->output($output, $quality);
     $response
-        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+        ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
         ->setContentType('image/png')
         ->file($data);
     unset($image);
@@ -275,7 +275,7 @@ App::get('/v1/avatars/image')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType('image/png')
             ->file($data);
         unset($image);
@@ -409,7 +409,7 @@ App::get('/v1/avatars/favicon')
                 throw new Exception(Exception::AVATAR_ICON_NOT_FOUND, 'Favicon not found');
             }
             $response
-                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+                ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
                 ->setContentType('image/x-icon')
                 ->file($data);
         }
@@ -420,7 +420,7 @@ App::get('/v1/avatars/favicon')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType('image/png')
             ->file($data);
         unset($image);
@@ -461,7 +461,7 @@ App::get('/v1/avatars/qr')
         $image->crop((int) $size, (int) $size);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->send($image->output('png', 9));
     });
@@ -544,7 +544,7 @@ App::get('/v1/avatars/initials')
         $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($image->getImageBlob());
     });
@@ -609,9 +609,9 @@ App::get('/v1/cards/cloud')
 
             $isPlatinum = $user->getInternalId() % 100 === 0;
         } else {
-            $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brien Junior' : 'Walter O\'Brien';
+            $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
             $createdAt = new \DateTime('now');
-            $githubName = $mock === 'normal-no-github' ? '' : ($mock === 'normal-long' ? 'sir-first-walterobrien-junior' : 'walterobrien');
+            $githubName = $mock === 'normal-no-github' ? '' : ($mock === 'normal-long' ? 'sir-first-walterobrian-junior' : 'walterobrian');
             $isHero = $mock === 'hero';
             $isContributor = $mock === 'contributor';
             $isEmployee = \str_starts_with($mock, 'employee');
@@ -751,7 +751,7 @@ App::get('/v1/cards/cloud')
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });
@@ -829,7 +829,7 @@ App::get('/v1/cards/cloud-back')
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });
@@ -900,9 +900,9 @@ App::get('/v1/cards/cloud-og')
         } else {
             $bgVariation = \str_ends_with($mock, '-bg2') ? '2' : (\str_ends_with($mock, '-bg3') ? '3' : '1');
             $cardVariation = \str_ends_with($mock, '-right') ? '2' : (\str_ends_with($mock, '-middle') ? '3' : '1');
-            $name = \str_starts_with($mock, 'normal-long') ? 'Sir First Walter O\'Brien Junior' : 'Walter O\'Brien';
+            $name = \str_starts_with($mock, 'normal-long') ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
             $createdAt = new \DateTime('now');
-            $githubName = $mock === 'normal-no-github' ? '' : (\str_starts_with($mock, 'normal-long') ? 'sir-first-walterobrien-junior' : 'walterobrien');
+            $githubName = $mock === 'normal-no-github' ? '' : (\str_starts_with($mock, 'normal-long') ? 'sir-first-walterobrian-junior' : 'walterobrian');
             $isHero = \str_starts_with($mock, 'hero');
             $isContributor = \str_starts_with($mock, 'contributor');
             $isEmployee = \str_starts_with($mock, 'employee');
@@ -1219,7 +1219,7 @@ App::get('/v1/cards/cloud-og')
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });

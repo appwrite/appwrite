@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
@@ -50,18 +51,22 @@ class Deletes extends Action
             ->inject('deviceForFunctions')
             ->inject('deviceForBuilds')
             ->inject('deviceForCache')
+            ->inject('certificates')
             ->inject('abuseRetention')
             ->inject('executionRetention')
             ->inject('auditRetention')
             ->inject('log')
-            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log) => $this->action($message, $dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $abuseRetention, $executionRetention, $auditRetention, $log));
+            ->callback(
+                fn ($message, $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log) =>
+                    $this->action($message, $dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $abuseRetention, $executionRetention, $auditRetention, $log)
+            );
     }
 
     /**
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
+    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -84,10 +89,10 @@ class Deletes extends Action
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_PROJECTS:
-                        $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $document);
+                        $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
-                        $this->deleteFunction($dbForConsole, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $document, $project);
+                        $this->deleteFunction($dbForConsole, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project);
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
                         $this->deleteDeployment($getProjectDB, $deviceForFunctions, $deviceForBuilds, $document, $project);
@@ -102,7 +107,7 @@ class Deletes extends Action
                         $this->deleteInstallation($dbForConsole, $getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_RULES:
-                        $this->deleteRule($dbForConsole, $document);
+                        $this->deleteRule($dbForConsole, $document, $certificates);
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
@@ -110,7 +115,7 @@ class Deletes extends Action
                 }
                 break;
             case DELETE_TYPE_TEAM_PROJECTS:
-                $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $document);
+                $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $certificates, $document);
                 break;
             case DELETE_TYPE_EXECUTIONS:
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
@@ -118,10 +123,6 @@ class Deletes extends Action
             case DELETE_TYPE_AUDIT:
                 if (!$project->isEmpty()) {
                     $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
-                }
-
-                if (!$document->isEmpty()) {
-                    $this->deleteAuditLogsByResource($getProjectDB, 'document/' . $document->getId(), $project);
                 }
                 break;
             case DELETE_TYPE_ABUSE:
@@ -268,7 +269,7 @@ class Deletes extends Action
                         MESSAGE_TYPE_EMAIL => 'emailTotal',
                         MESSAGE_TYPE_SMS => 'smsTotal',
                         MESSAGE_TYPE_PUSH => 'pushTotal',
-                        default => throw new Exception('Invalid target provider type'),
+                        default => throw new Exception('Invalid target CertificatesAdapter type'),
                     };
                     $dbForProject->decreaseDocumentAttribute(
                         'topics',
@@ -446,7 +447,7 @@ class Deletes extends Action
      * @throws Structure
      * @throws Exception
      */
-    private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, Document $document): void
+    private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, CertificatesAdapter $certificates, Document $document): void
     {
 
         $projects = $dbForConsole->find('projects', [
@@ -459,7 +460,7 @@ class Deletes extends Action
             $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
             $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 
-            $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $project);
+            $this->deleteProject($dbForConsole, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $project);
             $dbForConsole->deleteDocument('projects', $project->getId());
         }
     }
@@ -477,9 +478,10 @@ class Deletes extends Action
      * @throws Authorization
      * @throws DatabaseException
      */
-    private function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Document $document): void
+    private function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Document $document): void
     {
         $projectInternalId = $document->getInternalId();
+        $projectId = $document->getId();
 
         try {
             $dsn = new DSN($document->getAttribute('database', 'console'));
@@ -498,18 +500,30 @@ class Deletes extends Action
 
         $limit = \count($projectCollectionIds) + 25;
 
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
+
+        $projectTables = !\in_array($dsn->getHost(), $sharedTables);
+        $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
+        $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
+        $sharedTables = $sharedTablesV1 || $sharedTablesV2;
+
         while (true) {
             $collections = $dbForProject->listCollections($limit);
 
             foreach ($collections as $collection) {
-                if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '') || !\in_array($collection->getId(), $projectCollectionIds)) {
-                    $dbForProject->deleteCollection($collection->getId());
-                } else {
-                    $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
+                try {
+                    if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
+                        $dbForProject->deleteCollection($collection->getId());
+                    } else {
+                        $this->deleteByGroup($collection->getId(), [], database: $dbForProject);
+                    }
+                } catch (Throwable $e) {
+                    Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
                 }
             }
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            if ($sharedTables) {
                 $collectionsIds = \array_map(fn ($collection) => $collection->getId(), $collections);
 
                 if (empty(\array_diff($collectionsIds, $projectCollectionIds))) {
@@ -528,8 +542,8 @@ class Deletes extends Action
         // Delete project and function rules
         $this->deleteByGroup('rules', [
             Query::equal('projectInternalId', [$projectInternalId])
-        ], $dbForConsole, function (Document $document) use ($dbForConsole) {
-            $this->deleteRule($dbForConsole, $document);
+        ], $dbForConsole, function (Document $document) use ($dbForConsole, $certificates) {
+            $this->deleteRule($dbForConsole, $document, $certificates);
         });
 
         // Delete Keys
@@ -557,11 +571,23 @@ class Deletes extends Action
             Query::equal('projectInternalId', [$projectInternalId]),
         ], $dbForConsole);
 
+        // Delete Schedules (No projectInternalId in this collection)
+        $this->deleteByGroup('schedules', [
+            Query::equal('projectId', [$projectId]),
+        ], $dbForConsole);
+
         // Delete metadata table
-        if ($dsn->getHost() !== System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
-            $dbForProject->deleteCollection('_metadata');
-        } else {
-            $this->deleteByGroup('_metadata', [], $dbForProject);
+        if ($projectTables) {
+            $dbForProject->deleteCollection(Database::METADATA);
+        } elseif ($sharedTablesV1) {
+            $this->deleteByGroup(Database::METADATA, [], $dbForProject);
+        } elseif ($sharedTablesV2) {
+            $queries = \array_map(
+                fn ($id) => Query::notEqual('$id', $id),
+                $projectCollectionIds
+            );
+
+            $this->deleteByGroup(Database::METADATA, $queries, $dbForProject);
         }
 
         // Delete all storage directories
@@ -718,22 +744,6 @@ class Deletes extends Action
 
     /**
      * @param callable $getProjectDB
-     * @param string $resource
-     * @param Document $project
-     * @return void
-     * @throws Exception
-     */
-    private function deleteAuditLogsByResource(callable $getProjectDB, string $resource, Document $project): void
-    {
-        $dbForProject = $getProjectDB($project);
-
-        $this->deleteByGroup(Audit::COLLECTION, [
-            Query::equal('resource', [$resource])
-        ], $dbForProject);
-    }
-
-    /**
-     * @param callable $getProjectDB
      * @param Device $deviceForFunctions
      * @param Device $deviceForBuilds
      * @param Document $document function document
@@ -741,7 +751,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteFunction(Database $dbForConsole, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, Document $project): void
+    private function deleteFunction(Database $dbForConsole, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, CertificatesAdapter $certificates, Document $document, Document $project): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -756,8 +766,8 @@ class Deletes extends Action
             Query::equal('resourceType', ['function']),
             Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
-        ], $dbForConsole, function (Document $document) use ($project, $dbForConsole) {
-            $this->deleteRule($dbForConsole, $document);
+        ], $dbForConsole, function (Document $document) use ($project, $dbForConsole, $certificates) {
+            $this->deleteRule($dbForConsole, $document, $certificates);
         });
 
         /**
@@ -955,7 +965,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    protected function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
     {
         $count = 0;
         $chunk = 0;
@@ -997,7 +1007,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
     {
         $count = 0;
         $chunk = 0;
@@ -1043,21 +1053,10 @@ class Deletes extends Action
      * @param Document $document rule document
      * @return void
      */
-    private function deleteRule(Database $dbForConsole, Document $document): void
+    private function deleteRule(Database $dbForConsole, Document $document, CertificatesAdapter $certificates): void
     {
-
         $domain = $document->getAttribute('domain');
-        $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
-        $checkTraversal = realpath($directory) === $directory;
-
-        if ($checkTraversal && is_dir($directory)) {
-            // Delete files, so Traefik is aware of change
-            array_map('unlink', glob($directory . '/*.*'));
-            rmdir($directory);
-            Console::info("Deleted certificate files for {$domain}");
-        } else {
-            Console::info("No certificate files found for {$domain}");
-        }
+        $certificates->deleteCertificate($domain);
 
         // Delete certificate document, so Appwrite is aware of change
         if (isset($document['certificateId'])) {

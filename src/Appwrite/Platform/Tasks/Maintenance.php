@@ -49,12 +49,7 @@ class Maintenance extends Action
             $this->foreachProject($dbForConsole, function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
                 $queueForDeletes->setProject($project);
 
-                $this->notifyDeleteTargets($queueForDeletes);
-                $this->notifyDeleteExecutionLogs($queueForDeletes);
-                $this->notifyDeleteAbuseLogs($queueForDeletes);
-                $this->notifyDeleteAuditLogs($queueForDeletes);
-                $this->notifyDeleteUsageStats($usageStatsRetentionHourly, $queueForDeletes);
-                $this->notifyDeleteExpiredSessions($queueForDeletes);
+                $this->notifyProjects($queueForDeletes, $usageStatsRetentionHourly);
             });
 
             $this->notifyDeleteConnections($queueForDeletes);
@@ -62,6 +57,19 @@ class Maintenance extends Action
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
         }, $interval, $delay);
+    }
+
+    /**
+     * Hook to allow sub-classes to extend project-level maintenance functionality.
+     */
+    protected function notifyProjects(Delete $queueForDeletes, int $usageStatsRetentionHourly): void
+    {
+        $this->notifyDeleteTargets($queueForDeletes);
+        $this->notifyDeleteExecutionLogs($queueForDeletes);
+        $this->notifyDeleteAbuseLogs($queueForDeletes);
+        $this->notifyDeleteAuditLogs($queueForDeletes);
+        $this->notifyDeleteUsageStats($usageStatsRetentionHourly, $queueForDeletes);
+        $this->notifyDeleteExpiredSessions($queueForDeletes);
     }
 
     protected function foreachProject(Database $dbForConsole, callable $callback): void
@@ -141,6 +149,7 @@ class Maintenance extends Action
 
         $certificates = $dbForConsole->find('certificates', [
             Query::lessThan('attempts', 5), // Maximum 5 attempts
+            Query::isNotNull('renewDate'),
             Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
             Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
         ]);
