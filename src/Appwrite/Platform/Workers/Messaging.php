@@ -32,6 +32,7 @@ use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Messages\SMS;
+use Utopia\Messaging\Priority;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
@@ -686,6 +687,11 @@ class Messaging extends Action
         $tag = $message['data']['tag'] ?? null;
         $badge = $message['data']['badge'] ?? null;
         $contentAvailable = $message['data']['contentAvailable'] ?? false;
+        $critical = $message['data']['critical'] ?? false;
+
+        $priority = $message['data']['priority'] === 'normal'
+            ? Priority::NORMAL
+            : Priority::HIGH;
 
         return new Push(
             $to,
@@ -699,7 +705,9 @@ class Messaging extends Action
             $color,
             $tag,
             $badge,
-            $contentAvailable
+            $contentAvailable,
+            $critical,
+            $priority
         );
     }
 

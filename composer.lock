@@ -3882,12 +3882,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "2580b8357d2dde6ed567a52e5164cfe58fb9b6dd"
+                "reference": "02ccc85424eabb680b5a2f1458a471f19bac56c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/2580b8357d2dde6ed567a52e5164cfe58fb9b6dd",
-                "reference": "2580b8357d2dde6ed567a52e5164cfe58fb9b6dd",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/02ccc85424eabb680b5a2f1458a471f19bac56c0",
+                "reference": "02ccc85424eabb680b5a2f1458a471f19bac56c0",
                 "shasum": ""
             },
             "require": {
@@ -3925,7 +3925,7 @@
                 "issues": "https://github.com/utopia-php/messaging/issues",
                 "source": "https://github.com/utopia-php/messaging/tree/feat-apns-content-available"
             },
-            "time": "2024-12-03T04:09:05+00:00"
+            "time": "2024-12-03T09:44:33+00:00"
         },
         {
             "name": "utopia-php/migration",

@@ -2919,7 +2919,9 @@ App::post('/v1/messaging/messages/push')
     ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
     ->param('badge', 0, new Integer(), 'Badge for push notification. Available only for iOS Platform.', true)
-    ->param('contentAvailable', false, new Boolean(), 'Content available for push notification. Available only for iOS Platform.', true)
+    ->param('contentAvailable', false, new Boolean(), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
+    ->param('critical', false, new Boolean(), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
+    ->param('priority', 'high', new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device battery state and may send notifications later. "high" will always attempt to immediately deliver the notification.', true)
     ->param('draft', false, new Boolean(), 'Is message a draft', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
@@ -2928,7 +2930,7 @@ App::post('/v1/messaging/messages/push')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, string $badge, bool $contentAvailable, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, string $badge, bool $contentAvailable, bool $critical, string $priority, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3011,7 +3013,7 @@ App::post('/v1/messaging/messages/push')
 
         $pushData = [];
 
-        $keys = ['title', 'body', 'data', 'action', 'image', 'icon', 'sound', 'color', 'tag', 'badge', 'contentAvailable'];
+        $keys = ['title', 'body', 'data', 'action', 'image', 'icon', 'sound', 'color', 'tag', 'badge', 'contentAvailable', 'critical', 'priority'];
 
         foreach ($keys as $key) {
             if (!empty($$key)) {
@@ -3697,6 +3699,9 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('color', null, new Text(256), 'Color for push notification. Available only for Android platforms.', true)
     ->param('tag', null, new Text(256), 'Tag for push notification. Available only for Android platforms.', true)
     ->param('badge', null, new Integer(), 'Badge for push notification. Available only for iOS platforms.', true)
+    ->param('contentAvailable', null, new Boolean(), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
+    ->param('critical', null, new Boolean(), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
+    ->param('priority', null, new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device battery state and may send notifications later. "high" will always attempt to immediately deliver the notification.', true)
     ->param('draft', null, new Boolean(), 'Is message a draft', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
@@ -3705,7 +3710,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $contentAvailable, ?bool $critical, ?string $priority, ?bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3842,6 +3847,18 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         if (!\is_null($badge)) {
             $pushData['badge'] = $badge;
+        }
+
+        if (!\is_null($contentAvailable)) {
+            $pushData['contentAvailable'] = $contentAvailable;
+        }
+
+        if (!\is_null($critical)) {
+            $pushData['critical'] = $critical;
+        }
+
+        if (!\is_null($priority)) {
+            $pushData['priority'] = $priority;
         }
 
         if (!\is_null($image)) {
