@@ -4620,6 +4620,14 @@
                                         "description": "Document data as JSON object.",
                                         "x-example": "{}"
                                     },
+                                    "documents": {
+                                        "type": "array",
+                                        "description": "Array of documents data as JSON object.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
                                     "permissions": {
                                         "type": "array",
                                         "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
@@ -4628,11 +4636,7 @@
                                             "type": "string"
                                         }
                                     }
-                                },
-                                "required": [
-                                    "documentId",
-                                    "data"
-                                ]
+                                }
                             }
                         }
                     }

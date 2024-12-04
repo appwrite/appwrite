@@ -8332,14 +8332,23 @@
                                 "documentId": {
                                     "type": "string",
                                     "description": "Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
-                                    "default": null,
+                                    "default": "",
                                     "x-example": "<DOCUMENT_ID>"
                                 },
                                 "data": {
                                     "type": "object",
                                     "description": "Document data as JSON object.",
-                                    "default": {},
+                                    "default": [],
                                     "x-example": "{}"
+                                },
+                                "documents": {
+                                    "type": "array",
+                                    "description": "Array of documents data as JSON object.",
+                                    "default": [],
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "object"
+                                    }
                                 },
                                 "permissions": {
                                     "type": "array",
@@ -8350,11 +8359,7 @@
                                         "type": "string"
                                     }
                                 }
-                            },
-                            "required": [
-                                "documentId",
-                                "data"
-                            ]
+                            }
                         }
                     }
                 ]

@@ -2845,7 +2845,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
     ->desc('Create document')
     ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].create')
     ->label('scope', 'documents.write')
     ->label('resourceType', RESOURCE_TYPE_DATABASES)
     ->label('audits.event', 'document.create')
@@ -2863,26 +2862,41 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
     ->label('sdk.offline.key', '{documentId}')
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
-    ->param('data', [], new JSON(), 'Document data as JSON object.')
+    ->param('data', [], new JSON(), 'Document data as JSON object.', true)
+    ->param('documents', [], new ArrayList(new JSON(), APP_LIMIT_ARRAY_DOCUMENTS_SIZE), 'Array of documents data as JSON object.', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
+    ->inject('project')
     ->inject('mode')
-    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, string $mode) {
-
+    ->action(function (string $databaseId, ?string $documentId, string $collectionId, string|array|null $data, ?array $documents, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, Document $project, string $mode) {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
+        $isBulk = true;
 
-        if (empty($data)) {
+        if (empty($data) && empty($documents)) {
             throw new Exception(Exception::DOCUMENT_MISSING_DATA);
         }
 
-        if (isset($data['$id'])) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is not allowed for creating new documents, try update instead');
+        if (!empty($data) && !empty($documents)) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'You can only send one of the following parameters: data, documents');
+        }
+
+        if (!empty($data) && empty($documentId)) {
+            throw new Exception(Exception::DOCUMENT_MISSING_DATA, 'Document ID is required when creating a single document');
+        }
+
+        if (!empty($documents) && !empty($documentId)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "documentId" is disallowed when creating multiple documents, use $id inside the documents');
+        }
+
+        if (!empty($data)) {
+            $isBulk = false;
+            $documents = [$data];
         }
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -2906,43 +2920,46 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             Database::PERMISSION_DELETE,
         ];
 
-        // Map aggregate permissions to into the set of individual permissions they represent.
-        $permissions = Permission::aggregate($permissions, $allowedPermissions);
-
-        // Add permissions for current the user if none were provided.
-        if (\is_null($permissions)) {
-            $permissions = [];
-            if (!empty($user->getId())) {
-                foreach ($allowedPermissions as $permission) {
-                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
-                }
+        $setPermissions = function (Document $document, ?array $permissions) use ($user, $allowedPermissions, $isAPIKey, $isPrivilegedUser, $isBulk) {
+            // Map aggregate permissions to into the set of individual permissions they represent.
+            if ($isBulk) {
+                $permissions = $document['$permissions'] ?? null;
             }
-        }
 
-        // Users can only manage their own roles, API keys and Admin users can manage any
-        if (!$isAPIKey && !$isPrivilegedUser) {
-            foreach (Database::PERMISSIONS as $type) {
-                foreach ($permissions as $permission) {
-                    $permission = Permission::parse($permission);
-                    if ($permission->getPermission() != $type) {
-                        continue;
-                    }
-                    $role = (new Role(
-                        $permission->getRole(),
-                        $permission->getIdentifier(),
-                        $permission->getDimension()
-                    ))->toString();
-                    if (!Authorization::isRole($role)) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
+            $permissions = Permission::aggregate($permissions, $allowedPermissions);
+
+            // Add permissions for current the user if none were provided.
+            if (\is_null($permissions)) {
+                $permissions = [];
+                if (!empty($user->getId())) {
+                    foreach ($allowedPermissions as $permission) {
+                        $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
                     }
                 }
             }
-        }
 
-        $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
-        $data['$id'] = $documentId == 'unique()' ? ID::unique() : $documentId;
-        $data['$permissions'] = $permissions;
-        $document = new Document($data);
+            // Users can only manage their own roles, API keys and Admin users can manage any
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                foreach (Database::PERMISSIONS as $type) {
+                    foreach ($permissions as $permission) {
+                        $permission = Permission::parse($permission);
+                        if ($permission->getPermission() != $type) {
+                            continue;
+                        }
+                        $role = (new Role(
+                            $permission->getRole(),
+                            $permission->getIdentifier(),
+                            $permission->getDimension()
+                        ))->toString();
+                        if (!Authorization::isRole($role)) {
+                            throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
+                        }
+                    }
+                }
+            }
+
+            $document->setAttribute('$permissions', $permissions);
+        };
 
         $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database) {
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
@@ -3024,10 +3041,29 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         };
 
-        $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
+        $documents = array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions) {
+            $document['$collection'] = $collection->getId();
+
+            if (!$isBulk) {
+                $document['$id'] = $documentId == 'unique()' ? ID::unique() : $documentId;
+            } else {
+                if (empty($document['$id'])) {
+                    throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is required inside documents when creating bulk documents');
+                }
+
+                $document['$id'] = $document['$id'] == 'unique()' ? ID::unique() : $document['$id'];
+            }
+
+            $document = new Document($document);
+
+            $setPermissions($document, $permissions);
+            $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
+
+            return $document;
+        }, $documents);
 
         try {
-            $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
+            $dbForProject->createDocuments('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documents);
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
         } catch (DuplicateException $e) {
@@ -3036,8 +3072,15 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+        $queueForEvents
+            ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collection->getId())
+            ->setContext('collection', $collection)
+            ->setContext('database', $database);
+
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document &$document) use (&$processDocument, $dbForProject, $database) {
+            $document->removeAttribute('$collection');
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -3069,28 +3112,26 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         };
 
-        $processDocument($collection, $document);
+        foreach ($documents as $document) {
+            $processDocument($collection, $document);
+        }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($document, Response::MODEL_DOCUMENT);
+        if ($isBulk) {
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->dynamic(new Document([
+                    'total' => count($documents),
+                    'documents' => $documents
+                ]), Response::MODEL_DOCUMENT_LIST);
+        } else {
+            $queueForEvents
+                ->setParam('documentId', $document->getId())
+                ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create');
 
-        $relationships = \array_map(
-            fn ($document) => $document->getAttribute('key'),
-            \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            )
-        );
-
-        $queueForEvents
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setParam('documentId', $document->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $database)
-            ->setPayload($response->getPayload(), sensitive: $relationships);
-
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->dynamic($documents[0], Response::MODEL_DOCUMENT);
+        }
 
         $queueForUsage
             ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collection->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE), 1); // per collection
@@ -3173,7 +3214,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 return false;
             }
 
-            $document->removeAttribute('$collection');
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
