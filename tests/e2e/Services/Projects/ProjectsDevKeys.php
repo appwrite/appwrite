@@ -147,7 +147,7 @@ trait ProjectsDevKeys
             'email' => 'user@appwrite.io',
             'password' => 'password'
         ]);
-        $this->assertEquals('429', $res['headers']['status-code']);
+        $this->assertEquals(429, $res['headers']['status-code']);
 
         $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
