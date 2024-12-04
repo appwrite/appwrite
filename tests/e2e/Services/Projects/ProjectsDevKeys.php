@@ -130,7 +130,6 @@ trait ProjectsDevKeys
 
         $devKey = $response['body']['secret'];
 
-        //
         for ($i = 0; $i < 11; $i++) {
             $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
                 'content-type' => 'application/json',
@@ -139,6 +138,7 @@ trait ProjectsDevKeys
                 'email' => 'user@appwrite.io',
                 'password' => 'password'
             ]);
+            $this->assertEquals(200, $res['headers']['status-code']);
         }
         $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
@@ -179,7 +179,7 @@ trait ProjectsDevKeys
             'email' => 'user@appwrite.io',
             'password' => 'password'
         ]);
-        $this->assertEquals('429', $res['headers']['status-code']);
+        $this->assertEquals(429, $res['headers']['status-code']);
     }
 
 
@@ -243,12 +243,26 @@ trait ProjectsDevKeys
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEmpty($response['body']);
 
+        /**
+        * Get rate limit trying to use the deleted key
+        */
+        $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-dev-key' => $response['body']['secret']
+        ], [
+            'email' => 'user@appwrite.io',
+            'password' => 'password'
+        ]);
+        $this->assertEquals(429, $res['headers']['status-code']);
+        
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/development-keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
+        
 
         /**
          * Test for FAILURE
