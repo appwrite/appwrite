@@ -157,7 +157,7 @@ trait ProjectsDevKeys
             'email' => 'user@appwrite.io',
             'password' => 'password'
         ]);
-        $this->assertEquals('401', $res['headers']['status-code']);
+        $this->assertEquals(401, $res['headers']['status-code']);
 
 
         /**
