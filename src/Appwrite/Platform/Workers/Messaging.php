@@ -689,9 +689,9 @@ class Messaging extends Action
         $contentAvailable = $message['data']['contentAvailable'] ?? false;
         $critical = $message['data']['critical'] ?? false;
 
-        $priority = $message['data']['priority'] === 'normal'
-            ? Priority::NORMAL
-            : Priority::HIGH;
+        $priority = $message['data']['priority'] === 'high'
+            ? Priority::HIGH
+            : Priority::NORMAL;
 
         return new Push(
             $to,
