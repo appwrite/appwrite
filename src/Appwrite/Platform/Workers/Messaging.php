@@ -32,6 +32,7 @@ use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Messages\SMS;
+use Utopia\Messaging\Priority;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
@@ -332,7 +333,6 @@ class Messaging extends Action
         } else {
             $message->setAttribute('status', MessageStatus::SENT);
         }
-
 
         $message->removeAttribute('to');
 
@@ -676,8 +676,8 @@ class Messaging extends Action
     private function buildPushMessage(Document $message): Push
     {
         $to = $message['to'];
-        $title = $message['data']['title'];
-        $body = $message['data']['body'];
+        $title = $message['data']['title'] === '' ? null : $message['data']['title'];
+        $body = $message['data']['body'] === '' ? null : $message['data']['body'];
         $data = $message['data']['data'] ?? null;
         $action = $message['data']['action'] ?? null;
         $image = $message['data']['image']['url'] ?? null;
@@ -686,6 +686,12 @@ class Messaging extends Action
         $color = $message['data']['color'] ?? null;
         $tag = $message['data']['tag'] ?? null;
         $badge = $message['data']['badge'] ?? null;
+        $contentAvailable = $message['data']['contentAvailable'] ?? false;
+        $critical = $message['data']['critical'] ?? false;
+
+        $priority = $message['data']['priority'] === 'high'
+            ? Priority::HIGH
+            : Priority::NORMAL;
 
         return new Push(
             $to,
@@ -698,7 +704,10 @@ class Messaging extends Action
             $icon,
             $color,
             $tag,
-            $badge
+            $badge,
+            $contentAvailable,
+            $critical,
+            $priority
         );
     }
 

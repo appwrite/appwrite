@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "1.6.0",
+        "version": "1.6.1",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -9610,7 +9610,8 @@
                                         "bun-1.0",
                                         "bun-1.1",
                                         "go-1.23",
-                                        "static-1"
+                                        "static-1",
+                                        "flutter-3.24"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -10286,7 +10287,8 @@
                                         "bun-1.0",
                                         "bun-1.1",
                                         "go-1.23",
-                                        "static-1"
+                                        "static-1",
+                                        "flutter-3.24"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -14328,13 +14330,13 @@
                                 "title": {
                                     "type": "string",
                                     "description": "Title for push notification.",
-                                    "default": null,
+                                    "default": "",
                                     "x-example": "<TITLE>"
                                 },
                                 "body": {
                                     "type": "string",
                                     "description": "Body for push notification.",
-                                    "default": null,
+                                    "default": "",
                                     "x-example": "<BODY>"
                                 },
                                 "topics": {
@@ -14366,7 +14368,7 @@
                                 },
                                 "data": {
                                     "type": "object",
-                                    "description": "Additional Data for push notification.",
+                                    "description": "Additional key-value pair data for push notification.",
                                     "default": {},
                                     "x-example": "{}"
                                 },
@@ -14390,7 +14392,7 @@
                                 },
                                 "sound": {
                                     "type": "string",
-                                    "description": "Sound for push notification. Available only for Android and IOS Platform.",
+                                    "description": "Sound for push notification. Available only for Android and iOS Platform.",
                                     "default": "",
                                     "x-example": "<SOUND>"
                                 },
@@ -14407,10 +14409,10 @@
                                     "x-example": "<TAG>"
                                 },
                                 "badge": {
-                                    "type": "string",
-                                    "description": "Badge for push notification. Available only for IOS Platform.",
-                                    "default": "",
-                                    "x-example": "<BADGE>"
+                                    "type": "integer",
+                                    "description": "Badge for push notification. Available only for iOS Platform.",
+                                    "default": 0,
+                                    "x-example": null
                                 },
                                 "draft": {
                                     "type": "boolean",
@@ -14423,12 +14425,34 @@
                                     "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                     "default": null,
                                     "x-example": null
+                                },
+                                "contentAvailable": {
+                                    "type": "boolean",
+                                    "description": "If set to true, the notification will be delivered in the background. Available only for iOS Platform.",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "critical": {
+                                    "type": "boolean",
+                                    "description": "If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "priority": {
+                                    "type": "string",
+                                    "description": "Set the notification priority. \"normal\" will consider device battery state and may send notifications later. \"high\" will always attempt to immediately deliver the notification.",
+                                    "default": "high",
+                                    "x-example": "normal",
+                                    "enum": [
+                                        "normal",
+                                        "high"
+                                    ],
+                                    "x-enum-name": null,
+                                    "x-enum-keys": []
                                 }
                             },
                             "required": [
-                                "messageId",
-                                "title",
-                                "body"
+                                "messageId"
                             ]
                         }
                     }
@@ -14600,6 +14624,30 @@
                                     "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                     "default": null,
                                     "x-example": null
+                                },
+                                "contentAvailable": {
+                                    "type": "boolean",
+                                    "description": "If set to true, the notification will be delivered in the background. Available only for iOS Platform.",
+                                    "default": null,
+                                    "x-example": false
+                                },
+                                "critical": {
+                                    "type": "boolean",
+                                    "description": "If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.",
+                                    "default": null,
+                                    "x-example": false
+                                },
+                                "priority": {
+                                    "type": "string",
+                                    "description": "Set the notification priority. \"normal\" will consider device battery state and may send notifications later. \"high\" will always attempt to immediately deliver the notification.",
+                                    "default": null,
+                                    "x-example": "normal",
+                                    "enum": [
+                                        "normal",
+                                        "high"
+                                    ],
+                                    "x-enum-name": null,
+                                    "x-enum-keys": []
                                 }
                             }
                         }
@@ -35618,7 +35666,7 @@
                 },
                 "schedule": {
                     "type": "string",
-                    "description": "Function execution schedult in CRON format.",
+                    "description": "Function execution schedule in CRON format.",
                     "x-example": "5 4 * * *"
                 },
                 "timeout": {
