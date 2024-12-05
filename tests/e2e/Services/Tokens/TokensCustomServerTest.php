@@ -2,12 +2,11 @@
 
 namespace Tests\E2E\Services\Tokens;
 
+use CURLFile;
+use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-
-use CURLFile;
-use Tests\E2E\Client;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
