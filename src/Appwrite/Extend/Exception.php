@@ -302,6 +302,9 @@ class Exception extends \Exception
     /** Schedules */
     public const SCHEDULE_NOT_FOUND                = 'schedule_not_found';
 
+    /** Tokens */
+    public const TOKEN_NOT_FOUND = 'token_not_found';
+
 
     protected string $type = '';
     protected array $errors = [];
