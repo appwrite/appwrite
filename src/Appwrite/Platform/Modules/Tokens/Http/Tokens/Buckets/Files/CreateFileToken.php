@@ -9,6 +9,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -60,7 +61,23 @@ class CreateFileToken extends Action
     public function action(string $bucketId, string $fileId, ?string $expire, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents)
     {
 
+        /**
+         * @var Document $bucket
+         * @var Document $file
+         */
         ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $bucketId, $fileId);
+
+        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+        $validator = new Authorization(Database::PERMISSION_UPDATE);
+        $bucketPermission = $validator->isValid($bucket->getUpdate());
+        if (!$fileSecurity && !$bucketPermission) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        $filePermission = $validator->isValid($file->getUpdate());
+        if ($fileSecurity && !$bucketPermission && !$filePermission) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
 
         $token = $dbForProject->createDocument('resourceTokens', new Document([
             '$id' => ID::unique(),
