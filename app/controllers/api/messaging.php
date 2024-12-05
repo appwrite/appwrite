@@ -2906,8 +2906,8 @@ App::post('/v1/messaging/messages/push')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('title', null, new Text(256), 'Title for push notification.', true)
-    ->param('body', null, new Text(64230), 'Body for push notification.', true)
+    ->param('title', '', new Text(256), 'Title for push notification.', true)
+    ->param('body', '', new Text(64230), 'Body for push notification.', true)
     ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
     ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
@@ -2930,7 +2930,7 @@ App::post('/v1/messaging/messages/push')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?string $title, ?string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, string $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, string $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;

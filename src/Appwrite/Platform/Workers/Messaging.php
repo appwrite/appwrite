@@ -676,8 +676,8 @@ class Messaging extends Action
     private function buildPushMessage(Document $message): Push
     {
         $to = $message['to'];
-        $title = $message['data']['title'];
-        $body = $message['data']['body'];
+        $title = $message['data']['title'] === '' ? null : $message['data']['title'];
+        $body = $message['data']['body'] === '' ? null : $message['data']['body'];
         $data = $message['data']['data'] ?? null;
         $action = $message['data']['action'] ?? null;
         $image = $message['data']['image']['url'] ?? null;
