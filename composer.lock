@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "db3e97b504d4482957dafccb618d5187",
+    "content-hash": "cfa976b029b0e8f53ef617056d04face",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -709,16 +709,16 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.29.0",
+            "version": "v4.29.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "0ef6b2eb74b782f3f9023276c324d22e440f7587"
+                "reference": "6042b5483f8029e42473faeb8ef75ba266278381"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/0ef6b2eb74b782f3f9023276c324d22e440f7587",
-                "reference": "0ef6b2eb74b782f3f9023276c324d22e440f7587",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/6042b5483f8029e42473faeb8ef75ba266278381",
+                "reference": "6042b5483f8029e42473faeb8ef75ba266278381",
                 "shasum": ""
             },
             "require": {
@@ -747,9 +747,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.29.0"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.29.1"
             },
-            "time": "2024-11-27T18:37:40+00:00"
+            "time": "2024-12-03T22:07:45+00:00"
         },
         {
             "name": "jean85/pretty-package-versions",
@@ -2970,10 +2970,10 @@
             },
             "type": "composer-plugin",
             "extra": {
+                "class": "Nevay\\SPI\\Composer\\Plugin",
                 "branch-alias": {
                     "dev-main": "0.2.x-dev"
                 },
-                "class": "Nevay\\SPI\\Composer\\Plugin",
                 "plugin-optional": true
             },
             "autoload": {
@@ -3476,16 +3476,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.53.25",
+            "version": "0.53.27",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "d95bbbd4f7fb74b020b0abae7f9970d71ca52baa"
+                "reference": "d3a8cae6e743a6a1a5719b860762a03aabce678a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/d95bbbd4f7fb74b020b0abae7f9970d71ca52baa",
-                "reference": "d95bbbd4f7fb74b020b0abae7f9970d71ca52baa",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/d3a8cae6e743a6a1a5719b860762a03aabce678a",
+                "reference": "d3a8cae6e743a6a1a5719b860762a03aabce678a",
                 "shasum": ""
             },
             "require": {
@@ -3526,9 +3526,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.53.25"
+                "source": "https://github.com/utopia-php/database/tree/0.53.27"
             },
-            "time": "2024-12-02T05:09:19+00:00"
+            "time": "2024-12-02T08:53:55+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -8558,7 +8558,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8582,5 +8582,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }
