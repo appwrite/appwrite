@@ -20,7 +20,7 @@
     "emails.sessionAlert.listDevice": "Gerät: {{b}}{{device}}{{/b}}",
     "emails.sessionAlert.listIpAddress": "IP-Adresse: {{b}}{{ipAddress}}{{/b}}",
     "emails.sessionAlert.listCountry": "Land: {{b}}{{country}}{{/b}}",
-    "emails.sessionAlert.footer": "Wenn dies du warst, musst du nichts weiter tun.\nWenn du diese Sitzung nicht initiiert hast oder verdächtige Aktivitäten feststellst, sichere bitte dein Konto.",
+    "emails.sessionAlert.footer": "Wenn du das warst, musst du nichts weiter tun.\nWenn du diese Sitzung nicht initiiert hast oder verdächtige Aktivitäten feststellst, sichere bitte dein Konto.",
     "emails.sessionAlert.thanks": "Danke,",
     "emails.sessionAlert.signature": "{{project}} Team"
     "emails.recovery.subject": "Kennwort zurücksetzen",
