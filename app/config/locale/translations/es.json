@@ -16,7 +16,7 @@
     "emails.magicSession.thanks": "Gracias.",
     "emails.magicSession.signature": "El equipo de {{project}}",
     "emails.sessionAlert.hello": "Hola, {{user}}",
-    "emails.sessionAlert.body": "Se ha iniciado una nueva sesión en tu cuenta de {{b}}{{project}}{{/b}}, {{b}}el {{date}}, {{year}} a las {{time}} UTC{{/b}}.\nAquí están los detalles de la nueva sesión: ",
+    "emails.sessionAlert.body": "Se ha detectado un nuevo inicio de sesión en tu cuenta de {{b}}{{project}}{{/b}}, {{b}}el {{date}}, {{year}} a las {{time}} UTC{{/b}}.\nAquí están los detalles de la sesión: ",
     "emails.sessionAlert.listDevice": "Dispositivo: {{b}}{{device}}{{/b}}",
     "emails.sessionAlert.listIpAddress": "Dirección IP: {{b}}{{ipAddress}}{{/b}}",
     "emails.sessionAlert.listCountry": "País: {{b}}{{country}}{{/b}}",
