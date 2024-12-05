@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ef3e1658b77791573597a84520173bfc",
+    "content-hash": "be412d647633d6b12328db6932714c49",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -8560,8 +8560,8 @@
         {
             "package": "utopia-php/database",
             "version": "dev-schema-attributes",
-            "alias": "0.53.99",
-            "alias_normalized": "0.53.99.0"
+            "alias": "0.53.200",
+            "alias_normalized": "0.53.200.0"
         }
     ],
     "minimum-stability": "stable",
