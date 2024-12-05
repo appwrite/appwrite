@@ -51,7 +51,7 @@
         "utopia-php/cache": "0.11.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "dev-schema-attributes as 1.53.200",
+        "utopia-php/database": "dev-schema-attributes as 0.53.20",
         "utopia-php/domains": "0.5.*",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "0.33.*",
