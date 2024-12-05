@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "04b9739820be8136d62de48c6325e763",
+    "content-hash": "d54809ddf7cd4b318f4606b56827037e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3878,16 +3878,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "dev-feat-apns-content-available",
+            "version": "0.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "4947ee3819a28aea303456a462051601e4d12ec9"
+                "reference": "0e3e57351fe4fe875ef3ab9a01a7fff5f022de90"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/4947ee3819a28aea303456a462051601e4d12ec9",
-                "reference": "4947ee3819a28aea303456a462051601e4d12ec9",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/0e3e57351fe4fe875ef3ab9a01a7fff5f022de90",
+                "reference": "0e3e57351fe4fe875ef3ab9a01a7fff5f022de90",
                 "shasum": ""
             },
             "require": {
@@ -3923,9 +3923,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/feat-apns-content-available"
+                "source": "https://github.com/utopia-php/messaging/tree/0.13.0"
             },
-            "time": "2024-12-04T07:10:23+00:00"
+            "time": "2024-12-05T08:36:07+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -8556,18 +8556,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/messaging",
-            "version": "dev-feat-apns-content-available",
-            "alias": "0.12.2",
-            "alias_normalized": "0.12.2.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/messaging": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
