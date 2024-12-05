@@ -1,0 +1,6 @@
+{
+    "emails.mfaEnabled.body": "Two-factor authentication has been successfully enabled for your {{project}} account.<br/><br/>Please make sure to store your security codes safely, so you can use them if you lose or can’t access your mobile device. Each recovery code can only be used once, but you can re-generate a new set of 6 codes at any time.",
+    "emails.mfaEnabled.buttonText": "Visit your account",
+    "emails.mfaDisabled.body": "You've disabled two-factor authentication for your {{project}} account. You can always enable it again through your {{project}} account.",
+    "emails.mfaDisabled.buttonText": "Visit your account"
+}
