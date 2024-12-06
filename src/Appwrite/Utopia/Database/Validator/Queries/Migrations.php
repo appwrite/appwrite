@@ -8,6 +8,7 @@ class Migrations extends Base
         'status',
         'stage',
         'source',
+        'destination',
         'resources',
         'statusCounters',
         'resourceData',

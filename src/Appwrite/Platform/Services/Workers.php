@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Services;
 
 use Appwrite\Platform\Workers\Audits;
-use Appwrite\Platform\Workers\Builds;
 use Appwrite\Platform\Workers\Certificates;
 use Appwrite\Platform\Workers\Databases;
 use Appwrite\Platform\Workers\Deletes;
@@ -23,7 +22,6 @@ class Workers extends Service
         $this->type = Service::TYPE_WORKER;
         $this
             ->addAction(Audits::getName(), new Audits())
-            ->addAction(Builds::getName(), new Builds())
             ->addAction(Certificates::getName(), new Certificates())
             ->addAction(Databases::getName(), new Databases())
             ->addAction(Deletes::getName(), new Deletes())

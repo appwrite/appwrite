@@ -44,5 +44,15 @@ class ProjectsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        // prevent sites domain
+        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
+            'resourceType' => 'api',
+            'domain' => $sitesDomain,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 }
