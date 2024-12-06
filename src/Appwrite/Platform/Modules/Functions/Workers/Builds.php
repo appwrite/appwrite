@@ -480,18 +480,14 @@ class Builds extends Action
             $memory =  max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, 1024); // We have a minimum of 1024MB here because some runtimes can't compile with less memory than this.
             $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
-            // JWT and API key generation for functions only
-            if ($resource->getCollection() === 'functions') {
-                $jwtExpiry = (int)System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
-                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
 
-                $apiKey = $jwtObj->encode([
-                    'projectId' => $project->getId(),
-                    'scopes' => $resource->getAttribute('scopes', [])
-                ]);
+            $jwtExpiry = (int)System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
+            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
 
-                $vars = array_merge($vars, ['APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey]);
-            }
+            $apiKey = $jwtObj->encode([
+                'projectId' => $project->getId(),
+                'scopes' => $resource->getAttribute('scopes', [])
+            ]);
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_DOMAIN');
@@ -499,9 +495,12 @@ class Builds extends Action
 
             // Appwrite vars
             $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
                 'APPWRITE_VERSION' => APP_VERSION_STABLE,
                 'APPWRITE_REGION' => $project->getAttribute('region'),
                 'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
+                'APPWRITE_COMPUTE_CPUS' => $cpus,
+                'APPWRITE_COMPUTE_MEMORY' => $memory,
                 'APPWRITE_VCS_REPOSITORY_ID' => $deployment->getAttribute('providerRepositoryId', ''),
                 'APPWRITE_VCS_REPOSITORY_NAME' => $deployment->getAttribute('providerRepositoryName', ''),
                 'APPWRITE_VCS_REPOSITORY_OWNER' => $deployment->getAttribute('providerRepositoryOwner', ''),
@@ -520,15 +519,13 @@ class Builds extends Action
                 case 'functions':
                     $vars = [
                         ...$vars,
-                        'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
                         'APPWRITE_FUNCTION_ID' => $resource->getId(),
                         'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
                         'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
                         'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
                         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
                         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-                        'APPWRITE_COMPUTE_CPUS' => $cpus,
-                        'APPWRITE_COMPUTE_MEMORY' => $memory
+                        'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                     ];
                     break;
                 case 'sites':
@@ -540,8 +537,7 @@ class Builds extends Action
                         'APPWRITE_SITE_PROJECT_ID' => $project->getId(),
                         'APPWRITE_SITE_RUNTIME_NAME' => $runtime['name'] ?? '',
                         'APPWRITE_SITE_RUNTIME_VERSION' => $runtime['version'] ?? '',
-                        'APPWRITE_COMPUTE_CPUS' => $cpus,
-                        'APPWRITE_COMPUTE_MEMORY' => $memory
+                        'APPWRITE_SITE_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                     ];
                     break;
             }
