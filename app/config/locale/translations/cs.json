@@ -16,11 +16,11 @@
     "emails.magicSession.thanks": "",
     "emails.magicSession.signature": "",
     "emails.sessionAlert.hello": "Ahoj {{user}}",
-    "emails.sessionAlert.body": "Na vašem účtu {{b}}{{project}}{{/b}} byla vytvořena nová relace, {{b}}dne {{date}}, {{year}} v {{time}} UTC{{/b}}.\nZde jsou podrobnosti o nové relaci: ",
+    "emails.sessionAlert.body": "Na vašem {{b}}{{project}}{{/b}} účtu bylo zjištěno nové přihlášení, {{b}}dne {{date}}, {{year}} o {{time}} UTC{{/b}}.\nZde jsou podrobnosti o nové relaci:",
     "emails.sessionAlert.listDevice": "Zařízení: {{b}}{{device}}{{/b}}",
     "emails.sessionAlert.listIpAddress": "IP adresa: {{b}}{{ipAddress}}{{/b}}",
     "emails.sessionAlert.listCountry": "Země: {{b}}{{country}}{{/b}}",
-    "emails.sessionAlert.footer": "Pokud to jste vy, není potřeba nic dalšího dělat.\nPokud jste tuto relaci nezačali nebo máte podezření na neoprávněnou činnost, prosím, zajistěte svůj účet.",
+    "emails.sessionAlert.footer": "Pokud jste to byli vy, není potřeba dělat nic dalšího.\nPokud však toto přihlášení nebylo vaše, nebo máte podezření na neoprávněnou činnost, prosím, zajistěte svůj účet.",
     "emails.sessionAlert.thanks": "Děkujeme,",
     "emails.sessionAlert.signature": "Tým {{project}}"
     "emails.recovery.subject": "",
