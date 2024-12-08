@@ -27,8 +27,6 @@ trait ProjectsDevKeys
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Key Test', $response['body']['name']);
         $this->assertNotEmpty($response['body']['secret']);
-        $this->assertArrayHasKey('sdks', $response['body']);
-        $this->assertEmpty($response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertEmpty($response['body']['accessedAt']);
 
@@ -204,8 +202,6 @@ trait ProjectsDevKeys
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($keyId, $response['body']['$id']);
         $this->assertEquals('Key Test Update', $response['body']['name']);
-        $this->assertArrayHasKey('sdks', $response['body']);
-        $this->assertEmpty($response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertEmpty($response['body']['accessedAt']);
 
@@ -218,8 +214,6 @@ trait ProjectsDevKeys
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($keyId, $response['body']['$id']);
         $this->assertEquals('Key Test Update', $response['body']['name']);
-        $this->assertArrayHasKey('sdks', $response['body']);
-        $this->assertEmpty($response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertEmpty($response['body']['accessedAt']);
 
