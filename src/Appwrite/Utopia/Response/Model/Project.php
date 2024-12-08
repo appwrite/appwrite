@@ -197,6 +197,13 @@ class Project extends Model
                 'example' => new \stdClass(),
                 'array' => true,
             ])
+            ->addRule('devKeys', [
+                'type' => Response::MODEL_DEV_KEY,
+                'description' => 'List of dev keys.',
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => true,
+            ])
             ->addRule('smtpEnabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Status for custom SMTP',

@@ -58,6 +58,7 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -469,6 +470,20 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('keys', [
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
+    }
+);
+
+Database::addFilter(
+    'subQueryDevKeys',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database
+            ->find('devKeys', [
                 Query::equal('projectInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
@@ -1795,6 +1810,27 @@ App::setResource('requestTimestamp', function ($request) {
 App::setResource('plan', function (array $plan = []) {
     return [];
 });
+
+App::setResource('devKey', function (Request $request, Document $project, Database $dbForConsole) {
+    $devKey = $request->getHeader('x-appwrite-dev-key', $request->getParam('devKey', ''));
+    // Check if given key match project's development keys
+    $key = $project->find('secret', $devKey, 'devKeys');
+    if ($key) {
+        $expire = $key->getAttribute('expire');
+        if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+            return new Document([]);
+        }
+
+        $accessedAt = $key->getAttribute('accessedAt', '');
+        if (DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
+            $key->setAttribute('accessedAt', DatabaseDateTime::now());
+            Authorization::skip(fn () => $dbForConsole->updateDocument('keys', $key->getId(), $key));
+            $dbForConsole->purgeCachedDocument('projects', $project->getId());
+        }
+        return $key;
+    }
+    return new Document([]);
+}, ['request', 'project', 'dbForConsole']);
 
 App::setResource('team', function (Document $project, Database $dbForConsole, App $utopia, Request $request) {
     $teamInternalId = '';
