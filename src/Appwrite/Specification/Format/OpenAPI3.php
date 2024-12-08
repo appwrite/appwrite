@@ -323,6 +323,7 @@ class OpenAPI3 extends Format
                     case 'Utopia\Validator\JSON':
                     case 'Utopia\Validator\Mock':
                     case 'Utopia\Validator\Assoc':
+                    case 'Appwrite\Functions\Validator\Payload':
                         $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['type'] = 'object';
                         $node['schema']['x-example'] = '{}';
@@ -549,6 +550,7 @@ class OpenAPI3 extends Format
                 switch ($rule['type']) {
                     case 'string':
                     case 'datetime':
+                    case 'payload':
                         $type = 'string';
                         break;
 

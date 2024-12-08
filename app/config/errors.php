@@ -24,6 +24,11 @@ return [
         'description' => 'Access to this API is forbidden.',
         'code' => 401,
     ],
+    Exception::GENERAL_RESOURCE_BLOCKED => [
+        'name' => Exception::GENERAL_RESOURCE_BLOCKED,
+        'description' => 'Access to this resource is blocked.',
+        'code' => 401,
+    ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
         'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
@@ -332,6 +337,11 @@ return [
         'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
     ],
+    Exception::API_KEY_EXPIRED => [
+        'name' => Exception::API_KEY_EXPIRED,
+        'description' => 'The dynamic API key has expired. Please don\'t use dynamic API keys for more than duration of the execution.',
+        'code' => 401,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [
@@ -524,6 +534,11 @@ return [
         'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
         'code' => 408,
     ],
+    Exception::FUNCTION_TEMPLATE_NOT_FOUND => [
+        'name' => Exception::FUNCTION_TEMPLATE_NOT_FOUND,
+        'description' => 'Function Template with the requested ID could not be found.',
+        'code' => 404,
+    ],
 
     /** Builds  */
     Exception::BUILD_NOT_FOUND => [
@@ -541,6 +556,11 @@ return [
         'description' => 'Build with the requested ID is already in progress. Please wait before you can retry.',
         'code' => 400,
     ],
+    Exception::BUILD_ALREADY_COMPLETED => [
+        'name' => Exception::BUILD_ALREADY_COMPLETED,
+        'description' => 'Build with the requested ID is already completed and cannot be canceled.',
+        'code' => 400,
+    ],
 
     /** Deployments */
     Exception::DEPLOYMENT_NOT_FOUND => [
@@ -554,6 +574,12 @@ return [
         'name' => Exception::EXECUTION_NOT_FOUND,
         'description' => 'Execution with the requested ID could not be found.',
         'code' => 404,
+    ],
+
+    Exception::EXECUTION_IN_PROGRESS => [
+        'name' => Exception::EXECUTION_IN_PROGRESS,
+        'description' => 'Can\'t delete ongoing execution. Please wait for execution to finish before deleting it.',
+        'code' => 400,
     ],
 
     /** Databases */
@@ -660,7 +686,7 @@ return [
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
         'name' => Exception::ATTRIBUTE_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of attributes has been reached.',
+        'description' => 'The maximum number or size of attributes for this collection has been reached.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_VALUE_INVALID => [
@@ -676,6 +702,11 @@ return [
     Exception::RELATIONSHIP_VALUE_INVALID => [
         'name' => Exception::RELATIONSHIP_VALUE_INVALID,
         'description' => 'The relationship value is invalid.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_INVALID_RESIZE => [
+        'name' => Exception::ATTRIBUTE_INVALID_RESIZE,
+        'description' => "Existing data is too large for new size, truncate your existing data then try again.",
         'code' => 400,
     ],
 

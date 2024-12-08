@@ -54,6 +54,7 @@ class Event
     protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
+    protected ?string $userId = null;
     protected bool $paused = false;
 
     /**
@@ -62,6 +63,24 @@ class Event
      */
     public function __construct(protected Connection $connection)
     {
+    }
+
+    /**
+     * Set paused state for this event.
+     */
+    public function setPaused(bool $paused): self
+    {
+        $this->paused = $paused;
+
+        return $this;
+    }
+
+    /**
+     * Get paused state for this event.
+     */
+    public function getPaused(): bool
+    {
+        return $this->paused;
     }
 
     /**
@@ -146,6 +165,18 @@ class Event
     }
 
     /**
+     * Set user ID for this event.
+     *
+     * @return self
+     */
+    public function setUserId(string $userId): self
+    {
+        $this->userId = $userId;
+
+        return $this;
+    }
+
+    /**
      * Get user responsible for triggering this event.
      *
      * @return ?Document
@@ -153,6 +184,14 @@ class Event
     public function getUser(): ?Document
     {
         return $this->user;
+    }
+
+    /**
+     * Get user responsible for triggering this event.
+     */
+    public function getUserId(): ?string
+    {
+        return $this->userId;
     }
 
     /**
@@ -181,19 +220,6 @@ class Event
     public function getPayload(): array
     {
         return $this->payload;
-    }
-
-    public function getRealtimePayload(): array
-    {
-        $payload = [];
-
-        foreach ($this->payload as $key => $value) {
-            if (!isset($this->sensitive[$key])) {
-                $payload[$key] = $value;
-            }
-        }
-
-        return $payload;
     }
 
     /**
@@ -303,6 +329,7 @@ class Event
         return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
+            'userId' => $this->userId,
             'payload' => $this->payload,
             'context' => $this->context,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
@@ -508,20 +535,21 @@ class Event
     }
 
     /**
-     * Get the value of paused
+     * Generate a function event from a base event
+     *
+     * @param Event $event
+     *
+     * @return self
+     *
      */
-    public function isPaused(): bool
+    public function from(Event $event): self
     {
-        return $this->paused;
-    }
-
-    /**
-     * Set the value of paused
-     */
-    public function setPaused(bool $paused): self
-    {
-        $this->paused = $paused;
-
+        $this->project = $event->getProject();
+        $this->user = $event->getUser();
+        $this->payload = $event->getPayload();
+        $this->event = $event->getEvent();
+        $this->params = $event->getParams();
+        $this->context = $event->context;
         return $this;
     }
 }

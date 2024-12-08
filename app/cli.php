@@ -1,12 +1,12 @@
 <?php
 
 require_once __DIR__ . '/init.php';
-require_once __DIR__ . '/controllers/general.php';
 
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Runtimes\Runtimes;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\CLI;
@@ -22,6 +22,12 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
+
+// overwriting runtimes to be architectur agnostic for CLI
+Config::setParam('runtimes', (new Runtimes('v4'))->getAll(supported: false));
+
+// require controllers after overwriting runtimes
+require_once __DIR__ . '/controllers/general.php';
 
 Authorization::disable();
 
@@ -108,8 +114,9 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         if (isset($databases[$dsn->getHost()])) {
             $database = $databases[$dsn->getHost()];
+            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
@@ -130,10 +137,10 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
-
         $databases[$dsn->getHost()] = $database;
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
-        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+        if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
@@ -174,7 +181,7 @@ CLI::setResource('logError', function (Registry $register) {
 
             $log = new Log();
             $log->setNamespace($namespace);
-            $log->setServer(\gethostname());
+            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
@@ -185,15 +192,18 @@ CLI::setResource('logError', function (Registry $register) {
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
 
             $log->setAction($action);
 
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $responseCode = $logger->addLog($log);
-            Console::info('Usage stats log pushed with status code: ' . $responseCode);
+            try {
+                $responseCode = $logger->addLog($log);
+                Console::info('Error log pushed with status code: ' . $responseCode);
+            } catch (Throwable $th) {
+                Console::error('Error pushing log: ' . $th->getMessage());
+            }
         }
 
         Console::warning("Failed: {$error->getMessage()}");

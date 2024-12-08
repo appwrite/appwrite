@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
@@ -40,29 +41,18 @@ class Functions extends Action
         $this
             ->desc('Functions worker')
             ->groups(['functions'])
+            ->inject('project')
             ->inject('message')
             ->inject('dbForProject')
             ->inject('queueForFunctions')
             ->inject('queueForEvents')
             ->inject('queueForUsage')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+            ->inject('isResourceBlocked')
+            ->callback(fn (Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, callable $isResourceBlocked) => $this->action($project, $message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log, $isResourceBlocked));
     }
 
-    /**
-     * @param Message $message
-     * @param Database $dbForProject
-     * @param Func $queueForFunctions
-     * @param Event $queueForEvents
-     * @param Usage $queueForUsage
-     * @param Log $log
-     * @return void
-     * @throws Authorization
-     * @throws Structure
-     * @throws \Utopia\Database\Exception
-     * @throws Conflict
-     */
-    public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log): void
+    public function action(Document $project, Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log, callable $isResourceBlocked): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -70,25 +60,45 @@ class Functions extends Action
             throw new Exception('Missing payload');
         }
 
-        $payload = $message->getPayload() ?? [];
+        $type = $payload['type'] ?? '';
 
-        if (empty($payload)) {
-            throw new Exception('Missing payload');
+        // Short-term solution to offhand write operation from API container
+        if ($type === Func::TYPE_ASYNC_WRITE) {
+            $execution = new Document($payload['execution'] ?? []);
+            $dbForProject->createDocument('executions', $execution);
+            return;
         }
 
-        $type = $payload['type'] ?? '';
         $events = $payload['events'] ?? [];
         $data = $payload['body'] ?? '';
         $eventData = $payload['payload'] ?? '';
-        $project = new Document($payload['project'] ?? []);
         $function = new Document($payload['function'] ?? []);
+        $functionId = $payload['functionId'] ?? '';
         $user = new Document($payload['user'] ?? []);
+        $userId = $payload['userId'] ?? '';
         $method = $payload['method'] ?? 'POST';
         $headers = $payload['headers'] ?? [];
         $path = $payload['path'] ?? '/';
+        $jwt = $payload['jwt'] ?? '';
+
+        if ($user->isEmpty() && !empty($userId)) {
+            $user = $dbForProject->getDocument('users', $userId);
+        }
+
+        if (empty($jwt) && !$user->isEmpty()) {
+            $jwtExpiry = $function->getAttribute('timeout', 900);
+            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+            $jwt = $jwtObj->encode([
+                'userId' => $user->getId(),
+            ]);
+        }
 
         if ($project->getId() === 'console') {
             return;
+        }
+
+        if ($function->isEmpty() && !empty($functionId)) {
+            $function = $dbForProject->getDocument('functions', $functionId);
         }
 
         $log->addTag('functionId', $function->getId());
@@ -99,7 +109,6 @@ class Functions extends Action
             $limit = 30;
             $sum = 30;
             $offset = 0;
-            /** @var Document[] $functions */
             while ($sum >= $limit) {
                 $functions = $dbForProject->find('functions', [
                     Query::limit($limit),
@@ -116,6 +125,12 @@ class Functions extends Action
                     if (!array_intersect($events, $function->getAttribute('events', []))) {
                         continue;
                     }
+
+                    if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
+                        Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
+                        continue;
+                    }
+
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
                     $this->execute(
@@ -146,12 +161,16 @@ class Functions extends Action
             return;
         }
 
+        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
+            Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
+            return;
+        }
+
         /**
          * Handle Schedule and HTTP execution.
          */
         switch ($type) {
             case 'http':
-                $jwt = $payload['jwt'] ?? '';
                 $execution = new Document($payload['execution'] ?? []);
                 $user = new Document($payload['user'] ?? []);
                 $this->execute(
@@ -175,6 +194,7 @@ class Functions extends Action
                 );
                 break;
             case 'schedule':
+                $execution = new Document($payload['execution'] ?? []);
                 $this->execute(
                     log: $log,
                     dbForProject: $dbForProject,
@@ -187,12 +207,12 @@ class Functions extends Action
                     path: $path,
                     method: $method,
                     headers: $headers,
-                    data: null,
-                    user: null,
-                    jwt: null,
+                    data: $data,
+                    user: $user,
+                    jwt: $jwt,
                     event: null,
                     eventData: null,
-                    executionId: null,
+                    executionId: $execution->getId() ?? null
                 );
                 break;
         }
@@ -253,9 +273,7 @@ class Functions extends Action
             'search' => implode(' ', [$function->getId(), $executionId]),
         ]);
 
-        if ($function->getAttribute('logging')) {
-            $execution = $dbForProject->createDocument('executions', $execution);
-        }
+        $execution = $dbForProject->createDocument('executions', $execution);
 
         if ($execution->isEmpty()) {
             throw new Exception('Failed to create execution');
@@ -308,6 +326,7 @@ class Functions extends Action
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
+        $spec = Config::getParam('runtime-specifications')[$function->getAttribute('specification', APP_FUNCTION_SPECIFICATION_DEFAULT)];
 
         $log->addTag('deploymentId', $deploymentId);
 
@@ -354,10 +373,21 @@ class Functions extends Action
 
         $runtime = $runtimes[$function->getAttribute('runtime')];
 
+        $jwtExpiry = $function->getAttribute('timeout', 900);
+        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+        $apiKey = $jwtObj->encode([
+            'projectId' => $project->getId(),
+            'scopes' => $function->getAttribute('scopes', [])
+        ]);
+
+        $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';
+        $headers['x-appwrite-country-code'] = '';
+        $headers['x-appwrite-continent-code'] = '';
+        $headers['x-appwrite-continent-eu'] = 'false';
 
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
@@ -390,9 +420,7 @@ class Functions extends Action
                 'search' => implode(' ', [$functionId, $executionId]),
             ]);
 
-            if ($function->getAttribute('logging')) {
-                $execution = $dbForProject->createDocument('executions', $execution);
-            }
+            $execution = $dbForProject->createDocument('executions', $execution);
 
             // TODO: @Meldiron Trigger executions.create event here
 
@@ -404,9 +432,7 @@ class Functions extends Action
         if ($execution->getAttribute('status') !== 'processing') {
             $execution->setAttribute('status', 'processing');
 
-            if ($function->getAttribute('logging')) {
-                $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-            }
+            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
         }
 
         $durationStart = \microtime(true);
@@ -440,14 +466,36 @@ class Functions extends Action
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = System::getEnv('_APP_DOMAIN');
+        $endpoint = $protocol . '://' . $hostname . "/v1";
+
         // Appwrite vars
         $vars = \array_merge($vars, [
+            'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deploymentId,
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_FUNCTION_CPUS' => ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT),
+            'APPWRITE_FUNCTION_MEMORY' => ($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT),
+            'APPWRITE_VERSION' => APP_VERSION_STABLE,
+            'APPWRITE_REGION' => $project->getAttribute('region'),
+            'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
+            'APPWRITE_VCS_REPOSITORY_ID' => $deployment->getAttribute('providerRepositoryId', ''),
+            'APPWRITE_VCS_REPOSITORY_NAME' => $deployment->getAttribute('providerRepositoryName', ''),
+            'APPWRITE_VCS_REPOSITORY_OWNER' => $deployment->getAttribute('providerRepositoryOwner', ''),
+            'APPWRITE_VCS_REPOSITORY_URL' => $deployment->getAttribute('providerRepositoryUrl', ''),
+            'APPWRITE_VCS_REPOSITORY_BRANCH' => $deployment->getAttribute('providerBranch', ''),
+            'APPWRITE_VCS_REPOSITORY_BRANCH_URL' => $deployment->getAttribute('providerBranchUrl', ''),
+            'APPWRITE_VCS_COMMIT_HASH' => $deployment->getAttribute('providerCommitHash', ''),
+            'APPWRITE_VCS_COMMIT_MESSAGE' => $deployment->getAttribute('providerCommitMessage', ''),
+            'APPWRITE_VCS_COMMIT_URL' => $deployment->getAttribute('providerCommitUrl', ''),
+            'APPWRITE_VCS_COMMIT_AUTHOR_NAME' => $deployment->getAttribute('providerCommitAuthor', ''),
+            'APPWRITE_VCS_COMMIT_AUTHOR_URL' => $deployment->getAttribute('providerCommitAuthorUrl', ''),
+            'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
         ]);
 
         /** Execute function */
@@ -469,10 +517,13 @@ class Functions extends Action
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: $command
+                runtimeEntrypoint: $command,
+                cpus: $spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT,
+                memory: $spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT,
+                logging: $function->getAttribute('logging', true),
             );
 
-            $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
+            $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
@@ -507,13 +558,15 @@ class Functions extends Action
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
+                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_FUNCTION_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_FUNCTION_CPUS_DEFAULT)))
                 ->trigger()
             ;
         }
 
-        if ($function->getAttribute('logging')) {
-            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-        }
+
+        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+
         /** Trigger Webhook */
         $executionModel = new Execution();
         $queueForEvents
@@ -540,7 +593,8 @@ class Functions extends Action
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern
             event: $allEvents[0],
-            payload: $execution
+            payload: $execution,
+            project: $project
         );
         Realtime::send(
             projectId: 'console',

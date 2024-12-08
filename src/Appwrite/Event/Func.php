@@ -8,12 +8,15 @@ use Utopia\Queue\Connection;
 
 class Func extends Event
 {
+    public const TYPE_ASYNC_WRITE = 'async_write';
+
     protected string $jwt = '';
     protected string $type = '';
     protected string $body = '';
     protected string $path = '';
     protected string $method = '';
     protected array $headers = [];
+    protected ?string $functionId = null;
     protected ?Document $function = null;
     protected ?Document $execution = null;
 
@@ -47,6 +50,28 @@ class Func extends Event
     public function getFunction(): ?Document
     {
         return $this->function;
+    }
+
+    /**
+     * Sets function id for the function event.
+     *
+     * @param string $functionId
+     */
+    public function setFunctionId(string $functionId): self
+    {
+        $this->functionId = $functionId;
+
+        return $this;
+    }
+
+    /**
+     * Returns set function id for the function event.
+     *
+     * @return string|null
+     */
+    public function getFunctionId(): ?string
+    {
+        return $this->functionId;
     }
 
     /**
@@ -199,7 +224,9 @@ class Func extends Event
         return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
+            'userId' => $this->userId,
             'function' => $this->function,
+            'functionId' => $this->functionId,
             'execution' => $this->execution,
             'type' => $this->type,
             'jwt' => $this->jwt,
@@ -210,23 +237,5 @@ class Func extends Event
             'headers' => $this->headers,
             'method' => $this->method,
         ]);
-    }
-
-    /**
-     * Generate a function event from a base event
-     *
-     * @param Event $event
-     *
-     * @return self
-     *
-     */
-    public function from(Event $event): self
-    {
-        $this->project = $event->getProject();
-        $this->user = $event->getUser();
-        $this->payload = $event->getPayload();
-        $this->event = $event->getEvent();
-        $this->params = $event->getParams();
-        return $this;
     }
 }

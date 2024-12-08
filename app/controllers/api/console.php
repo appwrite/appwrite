@@ -57,7 +57,7 @@ App::get('/v1/console/variables')
     });
 
 App::post('/v1/console/assistant')
-    ->desc('Ask Query')
+    ->desc('Ask query')
     ->groups(['api', 'assistant'])
     ->label('scope', 'assistant.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])

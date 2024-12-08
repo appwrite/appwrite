@@ -13,6 +13,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
@@ -23,7 +24,7 @@ use Utopia\Validator\WhiteList;
 
 App::post('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
-    ->desc('Create Rule')
+    ->desc('Create rule')
     ->label('scope', 'rules.write')
     ->label('event', 'rules.[ruleId].create')
     ->label('audits.event', 'rule.create')
@@ -51,7 +52,7 @@ App::post('/v1/proxy/rules')
         }
 
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-        if (str_ends_with($domain, $functionsDomain)) {
+        if ($functionsDomain != '' && str_ends_with($domain, $functionsDomain)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your functions domain or it\'s subdomain to specific resource. Please use different domain.');
         }
 
@@ -59,11 +60,17 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
 
-        $document = $dbForConsole->findOne('rules', [
-            Query::equal('domain', [$domain]),
-        ]);
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            $document = $dbForConsole->getDocument('rules', md5($domain));
+        } else {
+            $document = $dbForConsole->findOne('rules', [
+                Query::equal('domain', [$domain]),
+            ]);
+        }
 
-        if ($document && !$document->isEmpty()) {
+
+        if (!$document->isEmpty()) {
             if ($document->getAttribute('projectId') === $project->getId()) {
                 $resourceType = $document->getAttribute('resourceType');
                 $resourceId = $document->getAttribute('resourceId');
@@ -102,7 +109,9 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
-        $ruleId = ID::unique();
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
+
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
@@ -149,7 +158,7 @@ App::post('/v1/proxy/rules')
 
 App::get('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
-    ->desc('List Rules')
+    ->desc('List rules')
     ->label('scope', 'rules.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'proxy')
@@ -185,6 +194,12 @@ App::get('/v1/proxy/rules')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $ruleId = $cursor->getValue();
             $cursorDocument = $dbForConsole->getDocument('rules', $ruleId);
 
@@ -212,7 +227,7 @@ App::get('/v1/proxy/rules')
 
 App::get('/v1/proxy/rules/:ruleId')
     ->groups(['api', 'proxy'])
-    ->desc('Get Rule')
+    ->desc('Get rule')
     ->label('scope', 'rules.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'proxy')
@@ -241,7 +256,7 @@ App::get('/v1/proxy/rules/:ruleId')
 
 App::delete('/v1/proxy/rules/:ruleId')
     ->groups(['api', 'proxy'])
-    ->desc('Delete Rule')
+    ->desc('Delete rule')
     ->label('scope', 'rules.write')
     ->label('event', 'rules.[ruleId].delete')
     ->label('audits.event', 'rules.delete')
@@ -277,7 +292,7 @@ App::delete('/v1/proxy/rules/:ruleId')
     });
 
 App::patch('/v1/proxy/rules/:ruleId/verification')
-    ->desc('Update Rule Verification Status')
+    ->desc('Update rule verification status')
     ->groups(['api', 'proxy'])
     ->label('scope', 'rules.write')
     ->label('event', 'rules.[ruleId].update')

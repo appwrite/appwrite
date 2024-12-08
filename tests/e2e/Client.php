@@ -2,6 +2,7 @@
 
 namespace Tests\E2E;
 
+use Appwrite\Utopia\Fetch\BodyMultipart;
 use Exception;
 
 class Client
@@ -163,7 +164,7 @@ class Client
      * @return array
      * @throws Exception
      */
-    public function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true): array
+    public function call(string $method, string $path = '', array $headers = [], mixed $params = [], bool $decode = true): array
     {
         $headers            = array_merge($this->headers, $headers);
         $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
@@ -174,12 +175,18 @@ class Client
             'application/json' => json_encode($params),
             'multipart/form-data' => $this->flatten($params),
             'application/graphql' => $params[0],
+            'text/plain' => $params,
             default => http_build_query($params),
         };
 
-        foreach ($headers as $i => $header) {
-            $headers[] = $i . ':' . $header;
-            unset($headers[$i]);
+        $formattedHeaders = [];
+        foreach ($headers as $key => $value) {
+            if (strtolower($key) === 'accept-encoding') {
+                curl_setopt($ch, CURLOPT_ENCODING, $value);
+                continue;
+            } else {
+                $formattedHeaders[] = $key . ': ' . $value;
+            }
         }
 
         curl_setopt($ch, CURLOPT_PATH_AS_IS, 1);
@@ -187,7 +194,7 @@ class Client
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36');
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $formattedHeaders);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
         curl_setopt($ch, CURLOPT_TIMEOUT, 15);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders, &$cookies) {
@@ -218,23 +225,39 @@ class Client
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
-
         $responseBody   = curl_exec($ch);
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if ($decode && substr($responseType, 0, strpos($responseType, ';')) == 'application/json') {
-            $json = json_decode($responseBody, true);
+        if ($decode) {
+            $strpos = strpos($responseType, ';');
+            $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
+            switch (substr($responseType, 0, $strpos)) {
+                case 'multipart/form-data':
+                    $boundary = \explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '';
+                    $multipartResponse = new BodyMultipart($boundary);
+                    $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
 
-            if ($json === null) {
-                throw new Exception('Failed to parse response: ' . $responseBody);
+                    $responseBody = $multipartResponse->getParts();
+                    break;
+                case 'application/json':
+                    if (\is_bool($responseBody)) {
+                        throw new Exception('Response is not a valid JSON.');
+                    }
+
+                    $json = json_decode($responseBody, true);
+
+                    if ($json === null) {
+                        throw new Exception('Failed to parse response: ' . $responseBody);
+                    }
+
+                    $responseBody = $json;
+                    $json = null;
+                    break;
             }
-
-            $responseBody = $json;
-            $json = null;
         }
 
-        if ((curl_errno($ch))) {
+        if ((curl_errno($ch)/* || 200 != $responseStatus*/)) {
             throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
         }
 
@@ -243,7 +266,7 @@ class Client
         $responseHeaders['status-code'] = $responseStatus;
 
         if ($responseStatus === 500) {
-            echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . "\n";
+            echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . '\n';
         }
 
         return [
