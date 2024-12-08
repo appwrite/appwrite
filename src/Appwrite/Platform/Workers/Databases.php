@@ -11,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
@@ -273,6 +274,18 @@ class Databases extends Action
                 if (!$relatedAttribute->isEmpty()) {
                     $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
                 }
+
+            } catch (NotFound $e) {
+                Console::error($e->getMessage());
+
+                $dbForProject->deleteDocument('attributes', $attribute->getId());
+
+                if (!$relatedAttribute->isEmpty()) {
+                    $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
+                }
+
+                throw $e;
+
             } catch (\Throwable $e) {
                 Console::error($e->getMessage());
 
