@@ -604,7 +604,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteUser(callable $getProjectDB, Document $document, Document $project): void
+    protected function deleteUser(callable $getProjectDB, Document $document, Document $project): void
     {
         $userId = $document->getId();
         $userInternalId = $document->getInternalId();
@@ -625,6 +625,12 @@ class Deletes extends Action
                 $teamId = $document->getAttribute('teamId');
                 $team = $dbForProject->getDocument('teams', $teamId);
                 if (!$team->isEmpty()) {
+                    $total = $document->getAttribute('total');
+                    // Delete the team if the user is the last membership
+                    if ($total === 1) {
+                        $this->deleteById($team, $dbForProject);
+                        return;
+                    }
                     $dbForProject->decreaseDocumentAttribute('teams', $teamId, 'total', 1, 0);
                 }
             }
