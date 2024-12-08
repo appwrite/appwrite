@@ -175,7 +175,7 @@ class Deletes extends Action
      * @throws Structure
      * @throws DatabaseException
      */
-    protected function deleteSchedules(Database $dbForConsole, callable $getProjectDB, string $datetime): void
+    private function deleteSchedules(Database $dbForConsole, callable $getProjectDB, string $datetime): void
     {
         $this->listByGroup(
             'schedules',
@@ -226,7 +226,7 @@ class Deletes extends Action
      * @param Document $topic
      * @throws Exception
      */
-    protected function deleteTopic(Document $project, callable $getProjectDB, Document $topic)
+    private function deleteTopic(Document $project, callable $getProjectDB, Document $topic)
     {
         if ($topic->isEmpty()) {
             Console::error('Failed to delete subscribers. Topic not found');
@@ -248,7 +248,7 @@ class Deletes extends Action
      * @param Document $target
      * @throws Exception
      */
-    protected function deleteTargetSubscribers(Document $project, callable $getProjectDB, Document $target): void
+    private function deleteTargetSubscribers(Document $project, callable $getProjectDB, Document $target): void
     {
         /** @var Database */
         $dbForProject = $getProjectDB($project);
@@ -289,7 +289,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteExpiredTargets(Document $project, callable $getProjectDB): void
+    private function deleteExpiredTargets(Document $project, callable $getProjectDB): void
     {
         $this->deleteByGroup(
             'targets',
@@ -303,7 +303,7 @@ class Deletes extends Action
         );
     }
 
-    protected function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
+    private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
     {
         $this->deleteByGroup(
             'targets',
@@ -326,7 +326,7 @@ class Deletes extends Action
      * @param string|null $resourceType
      * @throws Exception
      */
-    protected function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, string $resourceType = null): void
+    private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, string $resourceType = null): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -364,7 +364,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteCacheByDate(Document $project, callable $getProjectDB, string $datetime): void
+    private function deleteCacheByDate(Document $project, callable $getProjectDB, string $datetime): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -400,7 +400,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteUsageStats(Document $project, callable $getProjectDB, string $hourlyUsageRetentionDatetime): void
+    private function deleteUsageStats(Document $project, callable $getProjectDB, string $hourlyUsageRetentionDatetime): void
     {
         $dbForProject = $getProjectDB($project);
         // Delete Usage stats
@@ -417,7 +417,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected  function deleteMemberships(callable $getProjectDB, Document $document, Document $project): void
+    public function deleteMemberships(callable $getProjectDB, Document $document, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
         $teamInternalId = $document->getInternalId();
@@ -447,7 +447,7 @@ class Deletes extends Action
      * @throws Structure
      * @throws Exception
      */
-    protected function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, CertificatesAdapter $certificates, Document $document): void
+    private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, CertificatesAdapter $certificates, Document $document): void
     {
 
         $projects = $dbForConsole->find('projects', [
@@ -478,7 +478,7 @@ class Deletes extends Action
      * @throws Authorization
      * @throws DatabaseException
      */
-    protected function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Document $document): void
+    private function deleteProject(Database $dbForConsole, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Document $document): void
     {
         $projectInternalId = $document->getInternalId();
         $projectId = $document->getId();
