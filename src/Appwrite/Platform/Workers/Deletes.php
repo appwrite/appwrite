@@ -666,7 +666,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime): void
+    private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime): void
     {
         $dbForProject = $getProjectDB($project);
         // Delete Executions
@@ -681,7 +681,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception|Throwable
      */
-    protected function deleteExpiredSessions(Document $project, callable $getProjectDB): void
+    private function deleteExpiredSessions(Document $project, callable $getProjectDB): void
     {
         $dbForProject = $getProjectDB($project);
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -699,7 +699,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteRealtimeUsage(Database $dbForConsole, string $datetime): void
+    private function deleteRealtimeUsage(Database $dbForConsole, string $datetime): void
     {
         // Delete Dead Realtime Logs
         $this->deleteByGroup('realtime', [
@@ -714,7 +714,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteAbuseLogs(Document $project, callable $getProjectDB, string $abuseRetention): void
+    private function deleteAbuseLogs(Document $project, callable $getProjectDB, string $abuseRetention): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -735,7 +735,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteAuditLogs(Document $project, callable $getProjectDB, string $auditRetention): void
+    private function deleteAuditLogs(Document $project, callable $getProjectDB, string $auditRetention): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -757,7 +757,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteFunction(Database $dbForConsole, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, CertificatesAdapter $certificates, Document $document, Document $project): void
+    private function deleteFunction(Database $dbForConsole, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, CertificatesAdapter $certificates, Document $document, Document $project): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -772,8 +772,8 @@ class Deletes extends Action
             Query::equal('resourceType', ['function']),
             Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
-        ], $dbForConsole, function (Document $document) use ($project, $dbForConsole) {
-            $this->deleteRule($dbForConsole, $document);
+        ], $dbForConsole, function (Document $document) use ($project, $dbForConsole, $certificates) {
+            $this->deleteRule($dbForConsole, $document, $certificates);
         });
 
         /**
@@ -848,7 +848,7 @@ class Deletes extends Action
      * @param Document $deployment
      * @return void
      */
-    protected function deleteDeploymentFiles(Device $device, Document $deployment): void
+    private function deleteDeploymentFiles(Device $device, Document $deployment): void
     {
         $deploymentId = $deployment->getId();
         $deploymentPath = $deployment->getAttribute('path', '');
@@ -880,7 +880,7 @@ class Deletes extends Action
      * @param Document $build
      * @return void
      */
-    protected function deleteBuildFiles(Device $device, Document $build): void
+    private function deleteBuildFiles(Device $device, Document $build): void
     {
         $buildId = $build->getId();
         $buildPath = $build->getAttribute('path', '');
@@ -914,7 +914,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteDeployment(callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, Document $project): void
+    private function deleteDeployment(callable $getProjectDB, Device $deviceForFunctions, Device $deviceForBuilds, Document $document, Document $project): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -950,7 +950,7 @@ class Deletes extends Action
      * @param callable|null $callback to perform after document is deleted
      * @return void
      */
-    protected function deleteById(Document $document, Database $database, callable $callback = null): void
+    private function deleteById(Document $document, Database $database, callable $callback = null): void
     {
         if ($database->deleteDocument($document->getCollection(), $document->getId())) {
             Console::success('Deleted document "' . $document->getId() . '" successfully');
@@ -1059,7 +1059,7 @@ class Deletes extends Action
      * @param Document $document rule document
      * @return void
      */
-    protected function deleteRule(Database $dbForConsole, Document $document, CertificatesAdapter $certificates): void
+    private function deleteRule(Database $dbForConsole, Document $document, CertificatesAdapter $certificates): void
     {
         $domain = $document->getAttribute('domain');
         $certificates->deleteCertificate($domain);
@@ -1077,7 +1077,7 @@ class Deletes extends Action
      * @param Document $project
      * @return void
      */
-    protected function deleteBucket(callable $getProjectDB, Device $deviceForFiles, Document $document, Document $project): void
+    private function deleteBucket(callable $getProjectDB, Device $deviceForFiles, Document $document, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
 
@@ -1094,7 +1094,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteInstallation(Database $dbForConsole, callable $getProjectDB, Document $document, Document $project): void
+    private function deleteInstallation(Database $dbForConsole, callable $getProjectDB, Document $document, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
 
@@ -1123,7 +1123,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteRuntimes(callable $getProjectDB, ?Document $function, Document $project): void
+    private function deleteRuntimes(callable $getProjectDB, ?Document $function, Document $project): void
     {
         $executor = new Executor(System::getEnv('_APP_EXECUTOR_HOST'));
 
