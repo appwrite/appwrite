@@ -2854,7 +2854,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'createDocument')
+    ->label('sdk.method', [
+        'createDocument' => [
+            'parameters' => ['documentId', 'data', 'permissions'],
+            'response' => Response::MODEL_DOCUMENT,
+        ],
+        'createDocuments' => [
+            'parameters' => ['documents'],
+            'response' => Response::MODEL_DOCUMENT_LIST,
+        ],
+    ])
     ->label('sdk.description', '/docs/references/databases/create-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
