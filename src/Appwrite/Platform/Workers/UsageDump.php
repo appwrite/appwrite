@@ -19,6 +19,9 @@ const METRIC_PROJECT_LEVEL_STORAGE = 2;
 class UsageDump extends Action
 {
     protected array $stats = [];
+
+    protected array $_map = [];
+
     protected array $periods = [
         '1h' => 'Y-m-d H:00',
         '1d' => 'Y-m-d 00:00',
@@ -88,16 +91,7 @@ class UsageDump extends Action
                         $time = 'inf' === $period ? null : date($format, time());
                         $id = \md5("{$time}_{$period}_{$key}");
 
-                        try {
-                            $dbForProject->createDocument('stats', new Document([
-                                '$id' => $id,
-                                'period' => $period,
-                                'time' => $time,
-                                'metric' => $key,
-                                'value' => $value,
-                                'region' => System::getEnv('_APP_REGION', 'default'),
-                            ]));
-                        } catch (Duplicate $th) {
+                        if(array_key_exists($id, $this->_map)) {
                             if ($value < 0) {
                                 $dbForProject->decreaseDocumentAttribute(
                                     'stats',
@@ -112,6 +106,35 @@ class UsageDump extends Action
                                     'value',
                                     $value
                                 );
+                            }
+                        } else {
+                            $this->_map[$id] = null;
+                            try {
+                                $dbForProject->createDocument('stats', new Document([
+                                    '$id' => $id,
+                                    'period' => $period,
+                                    'time' => $time,
+                                    'metric' => $key,
+                                    'value' => $value,
+                                    'region' => System::getEnv('_APP_REGION', 'default'),
+                                ]));
+
+                            } catch (Duplicate $th) {
+                                if ($value < 0) {
+                                    $dbForProject->decreaseDocumentAttribute(
+                                        'stats',
+                                        $id,
+                                        'value',
+                                        abs($value)
+                                    );
+                                } else {
+                                    $dbForProject->increaseDocumentAttribute(
+                                        'stats',
+                                        $id,
+                                        'value',
+                                        $value
+                                    );
+                                }
                             }
                         }
                     }
