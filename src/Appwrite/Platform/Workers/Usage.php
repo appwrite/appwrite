@@ -15,9 +15,10 @@ class Usage extends Action
 {
     private array $stats = [];
     private int $lastTriggeredTime = 0;
+    private int $aggregationInterval = 20;
     private int $keys = 0;
     private const INFINITY_PERIOD = '_inf_';
-    private const KEYS_THRESHOLD = 10000;
+    private const KEYS_THRESHOLD = 12000;
 
     public static function getName(): string
     {
@@ -39,6 +40,7 @@ class Usage extends Action
             $this->action($message, $getProjectDB, $queueForUsageDump);
         });
 
+        $this->aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
         $this->lastTriggeredTime = time();
     }
 
@@ -56,9 +58,7 @@ class Usage extends Action
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
-        //Todo Figure out way to preserve keys when the container is being recreated @shimonewman
 
-        $aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
         $project = new Document($payload['project'] ?? []);
         $projectId = $project->getInternalId();
         foreach ($payload['reduce'] ?? [] as $document) {
@@ -74,7 +74,11 @@ class Usage extends Action
             );
         }
 
-        $this->stats[$projectId]['project'] = $project;
+        $this->stats[$projectId]['project'] = [
+            '$uid' => $project->getId(),
+            '$internalId' => $project->getInternalId(),
+            'database' => $project->getAttribute('database'),
+        ];
         $this->stats[$projectId]['receivedAt'] = DateTime::now();
         foreach ($payload['metrics'] ?? [] as $metric) {
             $this->keys++;
@@ -89,7 +93,7 @@ class Usage extends Action
         // If keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
         if (
             $this->keys >= self::KEYS_THRESHOLD ||
-            (time() - $this->lastTriggeredTime > $aggregationInterval  && $this->keys > 0)
+            (time() - $this->lastTriggeredTime > $this->aggregationInterval  && $this->keys > 0)
         ) {
             Console::warning('[' . DateTime::now() . '] Aggregated ' . $this->keys . ' keys');
 
