@@ -13,6 +13,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
@@ -59,11 +60,17 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
 
-        $document = $dbForConsole->findOne('rules', [
-            Query::equal('domain', [$domain]),
-        ]);
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            $document = $dbForConsole->getDocument('rules', md5($domain));
+        } else {
+            $document = $dbForConsole->findOne('rules', [
+                Query::equal('domain', [$domain]),
+            ]);
+        }
 
-        if ($document && !$document->isEmpty()) {
+
+        if (!$document->isEmpty()) {
             if ($document->getAttribute('projectId') === $project->getId()) {
                 $resourceType = $document->getAttribute('resourceType');
                 $resourceId = $document->getAttribute('resourceId');
@@ -102,7 +109,9 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
-        $ruleId = ID::unique();
+        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
+
         $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
@@ -185,6 +194,12 @@ App::get('/v1/proxy/rules')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $ruleId = $cursor->getValue();
             $cursorDocument = $dbForConsole->getDocument('rules', $ruleId);
 
