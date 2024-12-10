@@ -8268,9 +8268,16 @@
                 "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "201": {
-                        "description": "Document",
+                        "description": "Document, or Documents List",
                         "schema": {
-                            "$ref": "#\/definitions\/document"
+                            "x-oneOf": [
+                                {
+                                    "$ref": "#\/definitions\/document"
+                                },
+                                {
+                                    "$ref": "#\/definitions\/documentList"
+                                }
+                            ]
                         }
                     }
                 },
@@ -8295,6 +8302,33 @@
                     "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
                     "offline-key": "{documentId}",
                     "offline-response-key": "$id",
+                    "multiplex": {
+                        "createDocument": {
+                            "name": "Create Document",
+                            "parameters": [
+                                "documentId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "documentId",
+                                "data"
+                            ],
+                            "response": "document",
+                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                        },
+                        "createDocuments": {
+                            "name": "Create Documents",
+                            "parameters": [
+                                "documents"
+                            ],
+                            "required": [
+                                "documents"
+                            ],
+                            "response": "documentList",
+                            "description": "Create a batch of new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                        }
+                    },
                     "auth": {
                         "Project": []
                     }
