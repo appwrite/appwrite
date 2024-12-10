@@ -25,6 +25,7 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -81,6 +82,15 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     $project = Authorization::skip(
         fn () => $dbForConsole->getDocument('projects', $projectId)
     );
+
+    if (!$project->isEmpty() && $project->getId() !== 'console') {
+        $accessedAt = $project->getAttribute('accessedAt', '');
+        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+            $project->setAttribute('accessedAt', DateTime::now());
+            Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
+        }
+    }
+
     if (array_key_exists('proxy', $project->getAttribute('services', []))) {
         $status = $project->getAttribute('services', [])['proxy'];
         if (!$status) {
