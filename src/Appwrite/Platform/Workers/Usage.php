@@ -18,7 +18,7 @@ class Usage extends Action
     private int $aggregationInterval = 20;
     private int $keys = 0;
     private const INFINITY_PERIOD = '_inf_';
-    private const KEYS_THRESHOLD = 12000;
+    private const KEYS_THRESHOLD = 20000;
 
     public static function getName(): string
     {
