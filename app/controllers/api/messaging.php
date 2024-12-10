@@ -3013,12 +3013,44 @@ App::post('/v1/messaging/messages/push')
 
         $pushData = [];
 
-        $keys = ['title', 'body', 'data', 'action', 'image', 'icon', 'sound', 'color', 'tag', 'badge', 'contentAvailable', 'critical', 'priority'];
-
-        foreach ($keys as $key) {
-            if (!empty($$key)) {
-                $pushData[$key] = $$key;
-            }
+        if (!empty($title)) {
+            $pushData['title'] = $title;
+        }
+        if (!empty($body)) {
+            $pushData['body'] = $body;
+        }
+        if (!empty($data)) {
+            $pushData['data'] = $data;
+        }
+        if (!empty($action)) {
+            $pushData['action'] = $action;
+        }
+        if (!empty($image)) {
+            $pushData['image'] = $image;
+        }
+        if (!empty($icon)) {
+            $pushData['icon'] = $icon;
+        }
+        if (!empty($sound)) {
+            $pushData['sound'] = $sound;
+        }
+        if (!empty($color)) {
+            $pushData['color'] = $color;
+        }
+        if (!empty($tag)) {
+            $pushData['tag'] = $tag;
+        }
+        if ($badge >= 0) {
+            $pushData['badge'] = $badge;
+        }
+        if ($contentAvailable) {
+            $pushData['contentAvailable'] = true;
+        }
+        if ($critical) {
+            $pushData['critical'] = true;
+        }
+        if (!empty($priority)) {
+            $pushData['priority'] = $priority;
         }
 
         $message = $dbForProject->createDocument('messages', new Document([
