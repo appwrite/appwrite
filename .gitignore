@@ -9,9 +9,11 @@
 !/.idea/php.xml
 .DS_Store
 .php_cs.cache
+.phpactor.json
 debug/
 app/sdks
 dev/yasd_init.php
 .phpunit.result.cache
 Makefile
 appwrite.json
+/.zed/
