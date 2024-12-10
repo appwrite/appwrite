@@ -188,6 +188,13 @@ class Swagger2 extends Format
 
             if (is_array($route->getLabel('sdk.method', ''))) {
                 $temp['x-appwrite']['multiplex'] = $route->getLabel('sdk.method', '');
+
+                foreach ($temp['x-appwrite']['multiplex'] as $key => $value) {
+                    if (!empty($value['description'])) {
+                        $desc = \realpath(__DIR__ . '/../../../../' . $value['description']);
+                        $temp['x-appwrite']['multiplex'][$key]['description'] = $desc ? \file_get_contents($desc) : '';
+                    }
+                }
             }
 
             foreach ($this->models as $value) {

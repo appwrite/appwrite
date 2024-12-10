@@ -2856,18 +2856,30 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', [
         'createDocument' => [
-            'parameters' => ['documentId', 'data', 'permissions'],
+            'name' => 'Create Document',
+            'parameters' => [
+                'documentId',
+                'data',
+                'permissions',
+            ],
+            'required' => ['documentId', 'data'],
             'response' => Response::MODEL_DOCUMENT,
+            'description' => '/docs/references/databases/create-document.md',
         ],
         'createDocuments' => [
-            'parameters' => ['documents'],
+            'name' => 'Create Documents',
+            'parameters' => [
+                'documents'
+            ],
+            'required' => ['documents'],
             'response' => Response::MODEL_DOCUMENT_LIST,
+            'description' => '/docs/references/databases/create-documents.md'
         ],
     ])
     ->label('sdk.description', '/docs/references/databases/create-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->label('sdk.response.model', [Response::MODEL_DOCUMENT, Response::MODEL_DOCUMENT_LIST])
     ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
     ->label('sdk.offline.key', '{documentId}')
     ->param('databaseId', '', new UID(), 'Database ID.')
