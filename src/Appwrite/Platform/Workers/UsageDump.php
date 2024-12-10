@@ -15,12 +15,15 @@ use Utopia\System\System;
 const METRIC_COLLECTION_LEVEL_STORAGE = 4;
 const METRIC_DATABASE_LEVEL_STORAGE = 3;
 const METRIC_PROJECT_LEVEL_STORAGE = 2;
+const MAP_ARRAY_SIZE_MAX = 400000;
+
 
 class UsageDump extends Action
 {
     protected array $stats = [];
 
-    protected array $_map = [];
+    protected array $map = [];
+    protected array $timeMap = [];
 
     protected array $periods = [
         '1h' => 'Y-m-d H:00',
@@ -60,6 +63,11 @@ class UsageDump extends Action
             throw new Exception('Missing payload');
         }
 
+        if (count($this->map) >= self::MAP_ARRAY_SIZE_MAX) {
+            $this->handleMapSize();
+            //$this->map = [];
+        }
+
         // TODO: rename both usage workers @shimonewman
         foreach ($payload['stats'] ?? [] as $stats) {
             $project = new Document($stats['project'] ?? []);
@@ -91,7 +99,7 @@ class UsageDump extends Action
                         $time = 'inf' === $period ? null : date($format, time());
                         $id = \md5("{$time}_{$period}_{$key}");
 
-                        if(array_key_exists($id, $this->_map)) {
+                        if(array_key_exists($id, $this->map)) {
                             if ($value < 0) {
                                 $dbForProject->decreaseDocumentAttribute(
                                     'stats',
@@ -108,7 +116,10 @@ class UsageDump extends Action
                                 );
                             }
                         } else {
-                            $this->_map[$id] = null;
+
+                            $this->map[$id] = null;
+                            $this->timeMap[time()] = $id;
+
                             try {
                                 $dbForProject->createDocument('stats', new Document([
                                     '$id' => $id,
@@ -142,6 +153,24 @@ class UsageDump extends Action
             } catch (\Exception $e) {
                 console::error('[' . DateTime::now() . '] project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
             }
+        }
+    }
+
+    private function handleMapSize(): void
+    {
+
+        $now = time();
+        $thirtyDaysAgo = $now - (60 * 60 * 24 * 30); //30 days
+        $filteredKeys = [];
+        foreach ($this->timeMap as $key => $value) {
+            if ($key >= $thirtyDaysAgo && $key < $now) {
+                $filteredKeys[$key] = $value;
+            }
+        }
+
+        foreach ($filteredKeys as $key => $value) {
+                unset($this->map[$value]);
+                unset($this->timeMap[$key]);
         }
     }
 
