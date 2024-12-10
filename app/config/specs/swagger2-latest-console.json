@@ -14447,7 +14447,7 @@
                                         "normal",
                                         "high"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "MessagePriority",
                                     "x-enum-keys": []
                                 }
                             },
@@ -14646,7 +14646,7 @@
                                         "normal",
                                         "high"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "MessagePriority",
                                     "x-enum-keys": []
                                 }
                             }
