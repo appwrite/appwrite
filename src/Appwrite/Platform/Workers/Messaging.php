@@ -676,8 +676,8 @@ class Messaging extends Action
     private function buildPushMessage(Document $message): Push
     {
         $to = $message['to'];
-        $title = ($message['data']['title'] ?? null) === '' ? null : $message['data']['title'];
-        $body = ($message['data']['body'] ?? null) === '' ? null : $message['data']['body'];
+        $title = $message['data']['title'] ?? null;
+        $body = $message['data']['body'] ?? null;
         $data = $message['data']['data'] ?? null;
         $action = $message['data']['action'] ?? null;
         $image = $message['data']['image']['url'] ?? null;
@@ -686,11 +686,21 @@ class Messaging extends Action
         $color = $message['data']['color'] ?? null;
         $tag = $message['data']['tag'] ?? null;
         $badge = $message['data']['badge'] ?? null;
-        $contentAvailable = $message['data']['contentAvailable'] ?? false;
-        $critical = $message['data']['critical'] ?? false;
-        $priority = $message['data']['priority'] === 'high'
-            ? Priority::HIGH
-            : Priority::NORMAL;
+        $contentAvailable = $message['data']['contentAvailable'] ?? null;
+        $critical = $message['data']['critical'] ?? null;
+        $priority = $message['data']['priority'] ?? null;
+
+        if ($title === '') {
+            $title = null;
+        }
+        if ($body === '') {
+            $body = null;
+        }
+        if ($priority !== null) {
+            $priority = $priority === 'high'
+                ? Priority::HIGH
+                : Priority::NORMAL;
+        }
 
         return new Push(
             $to,
