@@ -13040,7 +13040,7 @@
                                     },
                                     "priority": {
                                         "type": "string",
-                                        "description": "Set the notification priority. \"normal\" will consider device battery state and may send notifications later. \"high\" will always attempt to immediately deliver the notification.",
+                                        "description": "Set the notification priority. \"normal\" will consider device state and may not deliver notifications immediately. \"high\" will always attempt to immediately deliver the notification.",
                                         "x-example": "normal",
                                         "enum": [
                                             "normal",

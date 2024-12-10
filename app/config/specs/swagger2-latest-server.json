@@ -13277,7 +13277,7 @@
                                 "badge": {
                                     "type": "integer",
                                     "description": "Badge for push notification. Available only for iOS Platform.",
-                                    "default": 0,
+                                    "default": -1,
                                     "x-example": null
                                 },
                                 "draft": {
@@ -13306,7 +13306,7 @@
                                 },
                                 "priority": {
                                     "type": "string",
-                                    "description": "Set the notification priority. \"normal\" will consider device battery state and may send notifications later. \"high\" will always attempt to immediately deliver the notification.",
+                                    "description": "Set the notification priority. \"normal\" will consider device state and may not deliver notifications immediately. \"high\" will always attempt to immediately deliver the notification.",
                                     "default": "high",
                                     "x-example": "normal",
                                     "enum": [
