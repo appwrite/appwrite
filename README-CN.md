@@ -100,6 +100,41 @@ docker run -it --rm `
 
 如果您从旧版本升级 Appwrite 服务器，则应在设置完成后使用 Appwrite 迁移工具。有关这方面的更多信息，请查看 [安装文档](https://appwrite.io/docs/installation)。
 
+## 一键配置
+
+除了在本地运行 Appwrite，您还可以使用预配置的设置启动 Appwrite。这样可以让您快速启动并运行 Appwrite，而无需在本地计算机上安装 Docker。
+
+请从以下提供商中选择一个：
+
+<table border="0">
+  <tr>
+    <td align="center" width="100" height="100">
+      <a href="https://marketplace.digitalocean.com/apps/appwrite">
+        <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
+          <br /><sub><b>DigitalOcean</b></sub></a>
+        </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
+        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
+          <br /><sub><b>Gitpod</b></sub></a>    
+      </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
+        <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
+          <br /><sub><b>Akamai Compute</b></sub></a>    
+      </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
+        <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
+          <br /><sub><b>AWS Marketplace</b></sub></a>    
+      </a>
+    </td>
+  </tr>
+</table>
+
 ## 入门
 
 开始使用 Appwrite 只需要在控制台创建一个新项目，选择开发平台，然后抓取我们的开发套件。您可以从以下的教程中找到你喜欢的平台开始使用 Appwrite。
