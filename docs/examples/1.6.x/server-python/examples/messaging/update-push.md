@@ -23,5 +23,8 @@ result = messaging.update_push(
     tag = '<TAG>', # optional
     badge = None, # optional
     draft = False, # optional
-    scheduled_at = '' # optional
+    scheduled_at = '', # optional
+    content_available = False, # optional
+    critical = False, # optional
+    priority = MessagePriority.NORMAL # optional
 )

@@ -26,6 +26,9 @@ messaging.updatePush(
     0, // badge (optional)
     false, // draft (optional)
     "", // scheduledAt (optional)
+    false, // contentAvailable (optional)
+    false, // critical (optional)
+    MessagePriority.NORMAL, // priority (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
