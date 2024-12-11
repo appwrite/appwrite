@@ -355,6 +355,12 @@ class Migrations extends Action
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
 
+                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
+                    'migrationId' => $migration->getId(),
+                    'source' => $migration->getAttribute('source') ?? '',
+                    'destination' => $migration->getAttribute('destination') ?? '',
+                ]);
+
                 return;
             }
 
@@ -388,18 +394,22 @@ class Migrations extends Action
                 $source->error();
 
                 foreach ($source->getErrors() as $error) {
+                    /** @var MigrationException $error */
                     call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
-                        'migrationId' => $migration->getId() ?? '',
+                        'migrationId' => $migration->getId(),
                         'source' => $migration->getAttribute('source') ?? '',
+                        'destination' => $migration->getAttribute('destination') ?? '',
                         'resourceName' => $error->getResourceName(),
                         'resourceGroup' => $error->getResourceGroup()
                     ]);
                 }
 
                 foreach ($destination->getErrors() as $error) {
+                    /** @var MigrationException $error */
                     call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
-                        'migrationId' => $migration->getId() ?? '',
+                        'migrationId' => $migration->getId(),
                         'source' => $migration->getAttribute('source') ?? '',
+                        'destination' => $migration->getAttribute('destination') ?? '',
                         'resourceName' => $error->getResourceName(),
                         'resourceGroup' => $error->getResourceGroup()
                     ]);
