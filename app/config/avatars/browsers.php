@@ -2,20 +2,21 @@
 
 return [
     // Codes based on: https://github.com/matomo-org/device-detector/blob/master/Parser/Client/Browser.php
-    'aa' => __DIR__ . '/browsers/avant.png',
-    'an' => __DIR__ . '/browsers/android-webview-beta.png',
-    'ch' => __DIR__ . '/browsers/chrome.png',
-    'ci' => __DIR__ . '/browsers/chrome.png', //Chrome Mobile iOS
-    'cm' => __DIR__ . '/browsers/chrome.png', //Chrome Mobile
-    'cr' => __DIR__ . '/browsers/chromium.png',
-    'ff' => __DIR__ . '/browsers/firefox.png',
-    'sf' => __DIR__ . '/browsers/safari.png',
-    'mf' => __DIR__ . '/browsers/safari.png',
-    'ps' => __DIR__ . '/browsers/edge.png',
-    'oi' => __DIR__ . '/browsers/edge.png',
-    'om' => __DIR__ . '/browsers/opera-mini.png',
-    'op' => __DIR__ . '/browsers/opera.png',
-    'on' => __DIR__ . '/browsers/opera.png',
+    'aa' => ['name' => 'Avant Browser', 'path' => __DIR__ . '/browsers/avant.png'],
+    'an' => ['name' => 'Android WebView Beta', 'path' => __DIR__ . '/browsers/android-webview-beta.png'],
+    'ch' => ['name' => 'Google Chrome', 'path' => __DIR__ . '/browsers/chrome.png'],
+    'ci' => ['name' => 'Google Chrome (iOS)', 'path' => __DIR__ . '/browsers/chrome.png'],
+    'cm' => ['name' => 'Google Chrome (Mobile)', 'path' => __DIR__ . '/browsers/chrome.png'],
+    'cr' => ['name' => 'Chromium', 'path' => __DIR__ . '/browsers/chromium.png'],
+    'ff' => ['name' => 'Mozilla Firefox', 'path' => __DIR__ . '/browsers/firefox.png'],
+    'sf' => ['name' => 'Safari', 'path' => __DIR__ . '/browsers/safari.png'],
+    'mf' => ['name' => 'Mobile Safari', 'path' => __DIR__ . '/browsers/safari.png'],
+    'ps' => ['name' => 'Microsoft Edge', 'path' => __DIR__ . '/browsers/edge.png'],
+    'oi' => ['name' => 'Microsoft Edge (iOS)', 'path' => __DIR__ . '/browsers/edge.png'],
+    'om' => ['name' => 'Opera Mini', 'path' => __DIR__ . '/browsers/opera-mini.png'],
+    'op' => ['name' => 'Opera', 'path' => __DIR__ . '/browsers/opera.png'],
+    'on' => ['name' => 'Opera (Next)', 'path' => __DIR__ . '/browsers/opera.png'],
+
 
     /*
     '36' => '360 Phone Browser',

@@ -6,9 +6,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\ID;
-use Utopia\Database\Role;
-use Utopia\Database\Permission;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 class AuthTest extends Scope
 {
@@ -73,9 +73,7 @@ class AuthTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $graphQLPayload);
 
-        $this->token1 = $this->client->parseCookie(
-            (string)$session1['headers']['set-cookie']
-        )['a_session_' . $projectId];
+        $this->token1 = $session1['cookies']['a_session_' . $projectId];
 
         // Create session 2
         $graphQLPayload['variables']['email'] = $email2;
@@ -85,9 +83,7 @@ class AuthTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $graphQLPayload);
 
-        $this->token2 = $this->client->parseCookie(
-            (string)$session2['headers']['set-cookie']
-        )['a_session_' . $projectId];
+        $this->token2 = $session2['cookies']['a_session_' . $projectId];
 
         // Create database
         $query = $this->getQuery(self::$CREATE_DATABASE);

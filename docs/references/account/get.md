@@ -1,1 +1,1 @@
-Get currently logged in user data as JSON object.
+Get the currently logged in user.

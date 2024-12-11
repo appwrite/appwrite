@@ -4,7 +4,7 @@ namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\Origin;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 class OriginTest extends TestCase
 {

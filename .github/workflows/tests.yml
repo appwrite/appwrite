@@ -1,43 +1,228 @@
 name: "Tests"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: appwrite-dev
+  CACHE_KEY: appwrite-dev-${{ github.event.pull_request.head.sha }}
+
 on: [pull_request]
+
 jobs:
-  tests:
-    name: Unit & E2E
+  setup:
+    name: Setup & Build Appwrite Image
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Appwrite
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: false
+          tags: ${{ env.IMAGE }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=/tmp/${{ env.IMAGE }}.tar
+          build-args: |
+            DEBUG=false
+            TESTING=true
+            VERSION=dev
+
+      - name: Cache Docker Image
+        uses: actions/cache@v3
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+
+  unit_test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    needs: setup
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-      with:
-        # We must fetch at least the immediate parents so that if this is
-        # a pull request then we can checkout the head.
-        fetch-depth: 2
-        # Fetch submodules
-        submodules: recursive
+      - name: checkout
+        uses: actions/checkout@v2
 
-    # If this run was triggered by a pull request event, then checkout
-    # the head of the pull request instead of the merge commit.
-    - run: git checkout HEAD^2
-      if: ${{ github.event_name == 'pull_request' }}
+      - name: Load Cache
+        uses: actions/cache@v3
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
 
-    - name: Build Appwrite
-      # Upstream bug causes buildkit pulls to fail so prefetch base images
-      # https://github.com/moby/moby/issues/41864
-      run:  |
-        export COMPOSE_INTERACTIVE_NO_CLI
-        export DOCKER_BUILDKIT=1
-        export COMPOSE_DOCKER_CLI_BUILD=1
-        export BUILDKIT_PROGRESS=plain
-        docker pull composer:2.0
-        docker compose build appwrite
-        docker compose up -d
-        sleep 30
-    - name: Doctor
-      run: docker compose exec -T appwrite doctor
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose up -d
+          sleep 10
 
-    - name: Environment Variables
-      run:  docker compose exec -T appwrite vars
+      - name: Doctor
+        run: docker compose exec -T appwrite doctor
 
-    - name: Run Tests
-      run: docker compose exec -T appwrite test --debug
+      - name: Environment Variables
+        run: docker compose exec -T appwrite vars
+
+      - name: Run Unit Tests
+        run: docker compose exec appwrite test /usr/src/code/tests/unit
+
+  e2e_general_test:
+    name: E2E General Test
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Load Cache
+        uses: actions/cache@v3
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose up -d
+          sleep 10
+
+      - name: Run General Tests
+        run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/General --debug
+
+  e2e_service_test:
+    name: E2E Service Test
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          [
+            Account,
+            Avatars,
+            Console,
+            Databases,
+            Functions,
+            GraphQL,
+            Health,
+            Locale,
+            Projects,
+            Realtime,
+            Storage,
+            Teams,
+            Users,
+            Webhooks,
+            VCS,
+            Messaging,
+          ]
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Load Cache
+        uses: actions/cache@v3
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose up -d
+          sleep 25
+
+      - name: Run ${{matrix.service}} Tests
+        run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.service}} --debug
+
+      - name: Run ${{matrix.service}} Shared Tables Tests
+        run: _APP_DATABASE_SHARED_TABLES=database_db_main docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.service}} --debug
+
+  benchamrking:
+    name: Benchmark
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Load Cache
+        uses: actions/cache@v3
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+      - name: Load and Start Appwrite
+        run: |
+          sed -i 's/traefik/localhost/g' .env 
+          docker load --input /tmp/${{ env.IMAGE }}.tar          
+          docker compose up -d
+          sleep 10
+      - name: Install Oha
+        run: |
+          echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
+          sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg https://azlux.fr/repo.gpg
+          sudo apt update
+          sudo apt install oha
+      - name: Benchmark PR
+        run: oha -z 180s  http://localhost/v1/health/version -j > benchmark.json
+      - name: Cleaning
+        run: docker compose down -v
+      - name: Installing latest version
+        run: |
+          rm docker-compose.yml
+          rm .env
+          curl https://appwrite.io/install/compose -o docker-compose.yml
+          curl https://appwrite.io/install/env -o .env
+          sed -i 's/_APP_OPTIONS_ABUSE=enabled/_APP_OPTIONS_ABUSE=disabled/g' .env
+          docker compose up -d
+          sleep 10
+      - name: Benchmark Latest
+        run: oha -z 180s  http://localhost/v1/health/version -j > benchmark-latest.json
+      - name: Prepare comment
+        run: |
+          echo '## :sparkles: Benchmark results' > benchmark.txt
+          echo ' ' >> benchmark.txt
+          echo "- Requests per second: $(jq -r '.summary.requestsPerSec|tonumber?|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json)" >> benchmark.txt
+          echo "- Requests with 200 status code: $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json)" >> benchmark.txt
+          echo "- P99 latency: $(jq -r '.latencyPercentiles.p99' benchmark.json )" >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo "## :zap:  Benchmark Comparison" >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo "| Metric | This PR | Latest version | "  >> benchmark.txt
+          echo "| --- | --- | --- | "  >> benchmark.txt
+          echo "| RPS | $(jq -r '.summary.requestsPerSec|tonumber?|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.summary.requestsPerSec|tonumber|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
+          echo "| 200 | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
+          echo "| P99 | $(jq -r '.latencyPercentiles.p99' benchmark.json ) | $(jq -r '.latencyPercentiles.p99' benchmark-latest.json ) | "  >> benchmark.txt
+      - name: Save results
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: benchmark.json
+          path: benchmark.json
+          retention-days: 7
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Benchmark results
+      - name: Comment on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: benchmark.txt
+          edit-mode: replace

@@ -2,12 +2,12 @@
 
 namespace Appwrite\Messaging\Adapter;
 
+use Appwrite\Messaging\Adapter;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Appwrite\Messaging\Adapter;
-use Utopia\App;
-use Utopia\Database\ID;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
+use Utopia\System\System;
 
 class Realtime extends Adapter
 {
@@ -140,7 +140,7 @@ class Realtime extends Adapter
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
         $redis = new \Redis(); //TODO: make this part of the constructor
-        $redis->connect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+        $redis->connect(System::getEnv('_APP_REDIS_HOST', ''), System::getEnv('_APP_REDIS_PORT', ''));
         $redis->publish('realtime', json_encode([
             'project' => $projectId,
             'roles' => $roles,
@@ -260,6 +260,11 @@ class Realtime extends Adapter
                 $channels[] = 'account.' . $parts[1];
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
+            case 'rules':
+                $channels[] = 'console';
+                $projectId = 'console';
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                break;
             case 'teams':
                 if ($parts[2] === 'memberships') {
                     $permissionsChanged = $parts[4] ?? false;
@@ -325,6 +330,11 @@ class Realtime extends Adapter
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
 
+                break;
+            case 'migrations':
+                $channels[] = 'console';
+                $projectId = 'console';
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
         }
 

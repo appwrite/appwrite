@@ -7,9 +7,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 class ContentTypeTest extends Scope
 {
@@ -30,7 +30,7 @@ class ContentTypeTest extends Scope
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
         $response = $response['body']['data']['localeListCountries'];
-        $this->assertEquals(194, $response['total']);
+        $this->assertEquals(197, $response['total']);
     }
 
     public function testSingleQueryJSONContentType()
@@ -46,7 +46,7 @@ class ContentTypeTest extends Scope
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
         $response = $response['body']['data']['localeListCountries'];
-        $this->assertEquals(194, $response['total']);
+        $this->assertEquals(197, $response['total']);
     }
 
     public function testArrayBatchedJSONContentType()
@@ -69,7 +69,7 @@ class ContentTypeTest extends Scope
         $this->assertArrayNotHasKey('errors', $response['body'][1]);
         $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
         $this->assertArrayHasKey('localeListContinents', $response['body'][1]['data']);
-        $this->assertEquals(194, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(197, $response['body'][0]['data']['localeListCountries']['total']);
         $this->assertEquals(7, $response['body'][1]['data']['localeListContinents']['total']);
     }
 
@@ -94,7 +94,7 @@ class ContentTypeTest extends Scope
         $this->assertArrayNotHasKey('errors', $response['body']);
         $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
         $this->assertArrayHasKey('localeListContinents', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total']);
+        $this->assertEquals(197, $response['body']['data']['localeListCountries']['total']);
         $this->assertEquals(7, $response['body']['data']['localeListContinents']['total']);
     }
 

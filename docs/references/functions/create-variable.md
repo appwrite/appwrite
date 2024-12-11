@@ -1,1 +1,1 @@
-Create a new function variable. These variables can be accessed within function in the `env` object under the request variable.
+Create a new function environment variable. These variables can be accessed in the function at runtime as environment variables.

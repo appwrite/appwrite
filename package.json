@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "name": "@appwrite.io/repo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appwrite/appwrite.git"
+  }
+}
