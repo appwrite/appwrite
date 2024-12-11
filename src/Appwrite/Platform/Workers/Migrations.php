@@ -351,15 +351,9 @@ class Migrations extends Action
             Console::error($th->getMessage());
             Console::error($th->getTraceAsString());
 
-            var_dump($transfer);
-            var_dump($destination);
-            var_dump($destination);
-
             if (! $migration->isEmpty()) {
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
-
-                Console::error('Sentry error: '.$th->getMessage());
 
                 call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
                     'migrationId' => $migration->getId(),
