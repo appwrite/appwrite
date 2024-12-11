@@ -17,5 +17,5 @@ return [
     'visa' => ['name' => 'Visa', 'path' => __DIR__ . '/credit-cards/visa.png'],
     'mir' => ['name' => 'MIR', 'path' => __DIR__ . '/credit-cards/mir.png'],
     'maestro' => ['name' => 'Maestro', 'path' => __DIR__ . '/credit-cards/maestro.png'],
-    'rupay' => ['name' => 'Rupay', 'path' => __DIR__ . '/credit-cards/rupay.png'],
+    'rupay' => ['name' => 'Rupay', 'path' => __DIR__ . '/credit-cards/rupay.png']
 ];
