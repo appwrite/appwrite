@@ -355,6 +355,8 @@ class Migrations extends Action
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
 
+                Console::error('Sentry error: '.$th->getMessage());
+
                 call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
                     'migrationId' => $migration->getId(),
                     'source' => $migration->getAttribute('source') ?? '',
