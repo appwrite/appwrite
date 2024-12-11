@@ -1,6 +1,9 @@
 <?php
 
 return [ // List of publicly visible scopes
+    'sessions.write' => [
+        'description' => 'Access to create, update, and delete user sessions',
+    ],
     'users.read' => [
         'description' => 'Access to read your project\'s users',
     ],
@@ -75,5 +78,56 @@ return [ // List of publicly visible scopes
     ],
     'health.read' => [
         'description' => 'Access to read your project\'s health status',
+    ],
+    'providers.read' => [
+        'description' => 'Access to read your project\'s providers',
+    ],
+    'providers.write' => [
+        'description' => 'Access to create, update, and delete your project\'s providers',
+    ],
+    'messages.read' => [
+        'description' => 'Access to read your project\'s messages',
+    ],
+    'messages.write' => [
+        'description' => 'Access to create, update, and delete your project\'s messages',
+    ],
+    'topics.read' => [
+        'description' => 'Access to read your project\'s topics',
+    ],
+    'topics.write' => [
+        'description' => 'Access to create, update, and delete your project\'s topics',
+    ],
+    'subscribers.read' => [
+        'description' => 'Access to read your project\'s subscribers',
+    ],
+    'subscribers.write' => [
+        'description' => 'Access to create, update, and delete your project\'s subscribers',
+    ],
+    'targets.read' => [
+        'description' => 'Access to read your project\'s targets',
+    ],
+    'targets.write' => [
+        'description' => 'Access to create, update, and delete your project\'s targets',
+    ],
+    'rules.read' => [
+        'description' => 'Access to read your project\'s proxy rules',
+    ],
+    'rules.write' => [
+        'description' => 'Access to create, update, and delete your project\'s proxy rules',
+    ],
+    'migrations.read' => [
+        'description' => 'Access to read your project\'s migrations',
+    ],
+    'migrations.write' => [
+        'description' => 'Access to create, update, and delete your project\'s migrations.',
+    ],
+    'vcs.read' => [
+        'description' => 'Access to read your project\'s VCS repositories',
+    ],
+    'vcs.write' => [
+        'description' => 'Access to create, update, and delete your project\'s VCS repositories',
+    ],
+    'assistant.read' => [
+        'description' => 'Access to read the Assistant service',
     ],
 ];

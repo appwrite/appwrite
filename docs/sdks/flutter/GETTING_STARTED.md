@@ -46,6 +46,8 @@ For **Linux** add your app <u>name</u> and <u>package name</u>, Your package nam
 ### Mac OS
 For **Mac OS** add your app name and Bundle ID, You can find your Bundle Identifier in the General tab for your app's primary target in Xcode.
 
+The Appwrite SDK uses ASWebAuthenticationSession on macOS 10.15+ to allow OAuth authentication. You have to change your macOS Deployment Target in Xcode to be macOS >= 10.15 to be able to build your app for macOS.
+
 ### Web
 Appwrite 0.7, and the Appwrite Flutter SDK 0.3.0 have added support for Flutter Web. To build web apps that integrate with Appwrite successfully, all you have to do is add a web platform on your Appwrite project's dashboard and list the domain your website will use to allow communication to the Appwrite API.
 
@@ -103,10 +105,7 @@ When trying to connect to Appwrite from an emulator or a mobile device, localhos
 Account account = Account(client);
 final user = await account
   .create(
-    userId: ID.unique(),
-    email: 'me@appwrite.io',
-    password: 'password',
-    name: 'My Name'
+    userId: ID.unique(), email: "email@example.com", password: "password", name: "Walter O'Brien"
   );
 ```
 
@@ -131,10 +130,7 @@ void main() {
 
   final user = await account
     .create(
-      userId: ID.unique(),
-      email: 'me@appwrite.io',
-      password: 'password',
-      name: 'My Name'
+      userId: ID.unique(), email: "email@example.com", password: "password", name: "Walter O'Brien"
     );
 }
 ```
@@ -146,7 +142,7 @@ The Appwrite Flutter SDK raises `AppwriteException` object with `message`, `type
 Account account = Account(client);
 
 try {
-  final user = await account.create(userId: ID.unique(), email: ‘email@example.com’,password: ‘password’, name: ‘name’);
+  final user = await account.create(userId: ID.unique(), email: "email@example.com", password: "password", name: "Walter O'Brien");
   print(user.toMap());
 } on AppwriteException catch(e) {
   //show message to user or do other operation based on error as required

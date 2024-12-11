@@ -4,8 +4,8 @@ namespace Tests\E2E\Services\Realtime;
 
 use CURLFile;
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
@@ -290,7 +290,6 @@ class RealtimeCustomClientTest extends Scope
 
         $this->assertEquals($name, $response['data']['payload']['name']);
 
-
         /**
          * Test Account Password Event
          */
@@ -376,6 +375,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertCount(2, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertArrayNotHasKey('secret', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
         $this->assertContains("users.{$userId}.verification.{$verificationId}.create", $response['data']['events']);
@@ -468,7 +468,7 @@ class RealtimeCustomClientTest extends Scope
                 'password' => 'new-password',
             ]);
 
-            $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $projectId];
+            $sessionNew = $response['cookies']['a_session_' . $projectId];
             $sessionNewId = $response['body']['$id'];
 
             return array("session" => $sessionNew, "sessionId" => $sessionNewId);
@@ -617,7 +617,6 @@ class RealtimeCustomClientTest extends Scope
             'userId' => $userId,
             'secret' => $recovery,
             'password' => 'test-recovery',
-            'passwordAgain' => 'test-recovery',
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -1263,6 +1262,7 @@ class RealtimeCustomClientTest extends Scope
             'name' => 'Test',
             'execute' => ['users'],
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'timeout' => 10,
         ]);
 
@@ -1284,7 +1284,8 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'entrypoint' => 'index.php',
-            'code' => new CURLFile($code, 'application/x-gzip', basename($code))
+            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -1292,8 +1293,23 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals($deployment['headers']['status-code'], 202);
         $this->assertNotEmpty($deployment['body']['$id']);
 
-        // Wait for deployment to be built.
-        sleep(5);
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
 
         $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -1301,7 +1317,7 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), []);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
@@ -1311,7 +1327,7 @@ class RealtimeCustomClientTest extends Scope
             'async' => true
         ]);
 
-        $this->assertEquals($execution['headers']['status-code'], 202);
+        $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
 
         $response = json_decode($client->receive(), true);
@@ -1457,6 +1473,43 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("teams.*.update", $response['data']['events']);
         $this->assertContains("teams.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
+
+        /**
+         * Test Team Update Prefs
+         */
+        $team = $this->client->call(Client::METHOD_PUT, '/teams/' . $teamId . '/prefs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'prefs' => [
+                'funcKey1' => 'funcValue1',
+                'funcKey2' => 'funcValue2',
+            ]
+        ]);
+
+        $this->assertEquals($team['headers']['status-code'], 200);
+        $this->assertEquals($team['body']['funcKey1'], 'funcValue1');
+        $this->assertEquals($team['body']['funcKey2'], 'funcValue2');
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('teams', $response['data']['channels']);
+        $this->assertContains("teams.{$teamId}", $response['data']['channels']);
+        $this->assertContains("teams.{$teamId}.update", $response['data']['events']);
+        $this->assertContains("teams.{$teamId}.update.prefs", $response['data']['events']);
+        $this->assertContains("teams.{$teamId}", $response['data']['events']);
+        $this->assertContains("teams.*.update.prefs", $response['data']['events']);
+        $this->assertContains("teams.*.update", $response['data']['events']);
+        $this->assertContains("teams.*", $response['data']['events']);
+        $this->assertNotEmpty($response['data']['payload']);
+        $this->assertEquals($response['data']['payload']['funcKey1'], 'funcValue1');
+        $this->assertEquals($response['data']['payload']['funcKey2'], 'funcValue2');
 
         $client->close();
 
