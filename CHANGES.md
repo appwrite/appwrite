@@ -1,3 +1,8 @@
+
+### Miscellaneous
+* pt-PT translation improvements [#4800](https://github.com/appwrite/appwrite/pull/4800)
+
+
 # Version 1.6.0
 
 ## What's Changed
