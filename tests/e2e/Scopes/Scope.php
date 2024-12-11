@@ -3,8 +3,8 @@
 namespace Tests\E2E\Scopes;
 
 use Appwrite\Tests\Retryable;
-use Tests\E2E\Client;
 use PHPUnit\Framework\TestCase;
+use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 
 abstract class Scope extends TestCase
@@ -17,10 +17,7 @@ abstract class Scope extends TestCase
     protected function setUp(): void
     {
         $this->client = new Client();
-
-        $this->client
-            ->setEndpoint($this->endpoint)
-        ;
+        $this->client->setEndpoint($this->endpoint);
     }
 
     protected function tearDown(): void
@@ -28,14 +25,19 @@ abstract class Scope extends TestCase
         $this->client = null;
     }
 
-    protected function getLastEmail(): array
+    protected function getLastEmail(int $limit = 1): array
     {
         sleep(3);
 
         $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
 
         if ($emails && is_array($emails)) {
-            return end($emails);
+            if ($limit === 1) {
+                return end($emails);
+            } else {
+                $lastEmails = array_slice($emails, -1 * $limit);
+                return $lastEmails;
+            }
         }
 
         return [];
@@ -45,10 +47,10 @@ abstract class Scope extends TestCase
     {
         sleep(2);
 
-        $resquest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
-        $resquest['data'] = json_decode($resquest['data'], true);
+        $request = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
+        $request['data'] = json_decode($request['data'], true);
 
-        return $resquest;
+        return $request;
     }
 
     /**
@@ -101,7 +103,7 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_console'];
+        $session = $session['cookies']['a_session_console'];
 
         self::$root = [
             '$id' => ID::custom($root['body']['$id']),
@@ -153,7 +155,7 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $token = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
 
         self::$user[$this->getProject()['$id']] = [
             '$id' => ID::custom($user['body']['$id']),

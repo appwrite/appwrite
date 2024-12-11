@@ -37,15 +37,15 @@ Finally, you will need to create a `feat-XXX-YYY-oauth` branch based on the `mas
 The first step in adding a new OAuth2 provider is to add it to the list of providers located at:
 
 ```
-app/config/providers.php
+app/config/oAuthProviders.php
 ```
 
 Make sure to fill in all data needed and that your provider array key name:
 
-- is in [`camelCase`](https://en.wikipedia.org/wiki/Camel_case) format
+- is in [`camelCase`](https://en.wikipedia.org/wiki/Camel_case) format for sentence, but lowercase for names. `github` must be all lowercased, but `paypalSandbox` should have uppercase S
 - has no spaces or special characters
 
-> Please make sure to keep the list of providers in `providers.php` in the alphabetical order A-Z.
+> Please make sure to keep the list of providers in `oAuthProviders.php` in the alphabetical order A-Z.
 
 ### 2.2 Add Provider Logo
 
@@ -181,7 +181,7 @@ After you finish adding your new provider to Appwrite, you should be able to see
 
 Add credentials and check both a successful and a failed login (where the user denies integration on the provider page).
 
-You can test your OAuth2 provider by trying to login using the [OAuth2 method](https://appwrite.io/docs/client/account#accountCreateOAuth2Session) when integrating the Appwrite Web SDK in a demo app.
+You can test your OAuth2 provider by trying to login using the [OAuth2 method](https://appwrite.io/docs/references/cloud/client-web/account#createOAuth2Session) when integrating the Appwrite Web SDK in a demo app.
 
 Pass your new adapter name as the provider parameter. If login is successful, you will be redirected to your success URL parameter. Otherwise, you will be redirected to your failure URL.
 
@@ -199,7 +199,7 @@ If you need any help with the contribution, feel free to head over to [our Disco
 
 If your OAuth provider requires special configuration apart from `clientId` and `clientSecret` you can create a custom form. Currently this is being realized through putting all custom fields as JSON into the `clientSecret` field to keep the project API stable. You can implement your custom form following these steps:
 
-1. Add your custom form in `app/views/console/users/oauth/[PROVIDER].phtml`. Below is a template you can use. Add the filename to `app/config/providers.php`.
+1. Add your custom form in `app/views/console/users/oauth/[PROVIDER].phtml`. Below is a template you can use. Add the filename to `app/config/oAuthProviders.php`.
 
 ```php
 <?php

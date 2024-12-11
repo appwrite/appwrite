@@ -2,18 +2,37 @@
 
 namespace Appwrite\Event;
 
-use Resque;
 use Utopia\Database\Document;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Build extends Event
 {
     protected string $type = '';
     protected ?Document $resource = null;
     protected ?Document $deployment = null;
+    protected ?Document $template = null;
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::BUILDS_QUEUE_NAME)
+            ->setClass(Event::BUILDS_CLASS_NAME);
+    }
+
+    /**
+     * Sets template for the build event.
+     *
+     * @param Document $template
+     * @return self
+     */
+    public function setTemplate(Document $template): self
+    {
+        $this->template = $template;
+
+        return $this;
     }
 
     /**
@@ -93,11 +112,30 @@ class Build extends Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        $client = new Client($this->queue, $this->connection);
+
+        return $client->enqueue([
             'project' => $this->project,
             'resource' => $this->resource,
             'deployment' => $this->deployment,
-            'type' => $this->type
+            'type' => $this->type,
+            'template' => $this->template
         ]);
+    }
+
+    /**
+     * Resets event.
+     *
+     * @return self
+     */
+    public function reset(): self
+    {
+        $this->type = '';
+        $this->resource = null;
+        $this->deployment = null;
+        $this->template = null;
+        parent::reset();
+
+        return $this;
     }
 }

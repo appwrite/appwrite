@@ -1,1 +1,1 @@
-Get currently logged in user list of active sessions across different devices.
+Get the list of active sessions across different devices for the currently logged in user.

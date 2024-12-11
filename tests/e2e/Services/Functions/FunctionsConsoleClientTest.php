@@ -2,9 +2,9 @@
 
 namespace Tests\E2E\Services\Functions;
 
-use Tests\E2E\Scopes\Scope;
-use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
@@ -24,6 +24,7 @@ class FunctionsConsoleClientTest extends Scope
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -41,7 +42,8 @@ class FunctionsConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test Failure',
             'execute' => ['some-random-string'],
-            'runtime' => 'php-8.0'
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -89,17 +91,28 @@ class FunctionsConsoleClientTest extends Scope
             'range' => '24h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 9);
-        $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['executionsTotal']);
-        $this->assertIsArray($response['body']['executionsFailure']);
-        $this->assertIsArray($response['body']['executionsSuccess']);
-        $this->assertIsArray($response['body']['executionsTime']);
-        $this->assertIsArray($response['body']['buildsTotal']);
-        $this->assertIsArray($response['body']['buildsFailure']);
-        $this->assertIsArray($response['body']['buildsSuccess']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(19, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
+        $this->assertIsNumeric($response['body']['deploymentsTotal']);
+        $this->assertIsNumeric($response['body']['deploymentsStorageTotal']);
+        $this->assertIsNumeric($response['body']['buildsTotal']);
+        $this->assertIsNumeric($response['body']['buildsStorageTotal']);
+        $this->assertIsNumeric($response['body']['buildsTimeTotal']);
+        $this->assertIsNumeric($response['body']['buildsMbSecondsTotal']);
+        $this->assertIsNumeric($response['body']['executionsTotal']);
+        $this->assertIsNumeric($response['body']['executionsTimeTotal']);
+        $this->assertIsNumeric($response['body']['executionsMbSecondsTotal']);
+        $this->assertIsArray($response['body']['deployments']);
+        $this->assertIsArray($response['body']['deploymentsStorage']);
+        $this->assertIsArray($response['body']['builds']);
         $this->assertIsArray($response['body']['buildsTime']);
+        $this->assertIsArray($response['body']['buildsStorage']);
+        $this->assertIsArray($response['body']['buildsTime']);
+        $this->assertIsArray($response['body']['buildsMbSeconds']);
+        $this->assertIsArray($response['body']['executions']);
+        $this->assertIsArray($response['body']['executionsTime']);
+        $this->assertIsArray($response['body']['executionsMbSeconds']);
     }
 
     /**

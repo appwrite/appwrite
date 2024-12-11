@@ -1,0 +1,5 @@
+query {
+    healthGetQueueDeletes {
+        size
+    }
+}
