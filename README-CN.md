@@ -24,8 +24,6 @@
 
 [English](README.md) | 简体中文
 
-[**我们发布了支持 GraphQL 的Appwrite 1.2 版本，点击这里了解更多！**](https://appwrite.io/graphql)
-
 Appwrite是一个基于Docker的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面简化了从零开始编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
 
 Appwrite 可以提供给开发者用户验证，外部授权，用户数据读写检索，文件储存，图像处理，云函数计算，[等多种服务](https://appwrite.io/docs).
@@ -119,6 +117,18 @@ docker run -it --rm `
       <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
         <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
           <br /><sub><b>Gitpod</b></sub></a>    
+      </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
+        <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
+          <br /><sub><b>Akamai Compute</b></sub></a>    
+      </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://aws.amazon.com/marketplace/pp/prodview-2hiaeo2px4md6">
+        <img width="50" height="39" src="public/images/integrations/aws-logo.svg" alt="AWS Logo" />
+          <br /><sub><b>AWS Marketplace</b></sub></a>    
       </a>
     </td>
   </tr>
