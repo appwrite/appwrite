@@ -11,14 +11,14 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Database\DateTime;
 
 App::get('/v1/project/usage')
-    ->desc('Get usage stats for a project')
-    ->groups(['api'])
+    ->desc('Get project usage stats')
+    ->groups(['api', 'usage'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'project')
@@ -26,102 +26,269 @@ App::get('/v1/project/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->param('startDate', '', new DateTimeValidator(), 'Starting date for the usage')
+    ->param('endDate', '', new DateTimeValidator(), 'End date for the usage')
+    ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
-        $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '1h',
-                    'limit' => 24,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
+    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject) {
+        $stats = $total = $usage = [];
+        $format = 'Y-m-d 00:00:00';
+        $firstDay = (new DateTime($startDate))->format($format);
+        $lastDay = (new DateTime($endDate))->format($format);
 
-            $metrics = [
-                'project.$all.network.requests',
-                'project.$all.network.bandwidth',
-                'project.$all.storage.size',
-                'users.$all.count.total',
-                'databases.$all.count.total',
-                'documents.$all.count.total',
-                'executions.$all.compute.total',
-                'buckets.$all.count.total'
-            ];
+        $metrics = [
+            'total' => [
+                METRIC_EXECUTIONS,
+                METRIC_EXECUTIONS_MB_SECONDS,
+                METRIC_BUILDS_MB_SECONDS,
+                METRIC_DOCUMENTS,
+                METRIC_DATABASES,
+                METRIC_USERS,
+                METRIC_BUCKETS,
+                METRIC_FILES_STORAGE,
+                METRIC_DEPLOYMENTS_STORAGE,
+                METRIC_BUILDS_STORAGE
+            ],
+            'period' => [
+                METRIC_NETWORK_REQUESTS,
+                METRIC_NETWORK_INBOUND,
+                METRIC_NETWORK_OUTBOUND,
+                METRIC_USERS,
+                METRIC_EXECUTIONS,
+                METRIC_EXECUTIONS_MB_SECONDS,
+                METRIC_BUILDS_MB_SECONDS
+            ]
+        ];
 
-            $stats = [];
+        $factor = match ($period) {
+            '1h' => 3600,
+            '1d' => 86400,
+        };
 
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
+        $limit = match ($period) {
+            '1h' => (new DateTime($startDate))->diff(new DateTime($endDate))->days * 24,
+            '1d' => (new DateTime($startDate))->diff(new DateTime($endDate))->days
+        };
 
-                    $requestDocs = $dbForProject->find('stats', [
-                        Query::equal('period', [$period]),
-                        Query::equal('metric', [$metric]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
+        $format = match ($period) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
 
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
+        Authorization::skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
+            foreach ($metrics['total'] as $metric) {
+                $result = $dbForProject->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
+                $total[$metric] = $result['value'] ?? 0;
+            }
 
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '1h' => 3600,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-                        ];
-                        $backfill--;
-                    }
-                    $stats[$metric] = array_reverse($stats[$metric]);
+            foreach ($metrics['period'] as $metric) {
+                $results = $dbForProject->find('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::greaterThanEqual('time', $firstDay),
+                    Query::lessThan('time', $lastDay),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+
+                $stats[$metric] = [];
+                foreach ($results as $result) {
+                    $stats[$metric][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
                 }
-            });
+            }
+        });
 
-            $usage = new Document([
-                'range' => $range,
-                'requests' => $stats[$metrics[0]] ?? [],
-                'network' => $stats[$metrics[1]] ?? [],
-                'storage' => $stats[$metrics[2]] ?? [],
-                'users' => $stats[$metrics[3]] ?? [],
-                'databases' => $stats[$metrics[4]] ?? [],
-                'documents' => $stats[$metrics[5]] ?? [],
-                'executions' => $stats[$metrics[6]] ?? [],
-                'buckets' => $stats[$metrics[7]] ?? [],
-            ]);
+        $now = time();
+        foreach ($metrics['period'] as $metric) {
+            $usage[$metric] = [];
+            $leap = $now - ($limit * $factor);
+            while ($leap < $now) {
+                $leap += $factor;
+                $formatDate = date($format, $leap);
+                $usage[$metric][] = [
+                    'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
+                ];
+            }
         }
 
-        $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
+        $executionsBreakdown = array_map(function ($function) use ($dbForProject) {
+            $id = $function->getId();
+            $name = $function->getAttribute('name');
+            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS);
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('functions'));
+
+        $executionsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
+            $id = $function->getId();
+            $name = $function->getAttribute('name');
+            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('functions'));
+
+        $buildsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
+            $id = $function->getId();
+            $name = $function->getAttribute('name');
+            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('functions'));
+
+        $bucketsBreakdown = array_map(function ($bucket) use ($dbForProject) {
+            $id = $bucket->getId();
+            $name = $bucket->getAttribute('name');
+            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE);
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('buckets'));
+
+        $functionsStorageBreakdown = array_map(function ($function) use ($dbForProject) {
+            $id = $function->getId();
+            $name = $function->getAttribute('name');
+            $deploymentMetric = str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE);
+            $deploymentValue = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$deploymentMetric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            $buildMetric = str_replace(['{functionInternalId}'], [$function->getInternalId()], METRIC_FUNCTION_ID_BUILDS_STORAGE);
+            $buildValue = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$buildMetric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            $value = ($buildValue['value'] ?? 0) + ($deploymentValue['value'] ?? 0);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value,
+            ];
+        }, $dbForProject->find('functions'));
+
+        $executionsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
+            $id = $function->getId();
+            $name = $function->getAttribute('name');
+            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_MB_SECONDS);
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('functions'));
+
+        $buildsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
+            $id = $function->getId();
+            $name = $function->getAttribute('name');
+            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_MB_SECONDS);
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('functions'));
+
+        // merge network inbound + outbound
+        $projectBandwidth = [];
+        foreach ($usage[METRIC_NETWORK_INBOUND] as $item) {
+            $projectBandwidth[$item['date']] ??= 0;
+            $projectBandwidth[$item['date']] += $item['value'];
+        }
+
+        foreach ($usage[METRIC_NETWORK_OUTBOUND] as $item) {
+            $projectBandwidth[$item['date']] ??= 0;
+            $projectBandwidth[$item['date']] += $item['value'];
+        }
+
+
+        $network = [];
+        foreach ($projectBandwidth as $date => $value) {
+            $network[] = [
+                'date' => $date,
+                'value' => $value
+            ];
+        }
+
+        $response->dynamic(new Document([
+            'requests' => ($usage[METRIC_NETWORK_REQUESTS]),
+            'network' => $network,
+            'users' => ($usage[METRIC_USERS]),
+            'executions' => ($usage[METRIC_EXECUTIONS]),
+            'executionsTotal' => $total[METRIC_EXECUTIONS],
+            'executionsMbSecondsTotal' => $total[METRIC_EXECUTIONS_MB_SECONDS],
+            'buildsMbSecondsTotal' => $total[METRIC_BUILDS_MB_SECONDS],
+            'documentsTotal' => $total[METRIC_DOCUMENTS],
+            'databasesTotal' => $total[METRIC_DATABASES],
+            'usersTotal' => $total[METRIC_USERS],
+            'bucketsTotal' => $total[METRIC_BUCKETS],
+            'filesStorageTotal' => $total[METRIC_FILES_STORAGE],
+            'functionsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE] + $total[METRIC_BUILDS_STORAGE],
+            'buildsStorageTotal' => $total[METRIC_BUILDS_STORAGE],
+            'deploymentsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE],
+            'executionsBreakdown' => $executionsBreakdown,
+            'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
+            'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
+            'bucketsBreakdown' => $bucketsBreakdown,
+            'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
+            'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
+            'functionsStorageBreakdown' => $functionsStorageBreakdown,
+        ]), Response::MODEL_USAGE_PROJECT);
     });
 
-// Variables
 
+// Variables
 App::post('/v1/project/variables')
-    ->desc('Create Variable')
+    ->desc('Create variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
     ->label('audits.event', 'variable.create')
@@ -176,7 +343,7 @@ App::post('/v1/project/variables')
     });
 
 App::get('/v1/project/variables')
-    ->desc('List Variables')
+    ->desc('List variables')
     ->groups(['api'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -201,7 +368,7 @@ App::get('/v1/project/variables')
     });
 
 App::get('/v1/project/variables/:variableId')
-    ->desc('Get Variable')
+    ->desc('Get variable')
     ->groups(['api'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -225,7 +392,7 @@ App::get('/v1/project/variables/:variableId')
     });
 
 App::put('/v1/project/variables/:variableId')
-    ->desc('Update Variable')
+    ->desc('Update variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -271,7 +438,7 @@ App::put('/v1/project/variables/:variableId')
     });
 
 App::delete('/v1/project/variables/:variableId')
-    ->desc('Delete Variable')
+    ->desc('Delete variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])

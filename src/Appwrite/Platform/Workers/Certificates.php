@@ -23,8 +23,10 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
 use Utopia\Locale\Locale;
+use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\System\System;
 
 class Certificates extends Action
 {
@@ -45,7 +47,8 @@ class Certificates extends Action
             ->inject('queueForMails')
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
-            ->callback(fn(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions));
+            ->inject('log')
+            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
     }
 
     /**
@@ -54,11 +57,12 @@ class Certificates extends Action
      * @param Mail $queueForMails
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
+     * @param Log $log
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions): void
+    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -70,7 +74,9 @@ class Certificates extends Action
         $domain   = new Domain($document->getAttribute('domain', ''));
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
 
-        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $skipRenewCheck);
+        $log->addTag('domain', $domain->get());
+
+        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $skipRenewCheck);
     }
 
     /**
@@ -84,7 +90,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, bool $skipRenewCheck = false): void
+    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, bool $skipRenewCheck = false): void
     {
         /**
          * 1. Read arguments and validate domain
@@ -129,20 +135,20 @@ class Certificates extends Action
 
         try {
             // Email for alerts is required by LetsEncrypt
-            $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
+            $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
             if (empty($email)) {
-                throw new Exception('You must set a valid security email address (_APP_SYSTEM_SECURITY_EMAIL_ADDRESS) to issue an SSL certificate.');
+                throw new Exception('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue an SSL certificate.');
             }
 
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
                 $mainDomain = $this->getMainDomain();
                 $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
-                $this->validateDomain($domain, $isMainDomain);
+                $this->validateDomain($domain, $isMainDomain, $log);
             }
 
             // If certificate exists already, double-check expiry date. Skip if job is forced
-            if (!$skipRenewCheck && !$this->isRenewRequired($domain->get())) {
+            if (!$skipRenewCheck && !$this->isRenewRequired($domain->get(), $log)) {
                 throw new Exception('Renew isn\'t required.');
             }
 
@@ -180,6 +186,8 @@ class Certificates extends Action
 
             // Send email to security email
             $this->notifyError($domain->get(), $e->getMessage(), $attempts, $queueForMails);
+
+            throw $e;
         } finally {
             // All actions result in new updatedAt date
             $certificate->setAttribute('updated', DateTime::now());
@@ -228,7 +236,7 @@ class Certificates extends Action
      */
     private function getMainDomain(): ?string
     {
-        $envDomain = App::getEnv('_APP_DOMAIN', '');
+        $envDomain = System::getEnv('_APP_DOMAIN', '');
         if (!empty($envDomain) && $envDomain !== 'localhost') {
             return $envDomain;
         }
@@ -247,7 +255,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Domain $domain, bool $isMainDomain): void
+    private function validateDomain(Domain $domain, bool $isMainDomain, Log $log): void
     {
         if (empty($domain->get())) {
             throw new Exception('Missing certificate domain.');
@@ -260,15 +268,22 @@ class Certificates extends Action
         if (!$isMainDomain) {
             // TODO: Would be awesome to also support A/AAAA records here. Maybe dry run?
             // Validate if domain target is properly configured
-            $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+            $target = new Domain(System::getEnv('_APP_DOMAIN_TARGET', ''));
 
             if (!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
             }
 
             // Verify domain with DNS records
+            $validationStart = \microtime(true);
             $validator = new CNAME($target->get());
             if (!$validator->isValid($domain->get())) {
+                $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
+                $log->addTag('dnsDomain', $domain->get());
+
+                $error = $validator->getLogs();
+                $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
+
                 throw new Exception('Failed to verify domain DNS records.');
             }
         } else {
@@ -284,7 +299,7 @@ class Certificates extends Action
      * @return bool True, if certificate needs to be renewed
      * @throws Exception
      */
-    private function isRenewRequired(string $domain): bool
+    private function isRenewRequired(string $domain, Log $log): bool
     {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         if (\file_exists($certPath)) {
@@ -294,12 +309,15 @@ class Certificates extends Action
             $validTo = $certData['validTo_time_t'] ?? 0;
 
             if (empty($validTo)) {
+                $log->addTag('certificateDomain', $domain);
                 throw new Exception('Unable to read certificate file (cert.pem).');
             }
 
             // LetsEncrypt allows renewal 30 days before expiry
             $expiryInAdvance = (60 * 60 * 24 * 30);
             if ($validTo - $expiryInAdvance > \time()) {
+                $log->addTag('certificateDomain', $domain);
+                $log->addExtra('certificateData', \is_array($certData) ? \json_encode($certData) : \strval($certData));
                 return false;
             }
         }
@@ -419,37 +437,28 @@ class Certificates extends Action
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
-        // Send mail to administratore mail
+        $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
 
-        $locale = new Locale(App::getEnv('_APP_LOCALE', 'en'));
-        if (!$locale->getText('emails.sender') || !$locale->getText("emails.certificate.hello") || !$locale->getText("emails.certificate.subject") || !$locale->getText("emails.certificate.body") || !$locale->getText("emails.certificate.footer") || !$locale->getText("emails.certificate.thanks") || !$locale->getText("emails.certificate.signature")) {
-            $locale->setDefault('en');
-        }
+        // Send mail to administrator mail
+        $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
+        $template->setParam('{{domain}}', $domain);
+        $template->setParam('{{error}}', \nl2br($errorMessage));
+        $template->setParam('{{attempts}}', $attempt);
+        $body = $template->render();
 
-        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
+        $emailVariables = [
+            'direction' => $locale->getText('settings.direction'),
+        ];
 
         $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
-        $body
-            ->setParam('{{domain}}', $domain)
-            ->setParam('{{error}}', $errorMessage)
-            ->setParam('{{attempt}}', $attempt)
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{hello}}', $locale->getText("emails.certificate.hello"))
-            ->setParam('{{body}}', $locale->getText("emails.certificate.body"))
-            ->setParam('{{redirect}}', 'https://' . $domain)
-            ->setParam('{{footer}}', $locale->getText("emails.certificate.footer"))
-            ->setParam('{{thanks}}', $locale->getText("emails.certificate.thanks"))
-            ->setParam('{{signature}}', $locale->getText("emails.certificate.signature"))
-            ->setParam('{{project}}', 'Console')
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{text-content}}', '#000000');
 
         $queueForMails
-            ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
-            ->setBody($body->render())
+            ->setSubject($subject)
+            ->setBody($body)
             ->setName('Appwrite Administrator')
+            ->setbodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
+            ->setVariables($emailVariables)
+            ->setRecipient(System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')))
             ->trigger();
     }
 
@@ -510,7 +519,7 @@ class Certificates extends Action
                 'ruleId' => $rule->getId(),
             ]);
             $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $rule,
                 project: $project

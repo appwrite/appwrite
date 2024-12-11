@@ -1,3 +1,45 @@
+## 13.0.0
+
+* Fixed realtime reconnection issues
+* Support for Appwrite 1.6
+* Update dependencies
+* Added `scheduledAt` attribute to `Execution` response model
+* Added `scheduledAt` parameter to `createExecution()`: Enables creating a delayed execution
+* Breaking changes:
+  * Removed `otp` parameter from `deleteMFAAuthenticator`.
+
+You can find the new syntax for breaking changes in the [Appwrite API references](https://appwrite.io/docs/references). Select version `1.6.x`.
+
+**Please note: This version is compatible with Appwrite 1.6 and later only. If you do not update your Appwrite SDK, old SDKs will not break your app. Appwrite APIs are backwards compatible.**
+
+## 12.0.4
+
+* Fixed concurrent modification error when closing realtime socket
+
+## 12.0.3
+
+* Upgrade dependencies
+
+## 12.0.2
+
+* Fixed realtime multiple subscription issues
+
+## 12.0.1
+
+* Fixed parameters using enum types
+
+## 12.0.0
+
+* Added enum support
+* Added SSR support
+* Added messaging service support
+* Added contains query support
+* Added or query support
+
+## 11.0.1
+
+* Fix between queries
+
 ## 11.0.0
 
 * Parameter `url` is now optional in the `createMembership` endpoint
@@ -83,7 +125,7 @@
     4.  `greaterEqual` renamed to `greaterThanEqual`
 * `User` response model is now renamed to `Account`
 
-**Full Changelog for Appwrite 1.0.0 can be found here**: 
+**Full Changelog for Appwrite 1.0.0 can be found here**:
 https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 
 ## 7.0.0
@@ -136,7 +178,7 @@ https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 
 ## 3.0.0
 - Support for Appwrite 0.12
-- **BREAKING** Updated database service to adapt 0.12 API 
+- **BREAKING** Updated database service to adapt 0.12 API
 - **BREAKING** Custom ID support while creating resources
 - [View all the changes](https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0120)
 
@@ -214,7 +256,7 @@ https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 - Fallback Cookies for Flutter Web if 3rd party cookies are blocked
 - Custom User Agent Support
 - [Update membership roles](https://appwrite.io/docs/references/cloud/client-flutter/teams?sdk=flutter#updateMembershipRoles)
-- New awesome image preview features, supports borderRadius, borderColor, borderWidth 
+- New awesome image preview features, supports borderRadius, borderColor, borderWidth
 
 ## 0.5.0-dev.1
 

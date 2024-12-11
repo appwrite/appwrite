@@ -2,9 +2,8 @@
 
 namespace Tests\Unit\Utopia\Response\Filters;
 
-use Appwrite\Utopia\Response\Filters\V16;
-use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Filters\V16;
 use Cron\CronExpression;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\DateTime;
@@ -35,6 +34,31 @@ class V16Test extends TestCase
                 [
                     'buildStdout' => 'Compiling source files...',
                     'buildStderr' => '',
+                ],
+            ],
+            'size and buildSize' => [
+                [
+                    'size' => 20,
+                    'buildSize' => 40
+                ],
+                [
+                    'size' => 60
+                ],
+            ],
+
+            'size and buildSize missing' => [
+                [
+                    'size' => 20
+                ],
+                [
+                    'size' => 20
+                ],
+            ],
+
+            'empty no errors' => [
+                [
+                ],
+                [
                 ],
             ],
         ];
@@ -154,9 +178,9 @@ class V16Test extends TestCase
     public function projectProvider(): array
     {
         return [
-            'providers' => [
+            'oAuthProviders' => [
                 [
-                    'providers' => [
+                    'oAuthProviders' => [
                         [
                             'key' => 'github',
                             'name' => 'GitHub',
@@ -167,7 +191,7 @@ class V16Test extends TestCase
                     ],
                 ],
                 [
-                    'providers' => [
+                    'oAuthProviders' => [
                         [
                             'name' => 'Github',
                             'appId' => 'client_id',

@@ -71,11 +71,11 @@ class Audits extends Action
             ip: $ip,
             location: '',
             data: [
-            'userId' => $user->getId(),
-            'userName' => $userName,
-            'userEmail' => $userEmail,
-            'mode' => $mode,
-            'data' => $auditPayload,
+                'userId' => $user->getId(),
+                'userName' => $userName,
+                'userEmail' => $userEmail,
+                'mode' => $mode,
+                'data' => $auditPayload,
             ]
         );
     }

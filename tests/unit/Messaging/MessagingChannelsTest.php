@@ -3,9 +3,9 @@
 namespace Tests\Unit\Messaging;
 
 use Appwrite\Auth\Auth;
-use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 

@@ -2,8 +2,8 @@
 
 namespace Tests\E2E\Services\Realtime;
 
-use WebSocket\ConnectionException;
 use WebSocket\Client as WebSocketClient;
+use WebSocket\ConnectionException;
 
 trait RealtimeBase
 {

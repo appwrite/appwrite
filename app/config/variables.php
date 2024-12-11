@@ -115,18 +115,19 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
-            // [
-            //     'name' => '_APP_CONSOLE_WHITELIST_DOMAINS',
-            //     'description' => 'This option allows you to limit creation of users to Appwrite console for users sharing the same email domains. This option is very useful for team working with company emails domain.\n\nTo enable this option, pass a list of allowed email domains separated by a comma.',
-            //     'introduction' => '',
-            //     'default' => '',
-            //     'required' => false,
-            //     'question' => '',
-            // ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_IPS',
                 'description' => "This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.\n\nTo enable/activate this option, pass a list of allowed IP addresses separated by a comma.",
                 'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_HOSTNAMES',
+                'description' => 'This option allows you to add additional hostnames to your Appwrite console. This option is very useful for allowing access to the console project from additional domains. To enable it, pass a list of allowed hostnames separated by a comma.',
+                'introduction' => '1.5.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -143,8 +144,17 @@ return [
             ],
             [
                 'name' => '_APP_SYSTEM_EMAIL_ADDRESS',
-                'description' => 'This is the sender email address that will appear on email messages sent to developers from the Appwrite console. The default value is \'team@appwrite.io\'. You should choose an email address that is allowed to be used from your SMTP server to avoid the server email ending in the users\' SPAM folders.',
+                'description' => 'This is the sender email address that will appear on email messages sent to developers from the Appwrite console. The default value is \'noreply@appwrite.io\'. You should choose an email address that is allowed to be used from your SMTP server to avoid the server email ending in the users\' SPAM folders.',
                 'introduction' => '0.7.0',
+                'default' => 'noreply@appwrite.io',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SYSTEM_TEAM_EMAIL',
+                'description' => 'This is the sender email address that will appear in the generated specs. The default value is \'team@appwrite.io\'.',
+                'introduction' => '1.6.0',
                 'default' => 'team@appwrite.io',
                 'required' => false,
                 'question' => '',
@@ -161,11 +171,29 @@ return [
             ],
             [
                 'name' => '_APP_SYSTEM_SECURITY_EMAIL_ADDRESS',
-                'description' => 'This is the email address used to issue SSL certificates for custom domains or the user agent in your webhooks payload.',
+                'description' => 'Deprecated since 1.5.1 use _APP_EMAIL_SECURITY and _APP_EMAIL_CERTIFICATES instead',
                 'introduction' => '0.7.0',
                 'default' => 'certs@appwrite.io',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EMAIL_SECURITY',
+                'description' => 'This is the email address used as the user agent in your webhooks payload.',
+                'introduction' => '1.5.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EMAIL_CERTIFICATES',
+                'description' => 'This is the email address used to issue SSL certificates for custom domains',
+                'introduction' => '1.5.1',
+                'default' => '',
+                'required' => true,
+                'question' => 'Enter an email that will be used when registering for SSL certificates',
                 'filter' => ''
             ],
             [
@@ -179,7 +207,7 @@ return [
             ],
             [
                 'name' => '_APP_LOGGING_PROVIDER',
-                'description' => 'This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, set the value to one of \'sentry\', \'raygun\', \'appSignal\', \'logOwl\' to enable the logger.',
+                'description' => 'Deprecated since 1.6.0, use `_APP_LOGGING_CONFIG` with DSN value instead. This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, set the value to one of \'sentry\', \'raygun\', \'appSignal\', \'logOwl\' to enable the logger.',
                 'introduction' => '0.12.0',
                 'default' => '',
                 'required' => false,
@@ -188,7 +216,7 @@ return [
             ],
             [
                 'name' => '_APP_LOGGING_CONFIG',
-                'description' => 'This variable configures authentication to 3rd party error logging providers. If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key. If using LogOwl, this should be LogOwl Service Ticket.',
+                'description' => 'This variable allows you to enable logging errors to third party providers. This value is empty by default, set a DSN value to one of the following `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/`, , `logowl://SERVICE_TICKET@SERIVCE_HOST/` `raygun://RAYGUN_API_KEY/`, `appSignal://API_KEY/` to enable the logger.\n\nFor versions prior `1.5.6` you can use the old syntax.\n\nOld syntax: If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key. If using LogOwl, this should be LogOwl Service Ticket.',
                 'introduction' => '0.12.0',
                 'default' => '',
                 'required' => false,
@@ -227,6 +255,15 @@ return [
                 'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
                 'introduction' => '0.13.0',
                 'default' => 6,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_SESSION_ALERTS',
+                'description' => 'This option allows you configure if a new login in the Appwrite Console should send an alert email to the user. It\'s disabled by default with value "disabled", and to enable it, pass value "enabled".',
+                'introduction' => '1.6.0',
+                'default' => 'disabled',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -337,7 +374,7 @@ return [
     ],
     [
         'category' => 'InfluxDB',
-        'description' => 'Appwrite uses an InfluxDB server for managing time-series data and server stats. The InfluxDB env vars are used to allow Appwrite server to connect to the InfluxDB container.',
+        'description' => 'Deprecated since 1.4.8.',
         'variables' => [
             [
                 'name' => '_APP_INFLUXDB_HOST',
@@ -361,7 +398,7 @@ return [
     ],
     [
         'category' => 'StatsD',
-        'description' => 'Appwrite uses a StatsD server for aggregating and sending stats data over a fast UDP connection. The StatsD env vars are used to allow Appwrite server to connect to the StatsD container.',
+        'description' => 'Deprecated since 1.4.8.',
         'variables' => [
             [
                 'name' => '_APP_STATSD_HOST',
@@ -407,7 +444,7 @@ return [
             ],
             [
                 'name' => '_APP_SMTP_SECURE',
-                'description' => 'SMTP secure connection protocol. Empty by default, change to \'tls\' if running on a secure connection.',
+                'description' => 'SMTP secure connection protocol. Empty by default, change to \'tls\' or \'ssl\' if running on a secure connection.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -440,7 +477,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMS_PROVIDER',
-                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, text-magic, telesign, msg91, and vonage.",
+                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, Textmagic, telesign, msg91, and vonage.",
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
@@ -449,7 +486,7 @@ return [
             ],
             [
                 'name' => '_APP_SMS_FROM',
-                'description' => 'Phone number used for sending out messages. Must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789).',
+                'description' => 'Phone number used for sending out messages. If using Twilio, this may be a Messaging Service SID, starting with MG. Otherwise, the number must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789). ',
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
@@ -683,9 +720,18 @@ return [
         'variables' => [
             [
                 'name' => '_APP_FUNCTIONS_SIZE_LIMIT',
-                'description' => 'The maximum size deployment in bytes. The default value is 30MB.',
+                'description' => 'The maximum size of a function in bytes. The default value is 30MB.',
                 'introduction' => '0.13.0',
                 'default' => '30000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_BUILD_SIZE_LIMIT',
+                'description' => 'The maximum size of a built deployment in bytes. The default value is 2,000,000,000 (2GB), and the maximum value is 4,294,967,295 (4.2GB).',
+                'introduction' => '1.6.0',
+                'default' => '2000000000',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -755,7 +801,7 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_SECRET',
-                'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this!',
+                'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this.',
                 'introduction' => '0.13.0',
                 'default' => 'your-secret-key',
                 'required' => false,
@@ -764,9 +810,9 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_HOST',
-                'description' => 'The host used by Appwrite to communicate with the function executor!',
+                'description' => 'The host used by Appwrite to communicate with the function executor.',
                 'introduction' => '0.13.0',
-                'default' => 'http://appwrite-executor/v1',
+                'default' => 'http://exc1/v1',
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
@@ -774,7 +820,7 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_RUNTIME_NETWORK',
-                'description' => 'Deprecated with 0.14.0, use \'OPEN_RUNTIMES_NETWORK\' instead!',
+                'description' => 'Deprecated with 0.14.0, use \'OPEN_RUNTIMES_NETWORK\' instead.',
                 'introduction' => '0.13.0',
                 'default' => 'appwrite_runtimes',
                 'required' => false,
@@ -783,7 +829,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_ENVS',
-                'description' => 'Deprecated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
+                'description' => 'Deprecated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead.',
                 'introduction' => '0.7.0',
                 'default' => 'node-16.0,php-7.4,python-3.9,ruby-3.0',
                 'required' => false,
@@ -801,7 +847,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_USERNAME',
-                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_USERNAME\' instead!',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_USERNAME\' instead.',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -810,7 +856,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_PASSWORD',
-                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_PASSWORD\' instead!',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_PASSWORD\' instead.',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -828,7 +874,7 @@ return [
             ],
             [
                 'name' => 'OPEN_RUNTIMES_NETWORK',
-                'description' => 'Deprecated with 1.2.0, use \'_APP_FUNCTIONS_RUNTIMES_NETWORK\' instead!',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_FUNCTIONS_RUNTIMES_NETWORK\' instead.',
                 'introduction' => '0.13.0',
                 'default' => 'appwrite_runtimes',
                 'required' => false,
@@ -943,6 +989,15 @@ return [
                 'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
                 'introduction' => '0.7.0',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_DELAY',
+                'description' => 'Delay value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 0 seconds.',
+                'introduction' => '1.5.0',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

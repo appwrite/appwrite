@@ -2,44 +2,44 @@
 
 namespace Appwrite\Platform\Services;
 
-use Utopia\Platform\Service;
 use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
-use Appwrite\Platform\Tasks\Schedule;
+use Appwrite\Platform\Tasks\QueueCount;
+use Appwrite\Platform\Tasks\QueueRetry;
+use Appwrite\Platform\Tasks\ScheduleExecutions;
+use Appwrite\Platform\Tasks\ScheduleFunctions;
+use Appwrite\Platform\Tasks\ScheduleMessages;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
-use Appwrite\Platform\Tasks\Hamster;
-use Appwrite\Platform\Tasks\Usage;
+use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
-use Appwrite\Platform\Tasks\VolumeSync;
-use Appwrite\Platform\Tasks\CalcTierStats;
-use Appwrite\Platform\Tasks\Upgrade;
+use Utopia\Platform\Service;
 
 class Tasks extends Service
 {
     public function __construct()
     {
-        $this->type = self::TYPE_CLI;
+        $this->type = Service::TYPE_TASK;
         $this
-            ->addAction(Version::getName(), new Version())
-            ->addAction(Usage::getName(), new Usage())
-            ->addAction(Vars::getName(), new Vars())
-            ->addAction(SSL::getName(), new SSL())
-            ->addAction(Hamster::getName(), new Hamster())
             ->addAction(Doctor::getName(), new Doctor())
             ->addAction(Install::getName(), new Install())
-            ->addAction(Upgrade::getName(), new Upgrade())
             ->addAction(Maintenance::getName(), new Maintenance())
-            ->addAction(Schedule::getName(), new Schedule())
             ->addAction(Migrate::getName(), new Migrate())
+            ->addAction(QueueCount::getName(), new QueueCount())
+            ->addAction(QueueRetry::getName(), new QueueRetry())
             ->addAction(SDKs::getName(), new SDKs())
-            ->addAction(VolumeSync::getName(), new VolumeSync())
+            ->addAction(SSL::getName(), new SSL())
+            ->addAction(ScheduleFunctions::getName(), new ScheduleFunctions())
+            ->addAction(ScheduleExecutions::getName(), new ScheduleExecutions())
+            ->addAction(ScheduleMessages::getName(), new ScheduleMessages())
             ->addAction(Specs::getName(), new Specs())
-            ->addAction(CalcTierStats::getName(), new CalcTierStats())
+            ->addAction(Upgrade::getName(), new Upgrade())
+            ->addAction(Vars::getName(), new Vars())
+            ->addAction(Version::getName(), new Version())
         ;
     }
 }

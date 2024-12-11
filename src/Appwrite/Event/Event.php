@@ -27,6 +27,9 @@ class Event
     public const USAGE_QUEUE_NAME = 'v1-usage';
     public const USAGE_CLASS_NAME = 'UsageV1';
 
+    public const USAGE_DUMP_QUEUE_NAME = 'v1-usage-dump';
+    public const USAGE_DUMP_CLASS_NAME = 'UsageDumpV1';
+
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 
@@ -46,10 +49,12 @@ class Event
     protected string $class = '';
     protected string $event = '';
     protected array $params = [];
+    protected array $sensitive = [];
     protected array $payload = [];
     protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
+    protected ?string $userId = null;
     protected bool $paused = false;
 
     /**
@@ -142,6 +147,18 @@ class Event
     }
 
     /**
+     * Set user ID for this event.
+     *
+     * @return self
+     */
+    public function setUserId(string $userId): self
+    {
+        $this->userId = $userId;
+
+        return $this;
+    }
+
+    /**
      * Get user responsible for triggering this event.
      *
      * @return ?Document
@@ -152,14 +169,27 @@ class Event
     }
 
     /**
+     * Get user responsible for triggering this event.
+     */
+    public function getUserId(): ?string
+    {
+        return $this->userId;
+    }
+
+    /**
      * Set payload for this event.
      *
      * @param array $payload
+     * @param array $sensitive
      * @return self
      */
-    public function setPayload(array $payload): self
+    public function setPayload(array $payload, array $sensitive = []): self
     {
         $this->payload = $payload;
+
+        foreach ($sensitive as $key) {
+            $this->sensitive[$key] = true;
+        }
 
         return $this;
     }
@@ -172,6 +202,19 @@ class Event
     public function getPayload(): array
     {
         return $this->payload;
+    }
+
+    public function getRealtimePayload(): array
+    {
+        $payload = [];
+
+        foreach ($this->payload as $key => $value) {
+            if (!isset($this->sensitive[$key])) {
+                $payload[$key] = $value;
+            }
+        }
+
+        return $payload;
     }
 
     /**
@@ -236,6 +279,13 @@ class Event
         return $this;
     }
 
+    public function setParamSensitive(string $key): self
+    {
+        $this->sensitive[$key] = true;
+
+        return $this;
+    }
+
     /**
      * Get param of event.
      *
@@ -274,6 +324,7 @@ class Event
         return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
+            'userId' => $this->userId,
             'payload' => $this->payload,
             'context' => $this->context,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
@@ -288,6 +339,7 @@ class Event
     public function reset(): self
     {
         $this->params = [];
+        $this->sensitive = [];
 
         return $this;
     }
@@ -448,9 +500,9 @@ class Event
                             if ($subCurrent === $current || $subCurrent === $key) {
                                 continue;
                             }
-                            $filtered1 = \array_filter($paramKeys, fn(string $k) => $k === $subCurrent);
+                            $filtered1 = \array_filter($paramKeys, fn (string $k) => $k === $subCurrent);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered1, '*', $eventPattern));
-                            $filtered2 = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                            $filtered2 = \array_filter($paramKeys, fn (string $k) => $k === $current);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', \str_replace($filtered1, '*', $eventPattern)));
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', $eventPattern));
                         }
@@ -458,7 +510,7 @@ class Event
                         if ($current === $key) {
                             continue;
                         }
-                        $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                        $filtered = \array_filter($paramKeys, fn (string $k) => $k === $current);
                         $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
                     }
                 }
