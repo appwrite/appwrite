@@ -196,7 +196,7 @@ Below is a list of currently supported platforms and languages. If you would lik
 - :white_check_mark: &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (Maintained by the Appwrite Team)
 - :white_check_mark: &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) (Maintained by the Appwrite Team)
 - :white_check_mark: &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (Maintained by the Appwrite Team)
-- :white_check_mark: &nbsp; [React Native](https://github.com/appwrite/sdk-for-react-native) (Maintained by the Appwrite Team)
+- :white_check_mark: &nbsp; [React Native](https://github.com/appwrite/sdk-for-react-native) - **Beta** (Maintained by the Appwrite Team)
 
 #### Server
 
@@ -207,7 +207,7 @@ Below is a list of currently supported platforms and languages. If you would lik
 - :white_check_mark: &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (Maintained by the Appwrite Team)
 - :white_check_mark: &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (Maintained by the Appwrite Team)
 - :white_check_mark: &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) (Maintained by the Appwrite Team)
-- :white_check_mark: &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) (Maintained by the Appwrite Team)
+- :white_check_mark: &nbsp; [Swift](https://github.com/appwrite/sdk-for-swift) (Maintained by the Appwrite Team)
 - :white_check_mark: &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Beta** (Maintained by the Appwrite Team)
 
 #### Community
