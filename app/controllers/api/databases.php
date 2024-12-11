@@ -2854,11 +2854,32 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'createDocument')
+    ->label('sdk.method', [
+        'createDocument' => [
+            'name' => 'Create Document',
+            'parameters' => [
+                'documentId',
+                'data',
+                'permissions',
+            ],
+            'required' => ['documentId', 'data'],
+            'response' => Response::MODEL_DOCUMENT,
+            'description' => '/docs/references/databases/create-document.md',
+        ],
+        'createDocuments' => [
+            'name' => 'Create Documents',
+            'parameters' => [
+                'documents'
+            ],
+            'required' => ['documents'],
+            'response' => Response::MODEL_DOCUMENT_LIST,
+            'description' => '/docs/references/databases/create-documents.md'
+        ],
+    ])
     ->label('sdk.description', '/docs/references/databases/create-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->label('sdk.response.model', [Response::MODEL_DOCUMENT, Response::MODEL_DOCUMENT_LIST])
     ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
     ->label('sdk.offline.key', '{documentId}')
     ->param('databaseId', '', new UID(), 'Database ID.')

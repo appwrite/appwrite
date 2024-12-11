@@ -121,6 +121,11 @@ class Swagger2 extends Format
             $consumes = [$route->getLabel('sdk.request.type', 'application/json')];
 
             $method = $route->getLabel('sdk.method', \uniqid());
+
+            if (!empty($method) && is_array($method)) {
+                $method = array_keys($method)[0];
+            }
+
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__ . '/../../../../' . $route->getLabel('sdk.description', '')) : null;
             $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none');
@@ -179,6 +184,10 @@ class Swagger2 extends Format
 
             if ($produces) {
                 $temp['produces'][] = $produces;
+            }
+
+            if (is_array($route->getLabel('sdk.method', ''))) {
+                $temp['x-appwrite']['multiplex'] = $route->getLabel('sdk.method', '');
             }
 
             foreach ($this->models as $value) {

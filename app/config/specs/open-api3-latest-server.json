@@ -7633,14 +7633,21 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "201": {
-                        "description": "Document",
+                        "description": "Document, or Documents List",
                         "content": {
                             "application\/json": {
                                 "schema": {
-                                    "$ref": "#\/components\/schemas\/document"
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#\/components\/schemas\/document"
+                                        },
+                                        {
+                                            "$ref": "#\/components\/schemas\/documentList"
+                                        }
+                                    ]
                                 }
                             }
                         }
@@ -7667,6 +7674,33 @@
                     "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
                     "offline-key": "{documentId}",
                     "offline-response-key": "$id",
+                    "multiplex": {
+                        "createDocument": {
+                            "name": "Create Document",
+                            "parameters": [
+                                "documentId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "documentId",
+                                "data"
+                            ],
+                            "response": "document",
+                            "description": "\/docs\/references\/databases\/create-document.md"
+                        },
+                        "createDocuments": {
+                            "name": "Create Documents",
+                            "parameters": [
+                                "documents"
+                            ],
+                            "required": [
+                                "documents"
+                            ],
+                            "response": "documentList",
+                            "description": "\/docs\/references\/databases\/create-documents.md"
+                        }
+                    },
                     "auth": {
                         "Project": [],
                         "Session": []
