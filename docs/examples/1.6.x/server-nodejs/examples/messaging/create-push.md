@@ -9,8 +9,8 @@ const messaging = new sdk.Messaging(client);
 
 const result = await messaging.createPush(
     '<MESSAGE_ID>', // messageId
-    '<TITLE>', // title
-    '<BODY>', // body
+    '<TITLE>', // title (optional)
+    '<BODY>', // body (optional)
     [], // topics (optional)
     [], // users (optional)
     [], // targets (optional)
@@ -21,7 +21,10 @@ const result = await messaging.createPush(
     '<SOUND>', // sound (optional)
     '<COLOR>', // color (optional)
     '<TAG>', // tag (optional)
-    '<BADGE>', // badge (optional)
+    null, // badge (optional)
     false, // draft (optional)
-    '' // scheduledAt (optional)
+    '', // scheduledAt (optional)
+    false, // contentAvailable (optional)
+    false, // critical (optional)
+    sdk.MessagePriority.Normal // priority (optional)
 );

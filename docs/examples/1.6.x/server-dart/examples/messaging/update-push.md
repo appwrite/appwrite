@@ -24,4 +24,7 @@ Message result = await messaging.updatePush(
     badge: 0, // (optional)
     draft: false, // (optional)
     scheduledAt: '', // (optional)
+    contentAvailable: false, // (optional)
+    critical: false, // (optional)
+    priority: MessagePriority.normal, // (optional)
 );
