@@ -209,8 +209,7 @@ class Builds extends Action
 
         try {
             if ($isNewBuild && !$isVcsEnabled) {
-                // Non-vcs+Template
-
+                // Non-VCS + Template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
                 $templateOwnerName = $template->getAttribute('ownerName', '');
                 $templateVersion = $template->getAttribute('version', '');
@@ -232,6 +231,8 @@ class Builds extends Action
                     if ($exit !== 0) {
                         throw new \Exception('Unable to clone code repository: ' . $stderr);
                     }
+
+                    Console::execute('find ' . \escapeshellarg($tmpTemplateDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
 
                     // Ensure directories
                     Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
@@ -397,6 +398,8 @@ class Builds extends Action
                 if ($directorySize > $functionsSizeLimit) {
                     throw new \Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
                 }
+
+                Console::execute('find ' . \escapeshellarg($tmpDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
 
                 $tarParamDirectory = '/tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory);
                 Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
