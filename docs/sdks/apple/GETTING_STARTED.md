@@ -33,7 +33,7 @@ Next we need to add a hook to save cookies when our app is opened by its callbac
 
 > If you're using UIKit, you can skip this section.
 
-In SwiftUI this is as simple as ensuring `.registerOAuthHanlder()` is called on the `View` you want to invoke an OAuth request from.
+In SwiftUI this is as simple as ensuring `.registerOAuthHandler()` is called on the `View` you want to invoke an OAuth request from.
 
 ### Updating the SceneDelegate for UIKit
 
@@ -75,9 +75,10 @@ let account = Account(client)
 
 do {
     let user = try await account.create(
-        userId: ID.unique(), 
-        email: "email@example.com", 
-        password: "password"
+        userId: ID.unique(),
+        email: "email@example.com",
+        password: "password",
+        name: "Walter O'Brien"
     )
     print(String(describing: user.toMap()))
 } catch {
@@ -100,9 +101,10 @@ func main() {
     
     do {
         let user = try await account.create(
-            userId: ID.unique(), 
-            email: "email@example.com", 
-            password: "password"
+            userId: ID.unique(),
+            email: "email@example.com",
+            password: "password",
+            name: "Walter O'Brien"
         )
         print(String(describing: account.toMap()))
     } catch {

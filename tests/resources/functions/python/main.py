@@ -1,28 +1,21 @@
 import json
+import os
 
-#    'req' variable has:
-#        'headers' - object with request headers
-#        'payload' - object with request body data
-#        'variables' - object with function variables
-#    'res' variable has:
-#        'send(text, status)' - function to return text response. Status code defaults to 200
-#        'json(obj, status)' - function to return JSON response. Status code defaults to 200
-#    
-#    If an error is thrown, a response with code 500 will be returned.
+def main(context):
+    context.log('Amazing Function Log')
 
-def main(request, response):
-    return response.json({
-        'APPWRITE_FUNCTION_ID' : request.variables['APPWRITE_FUNCTION_ID'],
-        'APPWRITE_FUNCTION_NAME' : request.variables['APPWRITE_FUNCTION_NAME'],
-        'APPWRITE_FUNCTION_DEPLOYMENT' : request.variables['APPWRITE_FUNCTION_DEPLOYMENT'],
-        'APPWRITE_FUNCTION_TRIGGER' : request.variables['APPWRITE_FUNCTION_TRIGGER'],
-        'APPWRITE_FUNCTION_RUNTIME_NAME' : request.variables['APPWRITE_FUNCTION_RUNTIME_NAME'],
-        'APPWRITE_FUNCTION_RUNTIME_VERSION' : request.variables['APPWRITE_FUNCTION_RUNTIME_VERSION'],
-        'APPWRITE_FUNCTION_EVENT' : request.variables['APPWRITE_FUNCTION_EVENT'],
-        'APPWRITE_FUNCTION_EVENT_DATA' : request.variables['APPWRITE_FUNCTION_EVENT_DATA'],
-        'APPWRITE_FUNCTION_DATA' : request.variables['APPWRITE_FUNCTION_DATA'],
-        'APPWRITE_FUNCTION_USER_ID' : request.variables['APPWRITE_FUNCTION_USER_ID'],
-        'APPWRITE_FUNCTION_JWT' : request.variables['APPWRITE_FUNCTION_JWT'],
-        'APPWRITE_FUNCTION_PROJECT_ID' : request.variables['APPWRITE_FUNCTION_PROJECT_ID'],
-        'CUSTOM_VARIABLE' : request.variables['CUSTOM_VARIABLE'],
+    return context.res.json({
+        'APPWRITE_FUNCTION_ID' : os.environ.get('APPWRITE_FUNCTION_ID',''),
+        'APPWRITE_FUNCTION_NAME' : os.environ.get('APPWRITE_FUNCTION_NAME',''),
+        'APPWRITE_FUNCTION_DEPLOYMENT' : os.environ.get('APPWRITE_FUNCTION_DEPLOYMENT',''),
+        'APPWRITE_FUNCTION_TRIGGER' : context.req.headers.get('x-appwrite-trigger', ''),
+        'APPWRITE_FUNCTION_RUNTIME_NAME' : os.environ.get('APPWRITE_FUNCTION_RUNTIME_NAME',''),
+        'APPWRITE_FUNCTION_RUNTIME_VERSION' : os.environ.get('APPWRITE_FUNCTION_RUNTIME_VERSION',''),
+        'APPWRITE_FUNCTION_EVENT' : context.req.headers.get('x-appwrite-event', ''),
+        'APPWRITE_FUNCTION_EVENT_DATA' : context.req.body_raw,
+        'APPWRITE_FUNCTION_DATA' : context.req.body_raw,
+        'APPWRITE_FUNCTION_USER_ID' : context.req.headers.get('x-appwrite-user-id', ''),
+        'APPWRITE_FUNCTION_JWT' : context.req.headers.get('x-appwrite-user-jwt', ''),
+        'APPWRITE_FUNCTION_PROJECT_ID' : os.environ.get('APPWRITE_FUNCTION_PROJECT_ID',''),
+        'CUSTOM_VARIABLE' : os.environ.get('CUSTOM_VARIABLE',''),
     })

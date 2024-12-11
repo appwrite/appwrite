@@ -1,0 +1,1 @@
+Check the Appwrite queue messaging servers are up and connection is successful.

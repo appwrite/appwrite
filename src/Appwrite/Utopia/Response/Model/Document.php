@@ -62,7 +62,7 @@ class Document extends Any
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Document permissions. [Learn more about permissions](/docs/permissions).',
+                'description' => 'Document permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
                 'default' => '',
                 'example' => ['read("any")'],
                 'array' => true,
@@ -72,7 +72,20 @@ class Document extends Any
     public function filter(DatabaseDocument $document): DatabaseDocument
     {
         $document->removeAttribute('$internalId');
-        $document->removeAttribute('$collection'); // $collection is the internal collection ID
+        $document->removeAttribute('$collection');
+        $document->removeAttribute('$tenant');
+
+        foreach ($document->getAttributes() as $attribute) {
+            if (\is_array($attribute)) {
+                foreach ($attribute as $subAttribute) {
+                    if ($subAttribute instanceof DatabaseDocument) {
+                        $this->filter($subAttribute);
+                    }
+                }
+            } elseif ($attribute instanceof DatabaseDocument) {
+                $this->filter($attribute);
+            }
+        }
 
         return $document;
     }
