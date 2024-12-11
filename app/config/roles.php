@@ -3,9 +3,12 @@
 use Appwrite\Auth\Auth;
 
 $member = [
+    'global',
     'public',
     'home',
     'console',
+    'graphql',
+    'sessions.write',
     'account',
     'teams.read',
     'teams.write',
@@ -19,9 +22,17 @@ $member = [
     'avatars.read',
     'execution.read',
     'execution.write',
+    'targets.read',
+    'targets.write',
+    'subscribers.write',
+    'subscribers.read',
+    'assistant.read',
 ];
 
 $admins = [
+    'global',
+    'graphql',
+    'sessions.write',
     'teams.read',
     'teams.write',
     'documents.read',
@@ -49,15 +60,34 @@ $admins = [
     'functions.write',
     'execution.read',
     'execution.write',
+    'rules.read',
+    'rules.write',
+    'migrations.read',
+    'migrations.write',
+    'vcs.read',
+    'vcs.write',
+    'targets.read',
+    'targets.write',
+    'providers.write',
+    'providers.read',
+    'messages.write',
+    'messages.read',
+    'topics.write',
+    'topics.read',
+    'subscribers.write',
+    'subscribers.read'
 ];
 
 return [
     Auth::USER_ROLE_GUESTS => [
         'label' => 'Guests',
         'scopes' => [
+            'global',
             'public',
             'home',
             'console',
+            'graphql',
+            'sessions.write',
             'documents.read',
             'documents.write',
             'files.read',
@@ -69,22 +99,22 @@ return [
     ],
     Auth::USER_ROLE_USERS => [
         'label' => 'Users',
-        'scopes' => \array_merge($member, []),
+        'scopes' => \array_merge($member),
     ],
     Auth::USER_ROLE_ADMIN => [
         'label' => 'Admin',
-        'scopes' => \array_merge($admins, []),
+        'scopes' => \array_merge($admins),
     ],
     Auth::USER_ROLE_DEVELOPER => [
         'label' => 'Developer',
-        'scopes' => \array_merge($admins, []),
+        'scopes' => \array_merge($admins),
     ],
     Auth::USER_ROLE_OWNER => [
         'label' => 'Owner',
-        'scopes' => \array_merge($member, $admins, []),
+        'scopes' => \array_merge($member, $admins),
     ],
     Auth::USER_ROLE_APPS => [
         'label' => 'Applications',
-        'scopes' => ['health.read'],
+        'scopes' => ['global', 'health.read', 'graphql'],
     ],
 ];

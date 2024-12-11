@@ -10,6 +10,13 @@ class AlgoBcrypt extends Model
     public function __construct()
     {
         // No options, because this can only be imported, and verifying doesnt require any configuration
+        $this
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Algo type.',
+                'default' => 'bcrypt',
+                'example' => 'bcrypt',
+            ]);
     }
 
     /**

@@ -2,8 +2,8 @@
 
 namespace Appwrite\Network\Validator;
 
-use Utopia\Validator\Hostname;
 use Utopia\Validator;
+use Utopia\Validator\Hostname;
 
 class Origin extends Validator
 {
@@ -14,19 +14,24 @@ class Origin extends Validator
     public const CLIENT_TYPE_FLUTTER_MACOS = 'flutter-macos';
     public const CLIENT_TYPE_FLUTTER_WINDOWS = 'flutter-windows';
     public const CLIENT_TYPE_FLUTTER_LINUX = 'flutter-linux';
+    public const CLIENT_TYPE_FLUTTER_WEB = 'flutter-web';
     public const CLIENT_TYPE_APPLE_IOS = 'apple-ios';
     public const CLIENT_TYPE_APPLE_MACOS = 'apple-macos';
     public const CLIENT_TYPE_APPLE_WATCHOS = 'apple-watchos';
     public const CLIENT_TYPE_APPLE_TVOS = 'apple-tvos';
     public const CLIENT_TYPE_ANDROID = 'android';
     public const CLIENT_TYPE_UNITY = 'unity';
+    public const CLIENT_TYPE_REACT_NATIVE_IOS = 'react-native-ios';
+    public const CLIENT_TYPE_REACT_NATIVE_ANDROID = 'react-native-android';
 
 
     public const SCHEME_TYPE_HTTP = 'http';
     public const SCHEME_TYPE_HTTPS = 'https';
     public const SCHEME_TYPE_IOS = 'appwrite-ios';
-    public const SCHEME_TYPE_ANDROID = 'appwrite-android';
     public const SCHEME_TYPE_MACOS = 'appwrite-macos';
+    public const SCHEME_TYPE_WATCHOS = 'appwrite-watchos';
+    public const SCHEME_TYPE_TVOS = 'appwrite-tvos';
+    public const SCHEME_TYPE_ANDROID = 'appwrite-android';
     public const SCHEME_TYPE_WINDOWS = 'appwrite-windows';
     public const SCHEME_TYPE_LINUX = 'appwrite-linux';
 
@@ -37,8 +42,10 @@ class Origin extends Validator
         self::SCHEME_TYPE_HTTP => 'Web',
         self::SCHEME_TYPE_HTTPS => 'Web',
         self::SCHEME_TYPE_IOS => 'iOS',
-        self::SCHEME_TYPE_ANDROID => 'Android',
         self::SCHEME_TYPE_MACOS => 'macOS',
+        self::SCHEME_TYPE_WATCHOS => 'watchOS',
+        self::SCHEME_TYPE_TVOS => 'tvOS',
+        self::SCHEME_TYPE_ANDROID => 'Android',
         self::SCHEME_TYPE_WINDOWS => 'Windows',
         self::SCHEME_TYPE_LINUX => 'Linux',
     ];
@@ -69,6 +76,7 @@ class Origin extends Validator
 
             switch ($type) {
                 case self::CLIENT_TYPE_WEB:
+                case self::CLIENT_TYPE_FLUTTER_WEB:
                     $this->clients[] = (isset($platform['hostname'])) ? $platform['hostname'] : '';
                     break;
 
@@ -79,6 +87,11 @@ class Origin extends Validator
                 case self::CLIENT_TYPE_FLUTTER_LINUX:
                 case self::CLIENT_TYPE_ANDROID:
                 case self::CLIENT_TYPE_APPLE_IOS:
+                case self::CLIENT_TYPE_APPLE_MACOS:
+                case self::CLIENT_TYPE_APPLE_WATCHOS:
+                case self::CLIENT_TYPE_APPLE_TVOS:
+                case self::CLIENT_TYPE_REACT_NATIVE_IOS:
+                case self::CLIENT_TYPE_REACT_NATIVE_ANDROID:
                     $this->clients[] = (isset($platform['key'])) ? $platform['key'] : '';
                     break;
 
