@@ -66,9 +66,9 @@ class UsageDump extends Action
                 continue;
             }
 
-            try {
-                console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
+            console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getInternalId(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
 
+            try {
                 $dbForProject = $getProjectDB($project);
                 foreach ($stats['keys'] ?? [] as $key => $value) {
                     if ($value == 0) {
