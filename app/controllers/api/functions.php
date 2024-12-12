@@ -210,7 +210,7 @@ App::post('/v1/functions')
             ->addHeader('X-RateLimit-Reset', $time);
 
         $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
-        if($enabled && $abuse->check()) {
+        if ($enabled && $abuse->check()) {
             throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
         }
         // End of temporary abuse  check
