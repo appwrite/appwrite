@@ -61,7 +61,7 @@ class Specs extends Action
         // Mock dependencies
         App::setResource('request', fn () => $this->getRequest());
         App::setResource('response', fn () => $response);
-        App::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
+        App::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
         App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
 
         $platforms = [

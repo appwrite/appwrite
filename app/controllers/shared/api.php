@@ -184,7 +184,7 @@ App::init()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
@@ -192,7 +192,7 @@ App::init()
     ->inject('servers')
     ->inject('mode')
     ->inject('team')
-    ->action(function (App $utopia, Request $request, Database $dbForConsole, Database $dbForProject, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
+    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team) {
         $route = $utopia->getRoute();
 
         if ($project->isEmpty()) {
@@ -284,8 +284,8 @@ App::init()
                     $accessedAt = $key->getAttribute('accessedAt', '');
                     if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
                         $key->setAttribute('accessedAt', DateTime::now());
-                        $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                        $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                        $dbForPlatform->updateDocument('keys', $key->getId(), $key);
+                        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                     }
 
                     $sdkValidator = new WhiteList($servers, true);
@@ -298,8 +298,8 @@ App::init()
 
                             /** Update access time as well */
                             $key->setAttribute('accessedAt', Datetime::now());
-                            $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                            $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                            $dbForPlatform->updateDocument('keys', $key->getId(), $key);
+                            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
                         }
                     }
                 }
@@ -343,7 +343,7 @@ App::init()
             $accessedAt = $project->getAttribute('accessedAt', '');
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $project->setAttribute('accessedAt', DateTime::now());
-                Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
+                Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
             }
         }
 
@@ -358,7 +358,7 @@ App::init()
                 if (APP_MODE_ADMIN !== $mode) {
                     $dbForProject->updateDocument('users', $user->getId(), $user);
                 } else {
-                    $dbForConsole->updateDocument('users', $user->getId(), $user);
+                    $dbForPlatform->updateDocument('users', $user->getId(), $user);
                 }
             }
         }

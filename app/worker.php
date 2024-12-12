@@ -41,7 +41,7 @@ Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 Server::setResource('register', fn () => $register);
 
-Server::setResource('dbForConsole', function (Cache $cache, Registry $register) {
+Server::setResource('dbForPlatform', function (Cache $cache, Registry $register) {
     $pools = $register->get('pools');
     $database = $pools
         ->get('console')
@@ -54,7 +54,7 @@ Server::setResource('dbForConsole', function (Cache $cache, Registry $register) 
     return $adapter;
 }, ['cache', 'register']);
 
-Server::setResource('project', function (Message $message, Database $dbForConsole) {
+Server::setResource('project', function (Message $message, Database $dbForPlatform) {
     $payload = $message->getPayload() ?? [];
     $project = new Document($payload['project'] ?? []);
 
@@ -62,12 +62,12 @@ Server::setResource('project', function (Message $message, Database $dbForConsol
         return $project;
     }
 
-    return $dbForConsole->getDocument('projects', $project->getId());
-}, ['message', 'dbForConsole']);
+    return $dbForPlatform->getDocument('projects', $project->getId());
+}, ['message', 'dbForPlatform']);
 
-Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForConsole) {
+Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForPlatform) {
     if ($project->isEmpty() || $project->getId() === 'console') {
-        return $dbForConsole;
+        return $dbForPlatform;
     }
 
     $pools = $register->get('pools');
@@ -108,14 +108,14 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     }
 
     return $database;
-}, ['cache', 'register', 'message', 'project', 'dbForConsole']);
+}, ['cache', 'register', 'message', 'project', 'dbForPlatform']);
 
-Server::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases): Database {
+    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases): Database {
         if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForConsole;
+            return $dbForPlatform;
         }
 
         try {
@@ -170,7 +170,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
         return $database;
     };
-}, ['pools', 'dbForConsole', 'cache']);
+}, ['pools', 'dbForPlatform', 'cache']);
 
 Server::setResource('abuseRetention', function () {
     return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
