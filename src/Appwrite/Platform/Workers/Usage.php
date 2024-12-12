@@ -75,7 +75,7 @@ class Usage extends Action
         }
 
         $this->stats[$projectId]['project'] = [
-            '$uid' => $project->getId(),
+            '$id' => $project->getId(),
             '$internalId' => $project->getInternalId(),
             'database' => $project->getAttribute('database'),
         ];
