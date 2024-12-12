@@ -292,6 +292,16 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 Console::success('[Setup] - Skip: metadata table already exists');
             }
 
+            if ($dbForProject->getCollection(Audit::COLLECTION)->isEmpty()) {
+                $audit = new Audit($dbForProject);
+                $audit->setup();
+            }
+
+            if ($dbForProject->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
+                $adapter = new TimeLimit("", 0, 1, $dbForProject);
+                $adapter->setup();
+            }
+
             foreach ($projectCollections as $key => $collection) {
                 if (($collection['$collection'] ?? '') !== Database::METADATA) {
                     continue;
