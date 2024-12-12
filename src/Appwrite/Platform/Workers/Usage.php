@@ -59,9 +59,9 @@ class Usage extends Action
             throw new Exception('Missing payload');
         }
 
-       $document = $payload['project'] ?? [];
+        $document = $payload['project'] ?? [];
 
-        if(empty($document)){
+        if (empty($document)) {
             var_dump($payload);
             return;
         }
