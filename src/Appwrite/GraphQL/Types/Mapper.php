@@ -87,7 +87,7 @@ class Mapper
 
         $names = $route->getLabel('sdk.response.model', 'none');
         $models = \is_array($names)
-            ? \array_map(static fn($m) => static::$models[$m], $names)
+            ? \array_map(static fn ($m) => static::$models[$m], $names)
             : [static::$models[$names]];
 
         foreach ($models as $model) {
@@ -150,7 +150,7 @@ class Mapper
                 'resolve' => static function ($object, $args, $context, $info) {
                     $data = \array_filter(
                         (array)$object,
-                        fn($key) => !\str_starts_with($key, '_'),
+                        fn ($key) => !\str_starts_with($key, '_'),
                         ARRAY_FILTER_USE_KEY
                     );
 
@@ -165,7 +165,7 @@ class Mapper
             $fields['status'] = [
                 'type' => Type::string(),
                 'description' => 'Status',
-                'resolve' => static fn($object, $args, $context, $info) => 'OK',
+                'resolve' => static fn ($object, $args, $context, $info) => 'OK',
             ];
         }
 
@@ -235,6 +235,7 @@ class Mapper
             case 'Utopia\Validator\Domain':
             case 'Appwrite\Network\Validator\Email':
             case 'Appwrite\Event\Validator\Event':
+            case 'Appwrite\Event\Validator\FunctionEvent':
             case 'Utopia\Validator\HexColor':
             case 'Utopia\Validator\Host':
             case 'Utopia\Validator\IP':
@@ -252,16 +253,20 @@ class Mapper
             case 'Appwrite\Utopia\Database\Validator\Queries\Base':
             case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
             case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
             case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
             case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Documents':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Installations':
+            case 'Utopia\Database\Validator\Queries\Documents':
             case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
             case 'Appwrite\Utopia\Database\Validator\Queries\Files':
             case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Rules':
             case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
             case 'Utopia\Database\Validator\Permissions':
             case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
-            case 'Appwrite\Utopia\Database\Validator\Queries':
+            case 'Utopia\Database\Validator\Queries':
             case 'Utopia\Database\Validator\Roles':
             case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
             case 'Appwrite\Utopia\Database\Validator\Queries\Users':

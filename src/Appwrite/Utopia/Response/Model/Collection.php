@@ -30,7 +30,7 @@ class Collection extends Model
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Collection permissions. [Learn more about permissions](/docs/permissions).',
+                'description' => 'Collection permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
                 'default' => '',
                 'example' => ['read("any")'],
                 'array' => true
@@ -49,13 +49,13 @@ class Collection extends Model
             ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Collection enabled.',
+                'description' => 'Collection enabled. Can be \'enabled\' or \'disabled\'. When disabled, the collection is inaccessible to users, but remains accessible to Server SDKs using API keys.',
                 'default' => true,
                 'example' => false,
             ])
             ->addRule('documentSecurity', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether document-level permissions are enabled. [Learn more about permissions](/docs/permissions).',
+                'description' => 'Whether document-level permissions are enabled. [Learn more about permissions](https://appwrite.io/docs/permissions).',
                 'default' => '',
                 'example' => true,
             ])

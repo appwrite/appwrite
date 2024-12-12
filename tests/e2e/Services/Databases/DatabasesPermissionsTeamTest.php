@@ -3,8 +3,8 @@
 namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -176,7 +176,7 @@ class DatabasesPermissionsTeamTest extends Scope
         if ($success) {
             $this->assertCount(1, $documents['body']['documents']);
         } else {
-            $this->assertCount(0, $documents['body']['documents']);
+            $this->assertEquals(401, $documents['headers']['status-code']);
         }
     }
 

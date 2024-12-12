@@ -251,7 +251,7 @@ class TeamsServerTest extends Scope
     public function testUpdateTeamMembershipRoles($team, $membership)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_TEAM_MEMBERSHIP_ROLES);
+        $query = $this->getQuery(self::$UPDATE_TEAM_MEMBERSHIP);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -268,7 +268,7 @@ class TeamsServerTest extends Scope
 
         $this->assertIsArray($membership['body']['data']);
         $this->assertArrayNotHasKey('errors', $membership['body']);
-        $membership = $membership['body']['data']['teamsUpdateMembershipRoles'];
+        $membership = $membership['body']['data']['teamsUpdateMembership'];
         $this->assertEquals(['developer', 'admin'], $membership['roles']);
     }
 
@@ -297,6 +297,7 @@ class TeamsServerTest extends Scope
         $this->assertEquals(204, $team['headers']['status-code']);
     }
 
+    /** @group cl-ignore */
     public function testDeleteTeam()
     {
         $team = $this->testCreateTeam();

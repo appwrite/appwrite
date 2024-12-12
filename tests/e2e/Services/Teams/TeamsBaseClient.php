@@ -3,7 +3,9 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait TeamsBaseClient
@@ -27,6 +29,7 @@ trait TeamsBaseClient
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
+        $this->assertFalse($response['body']['memberships'][0]['mfa']);
         $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['userName']);
         $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['userEmail']);
         $this->assertEquals($teamName, $response['body']['memberships'][0]['teamName']);
@@ -39,27 +42,9 @@ trait TeamsBaseClient
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(0)' ]
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(0, $response['body']['memberships']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ]
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(0, $response['body']['memberships']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [ 'equal("confirm", true)' ]
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -69,7 +54,33 @@ trait TeamsBaseClient
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("confirm", false)' ]
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(0, $response['body']['memberships']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('confirm', [true])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['memberships']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('confirm', [false])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -144,14 +155,14 @@ trait TeamsBaseClient
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertFalse($response['body']['mfa']);
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['userName']);
         $this->assertNotEmpty($response['body']['userEmail']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(2, $response['body']['roles']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(false, $dateValidator->isValid($response['body']['joined'])); // is null in DB
+        $this->assertEquals(false, (new DatetimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
 
         /**
@@ -204,8 +215,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(2, $response['body']['roles']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(false, $dateValidator->isValid($response['body']['joined'])); // is null in DB
+        $this->assertEquals(false, (new DatetimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
 
         $lastEmail = $this->getLastEmail();
@@ -224,10 +234,10 @@ trait TeamsBaseClient
          */
         $secondEmail = uniqid() . 'foe@localhost.test';
         $secondName = 'Another Foe';
-        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], [
             'userId' => 'unique()',
             'email' => $secondEmail,
             'password' => 'password',
@@ -363,7 +373,9 @@ trait TeamsBaseClient
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("' . $memberships['body']['memberships'][0]['$id'] . '")' ]
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => $memberships['body']['memberships'][0]['$id']]))->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -402,10 +414,9 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(2, $response['body']['roles']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['joined']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['joined']));
         $this->assertEquals(true, $response['body']['confirm']);
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
         $data['session'] = $session;
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
@@ -415,6 +426,7 @@ trait TeamsBaseClient
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(true, $response['body']['emailVerification']);
 
 
@@ -435,7 +447,7 @@ trait TeamsBaseClient
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
 
@@ -469,7 +481,7 @@ trait TeamsBaseClient
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
 
@@ -528,7 +540,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => ID::custom(''),
+            'userId' => ID::custom('asdf'),
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
@@ -622,9 +634,9 @@ trait TeamsBaseClient
         return $data;
     }
 
-     /**
-     * @depends testUpdateTeamMembershipRoles
-     */
+    /**
+    * @depends testUpdateTeamMembershipRoles
+    */
     public function testDeleteTeamMembership($data): array
     {
         $teamUid = $data['teamUid'] ?? '';

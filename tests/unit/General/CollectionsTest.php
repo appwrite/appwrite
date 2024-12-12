@@ -15,16 +15,18 @@ class CollectionsTest extends TestCase
 
     public function testDuplicateRules(): void
     {
-        foreach ($this->collections as $key => $collection) {
-            if (array_key_exists('attributes', $collection)) {
-                foreach ($collection['attributes'] as $check) {
-                    $occurrences = 0;
-                    foreach ($collection['attributes'] as $attribute) {
-                        if ($attribute['$id'] == $check['$id']) {
-                            $occurrences++;
+        foreach ($this->collections as $key => $sections) {
+            foreach ($sections as $key => $collection) {
+                if (array_key_exists('attributes', $collection)) {
+                    foreach ($collection['attributes'] as $check) {
+                        $occurrences = 0;
+                        foreach ($collection['attributes'] as $attribute) {
+                            if ($attribute['$id'] == $check['$id']) {
+                                $occurrences++;
+                            }
                         }
+                        $this->assertEquals(1, $occurrences);
                     }
-                    $this->assertEquals(1, $occurrences);
                 }
             }
         }

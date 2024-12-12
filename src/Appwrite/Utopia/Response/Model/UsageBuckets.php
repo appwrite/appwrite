@@ -12,48 +12,32 @@ class UsageBuckets extends Model
         $this
             ->addRule('range', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The time range of the usage stats.',
+                'description' => 'Time range of the usage stats.',
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('filesCount', [
+            ->addRule('filesTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of bucket files.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('filesStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of bucket files storage (in bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('files', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total number of files in this bucket.',
+                'description' => 'Aggregated  number of bucket files per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('filesStorage', [
+            ->addRule('storage', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total storage of files in this bucket.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('filesCreate', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for files created.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('filesRead', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for files read.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('filesUpdate', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for files updated.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('filesDelete', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for files deleted.',
+                'description' => 'Aggregated  number of bucket storage files (in bytes) per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
