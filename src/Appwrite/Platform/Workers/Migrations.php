@@ -355,6 +355,12 @@ class Migrations extends Action
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
 
+                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
+                    'migrationId' => $migration->getId(),
+                    'source' => $migration->getAttribute('source') ?? '',
+                    'destination' => $migration->getAttribute('destination') ?? '',
+                ]);
+
                 return;
             }
 
@@ -384,31 +390,40 @@ class Migrations extends Action
             if ($migration->getAttribute('status', '') === 'failed') {
                 Console::error('Migration('.$migration->getInternalId().':'.$migration->getId().') failed, Project('.$this->project->getInternalId().':'.$this->project->getId().')');
 
-                $destination->error();
-                $source->error();
+                if ($destination) {
+                    $destination->error();
 
-                foreach ($source->getErrors() as $error) {
-                    call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
-                        'migrationId' => $migration->getId() ?? '',
-                        'source' => $migration->getAttribute('source') ?? '',
-                        'resourceName' => $error->getResourceName(),
-                        'resourceGroup' => $error->getResourceGroup()
-                    ]);
+                    foreach ($destination->getErrors() as $error) {
+                        /** @var MigrationException $error */
+                        call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                            'migrationId' => $migration->getId(),
+                            'source' => $migration->getAttribute('source') ?? '',
+                            'destination' => $migration->getAttribute('destination') ?? '',
+                            'resourceName' => $error->getResourceName(),
+                            'resourceGroup' => $error->getResourceGroup()
+                        ]);
+                    }
                 }
 
-                foreach ($destination->getErrors() as $error) {
-                    call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
-                        'migrationId' => $migration->getId() ?? '',
-                        'source' => $migration->getAttribute('source') ?? '',
-                        'resourceName' => $error->getResourceName(),
-                        'resourceGroup' => $error->getResourceGroup()
-                    ]);
+                if ($source) {
+                    $source->error();
+
+                    foreach ($source->getErrors() as $error) {
+                        /** @var MigrationException $error */
+                        call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                            'migrationId' => $migration->getId(),
+                            'source' => $migration->getAttribute('source') ?? '',
+                            'destination' => $migration->getAttribute('destination') ?? '',
+                            'resourceName' => $error->getResourceName(),
+                            'resourceGroup' => $error->getResourceGroup()
+                        ]);
+                    }
                 }
             }
 
             if ($migration->getAttribute('status', '') === 'completed') {
-                $destination->success();
-                $source->success();
+                $destination?->success();
+                $source?->success();
             }
         }
     }
