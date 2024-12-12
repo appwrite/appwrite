@@ -104,20 +104,20 @@ App::post('/v1/migrations/firebase/oauth')
     ->param('projectId', '', new Text(65536), 'Project ID of the Firebase Project')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
     ->inject('request')
-    ->action(function (array $resources, string $projectId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations, Request $request) {
+    ->action(function (array $resources, string $projectId, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations, Request $request) {
         $firebase = new OAuth2Firebase(
             System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
             System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
             $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
 
-        $identity = $dbForConsole->findOne('identities', [
+        $identity = $dbForPlatform->findOne('identities', [
             Query::equal('provider', ['firebase']),
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
@@ -147,7 +147,7 @@ App::post('/v1/migrations/firebase/oauth')
                 ->setAttribute('providerRefreshToken', $refreshToken)
                 ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
 
-            $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
+            $dbForPlatform->updateDocument('identities', $identity->getId(), $identity);
         }
 
         if ($identity->getAttribute('secrets')) {
@@ -158,7 +158,7 @@ App::post('/v1/migrations/firebase/oauth')
             $identity = $identity
                 ->setAttribute('secrets', json_encode($serviceAccount));
 
-            $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
+            $dbForPlatform->updateDocument('identities', $identity->getId(), $identity);
         }
 
         $migration = $dbForProject->createDocument('migrations', new Document([
@@ -563,15 +563,15 @@ App::get('/v1/migrations/firebase/report/oauth')
     ->inject('response')
     ->inject('request')
     ->inject('user')
-    ->inject('dbForConsole')
-    ->action(function (array $resources, string $projectId, Response $response, Request $request, Document $user, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (array $resources, string $projectId, Response $response, Request $request, Document $user, Database $dbForPlatform) {
         $firebase = new OAuth2Firebase(
             System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
             System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
             $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
 
-        $identity = $dbForConsole->findOne('identities', [
+        $identity = $dbForPlatform->findOne('identities', [
             Query::equal('provider', ['firebase']),
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
@@ -610,7 +610,7 @@ App::get('/v1/migrations/firebase/report/oauth')
                 ->setAttribute('providerRefreshToken', $refreshToken)
                 ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
 
-            $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
+            $dbForPlatform->updateDocument('identities', $identity->getId(), $identity);
         }
 
         // Get Service Account
@@ -622,7 +622,7 @@ App::get('/v1/migrations/firebase/report/oauth')
             $identity = $identity
                 ->setAttribute('secrets', json_encode($serviceAccount));
 
-            $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
+            $dbForPlatform->updateDocument('identities', $identity->getId(), $identity);
         }
 
         $firebase = new Firebase($serviceAccount);
@@ -655,8 +655,8 @@ App::get('/v1/migrations/firebase/connect')
     ->inject('response')
     ->inject('request')
     ->inject('user')
-    ->inject('dbForConsole')
-    ->action(function (string $redirect, string $projectId, Response $response, Request $request, Document $user, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $redirect, string $projectId, Response $response, Request $request, Document $user, Database $dbForPlatform) {
         $state = \json_encode([
             'projectId' => $projectId,
             'redirect' => $redirect,
@@ -665,7 +665,7 @@ App::get('/v1/migrations/firebase/connect')
         $prefs = $user->getAttribute('prefs', []);
         $prefs['migrationState'] = $state;
         $user->setAttribute('prefs', $prefs);
-        $dbForConsole->updateDocument('users', $user->getId(), $user);
+        $dbForPlatform->updateDocument('users', $user->getId(), $user);
 
         $oauth2 = new OAuth2Firebase(
             System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
@@ -690,12 +690,12 @@ App::get('/v1/migrations/firebase/redirect')
     ->inject('project')
     ->inject('request')
     ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $code, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
+    ->inject('dbForPlatform')
+    ->action(function (string $code, Document $user, Document $project, Request $request, Response $response, Database $dbForPlatform) {
         $state = $user['prefs']['migrationState'] ?? '{}';
         $prefs['migrationState'] = '';
         $user->setAttribute('prefs', $prefs);
-        $dbForConsole->updateDocument('users', $user->getId(), $user);
+        $dbForPlatform->updateDocument('users', $user->getId(), $user);
 
         if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Installation requests from organisation members for the Appwrite Google App are currently unsupported.');
@@ -705,7 +705,7 @@ App::get('/v1/migrations/firebase/redirect')
         $redirect = $state['redirect'] ?? '';
         $projectId = $state['projectId'] ?? '';
 
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if (empty($redirect)) {
             $redirect = $request->getProtocol() . '://' . $request->getHostname() . '/console/project-$projectId/settings/migrations';
@@ -747,7 +747,7 @@ App::get('/v1/migrations/firebase/redirect')
             }
 
             // Makes sure this email is not already used in another identity
-            $identity = $dbForConsole->findOne('identities', [
+            $identity = $dbForPlatform->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
 
@@ -763,9 +763,9 @@ App::get('/v1/migrations/firebase/redirect')
                     ->setAttribute('providerRefreshToken', $refreshToken)
                     ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry));
 
-                $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
+                $dbForPlatform->updateDocument('identities', $identity->getId(), $identity);
             } else {
-                $identity = $dbForConsole->createDocument('identities', new Document([
+                $identity = $dbForPlatform->createDocument('identities', new Document([
                     '$id' => ID::unique(),
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -806,16 +806,16 @@ App::get('/v1/migrations/firebase/projects')
     ->inject('user')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('request')
-    ->action(function (Document $user, Response $response, Document $project, Database $dbForConsole, Request $request) {
+    ->action(function (Document $user, Response $response, Document $project, Database $dbForPlatform, Request $request) {
         $firebase = new OAuth2Firebase(
             System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
             System::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
             $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
 
-        $identity = $dbForConsole->findOne('identities', [
+        $identity = $dbForPlatform->findOne('identities', [
             Query::equal('provider', ['firebase']),
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
@@ -859,7 +859,7 @@ App::get('/v1/migrations/firebase/projects')
                     ->setAttribute('providerRefreshToken', $refreshToken)
                     ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
 
-                $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
+                $dbForPlatform->updateDocument('identities', $identity->getId(), $identity);
             }
 
             $projects = $firebase->getProjects($accessToken);
@@ -893,9 +893,9 @@ App::get('/v1/migrations/firebase/deauthorize')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->inject('user')
     ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (Document $user, Response $response, Database $dbForConsole) {
-        $identity = $dbForConsole->findOne('identities', [
+    ->inject('dbForPlatform')
+    ->action(function (Document $user, Response $response, Database $dbForPlatform) {
+        $identity = $dbForPlatform->findOne('identities', [
             Query::equal('provider', ['firebase']),
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
@@ -904,7 +904,7 @@ App::get('/v1/migrations/firebase/deauthorize')
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Not authenticated with Firebase'); //TODO: Replace with USER_IDENTITY_NOT_FOUND
         }
 
-        $dbForConsole->deleteDocument('identities', $identity->getId());
+        $dbForPlatform->deleteDocument('identities', $identity->getId());
 
         $response->noContent();
     });
