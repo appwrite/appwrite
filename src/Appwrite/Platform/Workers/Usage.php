@@ -59,7 +59,13 @@ class Usage extends Action
             throw new Exception('Missing payload');
         }
 
-        $project = new Document($payload['project'] ?? []);
+        $document = $payload['project'] ?? [];
+
+        if (empty($document)) {
+            var_dump($payload);
+        }
+
+        $project = new Document($document);
         $projectId = $project->getInternalId();
         foreach ($payload['reduce'] ?? [] as $document) {
             if (empty($document)) {
