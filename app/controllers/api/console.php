@@ -69,15 +69,11 @@ App::post('/v1/console/assistant')
     ->label('abuse-limit', 15)
     ->label('abuse-key', 'userId:{userId}')
     ->param('prompt', '', new Text(2000), 'Prompt. A string containing questions asked to the AI assistant.')
-    ->param('systemPrompt', '', new Text(2000), 'System Prompt. A string containing context to help the AI assistant provide better responses.')
     ->inject('response')
-    ->action(function (string $prompt, string $systemPrompt, Response $response) {
+    ->action(function (string $prompt, Response $response) {
         $ch = curl_init('http://appwrite-assistant:3003/');
         $responseHeaders = [];
-        $query = json_encode([
-            'prompt' => $prompt,
-            'systemPrompt' => $systemPrompt,
-        ]);
+        $query = json_encode(['prompt' => $prompt]);
         $headers = ['accept: text/event-stream'];
         $handleEvent = function ($ch, $data) use ($response) {
             $response->chunk($data);
