@@ -190,30 +190,33 @@ App::post('/v1/functions')
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         // Temporary abuse check
-        $abuseKey = "projectId:{projectId},url:{url}";
-        $abuseLimit = App::getEnv('_APP_FUNCTIONS_CREATION_ABUSE_LIMIT', 50);
-        $abuseTime = 86400; // 1 day
+        $abuseCheck = function () use ($project, $dbForProject, $response) {
+            $abuseKey = "projectId:{projectId},url:{url}";
+            $abuseLimit = App::getEnv('_APP_FUNCTIONS_CREATION_ABUSE_LIMIT', 50);
+            $abuseTime = 86400; // 1 day
 
-        $timeLimit = new TimeLimit($abuseKey, $abuseLimit, $abuseTime, $dbForProject);
-        $timeLimit
-            ->setParam('{projectId}', $project->getId())
-            ->setParam('{url}', '/v1/functions');
+            $timeLimit = new TimeLimit($abuseKey, $abuseLimit, $abuseTime, $dbForProject);
+            $timeLimit
+                ->setParam('{projectId}', $project->getId())
+                ->setParam('{url}', '/v1/functions');
 
-        $abuse = new Abuse($timeLimit);
-        $remaining = $timeLimit->remaining();
-        $limit = $timeLimit->limit();
-        $time = (new \DateTime($timeLimit->time()))->getTimestamp() + $abuseTime;
+            $abuse = new Abuse($timeLimit);
+            $remaining = $timeLimit->remaining();
+            $limit = $timeLimit->limit();
+            $time = (new \DateTime($timeLimit->time()))->getTimestamp() + $abuseTime;
 
-        $response
-            ->addHeader('X-RateLimit-Limit', $limit)
-            ->addHeader('X-RateLimit-Remaining', $remaining)
-            ->addHeader('X-RateLimit-Reset', $time);
+            $response
+                ->addHeader('X-RateLimit-Limit', $limit)
+                ->addHeader('X-RateLimit-Remaining', $remaining)
+                ->addHeader('X-RateLimit-Reset', $time);
 
-        $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
-        if ($enabled && $abuse->check()) {
-            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
-        }
-        // End of temporary abuse  check
+            $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+            if ($enabled && $abuse->check()) {
+                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+            }
+        };
+
+        $abuseCheck();
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
