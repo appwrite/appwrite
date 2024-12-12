@@ -57,9 +57,28 @@ class UsageDump extends Action
             throw new Exception('Missing payload');
         }
 
-        // TODO: rename both usage workers @shimonewman
+
         foreach ($payload['stats'] ?? [] as $stats) {
-            $project = new Document($stats['project'] ?? []);
+            //$project = new Document($stats['project'] ?? []);
+
+            /**
+             * Start temp bug fallback
+             */
+            $document = $stats['project'] ?? [];
+            if (!empty($document['$uid'])) {
+                $document['$id'] = $document['$uid'];
+            }
+
+            $project = new Document($document);
+
+            if (empty($project->getAttribute('database'))) {
+                var_dump($stats);
+            }
+
+            /**
+             * End temp bug fallback
+             */
+
             $numberOfKeys = !empty($stats['keys']) ? count($stats['keys']) : 0;
             $receivedAt = $stats['receivedAt'] ?? 'NONE';
             if ($numberOfKeys === 0) {
