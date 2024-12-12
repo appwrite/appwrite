@@ -65,13 +65,13 @@ class UsageDump extends Action
              * Start temp bug fallback
              */
             $document = $stats['project'] ?? [];
-            if(!empty($document['$uid'])) {
+            if (!empty($document['$uid'])) {
                 $document['$id'] = $document['$uid'];
             }
 
             $project = new Document($document);
 
-            if(empty($project->getAttribute('database'))){
+            if (empty($project->getAttribute('database'))) {
                 var_dump($stats);
             }
 
