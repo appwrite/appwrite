@@ -191,7 +191,7 @@ App::post('/v1/functions')
 
         // Temporary abuse check
         $abuseKey = "projectId:{projectId},url:{url}";
-        $abuseLimit = 5;
+        $abuseLimit = 50;
         $abuseTime = 86400; // 1 day
 
         $timeLimit = new TimeLimit($abuseKey, $abuseLimit, $abuseTime, $dbForProject);
