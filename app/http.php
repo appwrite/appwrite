@@ -265,7 +265,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
         $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
 
-        $region = System::getEnv('_APP_REGION', 'fra');
+        $region = System::getEnv('_APP_REGION', 'default');
         $cache = $app->getResource('cache');
 
         $regionDatabases = \array_filter(
@@ -292,12 +292,16 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 Console::success('[Setup] - Skip: metadata table already exists');
             }
 
+            Console::info('Checking audit collection');
             if ($dbForProject->getCollection(Audit::COLLECTION)->isEmpty()) {
+                Console::info('Creating audit collection');
                 $audit = new Audit($dbForProject);
                 $audit->setup();
             }
 
+            Console::info('Checking abuse collection');
             if ($dbForProject->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
+                Console::info('Creating abuse collection');
                 $adapter = new TimeLimit("", 0, 1, $dbForProject);
                 $adapter->setup();
             }
