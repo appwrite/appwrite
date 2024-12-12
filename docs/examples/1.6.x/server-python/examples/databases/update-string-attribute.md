@@ -13,6 +13,6 @@ result = databases.update_string_attribute(
     key = '',
     required = False,
     default = '<DEFAULT>',
-    size = None, # optional
+    size = 1, # optional
     new_key = '' # optional
 )

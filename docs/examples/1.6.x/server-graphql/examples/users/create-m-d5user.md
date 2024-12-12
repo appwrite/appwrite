@@ -33,6 +33,7 @@ mutation {
             providerId
             providerType
             identifier
+            expired
         }
         accessedAt
     }

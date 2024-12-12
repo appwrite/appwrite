@@ -23,5 +23,8 @@ const result = await messaging.updatePush(
     '<TAG>', // tag (optional)
     null, // badge (optional)
     false, // draft (optional)
-    '' // scheduledAt (optional)
+    '', // scheduledAt (optional)
+    false, // contentAvailable (optional)
+    false, // critical (optional)
+    sdk.MessagePriority.Normal // priority (optional)
 );

@@ -16,8 +16,8 @@ func main() {
     service := messaging.NewMessaging(client)
     response, error := service.CreatePush(
         "<MESSAGE_ID>",
-        "<TITLE>",
-        "<BODY>",
+        messaging.WithCreatePushTitle("<TITLE>"),
+        messaging.WithCreatePushBody("<BODY>"),
         messaging.WithCreatePushTopics([]interface{}{}),
         messaging.WithCreatePushUsers([]interface{}{}),
         messaging.WithCreatePushTargets([]interface{}{}),
@@ -28,9 +28,12 @@ func main() {
         messaging.WithCreatePushSound("<SOUND>"),
         messaging.WithCreatePushColor("<COLOR>"),
         messaging.WithCreatePushTag("<TAG>"),
-        messaging.WithCreatePushBadge("<BADGE>"),
+        messaging.WithCreatePushBadge(0),
         messaging.WithCreatePushDraft(false),
         messaging.WithCreatePushScheduledAt(""),
+        messaging.WithCreatePushContentAvailable(false),
+        messaging.WithCreatePushCritical(false),
+        messaging.WithCreatePushPriority("normal"),
     )
 
     if error != nil {

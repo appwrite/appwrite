@@ -721,12 +721,19 @@ Database::addFilter(
         $data = \json_decode($message->getAttribute('data', []), true);
         $providerType = $message->getAttribute('providerType', '');
 
-        if ($providerType === MESSAGE_TYPE_EMAIL) {
-            $searchValues = \array_merge($searchValues, [$data['subject'], MESSAGE_TYPE_EMAIL]);
-        } elseif ($providerType === MESSAGE_TYPE_SMS) {
-            $searchValues = \array_merge($searchValues, [$data['content'], MESSAGE_TYPE_SMS]);
-        } else {
-            $searchValues = \array_merge($searchValues, [$data['title'], MESSAGE_TYPE_PUSH]);
+        switch ($providerType) {
+            case MESSAGE_TYPE_EMAIL:
+                $searchValues[] = $data['subject'];
+                $searchValues[] = MESSAGE_TYPE_EMAIL;
+                break;
+            case MESSAGE_TYPE_SMS:
+                $searchValues[] = $data['content'];
+                $searchValues[] = MESSAGE_TYPE_SMS;
+                break;
+            case MESSAGE_TYPE_PUSH:
+                $searchValues[] = $data['title'] ?? '';
+                $searchValues[] = MESSAGE_TYPE_PUSH;
+                break;
         }
 
         $search = \implode(' ', \array_filter($searchValues));
