@@ -63,7 +63,6 @@ class Usage extends Action
 
         if (empty($document)) {
             var_dump($payload);
-            return;
         }
 
         $project = new Document($document);
