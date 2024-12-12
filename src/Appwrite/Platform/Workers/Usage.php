@@ -60,12 +60,13 @@ class Usage extends Action
         }
 
         $document = $payload['project'] ?? [];
+        $project = new Document($document);
 
-        if (empty($document)) {
+        if (empty($project->getAttribute('database'))) {
+            var_dump(1);
             var_dump($payload);
         }
 
-        $project = new Document($document);
         $projectId = $project->getInternalId();
         foreach ($payload['reduce'] ?? [] as $document) {
             if (empty($document)) {
@@ -78,6 +79,11 @@ class Usage extends Action
                 metrics:  $payload['metrics'],
                 getProjectDB: $getProjectDB
             );
+        }
+
+        if (empty($project->getAttribute('database'))) {
+            var_dump(2);
+            var_dump($payload);
         }
 
         $this->stats[$projectId]['project'] = [
