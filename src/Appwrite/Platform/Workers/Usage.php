@@ -63,8 +63,8 @@ class Usage extends Action
         $project = new Document($document);
 
         if (empty($project->getAttribute('database'))) {
-            var_dump(1);
             var_dump($payload);
+            return;
         }
 
         $projectId = $project->getInternalId();
@@ -81,10 +81,6 @@ class Usage extends Action
             );
         }
 
-        if (empty($project->getAttribute('database'))) {
-            var_dump(2);
-            var_dump($payload);
-        }
 
         $this->stats[$projectId]['project'] = [
             '$id' => $project->getId(),
