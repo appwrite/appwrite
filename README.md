@@ -22,7 +22,7 @@
 <!-- [![Translate](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md) -->
 <!-- [![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io) -->
 
-English | [简体中文](README-CN.md)
+English | [简体中文](README-CN.md) | [Türkçe](README-TR.md)
 
 [**Announcing Appwrite Cloud Public Beta! Sign up today!**](https://cloud.appwrite.io)
 
