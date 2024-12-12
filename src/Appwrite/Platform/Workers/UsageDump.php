@@ -71,6 +71,10 @@ class UsageDump extends Action
 
             $project = new Document($document);
 
+            if (empty($project->getAttribute('database'))) {
+                continue;
+            }
+
             /**
              * End temp bug fallback
              */
