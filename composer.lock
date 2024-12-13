@@ -3136,16 +3136,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.43.1",
+            "version": "0.43.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "e404c21e8dcf6a310bc83cf1d74e716b105598fa"
+                "reference": "374536b86d8d39066960a7da161d444a099bbc56"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/e404c21e8dcf6a310bc83cf1d74e716b105598fa",
-                "reference": "e404c21e8dcf6a310bc83cf1d74e716b105598fa",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/374536b86d8d39066960a7da161d444a099bbc56",
+                "reference": "374536b86d8d39066960a7da161d444a099bbc56",
                 "shasum": ""
             },
             "require": {
@@ -3153,7 +3153,7 @@
                 "ext-pdo": "*",
                 "ext-redis": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.53.*"
+                "utopia-php/database": "0.53.200"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
@@ -3181,9 +3181,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.43.1"
+                "source": "https://github.com/utopia-php/abuse/tree/0.43.2"
             },
-            "time": "2024-10-23T04:29:12+00:00"
+            "time": "2024-12-12T19:43:24+00:00"
         },
         {
             "name": "utopia-php/analytics",

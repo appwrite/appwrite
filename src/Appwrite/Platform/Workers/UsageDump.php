@@ -72,7 +72,7 @@ class UsageDump extends Action
             $project = new Document($document);
 
             if (empty($project->getAttribute('database'))) {
-                var_dump($stats);
+                continue;
             }
 
             /**

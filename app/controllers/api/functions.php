@@ -23,6 +23,8 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Executor\Executor;
 use MaxMind\Db\Reader;
+use Utopia\Abuse\Abuse;
+use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -186,6 +188,35 @@ App::post('/v1/functions')
     ->inject('gitHub')
     ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $scopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateVersion, string $specification, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForPlatform, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
+
+        // Temporary abuse check
+        $abuseCheck = function () use ($project, $dbForProject, $response) {
+            $abuseKey = "projectId:{projectId},url:{url}";
+            $abuseLimit = App::getEnv('_APP_FUNCTIONS_CREATION_ABUSE_LIMIT', 50);
+            $abuseTime = 86400; // 1 day
+
+            $timeLimit = new TimeLimit($abuseKey, $abuseLimit, $abuseTime, $dbForProject);
+            $timeLimit
+                ->setParam('{projectId}', $project->getId())
+                ->setParam('{url}', '/v1/functions');
+
+            $abuse = new Abuse($timeLimit);
+            $remaining = $timeLimit->remaining();
+            $limit = $timeLimit->limit();
+            $time = (new \DateTime($timeLimit->time()))->getTimestamp() + $abuseTime;
+
+            $response
+                ->addHeader('X-RateLimit-Limit', $limit)
+                ->addHeader('X-RateLimit-Remaining', $remaining)
+                ->addHeader('X-RateLimit-Reset', $time);
+
+            $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+            if ($enabled && $abuse->check()) {
+                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+            }
+        };
+
+        $abuseCheck();
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
