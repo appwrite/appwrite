@@ -73,6 +73,7 @@ $image = $this->getParam('image', '');
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
+      - _APP_COMPRESSION_MIN_SIZE_BYTES
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
       - _APP_CONSOLE_SESSION_ALERTS
@@ -166,7 +167,7 @@ $image = $this->getParam('image', '');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:5.0.12
+    image: <?php echo $organization; ?>/console:5.2.27
     restart: unless-stopped
     networks:
       - appwrite

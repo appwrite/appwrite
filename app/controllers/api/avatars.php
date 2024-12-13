@@ -55,15 +55,15 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $output = (empty($output)) ? $type : $output;
     $data = $image->output($output, $quality);
     $response
-        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+        ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
         ->setContentType('image/png')
         ->file($data);
     unset($image);
 };
 
-$getUserGitHub = function (string $userId, Document $project, Database $dbForProject, Database $dbForConsole, ?Logger $logger) {
+$getUserGitHub = function (string $userId, Document $project, Database $dbForProject, Database $dbForPlatform, ?Logger $logger) {
     try {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
         $sessions = $user->getAttribute('sessions', []);
 
@@ -122,7 +122,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
                 do {
                     $previousAccessToken = $gitHubSession->getAttribute('providerAccessToken');
 
-                    $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+                    $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
                     $sessions = $user->getAttribute('sessions', []);
 
                     $gitHubSession = new Document();
@@ -275,7 +275,7 @@ App::get('/v1/avatars/image')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType('image/png')
             ->file($data);
         unset($image);
@@ -409,7 +409,7 @@ App::get('/v1/avatars/favicon')
                 throw new Exception(Exception::AVATAR_ICON_NOT_FOUND, 'Favicon not found');
             }
             $response
-                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+                ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
                 ->setContentType('image/x-icon')
                 ->file($data);
         }
@@ -420,7 +420,7 @@ App::get('/v1/avatars/favicon')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType('image/png')
             ->file($data);
         unset($image);
@@ -461,7 +461,7 @@ App::get('/v1/avatars/qr')
         $image->crop((int) $size, (int) $size);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->send($image->output('png', 9));
     });
@@ -544,7 +544,7 @@ App::get('/v1/avatars/initials')
         $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($image->getImageBlob());
     });
@@ -565,14 +565,14 @@ App::get('/v1/cards/cloud')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('response')
     ->inject('heroes')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
+        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -583,7 +583,7 @@ App::get('/v1/cards/cloud')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
@@ -751,7 +751,7 @@ App::get('/v1/cards/cloud')
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });
@@ -772,14 +772,14 @@ App::get('/v1/cards/cloud-back')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('response')
     ->inject('heroes')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
+        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -789,7 +789,7 @@ App::get('/v1/cards/cloud-back')
             $userId = $user->getId();
             $email = $user->getAttribute('email', '');
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger);
             $githubId = $gitHub['id'] ?? '';
 
             $isHero = \array_key_exists($email, $heroes);
@@ -829,7 +829,7 @@ App::get('/v1/cards/cloud-back')
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });
@@ -850,14 +850,14 @@ App::get('/v1/cards/cloud-og')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('response')
     ->inject('heroes')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
+        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -872,7 +872,7 @@ App::get('/v1/cards/cloud-og')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
@@ -1219,7 +1219,7 @@ App::get('/v1/cards/cloud-og')
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });

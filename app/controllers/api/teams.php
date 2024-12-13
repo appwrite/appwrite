@@ -34,6 +34,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
@@ -170,6 +171,12 @@ App::get('/v1/teams')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $teamId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('teams', $teamId);
 
@@ -460,17 +467,17 @@ App::post('/v1/teams/:teamId/memberships')
             $name = empty($name) ? $invitee->getAttribute('name', '') : $name;
         } elseif (!empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
-            if (!empty($invitee) && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
+            if (!$invitee->isEmpty() && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
             }
         } elseif (!empty($phone)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-            if (!empty($invitee) && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
+            if (!$invitee->isEmpty() && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
             }
         }
 
-        if (empty($invitee)) { // Create new user if no user with same email found
+        if ($invitee->isEmpty()) { // Create new user if no user with same email found
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if (!$isPrivilegedUser && !$isAppUser && $limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
@@ -485,7 +492,7 @@ App::post('/v1/teams/:teamId/memberships')
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
-            if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+            if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
@@ -720,9 +727,9 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
-    ->action(function (string $teamId, array $queries, string $search, Response $response, Database $dbForProject) {
-
+    ->action(function (string $teamId, array $queries, string $search, Response $response, Document $project, Database $dbForProject) {
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
@@ -751,6 +758,13 @@ App::get('/v1/teams/:teamId/memberships')
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
+
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
+
             $membershipId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('memberships', $membershipId);
 
@@ -776,27 +790,51 @@ App::get('/v1/teams/:teamId/memberships')
 
         $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
-        $memberships = array_map(function ($membership) use ($dbForProject, $team) {
-            $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
+        $membershipsPrivacy =  [
+            'userName' => $project->getAttribute('auths', [])['membershipsUserName'] ?? true,
+            'userEmail' => $project->getAttribute('auths', [])['membershipsUserEmail'] ?? true,
+            'mfa' => $project->getAttribute('auths', [])['membershipsMfa'] ?? true,
+        ];
 
-            $mfa = $user->getAttribute('mfa', false);
-            if ($mfa) {
-                $totp = TOTP::getAuthenticatorFromUser($user);
-                $totpEnabled = $totp && $totp->getAttribute('verified', false);
-                $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
-                $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
-                if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
-                    $mfa = false;
+        $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
+            return $privacy || $isPrivilegedUser || $isAppUser;
+        }, $membershipsPrivacy);
+
+        $memberships = array_map(function ($membership) use ($dbForProject, $team, $membershipsPrivacy) {
+            $user = !empty(array_filter($membershipsPrivacy))
+                ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))
+                : new Document();
+
+            if ($membershipsPrivacy['mfa']) {
+                $mfa = $user->getAttribute('mfa', false);
+
+                if ($mfa) {
+                    $totp = TOTP::getAuthenticatorFromUser($user);
+                    $totpEnabled = $totp && $totp->getAttribute('verified', false);
+                    $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
+                    $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+
+                    if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
+                        $mfa = false;
+                    }
                 }
+
+                $membership->setAttribute('mfa', $mfa);
             }
 
-            $membership
-                ->setAttribute('mfa', $mfa)
-                ->setAttribute('teamName', $team->getAttribute('name'))
-                ->setAttribute('userName', $user->getAttribute('name'))
-                ->setAttribute('userEmail', $user->getAttribute('email'))
-            ;
+            if ($membershipsPrivacy['userName']) {
+                $membership->setAttribute('userName', $user->getAttribute('name'));
+            }
+
+            if ($membershipsPrivacy['userEmail']) {
+                $membership->setAttribute('userEmail', $user->getAttribute('email'));
+            }
+
+            $membership->setAttribute('teamName', $team->getAttribute('name'));
 
             return $membership;
         }, $memberships);
@@ -823,8 +861,9 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
-    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject) {
+    ->action(function (string $teamId, string $membershipId, Response $response, Document $project, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -838,27 +877,50 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
-        $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
+        $membershipsPrivacy =  [
+            'userName' => $project->getAttribute('auths', [])['membershipsUserName'] ?? true,
+            'userEmail' => $project->getAttribute('auths', [])['membershipsUserEmail'] ?? true,
+            'mfa' => $project->getAttribute('auths', [])['membershipsMfa'] ?? true,
+        ];
 
-        $mfa = $user->getAttribute('mfa', false);
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
-        if ($mfa) {
-            $totp = TOTP::getAuthenticatorFromUser($user);
-            $totpEnabled = $totp && $totp->getAttribute('verified', false);
-            $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
-            $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+        $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
+            return $privacy || $isPrivilegedUser || $isAppUser;
+        }, $membershipsPrivacy);
 
-            if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
-                $mfa = false;
+        $user = !empty(array_filter($membershipsPrivacy))
+            ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))
+            : new Document();
+
+        if ($membershipsPrivacy['mfa']) {
+            $mfa = $user->getAttribute('mfa', false);
+
+            if ($mfa) {
+                $totp = TOTP::getAuthenticatorFromUser($user);
+                $totpEnabled = $totp && $totp->getAttribute('verified', false);
+                $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
+                $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+
+                if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
+                    $mfa = false;
+                }
             }
+
+            $membership->setAttribute('mfa', $mfa);
         }
 
-        $membership
-            ->setAttribute('mfa', $mfa)
-            ->setAttribute('teamName', $team->getAttribute('name'))
-            ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email'))
-        ;
+        if ($membershipsPrivacy['userName']) {
+            $membership->setAttribute('userName', $user->getAttribute('name'));
+        }
+
+        if ($membershipsPrivacy['userEmail']) {
+            $membership->setAttribute('userEmail', $user->getAttribute('email'));
+        }
+
+        $membership->setAttribute('teamName', $team->getAttribute('name'));
 
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
     });
@@ -998,7 +1060,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
         }
 
-        if ($user->isEmpty()) {
+        $hasSession = !$user->isEmpty();
+        if (!$hasSession) {
             $user->setAttributes($dbForProject->getDocument('users', $userId)->getArrayCopy()); // Get user
         }
 
@@ -1017,39 +1080,64 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         Authorization::skip(fn () => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
 
-        // Log user in
+        // Create session for the user if not logged in
+        if (!$hasSession) {
+            Authorization::setRole(Role::user($user->getId())->toString());
 
-        Authorization::setRole(Role::user($user->getId())->toString());
+            $detector = new Detector($request->getUserAgent('UNKNOWN'));
+            $record = $geodb->get($request->getIP());
+            $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
+            $secret = Auth::tokenGenerator();
+            $session = new Document(array_merge([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'providerUid' => $user->getAttribute('email'),
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'factors' => ['email'],
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
+            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
-        $secret = Auth::tokenGenerator();
-        $session = new Document(array_merge([
-            '$id' => ID::unique(),
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
-            'provider' => Auth::SESSION_PROVIDER_EMAIL,
-            'providerUid' => $user->getAttribute('email'),
-            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
-            'factors' => ['email'],
-            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-            'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
-        ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+            $session = $dbForProject->createDocument('sessions', $session);
 
-        $session = $dbForProject->createDocument('sessions', $session
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+            Authorization::setRole(Role::user($userId)->toString());
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+            if (!Config::getParam('domainVerification')) {
+                $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+            }
 
-        Authorization::setRole(Role::user($userId)->toString());
+            $response
+                ->addCookie(
+                    name: Auth::$cookieName . '_legacy',
+                    value: Auth::encodeSession($user->getId(), $secret),
+                    expire: (new \DateTime($expire))->getTimestamp(),
+                    path: '/',
+                    domain: Config::getParam('cookieDomain'),
+                    secure: ('https' === $protocol),
+                    httponly: true
+                )
+                ->addCookie(
+                    name: Auth::$cookieName,
+                    value: Auth::encodeSession($user->getId(), $secret),
+                    expire: (new \DateTime($expire))->getTimestamp(),
+                    path: '/',
+                    domain: Config::getParam('cookieDomain'),
+                    secure: ('https' === $protocol),
+                    httponly: true,
+                    sameSite: Config::getParam('cookieSamesite')
+                )
+            ;
+        }
 
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 
@@ -1063,22 +1151,11 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setParam('membershipId', $membership->getId())
         ;
 
-        if (!Config::getParam('domainVerification')) {
-            $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
-            ;
-        }
-
-        $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-        ;
-
         $response->dynamic(
             $membership
-            ->setAttribute('teamName', $team->getAttribute('name'))
-            ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email')),
+                ->setAttribute('teamName', $team->getAttribute('name'))
+                ->setAttribute('userName', $user->getAttribute('name'))
+                ->setAttribute('userEmail', $user->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
     });

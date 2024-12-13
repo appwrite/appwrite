@@ -62,6 +62,7 @@ services:
       - redis
       # - clamav
     environment:
+      - _APP_COMPRESSION_MIN_SIZE_BYTES
       - _APP_ENV
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
