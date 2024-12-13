@@ -31,9 +31,7 @@ export class Avatars extends Service {
          * @returns {URL}
          */
         getBrowser(code: string, width?: number, height?: number, quality?: number): URL {
-            if (typeof code === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "code"');
-            }
+            Service.validateRequiredParameters({ code });
 
             let path = '/avatars/browsers/{code}'.replace('{code}', code);
             let payload: Payload = {};
@@ -81,9 +79,7 @@ export class Avatars extends Service {
          * @returns {URL}
          */
         getCreditCard(code: string, width?: number, height?: number, quality?: number): URL {
-            if (typeof code === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "code"');
-            }
+            Service.validateRequiredParameters({ code });
 
             let path = '/avatars/credit-cards/{code}'.replace('{code}', code);
             let payload: Payload = {};
@@ -122,9 +118,7 @@ export class Avatars extends Service {
          * @returns {URL}
          */
         getFavicon(url: string): URL {
-            if (typeof url === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "url"');
-            }
+            Service.validateRequiredParameters({ url });
 
             let path = '/avatars/favicon';
             let payload: Payload = {};
@@ -165,9 +159,7 @@ export class Avatars extends Service {
          * @returns {URL}
          */
         getFlag(code: string, width?: number, height?: number, quality?: number): URL {
-            if (typeof code === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "code"');
-            }
+            Service.validateRequiredParameters({ code });
 
             let path = '/avatars/flags/{code}'.replace('{code}', code);
             let payload: Payload = {};
@@ -215,9 +207,7 @@ export class Avatars extends Service {
          * @returns {URL}
          */
         getImage(url: string, width?: number, height?: number): URL {
-            if (typeof url === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "url"');
-            }
+            Service.validateRequiredParameters({ url });
 
             let path = '/avatars/image';
             let payload: Payload = {};
@@ -316,9 +306,7 @@ export class Avatars extends Service {
          * @returns {URL}
          */
         getQR(text: string, size?: number, margin?: number, download?: boolean): URL {
-            if (typeof text === 'undefined') {
-                throw new AppwriteException('Missing required parameter: "text"');
-            }
+            Service.validateRequiredParameters({ text });
 
             let path = '/avatars/qr';
             let payload: Payload = {};
