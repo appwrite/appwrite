@@ -2742,7 +2742,7 @@ App::post('/v1/messaging/messages/email')
                     ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
-                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => $project->getAttribute('region'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
@@ -2859,8 +2859,8 @@ App::post('/v1/messaging/messages/sms')
                     ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
-                $schedule = $dbForConsole->createDocument('schedules', new Document([
-                    'region' => $project->getAttribute('region'),,
+                $schedule = $dbForPlatform->createDocument('schedules', new Document([
+                    'region' => $project->getAttribute('region'),
                     'resourceType' => 'message',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
