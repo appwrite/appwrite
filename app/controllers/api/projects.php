@@ -128,7 +128,6 @@ App::post('/v1/projects')
 
         $databases = Config::getParam('pools-database', []);
 
-
         if ($region !== 'default') {
             $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
             $keys = explode(',', $databaseKeys);
@@ -234,8 +233,6 @@ App::post('/v1/projects')
             } catch (Duplicate) {
                 $create = false;
             }
-
-
 
             if ($create || $projectTables) {
                 $audit = new Audit($dbForProject);
