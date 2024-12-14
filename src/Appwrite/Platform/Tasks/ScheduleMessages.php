@@ -26,7 +26,7 @@ class ScheduleMessages extends ScheduleBase
         return 'messages';
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
+    protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
     {
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
@@ -40,7 +40,7 @@ class ScheduleMessages extends ScheduleBase
                 continue;
             }
 
-            \go(function () use ($schedule, $pools, $dbForConsole) {
+            \go(function () use ($schedule, $pools, $dbForPlatform) {
                 $queue = $pools->get('queue')->pop();
                 $connection = $queue->getResource();
                 $queueForMessaging = new Messaging($connection);
@@ -51,7 +51,7 @@ class ScheduleMessages extends ScheduleBase
                     ->setProject($schedule['project'])
                     ->trigger();
 
-                $dbForConsole->deleteDocument(
+                $dbForPlatform->deleteDocument(
                     'schedules',
                     $schedule['$id'],
                 );

@@ -52,7 +52,7 @@ CLI::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
-CLI::setResource('dbForConsole', function ($pools, $cache) {
+CLI::setResource('dbForPlatform', function ($pools, $cache) {
     $sleep = 3;
     $maxAttempts = 5;
     $attempts = 0;
@@ -67,9 +67,9 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
                 ->pop()
                 ->getResource();
 
-            $dbForConsole = new Database($dbAdapter, $cache);
+            $dbForPlatform = new Database($dbAdapter, $cache);
 
-            $dbForConsole
+            $dbForPlatform
                 ->setNamespace('_console')
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', 'console');
@@ -78,7 +78,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             $collections = Config::getParam('collections', [])['console'];
             $last = \array_key_last($collections);
 
-            if (!($dbForConsole->exists($dbForConsole->getDatabase(), $last))) { /** TODO cache ready variable using registry */
+            if (!($dbForPlatform->exists($dbForPlatform->getDatabase(), $last))) { /** TODO cache ready variable using registry */
                 throw new Exception('Tables not ready yet.');
             }
 
@@ -94,15 +94,15 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
         throw new Exception("Console is not ready yet. Please try again later.");
     }
 
-    return $dbForConsole;
+    return $dbForPlatform;
 }, ['pools', 'cache']);
 
-CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForConsole;
+            return $dbForPlatform;
         }
 
         try {
@@ -158,7 +158,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         return $database;
     };
-}, ['pools', 'dbForConsole', 'cache']);
+}, ['pools', 'dbForPlatform', 'cache']);
 
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
