@@ -743,7 +743,7 @@ App::error()
     ->inject('log')
     ->inject('queueForUsage')
     ->inject('devKey')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Usage $queueForUsage, Document $devKey) {
+    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Usage $queueForUsage) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
@@ -949,7 +949,7 @@ App::error()
 
         // TODO filter out secrets and server details when not in development
         // but devKey is provided
-        $output = ((App::isDevelopment()) || (!$devKey->isEmpty())) ? [
+        $output = (App::isDevelopment()) ? [
             'message' => $message,
             'code' => $code,
             'file' => $file,
@@ -990,7 +990,7 @@ App::error()
 
         $response->dynamic(
             new Document($output),
-            $utopia->isDevelopment() || !$devKey->isEmpty() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
+            $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
         );
     });
 
