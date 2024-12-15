@@ -27,7 +27,7 @@ class CreateKey extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/projects/:projectId/development-keys')
+            ->setHttpPath('/v1/projects/:projectId/dev-keys')
             ->desc('Create dev key')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.write')

@@ -22,7 +22,7 @@ class DeleteKey extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
-            ->setHttpPath('/v1/projects/:projectId/development-keys/:keyId')
+            ->setHttpPath('/v1/projects/:projectId/dev-keys/:keyId')
             ->desc('Delete dev key')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.write')

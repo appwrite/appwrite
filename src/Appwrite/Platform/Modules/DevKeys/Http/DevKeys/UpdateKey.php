@@ -23,7 +23,7 @@ class UpdateKey extends Action
     public function __construct()
     {
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
-            ->setHttpPath('/v1/projects/:projectId/development-keys/:keyId')
+            ->setHttpPath('/v1/projects/:projectId/dev-keys/:keyId')
             ->desc('Update dev key')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.write')

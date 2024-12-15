@@ -23,7 +23,7 @@ class ListKeys extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/projects/:projectId/development-keys')
+            ->setHttpPath('/v1/projects/:projectId/dev-keys')
             ->desc('List dev keys')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.read')

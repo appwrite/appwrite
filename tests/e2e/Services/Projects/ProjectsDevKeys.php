@@ -15,7 +15,7 @@ trait ProjectsDevKeys
     {
         $id = $data['projectId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/development-keys', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -31,7 +31,7 @@ trait ProjectsDevKeys
         $this->assertEmpty($response['body']['accessedAt']);
 
         /** TEST expiry date is required */
-        $res = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/development-keys', array_merge([
+        $res = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -57,7 +57,7 @@ trait ProjectsDevKeys
     {
         $id = $data['projectId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/development-keys', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/dev-keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -79,7 +79,7 @@ trait ProjectsDevKeys
         $id = $data['projectId'] ?? '';
         $keyId = $data['keyId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/development-keys/' . $keyId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/dev-keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -95,7 +95,7 @@ trait ProjectsDevKeys
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/development-keys/error', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/dev-keys/error', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -116,7 +116,7 @@ trait ProjectsDevKeys
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/development-keys', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -159,7 +159,7 @@ trait ProjectsDevKeys
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/development-keys', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -181,7 +181,7 @@ trait ProjectsDevKeys
         /**
          * Test for FAILURE after expire
          */
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/development-keys', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -222,7 +222,7 @@ trait ProjectsDevKeys
         $id = $data['projectId'] ?? '';
         $keyId = $data['keyId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/development-keys/' . $keyId, array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/dev-keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -237,7 +237,7 @@ trait ProjectsDevKeys
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertEmpty($response['body']['accessedAt']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/development-keys/' . $keyId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/dev-keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -261,7 +261,7 @@ trait ProjectsDevKeys
         $id = $data['projectId'] ?? '';
         $keyId = $data['keyId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/development-keys/' . $keyId, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/dev-keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -282,7 +282,7 @@ trait ProjectsDevKeys
         ]);
         $this->assertEquals(429, $res['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/development-keys/' . $keyId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/dev-keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -293,7 +293,7 @@ trait ProjectsDevKeys
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/development-keys/error', array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/dev-keys/error', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
