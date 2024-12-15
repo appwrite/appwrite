@@ -176,6 +176,40 @@ trait ProjectsDevKeys
             'password' => 'password'
         ]);
         $this->assertEquals(429, $res['headers']['status-code']);
+
+
+        /**
+         * Test for FAILURE after expire
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/development-keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Key Test',
+            'expire' => DateTime::addSeconds(new \DateTime(), 5),
+        ]);
+
+        $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-dev-key' => $response['body']['secret']
+        ], [
+            'email' => 'user@appwrite.io',
+            'password' => 'password'
+        ]);
+        $this->assertEquals(401, $res['headers']['status-code']);
+
+        sleep(5);
+
+        $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-dev-key' => $response['body']['secret']
+        ], [
+            'email' => 'user@appwrite.io',
+            'password' => 'password'
+        ]);
+        $this->assertEquals(429, $res['headers']['status-code']);
     }
 
 
