@@ -38,19 +38,19 @@ class UpdateKey extends Action
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
             ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.')
             ->inject('response')
-            ->inject('dbForConsole')
-            ->callback(fn ($projectId, $keyId, $name, $expire, $response, $dbForConsole) => $this->action($projectId, $keyId, $name, $expire, $response, $dbForConsole));
+            ->inject('dbForPlatform')
+            ->callback(fn ($projectId, $keyId, $name, $expire, $response, $dbForPlatform) => $this->action($projectId, $keyId, $name, $expire, $response, $dbForPlatform));
     }
-    public function action(string $projectId, string $keyId, string $name, ?string $expire, Response $response, Database $dbForConsole)
+    public function action(string $projectId, string $keyId, string $name, ?string $expire, Response $response, Database $dbForPlatform)
     {
 
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $key = $dbForConsole->findOne('devKeys', [
+        $key = $dbForPlatform->findOne('devKeys', [
             Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
@@ -63,9 +63,9 @@ class UpdateKey extends Action
             ->setAttribute('name', $name)
             ->setAttribute('expire', $expire);
 
-        $dbForConsole->updateDocument('devKeys', $key->getId(), $key);
+        $dbForPlatform->updateDocument('devKeys', $key->getId(), $key);
 
-        $dbForConsole->purgeCachedDocument('projects', $project->getId());
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($key, Response::MODEL_DEV_KEY);
     }

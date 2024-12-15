@@ -41,13 +41,13 @@ class CreateKey extends Action
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
             ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.', false)
             ->inject('response')
-            ->inject('dbForConsole')
-            ->callback(fn ($projectId, $name, $expire, $response, $dbForConsole) => $this->action($projectId, $name, $expire, $response, $dbForConsole));
+            ->inject('dbForPlatform')
+            ->callback(fn ($projectId, $name, $expire, $response, $dbForPlatform) => $this->action($projectId, $name, $expire, $response, $dbForPlatform));
     }
 
-    public function action(string $projectId, string $name, ?string $expire, Response $response, Database $dbForConsole)
+    public function action(string $projectId, string $name, ?string $expire, Response $response, Database $dbForPlatform)
     {
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -69,9 +69,9 @@ class CreateKey extends Action
             'secret' => \bin2hex(\random_bytes(128)),
         ]);
 
-        $key = $dbForConsole->createDocument('devKeys', $key);
+        $key = $dbForPlatform->createDocument('devKeys', $key);
 
-        $dbForConsole->purgeCachedDocument('projects', $project->getId());
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

@@ -34,20 +34,20 @@ class DeleteKey extends Action
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('keyId', '', new UID(), 'Key unique ID.')
             ->inject('response')
-            ->inject('dbForConsole')
-            ->callback(fn ($projectId, $keyId, $response, $dbForConsole) => $this->action($projectId, $keyId, $response, $dbForConsole));
+            ->inject('dbForPlatform')
+            ->callback(fn ($projectId, $keyId, $response, $dbForPlatform) => $this->action($projectId, $keyId, $response, $dbForPlatform));
     }
 
-    public function action(string $projectId, string $keyId, Response $response, Database $dbForConsole)
+    public function action(string $projectId, string $keyId, Response $response, Database $dbForPlatform)
     {
 
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $key = $dbForConsole->findOne('devKeys', [
+        $key = $dbForPlatform->findOne('devKeys', [
             Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
@@ -56,9 +56,9 @@ class DeleteKey extends Action
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        $dbForConsole->deleteDocument('devKeys', $key->getId());
+        $dbForPlatform->deleteDocument('devKeys', $key->getId());
 
-        $dbForConsole->purgeCachedDocument('projects', $project->getId());
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $response->noContent();
     }

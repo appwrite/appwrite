@@ -35,20 +35,20 @@ class ListKeys extends Action
             ->label('sdk.response.model', Response::MODEL_DEV_KEY_LIST)
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->inject('response')
-            ->inject('dbForConsole')
-            ->callback(fn ($projectId, $response, $dbForConsole) => $this->action($projectId, $response, $dbForConsole));
+            ->inject('dbForPlatform')
+            ->callback(fn ($projectId, $response, $dbForPlatform) => $this->action($projectId, $response, $dbForPlatform));
     }
 
-    public function action(string $projectId, Response $response, Database $dbForConsole)
+    public function action(string $projectId, Response $response, Database $dbForPlatform)
     {
 
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $keys = $dbForConsole->find('devKeys', [
+        $keys = $dbForPlatform->find('devKeys', [
             Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::limit(5000),
         ]);
