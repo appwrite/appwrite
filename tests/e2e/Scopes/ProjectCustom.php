@@ -105,8 +105,10 @@ trait ProjectCustom
         $this->assertNotEmpty($key['body']['secret']);
 
         $devKey = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/dev-keys', array_merge([
+            'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
