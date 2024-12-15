@@ -118,7 +118,7 @@ trait AccountBase
             'password' => $shortPassword
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $longPassword = '';
         for ($i = 0; $i < 257; $i++) { // 256 is the limit
@@ -135,7 +135,7 @@ trait AccountBase
             'password' => $longPassword,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return [
             'id' => $id,
@@ -156,7 +156,7 @@ trait AccountBase
             'email' => 'otpuser@appwrite.io'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code'], );
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertNotEmpty($response['body']['userId']);
