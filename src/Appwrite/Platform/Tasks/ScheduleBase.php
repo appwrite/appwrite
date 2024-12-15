@@ -25,7 +25,7 @@ abstract class ScheduleBase extends Action
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
     abstract public static function getCollectionId(): string;
-    abstract protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void;
+    abstract protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void;
 
     public function __construct()
     {
@@ -34,9 +34,9 @@ abstract class ScheduleBase extends Action
         $this
             ->desc("Execute {$type}s scheduled in Appwrite")
             ->inject('pools')
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
             ->inject('getProjectDB')
-            ->callback(fn (Group $pools, Database $dbForConsole, callable $getProjectDB) => $this->action($pools, $dbForConsole, $getProjectDB));
+            ->callback(fn (Group $pools, Database $dbForPlatform, callable $getProjectDB) => $this->action($pools, $dbForPlatform, $getProjectDB));
     }
 
     /**
@@ -44,7 +44,7 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(Group $pools, Database $dbForConsole, callable $getProjectDB): void
+    public function action(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
@@ -56,8 +56,8 @@ abstract class ScheduleBase extends Action
          * @throws Exception
          * @var Document $schedule
          */
-        $getSchedule = function (Document $schedule) use ($dbForConsole, $getProjectDB): array {
-            $project = $dbForConsole->getDocument('projects', $schedule->getAttribute('projectId'));
+        $getSchedule = function (Document $schedule) use ($dbForPlatform, $getProjectDB): array {
+            $project = $dbForPlatform->getDocument('projects', $schedule->getAttribute('projectId'));
 
             $resource = $getProjectDB($project)->getDocument(
                 static::getCollectionId(),
@@ -91,7 +91,7 @@ abstract class ScheduleBase extends Action
                 $paginationQueries[] = Query::cursorAfter($latestDocument);
             }
 
-            $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
+            $results = $dbForPlatform->find('schedules', \array_merge($paginationQueries, [
                 Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                 Query::equal('resourceType', [static::getSupportedResource()]),
                 Query::equal('active', [true]),
@@ -119,11 +119,11 @@ abstract class ScheduleBase extends Action
 
         Console::success("Starting timers at " . DateTime::now());
 
-        run(function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $pools, $getProjectDB) {
+        run(function () use ($dbForPlatform, &$lastSyncUpdate, $getSchedule, $pools, $getProjectDB) {
             /**
              * The timer synchronize $schedules copy with database collection.
              */
-            Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $pools) {
+            Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, &$lastSyncUpdate, $getSchedule, $pools) {
                 $time = DateTime::now();
                 $timerStart = \microtime(true);
 
@@ -141,7 +141,7 @@ abstract class ScheduleBase extends Action
                         $paginationQueries[] = Query::cursorAfter($latestDocument);
                     }
 
-                    $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
+                    $results = $dbForPlatform->find('schedules', \array_merge($paginationQueries, [
                         Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
                         Query::equal('resourceType', [static::getSupportedResource()]),
                         Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate),
@@ -179,10 +179,10 @@ abstract class ScheduleBase extends Action
 
             Timer::tick(
                 static::ENQUEUE_TIMER * 1000,
-                fn () => $this->enqueueResources($pools, $dbForConsole, $getProjectDB)
+                fn () => $this->enqueueResources($pools, $dbForPlatform, $getProjectDB)
             );
 
-            $this->enqueueResources($pools, $dbForConsole, $getProjectDB);
+            $this->enqueueResources($pools, $dbForPlatform, $getProjectDB);
         });
     }
 }

@@ -2724,8 +2724,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
@@ -2804,8 +2804,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
@@ -3136,16 +3136,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.43.1",
+            "version": "0.43.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "e404c21e8dcf6a310bc83cf1d74e716b105598fa"
+                "reference": "374536b86d8d39066960a7da161d444a099bbc56"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/e404c21e8dcf6a310bc83cf1d74e716b105598fa",
-                "reference": "e404c21e8dcf6a310bc83cf1d74e716b105598fa",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/374536b86d8d39066960a7da161d444a099bbc56",
+                "reference": "374536b86d8d39066960a7da161d444a099bbc56",
                 "shasum": ""
             },
             "require": {
@@ -3153,7 +3153,7 @@
                 "ext-pdo": "*",
                 "ext-redis": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.53.*"
+                "utopia-php/database": "0.53.200"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
@@ -3181,9 +3181,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.43.1"
+                "source": "https://github.com/utopia-php/abuse/tree/0.43.2"
             },
-            "time": "2024-10-23T04:29:12+00:00"
+            "time": "2024-12-12T19:43:24+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -3678,16 +3678,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.14",
+            "version": "0.33.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "45a5a2db3602fa054096f378482c7da9936f5850"
+                "reference": "83b0628900c2c53e8c3efbf069f3e13050295edc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/45a5a2db3602fa054096f378482c7da9936f5850",
-                "reference": "45a5a2db3602fa054096f378482c7da9936f5850",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/83b0628900c2c53e8c3efbf069f3e13050295edc",
+                "reference": "83b0628900c2c53e8c3efbf069f3e13050295edc",
                 "shasum": ""
             },
             "require": {
@@ -3719,9 +3719,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.14"
+                "source": "https://github.com/utopia-php/http/tree/0.33.15"
             },
-            "time": "2024-11-20T12:39:10+00:00"
+            "time": "2024-12-10T13:07:04+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -4575,16 +4575,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.8.5",
+            "version": "0.8.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "7622330628d53844a3873ca873338150756bab82"
+                "reference": "b10225f54d5670f09f83e82e09de9d820ada6931"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/7622330628d53844a3873ca873338150756bab82",
-                "reference": "7622330628d53844a3873ca873338150756bab82",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/b10225f54d5670f09f83e82e09de9d820ada6931",
+                "reference": "b10225f54d5670f09f83e82e09de9d820ada6931",
                 "shasum": ""
             },
             "require": {
@@ -4618,9 +4618,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.8.5"
+                "source": "https://github.com/utopia-php/vcs/tree/0.8.6"
             },
-            "time": "2024-11-11T18:33:10+00:00"
+            "time": "2024-12-10T13:13:23+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -7890,8 +7890,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
@@ -7966,8 +7966,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
@@ -8044,8 +8044,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
@@ -8122,8 +8122,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
