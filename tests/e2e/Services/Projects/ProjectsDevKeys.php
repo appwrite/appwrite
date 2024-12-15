@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Projects;
 
+use Appwrite\ID;
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
 
@@ -126,7 +127,7 @@ trait ProjectsDevKeys
 
         $devKey = $response['body']['secret'];
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 11; $i++) {
             $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $id,
@@ -134,7 +135,7 @@ trait ProjectsDevKeys
                 'email' => 'user@appwrite.io',
                 'password' => 'password'
             ]);
-            $this->assertEquals(200, $res['headers']['status-code']);
+            $this->assertEquals(401, $res['headers']['status-code']);
         }
         $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
