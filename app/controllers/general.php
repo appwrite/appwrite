@@ -48,7 +48,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForConsole, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname)
+function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname)
 {
     $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
 
@@ -59,10 +59,10 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
     // TODO: @christyjacob remove once we migrate the rules in 1.7.x
     if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-        $route = Authorization::skip(fn () => $dbForConsole->getDocument('rules', md5($host)));
+        $route = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($host)));
     } else {
         $route = Authorization::skip(
-            fn () => $dbForConsole->find('rules', [
+            fn () => $dbForPlatform->find('rules', [
                 Query::equal('domain', [$host]),
                 Query::limit(1)
             ])
@@ -91,7 +91,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
     $projectId = $route->getAttribute('projectId');
     $project = Authorization::skip(
-        fn () => $dbForConsole->getDocument('projects', $projectId)
+        fn () => $dbForPlatform->getDocument('projects', $projectId)
     );
     if (array_key_exists('proxy', $project->getAttribute('services', []))) {
         $status = $project->getAttribute('services', [])['proxy'];
@@ -137,7 +137,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $requestHeaders = $request->getHeaders();
 
-        $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+        $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
         $dbForProject = $getProjectDB($project);
 
@@ -461,7 +461,7 @@ App::init()
     ->inject('response')
     ->inject('console')
     ->inject('project')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('locale')
     ->inject('localeCodes')
@@ -474,7 +474,7 @@ App::init()
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
     ->inject('devKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, Usage $queueForUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, callable $isResourceBlocked, string $previewHostname, Document $devKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, Usage $queueForUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, callable $isResourceBlocked, string $previewHostname, Document $devKey) {
         /*
         * Appwrite Router
         */
@@ -482,7 +482,7 @@ App::init()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
-            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
                 return;
             }
         }
@@ -532,9 +532,9 @@ App::init()
                 } else {
                     // TODO: @christyjacob remove once we migrate the rules in 1.7.x
                     if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-                        $domainDocument = $dbForConsole->getDocument('rules', md5($envDomain));
+                        $domainDocument = $dbForPlatform->getDocument('rules', md5($envDomain));
                     } else {
-                        $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
+                        $domainDocument = $dbForPlatform->findOne('rules', [Query::orderAsc('$id')]);
                     }
                     $mainDomain = !$domainDocument->isEmpty() ? $domainDocument->getAttribute('domain') : $domain->get();
                 }
@@ -544,9 +544,9 @@ App::init()
                 } else {
                     // TODO: @christyjacob remove once we migrate the rules in 1.7.x
                     if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-                        $domainDocument = $dbForConsole->getDocument('rules', md5($domain->get()));
+                        $domainDocument = $dbForPlatform->getDocument('rules', md5($domain->get()));
                     } else {
-                        $domainDocument = $dbForConsole->findOne('rules', [
+                        $domainDocument = $dbForPlatform->findOne('rules', [
                             Query::equal('domain', [$domain->get()])
                         ]);
                     }
@@ -562,7 +562,7 @@ App::init()
                             'projectInternalId' => 'console'
                         ]);
 
-                        $domainDocument = $dbForConsole->createDocument('rules', $domainDocument);
+                        $domainDocument = $dbForPlatform->createDocument('rules', $domainDocument);
 
                         Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
 
@@ -699,7 +699,7 @@ App::options()
     ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
@@ -708,7 +708,7 @@ App::options()
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
     ->inject('devKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname, Document $devKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname, Document $devKey) {
         /*
         * Appwrite Router
         */
@@ -716,7 +716,7 @@ App::options()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
-            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname)) {
                 return;
             }
         }
@@ -1002,7 +1002,7 @@ App::get('/robots.txt')
     ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
@@ -1010,7 +1010,7 @@ App::get('/robots.txt')
     ->inject('geodb')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -1018,7 +1018,7 @@ App::get('/robots.txt')
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
-            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname);
+            router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname);
         }
     });
 
@@ -1030,7 +1030,7 @@ App::get('/humans.txt')
     ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
@@ -1038,7 +1038,7 @@ App::get('/humans.txt')
     ->inject('geodb')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Func $queueForFunctions, Reader $geodb, callable $isResourceBlocked, string $previewHostname) {
         $host = $request->getHostname() ?? '';
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
 
@@ -1046,7 +1046,7 @@ App::get('/humans.txt')
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
-            router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname);
+            router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $queueForFunctions, $geodb, $isResourceBlocked, $previewHostname);
         }
     });
 
@@ -1110,9 +1110,9 @@ App::get('/v1/ping')
     ->label('event', 'projects.[projectId].ping')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForConsole')
+    ->inject('dbForPlatform')
     ->inject('queueForEvents')
-    ->action(function (Response $response, Document $project, Database $dbForConsole, Event $queueForEvents) {
+    ->action(function (Response $response, Document $project, Database $dbForPlatform, Event $queueForEvents) {
         if ($project->isEmpty()) {
             throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
         }
@@ -1124,8 +1124,8 @@ App::get('/v1/ping')
             ->setAttribute('pingCount', $pingCount)
             ->setAttribute('pingedAt', $pingedAt);
 
-        Authorization::skip(function () use ($dbForConsole, $project) {
-            $dbForConsole->updateDocument('projects', $project->getId(), $project);
+        Authorization::skip(function () use ($dbForPlatform, $project) {
+            $dbForPlatform->updateDocument('projects', $project->getId(), $project);
         });
 
         $queueForEvents
