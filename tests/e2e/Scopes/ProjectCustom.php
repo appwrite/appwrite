@@ -3,6 +3,7 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 
 trait ProjectCustom
@@ -103,6 +104,17 @@ trait ProjectCustom
         $this->assertNotEmpty($key['body']);
         $this->assertNotEmpty($key['body']['secret']);
 
+        $devKey = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/development-keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Key Test',
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
+        ]);
+        $this->assertEquals(201, $devKey['headers']['status-code']);
+        $this->assertNotEmpty($devKey['body']);
+        $this->assertNotEmpty($devKey['body']['secret']);
+
         $webhook = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/webhooks', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -143,9 +155,11 @@ trait ProjectCustom
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
+            'devKey' => $devKey['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
             'signatureKey' => $webhook['body']['signatureKey'],
         ];
+
         if ($fresh) {
             return $project;
         }

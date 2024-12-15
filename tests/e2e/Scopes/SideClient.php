@@ -4,12 +4,17 @@ namespace Tests\E2E\Scopes;
 
 trait SideClient
 {
-    public function getHeaders(): array
+    public function getHeaders(bool $devKey = true): array
     {
-        return [
+        $headers = [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->getUser()['session'],
+
         ];
+        if ($devKey) {
+            $headers['x-appwrite-dev-key'] = $this->getProject()['devKey'];
+        }
+        return $headers;
     }
 
     /**
