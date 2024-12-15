@@ -11,7 +11,7 @@ trait SideClient
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->getUser()['session'],
 
         ];
-        if ($devKey) {
+        if ($devKey && isset($this->getProject()['devKey'])) {
             $headers['x-appwrite-dev-key'] = $this->getProject()['devKey'];
         }
         return $headers;

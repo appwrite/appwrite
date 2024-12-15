@@ -126,7 +126,7 @@ trait ProjectsDevKeys
 
         $devKey = $response['body']['secret'];
 
-        for ($i = 0; $i < 11; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             $res = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $id,
