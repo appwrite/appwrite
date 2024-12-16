@@ -3808,7 +3808,7 @@ App::post('/v1/account/mfa/authenticators/:type')
         responseModel: Response::MODEL_MFA_TYPE,
         offlineModel: '/account',
         offlineKey: 'current'
-   ))
+    ))
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator. Must be `' . Type::TOTP . '`')
     ->inject('requestTimestamp')
     ->inject('response')

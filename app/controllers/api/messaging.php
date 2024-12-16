@@ -23,7 +23,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
-use Tests\Unit\Auth\AuthTest;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;

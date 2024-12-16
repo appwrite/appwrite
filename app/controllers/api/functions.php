@@ -1688,7 +1688,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/build')
     ->label('scope', 'functions.write')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
     ->label('audits.event', 'deployment.update')
-    ->label('audits.resource', 'function/{request.functionId}') 
+    ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk', new Method(
         namespace: 'functions',
         name: 'updateDeploymentBuild',
@@ -2464,7 +2464,8 @@ App::get('/v1/functions/:functionId/variables')
     ->desc('List variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
-    ->label('sdk', 
+    ->label(
+        'sdk',
         new Method(
             namespace: 'functions',
             name: 'listVariables',
@@ -2496,7 +2497,9 @@ App::get('/v1/functions/:functionId/variables/:variableId')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
     ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-    ->label('sdk', new Method(
+    ->label(
+        'sdk',
+        new Method(
             namespace: 'functions',
             name: 'getVariable',
             description: '/docs/references/functions/get-variable.md',

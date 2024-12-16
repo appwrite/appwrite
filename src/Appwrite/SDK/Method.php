@@ -5,21 +5,24 @@ namespace Appwrite\SDK;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Response as HttpResponse;
 
-enum AuthType: string {
+enum AuthType: string
+{
     case JWT = APP_AUTH_TYPE_JWT;
     case KEY = APP_AUTH_TYPE_KEY;
     case SESSION = APP_AUTH_TYPE_SESSION;
     case ADMIN = APP_AUTH_TYPE_ADMIN;
 }
 
-enum MethodType: string {
+enum MethodType: string
+{
     case WEBAUTH = 'webAuth';
     case LOCATION = 'location';
     case GRAPHQL = 'graphql';
     case UPLOAD = 'upload';
 }
 
-enum ResponseType: string {
+enum ResponseType: string
+{
     case NONE = '';
     case JSON = 'application/json';
     case IMAGE = 'image/*';
@@ -32,11 +35,11 @@ enum ResponseType: string {
 
 class Method
 {
-    static array $knownMethods = [];
+    public static array $knownMethods = [];
 
     /**
      * Initialise a new SDK method
-     * 
+     *
      * @param array<AuthType> $authTypes
      * @param string $namespace
      * @param MethodType $methodType
@@ -45,7 +48,7 @@ class Method
      * @param string $responseModel
      * @param string $offlineKey
      * @param string $offlineModel
-     * 
+     *
      * @throws \Exception
      */
     public function __construct(
@@ -65,12 +68,11 @@ class Method
         protected bool $packaging = false,
         protected string $requestType = 'application/json',
         protected array $parameters = [],
-    )
-    {
+    ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
         // Disabled for now, will be enabled later
-        // $this->validateDesc($description); 
+        // $this->validateDesc($description);
         $this->validateResponseModel($responseModel);
 
         // No content check
