@@ -5,6 +5,9 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\CNAME;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\ResponseType;
 use Appwrite\Utopia\Database\Validator\Queries\Rules;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -28,13 +31,15 @@ App::post('/v1/proxy/rules')
     ->label('event', 'rules.[ruleId].create')
     ->label('audits.event', 'rule.create')
     ->label('audits.resource', 'rule/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'proxy')
-    ->label('sdk.method', 'createRule')
-    ->label('sdk.description', '/docs/references/proxy/create-rule.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROXY_RULE)
+    ->label('sdk', new Method(
+        namespace: 'proxy',
+        name: 'createRule',
+        description: '/docs/references/proxy/create-rule.md',
+        auth: [AuthType::ADMIN],
+        responseCode: Response::STATUS_CODE_CREATED,
+        responseModel: Response::MODEL_PROXY_RULE,
+        responseType: ResponseType::JSON,
+    ))
     ->param('domain', null, new ValidatorDomain(), 'Domain name.')
     ->param('resourceType', null, new WhiteList(['api', 'function']), 'Action definition for the rule. Possible values are "api", "function"')
     ->param('resourceId', '', new UID(), 'ID of resource for the action type. If resourceType is "api", leave empty. If resourceType is "function", provide ID of the function.', true)
@@ -150,13 +155,15 @@ App::get('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
     ->desc('List rules')
     ->label('scope', 'rules.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'proxy')
-    ->label('sdk.method', 'listRules')
-    ->label('sdk.description', '/docs/references/proxy/list-rules.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROXY_RULE_LIST)
+    ->label('sdk', new Method(
+        namespace: 'proxy',
+        name: 'listRules',
+        description: '/docs/references/proxy/list-rules.md',
+        auth: [AuthType::ADMIN],
+        responseCode: Response::STATUS_CODE_OK,
+        responseModel: Response::MODEL_PROXY_RULE_LIST,
+        responseType: ResponseType::JSON,
+    ))
     ->param('queries', [], new Rules(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Rules::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
@@ -219,13 +226,15 @@ App::get('/v1/proxy/rules/:ruleId')
     ->groups(['api', 'proxy'])
     ->desc('Get rule')
     ->label('scope', 'rules.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'proxy')
-    ->label('sdk.method', 'getRule')
-    ->label('sdk.description', '/docs/references/proxy/get-rule.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROXY_RULE)
+    ->label('sdk', new Method(
+        namespace: 'proxy',
+        name: 'getRule',
+        description: '/docs/references/proxy/get-rule.md',
+        auth: [AuthType::ADMIN],
+        responseCode: Response::STATUS_CODE_OK,
+        responseModel: Response::MODEL_PROXY_RULE,
+        responseType: ResponseType::JSON,
+    ))
     ->param('ruleId', '', new UID(), 'Rule ID.')
     ->inject('response')
     ->inject('project')
@@ -251,12 +260,14 @@ App::delete('/v1/proxy/rules/:ruleId')
     ->label('event', 'rules.[ruleId].delete')
     ->label('audits.event', 'rules.delete')
     ->label('audits.resource', 'rule/{request.ruleId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'proxy')
-    ->label('sdk.method', 'deleteRule')
-    ->label('sdk.description', '/docs/references/proxy/delete-rule.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'proxy',
+        name: 'deleteRule',
+        description: '/docs/references/proxy/delete-rule.md',
+        auth: [AuthType::ADMIN],
+        responseCode: Response::STATUS_CODE_NOCONTENT,
+        responseModel: Response::MODEL_NONE,
+    ))
     ->param('ruleId', '', new UID(), 'Rule ID.')
     ->inject('response')
     ->inject('project')
@@ -288,12 +299,15 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
     ->label('event', 'rules.[ruleId].update')
     ->label('audits.event', 'rule.update')
     ->label('audits.resource', 'rule/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'proxy')
-    ->label('sdk.method', 'updateRuleVerification')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROXY_RULE)
+    ->label('sdk', new Method(
+        namespace: 'proxy',
+        name: 'updateRuleVerification',
+        description: '',
+        auth: [AuthType::ADMIN],
+        responseCode: Response::STATUS_CODE_OK,
+        responseModel: Response::MODEL_PROXY_RULE,
+        responseType: ResponseType::JSON,
+    ))
     ->param('ruleId', '', new UID(), 'Rule ID.')
     ->inject('response')
     ->inject('queueForCertificates')

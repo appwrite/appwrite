@@ -2,6 +2,8 @@
 
 namespace Appwrite\Specification\Format;
 
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\MethodType;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
@@ -118,32 +120,40 @@ class Swagger2 extends Format
             /** @var \Utopia\Route $route */
             $url = \str_replace('/v1', '', $route->getPath());
             $scope = $route->getLabel('scope', '');
-            $consumes = [$route->getLabel('sdk.request.type', 'application/json')];
 
-            $method = $route->getLabel('sdk.method', \uniqid());
+            /** @var \Appwrite\SDK\Method $sdk */
+            $sdk = $route->getLabel('sdk', false);
+
+            if (empty($sdk)) {
+                continue;
+            }
+
+            $consumes = [$sdk->getRequestType()];
+
+            $method = $sdk->getMethodName() ?? \uniqid();
 
             if (!empty($method) && is_array($method)) {
                 $method = array_keys($method)[0];
             }
 
-            $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__ . '/../../../../' . $route->getLabel('sdk.description', '')) : null;
-            $produces = $route->getLabel('sdk.response.type', null);
-            $model = $route->getLabel('sdk.response.model', 'none');
-            $routeSecurity = $route->getLabel('sdk.auth', []);
+            $desc = (!empty($sdk->getDescription())) ? \realpath(__DIR__ . '/../../../../' . $sdk->getDescription()) : null;
+            $produces = ($sdk->getResponseType())->value;
+            $model = $sdk->getResponseModel() ?? 'none';
+            $routeSecurity = $sdk->getAuth() ?? [];
             $sdkPlatforms = [];
 
             foreach ($routeSecurity as $value) {
                 switch ($value) {
-                    case APP_AUTH_TYPE_SESSION:
+                    case AuthType::SESSION:
                         $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                         break;
-                    case APP_AUTH_TYPE_KEY:
+                    case AuthType::KEY:
                         $sdkPlatforms[] = APP_PLATFORM_SERVER;
                         break;
-                    case APP_AUTH_TYPE_JWT:
+                    case AuthType::JWT:
                         $sdkPlatforms[] = APP_PLATFORM_SERVER;
                         break;
-                    case APP_AUTH_TYPE_ADMIN:
+                    case AuthType::ADMIN:
                         $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
                         break;
                 }
@@ -154,31 +164,33 @@ class Swagger2 extends Format
                 $sdkPlatforms[] = APP_PLATFORM_CLIENT;
             }
 
+            $namespace = $sdk->getNamespace() ?? 'default';
+
             $temp = [
                 'summary' => $route->getDesc(),
-                'operationId' => $route->getLabel('sdk.namespace', 'default') . ucfirst($method),
+                'operationId' => $namespace . ucfirst($method),
                 'consumes' => [],
                 'produces' => [],
-                'tags' => [$route->getLabel('sdk.namespace', 'default')],
+                'tags' => [$namespace],
                 'description' => ($desc) ? \file_get_contents($desc) : '',
                 'responses' => [],
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $method,
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
-                    'type' => $route->getLabel('sdk.methodType', ''),
-                    'deprecated' => $route->getLabel('sdk.deprecated', false),
-                    'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($method) . '.md',
-                    'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
+                    'type' => $sdk->getMethodType()->value ?? '',
+                    'deprecated' => $sdk->isDeprecated(),
+                    'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($method) . '.md',
+                    'edit' => 'https://github.com/appwrite/appwrite/edit/master' .  $sdk->getDescription() ?? '',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
-                    'packaging' => $route->getLabel('sdk.packaging', false),
-                    'offline-model' => $route->getLabel('sdk.offline.model', ''),
-                    'offline-key' => $route->getLabel('sdk.offline.key', ''),
-                    'offline-response-key' => $route->getLabel('sdk.offline.response.key', '$id'),
+                    'packaging' => $sdk->isPackaging(),
+                    'offline-model' => $sdk->getOfflineModel() ?? '',
+                    'offline-key' => $sdk->getOfflineKey() ?? '',
+                    'offline-response-key' => $sdk->getOfflineResponseKey() ?? '$id',
                 ],
             ];
 
@@ -186,8 +198,8 @@ class Swagger2 extends Format
                 $temp['produces'][] = $produces;
             }
 
-            if (is_array($route->getLabel('sdk.method', ''))) {
-                $temp['x-appwrite']['multiplex'] = $route->getLabel('sdk.method', '');
+            if (is_array($sdk->getMethodName() ?? '')) {
+                $temp['x-appwrite']['multiplex'] = $sdk->getMethodName();
             }
 
             foreach ($this->models as $value) {
@@ -202,7 +214,7 @@ class Swagger2 extends Format
             }
 
             if (!(\is_array($model)) &&  $model->isNone()) {
-                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+                $temp['responses'][(string)$sdk->getResponseCode() ?? '500'] = [
                     'description' => in_array($produces, [
                         'image/*',
                         'image/jpeg',
@@ -224,7 +236,7 @@ class Swagger2 extends Format
                     foreach ($model as $m) {
                         $usedModels[] = $m->getType();
                     }
-                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+                    $temp['responses'][(string)$sdk->getResponseCode() ?? '500'] = [
                         'description' => $modelDescription,
                         'schema' => [
                             'x-oneOf' => \array_map(function ($m) {
@@ -235,7 +247,7 @@ class Swagger2 extends Format
                 } else {
                     // Response definition using one type
                     $usedModels[] = $model->getType();
-                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+                    $temp['responses'][(string)$sdk->getResponseCode() ?? '500'] = [
                         'description' => $model->getName(),
                         'schema' => [
                             '$ref' => '#/definitions/' . $model->getType(),
@@ -244,17 +256,18 @@ class Swagger2 extends Format
                 }
             }
 
-            if (in_array($route->getLabel('sdk.response.code', 500), [204, 301, 302, 308], true)) {
-                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['description'] = 'No content';
-                unset($temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['schema']);
+            if (in_array($sdk->getResponseCode() ?? 500, [204, 301, 302, 308], true)) {
+                $temp['responses'][(string)$sdk->getResponseCode() ?? '500']['description'] = 'No content';
+                unset($temp['responses'][(string)$sdk->getResponseCode() ?? '500']['schema']);
             }
 
             if ((!empty($scope))) { //  && 'public' != $scope
                 $securities = ['Project' => []];
 
-                foreach ($route->getLabel('sdk.auth', []) as $security) {
-                    if (array_key_exists($security, $this->keys)) {
-                        $securities[$security] = [];
+                foreach ($sdk->getAuth() as $security) {
+                    /** @var \Appwrite\SDK\AuthType $security */
+                    if (array_key_exists($security->value, $this->keys)) {
+                        $securities[$security->value] = [];
                     }
                 }
 
@@ -275,7 +288,7 @@ class Swagger2 extends Format
 
             $parameters = \array_merge(
                 $route->getParams(),
-                $route->getLabel('sdk.parameters', []),
+                $sdk->getParameters() ?? [],
             );
 
             foreach ($parameters as $name => $param) { // Set params
@@ -325,7 +338,7 @@ class Swagger2 extends Format
                         $node['x-example'] = false;
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CustomId':
-                        if ($route->getLabel('sdk.methodType', '') === 'upload') {
+                        if ($sdk->getMethodType() === MethodType::UPLOAD) {
                             $node['x-upload-id'] = true;
                         }
                         $node['type'] = $validator->getType();
@@ -432,7 +445,7 @@ class Swagger2 extends Format
                         //Iterate the blackList. If it matches with the current one, then it is blackListed
                         $allowed = true;
                         foreach ($this->enumBlacklist as $blacklist) {
-                            if ($blacklist['namespace'] == $route->getLabel('sdk.namespace', '') && $blacklist['method'] == $method && $blacklist['parameter'] == $name) {
+                            if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $method && $blacklist['parameter'] == $name) {
                                 $allowed = false;
                                 break;
                             }
@@ -440,8 +453,8 @@ class Swagger2 extends Format
 
                         if ($allowed && $validator->getType() === 'string') {
                             $node['enum'] = $validator->getList();
-                            $node['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $method, $name);
-                            $node['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $method, $name);
+                            $node['x-enum-name'] = $this->getEnumName($namespace, $method, $name);
+                            $node['x-enum-keys'] = $this->getEnumKeys($namespace, $method, $name);
                         }
 
                         if ($validator->getType() === 'integer') {

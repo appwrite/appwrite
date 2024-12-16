@@ -1,0 +1,1 @@
+Use this endpoint to create a new push target for messages for the currently logged in user.

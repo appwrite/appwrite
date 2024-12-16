@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\SDK\AuthType;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
@@ -182,25 +183,31 @@ class Specs extends Action
 
             foreach ($appRoutes as $key => $method) {
                 foreach ($method as $route) {
-                    $hide = $route->getLabel('sdk.hide', false);
+                    $sdk = $route->getLabel('sdk', false);
+
+                    /** @var \Appwrite\SDK\Method $sdk */
+                    if (empty($sdk)) {
+                        continue;
+                    }
+
+                    $hide = $sdk->isHidden();
                     if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
                         continue;
                     }
 
-                    /** @var \Utopia\Route $route */
-                    $routeSecurity = $route->getLabel('sdk.auth', []);
+                    $routeSecurity = $sdk->getAuth();
                     $sdkPlatforms = [];
 
                     foreach ($routeSecurity as $value) {
                         switch ($value) {
-                            case APP_AUTH_TYPE_SESSION:
+                            case AuthType::SESSION:
                                 $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                                 break;
-                            case APP_AUTH_TYPE_JWT:
-                            case APP_AUTH_TYPE_KEY:
+                            case AuthType::JWT:
+                            case AuthType::KEY:
                                 $sdkPlatforms[] = APP_PLATFORM_SERVER;
                                 break;
-                            case APP_AUTH_TYPE_ADMIN:
+                            case AuthType::ADMIN:
                                 $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
                                 break;
                         }
@@ -215,15 +222,15 @@ class Specs extends Action
                         continue;
                     }
 
-                    if ($route->getLabel('sdk.mock', false) && !$mocks) {
+                    if ($route->getLabel('mock', false) && !$mocks) {
                         continue;
                     }
 
-                    if (!$route->getLabel('sdk.mock', false) && $mocks) {
+                    if (!$route->getLabel('mock', false) && $mocks) {
                         continue;
                     }
 
-                    if (empty($route->getLabel('sdk.namespace', null))) {
+                    if (empty($sdk->getNamespace())) {
                         continue;
                     }
 

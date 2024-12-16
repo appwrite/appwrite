@@ -86,7 +86,14 @@ class Mapper
             }
         }
 
-        $names = $route->getLabel('sdk.response.model', 'none');
+        /** @var \Appwrite\SDK\Method $sdk */
+        $sdk = $route->getLabel('sdk', false);
+
+        if (!$sdk) {
+            return;
+        }
+
+        $names = $sdk->getResponseModel() ?? [];
         $models = \is_array($names)
             ? \array_map(static fn ($m) => static::$models[$m], $names)
             : [static::$models[$names]];
