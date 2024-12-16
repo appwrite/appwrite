@@ -423,7 +423,7 @@ class Certificates extends Action
     }
 
     /**
-     * Method to make sure information about error is delivered to admnistrator.
+     * Method to make sure information about error is delivered to administrator.
      *
      * @param string $domain Domain that caused the error
      * @param string $errorMessage Verbose error message
