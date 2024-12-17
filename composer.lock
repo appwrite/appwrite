@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fae350df93342992edd8f639948e1570",
+    "content-hash": "35d6e3f5c403194ad7969d48dc4cbdf5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1530,13 +1530,13 @@
             },
             "type": "library",
             "extra": {
-                "branch-alias": {
-                    "dev-main": "1.0.x-dev"
-                },
                 "spi": {
                     "OpenTelemetry\\API\\Instrumentation\\AutoInstrumentation\\HookManagerInterface": [
                         "OpenTelemetry\\API\\Instrumentation\\AutoInstrumentation\\ExtensionHookManager"
                     ]
+                },
+                "branch-alias": {
+                    "dev-main": "1.0.x-dev"
                 }
             },
             "autoload": {
@@ -3136,16 +3136,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.43.1",
+            "version": "0.43.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "e404c21e8dcf6a310bc83cf1d74e716b105598fa"
+                "reference": "374536b86d8d39066960a7da161d444a099bbc56"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/e404c21e8dcf6a310bc83cf1d74e716b105598fa",
-                "reference": "e404c21e8dcf6a310bc83cf1d74e716b105598fa",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/374536b86d8d39066960a7da161d444a099bbc56",
+                "reference": "374536b86d8d39066960a7da161d444a099bbc56",
                 "shasum": ""
             },
             "require": {
@@ -3153,7 +3153,7 @@
                 "ext-pdo": "*",
                 "ext-redis": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.53.*"
+                "utopia-php/database": "0.53.200"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
@@ -3181,9 +3181,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.43.1"
+                "source": "https://github.com/utopia-php/abuse/tree/0.43.2"
             },
-            "time": "2024-10-23T04:29:12+00:00"
+            "time": "2024-12-12T19:43:24+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -4807,16 +4807,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.39.26",
+            "version": "0.39.27",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "39768deacb4913f93548c46fa0149c3fadc62d0c"
+                "reference": "27d8ecde30e40cbfe1124cc0430c406d3e144849"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/39768deacb4913f93548c46fa0149c3fadc62d0c",
-                "reference": "39768deacb4913f93548c46fa0149c3fadc62d0c",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/27d8ecde30e40cbfe1124cc0430c406d3e144849",
+                "reference": "27d8ecde30e40cbfe1124cc0430c406d3e144849",
                 "shasum": ""
             },
             "require": {
@@ -4852,9 +4852,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.26"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.39.27"
             },
-            "time": "2024-12-12T10:51:34+00:00"
+            "time": "2024-12-16T11:32:02+00:00"
         },
         {
             "name": "doctrine/annotations",
