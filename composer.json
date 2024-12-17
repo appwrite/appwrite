@@ -1,106 +1,106 @@
 {
 
-    "name": "appwrite/server-ce",
-    "description": "End to end backend server for frontend and mobile apps.",
-    "type": "project",
-    "license": "BSD-3-Clause",
-    "authors": [
-        {
-            "name": "Eldad Fux",
-            "email": "eldad@appwrite.io"
-        }
-    ],
-    "scripts": {
-        "test": "vendor/bin/phpunit",
-        "lint": "vendor/bin/pint --test",
-        "format": "vendor/bin/pint",
-        "bench": "vendor/bin/phpbench run --report=benchmark"
-    },
-    "autoload": {
-        "psr-4": {
-            "Appwrite\\": "src/Appwrite",
-            "Executor\\": "src/Executor"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tests\\E2E\\": "tests/e2e",
-            "Tests\\Unit\\": "tests/unit",
-            "Appwrite\\Tests\\": "tests/extensions"
-        }
-    },
-    "require": {
-        "php": ">=8.0.0",
-        "ext-curl": "*",
-        "ext-imagick": "*",
-        "ext-mbstring": "*",
-        "ext-json": "*",
-        "ext-yaml": "*",
-        "ext-dom": "*",
-        "ext-redis": "*",
-        "ext-swoole": "*",
-        "ext-pdo": "*",
-        "ext-openssl": "*",
-        "ext-zlib": "*",
-        "ext-sockets": "*",
-        "appwrite/php-runtimes": "0.16.*",
-        "appwrite/php-clamav": "2.0.*",
-        "utopia-php/abuse": "0.43.*",
-        "utopia-php/analytics": "0.10.*",
-        "utopia-php/audit": "0.43.*",
-        "utopia-php/cache": "0.11.*",
-        "utopia-php/cli": "0.15.*",
-        "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.53.200",
-        "utopia-php/domains": "0.5.*",
-        "utopia-php/dsn": "0.2.1",
-        "utopia-php/framework": "0.33.*",
-        "utopia-php/fetch": "0.2.*",
-        "utopia-php/image": "0.7.*",
-        "utopia-php/locale": "0.4.*",
-        "utopia-php/logger": "0.6.*",
-        "utopia-php/messaging": "0.12.*",
-        "utopia-php/migration": "0.6.*",
-        "utopia-php/orchestration": "0.9.*",
-        "utopia-php/platform": "0.7.*",
-        "utopia-php/pools": "0.5.*",
-        "utopia-php/preloader": "0.2.*",
-        "utopia-php/queue": "0.7.*",
-        "utopia-php/registry": "0.5.*",
-        "utopia-php/storage": "0.18.*",
-        "utopia-php/swoole": "0.8.*",
-        "utopia-php/system": "0.9.*",
-        "utopia-php/telemetry": "0.1.*",
-        "utopia-php/vcs": "0.8.*",
-        "utopia-php/websocket": "0.1.*",
-        "matomo/device-detector": "6.1.*",
-        "dragonmantank/cron-expression": "3.3.2",
-        "phpmailer/phpmailer": "6.9.1",
-        "chillerlan/php-qrcode": "4.3.4",
-        "adhocore/jwt": "1.1.2",
-        "spomky-labs/otphp": "^10.0",
-        "webonyx/graphql-php": "14.11.*",
-        "league/csv": "9.14.*"
-    },
-    "require-dev": {
-        "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "0.39.*",
-        "phpunit/phpunit": "9.5.20",
-        "swoole/ide-helper": "5.1.2",
-        "textalk/websocket": "1.5.7",
-        "laravel/pint": "^1.14",
-        "phpbench/phpbench": "^1.2"
-    },
-    "provide": {
-        "ext-phpiredis": "*"
-    },
-    "config": {
-        "platform": {
-            "php": "8.3"
-        },
-        "allow-plugins": {
-            "php-http/discovery": false,
-            "tbachert/spi": false
-        }
-    }
+  "name": "appwrite/server-ce",
+  "description": "End to end backend server for frontend and mobile apps.",
+  "type": "project",
+  "license": "BSD-3-Clause",
+  "authors": [
+      {
+          "name": "Eldad Fux",
+          "email": "eldad@appwrite.io"
+      }
+  ],
+  "scripts": {
+      "test": "vendor/bin/phpunit",
+      "lint": "vendor/bin/pint --test",
+      "format": "vendor/bin/pint",
+      "bench": "vendor/bin/phpbench run --report=benchmark"
+  },
+  "autoload": {
+      "psr-4": {
+          "Appwrite\\": "src/Appwrite",
+          "Executor\\": "src/Executor"
+      }
+  },
+  "autoload-dev": {
+      "psr-4": {
+          "Tests\\E2E\\": "tests/e2e",
+          "Tests\\Unit\\": "tests/unit",
+          "Appwrite\\Tests\\": "tests/extensions"
+      }
+  },
+  "require": {
+      "php": ">=8.0.0",
+      "ext-curl": "*",
+      "ext-imagick": "*",
+      "ext-mbstring": "*",
+      "ext-json": "*",
+      "ext-yaml": "*",
+      "ext-dom": "*",
+      "ext-redis": "*",
+      "ext-swoole": "*",
+      "ext-pdo": "*",
+      "ext-openssl": "*",
+      "ext-zlib": "*",
+      "ext-sockets": "*",
+      "appwrite/php-runtimes": "0.16.*",
+      "appwrite/php-clamav": "2.0.*",
+      "utopia-php/abuse": "0.43.*",
+      "utopia-php/analytics": "0.10.*",
+      "utopia-php/audit": "0.43.*",
+      "utopia-php/cache": "0.11.*",
+      "utopia-php/cli": "0.15.*",
+      "utopia-php/config": "0.2.*",
+      "utopia-php/database": "0.53.200",
+      "utopia-php/domains": "0.5.*",
+      "utopia-php/dsn": "0.2.1",
+      "utopia-php/framework": "0.33.*",
+      "utopia-php/fetch": "0.2.*",
+      "utopia-php/image": "0.7.*",
+      "utopia-php/locale": "0.4.*",
+      "utopia-php/logger": "0.6.*",
+      "utopia-php/messaging": "0.12.*",
+      "utopia-php/migration": "0.6.*",
+      "utopia-php/orchestration": "0.9.*",
+      "utopia-php/platform": "0.7.*",
+      "utopia-php/pools": "0.5.*",
+      "utopia-php/preloader": "0.2.*",
+      "utopia-php/queue": "0.7.*",
+      "utopia-php/registry": "0.5.*",
+      "utopia-php/storage": "0.18.*",
+      "utopia-php/swoole": "0.8.*",
+      "utopia-php/system": "0.9.*",
+      "utopia-php/telemetry": "0.1.*",
+      "utopia-php/vcs": "0.8.*",
+      "utopia-php/websocket": "0.1.*",
+      "matomo/device-detector": "6.1.*",
+      "dragonmantank/cron-expression": "3.3.2",
+      "phpmailer/phpmailer": "6.9.1",
+      "chillerlan/php-qrcode": "4.3.4",
+      "adhocore/jwt": "1.1.2",
+      "spomky-labs/otphp": "^10.0",
+      "webonyx/graphql-php": "14.11.*",
+      "league/csv": "9.14.*"
+  },
+  "require-dev": {
+      "ext-fileinfo": "*",
+      "appwrite/sdk-generator": "0.39.27",
+      "phpunit/phpunit": "9.5.20",
+      "swoole/ide-helper": "5.1.2",
+      "textalk/websocket": "1.5.7",
+      "laravel/pint": "^1.14",
+      "phpbench/phpbench": "^1.2"
+  },
+  "provide": {
+      "ext-phpiredis": "*"
+  },
+  "config": {
+      "platform": {
+          "php": "8.3"
+      },
+      "allow-plugins": {
+          "php-http/discovery": false,
+          "tbachert/spi": false
+      }
+  }
 }
