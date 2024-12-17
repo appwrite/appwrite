@@ -381,20 +381,6 @@ try {
 $worker = $platform->getWorker();
 
 $worker
-    ->init()
-    ->inject('project')
-    ->inject('dbForConsole')
-    ->action(function (Document $project, Database $dbForConsole) {
-        if (!$project->isEmpty() && $project->getId() !== 'console') {
-            $accessedAt = $project->getAttribute('accessedAt', '');
-            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $project->setAttribute('accessedAt', DateTime::now());
-                Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
-            }
-        }
-    });
-
-$worker
     ->shutdown()
     ->inject('pools')
     ->action(function (Group $pools) {
