@@ -9,6 +9,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Multiplex;
 use Appwrite\SDK\ResponseType;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Attributes;
@@ -2944,37 +2945,32 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'databases')
-    //TODO: Deal with SDK Multiplexing later - B/S
-    ->label('sdk.method', [
-        'createDocument' => [
-            'name' => 'Create Document',
-            'parameters' => [
-                'documentId',
-                'data',
-                'permissions',
-            ],
-            'required' => ['documentId', 'data'],
-            'response' => Response::MODEL_DOCUMENT,
-            'description' => '/docs/references/databases/create-document.md',
-        ],
-        'createDocuments' => [
-            'name' => 'Create Documents',
-            'parameters' => [
-                'documents'
-            ],
-            'required' => ['documents'],
-            'response' => Response::MODEL_DOCUMENT_LIST,
-            'description' => '/docs/references/databases/create-documents.md'
-        ],
-    ])
-    ->label('sdk.description', '/docs/references/databases/create-document.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', [Response::MODEL_DOCUMENT, Response::MODEL_DOCUMENT_LIST])
-    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
-    ->label('sdk.offline.key', '{documentId}')
+    ->label('sdk',
+        new Method(
+            namespace: 'databases',
+            name: 'createDocument',
+            description: '/docs/references/databases/create-document.md',
+            auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+            responseCode: Response::STATUS_CODE_CREATED,
+            responseModel: Response::MODEL_DOCUMENT,
+            responseType: ResponseType::JSON,
+            offlineKey: '{documentId}',
+            offlineModel: '/databases/{databaseId}/collections/{collectionId}/documents',
+            multiplex: [
+                new Multiplex(
+                    name: 'createDocument',
+                    parameters: ['documentId', 'data', 'permissions'],
+                    required: ['documentId', 'data'],
+                    responseModel: Response::MODEL_DOCUMENT,
+                ),
+                new Multiplex(
+                    name: 'createDocuments',
+                    parameters: ['documents'],
+                    required: ['documents'],
+                    responseModel: Response::MODEL_DOCUMENT_LIST,
+                ),
+            ]
+        ))
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')

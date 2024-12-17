@@ -8093,6 +8093,118 @@
                     }
                 ]
             },
+            "post": {
+                "summary": "Create document",
+                "operationId": "databasesCreateDocument",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "responses": {
+                    "201": {
+                        "description": "Document",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/document"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "createDocument",
+                    "weight": 108,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "databases\/create-document.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-document.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
+                    "offline-key": "{documentId}",
+                    "offline-response-key": "$id",
+                    "multiplex": "[{},{}]",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection). Make sure to define attributes before creating documents.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "documentId": {
+                                        "type": "string",
+                                        "description": "Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "x-example": "<DOCUMENT_ID>"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "description": "Document data as JSON object.",
+                                        "x-example": "{}"
+                                    },
+                                    "documents": {
+                                        "type": "array",
+                                        "description": "Array of documents data as JSON object.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "permissions": {
+                                        "type": "array",
+                                        "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                        "x-example": "[\"read(\"any\")\"]",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "patch": {
                 "summary": "Update documents",
                 "operationId": "databasesUpdateDocuments",

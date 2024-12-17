@@ -4,6 +4,7 @@ namespace Appwrite\Specification\Format;
 
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Multiplex;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
@@ -196,8 +197,8 @@ class OpenAPI3 extends Format
                 ],
             ];
 
-            if (is_array($sdk->getMethodName() ?? '')) {
-                $temp['x-appwrite']['multiplex'] = $sdk->getMethodName();
+            if (!empty($sdk->getMultiplex())) {
+                $temp['x-appwrite']['multiplex'] = \json_encode($sdk->getMultiplex());
             }
 
             foreach ($this->models as $value) {

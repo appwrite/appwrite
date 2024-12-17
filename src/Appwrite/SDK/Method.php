@@ -38,16 +38,29 @@ class Method
     public static array $knownMethods = [];
 
     /**
+     * @var array<Multiplex>
+     */
+    protected array $multiplexRoutes = [];
+
+    /**
      * Initialise a new SDK method
      *
-     * @param array<AuthType> $authTypes
      * @param string $namespace
-     * @param MethodType $methodType
-     * @param string $desc
+     * @param string $name
+     * @param string $description
+     * @param array<AuthType> $auth
      * @param int $responseCode
-     * @param string $responseModel
-     * @param string $offlineKey
-     * @param string $offlineModel
+     * @param string|array $responseModel
+     * @param ResponseType $responseType
+     * @param MethodType|null $methodType
+     * @param string|null $offlineKey
+     * @param string|null $offlineModel
+     * @param string|null $offlineResponseKey
+     * @param bool $deprecated
+     * @param array|bool $hide
+     * @param bool $packaging
+     * @param string $requestType
+     * @param array $parameters
      *
      * @throws \Exception
      */
@@ -68,6 +81,7 @@ class Method
         protected bool $packaging = false,
         protected string $requestType = 'application/json',
         protected array $parameters = [],
+        protected array $multiplex = []
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
@@ -220,5 +234,10 @@ class Method
     public function getParameters(): array
     {
         return $this->parameters;
+    }
+
+    public function getMultiplex(): array
+    {
+        return $this->multiplex;
     }
 }
