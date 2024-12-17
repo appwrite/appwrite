@@ -7,7 +7,6 @@ use Cron\CronExpression;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Group;
 
 class ScheduleFunctions extends ScheduleBase
@@ -85,15 +84,7 @@ class ScheduleFunctions extends ScheduleBase
 
                     $schedule = $this->schedules[$scheduleKey];
 
-                    $project = $schedule['project'];
-
-                    if (!$project->isEmpty() && $project->getId() !== 'console') {
-                        $accessedAt = $project->getAttribute('accessedAt', '');
-                        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                            $project->setAttribute('accessedAt', DateTime::now());
-                            Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
-                        }
-                    }
+                    $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
                     $queueForFunctions = new Func($connection);
 
@@ -102,7 +93,7 @@ class ScheduleFunctions extends ScheduleBase
                         ->setFunction($schedule['resource'])
                         ->setMethod('POST')
                         ->setPath('/')
-                        ->setProject($project)
+                        ->setProject($schedule['project'])
                         ->trigger();
                 }
 

@@ -5,8 +5,6 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Event\Func;
 use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Group;
 
 class ScheduleExecutions extends ScheduleBase
@@ -59,15 +57,7 @@ class ScheduleExecutions extends ScheduleBase
 
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
 
-            $project = $schedule['project'];
-
-            if (!$project->isEmpty() && $project->getId() !== 'console') {
-                $accessedAt = $project->getAttribute('accessedAt', '');
-                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                    $project->setAttribute('accessedAt', DateTime::now());
-                    Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
-                }
-            }
+            $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
             \go(function () use ($queueForFunctions, $schedule, $delay, $data) {
                 Co::sleep($delay);
