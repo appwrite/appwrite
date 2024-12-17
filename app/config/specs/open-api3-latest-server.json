@@ -12291,57 +12291,6 @@
                 ]
             }
         },
-        "\/health\/version": {
-            "get": {
-                "summary": "Get version",
-                "operationId": "healthGetVersion",
-                "tags": [
-                    "health"
-                ],
-                "description": "Get the version of Appwrite that this instance is currently running.",
-                "responses": {
-                    "200": {
-                        "description": "Health Version",
-                        "content": {
-                            "application\/json": {
-                                "schema": {
-                                    "$ref": "#\/components\/schemas\/healthVersion"
-                                }
-                            }
-                        }
-                    }
-                },
-                "x-appwrite": {
-                    "method": "getVersion",
-                    "weight": 128,
-                    "cookies": false,
-                    "type": "",
-                    "deprecated": false,
-                    "demo": "health\/get-version.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-version.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "public",
-                    "platforms": [
-                        "server",
-                        "client"
-                    ],
-                    "packaging": false,
-                    "offline-model": "",
-                    "offline-key": "",
-                    "offline-response-key": "$id",
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": []
-                    }
-                ]
-            }
-        },
         "\/locale": {
             "get": {
                 "summary": "Get user locale",
@@ -26849,20 +26798,6 @@
                     "remoteTime",
                     "localTime",
                     "diff"
-                ]
-            },
-            "healthVersion": {
-                "description": "Health Version",
-                "type": "object",
-                "properties": {
-                    "version": {
-                        "type": "string",
-                        "description": "Version of the Appwrite instance.",
-                        "x-example": "0.11.0"
-                    }
-                },
-                "required": [
-                    "version"
                 ]
             },
             "headers": {
