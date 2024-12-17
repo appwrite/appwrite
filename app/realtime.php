@@ -142,7 +142,6 @@ if (!function_exists('getCache')) {
 if (!function_exists('getRedis')) {
     function getRedis(): \Redis
     {
-        
         $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
         $port = System::getEnv('_APP_REDIS_PORT', 6379);
         $pass = System::getEnv('_APP_REDIS_PASS', '');
