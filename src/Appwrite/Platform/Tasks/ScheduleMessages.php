@@ -4,6 +4,8 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Messaging;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Group;
 
 class ScheduleMessages extends ScheduleBase
@@ -45,10 +47,20 @@ class ScheduleMessages extends ScheduleBase
                 $connection = $queue->getResource();
                 $queueForMessaging = new Messaging($connection);
 
+                $project = $schedule['project'];
+
+                if (!$project->isEmpty() && $project->getId() !== 'console') {
+                    $accessedAt = $project->getAttribute('accessedAt', '');
+                    if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+                        $project->setAttribute('accessedAt', DateTime::now());
+                        Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+                    }
+                }
+
                 $queueForMessaging
                     ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
                     ->setMessageId($schedule['resourceId'])
-                    ->setProject($schedule['project'])
+                    ->setProject($project)
                     ->trigger();
 
                 $dbForPlatform->deleteDocument(
