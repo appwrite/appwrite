@@ -562,7 +562,7 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
-        // Creating one to one relationship from collection 1 to colletion 2
+        // Creating one to one relationship from collection 1 to collection 2
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/attributes/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -575,7 +575,7 @@ class DatabasesCustomClientTest extends Scope
             'key' => $collection2['body']['$id']
         ]);
 
-        // Creating one to one relationship from collection 2 to colletion 3
+        // Creating one to one relationship from collection 2 to collection 3
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection2['body']['$id'] . '/attributes/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -588,7 +588,7 @@ class DatabasesCustomClientTest extends Scope
             'key' => $collection3['body']['$id']
         ]);
 
-        // Creating one to one relationship from collection 3 to colletion 4
+        // Creating one to one relationship from collection 3 to collection 4
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection3['body']['$id'] . '/attributes/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -601,7 +601,7 @@ class DatabasesCustomClientTest extends Scope
             'key' => $collection4['body']['$id']
         ]);
 
-        // Creating one to one relationship from collection 4 to colletion 5
+        // Creating one to one relationship from collection 4 to collection 5
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection4['body']['$id'] . '/attributes/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
