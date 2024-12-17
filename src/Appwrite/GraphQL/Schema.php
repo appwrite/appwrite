@@ -98,13 +98,16 @@ class Schema
             foreach ($routes as $route) {
                 /** @var Route $route */
 
-                $namespace = $route->getLabel('sdk.namespace', '');
-                $method = $route->getLabel('sdk.method', '');
-                $name = $namespace . \ucfirst($method);
+                /** @var \Appwrite\SDK\Method $sdk  */
+                $sdk = $route->getLabel('sdk', false);
 
-                if (empty($name)) {
+                if (empty($sdk)) {
                     continue;
                 }
+
+                $namespace = $sdk->getNamespace();
+                $method = $sdk->getMethodName();
+                $name = $namespace . \ucfirst($method);
 
                 foreach (Mapper::route($utopia, $route, $complexity) as $field) {
                     switch ($route->getMethod()) {

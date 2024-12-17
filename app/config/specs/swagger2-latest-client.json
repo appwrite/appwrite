@@ -367,7 +367,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "account"
                 ],
@@ -778,7 +780,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "account"
                 ],
@@ -922,14 +926,19 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "account"
                 ],
                 "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
                 "responses": {
-                    "204": {
-                        "description": "No content"
+                    "200": {
+                        "description": "Session",
+                        "schema": {
+                            "$ref": "#\/definitions\/session"
+                        }
                     }
                 },
                 "x-appwrite": {
@@ -1806,7 +1815,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "account"
                 ],
@@ -2490,7 +2501,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "account"
                 ],
@@ -2611,7 +2624,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Use this endpoint to update an existing push target for messages for the currently logged in user.",
                 "responses": {
                     "201": {
                         "description": "Target",
@@ -2627,7 +2640,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/create-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -2697,7 +2710,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Use this endpoint to create a new push target for messages for the currently logged in user.",
                 "responses": {
                     "200": {
                         "description": "Target",
@@ -2713,7 +2726,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/update-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -2776,7 +2789,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Use this endpoint to delete an existing push target for messages for the currently logged in user.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -2789,7 +2802,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/delete-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -4709,7 +4722,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -4739,6 +4752,31 @@
                     "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
                     "offline-key": "{documentId}",
                     "offline-response-key": "$id",
+                    "multiplex": [
+                        {
+                            "name": "createDocument",
+                            "parameters": [
+                                "documentId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "documentId",
+                                "data"
+                            ],
+                            "responseModel": "document"
+                        },
+                        {
+                            "name": "createDocuments",
+                            "parameters": [
+                                "documents"
+                            ],
+                            "required": [
+                                "documents"
+                            ],
+                            "responseModel": "documentList"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -5207,7 +5245,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -6675,7 +6715,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "storage"
                 ],
@@ -7410,7 +7452,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "teams"
                 ],
@@ -7838,7 +7882,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "teams"
                 ],

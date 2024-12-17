@@ -1,0 +1,1 @@
+Use this endpoint to delete an existing push target for messages for the currently logged in user.

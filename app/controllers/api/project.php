@@ -1,6 +1,9 @@
 <?php
 
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\ResponseType;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
@@ -20,12 +23,15 @@ App::get('/v1/project/usage')
     ->desc('Get project usage stats')
     ->groups(['api', 'usage'])
     ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'project')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
+    ->label('sdk', new Method(
+        namespace: 'project',
+        name: 'getUsage',
+        description: '/docs/references/project/get-usage.md',
+        auth: [AuthType::ADMIN],
+        responseCode: Response::STATUS_CODE_OK,
+        responseModel: Response::MODEL_USAGE_PROJECT,
+        responseType: ResponseType::JSON,
+    ))
     ->param('startDate', '', new DateTimeValidator(), 'Starting date for the usage')
     ->param('endDate', '', new DateTimeValidator(), 'End date for the usage')
     ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true)
@@ -313,13 +319,15 @@ App::post('/v1/project/variables')
     ->groups(['api'])
     ->label('scope', 'projects.write')
     ->label('audits.event', 'variable.create')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'project')
-    ->label('sdk.method', 'createVariable')
-    ->label('sdk.description', '/docs/references/project/create-variable.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VARIABLE)
+    ->label('sdk', new Method(
+        namespace: 'project',
+        name: 'createVariable',
+        description: '/docs/references/project/create-variable.md',
+        auth: [AuthType::ADMIN],
+        responseCode: Response::STATUS_CODE_CREATED,
+        responseModel: Response::MODEL_VARIABLE,
+        responseType: ResponseType::JSON,
+    ))
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
     ->inject('project')
@@ -367,13 +375,15 @@ App::get('/v1/project/variables')
     ->desc('List variables')
     ->groups(['api'])
     ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'project')
-    ->label('sdk.method', 'listVariables')
-    ->label('sdk.description', '/docs/references/project/list-variables.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VARIABLE_LIST)
+    ->label('sdk', new Method(
+        namespace: 'project',
+        name: 'listVariables',
+        description: '/docs/references/project/list-variables.md',
+        auth: [AuthType::ADMIN],
+        responseCode: Response::STATUS_CODE_OK,
+        responseModel: Response::MODEL_VARIABLE_LIST,
+        responseType: ResponseType::JSON,
+    ))
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (Response $response, Database $dbForProject) {
@@ -392,13 +402,15 @@ App::get('/v1/project/variables/:variableId')
     ->desc('Get variable')
     ->groups(['api'])
     ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'project')
-    ->label('sdk.method', 'getVariable')
-    ->label('sdk.description', '/docs/references/project/get-variable.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VARIABLE)
+    ->label('sdk', new Method(
+        namespace: 'project',
+        name: 'getVariable',
+        description: '/docs/references/project/get-variable.md',
+        auth: [AuthType::ADMIN],
+        responseCode: Response::STATUS_CODE_OK,
+        responseModel: Response::MODEL_VARIABLE,
+        responseType: ResponseType::JSON,
+    ))
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
     ->inject('project')
@@ -416,13 +428,15 @@ App::put('/v1/project/variables/:variableId')
     ->desc('Update variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'project')
-    ->label('sdk.method', 'updateVariable')
-    ->label('sdk.description', '/docs/references/project/update-variable.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VARIABLE)
+    ->label('sdk', new Method(
+        namespace: 'project',
+        name: 'updateVariable',
+        description: '/docs/references/project/update-variable.md',
+        auth: [AuthType::ADMIN],
+        responseCode: Response::STATUS_CODE_OK,
+        responseModel: Response::MODEL_VARIABLE,
+        responseType: ResponseType::JSON,
+    ))
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
@@ -462,12 +476,14 @@ App::delete('/v1/project/variables/:variableId')
     ->desc('Delete variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'project')
-    ->label('sdk.method', 'deleteVariable')
-    ->label('sdk.description', '/docs/references/project/delete-variable.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk', new Method(
+        namespace: 'project',
+        name: 'deleteVariable',
+        description: '/docs/references/project/delete-variable.md',
+        auth: [AuthType::ADMIN],
+        responseCode: Response::STATUS_CODE_NOCONTENT,
+        responseModel: Response::MODEL_NONE
+    ))
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('project')
     ->inject('response')

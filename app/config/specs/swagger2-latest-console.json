@@ -225,7 +225,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "account"
                 ],
@@ -421,7 +423,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "account"
                 ],
@@ -827,7 +831,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "account"
                 ],
@@ -970,14 +976,19 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "account"
                 ],
                 "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
                 "responses": {
-                    "204": {
-                        "description": "No content"
+                    "200": {
+                        "description": "Session",
+                        "schema": {
+                            "$ref": "#\/definitions\/session"
+                        }
                     }
                 },
                 "x-appwrite": {
@@ -1841,7 +1852,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "account"
                 ],
@@ -2522,7 +2535,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "account"
                 ],
@@ -2641,7 +2656,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Use this endpoint to update an existing push target for messages for the currently logged in user.",
                 "responses": {
                     "201": {
                         "description": "Target",
@@ -2657,7 +2672,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/create-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -2726,7 +2741,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Use this endpoint to create a new push target for messages for the currently logged in user.",
                 "responses": {
                     "200": {
                         "description": "Target",
@@ -2742,7 +2757,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/update-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -2804,7 +2819,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "",
+                "description": "Use this endpoint to delete an existing push target for messages for the currently logged in user.",
                 "responses": {
                     "204": {
                         "description": "No content"
@@ -2817,7 +2832,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "account\/delete-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -4948,7 +4963,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "databases\/get-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -5146,7 +5161,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -5572,7 +5589,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -5829,7 +5848,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -6045,7 +6066,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -6261,7 +6284,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -6487,7 +6512,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -6725,7 +6752,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -6967,7 +6996,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -7197,7 +7228,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -7561,7 +7594,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -7783,7 +7818,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -7998,7 +8035,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -8071,7 +8110,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -8265,7 +8306,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Document",
@@ -8295,6 +8336,31 @@
                     "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
                     "offline-key": "{documentId}",
                     "offline-response-key": "$id",
+                    "multiplex": [
+                        {
+                            "name": "createDocument",
+                            "parameters": [
+                                "documentId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "documentId",
+                                "data"
+                            ],
+                            "responseModel": "document"
+                        },
+                        {
+                            "name": "createDocuments",
+                            "parameters": [
+                                "documents"
+                            ],
+                            "required": [
+                                "documents"
+                            ],
+                            "responseModel": "documentList"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -8763,7 +8829,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -9209,7 +9277,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "databases"
                 ],
@@ -9386,7 +9456,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "databases\/get-collection-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-collection-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -9550,7 +9620,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "databases\/get-database-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-database-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10246,7 +10316,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "functions\/get-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/get-functions-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -10607,7 +10677,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "functions"
                 ],
@@ -10979,7 +11051,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "functions"
                 ],
@@ -11045,7 +11119,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "functions"
                 ],
@@ -11062,7 +11138,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "functions\/create-build.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/create-deployment-build.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11146,7 +11222,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "functions\/update-deployment-build.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/update-deployment-build.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -11546,7 +11622,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "functions"
                 ],
@@ -11634,7 +11712,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "functions\/get-function-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/functions\/get-function-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -12005,7 +12083,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "functions"
                 ],
@@ -14942,7 +15022,7 @@
                 "tags": [
                     "messaging"
                 ],
-                "description": "Update an email message by its unique ID.\n",
+                "description": "Update an SMS message by its unique ID.\n",
                 "responses": {
                     "200": {
                         "description": "Message",
@@ -14958,7 +15038,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "messaging\/update-sms.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/update-email.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/update-sms.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19078,7 +19158,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "migrations\/delete-firebase-auth.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/migrations\/migration-firebase-deauthorize.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19212,7 +19292,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "migrations\/list-firebase-projects.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/migrations\/migration-firebase-projects.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -19984,7 +20064,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "migrations"
                 ],
@@ -20063,7 +20145,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "project\/get-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/project\/get-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -20400,7 +20482,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "project"
                 ],
@@ -20874,7 +20958,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "projects"
                 ],
@@ -22356,7 +22442,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "projects"
                 ],
@@ -22918,7 +23006,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "projects"
                 ],
@@ -23299,7 +23389,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "projects"
                 ],
@@ -23745,9 +23837,9 @@
                 "description": "",
                 "responses": {
                     "200": {
-                        "description": "Project",
+                        "description": "EmailTemplate",
                         "schema": {
-                            "$ref": "#\/definitions\/project"
+                            "$ref": "#\/definitions\/emailTemplate"
                         }
                     }
                 },
@@ -25280,7 +25372,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "projects"
                 ],
@@ -25639,7 +25733,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "proxy"
                 ],
@@ -26174,7 +26270,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "storage"
                 ],
@@ -26579,7 +26677,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "storage"
                 ],
@@ -27093,7 +27193,7 @@
                     "type": "",
                     "deprecated": false,
                     "demo": "storage\/get-bucket-usage.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-bucket-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -27470,7 +27570,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "teams"
                 ],
@@ -27972,7 +28074,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "teams"
                 ],
@@ -28715,7 +28819,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "users"
                 ],
@@ -29450,7 +29556,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "users"
                 ],
@@ -30807,7 +30915,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "users"
                 ],
@@ -30865,7 +30975,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "users"
                 ],
@@ -32143,7 +32255,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "vcs"
                 ],
@@ -32361,7 +32475,9 @@
                 "consumes": [
                     "application\/json"
                 ],
-                "produces": [],
+                "produces": [
+                    "application\/json"
+                ],
                 "tags": [
                     "vcs"
                 ],
