@@ -54,15 +54,6 @@ App::get('/v1/health/version')
     ->desc('Get version')
     ->groups(['api', 'health'])
     ->label('scope', 'public')
-    ->label('sdk', new Method(
-        namespace: 'health',
-        name: 'getVersion',
-        description: '/docs/references/health/get-version.md',
-        auth: [],
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_VERSION,
-        responseType: ResponseType::JSON
-    ))
     ->inject('response')
     ->action(function (Response $response) {
         $response->dynamic(new Document([ 'version' => APP_VERSION_STABLE ]), Response::MODEL_HEALTH_VERSION);
