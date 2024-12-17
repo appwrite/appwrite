@@ -56,7 +56,7 @@ class Rule extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Certificate generation logs. This will return an empty string if generation did not run, or succeeded.',
                 'default' => '',
-                'example' => 'HTTP challegne failed.',
+                'example' => 'HTTP challenge failed.',
             ])
             ->addRule('renewAt', [
                 'type' => self::TYPE_DATETIME,
