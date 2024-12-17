@@ -1012,7 +1012,7 @@ return [
             ],
             [
                 'name' => 'SMTP_PORT',
-                'description' => 'The port of your STMP server. Commnly used ports include 25, 465, and 587.',
+                'description' => 'The port of your STMP server. Commonly used ports include 25, 465, and 587.',
                 'placeholder' => '25',
                 'required' => true,
                 'type' => 'number'
