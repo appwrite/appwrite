@@ -2022,7 +2022,7 @@
 - Fixed bug preventing the deletion of the project logo
 - Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
 - Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
-- Fixed bug denying authentication with Github OAuth provider
+- Fixed bug denying authentication with GitHub OAuth provider
 - Fixed a bug making read permission overwrite write permission in some cases
 - Fixed consistent property names in databases by enforcing camel case
 

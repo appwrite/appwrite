@@ -20,7 +20,7 @@ It's really easy to contribute to an open-sourced project, but when using GitHub
 
 ### 1.1 Fork the Appwrite repository
 
-Before making any changes, you will need to fork Appwrite's repository to keep branches on the official repo clean. To do that, visit the [Appwrite Github repository](https://github.com/appwrite/appwrite) and click on the fork button.
+Before making any changes, you will need to fork Appwrite's repository to keep branches on the official repo clean. To do that, visit the [Appwrite GitHub repository](https://github.com/appwrite/appwrite) and click on the fork button.
 
 ![Fork button](images/fork.png)
 
@@ -30,7 +30,7 @@ This will redirect you from `github.com/appwrite/appwrite` to `github.com/YOUR_U
 $ git clone COPIED_URL
 ```
 
-> To fork a repository, you will need a basic understanding of CLI and git-cli binaries installed. If you are a beginner, we recommend you to use `Github Desktop`. It is a really clean and simple visual Git client.
+> To fork a repository, you will need a basic understanding of CLI and git-cli binaries installed. If you are a beginner, we recommend you to use `GitHub Desktop`. It is a really clean and simple visual Git client.
 
 Finally, you will need to create a `feat-XXX-YYY-translation` branch based on the `locale` branch and switch to it. The `XXX` should represent issue ID and `YYY` the language name.
 
@@ -117,7 +117,7 @@ You're now ready to start contributing. On the left, you'll find the string to b
 
 ![Reference Language](images/reference-language.png)
 
-Once you're happy with your translations, you can export them. Head over to the **Exports** tab and choose the **Key-Value JSON** option only. Download the file and you can then follow the steps similar to the Github approach.
+Once you're happy with your translations, you can export them. Head over to the **Exports** tab and choose the **Key-Value JSON** option only. Download the file and you can then follow the steps similar to the GitHub approach.
 
 ![Exporting](images/export.png)
 

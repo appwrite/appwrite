@@ -31,7 +31,7 @@ This will redirect you from `github.com/appwrite/runtimes` to `github.com/YOUR_U
 $ git clone COPIED_URL
 ```
 
-> To fork a repository, you will need a basic understanding of CLI and git-cli binaries installed. If you are a beginner, we recommend you to use `Github Desktop`. It is a clean and simple visual Git client.
+> To fork a repository, you will need a basic understanding of CLI and git-cli binaries installed. If you are a beginner, we recommend you to use `GitHub Desktop`. It is a clean and simple visual Git client.
 
 Finally, you will need to create a `feat-XXX-YYY-runtime` branch based on the `refactor` branch and switch to it. The `XXX` should represent the issue ID and `YYY` the runtime name.
 
