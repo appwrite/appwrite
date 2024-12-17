@@ -1531,7 +1531,7 @@ App::setResource('cache', function (Group $pools) {
     return new Cache(new Sharding($adapters));
 }, ['pools']);
 
-App::setResource('redis', function (Group $pools) {
+App::setResource('redis', function () {
     $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
     $port = System::getEnv('_APP_REDIS_PORT', 6379);
     $pass = System::getEnv('_APP_REDIS_PASS', '');
@@ -1544,7 +1544,7 @@ App::setResource('redis', function (Group $pools) {
     $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
-}, ['pools']);
+});
 
 App::setResource('deviceForLocal', function () {
     return new Local();
