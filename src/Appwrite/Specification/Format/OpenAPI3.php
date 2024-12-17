@@ -198,7 +198,7 @@ class OpenAPI3 extends Format
             ];
 
             if (!empty($sdk->getMultiplex())) {
-                $temp['x-appwrite']['multiplex'] = \json_encode($sdk->getMultiplex());
+                $temp['x-appwrite']['multiplex'] = $sdk->getMultiplex();
             }
 
             foreach ($this->models as $value) {

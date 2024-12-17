@@ -198,8 +198,8 @@ class Swagger2 extends Format
                 $temp['produces'][] = $produces;
             }
 
-            if (is_array($sdk->getMethodName() ?? '')) {
-                $temp['x-appwrite']['multiplex'] = $sdk->getMethodName();
+            if (!empty($sdk->getMultiplex())) {
+                $temp['x-appwrite']['multiplex'] = $sdk->getMultiplex();
             }
 
             foreach ($this->models as $value) {

@@ -8336,6 +8336,31 @@
                     "offline-model": "\/databases\/{databaseId}\/collections\/{collectionId}\/documents",
                     "offline-key": "{documentId}",
                     "offline-response-key": "$id",
+                    "multiplex": [
+                        {
+                            "name": "createDocument",
+                            "parameters": [
+                                "documentId",
+                                "data",
+                                "permissions"
+                            ],
+                            "required": [
+                                "documentId",
+                                "data"
+                            ],
+                            "responseModel": "document"
+                        },
+                        {
+                            "name": "createDocuments",
+                            "parameters": [
+                                "documents"
+                            ],
+                            "required": [
+                                "documents"
+                            ],
+                            "responseModel": "documentList"
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }

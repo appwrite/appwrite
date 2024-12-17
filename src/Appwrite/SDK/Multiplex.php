@@ -2,7 +2,9 @@
 
 namespace Appwrite\SDK;
 
-class Multiplex
+use JsonSerializable;
+
+class Multiplex implements JsonSerializable
 {
     /**
      * @param string $name
@@ -17,4 +19,14 @@ class Multiplex
         private string $responseModel
     )
     {}
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'name' => $this->name,
+            'parameters' => $this->parameters,
+            'required' => $this->required,
+            'responseModel' => $this->responseModel,
+        ];
+    }
 }
