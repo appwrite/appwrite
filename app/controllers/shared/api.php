@@ -422,7 +422,7 @@ App::init()
     ->inject('dbForProject')
     ->inject('redis')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, Redis $redis, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, \Redis $redis, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -487,8 +487,8 @@ App::init()
 
             if (
                 $enabled                // Abuse is enabled
-                && !$isAppUser          // User is not API key
-                && !$isPrivilegedUser   // User is not an admin
+                // && !$isAppUser          // User is not API key
+                // && !$isPrivilegedUser   // User is not an admin
                 && $abuse->check()      // Route is rate-limited
             ) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);

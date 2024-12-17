@@ -138,6 +138,26 @@ if (!function_exists('getCache')) {
     }
 }
 
+// Allows overriding
+if (!function_exists('getRedis')) {
+    function getRedis(): \Redis
+    {
+        
+        $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
+        $port = System::getEnv('_APP_REDIS_PORT', 6379);
+        $pass = System::getEnv('_APP_REDIS_PASS', '');
+
+        $redis = new \Redis();
+        @$redis->pconnect($host, (int)$port);
+        if ($pass) {
+            $redis->auth($pass);
+        }
+        $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+
+        return $redis;
+    }
+}
+
 if (!function_exists('getRealtime')) {
     function getRealtime(): Realtime
     {
@@ -481,7 +501,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
 
-        $cache = $app->getResource('cache');
+        $redis = $app->getResource('redis');
         $console = $app->getResource('console'); /** @var Document $console */
         $user = $app->getResource('user'); /** @var Document $user */
 
@@ -490,7 +510,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $cache);
+        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $redis);
         $timeLimit
             ->setParam('{ip}', $request->getIP())
             ->setParam('{url}', $request->getURI());
@@ -593,7 +613,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $cache);
+        $redis = getRedis();
+        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $redis);
 
         $timeLimit
             ->setParam('{connection}', $connection)

@@ -853,31 +853,31 @@ $register->set('pools', function () {
     $connections = [
         'console' => [
             'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
+            'dsns' => $fallbackForDB,
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'database' => [
             'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
+            'dsns' => $fallbackForDB,
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'queue' => [
             'type' => 'queue',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
+            'dsns' => $fallbackForRedis,
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'pubsub' => [
             'type' => 'pubsub',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
+            'dsns' => $fallbackForRedis,
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'cache' => [
             'type' => 'cache',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
+            'dsns' => $fallbackForRedis,
             'multiple' => true,
             'schemes' => ['redis'],
         ],
@@ -949,12 +949,12 @@ $register->set('pools', function () {
                     });
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
-                    $redis = new Redis();
+                    $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
                     if ($dsnPass) {
                         $redis->auth($dsnPass);
                     }
-                    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
                     return $redis;
                 },
@@ -1532,18 +1532,18 @@ App::setResource('cache', function (Group $pools) {
 }, ['pools']);
 
 App::setResource('redis', function (Group $pools) {
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
+    $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
+    $port = System::getEnv('_APP_REDIS_PORT', 6379);
+    $pass = System::getEnv('_APP_REDIS_PASS', '');
 
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource()
-        ;
+    $redis = new \Redis();
+    @$redis->pconnect($host, (int)$port);
+    if ($pass) {
+        $redis->auth($pass);
     }
+    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
-    return new Sharding($adapters);
+    return $redis;
 }, ['pools']);
 
 App::setResource('deviceForLocal', function () {
