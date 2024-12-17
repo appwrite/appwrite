@@ -1003,7 +1003,7 @@ return [
     ],
     Exception::MESSAGE_MISSING_SCHEDULE => [
         'name' => Exception::MESSAGE_MISSING_SCHEDULE,
-        'description' => 'Message can not have status ' . MessageStatus::SCHEDULED . ' without a schedule.',
+        'description' => 'Message cannot have status ' . MessageStatus::SCHEDULED . ' without a schedule.',
         'code' => 400,
     ],
     Exception::SCHEDULE_NOT_FOUND => [
