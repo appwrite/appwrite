@@ -13,7 +13,7 @@ use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\Database\TimeLimit;
+use Utopia\Abuse\Adapters\Redis\TimeLimit;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -481,7 +481,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
 
-        $dbForProject = getProjectDB($project);
+        $cache = $app->getResource('cache');
         $console = $app->getResource('console'); /** @var Document $console */
         $user = $app->getResource('user'); /** @var Document $user */
 
@@ -490,7 +490,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $dbForProject);
+        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $cache);
         $timeLimit
             ->setParam('{ip}', $request->getIP())
             ->setParam('{url}', $request->getURI());
@@ -593,7 +593,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $database);
+        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $cache);
 
         $timeLimit
             ->setParam('{connection}', $connection)

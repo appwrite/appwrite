@@ -1531,6 +1531,21 @@ App::setResource('cache', function (Group $pools) {
     return new Cache(new Sharding($adapters));
 }, ['pools']);
 
+App::setResource('redis', function (Group $pools) {
+    $list = Config::getParam('pools-cache', []);
+    $adapters = [];
+
+    foreach ($list as $value) {
+        $adapters[] = $pools
+            ->get($value)
+            ->pop()
+            ->getResource()
+        ;
+    }
+
+    return new Sharding($adapters);
+}, ['pools']);
+
 App::setResource('deviceForLocal', function () {
     return new Local();
 });
