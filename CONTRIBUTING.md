@@ -154,7 +154,7 @@ To keep our services easy to understand within Docker we follow a naming convent
 `appwrite-worker-X` - Workers (`src/Appwrite/Platform/Workers/*`)
 `appwrite-task-X` - Tasks (`src/Appwrite/Platform/Tasks/*`)
 
-Other containes should be named the same as their service, for example `redis` should just be called `redis`.
+Other contains should be named the same as their service, for example `redis` should just be called `redis`.
 
 ##### Security
 
