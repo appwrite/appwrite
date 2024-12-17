@@ -1796,7 +1796,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         /**
-         * Enable Disctionary
+         * Enable Dictionary
          */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-dictionary', array_merge([
             'content-type' => 'application/json',

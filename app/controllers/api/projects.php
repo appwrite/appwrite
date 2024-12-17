@@ -769,7 +769,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
     });
 
 App::patch('/v1/projects/:projectId/auth/password-dictionary')
-    ->desc('Update authentication password dictionary status. Use this endpoint to enable or disable the dicitonary check for user password')
+    ->desc('Update authentication password dictionary status. Use this endpoint to enable or disable the dictionary check for user password')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
