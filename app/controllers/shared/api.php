@@ -487,8 +487,8 @@ App::init()
 
             if (
                 $enabled                // Abuse is enabled
-                // && !$isAppUser          // User is not API key
-                // && !$isPrivilegedUser   // User is not an admin
+                && !$isAppUser          // User is not API key
+                && !$isPrivilegedUser   // User is not an admin
                 && $abuse->check()      // Route is rate-limited
             ) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
