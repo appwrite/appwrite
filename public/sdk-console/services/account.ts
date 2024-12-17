@@ -35,7 +35,7 @@ export class Account extends Service {
          * project. After the user registration completes successfully, you can use
          * the [/account/verfication](/docs/client/account#accountCreateVerification)
          * route to start verifying the user email address. To allow the new user to
-         * login to their new account, you need to create a new [account
+         * log in to their new account, you need to create a new [account
          * session](/docs/client/account#accountCreateSession).
          *
          * @param {string} userId
@@ -623,7 +623,7 @@ export class Account extends Service {
         /**
          * Create Account Session with OAuth2
          *
-         * Allow the user to login to their account using the OAuth2 provider of their
+         * Allow the user to log in to their account using the OAuth2 provider of their
          * choice. Each OAuth2 provider should be enabled from the Appwrite console
          * first. Use the success and failure arguments to provide a redirect URL's
          * back to your app when login is completed.

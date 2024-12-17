@@ -321,7 +321,7 @@ App::get('/v1/vcs/github/callback')
     ->inject('dbForConsole')
     ->action(function (string $providerInstallationId, string $setupAction, string $state, string $code, GitHub $github, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
         if (empty($state)) {
-            $error = 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.';
+            $error = 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, log in to the Appwrite Console and install the GitHub App.';
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
         }
 
