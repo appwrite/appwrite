@@ -16,7 +16,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\Abuse\Adapters\Redis\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
