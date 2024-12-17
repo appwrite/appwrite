@@ -62,13 +62,7 @@ Server::setResource('project', function (Message $message, Database $dbForPlatfo
         return $project;
     }
 
-    // NOT all workers need valid DB config so we return empty if this fails
-    try {
-        return $dbForPlatform->getDocument('projects', $project->getId());
-    } catch (\Throwable $e) {
-        return new Document([]);
-    }
-
+    return $dbForPlatform->getDocument('projects', $project->getId());
 }, ['message', 'dbForPlatform']);
 
 Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForPlatform) {
