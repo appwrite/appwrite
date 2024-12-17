@@ -4,7 +4,6 @@ namespace Appwrite\Specification\Format;
 
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\MethodType;
-use Appwrite\SDK\Multiplex;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;

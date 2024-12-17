@@ -2945,7 +2945,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
-    ->label('sdk',
+    ->label(
+        'sdk',
         new Method(
             namespace: 'databases',
             name: 'createDocument',
@@ -2970,7 +2971,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     responseModel: Response::MODEL_DOCUMENT_LIST,
                 ),
             ]
-        ))
+        )
+    )
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')

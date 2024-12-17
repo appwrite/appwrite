@@ -12,13 +12,13 @@ class Multiplex implements JsonSerializable
      * @param array<string> $required
      * @param string $responseModel
      */
-    function __construct(
+    public function __construct(
         private string $name,
         private array $parameters,
         private array $required,
         private string $responseModel
-    )
-    {}
+    ) {
+    }
 
     public function jsonSerialize(): array
     {
