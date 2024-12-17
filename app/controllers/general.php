@@ -96,7 +96,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $accessedAt = $project->getAttribute('accessedAt', '');
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
             $project->setAttribute('accessedAt', DateTime::now());
-            Authorization::skip(fn () => $dbForConsole->updateDocument('projects', $project->getId(), $project));
+            Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
         }
     }
 
