@@ -698,10 +698,9 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
     if (array_key_exists($connection, $realtime->connections)) {
         $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
+        $register->get('telemetry.connectionCounter')->add(-1);
     }
     $realtime->unsubscribe($connection);
-
-    $register->get('telemetry.connectionCounter')->add(-1);
 
     Console::info('Connection close: ' . $connection);
 });

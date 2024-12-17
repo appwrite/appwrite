@@ -1213,12 +1213,12 @@ App::setResource('clients', function ($request, $console, $project) {
     return \array_unique($clients);
 }, ['request', 'console', 'project']);
 
-App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForConsole) {
+App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
     /** @var Utopia\Database\Database $dbForProject */
-    /** @var Utopia\Database\Database $dbForConsole */
+    /** @var Utopia\Database\Database $dbForPlatform */
     /** @var string $mode */
 
     Authorization::setDefaultStatus(true);
@@ -1267,13 +1267,13 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
             $user = new Document([]);
         } else {
             if ($project->getId() === 'console') {
-                $user = $dbForConsole->getDocument('users', Auth::$unique);
+                $user = $dbForPlatform->getDocument('users', Auth::$unique);
             } else {
                 $user = $dbForProject->getDocument('users', Auth::$unique);
             }
         }
     } else {
-        $user = $dbForConsole->getDocument('users', Auth::$unique);
+        $user = $dbForPlatform->getDocument('users', Auth::$unique);
     }
 
     if (
@@ -1316,14 +1316,14 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     }
 
     $dbForProject->setMetadata('user', $user->getId());
-    $dbForConsole->setMetadata('user', $user->getId());
+    $dbForPlatform->setMetadata('user', $user->getId());
 
     return $user;
-}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole']);
+}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform']);
 
-App::setResource('project', function ($dbForConsole, $request, $console) {
+App::setResource('project', function ($dbForPlatform, $request, $console) {
     /** @var Appwrite\Utopia\Request $request */
-    /** @var Utopia\Database\Database $dbForConsole */
+    /** @var Utopia\Database\Database $dbForPlatform */
     /** @var Utopia\Database\Document $console */
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
@@ -1332,10 +1332,10 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
         return $console;
     }
 
-    $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+    $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
     return $project;
-}, ['dbForConsole', 'request', 'console']);
+}, ['dbForPlatform', 'request', 'console']);
 
 App::setResource('session', function (Document $user) {
     if ($user->isEmpty()) {
@@ -1400,9 +1400,9 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
+App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
-        return $dbForConsole;
+        return $dbForPlatform;
     }
 
     try {
@@ -1440,9 +1440,9 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     }
 
     return $database;
-}, ['pools', 'dbForConsole', 'cache', 'project']);
+}, ['pools', 'dbForPlatform', 'cache', 'project']);
 
-App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
+App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
     $dbAdapter = $pools
         ->get('console')
         ->pop()
@@ -1460,12 +1460,12 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     return $database;
 }, ['pools', 'cache']);
 
-App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForConsole;
+            return $dbForPlatform;
         }
 
         try {
@@ -1514,7 +1514,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         return $database;
     };
-}, ['pools', 'dbForConsole', 'cache']);
+}, ['pools', 'dbForPlatform', 'cache']);
 
 App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
@@ -1811,7 +1811,7 @@ App::setResource('plan', function (array $plan = []) {
     return [];
 });
 
-App::setResource('team', function (Document $project, Database $dbForConsole, App $utopia, Request $request) {
+App::setResource('team', function (Document $project, Database $dbForPlatform, App $utopia, Request $request) {
     $teamInternalId = '';
     if ($project->getId() !== 'console') {
         $teamInternalId = $project->getAttribute('teamInternalId', '');
@@ -1821,23 +1821,23 @@ App::setResource('team', function (Document $project, Database $dbForConsole, Ap
         if (str_starts_with($path, '/v1/projects/:projectId')) {
             $uri = $request->getURI();
             $pid = explode('/', $uri)[3];
-            $p = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $pid));
+            $p = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $pid));
             $teamInternalId = $p->getAttribute('teamInternalId', '');
         } elseif ($path === '/v1/projects') {
             $teamId = $request->getParam('teamId', '');
-            $team = Authorization::skip(fn () => $dbForConsole->getDocument('teams', $teamId));
+            $team = Authorization::skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
             return $team;
         }
     }
 
-    $team = Authorization::skip(function () use ($dbForConsole, $teamInternalId) {
-        return $dbForConsole->findOne('teams', [
+    $team = Authorization::skip(function () use ($dbForPlatform, $teamInternalId) {
+        return $dbForPlatform->findOne('teams', [
             Query::equal('$internalId', [$teamInternalId]),
         ]);
     });
 
     return $team;
-}, ['project', 'dbForConsole', 'utopia', 'request']);
+}, ['project', 'dbForPlatform', 'utopia', 'request']);
 
 App::setResource(
     'isResourceBlocked',

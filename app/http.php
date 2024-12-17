@@ -172,8 +172,8 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         do {
             try {
                 $attempts++;
-                $dbForConsole = $app->getResource('dbForConsole');
-                /** @var Utopia\Database\Database $dbForConsole */
+                $dbForPlatform = $app->getResource('dbForPlatform');
+                /** @var Utopia\Database\Database $dbForPlatform */
                 break; // leave the do-while if successful
             } catch (\Throwable $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -188,13 +188,13 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
 
         try {
             Console::success('[Setup] - Creating console database...');
-            $dbForConsole->create();
+            $dbForPlatform->create();
         } catch (Duplicate) {
             Console::success('[Setup] - Skip: metadata table already exists');
         }
 
-        if ($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
-            $audit = new Audit($dbForConsole);
+        if ($dbForPlatform->getCollection(Audit::COLLECTION)->isEmpty()) {
+            $audit = new Audit($dbForPlatform);
             $audit->setup();
         }
 
@@ -205,7 +205,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
                 continue;
             }
-            if (!$dbForConsole->getCollection($key)->isEmpty()) {
+            if (!$dbForPlatform->getCollection($key)->isEmpty()) {
                 continue;
             }
 
@@ -214,12 +214,12 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
             $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
 
-            $dbForConsole->createCollection($key, $attributes, $indexes);
+            $dbForPlatform->createCollection($key, $attributes, $indexes);
         }
 
-        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists($dbForConsole->getDatabase(), 'bucket_1')) {
+        if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty() && !$dbForPlatform->exists($dbForPlatform->getDatabase(), 'bucket_1')) {
             Console::success('[Setup] - Creating default bucket...');
-            $dbForConsole->createDocument('buckets', new Document([
+            $dbForPlatform->createDocument('buckets', new Document([
                 '$id' => ID::custom('default'),
                 '$collection' => ID::custom('buckets'),
                 'name' => 'Default',
@@ -239,7 +239,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 'search' => 'buckets Default',
             ]));
 
-            $bucket = $dbForConsole->getDocument('buckets', 'default');
+            $bucket = $dbForPlatform->getDocument('buckets', 'default');
 
             Console::success('[Setup] - Creating files collection for default bucket...');
             $files = $collections['buckets']['files'] ?? [];
@@ -250,7 +250,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             $attributes = \array_map(fn ($attribute) => new Document($attribute), $files['attributes']);
             $indexes = \array_map(fn (array $index) => new Document($index), $files['indexes']);
 
-            $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+            $dbForPlatform->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
         }
 
         $projectCollections = $collections['projects'];
@@ -434,10 +434,10 @@ $http->on('Task', function () use ($register, $domains) {
     App::setResource('pools', fn () => $pools);
     $app = new App('UTC');
 
-    /** @var Utopia\Database\Database $dbForConsole */
-    $dbForConsole = $app->getResource('dbForConsole');
+    /** @var Utopia\Database\Database $dbForPlatform */
+    $dbForPlatform = $app->getResource('dbForPlatform');
 
-    Console::loop(function () use ($dbForConsole, $domains, &$lastSyncUpdate) {
+    Console::loop(function () use ($dbForPlatform, $domains, &$lastSyncUpdate) {
         try {
             $time = DateTime::now();
             $limit = 1000;
@@ -455,7 +455,7 @@ $http->on('Task', function () use ($register, $domains) {
                 $queries[] = Query::equal('resourceType', ['function']);
                 $results = [];
                 try {
-                    $results = Authorization::skip(fn () =>  $dbForConsole->find('rules', $queries));
+                    $results = Authorization::skip(fn () =>  $dbForPlatform->find('rules', $queries));
                 } catch (Throwable $th) {
                     Console::error($th->getMessage());
                 }

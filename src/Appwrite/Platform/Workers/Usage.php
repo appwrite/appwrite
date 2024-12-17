@@ -59,7 +59,14 @@ class Usage extends Action
             throw new Exception('Missing payload');
         }
 
-        $project = new Document($payload['project'] ?? []);
+        $document = $payload['project'] ?? [];
+        $project = new Document($document);
+
+        if (empty($project->getAttribute('database'))) {
+            var_dump($payload);
+            return;
+        }
+
         $projectId = $project->getInternalId();
         foreach ($payload['reduce'] ?? [] as $document) {
             if (empty($document)) {
@@ -74,8 +81,9 @@ class Usage extends Action
             );
         }
 
+
         $this->stats[$projectId]['project'] = [
-            '$uid' => $project->getId(),
+            '$id' => $project->getId(),
             '$internalId' => $project->getInternalId(),
             'database' => $project->getAttribute('database'),
         ];
