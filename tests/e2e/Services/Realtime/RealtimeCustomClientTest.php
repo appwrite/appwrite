@@ -229,7 +229,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals(1008, $payload['data']['code']);
         $this->assertEquals('Invalid Origin. Register your new client (appwrite.unknown) as a new Web platform on your project console dashboard', $payload['data']['message']);
         \usleep(250000); // 250ms
-        $this->expectException(ConnectionException::class); // Check if server disconnnected client
+        $this->expectException(ConnectionException::class); // Check if server disconnected client
         $client->close();
     }
 
