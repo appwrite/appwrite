@@ -497,7 +497,7 @@ export namespace Models {
          */
         continent: string;
         /**
-         * True if country is part of the Europian Union.
+         * True if country is part of the European Union.
          */
         eu: boolean;
         /**
