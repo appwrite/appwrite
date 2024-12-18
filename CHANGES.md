@@ -1371,7 +1371,7 @@
 - Fixed UI when file uploader is covered by jump to top button
 - Fixed bug that allowed Queries on failed indexes
 - Fixed UI when an alert with a lot text disappears too fast by increasing duration
-- Fixed issues with cache and case-sensivity on ID's
+- Fixed issues with cache and case-sensitivity on ID's
 - Fixed storage stats by upgrading to `BIGINT`
 - Fixed `storage.total` stats which now is a sum of `storage.files.total` and `storage.deployments.total`
 - Fixed Project logo preview
