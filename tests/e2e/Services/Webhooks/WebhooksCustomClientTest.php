@@ -813,7 +813,7 @@ class WebhooksCustomClientTest extends Scope
         $email = $data['email'] ?? '';
         $session = $data['session'] ?? '';
         $secret = $data['secret'] ?? '';
-        $password = 'newPassowrd2';
+        $password = 'newPassword2';
 
         $recovery = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
