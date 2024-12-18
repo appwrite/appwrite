@@ -3478,7 +3478,7 @@ trait DatabasesBase
     /**
      * @depends testUniqueIndexDuplicate
      */
-    public function testPersistantCreatedAt(array $data): array
+    public function testPersistentCreatedAt(array $data): array
     {
         $headers = $this->getSide() === 'client' ? array_merge([
             'content-type' => 'application/json',
