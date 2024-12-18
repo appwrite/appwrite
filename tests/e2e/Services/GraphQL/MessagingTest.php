@@ -1073,7 +1073,7 @@ class MessagingTest extends Scope
                 'messageId' => ID::unique(),
                 'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'title' => 'Push Notification Title',
-                'body' => 'Push Notifiaction Body',
+                'body' => 'Push Notification Body',
             ],
         ];
         $push = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -1119,7 +1119,7 @@ class MessagingTest extends Scope
                 'status' => 'draft',
                 'topics' => [$push['topics'][0]],
                 'title' => 'Push Notification Title',
-                'body' => 'Push Notifiaction Body',
+                'body' => 'Push Notification Body',
             ],
         ];
         $push = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
