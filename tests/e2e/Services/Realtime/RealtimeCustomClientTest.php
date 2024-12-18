@@ -426,7 +426,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("users.*.verification.*", $response['data']['events']);
         $this->assertContains("users.*", $response['data']['events']);
         /**
-         * Test Acoount Prefs Update
+         * Test Account Prefs Update
          */
         $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
