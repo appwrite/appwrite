@@ -1004,7 +1004,7 @@ return [
         'variables' => [
             [
                 'name' => 'SMTP_HOST',
-                'description' => 'The address of your SMTP server. Many STMP providers will provide this information in their documentation. Some popular providers include: Mailgun, SendGrid, and Gmail.',
+                'description' => 'The address of your SMTP server. Many SMTP providers will provide this information in their documentation. Some popular providers include: Mailgun, SendGrid, and Gmail.',
                 'value' => '',
                 'placeholder' => 'smtp.mailgun.org',
                 'required' => true,
@@ -1012,7 +1012,7 @@ return [
             ],
             [
                 'name' => 'SMTP_PORT',
-                'description' => 'The port of your STMP server. Commonly used ports include 25, 465, and 587.',
+                'description' => 'The port of your SMTP server. Commonly used ports include 25, 465, and 587.',
                 'placeholder' => '25',
                 'required' => true,
                 'type' => 'number'
