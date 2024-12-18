@@ -1751,9 +1751,9 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $booleanParams = ['async'];
-        foreach ($booleanParams as $booleamParam) {
-            if (!empty($$booleamParam) && !is_bool($$booleamParam)) {
-                $$booleamParam = $$booleamParam === "true" ? true : false;
+        foreach ($booleanParams as $booleanParam) {
+            if (!empty($$booleanParam) && !is_bool($$booleanParam)) {
+                $$booleanParam = $$booleanParam === "true" ? true : false;
             }
         }
 
