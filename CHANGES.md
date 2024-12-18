@@ -720,7 +720,7 @@
 * sync: main -> 1.5.x by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7705
 * Sync main 1.5.x by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7727
 * Updated header by @DylanG-64 in https://github.com/appwrite/appwrite/pull/7728
-* chore: update exector, runtimes by @loks0n in https://github.com/appwrite/appwrite/pull/7729
+* chore: update executor, runtimes by @loks0n in https://github.com/appwrite/appwrite/pull/7729
 * feat: pint by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7738
 * feat: cascading response/request filters by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7745
 * Revert 7629 revert 7614 chore usage queue health by @christyjacob4 in https://github.com/appwrite/appwrite/pull/7707
