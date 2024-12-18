@@ -783,7 +783,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
-                'description' => 'Deprecated since 1.2.0. High use of swap memory is not recommended to preserve harddrive health.',
+                'description' => 'Deprecated since 1.2.0. High use of swap memory is not recommended to preserve hard drive health.',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,
