@@ -1758,7 +1758,7 @@
   - Java 11.0
   - Node 16.0
   - Dart 2.13
-- Added a new gravity option when croping storage images using the file preview endpoint (#1260)
+- Added a new gravity option when cropping storage images using the file preview endpoint (#1260)
 - Upgraded GEOIP DB file to Jun 2021 release (#1256)
 - Added file created date to file info on the console (#1183)
 - Added file size to file info on the console (#1183)
