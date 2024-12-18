@@ -1483,8 +1483,8 @@
 
 ## Upgrades
 
-- Upgraded `redis` extenstion to version 5.3.7
-- Upgraded `swoole` extenstion to version 4.8.7
+- Upgraded `redis` extension to version 5.3.7
+- Upgraded `swoole` extension to version 4.8.7
 - Upgraded GEO IP database to version March 2022
 
 # Version 0.12.3
@@ -1504,9 +1504,9 @@
 
 ## Upgrades
 
-- Upgraded `redis` extenstion to version 5.3.6
-- Upgraded `swoole` extenstion to version 4.8.6
-- Upgraded `imagick` extenstion to version 3.7.0
+- Upgraded `redis` extension to version 5.3.6
+- Upgraded `swoole` extension to version 4.8.6
+- Upgraded `imagick` extension to version 3.7.0
 - Upgraded GEO IP database to version February 2022
 
 # Version 0.12.1
@@ -1602,11 +1602,11 @@
 - Fix security vulnerability in the ACME-Challenge (#2779)
 
 ## Upgrades
-- Upgraded redis extenstion to version 5.3.6
-- Upgraded swoole extenstion to version 4.8.6
-- Upgraded imagick extenstion to version 3.7.0
-- Upgraded yaml extenstion to version 2.2.2
-- Upgraded maxminddb extenstion to version 1.11.0
+- Upgraded redis extension to version 5.3.6
+- Upgraded swoole extension to version 4.8.6
+- Upgraded imagick extension to version 3.7.0
+- Upgraded yaml extension to version 2.2.2
+- Upgraded maxminddb extension to version 1.11.0
 - Upgraded GEO IP database to version February 2022
 
 # Version 0.11.0
