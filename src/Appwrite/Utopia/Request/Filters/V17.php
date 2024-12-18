@@ -179,7 +179,7 @@ class V17 extends Filter
                         $currentArrayParam[] = $currentParam;
                         $currentParam = "";
                     } else {
-                        // Append from parap builder. Either value, or array
+                        // Append from param builder. Either value, or array
                         if (empty($currentArrayParam)) {
                             if (strlen($currentParam)) {
                                 $params[] = $currentParam;
