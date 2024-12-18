@@ -1465,7 +1465,7 @@ trait UsersBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'providerId' => ID::unique(),
-            'name' => 'Sengrid1',
+            'name' => 'Sendgrid1',
             'apiKey' => 'my-apikey',
             'from' => 'from@domain.com',
         ]);

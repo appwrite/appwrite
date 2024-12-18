@@ -21,7 +21,7 @@ trait MessagingBase
         $providersParams = [
             'sendgrid' => [
                 'providerId' => ID::unique(),
-                'name' => 'Sengrid1',
+                'name' => 'Sendgrid1',
                 'apiKey' => 'my-apikey',
                 'from' => 'sender-email@my-domain.example.com',
             ],
@@ -129,7 +129,7 @@ trait MessagingBase
     {
         $providersParams = [
             'sendgrid' => [
-                'name' => 'Sengrid2',
+                'name' => 'Sendgrid2',
                 'apiKey' => 'my-apikey',
             ],
             'mailgun' => [

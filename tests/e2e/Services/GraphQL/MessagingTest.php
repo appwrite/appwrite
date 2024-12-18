@@ -21,7 +21,7 @@ class MessagingTest extends Scope
         $providersParams = [
             'Sendgrid' => [
                 'providerId' => ID::unique(),
-                'name' => 'Sengrid1',
+                'name' => 'Sendgrid1',
                 'apiKey' => 'my-apikey',
                 'fromName' => 'Sender Name',
                 'fromEmail' => 'sender-email@my-domain.example.com',
@@ -120,7 +120,7 @@ class MessagingTest extends Scope
         $providersParams = [
             'Sendgrid' => [
                 'providerId' => $providers[0]['_id'],
-                'name' => 'Sengrid2',
+                'name' => 'Sendgrid2',
                 'apiKey' => 'my-apikey',
             ],
             'Mailgun' => [
@@ -382,7 +382,7 @@ class MessagingTest extends Scope
         $providerParam = [
             'sendgrid' => [
                 'providerId' => ID::unique(),
-                'name' => 'Sengrid1',
+                'name' => 'Sendgrid1',
                 'apiKey' => 'my-apikey',
                 'fromName' => 'Sender',
                 'fromEmail' => 'sender-email@my-domain.example.com',

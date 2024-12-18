@@ -37,7 +37,7 @@ class MessagingConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'providerId' => ID::unique(),
-            'name' => 'Sengrid1',
+            'name' => 'Sendgrid1',
             'apiKey' => 'my-apikey',
             'from' => 'sender-email@my-domain.example.com',
         ]);
