@@ -1427,7 +1427,7 @@
 ## Features
 ### Functions
 - Synchronous function execution
-- Improved functions execution times by alot
+- Improved functions execution times by a lot
 - Added a new worker to build deployments
 - Functions are now executed differently and your functions need to be adapted **Breaking Change**
 - Tags are now called Deployments **Breaking Change**
