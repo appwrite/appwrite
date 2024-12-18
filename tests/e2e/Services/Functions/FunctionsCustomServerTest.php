@@ -472,7 +472,7 @@ class FunctionsCustomServerTest extends Scope
         /**
          * If below test ever starts failing, it means temaplate used in
          * this test now has some variables. This test currently doesnt test variables.
-         * Remove bellow assertion and update test to crete variable,
+         * Remove below assertion and update test to crete variable,
          * and ensure variable works as expected in execution.
          */
         $this->assertEmpty($template['body']['variables']);
