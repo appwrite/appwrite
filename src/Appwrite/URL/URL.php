@@ -35,11 +35,11 @@ class URL
      * Take URL parts and combine them to a valid string
      *
      * @param array $url
-     * @param array $ommit
+     * @param array $omit
      *
      * @return string
      */
-    public static function unparse(array $url, array $ommit = []): string
+    public static function unparse(array $url, array $omit = []): string
     {
         if (isset($url['path']) && \mb_substr($url['path'], 0, 1) !== '/') {
             $url['path'] = '/' . $url['path'];
@@ -65,8 +65,8 @@ class URL
 
         $parts['fragment'] = isset($url['fragment']) ? '#' . $url['fragment'] : '';
 
-        if ($ommit) {
-            foreach ($ommit as $key) {
+        if ($omit) {
+            foreach ($omit as $key) {
                 if (isset($parts[ $key ])) {
                     $parts[ $key ] = '';
                 }
