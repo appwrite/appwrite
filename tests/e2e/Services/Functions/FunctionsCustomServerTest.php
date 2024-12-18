@@ -470,7 +470,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotNull($entrypoint);
 
         /**
-         * If below test ever starts failing, it means temaplate used in
+         * If below test ever starts failing, it means template used in
          * this test now has some variables. This test currently doesnt test variables.
          * Remove below assertion and update test to crete variable,
          * and ensure variable works as expected in execution.
