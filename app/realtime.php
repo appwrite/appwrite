@@ -13,7 +13,7 @@ use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\Redis\TimeLimit;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -154,6 +154,13 @@ if (!function_exists('getRedis')) {
         $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
         return $redis;
+    }
+}
+
+if (!function_exists('getAdapterForAbuse')) {
+    function getAdapterForAbuse(): TimeLimit
+    {
+        return new TimeLimit("", 0, 1, getRedis());
     }
 }
 
@@ -500,7 +507,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
 
-        $redis = $app->getResource('redis');
+        $adapterForAbuse = $app->getResource('adapterForAbuse');
         $console = $app->getResource('console'); /** @var Document $console */
         $user = $app->getResource('user'); /** @var Document $user */
 
@@ -509,7 +516,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $redis);
+        $timeLimit = $adapterForAbuse('url:{url},ip:{ip}', 128, 60);
         $timeLimit
             ->setParam('{ip}', $request->getIP())
             ->setParam('{url}', $request->getURI());

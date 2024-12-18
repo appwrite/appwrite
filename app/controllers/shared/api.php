@@ -19,7 +19,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\Redis\TimeLimit;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -420,9 +420,9 @@ App::init()
     ->inject('queueForBuilds')
     ->inject('queueForUsage')
     ->inject('dbForProject')
-    ->inject('redis')
+    ->inject('adapterForAbuse')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, \Redis $redis, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, TimeLimit $adapterForAbuse, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -445,7 +445,7 @@ App::init()
         foreach ($abuseKeyLabel as $abuseKey) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
-            $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $redis);
+            $timeLimit = $adapterForAbuse($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
             $timeLimit
                 ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())

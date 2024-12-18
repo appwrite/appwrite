@@ -8,7 +8,7 @@ use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\Redis\TimeLimit;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -47,7 +47,7 @@ class Deletes extends Action
             ->inject('message')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
-            ->inject('redis')
+            ->inject('adapterForAbuse')
             ->inject('deviceForFiles')
             ->inject('deviceForFunctions')
             ->inject('deviceForBuilds')
@@ -58,8 +58,8 @@ class Deletes extends Action
             ->inject('auditRetention')
             ->inject('log')
             ->callback(
-                fn ($message, $dbForPlatform, callable $getProjectDB, \Redis $redis, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log) =>
-                    $this->action($message, $dbForPlatform, $getProjectDB, $redis, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $abuseRetention, $executionRetention, $auditRetention, $log)
+                fn ($message, $dbForPlatform, callable $getProjectDB, TimeLimit $adapterForAbuse, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log) =>
+                    $this->action($message, $dbForPlatform, $getProjectDB, $adapterForAbuse, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $abuseRetention, $executionRetention, $auditRetention, $log)
             );
     }
 
@@ -67,7 +67,7 @@ class Deletes extends Action
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Database $dbForPlatform, callable $getProjectDB, \Redis $redis, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
+    public function action(Message $message, Database $dbForPlatform, callable $getProjectDB, TimeLimit $adapterForAbuse, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -127,7 +127,7 @@ class Deletes extends Action
                 }
                 break;
             case DELETE_TYPE_ABUSE:
-                $this->deleteAbuseLogs($project, $redis, $abuseRetention);
+                $this->deleteAbuseLogs($project, $adapterForAbuse, $abuseRetention);
                 break;
             case DELETE_TYPE_REALTIME:
                 $this->deleteRealtimeUsage($dbForPlatform, $datetime);
@@ -708,10 +708,10 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteAbuseLogs(Document $project, \Redis $redis, string $abuseRetention): void
+    private function deleteAbuseLogs(Document $project, TimeLimit $adapterForAbuse, string $abuseRetention): void
     {
         $projectId = $project->getId();
-        $timeLimit = new TimeLimit("", 0, 1, $redis);
+        $timeLimit = $adapterForAbuse("", 0, 1);
         $abuse = new Abuse($timeLimit);
 
         try {

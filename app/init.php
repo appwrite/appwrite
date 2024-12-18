@@ -48,6 +48,7 @@ use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
@@ -93,6 +94,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
+use Redis;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -1545,6 +1547,12 @@ App::setResource('redis', function () {
 
     return $redis;
 });
+
+App::setResource('adapterForAbuse', function (\Redis $redis) {
+    return function (string $key, int $limit, int $time) use ($redis) {
+        return new TimeLimitRedis($key, $limit, $time, $redis);
+    };
+}, ['redis']);
 
 App::setResource('deviceForLocal', function () {
     return new Local();
