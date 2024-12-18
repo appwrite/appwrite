@@ -727,7 +727,7 @@
 * fix: migration 1.5.x by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7737
 * sync: main 1.5.x 3 by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7747
 * Allow users to disable APIs by @vermakhushboo in https://github.com/appwrite/appwrite/pull/7725
-* Feat seperate image IDs by @abnegate in https://github.com/appwrite/appwrite/pull/7749
+* Feat separate image IDs by @abnegate in https://github.com/appwrite/appwrite/pull/7749
 * fix: account endpoint order by @loks0n in https://github.com/appwrite/appwrite/pull/7739
 * Feat image jwts by @abnegate in https://github.com/appwrite/appwrite/pull/7751
 
