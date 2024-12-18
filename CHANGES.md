@@ -1403,7 +1403,7 @@
 
 # Version 0.13.3
 ## Bugs
-- Fixed search for terms that inlcude `@` characters
+- Fixed search for terms that include `@` characters
 - Fixed Bucket permissions
 - Fixed file upload error in UI
 - Fixed input field for float attributes in UI
