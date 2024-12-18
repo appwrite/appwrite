@@ -582,7 +582,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('waiting', $execution['body']['status']);
         $executionId = $execution['body']['$id'];
 
-        // Wait for async execuntion to finish
+        // Wait for async execution to finish
         sleep(5);
 
         // Ensure execution was successful
