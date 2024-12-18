@@ -14,7 +14,7 @@ class Detector
     /**
      * @param DeviceDetector
      */
-    protected $detctor;
+    protected $detector;
 
     /**
      * @param string $userAgent
@@ -93,13 +93,13 @@ class Detector
      */
     protected function getDetector(): DeviceDetector
     {
-        if (!$this->detctor) {
-            $this->detctor = new DeviceDetector($this->userAgent);
-            $this->detctor->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-            $this->detctor->parse();
+        if (!$this->detector) {
+            $this->detector = new DeviceDetector($this->userAgent);
+            $this->detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+            $this->detector->parse();
         }
 
-        return $this->detctor;
+        return $this->detector;
     }
 
     /**
