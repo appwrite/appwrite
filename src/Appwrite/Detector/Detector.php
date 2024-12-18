@@ -105,7 +105,7 @@ class Detector
     /**
      * Sets whether to skip bot detection.
      * It is needed if we want bots to be processed as a simple clients. So we can detect if it is mobile client,
-     * or desktop, or enything else. By default all this information is not retrieved for the bots.
+     * or desktop, or anything else. By default all this information is not retrieved for the bots.
      *
      * @param bool $skip
      */
