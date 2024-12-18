@@ -1545,7 +1545,7 @@
 - Wildcard permissions `*` are now `role:all` **Breaking Change**
 - Collections can be enabled and disabled
 - Permissions are now found as top-level keys `$read` and `$write` instead of nested under `$permissions`
-- Accessing collections with insufficient permissions now return a `401` isntead of `404` status code
+- Accessing collections with insufficient permissions now return a `401` instead of `404` status code
 - Offset cannot be greater than 5000 now and cursor pagination is required
 - Added Cursor pagination to all endpoints that provide pagination by offset
 - Added new Usage worker to aggregate usage statistics
