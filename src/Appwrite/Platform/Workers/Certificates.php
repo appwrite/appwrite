@@ -181,7 +181,7 @@ class Certificates extends Action
             $attempts = $certificate->getAttribute('attempts', 0) + 1;
             $certificate->setAttribute('attempts', $attempts);
 
-            // Store cuttent time as renew date to ensure another attempt in next maintenance cycle
+            // Store current time as renew date to ensure another attempt in next maintenance cycle
             $certificate->setAttribute('renewDate', DateTime::now());
 
             // Send email to security email
