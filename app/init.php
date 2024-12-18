@@ -1547,7 +1547,7 @@ App::setResource('redis', function () {
     return $redis;
 });
 
-App::setResource('adapterForAbuse', function (\Redis $redis) {
+App::setResource('timelimit', function (\Redis $redis) {
     return function (string $key, int $limit, int $time) use ($redis) {
         return new TimeLimitRedis($key, $limit, $time, $redis);
     };

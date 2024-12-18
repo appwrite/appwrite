@@ -157,8 +157,8 @@ if (!function_exists('getRedis')) {
     }
 }
 
-if (!function_exists('getAdapterForAbuse')) {
-    function getAdapterForAbuse(): TimeLimit
+if (!function_exists('getTimelimit')) {
+    function getTimelimit(): TimeLimit
     {
         return new TimeLimit("", 0, 1, getRedis());
     }
@@ -507,7 +507,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
 
-        $adapterForAbuse = $app->getResource('adapterForAbuse');
+        $timelimit = $app->getResource('timelimit');
         $console = $app->getResource('console'); /** @var Document $console */
         $user = $app->getResource('user'); /** @var Document $user */
 
@@ -516,12 +516,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timeLimit = $adapterForAbuse('url:{url},ip:{ip}', 128, 60);
-        $timeLimit
+        $timelimit = $timelimit('url:{url},ip:{ip}', 128, 60);
+        $timelimit
             ->setParam('{ip}', $request->getIP())
             ->setParam('{url}', $request->getURI());
 
-        $abuse = new Abuse($timeLimit);
+        $abuse = new Abuse($timelimit);
 
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many requests');
@@ -619,7 +619,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = getAdapterForAbuse('url:{url},connection:{connection}', 32, 60);
+        $timeLimit = getTimelimit('url:{url},connection:{connection}', 32, 60);
 
         $timeLimit
             ->setParam('{connection}', $connection)
