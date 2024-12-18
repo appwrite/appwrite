@@ -227,7 +227,7 @@ return [
         'id' => 'query-mongo-atlas',
         'name' => 'Query MongoDB Atlas',
         'tagline' =>
-        'Realtime NoSQL document database with geospatial, graph, search, and vector suport.',
+        'Realtime NoSQL document database with geospatial, graph, search, and vector support.',
         'permissions' => ['any'],
         'events' => [],
         'cron' => '',

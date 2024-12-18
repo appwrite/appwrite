@@ -108,7 +108,7 @@ You can find the new syntax for breaking changes in the [Appwrite API references
 * Support for Appwrite 1.0.0
 * More verbose headers have been included in the Clients - `x-sdk-name`, `x-sdk-platform`, `x-sdk-language`, `x-sdk-version`
 * Helper classes and methods for Permissions, Roles and IDs
-* Helper methods to suport new queries
+* Helper methods to support new queries
 * All Dates and times are now returned in the ISO 8601 format
 
 ### BREAKING CHANGES
