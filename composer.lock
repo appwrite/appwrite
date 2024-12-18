@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d2345c93c578d7ac06f364fc5a175810",
+    "content-hash": "fd1cf738be4e037abdc1a0fa4cb27a3c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -709,16 +709,16 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.29.1",
+            "version": "v4.29.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "6042b5483f8029e42473faeb8ef75ba266278381"
+                "reference": "79aa5014efeeec3d137df5cdb0ae2fc163953945"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/6042b5483f8029e42473faeb8ef75ba266278381",
-                "reference": "6042b5483f8029e42473faeb8ef75ba266278381",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/79aa5014efeeec3d137df5cdb0ae2fc163953945",
+                "reference": "79aa5014efeeec3d137df5cdb0ae2fc163953945",
                 "shasum": ""
             },
             "require": {
@@ -747,9 +747,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.29.1"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.29.2"
             },
-            "time": "2024-12-03T22:07:45+00:00"
+            "time": "2024-12-18T14:11:12+00:00"
         },
         {
             "name": "jean85/pretty-package-versions",
@@ -3136,16 +3136,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-add-support-for-sharding-adapter",
+            "version": "0.44.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "627d1ba56451dd70ca26a1253c42e039b4bfc1a7"
+                "reference": "25b9654ddfb1a17161debf1d26f2915e0128d9fd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/627d1ba56451dd70ca26a1253c42e039b4bfc1a7",
-                "reference": "627d1ba56451dd70ca26a1253c42e039b4bfc1a7",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/25b9654ddfb1a17161debf1d26f2915e0128d9fd",
+                "reference": "25b9654ddfb1a17161debf1d26f2915e0128d9fd",
                 "shasum": ""
             },
             "require": {
@@ -3181,9 +3181,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/add-support-for-sharding-adapter"
+                "source": "https://github.com/utopia-php/abuse/tree/0.44.0"
             },
-            "time": "2024-12-18T06:08:34+00:00"
+            "time": "2024-12-18T15:09:47+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -8556,9 +8556,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/abuse": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
