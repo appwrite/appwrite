@@ -119,7 +119,7 @@ class Certificates extends Action
          * 2. Save document to database
          * 3. Update all domains documents with current certificate ID
          *
-         * Note: Renewals are checked and scheduled from maintenence worker
+         * Note: Renewals are checked and scheduled from maintenance worker
          */
 
         // Get current certificate
