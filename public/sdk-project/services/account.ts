@@ -33,7 +33,7 @@ export class Account extends Service {
          *
          * Use this endpoint to allow a new user to register a new account in your
          * project. After the user registration completes successfully, you can use
-         * the [/account/verfication](/docs/client/account#accountCreateVerification)
+         * the [/account/verification](/docs/client/account#accountCreateVerification)
          * route to start verifying the user email address. To allow the new user to
          * log in to their new account, you need to create a new [account
          * session](/docs/client/account#accountCreateSession).
@@ -1026,7 +1026,7 @@ export class AccountDev extends Service {
          *
          * Use this endpoint to allow a new user to register a new account in your
          * project. After the user registration completes successfully, you can use
-         * the [/account/verfication](/docs/client/account#accountCreateVerification)
+         * the [/account/verification](/docs/client/account#accountCreateVerification)
          * route to start verifying the user email address. To allow the new user to
          * log in to their new account, you need to create a new [account
          * session](/docs/client/account#accountCreateSession).
