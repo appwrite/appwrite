@@ -356,7 +356,7 @@ App::get('/v1/vcs/github/callback')
 
         $personalSlug = '';
 
-        // OAuth Authroization
+        // OAuth Authorization
         if (!empty($code)) {
             $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
             $accessToken = $oauth2->getAccessToken($code) ?? '';
