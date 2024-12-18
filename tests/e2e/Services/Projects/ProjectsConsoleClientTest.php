@@ -3081,7 +3081,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $data = array_merge($data, ['platformFultteriOSId' => $response['body']['$id']]);
+        $data = array_merge($data, ['platformFlutteriOSId' => $response['body']['$id']]);
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
@@ -3100,7 +3100,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $data = array_merge($data, ['platformFultterAndroidId' => $response['body']['$id']]);
+        $data = array_merge($data, ['platformFlutterAndroidId' => $response['body']['$id']]);
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
@@ -3119,7 +3119,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('flutter.appwrite.io', $response['body']['hostname']);
 
-        $data = array_merge($data, ['platformFultterWebId' => $response['body']['$id']]);
+        $data = array_merge($data, ['platformFlutterWebId' => $response['body']['$id']]);
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
@@ -3261,48 +3261,48 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('localhost', $response['body']['hostname']);
 
-        $platformFultteriOSId = $data['platformFultteriOSId'] ?? '';
+        $platformFlutteriOSId = $data['platformFlutteriOSId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultteriOSId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFlutteriOSId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($platformFultteriOSId, $response['body']['$id']);
+        $this->assertEquals($platformFlutteriOSId, $response['body']['$id']);
         $this->assertEquals('flutter-ios', $response['body']['type']);
         $this->assertEquals('Flutter App (iOS)', $response['body']['name']);
         $this->assertEquals('com.example.ios', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformFultterAndroidId = $data['platformFultterAndroidId'] ?? '';
+        $platformFlutterAndroidId = $data['platformFlutterAndroidId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFlutterAndroidId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($platformFultterAndroidId, $response['body']['$id']);
+        $this->assertEquals($platformFlutterAndroidId, $response['body']['$id']);
         $this->assertEquals('flutter-android', $response['body']['type']);
         $this->assertEquals('Flutter App (Android)', $response['body']['name']);
         $this->assertEquals('com.example.android', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformFultterWebId = $data['platformFultterWebId'] ?? '';
+        $platformFlutterWebId = $data['platformFlutterWebId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFlutterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($platformFultterWebId, $response['body']['$id']);
+        $this->assertEquals($platformFlutterWebId, $response['body']['$id']);
         $this->assertEquals('flutter-web', $response['body']['type']);
         $this->assertEquals('Flutter App (Web)', $response['body']['name']);
         $this->assertEquals('', $response['body']['key']);
@@ -3412,9 +3412,9 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('localhost-new', $response['body']['hostname']);
 
-        $platformFultteriOSId = $data['platformFultteriOSId'] ?? '';
+        $platformFlutteriOSId = $data['platformFlutteriOSId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFultteriOSId, array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFlutteriOSId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -3424,16 +3424,16 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($platformFultteriOSId, $response['body']['$id']);
+        $this->assertEquals($platformFlutteriOSId, $response['body']['$id']);
         $this->assertEquals('flutter-ios', $response['body']['type']);
         $this->assertEquals('Flutter App (iOS) 2', $response['body']['name']);
         $this->assertEquals('com.example.ios2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformFultterAndroidId = $data['platformFultterAndroidId'] ?? '';
+        $platformFlutterAndroidId = $data['platformFlutterAndroidId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFlutterAndroidId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -3443,16 +3443,16 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($platformFultterAndroidId, $response['body']['$id']);
+        $this->assertEquals($platformFlutterAndroidId, $response['body']['$id']);
         $this->assertEquals('flutter-android', $response['body']['type']);
         $this->assertEquals('Flutter App (Android) 2', $response['body']['name']);
         $this->assertEquals('com.example.android2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
-        $platformFultterWebId = $data['platformFultterWebId'] ?? '';
+        $platformFlutterWebId = $data['platformFlutterWebId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFlutterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -3462,7 +3462,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($platformFultterWebId, $response['body']['$id']);
+        $this->assertEquals($platformFlutterWebId, $response['body']['$id']);
         $this->assertEquals('flutter-web', $response['body']['type']);
         $this->assertEquals('Flutter App (Web) 2', $response['body']['name']);
         $this->assertEquals('', $response['body']['key']);
@@ -3585,9 +3585,9 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $platformFultteriOSId = $data['platformFultteriOSId'] ?? '';
+        $platformFlutteriOSId = $data['platformFlutteriOSId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFultteriOSId, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFlutteriOSId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -3595,16 +3595,16 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEmpty($response['body']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultteriOSId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFlutteriOSId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $platformFultterAndroidId = $data['platformFultterAndroidId'] ?? '';
+        $platformFlutterAndroidId = $data['platformFlutterAndroidId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFlutterAndroidId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -3612,16 +3612,16 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEmpty($response['body']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFlutterAndroidId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $platformFultterWebId = $data['platformFultterWebId'] ?? '';
+        $platformFlutterWebId = $data['platformFlutterWebId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFlutterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -3629,7 +3629,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEmpty($response['body']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFlutterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
