@@ -1368,7 +1368,7 @@
 - Fixed search when a User is updated
 - Fixed aspect ratio bug in Avatars API
 - Fixed wrong `Fail to Warmup ...` error message in Executor
-- Fixed UI when file uploader is covered by jumpt to top button
+- Fixed UI when file uploader is covered by jump to top button
 - Fixed bug that allowed Queries on failed indexes
 - Fixed UI when an alert with a lot text disappears too fast by increasing duration
 - Fixed issues with cache and case-sensivity on ID's
