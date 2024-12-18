@@ -945,7 +945,7 @@
 - Override forEachDocument() to skip the cache collection [#6144](https://github.com/appwrite/appwrite/pull/6144)
 - Support for v2 functions [#6142](https://github.com/appwrite/appwrite/pull/6142)
 - Change executor hostname back to appwrite-executor [#6160](https://github.com/appwrite/appwrite/pull/6160)
-- Make URL optional for Create Membership API and Serverside Requests [#6157](https://github.com/appwrite/appwrite/pull/6157)
+- Make URL optional for Create Membership API and Server-side Requests [#6157](https://github.com/appwrite/appwrite/pull/6157)
 
 # Version 1.4.1
 
