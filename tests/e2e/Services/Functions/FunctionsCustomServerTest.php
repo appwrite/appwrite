@@ -1061,7 +1061,7 @@ class FunctionsCustomServerTest extends Scope
 
         /**
          * Ensure size output and size filters work exactly.
-         * Prevents buildSize being counted towards deployemtn size
+         * Prevents buildSize being counted towards deployment size
          */
         $response = $this->client->call(
             Client::METHOD_GET,

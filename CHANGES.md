@@ -1431,7 +1431,7 @@
 - Added a new worker to build deployments
 - Functions are now executed differently and your functions need to be adapted **Breaking Change**
 - Tags are now called Deployments **Breaking Change**
-- Renamed `tagId` to `deplyomentId` in collections **Breaking Change**
+- Renamed `tagId` to `deploymentId` in collections **Breaking Change**
 - Updated event names from `function.tags.*` to `function.deployments.*` **Breaking Change**
 - Java runtimes are currently not supported **Breaking Change**
 ### Storage
