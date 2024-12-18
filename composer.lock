@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2dd50e9cf2c2b74a56ea42d8593ffc0a",
+    "content-hash": "d2345c93c578d7ac06f364fc5a175810",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -8554,14 +8554,7 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/abuse",
-            "version": "dev-add-support-for-sharding-adapter",
-            "alias": "0.43.1000",
-            "alias_normalized": "0.43.1000.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/abuse": 20

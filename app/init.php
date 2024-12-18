@@ -94,7 +94,6 @@ use Utopia\Validator\Range;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
-use Redis;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
