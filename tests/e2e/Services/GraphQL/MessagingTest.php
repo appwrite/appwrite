@@ -24,7 +24,7 @@ class MessagingTest extends Scope
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
                 'fromName' => 'Sender Name',
-                'fromEmail' => 'sender-email@my-domain.com',
+                'fromEmail' => 'sender-email@my-domain.example.com',
             ],
             'Mailgun' => [
                 'providerId' => ID::unique(),
@@ -32,7 +32,7 @@ class MessagingTest extends Scope
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
                 'fromName' => 'Sender Name',
-                'fromEmail' => 'sender-email@my-domain.com',
+                'fromEmail' => 'sender-email@my-domain.example.com',
                 'isEuRegion' => false,
             ],
             'Twilio' => [
@@ -385,7 +385,7 @@ class MessagingTest extends Scope
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
                 'fromName' => 'Sender',
-                'fromEmail' => 'sender-email@my-domain.com',
+                'fromEmail' => 'sender-email@my-domain.example.com',
             ]
         ];
         $query = $this->getQuery(self::$CREATE_SENDGRID_PROVIDER);

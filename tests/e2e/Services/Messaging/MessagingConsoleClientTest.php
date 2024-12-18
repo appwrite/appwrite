@@ -39,7 +39,7 @@ class MessagingConsoleClientTest extends Scope
             'providerId' => ID::unique(),
             'name' => 'Sengrid1',
             'apiKey' => 'my-apikey',
-            'from' => 'sender-email@my-domain.com',
+            'from' => 'sender-email@my-domain.example.com',
         ]);
 
         $this->assertEquals(201, $provider['headers']['status-code']);
