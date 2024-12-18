@@ -1577,7 +1577,7 @@
 - Added negative rotation values to file preview endpoint
 - Multiple responses from the Health service were changed to new (better) schema  **Breaking Change**
 - Method `health.getAntiVirus()` has been renamed to `health.getAntivirus()`
-- Added following langauges to the Locale service:
+- Added following languages to the Locale service:
   - Latin
   - Sindhi
   - Telugu
