@@ -122,7 +122,7 @@ class Slack extends OAuth2
     /**
      * Check if the OAuth email is verified
      *
-     * If present, the email is verified. This was verfied through a manual Slack sign up process
+     * If present, the email is verified. This was verified through a manual Slack sign up process
      *
      * @link https://slack.com/help/articles/207262907-Change-your-email-address
      *

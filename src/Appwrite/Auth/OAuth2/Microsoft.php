@@ -132,7 +132,7 @@ class Microsoft extends OAuth2
     /**
      * Check if the OAuth email is verified
      *
-     * If present, the email is verified. This was verfied through a manual Microsoft sign up process
+     * If present, the email is verified. This was verified through a manual Microsoft sign up process
      *
      * @param string $accessToken
      *
