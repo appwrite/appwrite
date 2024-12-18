@@ -179,7 +179,7 @@ trait UsersBase
     }
 
     /**
-     * Tries to login into all accounts created with hashed password. Ensures hash veifying logic.
+     * Tries to login into all accounts created with hashed password. Ensures hash verifying logic.
      *
      * @depends testCreateUser
      */
