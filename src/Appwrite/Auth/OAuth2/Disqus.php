@@ -143,7 +143,7 @@ class Disqus extends OAuth2
     public function isEmailVerified(string $accessToken): bool
     {
 
-        // Look out for the change in their enpoint.
+        // Look out for the change in their endpoint.
         // It's in Beta so they may provide a parameter in the future.
         // https://disqus.com/api/docs/users/details/
 
