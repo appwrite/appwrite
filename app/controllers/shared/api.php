@@ -422,7 +422,7 @@ App::init()
     ->inject('dbForProject')
     ->inject('adapterForAbuse')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, TimeLimit $adapterForAbuse, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Connection $queue, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, callable $adapterForAbuse, string $mode) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
