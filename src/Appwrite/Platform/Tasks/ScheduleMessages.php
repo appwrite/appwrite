@@ -45,6 +45,8 @@ class ScheduleMessages extends ScheduleBase
                 $connection = $queue->getResource();
                 $queueForMessaging = new Messaging($connection);
 
+                $this->updateProjectAccess($schedule['project'], $dbForPlatform);
+
                 $queueForMessaging
                     ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
                     ->setMessageId($schedule['resourceId'])
