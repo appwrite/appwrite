@@ -204,7 +204,7 @@ class V17 extends Filter
         $parsedParams = [];
 
         foreach ($params as $param) {
-            // If array, parse each child separatelly
+            // If array, parse each child separately
             if (\is_array($param)) {
                 foreach ($param as $element) {
                     $arr[] = self::parseValue($element);
