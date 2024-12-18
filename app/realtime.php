@@ -13,7 +13,7 @@ use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -158,9 +158,9 @@ if (!function_exists('getRedis')) {
 }
 
 if (!function_exists('getTimelimit')) {
-    function getTimelimit(): TimeLimit
+    function getTimelimit(): TimeLimitRedis
     {
-        return new TimeLimit("", 0, 1, getRedis());
+        return new TimeLimitRedis("", 0, 1, getRedis());
     }
 }
 
