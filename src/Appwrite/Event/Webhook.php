@@ -2,8 +2,8 @@
 
 namespace Appwrite\Event;
 
-use Utopia\Queue\Connection;
 use Utopia\Database\Document;
+use Utopia\Queue\Connection;
 
 class Webhook extends Event
 {
