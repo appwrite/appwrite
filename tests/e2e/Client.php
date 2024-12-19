@@ -67,7 +67,7 @@ class Client
     /**
      * Set Key
      *
-     * Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard.
+     * Your Appwrite project secret key. You can create a new API key from your Appwrite console API keys dashboard.
      *
      * @param string $value
      *
