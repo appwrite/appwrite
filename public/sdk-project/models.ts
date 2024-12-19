@@ -4,7 +4,7 @@ export namespace Models {
      */
     export type DocumentList<Document extends Models.Document> = {
         /**
-         * Total number of documents documents that matched your query.
+         * Total number of documents that matched your query.
          */
         total: number;
         /**
