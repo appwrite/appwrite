@@ -22,7 +22,7 @@ class Webhook extends Event
         $this->context = [];
         $this->project = new Document([
             '$id' => $this->project->getId(),
-            '$internalId' => $this->project->getAttribute('internalId'),
+            '$internalId' => $this->project->getAttribute('$internalId'),
         ]);
 
         return parent::trigger();
