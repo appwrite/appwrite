@@ -217,8 +217,8 @@ $provider = $this->getParam('provider', '');
 ```js
 {
     "[Provider]":{
-        "[JSON property name 1]":"[html element Id 1]",
-        "[JSON property name 2]":"[html element Id 2]"
+        "[JSON property name 1]":"[html element ID 1]",
+        "[JSON property name 2]":"[html element ID 2]"
     }
 }
 ```
