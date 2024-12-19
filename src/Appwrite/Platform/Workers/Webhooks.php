@@ -56,9 +56,10 @@ class Webhooks extends Action
 
         $events = $payload['events'];
         $webhookPayload = json_encode($payload['payload']);
-        $project = new Document($payload['project']);
         $user = new Document($payload['user'] ?? []);
 
+        $project = new Document($payload['project']);
+        $project = $dbForPlatform->getDocument('projects', $project->getId());
         $log->addTag('projectId', $project->getId());
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
