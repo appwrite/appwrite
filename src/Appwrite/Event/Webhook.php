@@ -3,6 +3,7 @@
 namespace Appwrite\Event;
 
 use Utopia\Queue\Connection;
+use Utopia\Database\Document;
 
 class Webhook extends Event
 {
@@ -19,10 +20,10 @@ class Webhook extends Event
     {
         /** Filter out context and trim project to keep the payload small */
         $this->context = [];
-        $this->project = [
+        $this->project = new Document([
             '$id' => $this->project->getId(),
             '$internalId' => $this->project->getAttribute('internalId'),
-        ];
+        ]);
 
         return parent::trigger();
     }
