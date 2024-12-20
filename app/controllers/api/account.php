@@ -59,10 +59,10 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
 
-function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
+function sendSessionAlert(string $language, Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
 {
     $subject = $locale->getText("emails.sessionAlert.subject");
-    $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
+    $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $language] ?? [];
 
     $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-session-alert.tpl');
     $message
@@ -240,7 +240,8 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     ]) !== 1;
 
     if ($isAllowedTokenType && $hasUserEmail && $isSessionAlertsEnabled && $isNotFirstSession) {
-        sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+        $language = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', $locale->default));
+        sendSessionAlert($language, $locale, $user, $project, $session, $queueForMails);
     }
 
     $queueForEvents
@@ -918,7 +919,8 @@ App::post('/v1/account/sessions/email')
             if ($dbForProject->count('sessions', [
                 Query::equal('userId', [$user->getId()]),
             ]) !== 1) {
-                sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+                $language = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', $locale->default));
+                sendSessionAlert($language, $locale, $user, $project, $session, $queueForMails);
             }
         }
 
@@ -1884,7 +1886,8 @@ App::post('/v1/account/tokens/magic-url')
         $url = Template::unParseURL($url);
 
         $subject = $locale->getText("emails.magicSession.subject");
-        $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
+        $language = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', $locale->default));
+        $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $language] ?? [];
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $agentOs = $detector->getOS();
@@ -2115,7 +2118,8 @@ App::post('/v1/account/tokens/email')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $subject = $locale->getText("emails.otpSession.subject");
-        $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
+        $language = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', $locale->default));
+        $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $language] ?? [];
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $agentOs = $detector->getOS();
@@ -2426,7 +2430,8 @@ App::post('/v1/account/tokens/phone')
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
-            $customTemplate = $project->getAttribute('templates', [])['sms.login-' . $locale->default] ?? [];
+            $language = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', $locale->default));
+            $customTemplate = $project->getAttribute('templates', [])['sms.login-' . $language] ?? [];
             if (!empty($customTemplate)) {
                 $message = $customTemplate['message'] ?? $message;
             }
@@ -3037,7 +3042,8 @@ App::post('/v1/account/recovery')
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $body = $locale->getText("emails.recovery.body");
         $subject = $locale->getText("emails.recovery.subject");
-        $customTemplate = $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ?? [];
+        $language = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', $locale->default));
+        $customTemplate = $project->getAttribute('templates', [])['email.recovery-' . $language] ?? [];
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
@@ -3287,7 +3293,8 @@ App::post('/v1/account/verification')
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $body = $locale->getText("emails.verification.body");
         $subject = $locale->getText("emails.verification.subject");
-        $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
+        $language = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', $locale->default));
+        $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $language] ?? [];
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
@@ -3522,7 +3529,8 @@ App::post('/v1/account/verification/phone')
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
-            $customTemplate = $project->getAttribute('templates', [])['sms.verification-' . $locale->default] ?? [];
+            $language = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', $locale->default));
+            $customTemplate = $project->getAttribute('templates', [])['sms.verification-' . $language] ?? [];
             if (!empty($customTemplate)) {
                 $message = $customTemplate['message'] ?? $message;
             }
@@ -4060,7 +4068,8 @@ App::post('/v1/account/mfa/challenge')
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
-                $customTemplate = $project->getAttribute('templates', [])['sms.mfaChallenge-' . $locale->default] ?? [];
+                $language = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', $locale->default));
+                $customTemplate = $project->getAttribute('templates', [])['sms.mfaChallenge-' . $language] ?? [];
                 if (!empty($customTemplate)) {
                     $message = $customTemplate['message'] ?? $message;
                 }
@@ -4097,7 +4106,8 @@ App::post('/v1/account/mfa/challenge')
                 }
 
                 $subject = $locale->getText("emails.mfaChallenge.subject");
-                $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
+                $language = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', $locale->default));
+                $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $language] ?? [];
 
                 $detector = new Detector($request->getUserAgent('UNKNOWN'));
                 $agentOs = $detector->getOS();
