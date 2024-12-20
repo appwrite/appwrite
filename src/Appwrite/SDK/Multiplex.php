@@ -2,9 +2,7 @@
 
 namespace Appwrite\SDK;
 
-use JsonSerializable;
-
-class Multiplex implements JsonSerializable
+class Multiplex
 {
     /**
      * @param string $name
@@ -20,13 +18,23 @@ class Multiplex implements JsonSerializable
     ) {
     }
 
-    public function jsonSerialize(): array
+    public function getName(): string
     {
-        return [
-            'name' => $this->name,
-            'parameters' => $this->parameters,
-            'required' => $this->required,
-            'responseModel' => $this->responseModel,
-        ];
+        return $this->name;
+    }
+
+    public function getParameters(): array
+    {
+        return $this->parameters;
+    }
+
+    public function getRequired(): array
+    {
+        return $this->required;
+    }
+
+    public function getResponseModel(): string
+    {
+        return $this->responseModel;
     }
 }

@@ -4576,7 +4576,9 @@
                                 "documentId",
                                 "data"
                             ],
-                            "responseModel": "document"
+                            "responses": [
+                                "#\/components\/schemas\/document"
+                            ]
                         },
                         {
                             "name": "createDocuments",
@@ -4586,7 +4588,9 @@
                             "required": [
                                 "documents"
                             ],
-                            "responseModel": "documentList"
+                            "responses": [
+                                "#\/components\/schemas\/documentList"
+                            ]
                         }
                     ],
                     "auth": {

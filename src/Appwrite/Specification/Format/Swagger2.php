@@ -199,7 +199,17 @@ class Swagger2 extends Format
             }
 
             if (!empty($sdk->getMultiplex())) {
-                $temp['x-appwrite']['multiplex'] = $sdk->getMultiplex();
+                $temp['x-appwrite']['multiplex'] = [];
+                foreach ($sdk->getMultiplex() as $multiplex) {
+                    /** @var \Appwrite\SDK\Multiplex $multiplex */
+
+                    $temp['x-appwrite']['multiplex'][] = [
+                        'name' => $multiplex->getName(),
+                        'parameters' => $multiplex->getParameters(),
+                        'required' => $multiplex->getRequired(),
+                        'responses' => ["#/definitions/" . $multiplex->getResponseModel()]
+                    ];
+                }
             }
 
             foreach ($this->models as $value) {

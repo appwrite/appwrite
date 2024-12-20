@@ -49,8 +49,9 @@ class Method
      * @param string $name
      * @param string $description
      * @param array<AuthType> $auth
+     * @param array<Response> $responses
      * @param int $responseCode
-     * @param string|array $responseModel
+     * @param string|array<string> $responseModel
      * @param ResponseType $responseType
      * @param MethodType|null $methodType
      * @param string|null $offlineKey
@@ -69,8 +70,7 @@ class Method
         protected string $name,
         protected string $description,
         protected array $auth,
-        protected int $responseCode,
-        protected string|array $responseModel,
+        protected array $responses,
         protected ResponseType $responseType = ResponseType::JSON,
         protected ?MethodType $methodType = null,
         protected ?string $offlineKey = null,

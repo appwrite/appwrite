@@ -8348,7 +8348,9 @@
                                 "documentId",
                                 "data"
                             ],
-                            "responseModel": "document"
+                            "responses": [
+                                "#\/definitions\/document"
+                            ]
                         },
                         {
                             "name": "createDocuments",
@@ -8358,7 +8360,9 @@
                             "required": [
                                 "documents"
                             ],
-                            "responseModel": "documentList"
+                            "responses": [
+                                "#\/definitions\/documentList"
+                            ]
                         }
                     ],
                     "auth": {

@@ -5,6 +5,7 @@ use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\ResponseType;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -34,8 +35,12 @@ App::get('/v1/health')
         name: 'get',
         auth: [AuthType::KEY],
         description: '/docs/references/health/get.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_STATUS,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_STATUS,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->inject('response')
@@ -68,8 +73,12 @@ App::get('/v1/health/db')
         namespace: 'health',
         name: 'getDB',
         description: '/docs/references/health/get-db.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_STATUS,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_STATUS,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->inject('response')
@@ -124,8 +133,12 @@ App::get('/v1/health/cache')
         namespace: 'health',
         name: 'getCache',
         description: '/docs/references/health/get-cache.md',
-        responseCode: Response::STATUS_CODE_OK,
-        responseModel: Response::MODEL_HEALTH_STATUS,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_HEALTH_STATUS,
+            )
+        ],
         responseType: ResponseType::JSON
     ))
     ->inject('response')

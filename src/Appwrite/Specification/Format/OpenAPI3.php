@@ -197,7 +197,17 @@ class OpenAPI3 extends Format
             ];
 
             if (!empty($sdk->getMultiplex())) {
-                $temp['x-appwrite']['multiplex'] = $sdk->getMultiplex();
+                $temp['x-appwrite']['multiplex'] = [];
+                foreach ($sdk->getMultiplex() as $multiplex) {
+                    /** @var \Appwrite\SDK\Multiplex $multiplex */
+
+                    $temp['x-appwrite']['multiplex'][] = [
+                        'name' => $multiplex->getName(),
+                        'parameters' => $multiplex->getParameters(),
+                        'required' => $multiplex->getRequired(),
+                        'responses' => ['#/components/schemas/' . $multiplex->getResponseModel()]
+                    ];
+                }
             }
 
             foreach ($this->models as $value) {
