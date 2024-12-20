@@ -48,6 +48,7 @@ use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
@@ -853,31 +854,31 @@ $register->set('pools', function () {
     $connections = [
         'console' => [
             'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
+            'dsns' => $fallbackForDB,
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'database' => [
             'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
+            'dsns' => $fallbackForDB,
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'queue' => [
             'type' => 'queue',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
+            'dsns' => $fallbackForRedis,
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'pubsub' => [
             'type' => 'pubsub',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
+            'dsns' => $fallbackForRedis,
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'cache' => [
             'type' => 'cache',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
+            'dsns' => $fallbackForRedis,
             'multiple' => true,
             'schemes' => ['redis'],
         ],
@@ -949,12 +950,12 @@ $register->set('pools', function () {
                     });
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
-                    $redis = new Redis();
+                    $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
                     if ($dsnPass) {
                         $redis->auth($dsnPass);
                     }
-                    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
                     return $redis;
                 },
@@ -1530,6 +1531,27 @@ App::setResource('cache', function (Group $pools) {
 
     return new Cache(new Sharding($adapters));
 }, ['pools']);
+
+App::setResource('redis', function () {
+    $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
+    $port = System::getEnv('_APP_REDIS_PORT', 6379);
+    $pass = System::getEnv('_APP_REDIS_PASS', '');
+
+    $redis = new \Redis();
+    @$redis->pconnect($host, (int)$port);
+    if ($pass) {
+        $redis->auth($pass);
+    }
+    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+
+    return $redis;
+});
+
+App::setResource('timelimit', function (\Redis $redis) {
+    return function (string $key, int $limit, int $time) use ($redis) {
+        return new TimeLimitRedis($key, $limit, $time, $redis);
+    };
+}, ['redis']);
 
 App::setResource('deviceForLocal', function () {
     return new Local();
