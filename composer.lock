@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d2345c93c578d7ac06f364fc5a175810",
+    "content-hash": "db3b63ba1be2561ee4a112e5b9c6bd53",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3136,16 +3136,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-add-support-for-sharding-adapter",
+            "version": "0.45.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "d3119238ea05edd59f93ec99fb11545070e86eff"
+                "reference": "54a58355df1eb26c9be7834738debe6754e5581d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/d3119238ea05edd59f93ec99fb11545070e86eff",
-                "reference": "d3119238ea05edd59f93ec99fb11545070e86eff",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/54a58355df1eb26c9be7834738debe6754e5581d",
+                "reference": "54a58355df1eb26c9be7834738debe6754e5581d",
                 "shasum": ""
             },
             "require": {
@@ -3181,9 +3181,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/add-support-for-sharding-adapter"
+                "source": "https://github.com/utopia-php/abuse/tree/0.45.0"
             },
-            "time": "2024-12-20T14:11:20+00:00"
+            "time": "2024-12-20T16:18:52+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -8556,9 +8556,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/abuse": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
