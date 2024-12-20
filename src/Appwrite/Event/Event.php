@@ -48,6 +48,9 @@ class Event
     public const MIGRATIONS_QUEUE_NAME = 'v1-migrations';
     public const MIGRATIONS_CLASS_NAME = 'MigrationsV1';
 
+    public const INSIGHTS_QUEUE_NAME = 'v1-insights';
+    public const INSIGHTS_CLASS_NAME = 'InsightsV1';
+
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';
