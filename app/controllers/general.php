@@ -461,7 +461,7 @@ App::init()
     });
 
 App::init()
-    ->groups(['api', 'web'])
+    ->groups(['api'])
     ->inject('utopia')
     ->inject('swooleRequest')
     ->inject('request')
@@ -768,6 +768,7 @@ App::error()
             Console::error('[Error] Message: ' . $message);
             Console::error('[Error] File: ' . $file);
             Console::error('[Error] Line: ' . $line);
+            Console::error('[Error] Trace: ' . $error->getTraceAsString());
         }
 
         switch ($class) {
