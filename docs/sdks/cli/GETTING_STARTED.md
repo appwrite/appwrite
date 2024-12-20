@@ -59,7 +59,7 @@ My Awesome Function
 You can now deploy this function using 
 
 ```sh
-$ appwrite deploy function
+$ appwrite push function
 
 ? Which functions would you like to deploy? My Awesome Function (61d1a4c81dfcd95bc834)
 ℹ Info Deploying function My Awesome Function ( 61d1a4c81dfcd95bc834 )
@@ -73,7 +73,7 @@ Your function has now been deployed on your Appwrite server! As soon as the buil
 Similarly, you can deploy all your collections to your Appwrite server using 
 
 ```sh
-appwrite deploy collections
+appwrite push collections
 ```
 
 > ### Note
@@ -98,7 +98,7 @@ $ appwrite users list
 
 To create a document you can use the following command 
 ```sh
-$ appwrite database createDocument --collectionId <ID> --documentId 'unique()' --data '{ "Name": "Iron Man" }' --permissions 'read("any")' 'read("team:abc")'
+$ appwrite databases create-document --database-id=<DATABASE_ID> --collection-id=<COLLECTION_ID> --document-id="unique()" --data '{"name": "Walter O Brein"}'
 ```
 
 ### Some Gotchas
