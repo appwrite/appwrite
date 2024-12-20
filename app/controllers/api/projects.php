@@ -1688,7 +1688,7 @@ App::patch('/v1/projects/:projectId/smtp')
             $mail->Host = $host;
             $mail->Port = $port;
             $mail->SMTPSecure = $secure;
-            $mail->SMTPAuth = (!empty($username) && !empty($password)); 
+            $mail->SMTPAuth = (!empty($username) && !empty($password));
             $mail->SMTPAutoTLS = false;
             $mail->Timeout = 5;
 
