@@ -1,1 +1,2 @@
-Delete a collection by its unique ID. Only users with write permissions have access to delete this resource.
+Delete a collection by its unique ID.
+Only users with write permissions have access to delete this resource.

@@ -1,1 +1,2 @@
-Get a list of all collections that belong to the provided databaseId. You can use the search parameter to filter your results.
+Get a list of all collections that belong to the provided databaseId.
+You can use the search parameter to filter your results.
