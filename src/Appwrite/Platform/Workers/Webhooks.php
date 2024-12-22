@@ -31,21 +31,21 @@ class Webhooks extends Action
         $this
             ->desc('Webhooks worker')
             ->inject('message')
-            ->inject('dbForConsole')
+            ->inject('dbForPlatform')
             ->inject('queueForMails')
             ->inject('log')
-            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $log));
+            ->callback(fn (Message $message, Database $dbForPlatform, Mail $queueForMails, Log $log) => $this->action($message, $dbForPlatform, $queueForMails, $log));
     }
 
     /**
      * @param Message $message
-     * @param Database $dbForConsole
+     * @param Database $dbForPlatform
      * @param Mail $queueForMails
      * @param Log $log
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Log $log): void
+    public function action(Message $message, Database $dbForPlatform, Mail $queueForMails, Log $log): void
     {
         $this->errors = [];
         $payload = $message->getPayload() ?? [];
@@ -56,14 +56,15 @@ class Webhooks extends Action
 
         $events = $payload['events'];
         $webhookPayload = json_encode($payload['payload']);
-        $project = new Document($payload['project']);
         $user = new Document($payload['user'] ?? []);
 
+        $project = new Document($payload['project']);
+        $project = $dbForPlatform->getDocument('projects', $project->getId());
         $log->addTag('projectId', $project->getId());
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForConsole, $queueForMails);
+                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $queueForMails);
             }
         }
 
@@ -78,11 +79,11 @@ class Webhooks extends Action
      * @param Document $webhook
      * @param Document $user
      * @param Document $project
-     * @param Database $dbForConsole
+     * @param Database $dbForPlatform
      * @param Mail $queueForMails
      * @return void
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForConsole, Mail $queueForMails): void
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, Mail $queueForMails): void
     {
         if ($webhook->getAttribute('enabled') !== true) {
             return;
@@ -138,8 +139,8 @@ class Webhooks extends Action
         \curl_close($ch);
 
         if (!empty($curlError) || $statusCode >= 400) {
-            $dbForConsole->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
-            $webhook = $dbForConsole->getDocument('webhooks', $webhook->getId());
+            $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
+            $webhook = $dbForPlatform->getDocument('webhooks', $webhook->getId());
             $attempts = $webhook->getAttribute('attempts');
 
             $logs = '';
@@ -158,17 +159,17 @@ class Webhooks extends Action
 
             if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
                 $webhook->setAttribute('enabled', false);
-                $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForConsole, $queueForMails);
+                $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $queueForMails);
             }
 
-            $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
-            $dbForConsole->purgeCachedDocument('projects', $project->getId());
+            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $webhook);
+            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
             $this->errors[] = $logs;
         } else {
             $webhook->setAttribute('attempts', 0); // Reset attempts on success
-            $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
-            $dbForConsole->purgeCachedDocument('projects', $project->getId());
+            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $webhook);
+            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
         }
     }
 
@@ -177,20 +178,20 @@ class Webhooks extends Action
      * @param mixed $statusCode
      * @param Document $webhook
      * @param Document $project
-     * @param Database $dbForConsole
+     * @param Database $dbForPlatform
      * @param Mail $queueForMails
      * @return void
      */
-    public function sendEmailAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForConsole, Mail $queueForMails): void
+    public function sendEmailAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, Mail $queueForMails): void
     {
-        $memberships = $dbForConsole->find('memberships', [
+        $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
             Query::limit(APP_LIMIT_SUBQUERY)
         ]);
 
         $userIds = array_column(\array_map(fn ($membership) => $membership->getArrayCopy(), $memberships), 'userId');
 
-        $users = $dbForConsole->find('users', [
+        $users = $dbForPlatform->find('users', [
             Query::equal('$id', $userIds),
         ]);
 

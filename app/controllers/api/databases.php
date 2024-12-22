@@ -152,7 +152,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     } catch (DuplicateException) {
         throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
     } catch (LimitException) {
-        throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
+        throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
     } catch (\Throwable $e) {
         $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
         $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
@@ -196,7 +196,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
         } catch (LimitException) {
             $dbForProject->deleteDocument('attributes', $attribute->getId());
-            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
+            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
         } catch (\Throwable $e) {
             $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
             $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
@@ -290,15 +290,9 @@ function updateAttribute(
         $attribute->setAttribute('size', $size);
     }
 
-    $formatOptions = $attribute->getAttribute('formatOptions');
-
     switch ($attribute->getAttribute('format')) {
         case APP_DATABASE_ATTRIBUTE_INT_RANGE:
         case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
-            if ($min === $formatOptions['min'] && $max === $formatOptions['max']) {
-                break;
-            }
-
             if ($min > $max) {
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
             }
@@ -385,13 +379,15 @@ function updateAttribute(
                 size: $size,
                 required: $required,
                 default: $default,
-                formatOptions: $options ?? null,
+                formatOptions: $options,
                 newKey: $newKey ?? null
             );
         } catch (TruncateException) {
             throw new Exception(Exception::ATTRIBUTE_INVALID_RESIZE);
         } catch (NotFoundException) {
             throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+        } catch (LimitException) {
+            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
         }
     }
 
@@ -2631,7 +2627,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
-            $dbForProject->getAdapter()->getMaxIndexLength()
+            $dbForProject->getAdapter()->getMaxIndexLength(),
+            $dbForProject->getAdapter()->getInternalIndexesKeys(),
         );
         if (!$validator->isValid($index)) {
             throw new Exception(Exception::INDEX_INVALID, $validator->getDescription());

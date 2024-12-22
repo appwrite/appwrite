@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/init.php';
 
+use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
@@ -16,7 +17,7 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
-use Utopia\App;
+use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -41,7 +42,7 @@ Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 Server::setResource('register', fn () => $register);
 
-Server::setResource('dbForConsole', function (Cache $cache, Registry $register) {
+Server::setResource('dbForPlatform', function (Cache $cache, Registry $register) {
     $pools = $register->get('pools');
     $database = $pools
         ->get('console')
@@ -54,7 +55,7 @@ Server::setResource('dbForConsole', function (Cache $cache, Registry $register) 
     return $adapter;
 }, ['cache', 'register']);
 
-Server::setResource('project', function (Message $message, Database $dbForConsole) {
+Server::setResource('project', function (Message $message, Database $dbForPlatform) {
     $payload = $message->getPayload() ?? [];
     $project = new Document($payload['project'] ?? []);
 
@@ -62,12 +63,12 @@ Server::setResource('project', function (Message $message, Database $dbForConsol
         return $project;
     }
 
-    return $dbForConsole->getDocument('projects', $project->getId());
-}, ['message', 'dbForConsole']);
+    return $dbForPlatform->getDocument('projects', $project->getId());
+}, ['message', 'dbForPlatform']);
 
-Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForConsole) {
+Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForPlatform) {
     if ($project->isEmpty() || $project->getId() === 'console') {
-        return $dbForConsole;
+        return $dbForPlatform;
     }
 
     $pools = $register->get('pools');
@@ -93,7 +94,9 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+    if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
             ->setTenant($project->getInternalId())
@@ -106,14 +109,14 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     }
 
     return $database;
-}, ['cache', 'register', 'message', 'project', 'dbForConsole']);
+}, ['cache', 'register', 'message', 'project', 'dbForPlatform']);
 
-Server::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases): Database {
+    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases): Database {
         if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForConsole;
+            return $dbForPlatform;
         }
 
         try {
@@ -126,7 +129,9 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
         if (isset($databases[$dsn->getHost()])) {
             $database = $databases[$dsn->getHost()];
 
-            if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+            if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
@@ -150,7 +155,9 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
         $databases[$dsn->getHost()] = $database;
 
-        if ($dsn->getHost() === System::getEnv('_APP_DATABASE_SHARED_TABLES', '')) {
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+        if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
@@ -164,7 +171,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
         return $database;
     };
-}, ['pools', 'dbForConsole', 'cache']);
+}, ['pools', 'dbForPlatform', 'cache']);
 
 Server::setResource('abuseRetention', function () {
     return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
@@ -193,6 +200,27 @@ Server::setResource('cache', function (Registry $register) {
 
     return new Cache(new Sharding($adapters));
 }, ['register']);
+
+Server::setResource('redis', function () {
+    $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
+    $port = System::getEnv('_APP_REDIS_PORT', 6379);
+    $pass = System::getEnv('_APP_REDIS_PASS', '');
+
+    $redis = new \Redis();
+    @$redis->pconnect($host, (int)$port);
+    if ($pass) {
+        $redis->auth($pass);
+    }
+    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+
+    return $redis;
+});
+
+Server::setResource('timelimit', function (\Redis $redis) {
+    return function (string $key, int $limit, int $time) use ($redis) {
+        return new TimeLimitRedis($key, $limit, $time, $redis);
+    };
+}, ['redis']);
 
 Server::setResource('log', fn () => new Log());
 
@@ -277,6 +305,15 @@ Server::setResource(
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
 
+Server::setResource('certificates', function () {
+    $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
+    if (empty($email)) {
+        throw new Exception('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
+    }
+
+    return new LetsEncrypt($email);
+});
+
 Server::setResource('logError', function (Registry $register, Document $project) {
     return function (Throwable $error, string $namespace, string $action, ?array $extras) use ($register, $project) {
         $logger = $register->get('logger');
@@ -286,7 +323,7 @@ Server::setResource('logError', function (Registry $register, Document $project)
 
             $log = new Log();
             $log->setNamespace($namespace);
-            $log->setServer(\gethostname());
+            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
@@ -379,7 +416,7 @@ $worker
 
         if ($logger) {
             $log->setNamespace("appwrite-worker");
-            $log->setServer(\gethostname());
+            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
