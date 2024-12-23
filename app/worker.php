@@ -174,7 +174,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
 }, ['pools', 'dbForPlatform', 'cache']);
 
 Server::setResource('abuseRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
+    return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400);
 });
 
 Server::setResource('auditRetention', function () {

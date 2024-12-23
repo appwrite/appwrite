@@ -57,7 +57,7 @@ class Deletes extends Action
             ->inject('auditRetention')
             ->inject('log')
             ->callback(
-                fn ($message, $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log) =>
+                fn ($message, $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, int $abuseRetention, string $executionRetention, string $auditRetention, Log $log) =>
                     $this->action($message, $dbForPlatform, $getProjectDB, $timelimit, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $abuseRetention, $executionRetention, $auditRetention, $log)
             );
     }
@@ -66,7 +66,7 @@ class Deletes extends Action
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Database $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
+    public function action(Message $message, Database $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, int $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -703,11 +703,11 @@ class Deletes extends Action
     /**
      * @param Database $dbForPlatform
      * @param callable $getProjectDB
-     * @param string $datetime
+     * @param int $abuseRetention
      * @return void
      * @throws Exception
      */
-    private function deleteAbuseLogs(Document $project, callable $timelimit, string $abuseRetention): void
+    private function deleteAbuseLogs(Document $project, callable $timelimit, int $abuseRetention): void
     {
         $projectId = $project->getId();
         $timeLimit = $timelimit("", 0, 1);
