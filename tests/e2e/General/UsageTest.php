@@ -1195,10 +1195,14 @@ class UsageTest extends Scope
     /** @depends testCustomDomainsFunctionStats */
     public function testDeleteDeployment(): void
     {
-        $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), [
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/functions',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ], $this->getHeaders()),
+            [
                 'functionId' => 'unique()',
                 'name' => 'Test',
                 'runtime' => 'php-8.0',
@@ -1210,10 +1214,14 @@ class UsageTest extends Scope
 
         $functionId = $response['body']['$id'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), [
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/functions/' . $functionId . '/deployments',
+            array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ], $this->getHeaders()),
+            [
                 'entrypoint' => 'index.php',
                 'code' => $this->packageFunction('php'),
                 'activate' => true,
@@ -1226,14 +1234,17 @@ class UsageTest extends Scope
         $deploymentId = $response['body']['$id'] ?? '';
 
         for ($i = 0; $i < 10; $i++) {
-            $usage = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders(), [
+            $usage = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge(
+                [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ],
+                $this->getHeaders(),
+                [
                     'range' => '24h']
             ));
 
-            if($usage['body']["buildsTotal"] > 0){
+            if ($usage['body']["buildsTotal"] > 0) {
                 break;
             }
 
@@ -1259,15 +1270,17 @@ class UsageTest extends Scope
         $this->assertEquals($function['headers']['status-code'], 204);
 
         for ($i = 0; $i < 10; $i++) {
-            $usage = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders(), [
+            $usage = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge(
+                [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ],
+                $this->getHeaders(),
+                [
                     'range' => '24h']
             ));
 
-            var_dump($i);
-            if($usage['body']["buildsTotal"] === 0){
+            if ($usage['body']["buildsTotal"] === 0) {
                 break;
             }
 
