@@ -1192,6 +1192,97 @@ class UsageTest extends Scope
             }
         }
     }
+    /** @depends testCustomDomainsFunctionStats */
+    public function testDeleteDeployment(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+                'functionId' => 'unique()',
+                'name' => 'Test',
+                'runtime' => 'php-8.0',
+            ]
+        );
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $functionId = $response['body']['$id'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+                'entrypoint' => 'index.php',
+                'code' => $this->packageFunction('php'),
+                'activate' => true,
+            ]
+        );
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $deploymentId = $response['body']['$id'] ?? '';
+
+        for ($i = 0; $i < 10; $i++) {
+            $usage = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders(), [
+                    'range' => '24h']
+            ));
+
+            if($usage['body']["buildsTotal"] > 0){
+                break;
+            }
+
+            sleep((self::WAIT));
+        }
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertEquals(1, $usage['body']["deploymentsTotal"]);
+        $this->assertEquals(1, $usage['body']["buildsTotal"]);
+        $this->assertGreaterThan(0, $usage['body']["deploymentsStorageTotal"]);
+        $this->assertGreaterThan(0, $usage['body']["buildsStorageTotal"]);
+        $this->assertGreaterThan(0, $usage['body']["buildsMbSecondsTotal"]);
+        $this->assertGreaterThan(0, $usage['body']["buildsTimeTotal"]);
+
+        sleep(self::WAIT);
+
+        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]));
+
+        $this->assertEquals($function['headers']['status-code'], 204);
+
+        for ($i = 0; $i < 10; $i++) {
+            $usage = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders(), [
+                    'range' => '24h']
+            ));
+
+            var_dump($i);
+            if($usage['body']["buildsTotal"] === 0){
+                break;
+            }
+
+            sleep((self::WAIT));
+        }
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertEquals(0, $usage['body']["deploymentsTotal"]);
+        $this->assertEquals(0, $usage['body']["buildsTotal"]);
+        $this->assertEquals(0, $usage['body']["deploymentsStorageTotal"]);
+        $this->assertEquals(0, $usage['body']["buildsStorageTotal"]);
+        $this->assertEquals(0, $usage['body']["buildsMbSecondsTotal"]);
+        $this->assertEquals(0, $usage['body']["buildsTimeTotal"]);
+
+    }
 
     public function tearDown(): void
     {
