@@ -171,7 +171,7 @@ class Webhooks extends Action
             $queueForUsage
                 ->addMetric(METRIC_WEBHOOKS_FAILED, 1)
                 ->addMetric(str_replace('{webhookInternalId}', $webhook->getInternalId(), METRIC_WEBHOOK_ID_FAILED), 1)
-                ;
+            ;
 
 
         } else {
