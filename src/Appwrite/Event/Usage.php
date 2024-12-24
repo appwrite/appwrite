@@ -42,6 +42,7 @@ class Usage extends Event
      */
     public function addMetric(string $key, int $value): self
     {
+
         $this->metrics[] = [
             'key' => $key,
             'value' => $value,
@@ -62,10 +63,15 @@ class Usage extends Event
         }
 
         $client = new Client($this->queue, $this->connection);
-        return $client->enqueue([
+
+        $result = $client->enqueue([
             'project' => $this->getProject(),
             'reduce'  => $this->reduce,
             'metrics' => $this->metrics,
         ]);
+
+        $this->metrics = [];
+
+        return $result;
     }
 }
