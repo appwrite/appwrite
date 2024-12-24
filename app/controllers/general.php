@@ -91,6 +91,15 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     $project = Authorization::skip(
         fn () => $dbForPlatform->getDocument('projects', $projectId)
     );
+
+    if (!$project->isEmpty() && $project->getId() !== 'console') {
+        $accessedAt = $project->getAttribute('accessedAt', '');
+        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+            $project->setAttribute('accessedAt', DateTime::now());
+            Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+        }
+    }
+
     if (array_key_exists('proxy', $project->getAttribute('services', []))) {
         $status = $project->getAttribute('services', [])['proxy'];
         if (!$status) {

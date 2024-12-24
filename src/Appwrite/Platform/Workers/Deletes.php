@@ -8,7 +8,6 @@ use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -47,6 +46,7 @@ class Deletes extends Action
             ->inject('message')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
+            ->inject('timelimit')
             ->inject('deviceForFiles')
             ->inject('deviceForFunctions')
             ->inject('deviceForBuilds')
@@ -57,8 +57,8 @@ class Deletes extends Action
             ->inject('auditRetention')
             ->inject('log')
             ->callback(
-                fn ($message, $dbForPlatform, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log) =>
-                    $this->action($message, $dbForPlatform, $getProjectDB, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $abuseRetention, $executionRetention, $auditRetention, $log)
+                fn ($message, $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, int $abuseRetention, string $executionRetention, string $auditRetention, Log $log) =>
+                    $this->action($message, $dbForPlatform, $getProjectDB, $timelimit, $deviceForFiles, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $abuseRetention, $executionRetention, $auditRetention, $log)
             );
     }
 
@@ -66,7 +66,7 @@ class Deletes extends Action
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Database $dbForPlatform, callable $getProjectDB, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
+    public function action(Message $message, Database $dbForPlatform, callable $getProjectDB, callable $timelimit, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, int $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -126,7 +126,7 @@ class Deletes extends Action
                 }
                 break;
             case DELETE_TYPE_ABUSE:
-                $this->deleteAbuseLogs($project, $getProjectDB, $abuseRetention);
+                $this->deleteAbuseLogs($project, $timelimit, $abuseRetention);
                 break;
             case DELETE_TYPE_REALTIME:
                 $this->deleteRealtimeUsage($dbForPlatform, $datetime);
@@ -494,8 +494,7 @@ class Deletes extends Action
 
         $projectCollectionIds = [
             ...\array_keys(Config::getParam('collections', [])['projects']),
-            Audit::COLLECTION,
-            TimeLimit::COLLECTION,
+            Audit::COLLECTION
         ];
 
         $limit = \count($projectCollectionIds) + 25;
@@ -704,15 +703,14 @@ class Deletes extends Action
     /**
      * @param Database $dbForPlatform
      * @param callable $getProjectDB
-     * @param string $datetime
+     * @param int $abuseRetention
      * @return void
      * @throws Exception
      */
-    private function deleteAbuseLogs(Document $project, callable $getProjectDB, string $abuseRetention): void
+    private function deleteAbuseLogs(Document $project, callable $timelimit, int $abuseRetention): void
     {
         $projectId = $project->getId();
-        $dbForProject = $getProjectDB($project);
-        $timeLimit = new TimeLimit("", 0, 1, $dbForProject);
+        $timeLimit = $timelimit("", 0, 1);
         $abuse = new Abuse($timeLimit);
 
         try {

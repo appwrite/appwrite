@@ -10,10 +10,8 @@ use Swoole\Http\Response as SwooleResponse;
 use Swoole\Http\Server;
 use Swoole\Process;
 use Swoole\Table;
-use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -198,11 +196,6 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         if ($dbForPlatform->getCollection(Audit::COLLECTION)->isEmpty()) {
             $audit = new Audit($dbForPlatform);
             $audit->setup();
-        }
-
-        if ($dbForPlatform->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
-            $adapter = new TimeLimit("", 0, 1, $dbForPlatform);
-            $adapter->setup();
         }
 
         /** @var array $collections */

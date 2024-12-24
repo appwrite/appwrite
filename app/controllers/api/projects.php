@@ -16,7 +16,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\Abuse\Adapters\Database\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
@@ -237,9 +236,6 @@ App::post('/v1/projects')
             if ($create || $projectTables) {
                 $audit = new Audit($dbForProject);
                 $audit->setup();
-
-                $abuse = new TimeLimit('', 0, 1, $dbForProject);
-                $abuse->setup();
             }
 
             if (!$create && $sharedTablesV1) {
@@ -249,17 +245,6 @@ App::post('/v1/projects')
                     '$id' => ID::custom('audit'),
                     '$permissions' => [Permission::create(Role::any())],
                     'name' => 'audit',
-                    'attributes' => $attributes,
-                    'indexes' => $indexes,
-                    'documentSecurity' => true
-                ]));
-
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), TimeLimit::ATTRIBUTES);
-                $indexes = \array_map(fn (array $index) => new Document($index), TimeLimit::INDEXES);
-                $dbForProject->createDocument(Database::METADATA, new Document([
-                    '$id' => ID::custom('abuse'),
-                    '$permissions' => [Permission::create(Role::any())],
-                    'name' => 'abuse',
                     'attributes' => $attributes,
                     'indexes' => $indexes,
                     'documentSecurity' => true
