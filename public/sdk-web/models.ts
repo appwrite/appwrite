@@ -218,7 +218,7 @@ export namespace Models {
          */
         time: string;
         /**
-         * Operating system code name. View list of [available options](https://github.com/appwrite/appwrite/blob/master/docs/lists/os.json).
+         * Operating system code name. View list of [available options](https://github.com/appwrite/appwrite/blob/main/docs/lists/os.json).
          */
         osCode: string;
         /**
@@ -234,7 +234,7 @@ export namespace Models {
          */
         clientType: string;
         /**
-         * Client code name. View list of [available options](https://github.com/appwrite/appwrite/blob/master/docs/lists/clients.json).
+         * Client code name. View list of [available options](https://github.com/appwrite/appwrite/blob/main/docs/lists/clients.json).
          */
         clientCode: string;
         /**
@@ -378,7 +378,7 @@ export namespace Models {
          */
         ip: string;
         /**
-         * Operating system code name. View list of [available options](https://github.com/appwrite/appwrite/blob/master/docs/lists/os.json).
+         * Operating system code name. View list of [available options](https://github.com/appwrite/appwrite/blob/main/docs/lists/os.json).
          */
         osCode: string;
         /**
@@ -394,7 +394,7 @@ export namespace Models {
          */
         clientType: string;
         /**
-         * Client code name. View list of [available options](https://github.com/appwrite/appwrite/blob/master/docs/lists/clients.json).
+         * Client code name. View list of [available options](https://github.com/appwrite/appwrite/blob/main/docs/lists/clients.json).
          */
         clientCode: string;
         /**

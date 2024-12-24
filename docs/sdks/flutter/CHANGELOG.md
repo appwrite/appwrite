@@ -126,7 +126,7 @@ You can find the new syntax for breaking changes in the [Appwrite API references
 * `User` response model is now renamed to `Account`
 
 **Full Changelog for Appwrite 1.0.0 can be found here**:
-https://github.com/appwrite/appwrite/blob/master/CHANGES.md
+https://github.com/appwrite/appwrite/blob/main/CHANGES.md
 
 ## 7.0.0
 * **BREAKING** Switched to using [flutter_web_auth_2](https://pub.dev/packages/flutter_web_auth_2), check Getting Started section in Readme for changes (Android and Web will require adjustments for OAuth to work properly)
@@ -145,7 +145,7 @@ https://github.com/appwrite/appwrite/blob/master/CHANGES.md
     * collections.[COLLECTION_ID] is now databases.[DATABASE_ID].collections.[COLLECTION_ID]
     * collections.[COLLECTION_ID].documents is now databases.[DATABASE_ID].collections.[COLLECTION_ID].documents
 
-**Full Changelog for Appwrite 0.15 can be found here**: https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0150
+**Full Changelog for Appwrite 0.15 can be found here**: https://github.com/appwrite/appwrite/blob/main/CHANGES.md#version-0150
 
 ## 5.0.0
 * Support for Appwrite 0.14
@@ -171,7 +171,7 @@ https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 * Support for synchronous function executions
 * Bug fixes and Improvements
 
-**Full Changelog for Appwrite 0.13 can be found here**: https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0130
+**Full Changelog for Appwrite 0.13 can be found here**: https://github.com/appwrite/appwrite/blob/main/CHANGES.md#version-0130
 
 ## 3.0.1
 - Export Query Builder
@@ -180,7 +180,7 @@ https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 - Support for Appwrite 0.12
 - **BREAKING** Updated database service to adapt 0.12 API
 - **BREAKING** Custom ID support while creating resources
-- [View all the changes](https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0120)
+- [View all the changes](https://github.com/appwrite/appwrite/blob/main/CHANGES.md#version-0120)
 
 ## 2.1.0
 - Updated `flutter_we_auth` plugin now supports [Flutter web for OAuth2 sessions](https://github.com/appwrite/sdk-for-flutter/blob/master/README.md#web)

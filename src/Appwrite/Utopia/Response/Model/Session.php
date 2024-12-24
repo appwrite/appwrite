@@ -78,7 +78,7 @@ class Session extends Model
             ])
             ->addRule('osCode', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Operating system code name. View list of [available options](https://github.com/appwrite/appwrite/blob/master/docs/lists/os.json).',
+                'description' => 'Operating system code name. View list of [available options](https://github.com/appwrite/appwrite/blob/main/docs/lists/os.json).',
                 'default' => '',
                 'example' => 'Mac',
             ])
@@ -102,7 +102,7 @@ class Session extends Model
             ])
             ->addRule('clientCode', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Client code name. View list of [available options](https://github.com/appwrite/appwrite/blob/master/docs/lists/clients.json).',
+                'description' => 'Client code name. View list of [available options](https://github.com/appwrite/appwrite/blob/main/docs/lists/clients.json).',
                 'default' => '',
                 'example' => 'CM',
             ])

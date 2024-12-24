@@ -1,6 +1,6 @@
 # Creating a new functions runtime 🏃
 
-This document is part of the Appwrite contributors' guide. Before you continue reading this document make sure you have read the [Code of Conduct](https://github.com/appwrite/.github/blob/main/CODE_OF_CONDUCT.md) and the [Contributing Guide](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md).
+This document is part of the Appwrite contributors' guide. Before you continue reading this document make sure you have read the [Code of Conduct](https://github.com/appwrite/.github/blob/main/CODE_OF_CONDUCT.md) and the [Contributing Guide](https://github.com/appwrite/appwrite/blob/main/CONTRIBUTING.md).
 
 ## Getting started
 
@@ -17,13 +17,13 @@ Note: Both Compiled and Interpreted languages work with Appwrite's execution mod
 
 It's really easy to contribute to an open-source project, but when using GitHub, there are a few steps we need to follow. This section will take you step-by-step through the process of preparing your local version of Appwrite, where you can make any changes without affecting Appwrite right away.
 
-> If you are experienced with GitHub or have made a pull request before, you can skip to [Implement new runtime](https://github.com/appwrite/appwrite/blob/master/docs/tutorials/add-runtime.md#2-implement-new-runtime).
+> If you are experienced with GitHub or have made a pull request before, you can skip to [Implement new runtime](https://github.com/appwrite/appwrite/blob/main/docs/tutorials/add-runtime.md#2-implement-new-runtime).
 
 ### 1.1 Fork the Appwrite repository
 
 Before making any changes, you will need to fork Appwrite's repository to keep branches on the official repo clean. To do that, visit [Appwrite's Runtime repository](https://github.com/appwrite/runtimes) and click on the fork button.
 
-[![Fork button](https://github.com/appwrite/appwrite/raw/master/docs/tutorials/images/fork.png)](https://github.com/appwrite/appwrite/blob/master/docs/tutorials/images/fork.png)
+[![Fork button](https://github.com/appwrite/appwrite/raw/master/docs/tutorials/images/fork.png)](https://github.com/appwrite/appwrite/blob/main/docs/tutorials/images/fork.png)
 
 This will redirect you from `github.com/appwrite/runtimes` to `github.com/YOUR_USERNAME/runtimes`, meaning all changes you do are only done inside your repository. Once you are there, click the highlighted `Code` button, copy the URL and clone the repository to your computer using the `git clone` command:
 

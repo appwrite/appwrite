@@ -132,7 +132,7 @@ You can find the new syntax for breaking changes in the [Appwrite API references
     3.  `greater` renamed to `greaterThan`
     4.  `greaterEqual` renamed to `greaterThanEqual`
 
-**Full Changelog for Appwrite 1.0.0 can be found here**: https://github.com/appwrite/appwrite/blob/master/CHANGES.md
+**Full Changelog for Appwrite 1.0.0 can be found here**: https://github.com/appwrite/appwrite/blob/main/CHANGES.md
 
 ## 6.0.1
 * Dependency upgrades
@@ -149,7 +149,7 @@ You can find the new syntax for breaking changes in the [Appwrite API references
     * collections.[COLLECTION_ID] is now databases.[DATABASE_ID].collections.[COLLECTION_ID]
     * collections.[COLLECTION_ID].documents is now databases.[DATABASE_ID].collections.[COLLECTION_ID].documents
 
-**Full Changelog for Appwrite 0.15 can be found here**: https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0150
+**Full Changelog for Appwrite 0.15 can be found here**: https://github.com/appwrite/appwrite/blob/main/CHANGES.md#version-0150
 
 ## 5.0.1
 * Code formatting fix
@@ -179,7 +179,7 @@ You can find the new syntax for breaking changes in the [Appwrite API references
 * Support for synchronous function executions
 * Bug fixes and Improvements
 
-**Full Changelog for Appwrite 0.13 can be found here**: https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0130
+**Full Changelog for Appwrite 0.13 can be found here**: https://github.com/appwrite/appwrite/blob/main/CHANGES.md#version-0130
 
 ## 3.0.2
 - String Attribute Type got fixed
@@ -191,7 +191,7 @@ You can find the new syntax for breaking changes in the [Appwrite API references
 - Support for Appwrite 0.12
 - **BREAKING** Updated database service to adapt 0.12 API
 - **BREAKING** Custom ID support while creating resources
-- [View all the changes](https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0120)
+- [View all the changes](https://github.com/appwrite/appwrite/blob/main/CHANGES.md#version-0120)
 
 ## 2.0.0
 - BREAKING All services and methods now return structured response objects instead of `Response` object
