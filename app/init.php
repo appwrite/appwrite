@@ -234,6 +234,10 @@ const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
 const METRIC_WEBHOOKS_SENT  = 'webhooks.events.sent';
 const METRIC_WEBHOOKS_FAILED  = 'webhooks.events.failed';
+const METRIC_WEBHOOK_ID_SENT = '{webhookInternalId}.webhooks.events.sent';
+const METRIC_WEBHOOK_ID_FAILED = '{webhookInternalId}.webhooks.events.failed';
+
+
 const METRIC_AUTH_METHOD_PHONE  = 'auth.method.phone';
 const METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE  = METRIC_AUTH_METHOD_PHONE . '.{countryCode}';
 const METRIC_MESSAGES = 'messages';

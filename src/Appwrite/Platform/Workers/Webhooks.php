@@ -168,13 +168,20 @@ class Webhooks extends Action
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
             $this->errors[] = $logs;
-            $queueForUsage->addMetric(METRIC_WEBHOOKS_FAILED, 1);
+            $queueForUsage
+                ->addMetric(METRIC_WEBHOOKS_FAILED, 1)
+                ->addMetric(str_replace('{webhookInternalId}', $webhook->getInternalId(), METRIC_WEBHOOK_ID_FAILED), 1)
+                ;
+
 
         } else {
             $webhook->setAttribute('attempts', 0); // Reset attempts on success
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $webhook);
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-            $queueForUsage->addMetric(METRIC_WEBHOOKS_SENT, 1);
+            $queueForUsage
+                ->addMetric(METRIC_WEBHOOKS_SENT, 1)
+                ->addMetric(str_replace('{webhookInternalId}', $webhook->getInternalId(), METRIC_WEBHOOK_ID_SENT), 1)
+            ;
         }
 
         $queueForUsage
