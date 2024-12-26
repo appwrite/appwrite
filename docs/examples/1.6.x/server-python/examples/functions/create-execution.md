@@ -1,4 +1,6 @@
 from appwrite.client import Client
+from appwrite.services.functions import Functions
+from appwrite.enums.execution_method import ExecutionMethod
 
 client = Client()
 client.set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
@@ -10,7 +12,7 @@ functions = Functions(client)
 result = functions.create_execution(
     function_id = '<FUNCTION_ID>',
     body = '<BODY>', # optional
-    async = False, # optional
+    xasync = False, # optional
     path = '<PATH>', # optional
     method = ExecutionMethod.GET, # optional
     headers = {}, # optional
