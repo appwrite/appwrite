@@ -46,11 +46,10 @@ class DeleteDeployment extends Action
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
             ->inject('deviceForSites')
-            ->inject('deviceForFunctions') //TODO: remove it later
             ->callback([$this, 'action']);
     }
 
-    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Device $deviceForSites, Device $deviceForFunctions)
+    public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Device $deviceForSites)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
         if ($site->isEmpty()) {
@@ -71,7 +70,7 @@ class DeleteDeployment extends Action
         }
 
         if (!empty($deployment->getAttribute('path', ''))) {
-            if (!($deviceForFunctions->delete($deployment->getAttribute('path', '')))) {
+            if (!($deviceForSites->delete($deployment->getAttribute('path', '')))) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
         }

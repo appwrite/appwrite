@@ -773,9 +773,10 @@ App::get('/v1/health/storage')
     ->inject('response')
     ->inject('deviceForFiles')
     ->inject('deviceForFunctions')
+    ->inject('deviceForSites')
     ->inject('deviceForBuilds')
-    ->action(function (Response $response, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds) {
-        $devices = [$deviceForFiles, $deviceForFunctions, $deviceForBuilds];
+    ->action(function (Response $response, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds) {
+        $devices = [$deviceForFiles, $deviceForFunctions, $deviceForSites, $deviceForBuilds];
         $checkStart = \microtime(true);
 
         foreach ($devices as $device) {

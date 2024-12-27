@@ -466,6 +466,7 @@ class Deletes extends Action
      * @param Database $dbForConsole
      * @param callable $getProjectDB
      * @param Device $deviceForFiles
+     * @param Device $deviceForSites
      * @param Device $deviceForFunctions
      * @param Device $deviceForBuilds
      * @param Device $deviceForCache
