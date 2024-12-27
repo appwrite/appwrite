@@ -376,12 +376,12 @@ App::get('/v1/vcs/github/callback')
 
             if (!empty($code)) {
                 $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
+
                 $accessToken = $oauth2->getAccessToken($code) ?? '';
                 $refreshToken = $oauth2->getRefreshToken($code) ?? '';
-                $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code) ?? '';
+                $accessTokenExpiry = DateTime::addSeconds(new \DateTime(), \intval($oauth2->getAccessTokenExpiry($code)));
 
                 $personalSlug = $oauth2->getUserSlug($accessToken) ?? '';
-
                 $personal = $personalSlug === $owner;
             }
 
