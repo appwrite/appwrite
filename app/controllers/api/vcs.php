@@ -355,53 +355,6 @@ App::get('/v1/vcs/github/callback')
             throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
         }
 
-        $personalSlug = '';
-
-        // OAuth Authroization
-        if (!empty($code)) {
-            $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
-            $accessToken = $oauth2->getAccessToken($code) ?? '';
-            $refreshToken = $oauth2->getRefreshToken($code) ?? '';
-            $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code) ?? '';
-            $personalSlug = $oauth2->getUserSlug($accessToken) ?? '';
-            $email = $oauth2->getUserEmail($accessToken);
-            $oauth2ID = $oauth2->getUserID($accessToken);
-
-            // Makes sure this email is not already used in another identity
-            $identity = $dbForPlatform->findOne('identities', [
-                Query::equal('providerEmail', [$email]),
-            ]);
-            if (!$identity->isEmpty()) {
-                if ($identity->getAttribute('userInternalId', '') !== $user->getInternalId()) {
-                    throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
-                }
-
-                $identity = $identity
-                    ->setAttribute('providerAccessToken', $accessToken)
-                    ->setAttribute('providerRefreshToken', $refreshToken)
-                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry));
-
-                $dbForPlatform->updateDocument('identities', $identity->getId(), $identity);
-            } else {
-                $identity = $dbForPlatform->createDocument('identities', new Document([
-                    '$id' => ID::unique(),
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::user($user->getId())),
-                        Permission::delete(Role::user($user->getId())),
-                    ],
-                    'userInternalId' => $user->getInternalId(),
-                    'userId' => $user->getId(),
-                    'provider' => 'github',
-                    'providerUid' => $oauth2ID,
-                    'providerEmail' => $email,
-                    'providerAccessToken' => $accessToken,
-                    'providerRefreshToken' => $refreshToken,
-                    'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
-                ]));
-            }
-        }
-
         // Create / Update installation
         if (!empty($providerInstallationId)) {
             $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
@@ -415,6 +368,22 @@ App::get('/v1/vcs/github/callback')
                 Query::equal('providerInstallationId', [$providerInstallationId]),
                 Query::equal('projectInternalId', [$projectInternalId])
             ]);
+
+            $personal = false;
+            $refreshToken = null;
+            $accessToken = null;
+            $accessTokenExpiry = null;
+
+            if (!empty($code)) {
+                $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
+                $accessToken = $oauth2->getAccessToken($code) ?? '';
+                $refreshToken = $oauth2->getRefreshToken($code) ?? '';
+                $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code) ?? '';
+
+                $personalSlug = $oauth2->getUserSlug($accessToken) ?? '';
+
+                $personal = $personalSlug === $owner;
+            }
 
             if ($installation->isEmpty()) {
                 $teamId = $project->getAttribute('teamId', '');
@@ -433,14 +402,20 @@ App::get('/v1/vcs/github/callback')
                     'projectInternalId' => $projectInternalId,
                     'provider' => 'github',
                     'organization' => $owner,
-                    'personal' => $personalSlug === $owner
+                    'personal' => $personal,
+                    'personalRefreshToken' => $refreshToken,
+                    'personalAccessToken' => $accessToken,
+                    'personalAccessTokenExpiry' => $accessTokenExpiry,
                 ]);
 
                 $installation = $dbForPlatform->createDocument('installations', $installation);
             } else {
                 $installation = $installation
                     ->setAttribute('organization', $owner)
-                    ->setAttribute('personal', $personalSlug === $owner);
+                    ->setAttribute('personal', $personal)
+                    ->setAttribute('personalRefreshToken', $refreshToken)
+                    ->setAttribute('personalAccessToken', $accessToken)
+                    ->setAttribute('personalAccessTokenExpiry', $accessTokenExpiry);
                 $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), $installation);
             }
         } else {
@@ -720,17 +695,9 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         if ($installation->getAttribute('personal', false) === true) {
             $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
 
-            $identity = $dbForPlatform->findOne('identities', [
-                Query::equal('provider', ['github']),
-                Query::equal('userInternalId', [$user->getInternalId()]),
-            ]);
-            if ($identity->isEmpty()) {
-                throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
-            }
-
-            $accessToken = $identity->getAttribute('providerAccessToken');
-            $refreshToken = $identity->getAttribute('providerRefreshToken');
-            $accessTokenExpiry = $identity->getAttribute('providerAccessTokenExpiry');
+            $accessToken = $installation->getAttribute('personalAccessToken');
+            $refreshToken = $installation->getAttribute('personalRefreshToken');
+            $accessTokenExpiry = $installation->getAttribute('personalAccessTokenExpiry');
 
             $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
             if ($isExpired) {
@@ -745,12 +712,12 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
                     throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, "Another request is currently refreshing OAuth token. Please try again.");
                 }
 
-                $identity = $identity
-                    ->setAttribute('providerAccessToken', $accessToken)
-                    ->setAttribute('providerRefreshToken', $refreshToken)
-                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+                $installation = $installation
+                    ->setAttribute('personalAccessToken', $accessToken)
+                    ->setAttribute('personalRefreshToken', $refreshToken)
+                    ->setAttribute('personalAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
-                $dbForPlatform->updateDocument('identities', $identity->getId(), $identity);
+                $dbForPlatform->updateDocument('installations', $installation->getId(), $installation);
             }
 
             try {
