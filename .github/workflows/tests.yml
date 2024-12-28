@@ -149,15 +149,15 @@ jobs:
       - name: Run ${{matrix.service}} Shared Tables Tests
         run: _APP_DATABASE_SHARED_TABLES=database_db_main docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.service}} --debug
 
-  benchamrking:
+  benchmarking:
     name: Benchmark
     runs-on: ubuntu-latest
     needs: setup
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Load Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           key: ${{ env.CACHE_KEY }}
           path: /tmp/${{ env.IMAGE }}.tar
