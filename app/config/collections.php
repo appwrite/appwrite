@@ -2,14 +2,14 @@
 
 use Utopia\Config\Config;
 
-include_once __DIR__ . '/collections/common.php';
-include_once __DIR__ . '/collections/bucket.php';
-include_once __DIR__ . '/collections/project.php';
-include_once __DIR__ . '/collections/database.php';
-include_once __DIR__ . '/collections/platform.php';
+$common = include __DIR__ . '/collections/common.php';
+$bucket = include __DIR__ . '/collections/bucket.php';
+$project = include __DIR__ . '/collections/project.php';
+$database = include __DIR__ . '/collections/database.php';
+$platform = include __DIR__ . '/collections/platform.php';
 
-$providers = Config::getParam('oAuthProviders', []);
 $auth = Config::getParam('auth', []);
+$providers = Config::getParam('oAuthProviders', []);
 
 /**
  * $collection => id of the parent collection where this will be inserted
@@ -20,13 +20,11 @@ $auth = Config::getParam('auth', []);
  * indexes => list of indexes
  */
 
-$commonCollections = getCommonCollections();
-
 $collections = [
-    'buckets' => getBucketCollections(),
-    'databases' => getDatabaseCollections(),
-    'projects' => getProjectCollections($commonCollections),
-    'console' => getPlatformCollections($commonCollections),
+    'buckets' => $bucket,
+    'databases' => $database,
+    'projects' => array_merge($project, $common),
+    'console' => array_merge($platform, $common),
 ];
 
 return $collections;
