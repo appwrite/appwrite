@@ -2531,7 +2531,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
 
             if ($attributeIndex === false) {
-                throw new Exception(Exception::ATTRIBUTE_UNKNOWN, 'Unknown attribute: ' . $attribute . '. Verify the attribute name or create the attribute.');
+                throw new Exception(Exception::ATTRIBUTE_UNKNOWN, 'Unknown attribute: ' . $attribute);
             }
 
             $attributeStatus = $oldAttributes[$attributeIndex]['status'];
