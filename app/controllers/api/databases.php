@@ -2898,8 +2898,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
-        $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+        $collection = Authorization::skip(function () use ($queueForUsage, $dbForProject, $database, $collectionId){
+                $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+                return $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+           });
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
