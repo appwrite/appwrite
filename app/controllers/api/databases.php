@@ -2885,7 +2885,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is not allowed for creating new documents, try update instead');
         }
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(function () use ($queueForUsage, $dbForProject, $databaseId) {
+            $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+            return $dbForProject->getDocument('databases', $databaseId);
+        });
+
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -2895,6 +2899,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -2981,8 +2986,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                $relatedCollection = Authorization::skip(function () use ($relatedCollectionId, $dbForProject, $queueForUsage) {
+                        $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+                        return $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId);
+                    }
                 );
 
                 foreach ($relations as &$relation) {
@@ -2995,8 +3002,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
-                        $current = Authorization::skip(
-                            fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $relation->getId())
+                        $current = Authorization::skip(function () use ($queueForUsage, $dbForProject, $database, $relatedCollection, $relation) {
+                                $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+                                return $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $relation->getId());
+                                }
                         );
 
                         if ($current->isEmpty()) {
@@ -3028,6 +3037,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         try {
             $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
+            $queueForUsage->addMetric(METRIC_DATABASE_API_WRITE, 1);
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
         } catch (DuplicateException $e) {
@@ -3037,7 +3047,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $queueForUsage) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -3057,8 +3067,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                $relatedCollection = Authorization::skip(function () use ($queueForUsage, $dbForProject, $database, $relatedCollectionId) {
+                        $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+                        return $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId);
+                    }
                 );
 
                 foreach ($related as $relation) {
@@ -3116,8 +3128,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
+    ->inject('queueForUsage')
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode, Usage $queueForUsage) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -3126,6 +3141,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -3155,7 +3171,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+            $cursorDocument = Authorization::skip(function() use ($dbForProject, $queueForUsage, $collection, $database, $documentId) {
+                $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+                return $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+            });
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Document '{$documentId}' for the 'cursor' value not found.");
@@ -3165,10 +3184,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
+        $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+
         $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
+        $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
+        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $queueForUsage): bool {
             if ($document->isEmpty()) {
                 return false;
             }
@@ -3195,7 +3217,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
+                $relatedCollection = Authorization::skip(function() use ($dbForProject, $queueForUsage, $database, $relatedCollectionId) {
+                    $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+                    return $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId);
+                });
 
                 foreach ($relations as $index => $doc) {
                     if ($doc instanceof Document) {
@@ -3274,8 +3299,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode) {
+    ->inject('queueForUsage')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode, Usage $queueForUsage) {
+
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3284,7 +3312,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = Authorization::skip(function () use ($queueForUsage, $dbForProject, $database, $collectionId) {
+            $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+            return $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        });
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -3293,6 +3324,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         try {
             $queries = Query::parseQueries($queries);
             $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
+            $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
@@ -3304,7 +3336,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $queueForUsage) {
             if ($document->isEmpty()) {
                 return;
             }
@@ -3328,8 +3360,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                $relatedCollection = Authorization::skip(function () use ($queueForUsage, $dbForProject, $database, $relatedCollectionId) {
+                        $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+                        return $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId);
+                    }
                 );
 
                 foreach ($related as $relation) {
@@ -3481,7 +3515,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, string $mode) {
+    ->inject('queueForUsage')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, string $mode, Usage $queueForUsage) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -3489,7 +3524,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
         }
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(function () use($queueForUsage, $dbForProject, $databaseId) {
+            $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+            return $dbForProject->getDocument('databases', $databaseId);
+        });
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3498,7 +3536,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = Authorization::skip(function () use ($queueForUsage, $dbForProject, $collectionId) {
+            $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+            return $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        });
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -3506,7 +3547,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         // Read permission should not be required for update
         /** @var Document $document */
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+        $document = Authorization::skip(function () use ($queueForUsage, $dbForProject, $database, $collection, $documentId) {
+            $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+            return $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        });
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
@@ -3548,7 +3592,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
-        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database) {
+        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, $queueForUsage) {
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -3570,9 +3614,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
-                );
+                $relatedCollection = Authorization::skip(function () use ($queueForUsage, $dbForProject, $database, $relatedCollectionId) {
+                    $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+                    return $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId);
+                });
 
                 foreach ($relations as &$relation) {
                     // If the relation is an array it can be either update or create a child document.
@@ -3585,17 +3630,15 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
-                        $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument(
-                            'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
-                            $relation->getId()
-                        ));
+                        $oldDocument = Authorization::skip(function () use ($queueForUsage, $dbForProject, $database, $relatedCollection, $relation) {
+                            $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+                            return $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $relation->getId());
+                        });
+
                         $relation->removeAttribute('$collectionId');
                         $relation->removeAttribute('$databaseId');
                         // Attribute $collection is required for Utopia.
-                        $relation->setAttribute(
-                            '$collection',
-                            'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId()
-                        );
+                        $relation->setAttribute('$collection', 'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
 
                         if ($oldDocument->isEmpty()) {
                             if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
@@ -3617,14 +3660,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $setCollection($collection, $newDocument);
 
         try {
-            $document = $dbForProject->withRequestTimestamp(
-                $requestTimestamp,
-                fn () => $dbForProject->updateDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $document->getId(),
-                    $newDocument
-                )
-            );
+            $document = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($queueForUsage, $dbForProject, $database, $collection, $document, $newDocument) {
+                    $queueForUsage->addMetric(METRIC_DATABASE_API_WRITE, 1);
+                    return $dbForProject->updateDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document->getId(), $newDocument);
+            });
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (DuplicateException) {
@@ -3636,7 +3675,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         }
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $queueForUsage) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -3656,9 +3695,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
-                );
+                $relatedCollection = Authorization::skip(function () use ($queueForUsage, $dbForProject, $database, $relatedCollectionId) {
+                        $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+                        return $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId);
+                    });
 
                 foreach ($related as $relation) {
                     if ($relation instanceof Document) {
@@ -3720,6 +3760,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, Usage $queueForUsage, string $mode) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -3728,32 +3769,36 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = Authorization::skip(function () use ($queueForUsage, $dbForProject, $database, $collectionId) {
+            $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+            return $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        });
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         // Read permission should not be required for delete
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+        $document = Authorization::skip(function () use ($queueForUsage, $dbForProject, $database, $collection, $documentId) {
+            $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+            return $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        });
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
         try {
-            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
-                $dbForProject->deleteDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $documentId
-                );
+            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($queueForUsage, $dbForProject, $database, $collection, $documentId) {
+                $queueForUsage->addMetric(METRIC_DATABASE_API_WRITE, 1);
+                $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
             });
         } catch (NotFoundException $e) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $queueForUsage) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -3773,9 +3818,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
-                );
+                $relatedCollection = Authorization::skip(function () use ($queueForUsage, $dbForProject, $database, $relatedCollectionId) {
+                    $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
+                    return $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId);
+                });
 
                 foreach ($related as $relation) {
                     if ($relation instanceof Document) {
