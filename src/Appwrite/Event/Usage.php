@@ -69,7 +69,7 @@ class Usage extends Event
             'reduce'  => $this->reduce,
             'metrics' => $this->metrics,
         ]);
-        var_dump($this->metrics);
+
         $this->metrics = [];
 
         return $result;
