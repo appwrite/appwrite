@@ -3219,7 +3219,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(function() use ($dbForProject, $queueForUsage, $database, $relatedCollectionId) {
+                $relatedCollection = Authorization::skip(function() use ($queueForUsage, $dbForProject, $database, $relatedCollectionId) {
                     $queueForUsage->addMetric(METRIC_DATABASE_API_READ, 1);
                     return $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId);
                 });
