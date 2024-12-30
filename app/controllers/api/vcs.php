@@ -699,6 +699,20 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
             $refreshToken = $installation->getAttribute('personalRefreshToken');
             $accessTokenExpiry = $installation->getAttribute('personalAccessTokenExpiry');
 
+            if (empty($accessToken) || empty($refreshToken) || empty($accessTokenExpiry)) {
+                $identity = $dbForPlatform->findOne('identities', [
+                    Query::equal('provider', ['github']),
+                    Query::equal('userInternalId', [$user->getInternalId()]),
+                ]);
+                if ($identity->isEmpty()) {
+                    throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
+                }
+
+                $accessToken = $accessToken ?? $identity->getAttribute('providerAccessToken');
+                $refreshToken = $refreshToken ?? $identity->getAttribute('providerRefreshToken');
+                $accessTokenExpiry = $accessTokenExpiry ?? $identity->getAttribute('providerAccessTokenExpiry');
+            }
+
             $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
             if ($isExpired) {
                 $oauth2->refreshTokens($refreshToken);
