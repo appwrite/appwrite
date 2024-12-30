@@ -17,6 +17,7 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
+use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -173,7 +174,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
 }, ['pools', 'dbForPlatform', 'cache']);
 
 Server::setResource('abuseRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
+    return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400);
 });
 
 Server::setResource('auditRetention', function () {
@@ -199,6 +200,27 @@ Server::setResource('cache', function (Registry $register) {
 
     return new Cache(new Sharding($adapters));
 }, ['register']);
+
+Server::setResource('redis', function () {
+    $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
+    $port = System::getEnv('_APP_REDIS_PORT', 6379);
+    $pass = System::getEnv('_APP_REDIS_PASS', '');
+
+    $redis = new \Redis();
+    @$redis->pconnect($host, (int)$port);
+    if ($pass) {
+        $redis->auth($pass);
+    }
+    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+
+    return $redis;
+});
+
+Server::setResource('timelimit', function (\Redis $redis) {
+    return function (string $key, int $limit, int $time) use ($redis) {
+        return new TimeLimitRedis($key, $limit, $time, $redis);
+    };
+}, ['redis']);
 
 Server::setResource('log', fn () => new Log());
 
